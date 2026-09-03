@@ -2070,7 +2070,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
             // ROW 1: Smart Warehouse Storage Rack (WarehouseRack) + Industrial 3D Fluid Tank (Tank3D)
-            var row1 = new Panel { Dock = DockStyle.Top, Height = 280, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+            var row1 = new Panel { Dock = DockStyle.Top, Height = 310, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Card 1A: Warehouse Rack
             var cardRack = new ZeroCard
@@ -2090,7 +2090,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             cardRack.ContentPanel.Controls.Add(rack);
 
-            var rackToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
+            var rackToolbar = new Panel { Dock = DockStyle.Bottom, Height = 36, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
             var btnAddReel = new ZeroButton
             {
                 Text = "📦 Add SMT Reel to Bin A-02-03",

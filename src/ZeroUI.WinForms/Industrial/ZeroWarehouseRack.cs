@@ -288,14 +288,14 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 3. Rack Geometry Layout
-            int startY = 28;
-            int legendH = 22;
-            int marginX = 14;
+            int startY = 24;
+            int legendH = 20;
+            int marginX = 12;
             int availableW = w - (marginX * 2);
             int availableH = h - startY - legendH - 6;
 
             int gapX = 6;
-            int gapY = 8;
+            int gapY = 5;
             int binW = Math.Max(24, (availableW - ((_bays - 1) * gapX)) / _bays);
             int binH = Math.Max(20, (availableH - ((_levels - 1) * gapY)) / _levels);
 
@@ -352,7 +352,7 @@ namespace ZeroUI.WinForms.Industrial
             switch (bin.Status)
             {
                 case BinOccupancyStatus.Empty:
-                    fillC = Color.FromArgb(30, 41, 59);
+                    fillC = Color.FromArgb(24, 32, 48);
                     borderC = Color.FromArgb(51, 65, 85);
                     break;
                 case BinOccupancyStatus.Full:
@@ -381,18 +381,64 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawRectangle(pen, r);
             }
 
-            // Bin Code Text
+            // Measure Texts
             using var font = new Font("Segoe UI", 7.5f, FontStyle.Bold);
             using var textBrush = new SolidBrush(Color.White);
             var sz = g.MeasureString(bin.BinCode, font);
-            g.DrawString(bin.BinCode, font, textBrush, r.X + (r.Width - sz.Width) / 2, r.Y + 4);
 
-            // Sub text: Qty or status
-            string sub = bin.Status == BinOccupancyStatus.Empty ? "0" : $"{bin.CurrentQty}";
-            using var subFont = new Font("Segoe UI", 6.5f);
+            string sub = bin.Status == BinOccupancyStatus.Empty ? "—" : $"{bin.CurrentQty:N0}";
+            using var subFont = new Font("Segoe UI", 6.5f, FontStyle.Regular);
             using var subBrush = new SolidBrush(Color.FromArgb(226, 232, 240));
             var subSz = g.MeasureString(sub, subFont);
-            g.DrawString(sub, subFont, subBrush, r.X + (r.Width - subSz.Width) / 2, r.Y + r.Height - subSz.Height - 3);
+
+            // Adaptive layout: if height allows 2 stacked lines without overlapping, stack vertically.
+            // Otherwise, place side-by-side (Bin Code on left, Qty on right) to guarantee zero overlap.
+            float minStackHeight = sz.Height + subSz.Height + 2;
+            if (r.Height >= minStackHeight)
+            {
+                float codeY = r.Y + 2;
+                float subY = r.Bottom - subSz.Height - 2;
+
+                g.DrawString(bin.BinCode, font, textBrush, r.X + (r.Width - sz.Width) / 2, codeY);
+
+                if (bin.Status != BinOccupancyStatus.Empty)
+                {
+                    int pillW = (int)subSz.Width + 8;
+                    int pillH = (int)subSz.Height + 1;
+                    int pillX = r.X + (r.Width - pillW) / 2;
+                    int pillY = (int)subY;
+                    var pillRect = new Rectangle(pillX, pillY, pillW, pillH);
+                    using var pillBrush = new SolidBrush(Color.FromArgb(70, 0, 0, 0));
+                    using var pillPath = ZeroUIConfig.CreateRoundedRectangle(pillRect, 3);
+                    g.FillPath(pillBrush, pillPath);
+                }
+
+                g.DrawString(sub, subFont, subBrush, r.X + (r.Width - subSz.Width) / 2, subY);
+            }
+            else
+            {
+                // Side-by-side layout: Bin Code on left, Quantity on right
+                float centerY = r.Y + (r.Height - sz.Height) / 2;
+                float codeX = r.X + 6;
+                g.DrawString(bin.BinCode, font, textBrush, codeX, centerY);
+
+                float subY = r.Y + (r.Height - subSz.Height) / 2;
+                float subX = r.Right - subSz.Width - 8;
+
+                if (bin.Status != BinOccupancyStatus.Empty)
+                {
+                    int pillW = (int)subSz.Width + 8;
+                    int pillH = (int)subSz.Height + 2;
+                    int pillX = (int)subX - 4;
+                    int pillY = (int)subY - 1;
+                    var pillRect = new Rectangle(pillX, pillY, pillW, pillH);
+                    using var pillBrush = new SolidBrush(Color.FromArgb(70, 0, 0, 0));
+                    using var pillPath = ZeroUIConfig.CreateRoundedRectangle(pillRect, 3);
+                    g.FillPath(pillBrush, pillPath);
+                }
+
+                g.DrawString(sub, subFont, subBrush, subX, subY);
+            }
         }
 
         private void DrawLegend(Graphics g, int x, int y, Color color, string label)
