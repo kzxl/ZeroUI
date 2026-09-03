@@ -58,7 +58,7 @@ namespace ZeroUI.WinForms.Industrial
         private int _levels = 4;
         private WarehouseBin[,] _bins = new WarehouseBin[0, 0];
         private WarehouseBin? _hoveredBin;
-        private string _rackTitle = "Kệ Chứa Cuộn Linh Kiện SMT — Dãy A (Rack A-01..05)";
+        private string _rackTitle = "SMT Reel Storage Rack — Row A (Rack A-01..05)";
 
         public event EventHandler<WarehouseBinClickedEventArgs>? BinClicked;
 
@@ -104,7 +104,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Kệ Chứa Cuộn Linh Kiện SMT — Dãy A (Rack A-01..05)")]
+        [DefaultValue("SMT Reel Storage Rack — Row A (Rack A-01..05)")]
         public string RackTitle
         {
             get => _rackTitle;
@@ -149,7 +149,7 @@ namespace ZeroUI.WinForms.Industrial
                         status = BinOccupancyStatus.Available;
                         qty = rand.Next(300, 1500);
                         sku = "SMD-CAP-0805";
-                        name = "Tụ gốm SMD 10uF 25V";
+                        name = "Ceramic Capacitor SMD 10uF 25V";
                         lot = $"LOT-2026090{bayNum}-SMT1";
                     }
                     else
@@ -157,7 +157,7 @@ namespace ZeroUI.WinForms.Industrial
                         status = BinOccupancyStatus.Full;
                         qty = max;
                         sku = "MEC-STEP-N23";
-                        name = "Động cơ Nema 23";
+                        name = "Nema 23 Stepper Motor";
                         lot = $"LOT-2026082{bayNum}-IMP";
                     }
 
@@ -279,7 +279,7 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
 
-            string summary = $"Sử dụng: {fullCount + availCount}/{_levels * _bays} | Khóa QC: {quarCount}";
+            string summary = $"Occupancy: {fullCount + availCount}/{_levels * _bays} | QC Hold: {quarCount}";
             using (var statFont = new Font("Segoe UI", 7.5f))
             using (var statBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
             {
@@ -337,10 +337,10 @@ namespace ZeroUI.WinForms.Industrial
 
             // 5. Bottom Legend
             int legY = h - 18;
-            DrawLegend(g, 10, legY, Color.FromArgb(51, 65, 85), "Trống (Empty)");
-            DrawLegend(g, 105, legY, Color.FromArgb(59, 130, 246), "Có hàng (Avail)");
-            DrawLegend(g, 210, legY, Color.FromArgb(16, 185, 129), "Đầy (Full)");
-            DrawLegend(g, 290, legY, Color.FromArgb(239, 68, 68), "Khóa QC (Lock)");
+            DrawLegend(g, 10, legY, Color.FromArgb(51, 65, 85), "Empty");
+            DrawLegend(g, 85, legY, Color.FromArgb(59, 130, 246), "Available");
+            DrawLegend(g, 175, legY, Color.FromArgb(16, 185, 129), "Full");
+            DrawLegend(g, 240, legY, Color.FromArgb(239, 68, 68), "QC Hold");
         }
 
         private void DrawBin(Graphics g, WarehouseBin bin, bool isHovered)

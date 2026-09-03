@@ -91,19 +91,19 @@ namespace ZeroUI.WinForms.Industrial
 
         private void InitializeDefaultBoard()
         {
-            var col1 = new KanbanColumn("1. Chuẩn Bị NVL", 5);
-            col1.Cards.Add(new KanbanCard { OrderNo = "WO-8101", ProductName = "Mạch vi xử lý STM32", Quantity = 200, Priority = KanbanPriority.Normal, OperatorName = "Nguyễn Văn An" });
-            col1.Cards.Add(new KanbanCard { OrderNo = "WO-8104", ProductName = "Bộ nguồn Buck 24V", Quantity = 500, Priority = KanbanPriority.Urgent, OperatorName = "Trần Bích" });
+            var col1 = new KanbanColumn("1. Material Prep", 5);
+            col1.Cards.Add(new KanbanCard { OrderNo = "WO-8101", ProductName = "STM32 Microcontroller PCB", Quantity = 200, Priority = KanbanPriority.Normal, OperatorName = "Alex Nguyen" });
+            col1.Cards.Add(new KanbanCard { OrderNo = "WO-8104", ProductName = "24V Buck Converter Module", Quantity = 500, Priority = KanbanPriority.Urgent, OperatorName = "Sarah Chen" });
 
-            var col2 = new KanbanColumn("2. Đang Gia Công SMT", 3);
-            col2.Cards.Add(new KanbanCard { OrderNo = "WO-8098", ProductName = "Cảm biến quang Keyence", Quantity = 150, Priority = KanbanPriority.Normal, OperatorName = "Lê Hoàng" });
-            col2.Cards.Add(new KanbanCard { OrderNo = "WO-8099", ProductName = "Driver bước TMC2209", Quantity = 300, Priority = KanbanPriority.Urgent, OperatorName = "Phạm Dũng" });
+            var col2 = new KanbanColumn("2. SMT Assembly", 3);
+            col2.Cards.Add(new KanbanCard { OrderNo = "WO-8098", ProductName = "Keyence Optical Sensor", Quantity = 150, Priority = KanbanPriority.Normal, OperatorName = "David Lee" });
+            col2.Cards.Add(new KanbanCard { OrderNo = "WO-8099", ProductName = "TMC2209 Stepper Driver", Quantity = 300, Priority = KanbanPriority.Urgent, OperatorName = "Michael Ross" });
 
-            var col3 = new KanbanColumn("3. Kiểm Tra AOI/QC", 3);
-            col3.Cards.Add(new KanbanCard { OrderNo = "WO-8092", ProductName = "Module Wi-Fi ESP32", Quantity = 400, Priority = KanbanPriority.Normal, OperatorName = "Vũ Oanh" });
+            var col3 = new KanbanColumn("3. AOI / QC Inspection", 3);
+            col3.Cards.Add(new KanbanCard { OrderNo = "WO-8092", ProductName = "ESP32 Wi-Fi IoT Gateway", Quantity = 400, Priority = KanbanPriority.Normal, OperatorName = "Emily Watson" });
 
-            var col4 = new KanbanColumn("4. Đóng Gói / Xuất", 0);
-            col4.Cards.Add(new KanbanCard { OrderNo = "WO-8085", ProductName = "Vỏ nhôm CNC IP67", Quantity = 100, Priority = KanbanPriority.Low, OperatorName = "Đỗ Cường" });
+            var col4 = new KanbanColumn("4. Packaging & Dispatch", 0);
+            col4.Cards.Add(new KanbanCard { OrderNo = "WO-8085", ProductName = "IP67 CNC Aluminum Enclosure", Quantity = 100, Priority = KanbanPriority.Low, OperatorName = "John Miller" });
 
             _columns.Add(col1);
             _columns.Add(col2);

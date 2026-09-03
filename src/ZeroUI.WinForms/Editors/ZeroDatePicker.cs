@@ -268,7 +268,7 @@ namespace ZeroUI.WinForms.Editors
             private Rectangle _todayLinkRect;
 
             private Rectangle[] _presetRects = new Rectangle[4];
-            private readonly string[] _presetNames = new[] { "Hôm nay", "Hôm qua", "Ngày mai", "+7 Ngày" };
+            private readonly string[] _presetNames = new[] { "Today", "Yesterday", "Tomorrow", "+7 Days" };
             private int _hoveredPreset = -1;
 
             private int _hoveredDayIndex = -1; // 0..41
@@ -279,9 +279,9 @@ namespace ZeroUI.WinForms.Editors
 
             private readonly string[] _monthNames = new[]
             {
-                "Thg 1", "Thg 2", "Thg 3", "Thg 4",
-                "Thg 5", "Thg 6", "Thg 7", "Thg 8",
-                "Thg 9", "Thg 10", "Thg 11", "Thg 12"
+                "Jan", "Feb", "Mar", "Apr",
+                "May", "Jun", "Jul", "Aug",
+                "Sep", "Oct", "Nov", "Dec"
             };
 
             public ZeroCalendarPopupControl(ZeroDatePicker owner, DateTime initialDate, bool showPresets)
@@ -610,9 +610,9 @@ namespace ZeroUI.WinForms.Editors
                 int startDecade = (_viewMonth.Year / 10) * 10;
                 string titleText = _viewMode switch
                 {
-                    CalendarViewMode.Months => $"Năm {_viewMonth.Year} ▾",
+                    CalendarViewMode.Months => $"{_viewMonth.Year} ▾",
                     CalendarViewMode.Years => $"{startDecade} - {startDecade + 9}",
-                    _ => $"Tháng {_viewMonth.Month:D2}, {_viewMonth.Year} ▾"
+                    _ => $"{_viewMonth.ToString("MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture)} ▾"
                 };
 
                 // Draw Header Title with hover pill effect
@@ -660,7 +660,7 @@ namespace ZeroUI.WinForms.Editors
                 if (_viewMode == CalendarViewMode.Days)
                 {
                     // Day of Week Column Headers
-                    string[] dayHeaders = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+                    string[] dayHeaders = new[] { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
                     int cellW = (Width - 16) / 7;
                     using (var fontDOW = new Font(Font.FontFamily, 7.75f, FontStyle.Bold))
                     {
@@ -856,7 +856,7 @@ namespace ZeroUI.WinForms.Editors
                 using (var brushFoot = new SolidBrush(palette.Primary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString($"Hôm nay: {DateTime.Today:yyyy-MM-dd}", fontFoot, brushFoot, _todayLinkRect, sf);
+                    g.DrawString($"Today: {DateTime.Today:yyyy-MM-dd}", fontFoot, brushFoot, _todayLinkRect, sf);
                 }
             }
         }

@@ -214,9 +214,9 @@ namespace ZeroUI.WinForms.Editors
             IWin32Window parentWindow = (IWin32Window?)FindForm() ?? this;
             ZeroModal.Show(
                 parentWindow,
-                $"Xem Chi Tiết Hình Ảnh ({_image.Width} x {_image.Height} px)",
+                $"Image Preview ({_image.Width} x {_image.Height} px)",
                 previewPanel,
-                okText: "Đóng",
+                okText: "Close",
                 showCancel: false,
                 width: 680,
                 height: 520);
@@ -436,10 +436,10 @@ namespace ZeroUI.WinForms.Editors
                     Padding = new Padding(8, 2, 8, 2)
                 };
 
-                var btnZoomIn = CreateToolButton("➕ Phóng to", () => { _zoomFactor = Math.Min(4.0f, _zoomFactor + 0.25f); Invalidate(); });
-                var btnZoomOut = CreateToolButton("➖ Thu nhỏ", () => { _zoomFactor = Math.Max(0.25f, _zoomFactor - 0.25f); Invalidate(); });
-                var btnRotate = CreateToolButton("↷ Xoay 90°", () => { _rotationDegrees = (_rotationDegrees + 90) % 360; Invalidate(); });
-                var btnReset = CreateToolButton("⟲ Vừa khung", () => { _zoomFactor = 1.0f; _rotationDegrees = 0; Invalidate(); });
+                var btnZoomIn = CreateToolButton("➕ Zoom In", () => { _zoomFactor = Math.Min(4.0f, _zoomFactor + 0.25f); Invalidate(); });
+                var btnZoomOut = CreateToolButton("➖ Zoom Out", () => { _zoomFactor = Math.Max(0.25f, _zoomFactor - 0.25f); Invalidate(); });
+                var btnRotate = CreateToolButton("↷ Rotate 90°", () => { _rotationDegrees = (_rotationDegrees + 90) % 360; Invalidate(); });
+                var btnReset = CreateToolButton("⟲ Fit to Window", () => { _zoomFactor = 1.0f; _rotationDegrees = 0; Invalidate(); });
 
                 topTools.Controls.Add(btnReset);
                 topTools.Controls.Add(btnRotate);

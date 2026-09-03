@@ -348,7 +348,7 @@ namespace ZeroUI.WinForms.Editors
             private Rectangle[] _presetRects = new Rectangle[7];
             private readonly string[] _presetNames = new[]
             {
-                "Hôm nay", "Hôm qua", "7 Ngày qua", "30 Ngày qua", "Tháng này", "Tháng trước", "Từ đầu năm"
+                "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month", "Last Month", "Year to Date"
             };
             private readonly DateRangePreset[] _presetValues = new[]
             {
@@ -596,7 +596,7 @@ namespace ZeroUI.WinForms.Editors
                 // Title: "MMMM yyyy"
                 using var fontTitle = new Font(Font.FontFamily, 9.5f, FontStyle.Bold);
                 using var brushTitle = new SolidBrush(palette.TextPrimary);
-                string monthName = _viewMonth.ToString("MMMM yyyy");
+                string monthName = _viewMonth.ToString("MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture);
                 var titleRect = new Rectangle(calLeft + 48, 10, calW - 96, 22);
                 var sfTitle = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                 g.DrawString(monthName, fontTitle, brushTitle, titleRect, sfTitle);
@@ -613,7 +613,7 @@ namespace ZeroUI.WinForms.Editors
                 }
 
                 // Day-of-week headers
-                string[] dayHeaders = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+                string[] dayHeaders = new[] { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
                 int dayW = calW / 7;
                 int dayH = 26;
                 int startY = 38;
@@ -701,7 +701,7 @@ namespace ZeroUI.WinForms.Editors
                 using (var fontApply = new Font(Font.FontFamily, 8f, FontStyle.Bold))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString("Áp Dụng", fontApply, brushApplyText, applyRect, sf);
+                    g.DrawString("Apply", fontApply, brushApplyText, applyRect, sf);
                 }
             }
         }

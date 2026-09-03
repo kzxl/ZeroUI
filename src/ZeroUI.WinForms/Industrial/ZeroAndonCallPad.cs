@@ -74,10 +74,10 @@ namespace ZeroUI.WinForms.Industrial
 
             _tiles = new CallTile[]
             {
-                new CallTile { Type = AndonCallType.Material, Title = "Vật tư (Part)", Icon = "📦", Color = Color.FromArgb(59, 130, 246) },
-                new CallTile { Type = AndonCallType.Maintenance, Title = "Bảo trì (Tech)", Icon = "🔧", Color = Color.FromArgb(239, 68, 68) },
-                new CallTile { Type = AndonCallType.Quality, Title = "Chất lượng (QA)", Icon = "🔍", Color = Color.FromArgb(245, 158, 11) },
-                new CallTile { Type = AndonCallType.Supervisor, Title = "Tổ trưởng (Lead)", Icon = "👤", Color = Color.FromArgb(139, 92, 246) }
+                new CallTile { Type = AndonCallType.Material, Title = "Material", Icon = "📦", Color = Color.FromArgb(59, 130, 246) },
+                new CallTile { Type = AndonCallType.Maintenance, Title = "Maintenance", Icon = "🔧", Color = Color.FromArgb(239, 68, 68) },
+                new CallTile { Type = AndonCallType.Quality, Title = "Quality", Icon = "🔍", Color = Color.FromArgb(245, 158, 11) },
+                new CallTile { Type = AndonCallType.Supervisor, Title = "Supervisor", Icon = "👤", Color = Color.FromArgb(139, 92, 246) }
             };
 
             _slaTimer = new Timer { Interval = 1000 };

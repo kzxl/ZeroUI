@@ -38,8 +38,8 @@ namespace ZeroUI.WinForms.Industrial
         public ZeroStepStatus Status { get; set; } = ZeroStepStatus.Waiting;
         public ZeroStepGlyph Glyph { get; set; } = ZeroStepGlyph.Gear;
         public string? CustomGlyphText { get; set; }
-        public string QuantityPrefix { get; set; } = "Số lượng: ";
-        public string TimestampPrefix { get; set; } = "Ngày HT cuối: ";
+        public string QuantityPrefix { get; set; } = "Qty: ";
+        public string TimestampPrefix { get; set; } = "Updated: ";
         public object? Tag { get; set; }
     }
 

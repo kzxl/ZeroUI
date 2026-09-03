@@ -150,7 +150,7 @@ namespace ZeroUI.WinForms.Overlays
             string title,
             string message,
             Action? onOk = null,
-            string okText = "Đồng ý")
+            string okText = "OK")
         {
             var pnl = new MessageDialogPanel(ModalIconType.Success, message);
             return Show(parent, title, pnl, onOk, null, okText, "", false, 460, 240);
@@ -164,7 +164,7 @@ namespace ZeroUI.WinForms.Overlays
             string title,
             string message,
             Action? onOk = null,
-            string okText = "Đã hiểu")
+            string okText = "OK")
         {
             var pnl = new MessageDialogPanel(ModalIconType.Warning, message);
             return Show(parent, title, pnl, onOk, null, okText, "", false, 460, 240);
@@ -178,7 +178,7 @@ namespace ZeroUI.WinForms.Overlays
             string title,
             string message,
             Action? onOk = null,
-            string okText = "Đóng")
+            string okText = "Close")
         {
             var pnl = new MessageDialogPanel(ModalIconType.Error, message);
             return Show(parent, title, pnl, onOk, null, okText, "", false, 460, 240);
@@ -207,8 +207,8 @@ namespace ZeroUI.WinForms.Overlays
             string message,
             Action onConfirm,
             Action? onCancel = null,
-            string confirmText = "Xác nhận",
-            string cancelText = "Hủy bỏ")
+            string confirmText = "Confirm",
+            string cancelText = "Cancel")
         {
             var pnl = new MessageDialogPanel(ModalIconType.Confirm, message);
             return Show(parent, title, pnl, onConfirm, onCancel, confirmText, cancelText, true, 460, 240);
@@ -224,8 +224,8 @@ namespace ZeroUI.WinForms.Overlays
             string defaultValue,
             Action<string> onOk,
             Action? onCancel = null,
-            string okText = "Lưu",
-            string cancelText = "Hủy")
+            string okText = "Save",
+            string cancelText = "Cancel")
         {
             var pnl = new PromptDialogPanel(message, defaultValue);
             return Show(parent, title, pnl, () => onOk(pnl.InputText), onCancel, okText, cancelText, true, 480, 260);

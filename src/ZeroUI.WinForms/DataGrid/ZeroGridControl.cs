@@ -866,7 +866,7 @@ namespace ZeroUI.WinForms.DataGrid
             };
 
             // 1. Sort Ascending
-            var itemAsc = new ToolStripMenuItem("▲  Sort Ascending (Tăng dần)", null, (s, e) =>
+            var itemAsc = new ToolStripMenuItem("▲  Sort Ascending", null, (s, e) =>
             {
                 _ = SortColumnAsync(columnIndex, SortDirection.Ascending);
             })
@@ -875,7 +875,7 @@ namespace ZeroUI.WinForms.DataGrid
             };
 
             // 2. Sort Descending
-            var itemDesc = new ToolStripMenuItem("▼  Sort Descending (Giảm dần)", null, (s, e) =>
+            var itemDesc = new ToolStripMenuItem("▼  Sort Descending", null, (s, e) =>
             {
                 _ = SortColumnAsync(columnIndex, SortDirection.Descending);
             })
@@ -884,7 +884,7 @@ namespace ZeroUI.WinForms.DataGrid
             };
 
             // 3. Clear Sort
-            var itemClear = new ToolStripMenuItem("✕  Clear Sorting (Bỏ sắp xếp)", null, (s, e) =>
+            var itemClear = new ToolStripMenuItem("✕  Clear Sorting", null, (s, e) =>
             {
                 _ = SortColumnAsync(columnIndex, SortDirection.None);
             })
@@ -898,11 +898,11 @@ namespace ZeroUI.WinForms.DataGrid
             menu.Items.Add(new ToolStripSeparator());
 
             // 4. Auto-fit Width
-            var itemFit = new ToolStripMenuItem("↔  Best Fit Column (Tự căn độ rộng cột)", null, (s, e) =>
+            var itemFit = new ToolStripMenuItem("↔  Best Fit Column", null, (s, e) =>
             {
                 AutoFitColumnWidth(columnIndex);
             });
-            var itemFitAll = new ToolStripMenuItem("⇹  Best Fit All Columns (Tự căn tất cả cột)", null, (s, e) =>
+            var itemFitAll = new ToolStripMenuItem("⇹  Best Fit All Columns", null, (s, e) =>
             {
                 AutoFitAllColumns();
             });
@@ -910,16 +910,16 @@ namespace ZeroUI.WinForms.DataGrid
             menu.Items.Add(itemFitAll);
 
             // 5. Alignment Submenu
-            var itemAlign = new ToolStripMenuItem("⬌  Alignment (Căn lề dữ liệu)");
-            var alignLeft = new ToolStripMenuItem("⬅  Left (Trái)", null, (s, e) => { col.Alignment = CellAlignment.Left; Invalidate(); })
+            var itemAlign = new ToolStripMenuItem("⬌  Alignment");
+            var alignLeft = new ToolStripMenuItem("⬅  Left", null, (s, e) => { col.Alignment = CellAlignment.Left; Invalidate(); })
             {
                 Checked = col.Alignment == CellAlignment.Left
             };
-            var alignCenter = new ToolStripMenuItem("⬌  Center (Giữa)", null, (s, e) => { col.Alignment = CellAlignment.Center; Invalidate(); })
+            var alignCenter = new ToolStripMenuItem("⬌  Center", null, (s, e) => { col.Alignment = CellAlignment.Center; Invalidate(); })
             {
                 Checked = col.Alignment == CellAlignment.Center
             };
-            var alignRight = new ToolStripMenuItem("➡  Right (Phải)", null, (s, e) => { col.Alignment = CellAlignment.Right; Invalidate(); })
+            var alignRight = new ToolStripMenuItem("➡  Right", null, (s, e) => { col.Alignment = CellAlignment.Right; Invalidate(); })
             {
                 Checked = col.Alignment == CellAlignment.Right
             };
@@ -931,7 +931,7 @@ namespace ZeroUI.WinForms.DataGrid
             menu.Items.Add(new ToolStripSeparator());
 
             // 6. Hide Column
-            var itemHide = new ToolStripMenuItem($"👁  Hide '{col.HeaderText}' (Ẩn cột này)", null, (s, e) =>
+            var itemHide = new ToolStripMenuItem($"👁  Hide '{col.HeaderText}'", null, (s, e) =>
             {
                 col.IsVisible = false;
                 UpdateScrollBars();
@@ -947,7 +947,7 @@ namespace ZeroUI.WinForms.DataGrid
             }
             if (hasHidden)
             {
-                var itemShowAll = new ToolStripMenuItem("📋  Show All Columns (Hiện tất cả cột)", null, (s, e) =>
+                var itemShowAll = new ToolStripMenuItem("📋  Show All Columns", null, (s, e) =>
                 {
                     for (int i = 0; i < _columns.Count; i++) _columns[i].IsVisible = true;
                     UpdateScrollBars();

@@ -28,8 +28,8 @@ namespace ZeroUI.WinForms.Industrial
         private float _currentLevelLiters = 6850f;
         private float _highAlarmPct = 90f;
         private float _lowAlarmPct = 15f;
-        private string _tankName = "Bồn Dung Môi SMT-TK01";
-        private string _fluidName = "Dung dịch IPA 99.7%";
+        private string _tankName = "Solvent Tank TK-01";
+        private string _fluidName = "IPA Solution 99.7%";
         private Color _fluidColor = Color.FromArgb(6, 182, 212); // Cyan Blue
 
         private readonly Timer _animTimer;
@@ -100,7 +100,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Bồn Dung Môi SMT-TK01")]
+        [DefaultValue("Solvent Tank TK-01")]
         public string TankName
         {
             get => _tankName;
@@ -108,7 +108,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Dung dịch IPA 99.7%")]
+        [DefaultValue("IPA Solution 99.7%")]
         public string FluidName
         {
             get => _fluidName;

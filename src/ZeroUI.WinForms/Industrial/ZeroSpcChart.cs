@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Industrial
     public class ZeroSpcChart : Control
     {
         private readonly List<SpcDataPoint> _points = new List<SpcDataPoint>();
-        private string _title = "SPC X-Bar Chart — Đường Kính Trục Tiện CNC (Target: 12.000 mm)";
+        private string _title = "SPC X-Bar Chart — CNC Shaft Diameter (Target: 12.000 mm)";
         private string _unit = "mm";
         private float _nominalTarget = 12.000f;
         private float? _usl = 12.020f; // Upper Spec Limit
@@ -65,7 +65,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("SPC X-Bar Chart — Đường Kính Trục Tiện CNC (Target: 12.000 mm)")]
+        [DefaultValue("SPC X-Bar Chart — CNC Shaft Diameter (Target: 12.000 mm)")]
         public string Title
         {
             get => _title;
