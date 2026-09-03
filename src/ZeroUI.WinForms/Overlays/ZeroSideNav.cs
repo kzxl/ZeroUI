@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
@@ -338,9 +339,9 @@ namespace ZeroUI.WinForms.Overlays
 
             // 2. Brand Header (Top 56px)
             Rectangle headerRect = new Rectangle(0, 0, w, 56);
-            using (var logoFont = new Font("Segoe UI Emoji", 15f))
-            using (var titleFont = new Font("Segoe UI", 10.5f, FontStyle.Bold))
-            using (var subFont = new Font("Segoe UI", 7.5f, FontStyle.Regular))
+            var logoFont = ZeroFontCache.Get("Segoe UI Emoji", 15f, FontStyle.Regular);
+            var titleFont = ZeroFontCache.Get("Segoe UI", 10.5f, FontStyle.Bold);
+            var subFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
             using (var logoBrush = new SolidBrush(palette.Primary))
             using (var titleBrush = new SolidBrush(palette.TextPrimary))
             using (var subBrush = new SolidBrush(palette.TextSecondary))
@@ -370,11 +371,11 @@ namespace ZeroUI.WinForms.Overlays
             int paddingX = _isCollapsed ? 6 : 10;
             int itemW = w - (paddingX * 2);
 
-            using var catFont = new Font("Segoe UI", 7.5f, FontStyle.Bold);
-            using var itemFont = new Font("Segoe UI", 9.2f, FontStyle.Regular);
-            using var itemBold = new Font("Segoe UI", 9.2f, FontStyle.Bold);
-            using var iconFont = new Font("Segoe UI Emoji", 11f);
-            using var badgeFont = new Font("Segoe UI", 7.5f, FontStyle.Bold);
+            var catFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
+            var itemFont = ZeroFontCache.Get("Segoe UI", 9.2f, FontStyle.Regular);
+            var itemBold = ZeroFontCache.Get("Segoe UI", 9.2f, FontStyle.Bold);
+            var iconFont = ZeroFontCache.Get("Segoe UI Emoji", 11f, FontStyle.Regular);
+            var badgeFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
 
             for (int i = 0; i < _items.Count; i++)
             {
@@ -469,7 +470,7 @@ namespace ZeroUI.WinForms.Overlays
                 g.DrawLine(sepPen, 8, footerY, w - 8, footerY);
             }
 
-            using (var footFont = new Font("Segoe UI", 7.5f, FontStyle.Regular))
+            var footFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
             using (var footBrush = new SolidBrush(palette.TextSecondary))
             {
                 if (!_isCollapsed)

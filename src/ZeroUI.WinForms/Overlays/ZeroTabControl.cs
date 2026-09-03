@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
@@ -386,10 +387,10 @@ namespace ZeroUI.WinForms.Overlays
             if (_tabPages.Count == 0) return;
 
             int curX = 12;
-            using var fontTab = new Font(Font.FontFamily, 9.2f, FontStyle.Regular);
-            using var fontTabActive = new Font(Font.FontFamily, 9.2f, FontStyle.Bold);
-            using var fontIcon = new Font("Segoe UI Emoji", 9.5f);
-            using var fontBadge = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
+            var fontTab = ZeroFontCache.Get(9.2f, FontStyle.Regular);
+            var fontTabActive = ZeroFontCache.Get(9.2f, FontStyle.Bold);
+            var fontIcon = ZeroFontCache.Get("Segoe UI Emoji", 9.5f, FontStyle.Regular);
+            var fontBadge = ZeroFontCache.Get(7.5f, FontStyle.Bold);
 
             for (int i = 0; i < _tabPages.Count; i++)
             {
@@ -537,10 +538,10 @@ namespace ZeroUI.WinForms.Overlays
             int itemW = _tabWidth - 16;
             int itemH = Math.Max(36, _tabHeight);
 
-            using var fontTab = new Font(Font.FontFamily, 9.2f, FontStyle.Regular);
-            using var fontTabActive = new Font(Font.FontFamily, 9.2f, FontStyle.Bold);
-            using var fontIcon = new Font("Segoe UI Emoji", 10.5f);
-            using var fontBadge = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
+            var fontTab = ZeroFontCache.Get(9.2f, FontStyle.Regular);
+            var fontTabActive = ZeroFontCache.Get(9.2f, FontStyle.Bold);
+            var fontIcon = ZeroFontCache.Get("Segoe UI Emoji", 10.5f, FontStyle.Regular);
+            var fontBadge = ZeroFontCache.Get(7.5f, FontStyle.Bold);
 
             for (int i = 0; i < _tabPages.Count; i++)
             {
