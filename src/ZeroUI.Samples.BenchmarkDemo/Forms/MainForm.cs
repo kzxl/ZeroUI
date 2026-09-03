@@ -74,9 +74,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _autoScrollTimer.Interval = 16; // ~60 Hz tick
             _autoScrollTimer.Tick += AutoScrollTick;
 
-            // Load 100,000 rows initially
-            LoadDataset(100_000);
+            // Defer initial dataset generation to Shown event for instant 0ms window popup
+            Shown += (s, e) => LoadDataset(100_000);
         }
+
 
         private void InitializeComponents()
         {
@@ -288,7 +289,19 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 _scrollFrames = 0;
                 _scrollStopwatch.Restart();
+                if (_tabControl.SelectedTab == _tabDgv && _dgv.RowCount != _dataset.Length && _dataset.Length > 0)
+                {
+                    try
+                    {
+                        _dgv.SuspendLayout();
+                        _dgv.Rows.Clear();
+                        _dgv.RowCount = _dataset.Length;
+                        _dgv.ResumeLayout();
+                    }
+                    catch { }
+                }
             };
+
 
             // Assembly Form Layout
             Controls.Add(_drawer);
@@ -420,7 +433,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             Cursor = Cursors.WaitCursor;
             _lblStatus.Text = $"Data: Generating {count:N0} rows...";
-            Application.DoEvents();
 
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -457,18 +469,22 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             // Bind to ZeroGrid (Executes in <1ms)
             _zeroGrid.DataSource = _zeroSource;
 
-            // Bind to DataGridView safely without WinForms RemoveAt freeze
-            try
+            // Bind to DataGridView only if active to avoid blocking UI thread
+            if (_tabControl.SelectedTab == _tabDgv)
             {
-                _dgv.SuspendLayout();
-                _dgv.Rows.Clear();
-                _dgv.RowCount = count;
-                _dgv.ResumeLayout();
+                try
+                {
+                    _dgv.SuspendLayout();
+                    _dgv.Rows.Clear();
+                    _dgv.RowCount = count;
+                    _dgv.ResumeLayout();
+                }
+                catch { }
             }
-            catch { }
 
             sw.Stop();
             Cursor = Cursors.Default;
+
 
             _pagination.TotalRows = count;
             _searchBar.UpdateCountBadge();

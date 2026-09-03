@@ -45,16 +45,23 @@ namespace ZeroUI.WinForms.Controls
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
             DoubleBuffered = true;
+            KeyPreview = true;
             Size = new Size(cardWidth + 80, cardHeight + 80);
             BackColor = Color.FromArgb(15, 23, 42); // Overlay backdrop dark
             Opacity = 0.98;
 
             _cardRect = new Rectangle(40, 40, cardWidth, cardHeight);
 
-            // Setup content panel inside card
-            _contentControl.Location = new Point(_cardRect.Left + 20, _cardRect.Top + 60);
-            _contentControl.Size = new Size(_cardRect.Width - 40, _cardRect.Height - 120);
-            Controls.Add(_contentControl);
+            // Setup isolated body container inside card
+            var bodyPanel = new Panel
+            {
+                Location = new Point(_cardRect.Left + 20, _cardRect.Top + 55),
+                Size = new Size(_cardRect.Width - 40, _cardRect.Height - 115),
+                BackColor = Color.Transparent
+            };
+            _contentControl.Dock = DockStyle.Fill;
+            bodyPanel.Controls.Add(_contentControl);
+            Controls.Add(bodyPanel);
 
             // OK Button
             _btnOk = new ZeroButton
@@ -88,6 +95,18 @@ namespace ZeroUI.WinForms.Controls
             };
             Controls.Add(_btnCancel);
         }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.KeyCode == Keys.Escape)
+            {
+                DialogResult = DialogResult.Cancel;
+                _onCancel?.Invoke();
+                Close();
+            }
+        }
+
 
         public static DialogResult Show(
             IWin32Window parent,
@@ -198,13 +217,17 @@ namespace ZeroUI.WinForms.Controls
         protected override void OnMouseClick(MouseEventArgs e)
         {
             base.OnMouseClick(e);
-            if (e.Button == MouseButtons.Left && !_closeRect.IsEmpty && _closeRect.Contains(e.Location))
+            if (e.Button == MouseButtons.Left)
             {
-                DialogResult = DialogResult.Cancel;
-                _onCancel?.Invoke();
-                Close();
+                if ((!_closeRect.IsEmpty && _closeRect.Contains(e.Location)) || !_cardRect.Contains(e.Location))
+                {
+                    DialogResult = DialogResult.Cancel;
+                    _onCancel?.Invoke();
+                    Close();
+                }
             }
         }
+
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
         {
