@@ -104,9 +104,13 @@ namespace ZeroUI.WinForms.Controls
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            _textBox.Location = new Point(10, (Height - _textBox.PreferredHeight) / 2);
-            _textBox.Width = Width - 36;
+            if (_textBox != null)
+            {
+                _textBox.Location = new Point(10, (Height - _textBox.PreferredHeight) / 2);
+                _textBox.Width = Width - 36;
+            }
         }
+
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
