@@ -56,6 +56,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private ZeroTabPage _tabControls = null!;
         private ZeroTabPage _tabMes = null!;
+        private ZeroTabPage _tabProcessCards = null!;
         private ZeroTabPage _tabScada = null!;
         private ZeroTabPage _tabWms = null!;
         private ZeroTabPage _tabAdvanced = null!;
@@ -331,7 +332,18 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             // Cluster 2: MES Production
             _clusterMes = new ZeroTabPage("MES & Smart Factory", "🏭") { BadgeCount = 3 };
-            _tabMes = _clusterMes;
+            var subTabsMes = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabMes = new ZeroTabPage("Live Production Dashboard", "🏭");
+            _tabProcessCards = new ZeroTabPage("MOP & Work Order Cards", "📋");
+            subTabsMes.AddTab(_tabMes);
+            subTabsMes.AddTab(_tabProcessCards);
+            _clusterMes.Controls.Add(subTabsMes);
 
             // Cluster 3: Warehouse & Logistics Suite
             _clusterWarehouse = new ZeroTabPage("Warehouse & Logistics", "📦") { BadgeCount = 4 };
@@ -379,6 +391,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeDataGridView();
             InitializeComponentsShowcase();
             InitializeMesDashboard();
+            InitializeProcessCards(_tabProcessCards);
             InitializeScadaHub();
             InitializeWmsCenter();
             InitializeAdvancedSuite();
@@ -1603,6 +1616,94 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             row4.BringToFront();
 
             _tabMes.Controls.Add(mainContainer);
+        }
+
+        private void InitializeProcessCards(ZeroTabPage parentTab)
+        {
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "📋 Manufacturing Execution System (MES) & MOP Process Cards",
+                Message = "All-in-one Single HWND Step Process Cards: ZeroGridCard (Partlist & Stock Availability Grid) and ZeroWorkflowCard (Production Line Workflow Pipeline).",
+                Height = 62
+            };
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            // Card 1: ZeroGridCard (Step 1: Board Information)
+            var cardGrid = new ZeroGridCard
+            {
+                Dock = DockStyle.Top,
+                Height = 250,
+                StepNumber = 1,
+                Title = "Thông tin board (Board Information)",
+                Subtitle = "Board sử dụng theo partlist: 026MC02RP2.0",
+                StatusTag = "5 Items • Đủ Tồn Kho",
+                FooterText = "Thông tin xuất kho: Theo trạng thái",
+                SummaryText = "Tổng tồn NVL: 1,386 pcs"
+            };
+
+            cardGrid.AddColumn("Mã NVL", 140, HorizontalAlignment.Left);
+            cardGrid.AddColumn("SL Partlist", 100, HorizontalAlignment.Right);
+            cardGrid.AddColumn("Tồn kho NVL", 130, HorizontalAlignment.Right, isAlertZero: true);
+            cardGrid.AddColumn("Tồn kho BTP", 120, HorizontalAlignment.Right);
+
+            cardGrid.AddRow("BOA437", 1, 347, 0);
+            cardGrid.AddRow("BOA472", 0, 18, 0);
+            cardGrid.AddRow("BOA536", 1, 4, 0);
+            cardGrid.AddRow("BOA541", 1, 1017, 0);
+            cardGrid.AddRow("BOA602", 2, 0, 0); // Out of stock alert row!
+
+            cardGrid.FooterClicked += (s, e) =>
+            {
+                ZeroToast.Info(this, "Mở chi tiết phiếu xuất kho NVL theo trạng thái lệnh!");
+            };
+
+            var spacerCards = new Panel { Dock = DockStyle.Top, Height = 14, BackColor = Color.Transparent };
+
+            // Card 2: ZeroWorkflowCard (Step 3: Production Line Workflow)
+            var cardWorkflow = new ZeroWorkflowCard
+            {
+                Dock = DockStyle.Top,
+                Height = 160,
+                StepNumber = 3,
+                Title = "Thông tin trên chuyền sản xuất (Production Line Workflow)",
+                Subtitle = "Chuyền SMT Line 01 • Lệnh sản xuất MO-20260901",
+                StatusTag = "Đang vận hành (2/3 Hoàn tất)",
+                StatusTagColor = Color.FromArgb(16, 185, 129),
+                FooterText = "Bấm vào từng công đoạn để xem chi tiết hoặc chuyển bước sản xuất"
+            };
+
+            cardWorkflow.AddStage("assembly", "Thông tin lắp ráp", 1250, "17:10", ZeroStepStatus.Completed, ZeroStepGlyph.Gear);
+            cardWorkflow.AddStage("qc", "Thông tin QC", 1242, "17:15", ZeroStepStatus.InProgress, ZeroStepGlyph.Checkmark);
+            cardWorkflow.AddStage("inward", "Số lượng nhập kho", 0, "--", ZeroStepStatus.Waiting, ZeroStepGlyph.Warehouse);
+
+            cardWorkflow.StageClicked += (s, ev) =>
+            {
+                ZeroToast.Success(this, $"Đã chọn công đoạn: {ev.Stage.Title} (Qty: {ev.Stage.Quantity:N0})");
+            };
+
+            mainContainer.Controls.Add(cardWorkflow);
+            mainContainer.Controls.Add(spacerCards);
+            mainContainer.Controls.Add(cardGrid);
+            mainContainer.Controls.Add(bannerSpacer);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            bannerSpacer.BringToFront();
+            cardGrid.BringToFront();
+            spacerCards.BringToFront();
+            cardWorkflow.BringToFront();
+
+            parentTab.Controls.Add(mainContainer);
         }
 
         private void InitializeScadaHub()
