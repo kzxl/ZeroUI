@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
@@ -195,7 +196,7 @@ namespace ZeroUI.WinForms.Charts
                 legendH = 32;
                 float curX = 16f;
                 using var textBrush = new SolidBrush(palette.TextSecondary);
-                using var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+                var font = ZeroFontCache.Get(8.5f, FontStyle.Bold);
 
                 foreach (var s in _series)
                 {
@@ -212,8 +213,7 @@ namespace ZeroUI.WinForms.Charts
             if (_axes.Count < 3)
             {
                 using var noteBrush = new SolidBrush(palette.TextSecondary);
-                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("Add at least 3 axes to visualize radar chart.", Font, noteBrush, ClientRectangle, sf);
+                g.DrawString("Add at least 3 axes to visualize radar chart.", Font, noteBrush, ClientRectangle, ZeroStringFormats.Center);
                 return;
             }
 
@@ -231,8 +231,8 @@ namespace ZeroUI.WinForms.Charts
 
             using (var ringPen = new Pen(webColor, 1f) { DashStyle = DashStyle.Dash })
             using (var labelBrush = new SolidBrush(palette.TextSecondary))
-            using (var ringFont = new Font(Font.FontFamily, 7.5f, FontStyle.Regular))
             {
+                var ringFont = ZeroFontCache.Get(7.5f, FontStyle.Regular);
                 for (int ring = 1; ring <= _webRings; ring++)
                 {
                     float r = radius * ring / _webRings;
@@ -255,8 +255,8 @@ namespace ZeroUI.WinForms.Charts
             // 2. Draw Radial Spokes & Axis Labels
             using (var radialPen = new Pen(radialColor, 1f))
             using (var axisBrush = new SolidBrush(palette.TextPrimary))
-            using (var axisFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
             {
+                var axisFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
                 for (int a = 0; a < axisCount; a++)
                 {
                     double angle = -Math.PI / 2 + a * (2 * Math.PI / axisCount);
@@ -285,39 +285,41 @@ namespace ZeroUI.WinForms.Charts
             }
 
             // 3. Draw Series Polygons
-            for (int sIdx = 0; sIdx < _series.Count; sIdx++)
+            using (var vertexPen = new Pen(palette.Surface, 1.5f))
             {
-                var s = _series[sIdx];
-                var polyPoints = new PointF[axisCount];
-
-                for (int a = 0; a < axisCount; a++)
+                for (int sIdx = 0; sIdx < _series.Count; sIdx++)
                 {
-                    double val = a < s.Values.Count ? s.Values[a] : 0.0;
-                    double r = Math.Min(1.0, Math.Max(0.0, val / _maxValue)) * radius;
-                    double angle = -Math.PI / 2 + a * (2 * Math.PI / axisCount);
-                    polyPoints[a] = new PointF(
-                        (float)(cx + r * Math.Cos(angle)),
-                        (float)(cy + r * Math.Sin(angle)));
-                }
+                    var s = _series[sIdx];
+                    var polyPoints = new PointF[axisCount];
 
-                if (s.Filled)
-                {
-                    using var fillBrush = new SolidBrush(Color.FromArgb(s.FillAlpha, s.Color));
-                    g.FillPolygon(fillBrush, polyPoints);
-                }
+                    for (int a = 0; a < axisCount; a++)
+                    {
+                        double val = a < s.Values.Count ? s.Values[a] : 0.0;
+                        double r = Math.Min(1.0, Math.Max(0.0, val / _maxValue)) * radius;
+                        double angle = -Math.PI / 2 + a * (2 * Math.PI / axisCount);
+                        polyPoints[a] = new PointF(
+                            (float)(cx + r * Math.Cos(angle)),
+                            (float)(cy + r * Math.Sin(angle)));
+                    }
 
-                using (var linePen = new Pen(s.Color, s.LineWidth))
-                {
-                    g.DrawPolygon(linePen, polyPoints);
-                }
+                    if (s.Filled)
+                    {
+                        using var fillBrush = new SolidBrush(Color.FromArgb(s.FillAlpha, s.Color));
+                        g.FillPolygon(fillBrush, polyPoints);
+                    }
 
-                // Draw Vertex Markers
-                using var vertexBrush = new SolidBrush(s.Color);
-                using var vertexPen = new Pen(palette.Surface, 1.5f);
-                for (int a = 0; a < axisCount; a++)
-                {
-                    g.FillEllipse(vertexBrush, polyPoints[a].X - 3.5f, polyPoints[a].Y - 3.5f, 7f, 7f);
-                    g.DrawEllipse(vertexPen, polyPoints[a].X - 3.5f, polyPoints[a].Y - 3.5f, 7f, 7f);
+                    using (var linePen = new Pen(s.Color, s.LineWidth))
+                    {
+                        g.DrawPolygon(linePen, polyPoints);
+                    }
+
+                    // Draw Vertex Markers
+                    using var vertexBrush = new SolidBrush(s.Color);
+                    for (int a = 0; a < axisCount; a++)
+                    {
+                        g.FillEllipse(vertexBrush, polyPoints[a].X - 3.5f, polyPoints[a].Y - 3.5f, 7f, 7f);
+                        g.DrawEllipse(vertexPen, polyPoints[a].X - 3.5f, polyPoints[a].Y - 3.5f, 7f, 7f);
+                    }
                 }
             }
 
@@ -325,7 +327,7 @@ namespace ZeroUI.WinForms.Charts
             if (_hoverPoint.HasValue && !string.IsNullOrEmpty(_hoverText))
             {
                 var pt = _hoverPoint.Value;
-                using var tipFont = new Font(Font.FontFamily, 8.5f, FontStyle.Regular);
+                var tipFont = ZeroFontCache.Get(8.5f, FontStyle.Regular);
                 var tipSize = g.MeasureString(_hoverText, tipFont);
                 float boxW = tipSize.Width + 16;
                 float boxH = tipSize.Height + 10;

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
@@ -158,8 +159,7 @@ namespace ZeroUI.WinForms.Charts
             if (_stages.Count == 0)
             {
                 using var noteBrush = new SolidBrush(palette.TextSecondary);
-                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("No funnel stages defined.", Font, noteBrush, ClientRectangle, sf);
+                g.DrawString("No funnel stages defined.", Font, noteBrush, ClientRectangle, ZeroStringFormats.Center);
                 return;
             }
 
@@ -178,6 +178,19 @@ namespace ZeroUI.WinForms.Charts
 
             double topValue = _stages[0].Value;
             if (topValue <= 0) topValue = 1.0;
+
+            var centerFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
+            var nameFont = ZeroFontCache.Get(9f, FontStyle.Bold);
+            var descFont = ZeroFontCache.Get(7.5f, FontStyle.Regular);
+            var tagFont = ZeroFontCache.Get(8f, FontStyle.Bold);
+            var rateFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
+
+            using var centerBrush = new SolidBrush(Color.White);
+            using var nameBrush = new SolidBrush(palette.TextPrimary);
+            using var descBrush = new SolidBrush(palette.TextSecondary);
+            using var borderPen = new Pen(palette.Surface, 1.5f);
+            using var topTagBrush = new SolidBrush(palette.Success);
+            using var rateBrush = new SolidBrush(palette.Success);
 
             for (int i = 0; i < count; i++)
             {
@@ -218,44 +231,31 @@ namespace ZeroUI.WinForms.Charts
                     g.FillPolygon(lgb, trapezoid);
                 }
 
-                using (var borderPen = new Pen(palette.Surface, 1.5f))
-                {
-                    g.DrawPolygon(borderPen, trapezoid);
-                }
+                g.DrawPolygon(borderPen, trapezoid);
 
                 // Center Value Label inside trapezoid
                 double pctOfTop = (stage.Value / topValue) * 100.0;
                 string centerLabel = $"{stage.Value:N0}{_valueSuffix}";
                 if (_showPercentages && i > 0) centerLabel += $" ({pctOfTop:F1}%)";
 
-                using (var centerBrush = new SolidBrush(Color.White))
-                using (var centerFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
-                {
-                    var cSz = g.MeasureString(centerLabel, centerFont);
-                    float cy = yTop + stageH / 2f - cSz.Height / 2f;
-                    g.DrawString(centerLabel, centerFont, centerBrush, funnelCenter - cSz.Width / 2f, cy);
-                }
+                var cSz = g.MeasureString(centerLabel, centerFont);
+                float cy = yTop + stageH / 2f - cSz.Height / 2f;
+                g.DrawString(centerLabel, centerFont, centerBrush, funnelCenter - cSz.Width / 2f, cy);
 
                 // Left Label: Stage Name & description
-                using (var nameBrush = new SolidBrush(palette.TextPrimary))
-                using (var nameFont = new Font(Font.FontFamily, 9f, FontStyle.Bold))
-                using (var descBrush = new SolidBrush(palette.TextSecondary))
-                using (var descFont = new Font(Font.FontFamily, 7.5f))
+                float textRight = funnelCenter - wTop / 2f - 12f;
+                var nSz = g.MeasureString(stage.Name, nameFont);
+                float nx = Math.Max(8f, textRight - nSz.Width);
+                float ny = yTop + (stageH - nSz.Height) / 2f;
+                if (!string.IsNullOrEmpty(stage.Description)) ny -= 6f;
+
+                g.DrawString(stage.Name, nameFont, nameBrush, nx, ny);
+
+                if (!string.IsNullOrEmpty(stage.Description))
                 {
-                    float textRight = funnelCenter - wTop / 2f - 12f;
-                    var nSz = g.MeasureString(stage.Name, nameFont);
-                    float nx = Math.Max(8f, textRight - nSz.Width);
-                    float ny = yTop + (stageH - nSz.Height) / 2f;
-                    if (!string.IsNullOrEmpty(stage.Description)) ny -= 6f;
-
-                    g.DrawString(stage.Name, nameFont, nameBrush, nx, ny);
-
-                    if (!string.IsNullOrEmpty(stage.Description))
-                    {
-                        var dSz = g.MeasureString(stage.Description, descFont);
-                        float dx = Math.Max(8f, textRight - dSz.Width);
-                        g.DrawString(stage.Description, descFont, descBrush, dx, ny + nSz.Height);
-                    }
+                    var dSz = g.MeasureString(stage.Description, descFont);
+                    float dx = Math.Max(8f, textRight - dSz.Width);
+                    g.DrawString(stage.Description, descFont, descBrush, dx, ny + nSz.Height);
                 }
 
                 // Right Label: Conversion Rate relative to previous stage
@@ -266,8 +266,6 @@ namespace ZeroUI.WinForms.Charts
 
                     if (i == 0)
                     {
-                        using var topTagBrush = new SolidBrush(palette.Success);
-                        using var tagFont = new Font(Font.FontFamily, 8f, FontStyle.Bold);
                         g.DrawString("100% INWARD YIELD", tagFont, topTagBrush, rightX, midY - 6f);
                     }
                     else
@@ -279,8 +277,7 @@ namespace ZeroUI.WinForms.Charts
                         string rateText = $"Yield: {convRate:F1}%  (Loss: -{dropOff:F1}%)";
                         Color rateColor = convRate >= 95 ? palette.Success : (convRate >= 80 ? palette.Warning : palette.Danger);
 
-                        using var rateBrush = new SolidBrush(rateColor);
-                        using var rateFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+                        rateBrush.Color = rateColor;
                         g.DrawString(rateText, rateFont, rateBrush, rightX, midY - 6f);
                     }
                 }

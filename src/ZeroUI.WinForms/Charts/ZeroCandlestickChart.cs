@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
@@ -178,16 +179,15 @@ namespace ZeroUI.WinForms.Charts
             // 0. Header (Title & Latest Price Summary)
             int headerH = 34;
             using (var titleBrush = new SolidBrush(palette.TextPrimary))
-            using (var titleFont = new Font(Font.FontFamily, 9.5f, FontStyle.Bold))
             {
+                var titleFont = ZeroFontCache.Get(9.5f, FontStyle.Bold);
                 g.DrawString(_title, titleFont, titleBrush, 16, 8);
             }
 
             if (_items.Count == 0)
             {
                 using var noteBrush = new SolidBrush(palette.TextSecondary);
-                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("No candlestick data available.", Font, noteBrush, ClientRectangle, sf);
+                g.DrawString("No candlestick data available.", Font, noteBrush, ClientRectangle, ZeroStringFormats.Center);
                 return;
             }
 
@@ -198,8 +198,8 @@ namespace ZeroUI.WinForms.Charts
             string summaryText = $"{_valuePrefix}{latest.Close:F2}  {(diff >= 0 ? "+" : "")}{diff:F2} ({(pct >= 0 ? "+" : "")}{pct:F1}%)";
 
             using (var sumBrush = new SolidBrush(summaryColor))
-            using (var sumFont = new Font(Font.FontFamily, 9f, FontStyle.Bold))
             {
+                var sumFont = ZeroFontCache.Get(9f, FontStyle.Bold);
                 var sz = g.MeasureString(summaryText, sumFont);
                 g.DrawString(summaryText, sumFont, sumBrush, Width - sz.Width - 16, 9);
             }
@@ -241,8 +241,8 @@ namespace ZeroUI.WinForms.Charts
             Color gridColor = ZeroTheme.IsDark ? Color.FromArgb(40, 50, 70) : Color.FromArgb(230, 235, 245);
             using (var gridPen = new Pen(gridColor, 1f) { DashStyle = DashStyle.Dash })
             using (var labelBrush = new SolidBrush(palette.TextSecondary))
-            using (var labelFont = new Font(Font.FontFamily, 8f))
             {
+                var labelFont = ZeroFontCache.Get(8f, FontStyle.Regular);
                 int gridLines = 4;
                 for (int i = 0; i <= gridLines; i++)
                 {
@@ -258,7 +258,18 @@ namespace ZeroUI.WinForms.Charts
             float candleSlotW = (float)plotW / _items.Count;
             float candleBarW = Math.Max(2f, Math.Min(16f, candleSlotW * 0.7f));
 
-            var maPoints = new List<PointF>();
+            var maPoints = new List<PointF>(_showMovingAverage ? _items.Count : 0);
+
+            using var bullWickPen = new Pen(_bullishColor, 1.25f);
+            using var bearWickPen = new Pen(_bearishColor, 1.25f);
+            using var bullBodyBrush = new SolidBrush(_bullishColor);
+            using var bearBodyBrush = new SolidBrush(_bearishColor);
+            using var bullBodyPen = new Pen(_bullishColor, 1f);
+            using var bearBodyPen = new Pen(_bearishColor, 1f);
+            using var bullVolBrush = new SolidBrush(Color.FromArgb(90, _bullishColor));
+            using var bearVolBrush = new SolidBrush(Color.FromArgb(90, _bearishColor));
+            using var dateBrush = new SolidBrush(palette.TextSecondary);
+            var dateFont = ZeroFontCache.Get(7.5f, FontStyle.Regular);
 
             for (int i = 0; i < _items.Count; i++)
             {
@@ -270,25 +281,22 @@ namespace ZeroUI.WinForms.Charts
                 float openY = (float)(priceTop + (maxPrice - c.Open) / priceRange * priceH);
                 float closeY = (float)(priceTop + (maxPrice - c.Close) / priceRange * priceH);
 
-                Color cColor = c.IsBullish ? _bullishColor : _bearishColor;
+                bool isBull = c.IsBullish;
+                Pen wickPen = isBull ? bullWickPen : bearWickPen;
+                SolidBrush bodyBrush = isBull ? bullBodyBrush : bearBodyBrush;
+                Pen bodyPen = isBull ? bullBodyPen : bearBodyPen;
+                SolidBrush volBrush = isBull ? bullVolBrush : bearVolBrush;
 
                 // Wick Line
-                using (var wickPen = new Pen(cColor, 1.25f))
-                {
-                    g.DrawLine(wickPen, cx, highY, cx, lowY);
-                }
+                g.DrawLine(wickPen, cx, highY, cx, lowY);
 
                 // Candle Body
                 float bodyTop = Math.Min(openY, closeY);
                 float bodyH = Math.Max(2f, Math.Abs(closeY - openY));
                 var bodyRect = new RectangleF(cx - candleBarW / 2f, bodyTop, candleBarW, bodyH);
 
-                using (var bodyBrush = new SolidBrush(cColor))
-                using (var bodyPen = new Pen(cColor, 1f))
-                {
-                    g.FillRectangle(bodyBrush, bodyRect);
-                    g.DrawRectangle(bodyPen, bodyRect.X, bodyRect.Y, bodyRect.Width, bodyRect.Height);
-                }
+                g.FillRectangle(bodyBrush, bodyRect);
+                g.DrawRectangle(bodyPen, bodyRect.X, bodyRect.Y, bodyRect.Width, bodyRect.Height);
 
                 // Volume Bar
                 if (_showVolume)
@@ -296,8 +304,7 @@ namespace ZeroUI.WinForms.Charts
                     float vH = (float)(c.Volume / maxVol * volH);
                     float vY = volBottom - vH;
                     var vRect = new RectangleF(cx - candleBarW / 2f, vY, candleBarW, vH);
-                    using var vBrush = new SolidBrush(Color.FromArgb(90, cColor));
-                    g.FillRectangle(vBrush, vRect);
+                    g.FillRectangle(volBrush, vRect);
                 }
 
                 // Moving Average calculation
@@ -314,8 +321,6 @@ namespace ZeroUI.WinForms.Charts
                 int labelStride = Math.Max(1, _items.Count / 6);
                 if (i % labelStride == 0 || i == _items.Count - 1)
                 {
-                    using var dateBrush = new SolidBrush(palette.TextSecondary);
-                    using var dateFont = new Font(Font.FontFamily, 7.5f);
                     string dateStr = c.Date.ToString("MM/dd");
                     var dSz = g.MeasureString(dateStr, dateFont);
                     g.DrawString(dateStr, dateFont, dateBrush, cx - dSz.Width / 2f, Height - padBottom + 4);
@@ -348,7 +353,7 @@ namespace ZeroUI.WinForms.Charts
 
                 // HUD Tooltip
                 string hud = $"{hItem.Date:yyyy-MM-dd}\nOpen: {_valuePrefix}{hItem.Open:F2}  High: {_valuePrefix}{hItem.High:F2}\nLow:  {_valuePrefix}{hItem.Low:F2}  Close: {_valuePrefix}{hItem.Close:F2}\nVol:  {hItem.Volume:N0}";
-                using var hudFont = new Font(Font.FontFamily, 8f, FontStyle.Regular);
+                var hudFont = ZeroFontCache.Get(8f, FontStyle.Regular);
                 var hudSize = g.MeasureString(hud, hudFont);
                 float hudW = hudSize.Width + 16;
                 float hudH = hudSize.Height + 10;

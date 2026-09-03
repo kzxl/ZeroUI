@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
@@ -233,8 +234,8 @@ namespace ZeroUI.WinForms.Charts
             Color gridColor = ZeroTheme.IsDark ? Color.FromArgb(40, 50, 70) : Color.FromArgb(230, 235, 245);
             using (var gridPen = new Pen(gridColor, 1f) { DashStyle = DashStyle.Dash })
             using (var labelBrush = new SolidBrush(palette.TextSecondary))
-            using (var labelFont = new Font(Font.FontFamily, 8f))
             {
+                var labelFont = ZeroFontCache.Get(8f, FontStyle.Regular);
                 int gridLines = 4;
                 for (int i = 0; i <= gridLines; i++)
                 {
@@ -250,7 +251,14 @@ namespace ZeroUI.WinForms.Charts
             float slotW = (float)plotW / _items.Count;
             float barW = Math.Max(12f, Math.Min(48f, slotW * 0.65f));
 
-            var connectorPen = new Pen(Color.FromArgb(140, palette.TextSecondary), 1f) { DashStyle = DashStyle.Dot };
+            var valFont = ZeroFontCache.Get(7.5f, FontStyle.Bold);
+            var xFont = ZeroFontCache.Get(8f, FontStyle.Regular);
+
+            using var connectorPen = new Pen(Color.FromArgb(140, palette.TextSecondary), 1f) { DashStyle = DashStyle.Dot };
+            using var barBrush = new SolidBrush(Color.Empty);
+            using var borderPen = new Pen(palette.Surface, 1f);
+            using var valBrush = new SolidBrush(palette.TextPrimary);
+            using var xBrush = new SolidBrush(palette.TextSecondary);
 
             for (int i = 0; i < _items.Count; i++)
             {
@@ -279,12 +287,9 @@ namespace ZeroUI.WinForms.Charts
                 }
 
                 var rect = new RectangleF(cx - barW / 2f, yTop, barW, barH);
-                using (var brush = new SolidBrush(barColor))
-                using (var pen = new Pen(palette.Surface, 1f))
-                {
-                    g.FillRectangle(brush, rect);
-                    g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height);
-                }
+                barBrush.Color = barColor;
+                g.FillRectangle(barBrush, rect);
+                g.DrawRectangle(borderPen, rect.X, rect.Y, rect.Width, rect.Height);
 
                 // Connector line to next bar
                 if (_showConnectors && i < _items.Count - 1)
@@ -298,25 +303,15 @@ namespace ZeroUI.WinForms.Charts
                 string valStr = (item.Type == WaterfallItemType.Decrement ? "-" : (item.Type == WaterfallItemType.Increment ? "+" : "")) +
                                 $"{_valuePrefix}{Math.Abs(item.Value):N0}{_valueSuffix}";
 
-                using (var valBrush = new SolidBrush(palette.TextPrimary))
-                using (var valFont = new Font(Font.FontFamily, 7.5f, FontStyle.Bold))
-                {
-                    var sz = g.MeasureString(valStr, valFont);
-                    float vy = yTop - sz.Height - 3f;
-                    if (vy < padTop) vy = yTop + 3f;
-                    g.DrawString(valStr, valFont, valBrush, cx - sz.Width / 2f, vy);
-                }
+                var sz = g.MeasureString(valStr, valFont);
+                float vy = yTop - sz.Height - 3f;
+                if (vy < padTop) vy = yTop + 3f;
+                g.DrawString(valStr, valFont, valBrush, cx - sz.Width / 2f, vy);
 
                 // X-Axis Label
-                using (var xBrush = new SolidBrush(palette.TextSecondary))
-                using (var xFont = new Font(Font.FontFamily, 8f, FontStyle.Regular))
-                {
-                    var sz = g.MeasureString(item.Label, xFont);
-                    g.DrawString(item.Label, xFont, xBrush, cx - sz.Width / 2f, Height - padBottom + 6);
-                }
+                var xSz = g.MeasureString(item.Label, xFont);
+                g.DrawString(item.Label, xFont, xBrush, cx - xSz.Width / 2f, Height - padBottom + 6);
             }
-
-            connectorPen.Dispose();
         }
     }
 }
