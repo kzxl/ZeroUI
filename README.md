@@ -66,6 +66,11 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroGridExporter`**: High-throughput streaming CSV exporter capable of outputting >1,100,000 rows/sec directly to disk.
 
 ### 🏭 Industrial, SCADA & MES Subsystem (`ZeroUI.WinForms.Industrial`)
+* **`ZeroTrendChart`**: Real-time 60 FPS oscilloscope and sensor trend chart engineered with fixed-size circular ring buffers (`float[]`), multi-pen channels (e.g. Pressure, Oven Temp, Current), Upper/Lower Specification Limit (USL/LSL) thresholds, and 0 GC allocations on continuous telemetry streaming.
+* **`ZeroTaktTimer`**: Lean manufacturing Takt Time & Cycle Timer with circular countdown progress arc, digital remaining time readout, planned vs. actual cycle time comparison, and automatic color transitions (On-Track Green &rarr; Warning Amber &rarr; Overdue Flashing Red).
+* **`ZeroDefectMatrix`**: 2D Multi-Unit Panel & Wafer Defect Inspection Matrix for AOI, SMT, and QC workstations with configurable row/column array, defect color codes (Pass, Defect, Warning, Untested), hover glow, and drill-down slot click events.
+* **`ZeroPlcIoMonitor`**: Industrial PLC Digital I/O 16-bit monitor displaying DI 00..15 and DO 00..15 with live LED bit registers, hexadecimal word readout (`0x00A5`), and interactive output coil force simulation.
+* **`ZeroAndonCallPad`**: Touchscreen-optimized shopfloor operator call pad featuring 4 large finger-friendly tiles (*Material*, *Maintenance*, *Quality*, *Supervisor*) with active SLA elapsed response time counters.
 * **`ZeroLedTower`**: Industrial Andon Signal Tower Light control with Red, Amber, Green, and Blue lamp segments. Features 3D cylindrical glass reflection, mounting pole/base, and configurable Solid, Blinking (1Hz/2Hz flash), or Off states for real-time SCADA machine status.
 * **`ZeroSevenSegment`**: Industrial 7-Segment Digital LED Display for Takt time and production counters with polygon beveled segment geometry, authentic segment ghosting, customizable colors (Neon Cyan, Emerald, Amber), decimals, and colons.
 * **`ZeroLinearGauge`**: Industrial linear level, temperature, and pressure gauge with multi-zone threshold indicators (Normal, Warning, Critical), tick marks, and real-time floating value readout.
@@ -77,6 +82,7 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroGauge`**: Anti-aliased circular progress dial for **OEE %**, Yield Rate, and equipment efficiency.
 * **`ZeroAlertBanner`**: Dismissible or sticky alert banner for factory line stoppage, feeder shortage, or operator broadcasts.
 * **`ZeroBarcodeBox`**: Specialized hardware scanner input box with auto-select on focus, auto-submit on Enter, and green flash feedback.
+
 
 
 ### ✏️ Editors Subsystem (`ZeroUI.WinForms.Editors`)

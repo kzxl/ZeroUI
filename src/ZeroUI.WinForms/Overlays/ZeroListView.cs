@@ -82,7 +82,12 @@ namespace ZeroUI.WinForms.Overlays
 
         public void AddLog(LogSeverity severity, string message)
         {
-            _entries.Add(new LogEntry(DateTime.Now, severity, message));
+            AddLog(DateTime.Now, severity, message);
+        }
+
+        public void AddLog(DateTime timestamp, LogSeverity severity, string message)
+        {
+            _entries.Add(new LogEntry(timestamp, severity, message));
             UpdateScrollBars();
 
             if (_autoScrollToBottom)
@@ -91,6 +96,7 @@ namespace ZeroUI.WinForms.Overlays
             }
             Invalidate();
         }
+
 
         public void AddLogs(IEnumerable<LogEntry> batch)
         {

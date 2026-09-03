@@ -43,9 +43,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroDrawer _drawer = null!;
         private TabPage _tabControls = null!;
         private TabPage _tabMes = null!;
+        private TabPage _tabScada = null!;
         private ZeroSteps _mesSteps = null!;
         private ZeroListView _showcaseLog = null!;
         private System.Windows.Forms.Timer? _logGenTimer;
+        private System.Windows.Forms.Timer? _scadaSimTimer;
+
 
 
 
@@ -272,11 +275,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabDgv = new TabPage("🐢 Default DataGridView (VirtualMode)");
             _tabControls = new TabPage("🎨 Components Showcase");
             _tabMes = new TabPage("🏭 MES Production Dashboard");
+            _tabScada = new TabPage("🔬 SCADA & Smart Factory Hub");
 
             InitializeZeroGrid();
             InitializeDataGridView();
             InitializeComponentsShowcase();
             InitializeMesDashboard();
+            InitializeScadaHub();
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -288,6 +293,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabControl.TabPages.Add(_tabDgv);
             _tabControl.TabPages.Add(_tabControls);
             _tabControl.TabPages.Add(_tabMes);
+            _tabControl.TabPages.Add(_tabScada);
+
 
             _tabControl.SelectedIndexChanged += (s, e) =>
             {
@@ -1392,8 +1399,351 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabMes.Controls.Add(mainContainer);
         }
 
+        private void InitializeScadaHub()
+        {
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            // 0. Alert / Status Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "🔬 SCADA & Smart Factory Hub — Trạm Giám Sát & Điều Hành Thời Gian Thực",
+                Message = "Tích hợp biểu đồ xung sóng 60 FPS (ZeroTrendChart), nhịp chuyền Lean (ZeroTaktTimer), ma trận lỗi quang học AOI (ZeroDefectMatrix), thanh ghi I/O PLC (ZeroPlcIoMonitor) và bàn phím Andon SLA (ZeroAndonCallPad).",
+                Height = 62
+            };
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // ROW 1: Real-time Oscilloscope (TrendChart) + Lean Takt Countdown Ring (TaktTimer)
+            var row1 = new Panel { Dock = DockStyle.Top, Height = 220, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 1A: Trend Chart
+            var cardTrend = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Biểu Đồ Sóng Cảm Biến Thời Gian Thực (60 FPS Zero-Alloc)",
+                Dock = DockStyle.Left,
+                Width = 560
+            };
+
+            var trendChart = new ZeroTrendChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Ch1: Áp Suất Buồng Ép (Bar) | Ch2: Nhiệt Độ Lò Nung (°C)",
+                UpperLimit = 85f,
+                LowerLimit = 15f
+            };
+            cardTrend.ContentPanel.Controls.Add(trendChart);
+
+            var trendToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
+            var btnSpike = new ZeroButton
+            {
+                Text = "⚡ Tạo Xung Quá Áp (Inject Spike)",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Dock = DockStyle.Left,
+                Width = 200
+            };
+            var btnPauseTrend = new ZeroButton
+            {
+                Text = "⏸ Dừng/Chạy Stream",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Left,
+                Width = 140
+            };
+            trendToolbar.Controls.Add(btnPauseTrend);
+            trendToolbar.Controls.Add(btnSpike);
+            cardTrend.ContentPanel.Controls.Add(trendToolbar);
+
+            var split1 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 1B: Takt Timer
+            var cardTakt = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Chu Kỳ Nhịp Chuyền Takt Time (Assembly Line)",
+                Dock = DockStyle.Fill
+            };
+
+            var taktTimer = new ZeroTaktTimer
+            {
+                Dock = DockStyle.Left,
+                Width = 180,
+                TargetTaktSeconds = 25f,
+                AverageCycleTime = 23.8f,
+                CompletedUnits = 186
+            };
+            cardTakt.ContentPanel.Controls.Add(taktTimer);
+
+            var taktControls = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10, 20, 10, 10) };
+            var btnCompleteUnit = new ZeroButton
+            {
+                Text = "✅ Hoàn Tất 1 Sản Phẩm (+1 Output)",
+                ButtonStyle = ZeroButtonStyle.Success,
+                Dock = DockStyle.Top,
+                Height = 36
+            };
+            var taktSpacer1 = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
+            var btnResetTakt = new ZeroButton
+            {
+                Text = "🔄 Đặt Lại Chu Kỳ (Reset Takt)",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Top,
+                Height = 34
+            };
+            taktControls.Controls.Add(btnResetTakt);
+            taktControls.Controls.Add(taktSpacer1);
+            taktControls.Controls.Add(btnCompleteUnit);
+            cardTakt.ContentPanel.Controls.Add(taktControls);
+
+            row1.Controls.Add(cardTakt);
+            row1.Controls.Add(split1);
+            row1.Controls.Add(cardTrend);
+
+            // ROW 2: AOI Defect Matrix (DefectMatrix) + PLC I/O Registers (PlcIoMonitor)
+            var row2 = new Panel { Dock = DockStyle.Top, Height = 220, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 2A: Defect Matrix
+            var cardDefect = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Bản Đồ Kiểm Tra Ngoại Quan AOI SMT (Array 3x6)",
+                Dock = DockStyle.Left,
+                Width = 520
+            };
+
+            var defectMatrix = new ZeroDefectMatrix
+            {
+                Dock = DockStyle.Fill,
+                Title = "SMT Carrier Panel #SN-94812 — AOI Camera Trạm 03"
+            };
+            cardDefect.ContentPanel.Controls.Add(defectMatrix);
+
+            var defectToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
+            var btnSimDefect = new ZeroButton
+            {
+                Text = "🔍 Giả Lập Lỗi Hàn (Simulate Defect)",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Dock = DockStyle.Left,
+                Width = 200
+            };
+            var btnClearPass = new ZeroButton
+            {
+                Text = "✅ Tất Cả Đạt (All Pass)",
+                ButtonStyle = ZeroButtonStyle.Success,
+                Dock = DockStyle.Left,
+                Width = 140
+            };
+            defectToolbar.Controls.Add(btnClearPass);
+            defectToolbar.Controls.Add(btnSimDefect);
+            cardDefect.ContentPanel.Controls.Add(defectToolbar);
+
+            var split2 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 2B: PLC I/O Monitor
+            var cardPlc = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Bảng Giám Sát Bit I/O PLC (Click DO để Force)",
+                Dock = DockStyle.Fill
+            };
+
+            var plcMonitor = new ZeroPlcIoMonitor
+            {
+                Dock = DockStyle.Fill,
+                DigitalInputs = 0x00A5,
+                DigitalOutputs = 0x000F,
+                AllowSimulationClick = true
+            };
+            cardPlc.ContentPanel.Controls.Add(plcMonitor);
+
+            row2.Controls.Add(cardPlc);
+            row2.Controls.Add(split2);
+            row2.Controls.Add(cardDefect);
+
+            // ROW 3: Shopfloor Andon Call Pad + Station Event Journal
+            var row3 = new Panel { Dock = DockStyle.Top, Height = 200, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 3A: Andon Call Pad
+            var cardAndon = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Bàn Phím Cảm Ứng Gọi Hỗ Trợ Andon Trạm (Touch SLA Pad)",
+                Dock = DockStyle.Left,
+                Width = 480
+            };
+
+            var andonPad = new ZeroAndonCallPad
+            {
+                Dock = DockStyle.Fill
+            };
+            cardAndon.ContentPanel.Controls.Add(andonPad);
+
+            var split3 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 3B: Station Event Journal
+            var cardLog = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Nhật Ký Sự Kiện Trạm SCADA (Real-Time Audit Log)",
+                Dock = DockStyle.Fill
+            };
+
+            var scadaLog = new ZeroListView
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 9f)
+            };
+            cardLog.ContentPanel.Controls.Add(scadaLog);
+
+            row3.Controls.Add(cardLog);
+            row3.Controls.Add(split3);
+            row3.Controls.Add(cardAndon);
+
+            // Seed initial log entries
+            scadaLog.AddLog(DateTime.Now.AddMinutes(-12), LogSeverity.Info, "Trạm SCADA khởi động: Kết nối PLC Siemens S7-1500 (IP 192.168.1.10) thành công.");
+            scadaLog.AddLog(DateTime.Now.AddMinutes(-8), LogSeverity.Success, "AOI Inspection: Nạp mẫu kiểm tra Panel SMT 3x6 (Thư viện chuẩn IPC-A-610G).");
+            scadaLog.AddLog(DateTime.Now.AddMinutes(-5), LogSeverity.Info, "Lean Takt: Chu kỳ nhịp chuyền thiết lập chuẩn 25.0s.");
+
+            // Wire events
+            taktTimer.TaktCompleted += (s, e) =>
+            {
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Success, $"Takt Timer: Hoàn tất 1 sản phẩm. Tổng sản lượng ca: {taktTimer.CompletedUnits} PCS.");
+            };
+
+            taktTimer.TaktOverdue += (s, e) =>
+            {
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Warning, "Takt Timer: CẢNH BÁO TRỄ NHỊP CHUYỀN (>25s)!");
+                ZeroToast.Warning(this, "⚠ Cảnh báo: Chuyền sản xuất đang vượt Takt Time quy định!");
+            };
+
+            btnCompleteUnit.Click += (s, e) =>
+            {
+                taktTimer.CompleteUnit();
+                ZeroToast.Success(this, $"Đã xác nhận hoàn thành SP #{taktTimer.CompletedUnits}!");
+            };
+
+            btnResetTakt.Click += (s, e) =>
+            {
+                taktTimer.Reset();
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Info, "Takt Timer: Đã reset chu kỳ về 0.0s.");
+            };
+
+            defectMatrix.SlotClicked += (s, e) =>
+            {
+                var slot = e.Slot;
+                string msg = $"[AOI Drill-Down] Vị trí: {slot.Code} | Trạng thái: {slot.Status} | Chi tiết: {slot.DefectDetail}";
+                var sev = slot.Status == DefectStatus.Fail ? LogSeverity.Error : (slot.Status == DefectStatus.Warning ? LogSeverity.Warning : LogSeverity.Success);
+                scadaLog.AddLog(DateTime.Now, sev, msg);
+                if (slot.Status == DefectStatus.Fail)
+                    ZeroToast.Error(this, $"Phát hiện lỗi tại {slot.Code}: {slot.DefectDetail}");
+                else
+                    ZeroToast.Info(this, $"Chi tiết {slot.Code}: {slot.DefectDetail}");
+            };
+
+            btnSimDefect.Click += (s, e) =>
+            {
+                defectMatrix.SetSlotStatus(2, 1, DefectStatus.Fail, "Lệch chân tụ IC (Tombstone C18)");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Error, "AOI Inspection: Phát hiện lỗi ngoại quan tại vị trí U14 (Tombstone C18)!");
+                ZeroToast.Error(this, "AOI: Phát hiện linh kiện lệch chân tại U14!");
+            };
+
+            btnClearPass.Click += (s, e) =>
+            {
+                for (int r = 0; r < defectMatrix.Rows; r++)
+                    for (int c = 0; c < defectMatrix.Columns; c++)
+                        defectMatrix.SetSlotStatus(r, c, DefectStatus.Pass, "OK");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Success, "AOI Inspection: Toàn bộ panel đã đạt chuẩn Pass 100%.");
+                ZeroToast.Success(this, "Panel AOI: Đạt chuẩn 100%!");
+            };
+
+            plcMonitor.OutputCoilChanged += (s, e) =>
+            {
+                string state = e.NewState ? "BẬT (HIGH - 1)" : "TẮT (LOW - 0)";
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Info, $"PLC Coil: Ép trạng thái ngõ ra DO_{e.BitIndex:D2} sang {state}.");
+                ZeroToast.Info(this, $"PLC DO_{e.BitIndex:D2} = {(e.NewState ? 1 : 0)}");
+            };
+
+            andonPad.CallTriggered += (s, e) =>
+            {
+                if (e.IsActive)
+                {
+                    scadaLog.AddLog(DateTime.Now, LogSeverity.Warning, $"ANDON CALL: Yêu cầu khẩn cấp [{e.CallType}] được kích hoạt tại trạm!");
+                    ZeroToast.Warning(this, $"🚨 ANDON: Đã phát tín hiệu gọi [{e.CallType}]!");
+                }
+                else
+                {
+                    scadaLog.AddLog(DateTime.Now, LogSeverity.Success, $"ANDON CALL: Yêu cầu [{e.CallType}] đã được xử lý và giải tỏa.");
+                    ZeroToast.Success(this, $"Andon: Đã đóng yêu cầu [{e.CallType}].");
+                }
+            };
+
+            bool isStreaming = true;
+            btnPauseTrend.Click += (s, e) =>
+            {
+                isStreaming = !isStreaming;
+                btnPauseTrend.Text = isStreaming ? "⏸ Dừng Stream" : "▶ Tiếp tục Stream";
+            };
+
+            btnSpike.Click += (s, e) =>
+            {
+                trendChart.AddPoint(0, 94.2f);
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Error, "SCADA Sensor: Cảnh báo áp suất vượt ngưỡng an toàn USL (94.2 Bar > 85.0 Bar)!");
+                ZeroToast.Error(this, "⚠ Quá áp buồng ép: 94.2 Bar!");
+            };
+
+
+            // Live Simulation Timer for Telemetry and PLC
+            float simTime = 0f;
+            var rand = new Random();
+
+            _scadaSimTimer = new System.Windows.Forms.Timer { Interval = 80 };
+            _scadaSimTimer.Tick += (s, e) =>
+            {
+                if (!isStreaming) return;
+                simTime += 0.1f;
+
+                // Simulated pressure: 60 + 14 * sin(t) + jitter
+                float p = 60f + (14f * (float)Math.Sin(simTime)) + (float)(rand.NextDouble() * 3.0 - 1.5);
+                // Simulated temp: 220 + 8 * cos(t*0.4) + jitter
+                float t = 220f + (8f * (float)Math.Cos(simTime * 0.4f)) + (float)(rand.NextDouble() * 2.0 - 1.0);
+
+                trendChart.AddPoint(0, p);
+                trendChart.AddPoint(1, t);
+
+                // Pulse DI bit 0 (Photocell) every ~2.5 seconds
+                if ((int)(simTime * 10) % 25 == 0)
+                {
+                    bool cur = (plcMonitor.DigitalInputs & 0x0001) != 0;
+                    plcMonitor.SetInputBit(0, !cur);
+                }
+            };
+            _scadaSimTimer.Start();
+
+            // Assemble top-to-bottom layout
+            mainContainer.Controls.Add(row3);
+            mainContainer.Controls.Add(row2);
+            mainContainer.Controls.Add(row1);
+            mainContainer.Controls.Add(bannerSpacer);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            bannerSpacer.BringToFront();
+            row1.BringToFront();
+            row2.BringToFront();
+            row3.BringToFront();
+
+            _tabScada.Controls.Add(mainContainer);
+        }
+
     }
 }
+
 
 
 
