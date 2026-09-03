@@ -33,11 +33,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private ZeroGridSearchBar _searchBar = null!;
         private ZeroGridPagination _pagination = null!;
+        private ZeroToolbar _mainToolbar = null!;
         private TabPage _tabControls = null!;
         private TabPage _tabMes = null!;
         private ZeroSteps _mesSteps = null!;
         private ZeroListView _showcaseLog = null!;
         private System.Windows.Forms.Timer? _logGenTimer;
+
 
 
 
@@ -153,6 +155,59 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _hudPanel.Controls.Add(_lblRam);
             _hudPanel.Controls.Add(_lblGc);
 
+            // 2.5. ZeroToolbar (Modern Enterprise Action Bar)
+            _mainToolbar = new ZeroToolbar
+            {
+                Dock = DockStyle.Top,
+                Height = 42,
+                BackColor = Color.White
+            };
+
+            var btnNew = _mainToolbar.AddButton("New Order", "➕", (s, e) => ZeroToast.Success(this, "New order dialog triggered."));
+            btnNew.IsPrimary = true;
+
+            _mainToolbar.AddButton("Export CSV", "📊", (s, e) => _searchBar.TriggerExport());
+            _mainToolbar.AddButton("Refresh", "🔄", (s, e) =>
+            {
+                LoadDataset(100_000);
+                ZeroToast.Info(this, "Dataset refreshed successfully.");
+            });
+
+            _mainToolbar.AddSeparator();
+
+            _mainToolbar.AddDropdown("Views", "👁", (s, e) =>
+            {
+                ZeroToast.Info(this, "Views: Standard Grid, Pivot Analysis, Production Line View");
+            });
+
+            _mainToolbar.AddDropdown("Tools", "🛠", (s, e) =>
+            {
+                ZeroToast.Info(this, "Diagnostic Tools: GC Zero-Alloc Profiler, Memory DC Monitor");
+            });
+
+            var btnAlerts = _mainToolbar.AddButton("Alerts", "🔔", (s, e) =>
+            {
+                ZeroToast.Warning(this, "Active Alert: SMT Feeder BOA472 low stock warning.");
+            });
+            btnAlerts.BadgeCount = 3;
+
+            _mainToolbar.AddSpacer(); // Elastic right spacer
+
+            _mainToolbar.AddButton("Fullscreen", "⛶", (s, e) =>
+            {
+                WindowState = (WindowState == FormWindowState.Maximized) ? FormWindowState.Normal : FormWindowState.Maximized;
+            });
+
+            _mainToolbar.AddButton("Settings", "⚙️", (s, e) =>
+            {
+                ZeroToast.Info(this, "ZeroUI Core v1.0.0 Configuration: Ready");
+            });
+
+            _mainToolbar.AddButton("Help", "❓", (s, e) =>
+            {
+                ZeroToast.Info(this, "Repository: https://github.com/kzxl/ZeroUI");
+            });
+
             // 3. Tab Control
             _tabControl = new TabControl
             {
@@ -190,9 +245,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             // Assembly Form Layout
             Controls.Add(_tabControl);
+            Controls.Add(_mainToolbar);
             Controls.Add(_hudPanel);
             Controls.Add(_topPanel);
         }
+
 
 
         private Button CreateActionButton(string text, int x, Action onClick)

@@ -93,7 +93,13 @@ namespace ZeroUI.WinForms.Controls
         }
 
 
+        public void TriggerExport()
+        {
+            ExportClicked?.Invoke(this, EventArgs.Empty);
+        }
+
         public void AttachToGrid(ZeroGridControl grid)
+
         {
             _grid = grid;
             UpdateCountBadge();
