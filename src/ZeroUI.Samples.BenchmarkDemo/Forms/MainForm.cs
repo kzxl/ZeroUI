@@ -44,7 +44,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private TabPage _tabControls = null!;
         private TabPage _tabMes = null!;
         private TabPage _tabScada = null!;
+        private TabPage _tabWms = null!;
         private ZeroSteps _mesSteps = null!;
+
         private ZeroListView _showcaseLog = null!;
         private System.Windows.Forms.Timer? _logGenTimer;
         private System.Windows.Forms.Timer? _scadaSimTimer;
@@ -276,12 +278,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabControls = new TabPage("🎨 Components Showcase");
             _tabMes = new TabPage("🏭 MES Production Dashboard");
             _tabScada = new TabPage("🔬 SCADA & Smart Factory Hub");
+            _tabWms = new TabPage("📦 WMS & Quality Inspection Center");
 
             InitializeZeroGrid();
             InitializeDataGridView();
             InitializeComponentsShowcase();
             InitializeMesDashboard();
             InitializeScadaHub();
+            InitializeWmsCenter();
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -294,6 +298,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabControl.TabPages.Add(_tabControls);
             _tabControl.TabPages.Add(_tabMes);
             _tabControl.TabPages.Add(_tabScada);
+            _tabControl.TabPages.Add(_tabWms);
+
 
 
             _tabControl.SelectedIndexChanged += (s, e) =>
@@ -1741,8 +1747,255 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabScada.Controls.Add(mainContainer);
         }
 
+        private void InitializeWmsCenter()
+        {
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            // 0. Alert Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Success,
+                Title = "📦 WMS & Quality Inspection Center — Kho Thông Minh & Kiểm Soát Chất Lượng Six Sigma",
+                Message = "Tích hợp bản đồ kệ kho linh kiện 2D (ZeroWarehouseRack), bồn chứa dung môi 3D (ZeroTank3D), biểu đồ kiểm soát thống kê SPC X-Bar (ZeroSpcChart) và bảng thẻ Kanban điện tử (ZeroKanbanBoard).",
+                Height = 62
+            };
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // ROW 1: Smart Warehouse Storage Rack (WarehouseRack) + Industrial 3D Fluid Tank (Tank3D)
+            var row1 = new Panel { Dock = DockStyle.Top, Height = 280, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 1A: Warehouse Rack
+            var cardRack = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Sơ Đồ Kệ Kho Linh Kiện SMT — Dãy A (Bay 01..05 x Level 01..04)",
+                Dock = DockStyle.Left,
+                Width = 560
+            };
+
+            var rack = new ZeroWarehouseRack
+            {
+                Dock = DockStyle.Fill,
+                Bays = 5,
+                Levels = 4,
+                RackTitle = "Kệ Chứa Cuộn SMT A (A-01-01 đến A-05-04)"
+            };
+            cardRack.ContentPanel.Controls.Add(rack);
+
+            var rackToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
+            var btnAddReel = new ZeroButton
+            {
+                Text = "📦 Cấp Cuộn SMT Vào Vị Trí A-02-03",
+                ButtonStyle = ZeroButtonStyle.Success,
+                Dock = DockStyle.Left,
+                Width = 230
+            };
+            var btnLockQc = new ZeroButton
+            {
+                Text = "🔒 Khóa Lô Cách Ly QC",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Dock = DockStyle.Left,
+                Width = 160
+            };
+            rackToolbar.Controls.Add(btnLockQc);
+            rackToolbar.Controls.Add(btnAddReel);
+            cardRack.ContentPanel.Controls.Add(rackToolbar);
+
+            var split1 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 1B: Industrial 3D Tank
+            var cardTank = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Bồn Chứa Dung Môi SMT-TK01 (Capacity 10,000L)",
+                Dock = DockStyle.Fill
+            };
+
+            var tank = new ZeroTank3D
+            {
+                Dock = DockStyle.Left,
+                Width = 190,
+                CapacityLiters = 10000f,
+                CurrentLevelLiters = 6850f,
+                TankName = "Bồn IPA SMT-TK01",
+                FluidName = "Dung môi tẩy rửa 99.7%"
+            };
+            cardTank.ContentPanel.Controls.Add(tank);
+
+            var tankControls = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10, 30, 10, 10) };
+            var btnPumpIn = new ZeroButton
+            {
+                Text = "🔼 Bơm Nạp (+1,000L)",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Dock = DockStyle.Top,
+                Height = 36
+            };
+            var tankSpacer1 = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
+            var btnDrainOut = new ZeroButton
+            {
+                Text = "🔽 Xả Đáy (-1,000L)",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Top,
+                Height = 36
+            };
+            tankControls.Controls.Add(btnDrainOut);
+            tankControls.Controls.Add(tankSpacer1);
+            tankControls.Controls.Add(btnPumpIn);
+            cardTank.ContentPanel.Controls.Add(tankControls);
+
+            row1.Controls.Add(cardTank);
+            row1.Controls.Add(split1);
+            row1.Controls.Add(cardRack);
+
+            // ROW 2: Statistical Process Control (SpcChart) + Electronic Kanban Board (KanbanBoard)
+            var row2 = new Panel { Dock = DockStyle.Top, Height = 280, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 2A: SPC Chart
+            var cardSpc = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Biểu Đồ Thống Kê Đo Kiểm SPC X-Bar (Dung Sai Phay CNC)",
+                Dock = DockStyle.Left,
+                Width = 560
+            };
+
+            var spcChart = new ZeroSpcChart
+            {
+                Dock = DockStyle.Fill,
+                NominalTarget = 12.000f,
+                USL = 12.020f,
+                LSL = 11.980f,
+                Title = "SPC X-Bar: Đường kính trục Pin định vị CNC (12.000 ± 0.020 mm)"
+            };
+            cardSpc.ContentPanel.Controls.Add(spcChart);
+
+            var spcToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
+            var btnAddSample = new ZeroButton
+            {
+                Text = "📏 Đo Mẫu Mới (Thêm Subgroup)",
+                ButtonStyle = ZeroButtonStyle.Success,
+                Dock = DockStyle.Left,
+                Width = 200
+            };
+            var btnSpikeSpc = new ZeroButton
+            {
+                Text = "⚠ Giả Lập Lỗi Vượt 3-Sigma",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Dock = DockStyle.Left,
+                Width = 190
+            };
+            spcToolbar.Controls.Add(btnSpikeSpc);
+            spcToolbar.Controls.Add(btnAddSample);
+            cardSpc.ContentPanel.Controls.Add(spcToolbar);
+
+            var split2 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 2B: Kanban Board
+            var cardKanban = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Bảng Thẻ Kanban Điện Tử Điều Phối Chuyền SMT (WIP Limit)",
+                Dock = DockStyle.Fill
+            };
+
+            var kanban = new ZeroKanbanBoard
+            {
+                Dock = DockStyle.Fill
+            };
+            cardKanban.ContentPanel.Controls.Add(kanban);
+
+            row2.Controls.Add(cardKanban);
+            row2.Controls.Add(split2);
+            row2.Controls.Add(cardSpc);
+
+            // Wire Events
+            rack.BinClicked += (s, e) =>
+            {
+                var b = e.Bin;
+                string info = $"Vị trí {b.BinCode}: {b.Status} | SKU: {(string.IsNullOrEmpty(b.Sku) ? "(Trống)" : b.Sku)} | Tồn: {b.CurrentQty} PCS | Lô: {b.LotNumber}";
+                if (b.Status == BinOccupancyStatus.Quarantine)
+                    ZeroToast.Error(this, $"[CẢNH BÁO KHÓA QC] {info}");
+                else if (b.Status == BinOccupancyStatus.Full)
+                    ZeroToast.Success(this, $"[VỊ TRÍ ĐẦY] {info}");
+                else
+                    ZeroToast.Info(this, $"[CHI TIẾT VỊ TRÍ] {info}");
+            };
+
+            btnAddReel.Click += (s, e) =>
+            {
+                rack.SetBin(3, 2, BinOccupancyStatus.Full, "IC-MCU-STM32", "STM32F407VGT6", "LOT-20260903-NEW", 2000);
+                ZeroToast.Success(this, "Đã nhập thêm 2,000 PCS STM32 vào ngăn A-02-03!");
+            };
+
+            btnLockQc.Click += (s, e) =>
+            {
+                rack.SetBin(2, 4, BinOccupancyStatus.Quarantine, "SMD-CAP-0805", "Tụ gốm 10uF", "LOT-20260815-HOLD", 800);
+                ZeroToast.Error(this, "Đã khóa cách ly vị trí A-04-02 chờ phòng QA tái kiểm định!");
+            };
+
+            btnPumpIn.Click += (s, e) =>
+            {
+                tank.CurrentLevelLiters = Math.Min(tank.CapacityLiters, tank.CurrentLevelLiters + 1000f);
+                if (tank.AlarmState == TankAlarmState.HighOverflow)
+                    ZeroToast.Error(this, $"CẢNH BÁO TRÀN: Mức bồn đạt {tank.Percentage:F1}% (>90%)!");
+                else
+                    ZeroToast.Success(this, $"Bơm nạp thành công: {tank.CurrentLevelLiters:N0} L ({tank.Percentage:F1}%)");
+            };
+
+            btnDrainOut.Click += (s, e) =>
+            {
+                tank.CurrentLevelLiters = Math.Max(0f, tank.CurrentLevelLiters - 1000f);
+                if (tank.AlarmState == TankAlarmState.LowLevel)
+                    ZeroToast.Warning(this, $"CẢNH BÁO CẠN BỒN: Mức bồn còn {tank.Percentage:F1}% (<15%)!");
+                else
+                    ZeroToast.Info(this, $"Xả bồn thành công: {tank.CurrentLevelLiters:N0} L ({tank.Percentage:F1}%)");
+            };
+
+            var rand = new Random();
+            btnAddSample.Click += (s, e) =>
+            {
+                float val = 12.000f + (float)(rand.NextDouble() * 0.010 - 0.005);
+                spcChart.AddSample(val);
+                ZeroToast.Success(this, $"Đã đo mẫu mới: {val:F3} mm (Trong kiểm soát)");
+            };
+
+            btnSpikeSpc.Click += (s, e) =>
+            {
+                float spike = 12.028f;
+                spcChart.AddSample(spike, "Lệch dao phay CNC!");
+                ZeroToast.Error(this, $"CẢNH BÁO SPC: Mẫu {spike:F3} mm vượt giới hạn kiểm soát trên (UCL: {spcChart.UCL:F3} mm)!");
+            };
+
+            kanban.CardClicked += (s, e) =>
+            {
+                kanban.MoveCardNext(e.Card);
+                ZeroToast.Info(this, $"Kanban: Lệnh sản xuất {e.Card.OrderNo} ({e.Card.ProductName}) chuyển sang công đoạn kế tiếp!");
+            };
+
+            // Assemble top-to-bottom layout
+            mainContainer.Controls.Add(row2);
+            mainContainer.Controls.Add(row1);
+            mainContainer.Controls.Add(bannerSpacer);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            bannerSpacer.BringToFront();
+            row1.BringToFront();
+            row2.BringToFront();
+
+            _tabWms.Controls.Add(mainContainer);
+        }
+
     }
 }
+
 
 
 

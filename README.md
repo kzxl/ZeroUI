@@ -71,6 +71,10 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroDefectMatrix`**: 2D Multi-Unit Panel & Wafer Defect Inspection Matrix for AOI, SMT, and QC workstations with configurable row/column array, defect color codes (Pass, Defect, Warning, Untested), hover glow, and drill-down slot click events.
 * **`ZeroPlcIoMonitor`**: Industrial PLC Digital I/O 16-bit monitor displaying DI 00..15 and DO 00..15 with live LED bit registers, hexadecimal word readout (`0x00A5`), and interactive output coil force simulation.
 * **`ZeroAndonCallPad`**: Touchscreen-optimized shopfloor operator call pad featuring 4 large finger-friendly tiles (*Material*, *Maintenance*, *Quality*, *Supervisor*) with active SLA elapsed response time counters.
+* **`ZeroWarehouseRack`**: 2D Smart Warehouse Storage Rack visualizer (Bay $\times$ Level $\times$ Bin) showing occupancy (Empty, Partial, Full, Quarantine), SKU info, Lot number, hover inspection, and click events.
+* **`ZeroSpcChart`**: Statistical Process Control (SPC) X-Bar Chart for Six Sigma quality inspection. Automatically computes Mean ($\bar{X}$), Upper/Lower Control Limits ($UCL = \bar{X} + 3\sigma$, $LCL = \bar{X} - 3\sigma$), $C_{pk}$ index, and flags Western Electric rule violations.
+* **`ZeroKanbanBoard`**: Electronic Shopfloor Kanban Dispatching Board for MES manufacturing workflows. Features configurable stage columns, Work-In-Progress (WIP) limit enforcement, priority tags, and interactive card transitions.
+* **`ZeroTank3D`**: Industrial 3D cylindrical fluid storage tank with animated sinusoidal liquid surface waves, glass sight-gauge tube, graduated level markings, and High/Low limit sensor trips.
 * **`ZeroLedTower`**: Industrial Andon Signal Tower Light control with Red, Amber, Green, and Blue lamp segments. Features 3D cylindrical glass reflection, mounting pole/base, and configurable Solid, Blinking (1Hz/2Hz flash), or Off states for real-time SCADA machine status.
 * **`ZeroSevenSegment`**: Industrial 7-Segment Digital LED Display for Takt time and production counters with polygon beveled segment geometry, authentic segment ghosting, customizable colors (Neon Cyan, Emerald, Amber), decimals, and colons.
 * **`ZeroLinearGauge`**: Industrial linear level, temperature, and pressure gauge with multi-zone threshold indicators (Normal, Warning, Critical), tick marks, and real-time floating value readout.
@@ -82,6 +86,7 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroGauge`**: Anti-aliased circular progress dial for **OEE %**, Yield Rate, and equipment efficiency.
 * **`ZeroAlertBanner`**: Dismissible or sticky alert banner for factory line stoppage, feeder shortage, or operator broadcasts.
 * **`ZeroBarcodeBox`**: Specialized hardware scanner input box with auto-select on focus, auto-submit on Enter, and green flash feedback.
+
 
 
 
