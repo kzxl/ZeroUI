@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -323,19 +324,18 @@ namespace ZeroUI.WinForms.Industrial
                 using (var bPath = CreateRoundedRect(badgeRect, 5))
                 using (var bBrush = new SolidBrush(_badgeColor))
                 using (var numBrush = new SolidBrush(Color.White))
-                using (var numFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
                 {
+                    var numFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
                     g.FillPath(bBrush, bPath);
-                    var sfNum = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(badgeLabel, numFont, numBrush, badgeRect, sfNum);
+                    g.DrawString(badgeLabel, numFont, numBrush, badgeRect, ZeroStringFormats.Center);
                 }
                 curX += 28f;
             }
 
             // Title
             using (var titleBrush = new SolidBrush(palette.TextPrimary))
-            using (var titleFont = new Font(Font.FontFamily, 9.5f, FontStyle.Bold))
             {
+                var titleFont = ZeroFontCache.Get(9.5f, FontStyle.Bold);
                 g.DrawString(_title, titleFont, titleBrush, curX, 13f);
             }
 
@@ -343,14 +343,14 @@ namespace ZeroUI.WinForms.Industrial
             if (!string.IsNullOrEmpty(_subtitle))
             {
                 using var subBrush = new SolidBrush(palette.TextSecondary);
-                using var subFont = new Font(Font.FontFamily, 8f, FontStyle.Regular);
+                var subFont = ZeroFontCache.Get(8f, FontStyle.Regular);
                 g.DrawString(_subtitle, subFont, subBrush, curX, 33f);
             }
 
             // Header Right Status Tag
             if (!string.IsNullOrEmpty(_statusTag))
             {
-                using var tagFont = new Font(Font.FontFamily, 8f, FontStyle.Bold);
+                var tagFont = ZeroFontCache.Get(8f, FontStyle.Bold);
                 var tagSize = g.MeasureString(_statusTag, tagFont);
                 float tagW = tagSize.Width + 14f;
                 float tagH = 20f;
@@ -365,8 +365,7 @@ namespace ZeroUI.WinForms.Industrial
 
                 g.FillPath(tBg, tPath);
                 g.DrawPath(tPen, tPath);
-                var sfTag = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(_statusTag, tagFont, tText, tagRect, sfTag);
+                g.DrawString(_statusTag, tagFont, tText, tagRect, ZeroStringFormats.Center);
             }
 
             // 2. Embedded Grid Header
@@ -389,9 +388,9 @@ namespace ZeroUI.WinForms.Industrial
             // Draw Column Headers
             float colX = gridLeft;
             using (var chTextBrush = new SolidBrush(palette.TextPrimary))
-            using (var chFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
             using (var colLinePen = new Pen(Color.FromArgb(80, palette.Border), 1f))
             {
+                var chFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
                 for (int c = 0; c < _columns.Count; c++)
                 {
                     var col = _columns[c];
@@ -402,15 +401,11 @@ namespace ZeroUI.WinForms.Industrial
                     }
 
                     var cRect = new RectangleF(colX + 8, gridHeaderY, cW - 16, colHeaderH);
-                    var sf = new StringFormat
+                    var sf = col.Alignment switch
                     {
-                        LineAlignment = StringAlignment.Center,
-                        Alignment = col.Alignment switch
-                        {
-                            HorizontalAlignment.Right => StringAlignment.Far,
-                            HorizontalAlignment.Center => StringAlignment.Center,
-                            _ => StringAlignment.Near
-                        }
+                        HorizontalAlignment.Right => ZeroStringFormats.FarCenter,
+                        HorizontalAlignment.Center => ZeroStringFormats.Center,
+                        _ => ZeroStringFormats.NearCenter
                     };
 
                     g.DrawString(col.HeaderText, chFont, chTextBrush, cRect, sf);
@@ -434,11 +429,13 @@ namespace ZeroUI.WinForms.Industrial
             int rowH = 26;
             int totalContentH = _rows.Count * rowH;
 
-            using (var rowFont = new Font(Font.FontFamily, 8.5f, FontStyle.Regular))
-            using (var rowBoldFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
+            var rowFont = ZeroFontCache.Get(8.5f, FontStyle.Regular);
+            var rowBoldFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
             using (var textPrimaryBrush = new SolidBrush(palette.TextPrimary))
             using (var alertRedBrush = new SolidBrush(palette.Danger))
             using (var linePen = new Pen(Color.FromArgb(40, palette.Border), 1f))
+            using (var hovBrush = new SolidBrush(Color.FromArgb(20, palette.Primary)))
+            using (var altBrush = new SolidBrush(ZeroTheme.IsDark ? Color.FromArgb(20, 255, 255, 255) : Color.FromArgb(248, 250, 252)))
             {
                 for (int r = 0; r < _rows.Count; r++)
                 {
@@ -451,13 +448,10 @@ namespace ZeroUI.WinForms.Industrial
                     var rowRect = new RectangleF(gridLeft, rY, gridWidth, rowH);
                     if (r == _hoverRow)
                     {
-                        using var hovBrush = new SolidBrush(Color.FromArgb(20, palette.Primary));
                         g.FillRectangle(hovBrush, rowRect);
                     }
                     else if (r % 2 == 1)
                     {
-                        Color altBg = ZeroTheme.IsDark ? Color.FromArgb(20, 255, 255, 255) : Color.FromArgb(248, 250, 252);
-                        using var altBrush = new SolidBrush(altBg);
                         g.FillRectangle(altBrush, rowRect);
                     }
 
@@ -484,15 +478,11 @@ namespace ZeroUI.WinForms.Industrial
                         }
 
                         var cellRect = new RectangleF(rColX + 8, rY, cW - 16, rowH);
-                        var sf = new StringFormat
+                        var sf = col.Alignment switch
                         {
-                            LineAlignment = StringAlignment.Center,
-                            Alignment = col.Alignment switch
-                            {
-                                HorizontalAlignment.Right => StringAlignment.Far,
-                                HorizontalAlignment.Center => StringAlignment.Center,
-                                _ => StringAlignment.Near
-                            }
+                            HorizontalAlignment.Right => ZeroStringFormats.FarCenter,
+                            HorizontalAlignment.Center => ZeroStringFormats.Center,
+                            _ => ZeroStringFormats.NearCenter
                         };
 
                         Brush drawBrush = isZeroAlert ? alertRedBrush : textPrimaryBrush;
@@ -537,7 +527,7 @@ namespace ZeroUI.WinForms.Industrial
             int footerY = Height - 28;
             if (!string.IsNullOrEmpty(_footerText))
             {
-                using var footFont = new Font(Font.FontFamily, 8f, _isFooterHovered ? FontStyle.Underline : FontStyle.Regular);
+                var footFont = ZeroFontCache.Get(8f, _isFooterHovered ? FontStyle.Underline : FontStyle.Regular);
                 using var footBrush = new SolidBrush(_isFooterHovered ? Color.FromArgb(29, 78, 216) : _footerTextColor);
                 var fSz = g.MeasureString(_footerText, footFont);
                 _footerRect = new Rectangle(14, footerY - 2, (int)fSz.Width + 8, (int)fSz.Height + 4);
@@ -546,7 +536,7 @@ namespace ZeroUI.WinForms.Industrial
 
             if (!string.IsNullOrEmpty(_summaryText))
             {
-                using var sumFont = new Font(Font.FontFamily, 8f, FontStyle.Bold);
+                var sumFont = ZeroFontCache.Get(8f, FontStyle.Bold);
                 using var sumBrush = new SolidBrush(palette.TextSecondary);
                 var sSz = g.MeasureString(_summaryText, sumFont);
                 g.DrawString(_summaryText, sumFont, sumBrush, Width - sSz.Width - 14, footerY);

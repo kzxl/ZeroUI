@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -247,8 +248,8 @@ namespace ZeroUI.WinForms.Industrial
 
             // Title
             using (var titleBrush = new SolidBrush(palette.TextPrimary))
-            using (var titleFont = new Font(Font.FontFamily, 9.5f, FontStyle.Bold))
             {
+                var titleFont = ZeroFontCache.Get(9.5f, FontStyle.Bold);
                 g.DrawString(_title, titleFont, titleBrush, curX, 13f);
             }
 
@@ -256,14 +257,14 @@ namespace ZeroUI.WinForms.Industrial
             if (!string.IsNullOrEmpty(_subtitle))
             {
                 using var subBrush = new SolidBrush(palette.TextSecondary);
-                using var subFont = new Font(Font.FontFamily, 8f, FontStyle.Regular);
+                var subFont = ZeroFontCache.Get(8f, FontStyle.Regular);
                 g.DrawString(_subtitle, subFont, subBrush, curX, 33f);
             }
 
             // Status Tag on Header Right
             if (!string.IsNullOrEmpty(_statusTag))
             {
-                using var tagFont = new Font(Font.FontFamily, 8f, FontStyle.Bold);
+                var tagFont = ZeroFontCache.Get(8f, FontStyle.Bold);
                 var tagSize = g.MeasureString(_statusTag, tagFont);
                 float tagW = tagSize.Width + 14f;
                 float tagH = 20f;
@@ -278,8 +279,7 @@ namespace ZeroUI.WinForms.Industrial
 
                 g.FillPath(tBg, tPath);
                 g.DrawPath(tPen, tPath);
-                var sfTag = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(_statusTag, tagFont, tText, tagRect, sfTag);
+                g.DrawString(_statusTag, tagFont, tText, tagRect, ZeroStringFormats.Center);
             }
 
             // 2. Stages Workflow Pipeline
@@ -305,6 +305,17 @@ namespace ZeroUI.WinForms.Industrial
                 boxW = (availW - (stageCount - 1) * 24f) / stageCount;
                 gapW = 24f;
             }
+
+            var tFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
+            var sFont = ZeroFontCache.Get(7.5f, FontStyle.Regular);
+            var arrowFont = ZeroFontCache.Get(8f, FontStyle.Bold);
+
+            using var textPrimaryBrush = new SolidBrush(palette.TextPrimary);
+            using var textSecondaryBrush = new SolidBrush(palette.TextSecondary);
+            using var dotPenGreen = new Pen(Color.FromArgb(16, 185, 129), 1f) { DashStyle = DashStyle.Dot };
+            using var dotPenGray = new Pen(Color.FromArgb(120, palette.TextSecondary), 1f) { DashStyle = DashStyle.Dot };
+            using var arrowBrushGreen = new SolidBrush(Color.FromArgb(16, 185, 129));
+            using var arrowBrushGray = new SolidBrush(Color.FromArgb(120, palette.TextSecondary));
 
             for (int i = 0; i < stageCount; i++)
             {
@@ -379,22 +390,16 @@ namespace ZeroUI.WinForms.Industrial
                 float textX = iconX + iconSize + 10f;
                 float textW = bX + boxW - textX - 6f;
 
-                using (var titleBrush = new SolidBrush(palette.TextPrimary))
-                using (var tFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
-                using (var subBrush = new SolidBrush(palette.TextSecondary))
-                using (var sFont = new Font(Font.FontFamily, 7.5f, FontStyle.Regular))
-                {
-                    // Stage Title
-                    g.DrawString(stage.Title, tFont, titleBrush, textX, boxY + 8f);
+                // Stage Title
+                g.DrawString(stage.Title, tFont, textPrimaryBrush, textX, boxY + 8f);
 
-                    // Qty
-                    string qtyText = $"Qty: {stage.Quantity:N0}";
-                    g.DrawString(qtyText, sFont, subBrush, textX, boxY + 26f);
+                // Qty
+                string qtyText = $"Qty: {stage.Quantity:N0}";
+                g.DrawString(qtyText, sFont, textSecondaryBrush, textX, boxY + 26f);
 
-                    // Updated
-                    string upText = $"Updated: {stage.UpdatedTime ?? "--"}";
-                    g.DrawString(upText, sFont, subBrush, textX, boxY + 42f);
-                }
+                // Updated
+                string upText = $"Updated: {stage.UpdatedTime ?? "--"}";
+                g.DrawString(upText, sFont, textSecondaryBrush, textX, boxY + 42f);
 
                 // Draw Transition Arrow to next stage
                 if (i < stageCount - 1)
@@ -403,19 +408,15 @@ namespace ZeroUI.WinForms.Industrial
                     float arrowEndX = bX + boxW + gapW - 4f;
                     float arrowY = boxY + boxH / 2f;
 
-                    Color arrowColor = (stage.Status == ZeroStepStatus.Completed) ? Color.FromArgb(16, 185, 129) : Color.FromArgb(120, palette.TextSecondary);
+                    bool isCompleted = (stage.Status == ZeroStepStatus.Completed);
+                    Pen dotPen = isCompleted ? dotPenGreen : dotPenGray;
+                    SolidBrush arrowBrush = isCompleted ? arrowBrushGreen : arrowBrushGray;
 
-                    using (var dotPen = new Pen(arrowColor, 1f) { DashStyle = DashStyle.Dot })
-                    using (var arrowBrush = new SolidBrush(arrowColor))
-                    using (var arrowFont = new Font(Font.FontFamily, 8f, FontStyle.Bold))
-                    {
-                        g.DrawLine(dotPen, arrowStartX, arrowY, arrowEndX, arrowY);
+                    g.DrawLine(dotPen, arrowStartX, arrowY, arrowEndX, arrowY);
 
-                        // Draw arrow chevron in the middle
-                        float midX = (arrowStartX + arrowEndX) / 2f;
-                        var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                        g.DrawString("➔", arrowFont, arrowBrush, midX, arrowY, sf);
-                    }
+                    // Draw arrow chevron in the middle
+                    float midX = (arrowStartX + arrowEndX) / 2f;
+                    g.DrawString("➔", arrowFont, arrowBrush, midX, arrowY, ZeroStringFormats.Center);
                 }
             }
 
@@ -423,7 +424,7 @@ namespace ZeroUI.WinForms.Industrial
             if (!string.IsNullOrEmpty(_footerText))
             {
                 int footerY = Height - 22;
-                using var footFont = new Font(Font.FontFamily, 7.5f, FontStyle.Regular);
+                var footFont = ZeroFontCache.Get(7.5f, FontStyle.Regular);
                 using var footBrush = new SolidBrush(_footerTextColor);
                 g.DrawString(_footerText, footFont, footBrush, 14, footerY);
             }

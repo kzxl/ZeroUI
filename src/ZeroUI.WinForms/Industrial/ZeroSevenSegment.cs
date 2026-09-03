@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -426,9 +427,12 @@ namespace ZeroUI.WinForms.Industrial
             public bool IsDimmed;
         }
 
+        private readonly List<DisplayItem> _rawItemsBuffer = new List<DisplayItem>(16);
+        private readonly List<DisplayItem> _paddedItemsBuffer = new List<DisplayItem>(16);
+
         private List<DisplayItem> ParseValue()
         {
-            var rawItems = new List<DisplayItem>();
+            _rawItemsBuffer.Clear();
             string text = _value ?? "";
 
             for (int i = 0; i < text.Length; i++)
@@ -436,45 +440,45 @@ namespace ZeroUI.WinForms.Industrial
                 char c = text[i];
                 if (c == ':')
                 {
-                    rawItems.Add(new DisplayItem { IsColon = true });
+                    _rawItemsBuffer.Add(new DisplayItem { IsColon = true });
                 }
                 else if (c == '.' || c == ',')
                 {
-                    if (rawItems.Count > 0 && !rawItems[rawItems.Count - 1].IsColon)
+                    if (_rawItemsBuffer.Count > 0 && !_rawItemsBuffer[_rawItemsBuffer.Count - 1].IsColon)
                     {
-                        var last = rawItems[rawItems.Count - 1];
+                        var last = _rawItemsBuffer[_rawItemsBuffer.Count - 1];
                         last.HasDecimal = true;
-                        rawItems[rawItems.Count - 1] = last;
+                        _rawItemsBuffer[_rawItemsBuffer.Count - 1] = last;
                     }
                     else
                     {
-                        rawItems.Add(new DisplayItem { Character = ' ', HasDecimal = true });
+                        _rawItemsBuffer.Add(new DisplayItem { Character = ' ', HasDecimal = true });
                     }
                 }
                 else
                 {
-                    rawItems.Add(new DisplayItem { Character = c });
+                    _rawItemsBuffer.Add(new DisplayItem { Character = c });
                 }
             }
 
             // Check for clock format (colon)
             bool hasColon = false;
-            for (int i = 0; i < rawItems.Count; i++)
+            for (int i = 0; i < _rawItemsBuffer.Count; i++)
             {
-                if (rawItems[i].IsColon) { hasColon = true; break; }
+                if (_rawItemsBuffer[i].IsColon) { hasColon = true; break; }
             }
 
             if (!hasColon)
             {
                 if (_leadingZeroMode == LeadingZeroDisplayMode.DimmedGhost)
                 {
-                    for (int i = 0; i < rawItems.Count - 1; i++)
+                    for (int i = 0; i < _rawItemsBuffer.Count - 1; i++)
                     {
-                        if (rawItems[i].Character == '0' && !rawItems[i].HasDecimal)
+                        if (_rawItemsBuffer[i].Character == '0' && !_rawItemsBuffer[i].HasDecimal)
                         {
-                            var item = rawItems[i];
+                            var item = _rawItemsBuffer[i];
                             item.IsDimmed = true;
-                            rawItems[i] = item;
+                            _rawItemsBuffer[i] = item;
                         }
                         else
                         {
@@ -484,13 +488,13 @@ namespace ZeroUI.WinForms.Industrial
                 }
                 else if (_leadingZeroMode == LeadingZeroDisplayMode.Blank)
                 {
-                    for (int i = 0; i < rawItems.Count - 1; i++)
+                    for (int i = 0; i < _rawItemsBuffer.Count - 1; i++)
                     {
-                        if (rawItems[i].Character == '0' && !rawItems[i].HasDecimal)
+                        if (_rawItemsBuffer[i].Character == '0' && !_rawItemsBuffer[i].HasDecimal)
                         {
-                            var item = rawItems[i];
+                            var item = _rawItemsBuffer[i];
                             item.Character = ' ';
-                            rawItems[i] = item;
+                            _rawItemsBuffer[i] = item;
                         }
                         else
                         {
@@ -501,21 +505,21 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             int digitCountInValue = 0;
-            for (int i = 0; i < rawItems.Count; i++)
+            for (int i = 0; i < _rawItemsBuffer.Count; i++)
             {
-                if (!rawItems[i].IsColon) digitCountInValue++;
+                if (!_rawItemsBuffer[i].IsColon) digitCountInValue++;
             }
 
             int totalDigits = Math.Max(_digitCount, digitCountInValue);
             int padCount = totalDigits - digitCountInValue;
 
-            if (padCount <= 0) return rawItems;
+            if (padCount <= 0) return _rawItemsBuffer;
 
-            var paddedList = new List<DisplayItem>(rawItems.Count + padCount);
+            _paddedItemsBuffer.Clear();
             char padChar = (_leadingZeroMode == LeadingZeroDisplayMode.LitZero || _leadingZeroMode == LeadingZeroDisplayMode.DimmedGhost) ? '0' : ' ';
             bool isDimmed = (_leadingZeroMode == LeadingZeroDisplayMode.DimmedGhost);
 
-            DisplayItem createPadItem() => new DisplayItem
+            DisplayItem padItem = new DisplayItem
             {
                 Character = padChar,
                 IsDimmed = isDimmed
@@ -523,24 +527,26 @@ namespace ZeroUI.WinForms.Industrial
 
             if (_textAlignment == HorizontalAlignment.Right)
             {
-                for (int i = 0; i < padCount; i++) paddedList.Add(createPadItem());
-                paddedList.AddRange(rawItems);
+                for (int i = 0; i < padCount; i++) _paddedItemsBuffer.Add(padItem);
+                _paddedItemsBuffer.AddRange(_rawItemsBuffer);
             }
             else if (_textAlignment == HorizontalAlignment.Left)
             {
-                paddedList.AddRange(rawItems);
-                for (int i = 0; i < padCount; i++) paddedList.Add(new DisplayItem { Character = ' ' });
+                _paddedItemsBuffer.AddRange(_rawItemsBuffer);
+                DisplayItem blankItem = new DisplayItem { Character = ' ' };
+                for (int i = 0; i < padCount; i++) _paddedItemsBuffer.Add(blankItem);
             }
             else // Center
             {
                 int leftPad = padCount / 2;
                 int rightPad = padCount - leftPad;
-                for (int i = 0; i < leftPad; i++) paddedList.Add(createPadItem());
-                paddedList.AddRange(rawItems);
-                for (int i = 0; i < rightPad; i++) paddedList.Add(new DisplayItem { Character = ' ' });
+                for (int i = 0; i < leftPad; i++) _paddedItemsBuffer.Add(padItem);
+                _paddedItemsBuffer.AddRange(_rawItemsBuffer);
+                DisplayItem blankItem = new DisplayItem { Character = ' ' };
+                for (int i = 0; i < rightPad; i++) _paddedItemsBuffer.Add(blankItem);
             }
 
-            return paddedList;
+            return _paddedItemsBuffer;
         }
 
         #endregion
@@ -568,7 +574,7 @@ namespace ZeroUI.WinForms.Industrial
             int unitReservedWidth = 0;
             if (!string.IsNullOrEmpty(_unit))
             {
-                using var testFont = new Font("Segoe UI", Math.Max(7.5f, h * 0.18f), FontStyle.Bold);
+                var testFont = ZeroFontCache.Get("Segoe UI", Math.Max(7.5f, h * 0.18f), FontStyle.Bold);
                 var unitSize = g.MeasureString(_unit, testFont);
                 unitReservedWidth = (int)unitSize.Width + 6;
                 availableW -= unitReservedWidth;
@@ -606,6 +612,21 @@ namespace ZeroUI.WinForms.Industrial
 
             float currentX = padX;
 
+            // Pre-allocated Pens & Brushes once for the entire display pass
+            using var outerGlowPen = _showGlow ? new Pen(Color.FromArgb(32, _segmentColor), thickness * 1.5f) { LineJoin = LineJoin.Round } : null;
+            using var innerGlowPen = _showGlow ? new Pen(Color.FromArgb(85, _segmentColor), thickness * 0.7f) { LineJoin = LineJoin.Round } : null;
+            using var fillBrush = new SolidBrush(_segmentColor);
+            Color coreColor = Color.FromArgb(
+                255,
+                Math.Min(255, _segmentColor.R + 75),
+                Math.Min(255, _segmentColor.G + 75),
+                Math.Min(255, _segmentColor.B + 75));
+            using var corePen = new Pen(coreColor, Math.Max(1f, thickness * 0.26f)) { LineJoin = LineJoin.Round };
+            using var ghostBrush = new SolidBrush(_dimColor);
+            using var dimmedLitBrush = new SolidBrush(Color.FromArgb(100, _segmentColor));
+            using var dpGlowBrush = new SolidBrush(Color.FromArgb(60, _segmentColor));
+            using var coreBrush = new SolidBrush(Color.FromArgb(255, Math.Min(255, _segmentColor.R + 80), Math.Min(255, _segmentColor.G + 80), Math.Min(255, _segmentColor.B + 80)));
+
             // 3. Render Each Digit / Colon
             for (int i = 0; i < items.Count; i++)
             {
@@ -613,12 +634,12 @@ namespace ZeroUI.WinForms.Industrial
 
                 if (item.IsColon)
                 {
-                    DrawColon(g, currentX, padY, colonW, digitH, shearX, isDisplayDark);
+                    DrawColon(g, currentX, padY, colonW, digitH, shearX, isDisplayDark, fillBrush, ghostBrush, outerGlowPen, dpGlowBrush, coreBrush);
                     currentX += colonW + itemGap;
                 }
                 else
                 {
-                    DrawBeveledDigit(g, currentX, padY, digitW, digitH, item, thickness, gap, shearX, isDisplayDark);
+                    DrawBeveledDigit(g, currentX, padY, digitW, digitH, item, thickness, gap, shearX, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush, dimmedLitBrush, dpGlowBrush);
                     currentX += digitW + itemGap;
                 }
             }
@@ -676,7 +697,11 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        private void DrawBeveledDigit(Graphics g, float x, float y, float w, float h, DisplayItem item, int t, float gap, float shearX, bool isDisplayDark)
+        private void DrawBeveledDigit(
+            Graphics g, float x, float y, float w, float h,
+            DisplayItem item, int t, float gap, float shearX, bool isDisplayDark,
+            Pen? outerGlowPen, Pen? innerGlowPen, SolidBrush fillBrush, Pen corePen,
+            SolidBrush ghostBrush, SolidBrush dimmedLitBrush, SolidBrush dpGlowBrush)
         {
             byte mask = 0;
             char c = item.Character;
@@ -790,25 +815,23 @@ namespace ZeroUI.WinForms.Industrial
 
             if (isDimmedLeading)
             {
-                // Subdued luminous color for leading zero so the '0' digit is clearly visible and hollow in the center
-                Color dimmedLitColor = Color.FromArgb(100, _segmentColor);
-                DrawDimmedSegment(g, polyA, (mask & 0x01) != 0, dimmedLitColor);
-                DrawDimmedSegment(g, polyB, (mask & 0x02) != 0, dimmedLitColor);
-                DrawDimmedSegment(g, polyC, (mask & 0x04) != 0, dimmedLitColor);
-                DrawDimmedSegment(g, polyD, (mask & 0x08) != 0, dimmedLitColor);
-                DrawDimmedSegment(g, polyE, (mask & 0x10) != 0, dimmedLitColor);
-                DrawDimmedSegment(g, polyF, (mask & 0x20) != 0, dimmedLitColor);
-                DrawDimmedSegment(g, polyG, (mask & 0x40) != 0, dimmedLitColor);
+                DrawDimmedSegment(g, polyA, (mask & 0x01) != 0, dimmedLitBrush);
+                DrawDimmedSegment(g, polyB, (mask & 0x02) != 0, dimmedLitBrush);
+                DrawDimmedSegment(g, polyC, (mask & 0x04) != 0, dimmedLitBrush);
+                DrawDimmedSegment(g, polyD, (mask & 0x08) != 0, dimmedLitBrush);
+                DrawDimmedSegment(g, polyE, (mask & 0x10) != 0, dimmedLitBrush);
+                DrawDimmedSegment(g, polyF, (mask & 0x20) != 0, dimmedLitBrush);
+                DrawDimmedSegment(g, polyG, (mask & 0x40) != 0, dimmedLitBrush);
             }
             else
             {
-                DrawSingleSegment(g, polyA, (mask & 0x01) != 0, t, isDisplayDark);
-                DrawSingleSegment(g, polyB, (mask & 0x02) != 0, t, isDisplayDark);
-                DrawSingleSegment(g, polyC, (mask & 0x04) != 0, t, isDisplayDark);
-                DrawSingleSegment(g, polyD, (mask & 0x08) != 0, t, isDisplayDark);
-                DrawSingleSegment(g, polyE, (mask & 0x10) != 0, t, isDisplayDark);
-                DrawSingleSegment(g, polyF, (mask & 0x20) != 0, t, isDisplayDark);
-                DrawSingleSegment(g, polyG, (mask & 0x40) != 0, t, isDisplayDark);
+                DrawSingleSegment(g, polyA, (mask & 0x01) != 0, t, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush);
+                DrawSingleSegment(g, polyB, (mask & 0x02) != 0, t, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush);
+                DrawSingleSegment(g, polyC, (mask & 0x04) != 0, t, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush);
+                DrawSingleSegment(g, polyD, (mask & 0x08) != 0, t, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush);
+                DrawSingleSegment(g, polyE, (mask & 0x10) != 0, t, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush);
+                DrawSingleSegment(g, polyF, (mask & 0x20) != 0, t, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush);
+                DrawSingleSegment(g, polyG, (mask & 0x40) != 0, t, isDisplayDark, outerGlowPen, innerGlowPen, fillBrush, corePen, ghostBrush);
             }
 
             // Render Integrated Decimal Point (DP)
@@ -821,69 +844,50 @@ namespace ZeroUI.WinForms.Industrial
             {
                 if (_showGlow)
                 {
-                    using var glowBrush = new SolidBrush(Color.FromArgb(60, _segmentColor));
-                    g.FillEllipse(glowBrush, dpX - 1.5f, dpY - 1.5f, dpSize + 3f, dpSize + 3f);
+                    g.FillEllipse(dpGlowBrush, dpX - 1.5f, dpY - 1.5f, dpSize + 3f, dpSize + 3f);
                 }
-                using var dpBrush = new SolidBrush(_segmentColor);
-                g.FillEllipse(dpBrush, dpX, dpY, dpSize, dpSize);
+                g.FillEllipse(fillBrush, dpX, dpY, dpSize, dpSize);
             }
             else if (_showGhostSegments)
             {
-                using var ghostBrush = new SolidBrush(_dimColor);
                 g.FillEllipse(ghostBrush, dpX, dpY, dpSize, dpSize);
             }
 
             g.Restore(state);
         }
 
-        private void DrawDimmedSegment(Graphics g, PointF[] points, bool isZeroSegment, Color dimmedLitColor)
+        private static void DrawDimmedSegment(Graphics g, PointF[] points, bool isZeroSegment, SolidBrush dimmedLitBrush)
         {
             if (isZeroSegment)
             {
-                using var brush = new SolidBrush(dimmedLitColor);
-                g.FillPolygon(brush, points);
+                g.FillPolygon(dimmedLitBrush, points);
             }
-            // Do not draw segment G so the leading '0' remains distinctly hollow and authentic
         }
 
-        private void DrawSingleSegment(Graphics g, PointF[] points, bool lit, int t, bool isDisplayDark)
+        private void DrawSingleSegment(
+            Graphics g, PointF[] points, bool lit, int t, bool isDisplayDark,
+            Pen? outerGlowPen, Pen? innerGlowPen, SolidBrush fillBrush, Pen corePen, SolidBrush ghostBrush)
         {
             if (lit && !isDisplayDark)
             {
-                if (_showGlow)
+                if (_showGlow && outerGlowPen != null && innerGlowPen != null)
                 {
-                    // Soft Bloom Neon Outer Aura
-                    using var outerGlowPen = new Pen(Color.FromArgb(32, _segmentColor), t * 1.5f) { LineJoin = LineJoin.Round };
                     g.DrawPolygon(outerGlowPen, points);
-
-                    // High-density Inner Glow
-                    using var innerGlowPen = new Pen(Color.FromArgb(85, _segmentColor), t * 0.7f) { LineJoin = LineJoin.Round };
                     g.DrawPolygon(innerGlowPen, points);
                 }
 
-                // Core Solid Lit Segment
-                using (var fillBrush = new SolidBrush(_segmentColor))
-                {
-                    g.FillPolygon(fillBrush, points);
-                }
-
-                // Ultra-bright High-luminance Center Core
-                Color coreColor = Color.FromArgb(
-                    255,
-                    Math.Min(255, _segmentColor.R + 75),
-                    Math.Min(255, _segmentColor.G + 75),
-                    Math.Min(255, _segmentColor.B + 75));
-                using var corePen = new Pen(coreColor, Math.Max(1f, t * 0.26f)) { LineJoin = LineJoin.Round };
+                g.FillPolygon(fillBrush, points);
                 g.DrawPolygon(corePen, points);
             }
             else if (_showGhostSegments)
             {
-                using var ghostBrush = new SolidBrush(_dimColor);
                 g.FillPolygon(ghostBrush, points);
             }
         }
 
-        private void DrawColon(Graphics g, float x, float y, float w, float h, float shearX, bool isDisplayDark)
+        private void DrawColon(
+            Graphics g, float x, float y, float w, float h, float shearX, bool isDisplayDark,
+            SolidBrush fillBrush, SolidBrush ghostBrush, Pen? outerGlowPen, SolidBrush dpGlowBrush, SolidBrush coreBrush)
         {
             var state = g.Save();
 
@@ -908,21 +912,13 @@ namespace ZeroUI.WinForms.Industrial
             {
                 if (_showGlow)
                 {
-                    using var glowBrush = new SolidBrush(Color.FromArgb(60, _segmentColor));
-                    g.FillEllipse(glowBrush, dotX - 2, dot1Y - 2, dotSize + 4, dotSize + 4);
-                    g.FillEllipse(glowBrush, dotX - 2, dot2Y - 2, dotSize + 4, dotSize + 4);
+                    g.FillEllipse(dpGlowBrush, dotX - 2, dot1Y - 2, dotSize + 4, dotSize + 4);
+                    g.FillEllipse(dpGlowBrush, dotX - 2, dot2Y - 2, dotSize + 4, dotSize + 4);
                 }
 
-                using var brush = new SolidBrush(_segmentColor);
-                g.FillEllipse(brush, dotX, dot1Y, dotSize, dotSize);
-                g.FillEllipse(brush, dotX, dot2Y, dotSize, dotSize);
+                g.FillEllipse(fillBrush, dotX, dot1Y, dotSize, dotSize);
+                g.FillEllipse(fillBrush, dotX, dot2Y, dotSize, dotSize);
 
-                Color coreColor = Color.FromArgb(
-                    255,
-                    Math.Min(255, _segmentColor.R + 80),
-                    Math.Min(255, _segmentColor.G + 80),
-                    Math.Min(255, _segmentColor.B + 80));
-                using var coreBrush = new SolidBrush(coreColor);
                 float cSize = dotSize * 0.5f;
                 float offset = (dotSize - cSize) / 2f;
                 g.FillEllipse(coreBrush, dotX + offset, dot1Y + offset, cSize, cSize);
@@ -930,7 +926,6 @@ namespace ZeroUI.WinForms.Industrial
             }
             else if (_showGhostSegments)
             {
-                using var ghostBrush = new SolidBrush(_dimColor);
                 g.FillEllipse(ghostBrush, dotX, dot1Y, dotSize, dotSize);
                 g.FillEllipse(ghostBrush, dotX, dot2Y, dotSize, dotSize);
             }
@@ -941,16 +936,10 @@ namespace ZeroUI.WinForms.Industrial
         private void DrawUnitBadge(Graphics g, float x, float y, float w, float h)
         {
             Color uColor = _unitColor.IsEmpty ? Color.FromArgb(170, _segmentColor) : _unitColor;
-            using var font = new Font("Segoe UI", Math.Max(7.5f, h * 0.22f), FontStyle.Bold);
+            var font = ZeroFontCache.Get("Segoe UI", Math.Max(7.5f, h * 0.22f), FontStyle.Bold);
             using var brush = new SolidBrush(uColor);
-            using var format = new StringFormat
-            {
-                Alignment = StringAlignment.Far,
-                LineAlignment = StringAlignment.Far
-            };
-
             var rect = new RectangleF(x, y, w, h - 2);
-            g.DrawString(_unit, font, brush, rect, format);
+            g.DrawString(_unit, font, brush, rect, ZeroStringFormats.FarFar);
         }
 
         private void DrawGlassSheen(Graphics g, int w, int h)

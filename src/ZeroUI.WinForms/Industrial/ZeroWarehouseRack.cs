@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -252,13 +253,13 @@ namespace ZeroUI.WinForms.Industrial
             {
                 g.FillRectangle(brush, 0, 0, w, h);
             }
-            using (var borderPen = new Pen(Color.FromArgb(51, 65, 85), 1f))
+            using (var enclosurePen = new Pen(Color.FromArgb(51, 65, 85), 1f))
             {
-                g.DrawRectangle(borderPen, 0, 0, w - 1, h - 1);
+                g.DrawRectangle(enclosurePen, 0, 0, w - 1, h - 1);
             }
 
             // 2. Title & Occupancy Summary
-            using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
             {
                 g.DrawString(_rackTitle, titleFont, titleBrush, 8, 6);
@@ -280,7 +281,7 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             string summary = $"Occupancy: {fullCount + availCount}/{_levels * _bays} | QC Hold: {quarCount}";
-            using (var statFont = new Font("Segoe UI", 7.5f))
+            var statFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
             using (var statBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
             {
                 var sz = g.MeasureString(summary, statFont);
@@ -322,6 +323,14 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 4. Draw Individual Bins
+            var binFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
+            var subFont = ZeroFontCache.Get("Segoe UI", 6.5f, FontStyle.Regular);
+            using var textBrush = new SolidBrush(Color.White);
+            using var subBrush = new SolidBrush(Color.FromArgb(226, 232, 240));
+            using var pillBrush = new SolidBrush(Color.FromArgb(70, 0, 0, 0));
+            using var borderPen = new Pen(Color.Empty, 1f);
+            using var hoverPen = new Pen(Color.White, 2f);
+
             for (int lvl = 0; lvl < _levels; lvl++)
             {
                 for (int bay = 0; bay < _bays; bay++)
@@ -331,19 +340,23 @@ namespace ZeroUI.WinForms.Industrial
                     int y = startY + (lvl * (binH + gapY));
                     bin.Bounds = new Rectangle(x, y, binW, binH);
 
-                    DrawBin(g, bin, _hoveredBin == bin);
+                    DrawBin(g, bin, _hoveredBin == bin, binFont, subFont, textBrush, subBrush, pillBrush, borderPen, hoverPen);
                 }
             }
 
             // 5. Bottom Legend
             int legY = h - 18;
-            DrawLegend(g, 10, legY, Color.FromArgb(51, 65, 85), "Empty");
-            DrawLegend(g, 85, legY, Color.FromArgb(59, 130, 246), "Available");
-            DrawLegend(g, 175, legY, Color.FromArgb(16, 185, 129), "Full");
-            DrawLegend(g, 240, legY, Color.FromArgb(239, 68, 68), "QC Hold");
+            using var legTxtBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+            DrawLegend(g, 10, legY, Color.FromArgb(51, 65, 85), "Empty", statFont, legTxtBrush);
+            DrawLegend(g, 85, legY, Color.FromArgb(59, 130, 246), "Available", statFont, legTxtBrush);
+            DrawLegend(g, 175, legY, Color.FromArgb(16, 185, 129), "Full", statFont, legTxtBrush);
+            DrawLegend(g, 240, legY, Color.FromArgb(239, 68, 68), "QC Hold", statFont, legTxtBrush);
         }
 
-        private void DrawBin(Graphics g, WarehouseBin bin, bool isHovered)
+        private void DrawBin(
+            Graphics g, WarehouseBin bin, bool isHovered,
+            Font font, Font subFont, SolidBrush textBrush, SolidBrush subBrush,
+            SolidBrush pillBrush, Pen borderPen, Pen hoverPen)
         {
             Rectangle r = bin.Bounds;
             Color fillC;
@@ -369,26 +382,27 @@ namespace ZeroUI.WinForms.Industrial
                     break;
             }
 
-            // Fill
+            // Fill with subtle gradient
             using (var brush = new LinearGradientBrush(new Point(r.X, r.Y), new Point(r.X, r.Bottom), fillC, Color.FromArgb(180, fillC.R / 2, fillC.G / 2, fillC.B / 2)))
             {
                 g.FillRectangle(brush, r);
             }
 
             // Border
-            using (var pen = new Pen(isHovered ? Color.White : borderC, isHovered ? 2f : 1f))
+            if (isHovered)
             {
-                g.DrawRectangle(pen, r);
+                g.DrawRectangle(hoverPen, r);
+            }
+            else
+            {
+                borderPen.Color = borderC;
+                g.DrawRectangle(borderPen, r);
             }
 
             // Measure Texts
-            using var font = new Font("Segoe UI", 7.5f, FontStyle.Bold);
-            using var textBrush = new SolidBrush(Color.White);
             var sz = g.MeasureString(bin.BinCode, font);
 
             string sub = bin.Status == BinOccupancyStatus.Empty ? "—" : $"{bin.CurrentQty:N0}";
-            using var subFont = new Font("Segoe UI", 6.5f, FontStyle.Regular);
-            using var subBrush = new SolidBrush(Color.FromArgb(226, 232, 240));
             var subSz = g.MeasureString(sub, subFont);
 
             // Adaptive layout: if height allows 2 stacked lines without overlapping, stack vertically.
@@ -408,7 +422,6 @@ namespace ZeroUI.WinForms.Industrial
                     int pillX = r.X + (r.Width - pillW) / 2;
                     int pillY = (int)subY;
                     var pillRect = new Rectangle(pillX, pillY, pillW, pillH);
-                    using var pillBrush = new SolidBrush(Color.FromArgb(70, 0, 0, 0));
                     using var pillPath = ZeroUIConfig.CreateRoundedRectangle(pillRect, 3);
                     g.FillPath(pillBrush, pillPath);
                 }
@@ -432,7 +445,6 @@ namespace ZeroUI.WinForms.Industrial
                     int pillX = (int)subX - 4;
                     int pillY = (int)subY - 1;
                     var pillRect = new Rectangle(pillX, pillY, pillW, pillH);
-                    using var pillBrush = new SolidBrush(Color.FromArgb(70, 0, 0, 0));
                     using var pillPath = ZeroUIConfig.CreateRoundedRectangle(pillRect, 3);
                     g.FillPath(pillBrush, pillPath);
                 }
@@ -441,12 +453,10 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        private void DrawLegend(Graphics g, int x, int y, Color color, string label)
+        private void DrawLegend(Graphics g, int x, int y, Color color, string label, Font font, SolidBrush txtBrush)
         {
             using var brush = new SolidBrush(color);
             g.FillRectangle(brush, x, y + 2, 8, 8);
-            using var font = new Font("Segoe UI", 7.5f);
-            using var txtBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
             g.DrawString(label, font, txtBrush, x + 12, y);
         }
     }

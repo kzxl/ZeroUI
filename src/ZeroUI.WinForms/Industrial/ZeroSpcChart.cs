@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -228,18 +229,21 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 2. Header & Metrics Bar
-            using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
-            using (var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
-            {
-                g.DrawString(_title, titleFont, titleBrush, 8, 6);
-            }
-
             string stats = $"X̄: {_mean:F3} | UCL: {_ucl:F3} | LCL: {_lcl:F3} | σ: {_sigma:F4} | Cpk: {_cpk:F2}";
-            using (var statFont = new Font("Segoe UI", 7.5f, FontStyle.Bold))
-            using (var statBrush = new SolidBrush(_cpk >= 1.33f ? Color.FromArgb(52, 211, 153) : Color.FromArgb(251, 191, 36)))
+            var statFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
+            Color statColor = _cpk >= 1.33f ? Color.FromArgb(52, 211, 153) : Color.FromArgb(251, 191, 36);
+            using (var statBrush = new SolidBrush(statColor))
             {
                 var sz = g.MeasureString(stats, statFont);
-                g.DrawString(stats, statFont, statBrush, w - sz.Width - 10, 8);
+                float statsX = w - sz.Width - 10;
+                g.DrawString(stats, statFont, statBrush, statsX, 8);
+
+                // Draw title with ellipsis if constrained by stats
+                var titleFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
+                using var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249));
+                float titleMaxW = Math.Max(40f, statsX - 16f);
+                var titleRect = new RectangleF(8, 6, titleMaxW, 18);
+                g.DrawString(_title, titleFont, titleBrush, titleRect, ZeroStringFormats.EllipsisNearCenter);
             }
 
             // 3. Plot Area Geometry
@@ -313,6 +317,10 @@ namespace ZeroUI.WinForms.Industrial
                 }
 
                 // Draw Point markers
+                using var dotBrush = new SolidBrush(Color.Empty);
+                using var dotPen = new Pen(Color.White, 1f);
+                using var glowPen = new Pen(Color.FromArgb(120, 239, 68, 68), 3f);
+
                 for (int i = 0; i < _points.Count; i++)
                 {
                     var p = pts[i];
@@ -324,23 +332,17 @@ namespace ZeroUI.WinForms.Industrial
                     // Glow if out of control
                     if (ooc)
                     {
-                        using var glowPen = new Pen(Color.FromArgb(120, 239, 68, 68), 3f);
                         g.DrawEllipse(glowPen, p.X - r - 2, p.Y - r - 2, (r * 2) + 4, (r * 2) + 4);
                     }
 
-                    using (var dotBrush = new SolidBrush(dotColor))
-                    {
-                        g.FillEllipse(dotBrush, p.X - r, p.Y - r, r * 2, r * 2);
-                    }
-                    using (var dotPen = new Pen(Color.White, 1f))
-                    {
-                        g.DrawEllipse(dotPen, p.X - r, p.Y - r, r * 2, r * 2);
-                    }
+                    dotBrush.Color = dotColor;
+                    g.FillEllipse(dotBrush, p.X - r, p.Y - r, r * 2, r * 2);
+                    g.DrawEllipse(dotPen, p.X - r, p.Y - r, r * 2, r * 2);
                 }
             }
 
             // 8. X-Axis Subgroup labels at bottom
-            using var xFont = new Font("Segoe UI", 7f);
+            var xFont = ZeroFontCache.Get("Segoe UI", 7f, FontStyle.Regular);
             using var xBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
             if (_points.Count > 0)
             {
@@ -357,7 +359,7 @@ namespace ZeroUI.WinForms.Industrial
 
         private void DrawYLabel(Graphics g, int plotX, int y, string text, Color color)
         {
-            using var font = new Font("Segoe UI", 7f);
+            var font = ZeroFontCache.Get("Segoe UI", 7f, FontStyle.Regular);
             using var brush = new SolidBrush(color);
             var sz = g.MeasureString(text, font);
             g.DrawString(text, font, brush, plotX - sz.Width - 4, y - (sz.Height / 2));

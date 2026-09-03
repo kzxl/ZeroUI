@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -359,9 +360,11 @@ namespace ZeroUI.WinForms.Industrial
             float cellW = (float)plotW / cols;
             float cellH = (float)plotH / rows;
 
-            using var fontLabel = new Font(Font.FontFamily, 8f, FontStyle.Regular);
-            using var fontValue = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
+            var fontLabel = ZeroFontCache.Get(8f, FontStyle.Regular);
+            var fontValue = ZeroFontCache.Get(7.5f, FontStyle.Bold);
             using var brushLabel = new SolidBrush(palette.TextSecondary);
+            using var brushCell = new SolidBrush(Color.Empty);
+            using var brushVal = new SolidBrush(Color.Empty);
 
             // 1. Draw X Header Labels (Top, smart step when narrow to prevent overlap)
             int step = cellW < 20 ? 4 : (cellW < 30 ? 2 : 1);
@@ -369,16 +372,14 @@ namespace ZeroUI.WinForms.Industrial
             {
                 if (c % step != 0 && c != cols - 1) continue;
                 float x = leftMargin + (c * cellW) + (cellW / 2f);
-                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Far };
-                g.DrawString(_xLabels[c], fontLabel, brushLabel, x, topMargin - 4, sf);
+                g.DrawString(_xLabels[c], fontLabel, brushLabel, x, topMargin - 4, ZeroStringFormats.CenterFar);
             }
 
             // 2. Draw Y Header Labels (Left)
             for (int r = 0; r < rows; r++)
             {
                 float y = topMargin + (r * cellH) + (cellH / 2f);
-                var sf = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-                g.DrawString(_yLabels[r], fontLabel, brushLabel, leftMargin - 6, y, sf);
+                g.DrawString(_yLabels[r], fontLabel, brushLabel, leftMargin - 6, y, ZeroStringFormats.FarCenter);
             }
 
             // 3. Render Matrix Cells
@@ -402,9 +403,14 @@ namespace ZeroUI.WinForms.Industrial
 
                     var cellRect = new RectangleF(x, y, w, h);
 
-                    using (var brushCell = new SolidBrush(cellColor))
-                    using (var path = CreateRoundedRect(cellRect, _cellRadius))
+                    brushCell.Color = cellColor;
+                    if (_cellRadius <= 0)
                     {
+                        g.FillRectangle(brushCell, cellRect);
+                    }
+                    else
+                    {
+                        using var path = CreateRoundedRect(cellRect, _cellRadius);
                         g.FillPath(brushCell, path);
                     }
 
@@ -414,9 +420,8 @@ namespace ZeroUI.WinForms.Industrial
                         Color textC = (norm > 0.6f && _paletteMode != HeatmapPaletteMode.Emerald) ? Color.White : Color.FromArgb(240, 240, 240);
                         if (_paletteMode == HeatmapPaletteMode.Viridis && norm > 0.7f) textC = Color.FromArgb(20, 20, 20);
 
-                        using var brushVal = new SolidBrush(textC);
-                        var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                        g.DrawString(string.Format(_valueFormat, val), fontValue, brushVal, cellRect, sf);
+                        brushVal.Color = textC;
+                        g.DrawString(string.Format(_valueFormat, val), fontValue, brushVal, cellRect, ZeroStringFormats.Center);
                     }
 
                     if (r == _hoveredRow && c == _hoveredCol)
@@ -431,9 +436,16 @@ namespace ZeroUI.WinForms.Industrial
             if (!hoveredRect.IsEmpty && _hoveredRow >= 0 && _hoveredCol >= 0)
             {
                 using (var penHover = new Pen(Color.White, 2f))
-                using (var pathHover = CreateRoundedRect(hoveredRect, _cellRadius))
                 {
-                    g.DrawPath(penHover, pathHover);
+                    if (_cellRadius <= 0)
+                    {
+                        g.DrawRectangle(penHover, hoveredRect.X, hoveredRect.Y, hoveredRect.Width, hoveredRect.Height);
+                    }
+                    else
+                    {
+                        using var pathHover = CreateRoundedRect(hoveredRect, _cellRadius);
+                        g.DrawPath(penHover, pathHover);
+                    }
                 }
 
                 // Draw floating inspection pill near mouse
@@ -441,7 +453,7 @@ namespace ZeroUI.WinForms.Industrial
                 string cText = (_hoveredCol < _xLabels.Length) ? _xLabels[_hoveredCol] : "";
                 string tip = $"{rText} • {cText}: {hoveredVal:0.0} ({((hoveredVal - _minValue) / Math.Max(1f, _maxValue - _minValue) * 100):0}%)";
 
-                using var fontTip = new Font(Font.FontFamily, 8f, FontStyle.Bold);
+                var fontTip = ZeroFontCache.Get(8f, FontStyle.Bold);
                 var tipSz = g.MeasureString(tip, fontTip);
                 int tipW = (int)tipSz.Width + 16;
                 int tipH = 22;
@@ -458,8 +470,7 @@ namespace ZeroUI.WinForms.Industrial
                 }
 
                 using var brushTipText = new SolidBrush(Color.White);
-                var sfTip = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(tip, fontTip, brushTipText, tipRect, sfTip);
+                g.DrawString(tip, fontTip, brushTipText, tipRect, ZeroStringFormats.Center);
             }
 
             // 5. Draw Bottom Color Gradient Legend
@@ -472,16 +483,26 @@ namespace ZeroUI.WinForms.Industrial
 
                 var legRect = new Rectangle(legendX, legendY, legendW, legendH);
 
-                // Paint gradient bar
-                using (var legBmp = new Bitmap(legendW, 1))
+                // Paint gradient bar using cached interpolation colors
+                using (var legBrush = new LinearGradientBrush(
+                    legRect,
+                    InterpolateColor(0f, _paletteMode),
+                    InterpolateColor(1f, _paletteMode),
+                    LinearGradientMode.Horizontal))
                 {
-                    for (int lx = 0; lx < legendW; lx++)
+                    var cb = new ColorBlend(5);
+                    cb.Colors = new[]
                     {
-                        float norm = (float)lx / (legendW - 1);
-                        legBmp.SetPixel(lx, 0, InterpolateColor(norm, _paletteMode));
-                    }
-                    g.InterpolationMode = InterpolationMode.Bilinear;
-                    g.DrawImage(legBmp, legRect);
+                        InterpolateColor(0f, _paletteMode),
+                        InterpolateColor(0.25f, _paletteMode),
+                        InterpolateColor(0.5f, _paletteMode),
+                        InterpolateColor(0.75f, _paletteMode),
+                        InterpolateColor(1f, _paletteMode)
+                    };
+                    cb.Positions = new[] { 0f, 0.25f, 0.5f, 0.75f, 1f };
+                    legBrush.InterpolationColors = cb;
+
+                    g.FillRectangle(legBrush, legRect);
                 }
 
                 using (var penLeg = new Pen(palette.Border, 1f))
@@ -490,10 +511,10 @@ namespace ZeroUI.WinForms.Industrial
                 }
 
                 // Legend labels (Min, Mid, Max)
-                using var fontLeg = new Font(Font.FontFamily, 7.5f, FontStyle.Regular);
-                g.DrawString($"{_minValue:0}", fontLeg, brushLabel, legendX - 4, legendY - 1, new StringFormat { Alignment = StringAlignment.Far });
-                g.DrawString($"{((_minValue + _maxValue) / 2f):0}", fontLeg, brushLabel, legendX + (legendW / 2f), legendY + legendH + 2, new StringFormat { Alignment = StringAlignment.Center });
-                g.DrawString($"{_maxValue:0}", fontLeg, brushLabel, legendX + legendW + 4, legendY - 1, new StringFormat { Alignment = StringAlignment.Near });
+                var fontLeg = ZeroFontCache.Get(7.5f, FontStyle.Regular);
+                g.DrawString($"{_minValue:0}", fontLeg, brushLabel, legendX - 4, legendY - 1, ZeroStringFormats.FarNear);
+                g.DrawString($"{((_minValue + _maxValue) / 2f):0}", fontLeg, brushLabel, legendX + (legendW / 2f), legendY + legendH + 2, ZeroStringFormats.CenterNear);
+                g.DrawString($"{_maxValue:0}", fontLeg, brushLabel, legendX + legendW + 4, legendY - 1, ZeroStringFormats.NearNear);
             }
         }
 
