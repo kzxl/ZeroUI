@@ -35,7 +35,19 @@ namespace ZeroUI.WinForms.Charts.Model
         Pie,
 
         /// <summary>Donut chart with hollow center for KPI summaries and statistics.</summary>
-        Donut
+        Donut,
+
+        /// <summary>Multi-axis radar or spider chart for multi-dimensional performance benchmarking.</summary>
+        Radar,
+
+        /// <summary>Financial OHLC candlestick chart with volume histogram and trend overlays.</summary>
+        Candlestick,
+
+        /// <summary>Process pipeline and conversion funnel chart with stage drop-off metrics.</summary>
+        Funnel,
+
+        /// <summary>Cumulative variance bridge waterfall chart with floating positive and negative steps.</summary>
+        Waterfall
     }
 
     /// <summary>

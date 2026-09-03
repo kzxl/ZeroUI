@@ -3360,7 +3360,201 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             row1.BringToFront();
             row2.BringToFront();
 
-            _tabCharts.Controls.Add(mainContainer);
+            // -------------------------------------------------------------
+            // SUB-TAB 2: Radar Diagnostics & Candlestick Price Analytics
+            // -------------------------------------------------------------
+            var panelRadar = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            var bannerRadar = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "🎯 Multi-Axis Radar Diagnostics & Financial OHLC Candlestick Engine",
+                Message = "High-precision vector Radar/Spider evaluation across multiple OEE axes and real-time Financial Candlestick chart with synchronized volume and moving averages.",
+                Height = 62
+            };
+            var bannerSpacerRadar = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            var rowRadar = new Panel { Dock = DockStyle.Top, Height = 360, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card: Radar Chart
+            var cardRadar = new ZeroCard
+            {
+                Title = "Multi-Axis Machine OEE & Performance Benchmark (Spider)",
+                Dock = DockStyle.Left,
+                Width = 540
+            };
+            var radarChart = new ZeroRadarChart
+            {
+                Dock = DockStyle.Fill,
+                MaxValue = 100.0,
+                WebRings = 5
+            };
+            radarChart.SetAxes("Availability", "Performance", "Quality Rate", "MTBF Stability", "5S Hygiene", "Tooling Life");
+            radarChart.AddSeries("Line A - SMT Surface", Color.FromArgb(79, 70, 229), 92.0, 88.5, 96.2, 85.0, 94.0, 78.0);
+            radarChart.AddSeries("Target Benchmark", Color.FromArgb(16, 185, 129), 95.0, 90.0, 98.0, 90.0, 95.0, 85.0);
+            radarChart.AddSeries("Line B - Wave Soldering", Color.FromArgb(245, 158, 11), 84.0, 79.0, 91.0, 76.0, 88.0, 82.0);
+            cardRadar.ContentPanel.Controls.Add(radarChart);
+
+            var splitRadar = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card: Candlestick Chart
+            var cardCandle = new ZeroCard
+            {
+                Title = "Industrial Copper (Cu-99.9%) Daily Price ($/lb) & Trading Volume",
+                Dock = DockStyle.Fill
+            };
+            var candleChart = new ZeroCandlestickChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "COMEX Copper Futures (Daily OHLC + Volume)",
+                ValuePrefix = "$",
+                ShowMovingAverage = true,
+                ShowVolume = true,
+                MaPeriod = 5
+            };
+
+            var candleRnd = new Random(42);
+            DateTime baseDate = DateTime.Today.AddDays(-32);
+            double curPrice = 4.35;
+            for (int i = 0; i < 24; i++)
+            {
+                var dt = baseDate.AddDays(i);
+                if (dt.DayOfWeek == DayOfWeek.Saturday || dt.DayOfWeek == DayOfWeek.Sunday) continue;
+                double open = curPrice;
+                double change = (candleRnd.NextDouble() - 0.48) * 0.12;
+                double close = Math.Round(open + change, 3);
+                double high = Math.Round(Math.Max(open, close) + candleRnd.NextDouble() * 0.06, 3);
+                double low = Math.Round(Math.Min(open, close) - candleRnd.NextDouble() * 0.06, 3);
+                double vol = candleRnd.Next(15000, 48000);
+                candleChart.AddCandle(dt, open, high, low, close, vol);
+                curPrice = close;
+            }
+            cardCandle.ContentPanel.Controls.Add(candleChart);
+
+            rowRadar.Controls.Add(cardCandle);
+            rowRadar.Controls.Add(splitRadar);
+            rowRadar.Controls.Add(cardRadar);
+
+            panelRadar.Controls.Add(rowRadar);
+            panelRadar.Controls.Add(bannerSpacerRadar);
+            panelRadar.Controls.Add(bannerRadar);
+
+            bannerRadar.BringToFront();
+            bannerSpacerRadar.BringToFront();
+            rowRadar.BringToFront();
+
+            // -------------------------------------------------------------
+            // SUB-TAB 3: Funnel & Waterfall Bridges
+            // -------------------------------------------------------------
+            var panelBridges = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            var bannerBridges = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Warning,
+                Title = "📉 Conversion Pipeline Funnel & Reconciliation Waterfall Bridges",
+                Message = "Tapered trapezoid Funnel showing stage drop-off and conversion rates, coupled with floating-bar Waterfall chart tracking cumulative inventory & financial reconciliation.",
+                Height = 62
+            };
+            var bannerSpacerBridges = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            var rowBridges = new Panel { Dock = DockStyle.Top, Height = 360, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card: Funnel Chart
+            var cardFunnel = new ZeroCard
+            {
+                Title = "Production Yield & Stage Drop-off Conversion (Funnel)",
+                Dock = DockStyle.Left,
+                Width = 540
+            };
+            var funnelChart = new ZeroFunnelChart
+            {
+                Dock = DockStyle.Fill,
+                ValueSuffix = " pcs",
+                ShowConversionRates = true,
+                ShowPercentages = true,
+                NeckWidth = 90
+            };
+            funnelChart.AddStage("Raw Inward Wafers", 100000, Color.FromArgb(79, 70, 229), "Lot acceptance & IQC passed");
+            funnelChart.AddStage("SMT Chip Placement", 97400, Color.FromArgb(16, 185, 129), "High-speed surface mount");
+            funnelChart.AddStage("Reflow Soldering", 95200, Color.FromArgb(6, 182, 212), "10-zone nitrogen profile");
+            funnelChart.AddStage("AOI Optical Inspection", 92800, Color.FromArgb(245, 158, 11), "Automated optical inspection");
+            funnelChart.AddStage("Final Packaged Goods", 91600, Color.FromArgb(244, 63, 94), "OQC passed finished yield");
+            cardFunnel.ContentPanel.Controls.Add(funnelChart);
+
+            var splitBridges = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card: Waterfall Chart
+            var cardWaterfall = new ZeroCard
+            {
+                Title = "Inventory Balance Variance & Stock Flow Reconciliation (Waterfall)",
+                Dock = DockStyle.Fill
+            };
+            var waterfallChart = new ZeroWaterfallChart
+            {
+                Dock = DockStyle.Fill,
+                ValuePrefix = "",
+                ValueSuffix = " pcs",
+                ShowConnectors = true
+            };
+            waterfallChart.AddItem("Opening", 5000, WaterfallItemType.Start);
+            waterfallChart.AddItem("Receipts", 2400, WaterfallItemType.Increment);
+            waterfallChart.AddItem("SMT Scrap", -320, WaterfallItemType.Decrement);
+            waterfallChart.AddItem("Production", -1850, WaterfallItemType.Decrement);
+            waterfallChart.AddItem("Returns", 150, WaterfallItemType.Increment);
+            waterfallChart.AddItem("Dispatched", -1600, WaterfallItemType.Decrement);
+            waterfallChart.AddItem("Audit Adj", 40, WaterfallItemType.Increment);
+            waterfallChart.AddItem("Closing", 3820, WaterfallItemType.Total);
+            cardWaterfall.ContentPanel.Controls.Add(waterfallChart);
+
+            rowBridges.Controls.Add(cardWaterfall);
+            rowBridges.Controls.Add(splitBridges);
+            rowBridges.Controls.Add(cardFunnel);
+
+            panelBridges.Controls.Add(rowBridges);
+            panelBridges.Controls.Add(bannerSpacerBridges);
+            panelBridges.Controls.Add(bannerBridges);
+
+            bannerBridges.BringToFront();
+            bannerSpacerBridges.BringToFront();
+            rowBridges.BringToFront();
+
+            // Assemble Modular Sub-tabs
+            var subTabsCharts = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+
+            var tabExecOverview = new ZeroTabPage("Executive Overview", "📈");
+            tabExecOverview.Controls.Add(mainContainer);
+
+            var tabRadarDiagnostics = new ZeroTabPage("Radar & Candlestick Analytics", "🎯");
+            tabRadarDiagnostics.Controls.Add(panelRadar);
+
+            var tabBridgesSub = new ZeroTabPage("Funnel & Waterfall Bridges", "📉");
+            tabBridgesSub.Controls.Add(panelBridges);
+
+            subTabsCharts.AddTab(tabExecOverview);
+            subTabsCharts.AddTab(tabRadarDiagnostics);
+            subTabsCharts.AddTab(tabBridgesSub);
+
+            _tabCharts.Controls.Add(subTabsCharts);
         }
     }
 }
