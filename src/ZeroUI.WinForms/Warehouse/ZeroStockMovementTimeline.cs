@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 using ZeroUI.WinForms.Warehouse.Models;
 
@@ -160,12 +161,12 @@ namespace ZeroUI.WinForms.Warehouse
             }
 
             // 2. Header
-            using (var titleFont = new Font("Segoe UI", 9f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold);
             using (var titleBrush = new SolidBrush(Color.FromArgb(15, 23, 42)))
             {
                 g.DrawString($"BATCH TRACEABILITY: {_traceData.LotNumber}", titleFont, titleBrush, 12, 10);
             }
-            using (var subFont = new Font("Segoe UI", 8f, FontStyle.Regular))
+            var subFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Regular);
             using (var subBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
             {
                 g.DrawString($"Product: {_traceData.ProductCode} | Warehouse: {_traceData.WarehouseCode}", subFont, subBrush, 12, 28);
@@ -192,9 +193,15 @@ namespace ZeroUI.WinForms.Warehouse
                 g.DrawLine(spinePen, spineX, startY, spineX, endSpineY);
             }
 
-            using var nodeTitleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold);
-            using var nodeDetailFont = new Font("Segoe UI", 7.5f, FontStyle.Regular);
-            using var qtyFont = new Font("Segoe UI", 9f, FontStyle.Bold);
+            var nodeTitleFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
+            var nodeDetailFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
+            var qtyFont = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold);
+
+            using var branchPen = new Pen(Color.FromArgb(203, 213, 225), 1.8f);
+            using var tBrush = new SolidBrush(Color.Empty);
+            using var refBrush = new SolidBrush(Color.FromArgb(71, 85, 105));
+            using var detBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+            using var qBrush = new SolidBrush(Color.Empty);
 
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -204,7 +211,6 @@ namespace ZeroUI.WinForms.Warehouse
                 // Branch horizontal connector (├── or └──)
                 if (i > 0)
                 {
-                    using var branchPen = new Pen(Color.FromArgb(203, 213, 225), 1.8f);
                     g.DrawLine(branchPen, spineX, nodeY, spineX + 14, nodeY);
                 }
 
@@ -237,28 +243,20 @@ namespace ZeroUI.WinForms.Warehouse
                 }
 
                 // Line 1: Title & Reference
-                using (var tBrush = new SolidBrush(titleColor))
-                using (var refBrush = new SolidBrush(Color.FromArgb(71, 85, 105)))
-                {
-                    string refText = string.IsNullOrEmpty(node.ReferenceNo) ? "" : $" [{node.ReferenceNo}]";
-                    g.DrawString(node.Title + refText, nodeTitleFont, tBrush, textX, nodeY - 10);
-                }
+                tBrush.Color = titleColor;
+                string refText = string.IsNullOrEmpty(node.ReferenceNo) ? "" : $" [{node.ReferenceNo}]";
+                g.DrawString(node.Title + refText, nodeTitleFont, tBrush, textX, nodeY - 10);
 
                 // Line 2: Date & Destination/Source
-                using (var detBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
-                {
-                    string dateStr = node.Timestamp.ToString("dd/MM/yyyy HH:mm");
-                    string srcStr = string.IsNullOrEmpty(node.DestinationOrSource) ? "" : $" • {node.DestinationOrSource}";
-                    g.DrawString(dateStr + srcStr, nodeDetailFont, detBrush, textX, nodeY + 6);
-                }
+                string dateStr = node.Timestamp.ToString("dd/MM/yyyy HH:mm");
+                string srcStr = string.IsNullOrEmpty(node.DestinationOrSource) ? "" : $" • {node.DestinationOrSource}";
+                g.DrawString(dateStr + srcStr, nodeDetailFont, detBrush, textX, nodeY + 6);
 
                 // Right-aligned Quantity Badge
                 string qtyText = $"{qtyPrefix}{node.Quantity:N0}";
                 var qtySize = g.MeasureString(qtyText, qtyFont);
-                using (var qBrush = new SolidBrush(qtyColor))
-                {
-                    g.DrawString(qtyText, qtyFont, qBrush, w - qtySize.Width - 14, nodeY - 6);
-                }
+                qBrush.Color = qtyColor;
+                g.DrawString(qtyText, qtyFont, qBrush, w - qtySize.Width - 14, nodeY - 6);
             }
         }
 

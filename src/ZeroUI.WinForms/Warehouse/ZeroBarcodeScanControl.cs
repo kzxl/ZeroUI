@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Media;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 using ZeroUI.WinForms.Warehouse.Models;
 
@@ -393,7 +394,7 @@ namespace ZeroUI.WinForms.Warehouse
             }
 
             // 2. Header: Title + Live Status Badge
-            using (var titleFont = new Font("Segoe UI", 9.5f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get("Segoe UI", 9.5f, FontStyle.Bold);
             using (var titleBrush = new SolidBrush(Color.FromArgb(30, 41, 59)))
             {
                 g.DrawString(_title, titleFont, titleBrush, 14, 10);
@@ -407,7 +408,7 @@ namespace ZeroUI.WinForms.Warehouse
                 ? (_flashSuccess ? Color.FromArgb(16, 185, 129) : Color.FromArgb(239, 68, 68))
                 : Color.FromArgb(59, 130, 246);
 
-            using (var pillFont = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+            var pillFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
             using (var pillBrush = new SolidBrush(statusColor))
             {
                 g.DrawString(statusText, pillFont, pillBrush, w - 85, 12);
@@ -440,8 +441,8 @@ namespace ZeroUI.WinForms.Warehouse
 
             if (_lastResult != null)
             {
-                using var labelFont = new Font("Segoe UI", 8.5f, FontStyle.Bold);
-                using var valueFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+                var labelFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
+                var valueFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Regular);
                 using var greenBrush = new SolidBrush(Color.FromArgb(16, 185, 129));
                 using var textBrush = new SolidBrush(Color.FromArgb(30, 41, 59));
                 using var subBrush = new SolidBrush(Color.FromArgb(100, 116, 139));
@@ -469,14 +470,14 @@ namespace ZeroUI.WinForms.Warehouse
                 {
                     using var badgeBrush = new SolidBrush(Color.FromArgb(224, 231, 255));
                     using var badgeTextBrush = new SolidBrush(Color.FromArgb(67, 56, 202));
-                    using var badgeFont = new Font("Segoe UI", 7f, FontStyle.Bold);
+                    var badgeFont = ZeroFontCache.Get("Segoe UI", 7f, FontStyle.Bold);
                     g.FillRectangle(badgeBrush, w - 85, row1Y, 65, 16);
                     g.DrawString("USB WEDGE", badgeFont, badgeTextBrush, w - 83, row1Y + 2);
                 }
             }
             else
             {
-                using var guideFont = new Font("Segoe UI", 8.5f, FontStyle.Italic);
+                var guideFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Italic);
                 using var guideBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
                 g.DrawString("No barcode scanned. Ready for hardware scanner or manual input...", guideFont, guideBrush, 18, metaY + 24);
             }

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 using ZeroUI.WinForms.Warehouse.Models;
 
@@ -163,8 +164,8 @@ namespace ZeroUI.WinForms.Warehouse
             }
 
             // 2. Product Header Area
-            using (var codeFont = new Font("Segoe UI", 11f, FontStyle.Bold))
-            using (var nameFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
+            var codeFont = ZeroFontCache.Get("Segoe UI", 11f, FontStyle.Bold);
+            var nameFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Regular);
             using (var codeBrush = new SolidBrush(Color.FromArgb(15, 23, 42)))
             using (var nameBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
             {
@@ -175,8 +176,8 @@ namespace ZeroUI.WinForms.Warehouse
             // Top-right Warehouse Pill
             using (var whPillBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
             using (var whTextBrush = new SolidBrush(Color.FromArgb(51, 65, 85)))
-            using (var whFont = new Font("Segoe UI", 8f, FontStyle.Bold))
             {
+                var whFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Bold);
                 string whLabel = $"WH: {_data.WarehouseCode}";
                 var whSize = g.MeasureString(whLabel, whFont);
                 int pillW = (int)whSize.Width + 12;
@@ -194,8 +195,8 @@ namespace ZeroUI.WinForms.Warehouse
 
             // 3. Three Golden Stock Metrics
             int metricStartY = 62;
-            using (var labelFont = new Font("Segoe UI", 9f, FontStyle.Regular))
-            using (var valFont = new Font("Segoe UI", 9.5f, FontStyle.Bold))
+            var labelFont = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Regular);
+            var valFont = ZeroFontCache.Get("Segoe UI", 9.5f, FontStyle.Bold);
             using (var lblBrush = new SolidBrush(Color.FromArgb(71, 85, 105)))
             {
                 // Metric 1: Available - Emerald Green
@@ -257,8 +258,8 @@ namespace ZeroUI.WinForms.Warehouse
 
             // 5. Footer: Location & Total Summary
             int footerY = barY + 14;
-            using (var footFont = new Font("Segoe UI", 8f, FontStyle.Regular))
-            using (var footBoldFont = new Font("Segoe UI", 8f, FontStyle.Bold))
+            var footFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Regular);
+            var footBoldFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Bold);
             using (var footBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
             using (var totalBrush = new SolidBrush(Color.FromArgb(30, 41, 59)))
             {
@@ -269,8 +270,7 @@ namespace ZeroUI.WinForms.Warehouse
                 int maxLocW = (int)(w - totSize.Width - 32);
                 string loc = string.IsNullOrEmpty(_data.LocationBin) ? _data.WarehouseName : $"{_data.WarehouseName} - {_data.LocationBin}";
                 RectangleF locRect = new RectangleF(14, footerY, maxLocW, 16);
-                using var locFormat = new StringFormat { Trimming = StringTrimming.EllipsisCharacter };
-                g.DrawString(loc, footFont, footBrush, locRect, locFormat);
+                g.DrawString(loc, footFont, footBrush, locRect, ZeroStringFormats.EllipsisNearCenter);
             }
         }
 

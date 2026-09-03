@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 using ZeroUI.WinForms.Warehouse.Models;
 
@@ -356,8 +357,8 @@ namespace ZeroUI.WinForms.Warehouse
             }
 
             // 2. Header Area
-            using (var titleFont = new Font("Segoe UI", 9.5f, FontStyle.Bold))
-            using (var boldFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get("Segoe UI", 9.5f, FontStyle.Bold);
+            var boldFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var textBrush = new SolidBrush(Color.FromArgb(30, 41, 59)))
             {
                 g.DrawString($"Lot Allocation: {_productCode}", titleFont, textBrush, 12, 10);
@@ -399,7 +400,7 @@ namespace ZeroUI.WinForms.Warehouse
             int colStatus = 310;
             int colSelect = w - 90;
 
-            using (var thFont = new Font("Segoe UI", 8f, FontStyle.Bold))
+            var thFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Bold);
             using (var thBrush = new SolidBrush(Color.FromArgb(71, 85, 105)))
             {
                 g.DrawString("LOT NO", thFont, thBrush, colLot, tableY + 6);
@@ -411,10 +412,14 @@ namespace ZeroUI.WinForms.Warehouse
 
             // 4. Rows
             int rowY = tableY + TableHeaderHeight;
-            using (var cellFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
-            using (var cellBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+            var cellFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Regular);
+            var cellBold = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var textBrush = new SolidBrush(Color.FromArgb(30, 41, 59)))
             using (var subBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
+            using (var rowBrush = new SolidBrush(Color.Empty))
+            using (var linePen = new Pen(Color.FromArgb(241, 245, 249), 1f))
+            using (var selBrush = new SolidBrush(Color.Empty))
+            using (var lockBrush = new SolidBrush(Color.FromArgb(203, 213, 225)))
             {
                 for (int i = 0; i < _lots.Count; i++)
                 {
@@ -429,16 +434,11 @@ namespace ZeroUI.WinForms.Warehouse
                         ? Color.FromArgb(238, 242, 255) // Light Indigo
                         : (isHover ? Color.FromArgb(248, 250, 252) : Color.White);
 
-                    using (var rowBrush = new SolidBrush(rowBg))
-                    {
-                        g.FillRectangle(rowBrush, 1, rowY, w - 2, RowHeight);
-                    }
+                    rowBrush.Color = rowBg;
+                    g.FillRectangle(rowBrush, 1, rowY, w - 2, RowHeight);
 
                     // Bottom row line
-                    using (var linePen = new Pen(Color.FromArgb(241, 245, 249), 1f))
-                    {
-                        g.DrawLine(linePen, 1, rowY + RowHeight, w - 2, rowY + RowHeight);
-                    }
+                    g.DrawLine(linePen, 1, rowY + RowHeight, w - 2, rowY + RowHeight);
 
                     int textY = rowY + 7;
 
@@ -459,12 +459,11 @@ namespace ZeroUI.WinForms.Warehouse
                     if (lot.Status == LotStatus.Available)
                     {
                         string selText = isSelected ? $"[✓] {lot.AllocatedQuantity:N0}" : "[   ] 0";
-                        using var selBrush = new SolidBrush(isSelected ? Color.FromArgb(79, 70, 229) : Color.FromArgb(148, 163, 184));
+                        selBrush.Color = isSelected ? Color.FromArgb(79, 70, 229) : Color.FromArgb(148, 163, 184);
                         g.DrawString(selText, cellBold, selBrush, colSelect, textY);
                     }
                     else
                     {
-                        using var lockBrush = new SolidBrush(Color.FromArgb(203, 213, 225));
                         g.DrawString("[Locked]", cellFont, lockBrush, colSelect, textY);
                     }
 
@@ -485,7 +484,7 @@ namespace ZeroUI.WinForms.Warehouse
             {
                 g.FillPath(brush, path);
             }
-            using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+            var font = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
             using (var textBrush = new SolidBrush(text))
             {
                 var sz = g.MeasureString(label, font);
@@ -523,7 +522,7 @@ namespace ZeroUI.WinForms.Warehouse
                     break;
             }
 
-            using var font = new Font("Segoe UI", 7.5f, FontStyle.Bold);
+            var font = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
             using var brush = new SolidBrush(bg);
             using var textBrush = new SolidBrush(text);
 
