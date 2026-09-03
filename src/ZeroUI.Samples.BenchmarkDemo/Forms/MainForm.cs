@@ -9,8 +9,10 @@ using ZeroUI.Core.Data;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Diagnostics;
 using ZeroUI.WinForms.Controls;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
+
 {
     public sealed class MainForm : Form
     {
@@ -34,11 +36,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroGridSearchBar _searchBar = null!;
         private ZeroGridPagination _pagination = null!;
         private ZeroToolbar _mainToolbar = null!;
+        private ZeroDrawer _drawer = null!;
         private TabPage _tabControls = null!;
         private TabPage _tabMes = null!;
         private ZeroSteps _mesSteps = null!;
         private ZeroListView _showcaseLog = null!;
         private System.Windows.Forms.Timer? _logGenTimer;
+
 
 
 
@@ -163,8 +167,24 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 BackColor = Color.White
             };
 
-            var btnNew = _mainToolbar.AddButton("New Order", "➕", (s, e) => ZeroToast.Success(this, "New order dialog triggered."));
+            var btnNew = _mainToolbar.AddButton("New Order", "➕", (s, e) =>
+            {
+                var formPanel = new Panel { Dock = DockStyle.Fill };
+                var desc = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 32 };
+                desc.Add("Order Code", "ORD-2026-9081");
+                desc.Add("Target Product", "B1030 MAX (Rev 2.0)");
+                desc.Add("Quantity", "10,000 units");
+                desc.Add("Due Date", DateTime.Today.AddDays(7).ToString("yyyy-MM-dd"));
+                formPanel.Controls.Add(desc);
+
+                ZeroModal.Show(this, "Create Production Order", formPanel, onOk: () =>
+                {
+                    ZeroToast.Success(this, "Work Order ORD-2026-9081 created successfully!");
+                });
+            });
             btnNew.IsPrimary = true;
+
+            _mainToolbar.AddButton("Detail Drawer", "📋", (s, e) => _drawer.Toggle());
 
             _mainToolbar.AddButton("Export CSV", "📊", (s, e) => _searchBar.TriggerExport());
             _mainToolbar.AddButton("Refresh", "🔄", (s, e) =>
@@ -193,6 +213,16 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             _mainToolbar.AddSpacer(); // Elastic right spacer
 
+            var btnTheme = _mainToolbar.AddButton("🌙 Dark Mode", null, (s, e) =>
+            {
+                ZeroTheme.ToggleTheme();
+                (s as ZeroToolbarButton)!.Text = ZeroTheme.IsDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+                _tabZero.BackColor = ZeroTheme.Colors.Background;
+                _tabMes.BackColor = ZeroTheme.Colors.Background;
+                _tabControls.BackColor = ZeroTheme.Colors.Background;
+                ZeroToast.Info(this, $"Switched theme to: {(ZeroTheme.IsDark ? "Obsidian Dark" : "Clean Light")}");
+            });
+
             _mainToolbar.AddButton("Fullscreen", "⛶", (s, e) =>
             {
                 WindowState = (WindowState == FormWindowState.Maximized) ? FormWindowState.Normal : FormWindowState.Maximized;
@@ -208,7 +238,24 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ZeroToast.Info(this, "Repository: https://github.com/kzxl/ZeroUI");
             });
 
-            // 3. Tab Control
+            // 3. Setup Side Drawer
+            _drawer = new ZeroDrawer
+            {
+                Title = "Material & Lot Specification",
+                Subtitle = "Deep inspection for selected inventory entity",
+                DrawerWidth = 400
+            };
+            var descDrawer = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 30 };
+            descDrawer.Add("Part Number", "BOA437-SMT-V2");
+            descDrawer.Add("Category", "Microcontroller / Active");
+            descDrawer.Add("Standard Cost", "$14.20");
+            descDrawer.Add("Lead Time", "3 Days");
+            descDrawer.Add("Safety Stock", "500 Units");
+            descDrawer.Add("Supplier", "Foxconn Precision Co.");
+            descDrawer.Add("Inspection Status", "Passed OQC", Color.FromArgb(16, 185, 129));
+            _drawer.ContentPanel.Controls.Add(descDrawer);
+
+            // 4. Tab Control
             _tabControl = new TabControl
             {
                 Dock = DockStyle.Fill,
@@ -244,11 +291,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
 
             // Assembly Form Layout
+            Controls.Add(_drawer);
             Controls.Add(_tabControl);
             Controls.Add(_mainToolbar);
             Controls.Add(_hudPanel);
             Controls.Add(_topPanel);
         }
+
 
 
 
@@ -910,20 +959,30 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var barcodeBox = new ZeroBarcodeBox
             {
                 Location = new Point(175, 4),
-                Width = 320,
+                Width = 280,
                 PlaceholderText = "Scan Barcode (e.g. SN-1030-88)..."
             };
             rowToolbar.Controls.Add(barcodeBox);
+
+            var mesDatePicker = new ZeroDatePicker
+            {
+                Location = new Point(465, 4),
+                Width = 145,
+                Value = DateTime.Today
+            };
+            mesDatePicker.ValueChanged += (s, e) => ZeroToast.Info(this, $"Filter date set to: {mesDatePicker.Value:yyyy-MM-dd}");
+            rowToolbar.Controls.Add(mesDatePicker);
 
             var btnSimulateScan = new ZeroButton
             {
                 Text = "⚡ Giả lập PLC (+5 Lắp ráp, +4 QC, +3 Nhập kho)",
                 ButtonStyle = ZeroButtonStyle.Primary,
                 Size = new Size(360, 34),
-                Location = new Point(510, 4),
+                Location = new Point(620, 4),
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold)
             };
             rowToolbar.Controls.Add(btnSimulateScan);
+
 
             // ROW 1: Board Info + Shell Info + OEE Gauge
             var row1 = new Panel { Dock = DockStyle.Top, Height = 210, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
