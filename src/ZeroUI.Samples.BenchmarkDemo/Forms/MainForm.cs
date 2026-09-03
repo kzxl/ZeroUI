@@ -2187,6 +2187,22 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ShowLines = true
             };
 
+            // Setup modern Context Menu for BOM Tree
+            var bomMenu = new ZeroContextMenu();
+            bomMenu.AddAction("Sao chép mã linh kiện", () => ZeroToast.Info(this, "Đã sao chép mã linh kiện vào Clipboard!"), "Ctrl+C", "📋");
+            bomMenu.AddAction("Tra cứu tồn kho ERP", () => ZeroToast.Info(this, "Tồn kho khả dụng: 1,420 PCS tại Kho SMT Alpha"), "F3", "🔍");
+            bomMenu.AddAction("Thêm linh kiện con", () => ZeroModal.Prompt(this, "Thêm Linh Kiện Con", "Nhập mã định mức linh kiện:", "RES-0402-10K", val => ZeroToast.Success(this, $"Đã bổ sung mã {val} vào cụm!")), "Ins", "➕");
+            bomMenu.AddSeparator();
+            var subCat = bomMenu.AddSubMenu("Phân loại danh mục", "🏷️");
+            subCat.AddSubAction("Linh kiện tích cực (IC / Vi xử lý)", () => ZeroToast.Info(this, "Đã gán nhóm IC"));
+            subCat.AddSubAction("Linh kiện thụ động (Điện trở / Tụ điện)", () => ZeroToast.Info(this, "Đã gán nhóm R/L/C"));
+            subCat.AddSubAction("Cơ khí / Vỏ hộp kim loại", () => ZeroToast.Info(this, "Đã gán nhóm Cơ khí"));
+            bomMenu.AddSeparator();
+            bomMenu.AddCheckable("Ghim linh kiện ưu tiên KCS", false, chk => ZeroToast.Info(this, $"Đã {(chk ? "ghim" : "bỏ ghim")} linh kiện ưu tiên!"), "⭐");
+            bomMenu.AddDangerAction("Xóa khỏi định mức BOM", () => ZeroModal.Confirm(this, "Xác Nhận Xóa", "Bạn có chắc muốn gỡ linh kiện này khỏi định mức sản xuất?", () => ZeroToast.Success(this, "Đã gỡ linh kiện khỏi BOM!")), "Del", "🗑️");
+
+            treeBom.ContextMenuStrip = bomMenu;
+
             // Build realistic BOM hierarchy for Industrial Smart Gateway
             var rootBom = new ZeroTreeNode("ASM-9000: Gateway Điều Khiển IoT Công Nghiệp", "⚙️", "Tổng định mức: U$ 24.80 • 28 LK")
             {

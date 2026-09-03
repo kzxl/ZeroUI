@@ -104,6 +104,7 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroProgressBar`**: Modern flat progress bar with percentage overlay and indeterminate shimmer.
 
 ### 🪟 Overlays & Navigation Subsystem (`ZeroUI.WinForms.Overlays`)
+* **`ZeroContextMenu`**: Modern anti-aliased context menu strip with rounded pill highlights, danger actions (soft red hover for delete/cancel), shortcut key alignments, badge tags, checkable items, submenus, and 100% theme reactivity.
 * **`ZeroModal`**: Enterprise modal dialog suite replacing legacy `MessageBox.Show`; features 52px halo semantic badges (`Success`, `Warning`, `Error`, `Info`, `Confirm`, `Prompt`), rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), ESC key, and action buttons.
 * **`ZeroTabControl`**: Modern anti-aliased flat TabControl and container eliminating Win32 3D gray border flicker, supporting `Underline`, `Pill`, and `Card` styles, notification badges, icons, and 100% native Obsidian Dark / Clean Light theming.
 * **`ZeroToolbar`**: Flat, single-HWND enterprise action and menu bar with primary buttons, glyphs, dividers, badge counters, and elastic right spacers.
