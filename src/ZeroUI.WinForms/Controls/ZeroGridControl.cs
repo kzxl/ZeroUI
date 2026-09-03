@@ -115,11 +115,28 @@ namespace ZeroUI.WinForms.Controls
             set { _headerHeight = Math.Max(20, value); Invalidate(); }
         }
 
+        private GridDensity _density = GridDensity.Middle;
+
+        [Category("Appearance")]
+        [DefaultValue(GridDensity.Middle)]
+        public GridDensity Density
+        {
+            get => _density;
+            set
+            {
+                _density = value;
+                _rowHeight = (int)value;
+                UpdateScrollBars();
+                Invalidate();
+            }
+        }
+
         public int RowHeight
         {
             get => _rowHeight;
             set { _rowHeight = Math.Max(16, value); UpdateScrollBars(); Invalidate(); }
         }
+
 
         public int ScrollY
         {
@@ -345,6 +362,20 @@ namespace ZeroUI.WinForms.Controls
                         currentY += _rowHeight;
                     }
                 }
+                else
+                {
+                    // ZeroUI Native Empty State (Zero-Alloc Viewport)
+                    int emptyCenterY = (_headerHeight + height) / 2 - 20;
+
+                    _dibSection.SelectFont(_hHeaderFont);
+                    RECT emptyTitleRect = new RECT(20, emptyCenterY, width - 20, emptyCenterY + 24);
+                    _dibSection.DrawText("Không có dữ liệu phù hợp".AsSpan(), ref emptyTitleRect, 0x00666666, CellAlignment.Center, Font.Height);
+
+                    _dibSection.SelectFont(_hFont);
+                    RECT emptySubRect = new RECT(20, emptyCenterY + 26, width - 20, emptyCenterY + 50);
+                    _dibSection.DrawText("Vui lòng thử từ khóa tìm kiếm khác hoặc xóa bộ lọc dữ liệu".AsSpan(), ref emptySubRect, 0x00999999, CellAlignment.Center, Font.Height);
+                }
+
 
                 // 2. Render Header Row (Always on top with Bold Header Font)
                 _dibSection.SelectFont(_hHeaderFont);

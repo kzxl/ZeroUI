@@ -13,4 +13,12 @@ namespace ZeroUI.Core.Common
         Ascending = 1,
         Descending = 2
     }
+
+    public enum GridDensity : byte
+    {
+        Compact = 24,
+        Middle = 28,
+        Loose = 36
+    }
 }
+

@@ -605,9 +605,128 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             leftPanel.Controls.Add(lblSearchTitle);
 
-            searchY += 32;
+            searchY += 30;
             var searchDemo = new ZeroSearchBox { Location = new Point(16, searchY), Width = 390, PlaceholderText = "🔍 Nhập từ khóa thử nghiệm..." };
             leftPanel.Controls.Add(searchDemo);
+
+            // Section 4: ZeroSwitch & ZeroTag
+            int tagY = searchY + 44;
+            var lblTagTitle = new Label
+            {
+                Text = "4. ZeroSwitch & ZeroTag (Trạng thái & Công tắc)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 41, 55),
+                AutoSize = true,
+                Location = new Point(16, tagY)
+            };
+            leftPanel.Controls.Add(lblTagTitle);
+
+            tagY += 30;
+            var swDemo = new ZeroSwitch { Location = new Point(16, tagY), Checked = true };
+            var tag1 = new ZeroTag { Location = new Point(78, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Success, Text = "Hoạt động" };
+            var tag2 = new ZeroTag { Location = new Point(156, tagY), Size = new Size(76, 26), TagType = ZeroTagType.Processing, Text = "Đang xử lý" };
+            var tag3 = new ZeroTag { Location = new Point(238, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Warning, Text = "Cảnh báo" };
+            var tag4 = new ZeroTag { Location = new Point(316, tagY), Size = new Size(60, 26), TagType = ZeroTagType.Error, Text = "Lỗi" };
+            swDemo.CheckedChanged += (s, e) =>
+            {
+                tag1.TagType = swDemo.Checked ? ZeroTagType.Success : ZeroTagType.Default;
+                tag1.Text = swDemo.Checked ? "Hoạt động" : "Đã tắt";
+            };
+            leftPanel.Controls.Add(swDemo);
+            leftPanel.Controls.Add(tag1);
+            leftPanel.Controls.Add(tag2);
+            leftPanel.Controls.Add(tag3);
+            leftPanel.Controls.Add(tag4);
+
+            // Section 5: ZeroSegmented (Pill Switcher)
+            int segY = tagY + 38;
+            var lblSegTitle = new Label
+            {
+                Text = "5. ZeroSegmented (Bộ lọc viên thuốc)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 41, 55),
+                AutoSize = true,
+                Location = new Point(16, segY)
+            };
+            leftPanel.Controls.Add(lblSegTitle);
+
+            segY += 30;
+            var segDemo = new ZeroSegmented
+            {
+                Location = new Point(16, segY),
+                Width = 390,
+                Items = new[] { "Tất cả", "Hôm nay", "Tuần này", "Tháng này" }
+            };
+            segDemo.SelectedIndexChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Đã chọn chế độ xem: {segDemo.SelectedItem}");
+            };
+            leftPanel.Controls.Add(segDemo);
+
+            // Section 6: ZeroStatistic (KPI Card)
+            int statY = segY + 44;
+            var lblStatTitle = new Label
+            {
+                Text = "6. ZeroStatistic (Thẻ chỉ số KPI Dashboard)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 41, 55),
+                AutoSize = true,
+                Location = new Point(16, statY)
+            };
+            leftPanel.Controls.Add(lblStatTitle);
+
+            statY += 30;
+            var stat1 = new ZeroStatistic
+            {
+                Location = new Point(16, statY),
+                Size = new Size(190, 95),
+                Title = "TỔNG TỒN KHO",
+                Value = "1,248,500",
+                Suffix = "sp",
+                Trend = ZeroTrendDirection.Up,
+                TrendText = "+12.4% so với tháng trước"
+            };
+            var stat2 = new ZeroStatistic
+            {
+                Location = new Point(216, statY),
+                Size = new Size(190, 95),
+                Title = "DOANH THU THỰC TẾ",
+                Value = "3.85",
+                Prefix = "₫",
+                Suffix = "Tỷ",
+                Trend = ZeroTrendDirection.Down,
+                TrendText = "-2.1% chu kỳ"
+            };
+            leftPanel.Controls.Add(stat1);
+            leftPanel.Controls.Add(stat2);
+
+            // Section 7: ZeroToast (Floating Toasts)
+            int toastY = statY + 105;
+            var lblToastTitle = new Label
+            {
+                Text = "7. ZeroToast (Thông báo nổi Non-blocking)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(31, 41, 55),
+                AutoSize = true,
+                Location = new Point(16, toastY)
+            };
+            leftPanel.Controls.Add(lblToastTitle);
+
+
+            toastY += 30;
+            var btnToastSuccess = new ZeroButton { Text = "Toast Thành Công", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(16, toastY), Size = new Size(125, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            btnToastSuccess.Click += (s, e) => ZeroToast.Success(this, "Dữ liệu 10 triệu dòng đã được đồng bộ vào RAM thành công!");
+
+            var btnToastWarn = new ZeroButton { Text = "Toast Cảnh Báo", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(148, toastY), Size = new Size(120, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            btnToastWarn.Click += (s, e) => ZeroToast.Warning(this, "Hệ thống phát hiện tải bộ nhớ tăng nhanh.");
+
+            var btnToastError = new ZeroButton { Text = "Toast Lỗi", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(275, toastY), Size = new Size(115, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            btnToastError.Click += (s, e) => ZeroToast.Error(this, "Không thể kết nối đến máy chủ cơ sở dữ liệu!");
+
+            leftPanel.Controls.Add(btnToastSuccess);
+            leftPanel.Controls.Add(btnToastWarn);
+            leftPanel.Controls.Add(btnToastError);
+
 
             // Right Panel: ZeroListView Log Streamer
             var rightPanel = new Panel

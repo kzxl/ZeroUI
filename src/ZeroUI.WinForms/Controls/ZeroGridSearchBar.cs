@@ -13,6 +13,7 @@ namespace ZeroUI.WinForms.Controls
         private ZeroGridControl? _grid;
         private readonly ZeroSearchBox _searchBox;
         private readonly Label _lblMatchCount;
+        private readonly ZeroButton _btnDensity;
         private readonly ZeroButton _btnExport;
 
         public event EventHandler? ExportClicked;
@@ -42,6 +43,36 @@ namespace ZeroUI.WinForms.Controls
                 Location = new Point(345, 14)
             };
 
+            _btnDensity = new ZeroButton
+            {
+                Text = "📏 Mật độ: Vừa",
+                ButtonStyle = ZeroButtonStyle.Ghost,
+                Size = new Size(125, 32),
+                BorderRadius = 4,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                Location = new Point(Width - 260, 8),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            _btnDensity.Click += (s, e) =>
+            {
+                if (_grid == null) return;
+                var next = _grid.Density switch
+                {
+                    ZeroUI.Core.Common.GridDensity.Compact => ZeroUI.Core.Common.GridDensity.Middle,
+                    ZeroUI.Core.Common.GridDensity.Middle => ZeroUI.Core.Common.GridDensity.Loose,
+                    ZeroUI.Core.Common.GridDensity.Loose => ZeroUI.Core.Common.GridDensity.Compact,
+                    _ => ZeroUI.Core.Common.GridDensity.Middle
+                };
+                _grid.Density = next;
+                _btnDensity.Text = next switch
+                {
+                    ZeroUI.Core.Common.GridDensity.Compact => "📏 Mật độ: Dày",
+                    ZeroUI.Core.Common.GridDensity.Middle => "📏 Mật độ: Vừa",
+                    ZeroUI.Core.Common.GridDensity.Loose => "📏 Mật độ: Thoáng",
+                    _ => "📏 Mật độ"
+                };
+            };
+
             _btnExport = new ZeroButton
             {
                 Text = "📊 Xuất CSV",
@@ -56,8 +87,10 @@ namespace ZeroUI.WinForms.Controls
 
             Controls.Add(_searchBox);
             Controls.Add(_lblMatchCount);
+            Controls.Add(_btnDensity);
             Controls.Add(_btnExport);
         }
+
 
         public void AttachToGrid(ZeroGridControl grid)
         {
