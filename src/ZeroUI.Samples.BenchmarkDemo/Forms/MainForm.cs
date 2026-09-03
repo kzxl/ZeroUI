@@ -237,16 +237,16 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ZeroToast.Info(this, $"Switched theme to: {(ZeroTheme.IsDark ? "Obsidian Dark" : "Clean Light")}");
             });
 
-            _mainToolbar.AddButton("Bo Góc: Bật", "📐", (s, e) =>
+            _mainToolbar.AddButton("Corners: Rounded", "📐", (s, e) =>
             {
                 var btn = s as ZeroToolbarButton;
                 ZeroUIConfig.ToggleRoundedCornersAnimated(this, () =>
                 {
                     if (btn != null)
                     {
-                        btn.Text = ZeroUIConfig.RoundedCorners ? "Bo Góc: Bật" : "Bo Góc: Tắt (Vuông)";
+                        btn.Text = ZeroUIConfig.RoundedCorners ? "Corners: Rounded" : "Corners: Sharp";
                     }
-                    ZeroToast.Info(this, $"Đã chuyển góc toàn cục: {(ZeroUIConfig.RoundedCorners ? "Bo Tròn (Rounded - 6px)" : "Vuông Vức (Sharp - 0px)")}");
+                    ZeroToast.Info(this, $"Global corner style changed: {(ZeroUIConfig.RoundedCorners ? "Rounded (6px)" : "Sharp (0px)")}");
                 });
             });
 
@@ -348,8 +348,27 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             Controls.Add(_topPanel);
         }
 
+        public void SelectTabByIndex(int index)
+        {
+            if (_tabControl != null && index >= 0 && index < _tabControl.TabPages.Count)
+            {
+                _tabControl.SelectedIndex = index;
+            }
+        }
 
+        public void LoadDatasetPublic(int count) => LoadDataset(count);
 
+        public void ToggleThemePublic()
+        {
+            ZeroTheme.ToggleTheme();
+            _tabZero.BackColor = ZeroTheme.Colors.Background;
+            _tabMes.BackColor = ZeroTheme.Colors.Background;
+            _tabControls.BackColor = ZeroTheme.Colors.Background;
+            _tabScada.BackColor = ZeroTheme.Colors.Background;
+            _tabWms.BackColor = ZeroTheme.Colors.Background;
+            _tabAdvanced.BackColor = ZeroTheme.Colors.Background;
+            Invalidate(true);
+        }
 
         private Button CreateActionButton(string text, int x, Action onClick)
         {
@@ -1782,8 +1801,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Success,
-                Title = "📦 WMS & Quality Inspection Center — Kho Thông Minh & Kiểm Soát Chất Lượng Six Sigma",
-                Message = "Tích hợp bản đồ kệ kho linh kiện 2D (ZeroWarehouseRack), bồn chứa dung môi 3D (ZeroTank3D), biểu đồ kiểm soát thống kê SPC X-Bar (ZeroSpcChart) và bảng thẻ Kanban điện tử (ZeroKanbanBoard).",
+                Title = "📦 WMS & Quality Inspection Center — Smart Warehouse & Six Sigma QC",
+                Message = "Integrated 2D Smart Warehouse Storage Rack (ZeroWarehouseRack), 3D Industrial Tank (ZeroTank3D), SPC X-Bar Chart (ZeroSpcChart), and Electronic Kanban Dispatching Board (ZeroKanbanBoard).",
                 Height = 62
             };
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
@@ -1795,7 +1814,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardRack = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Sơ Đồ Kệ Kho Linh Kiện SMT — Dãy A (Bay 01..05 x Level 01..04)",
+                Title = "SMT Reel Storage Rack — Row A (Bay 01..05 x Level 01..04)",
                 Dock = DockStyle.Left,
                 Width = 560
             };
@@ -1805,21 +1824,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Dock = DockStyle.Fill,
                 Bays = 5,
                 Levels = 4,
-                RackTitle = "Kệ Chứa Cuộn SMT A (A-01-01 đến A-05-04)"
+                RackTitle = "SMT Reel Rack A (A-01-01 to A-05-04)"
             };
             cardRack.ContentPanel.Controls.Add(rack);
 
             var rackToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
             var btnAddReel = new ZeroButton
             {
-                Text = "📦 Cấp Cuộn SMT Vào Vị Trí A-02-03",
+                Text = "📦 Add SMT Reel to Bin A-02-03",
                 ButtonStyle = ZeroButtonStyle.Success,
                 Dock = DockStyle.Left,
                 Width = 230
             };
             var btnLockQc = new ZeroButton
             {
-                Text = "🔒 Khóa Lô Cách Ly QC",
+                Text = "🔒 Lock Batch (QC Hold)",
                 ButtonStyle = ZeroButtonStyle.Danger,
                 Dock = DockStyle.Left,
                 Width = 160
@@ -1834,7 +1853,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardTank = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Bồn Chứa Dung Môi SMT-TK01 (Capacity 10,000L)",
+                Title = "Solvent Storage Tank TK-01 (10,000L)",
                 Dock = DockStyle.Fill
             };
 
@@ -1844,15 +1863,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Width = 190,
                 CapacityLiters = 10000f,
                 CurrentLevelLiters = 6850f,
-                TankName = "Bồn IPA SMT-TK01",
-                FluidName = "Dung môi tẩy rửa 99.7%"
+                TankName = "IPA Tank TK-01",
+                FluidName = "IPA Solution 99.7%"
             };
-            cardTank.ContentPanel.Controls.Add(tank);
 
             var tankControls = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10, 30, 10, 10) };
             var btnPumpIn = new ZeroButton
             {
-                Text = "🔼 Bơm Nạp (+1,000L)",
+                Text = "🔼 Pump In (+1,000L)",
                 ButtonStyle = ZeroButtonStyle.Primary,
                 Dock = DockStyle.Top,
                 Height = 36
@@ -1860,7 +1878,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var tankSpacer1 = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
             var btnDrainOut = new ZeroButton
             {
-                Text = "🔽 Xả Đáy (-1,000L)",
+                Text = "🔽 Drain Out (-1,000L)",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Dock = DockStyle.Top,
                 Height = 36
@@ -1868,7 +1886,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             tankControls.Controls.Add(btnDrainOut);
             tankControls.Controls.Add(tankSpacer1);
             tankControls.Controls.Add(btnPumpIn);
+
             cardTank.ContentPanel.Controls.Add(tankControls);
+            cardTank.ContentPanel.Controls.Add(tank);
+            tank.SendToBack();
 
             row1.Controls.Add(cardTank);
             row1.Controls.Add(split1);
@@ -2691,10 +2712,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             int curY = 6;
 
-            // 1. Corner Style
+            // 1. Global Rounded Corners
             var lblCorners = new Label
             {
-                Text = "📐 Kiểu Bo Góc Toàn Cục (Global Corner Style - DevExpress Style):",
+                Text = "📐 Corner Radius Style (Global):",
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold),
                 ForeColor = ZeroTheme.Colors.TextPrimary,
                 Location = new Point(8, curY),
@@ -2707,7 +2728,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(8, curY),
                 Size = new Size(470, 36),
-                Items = new[] { "Bo Tròn (Rounded - 6px)", "Vuông Vức (Sharp - 0px)", "Viên Thuốc (Pill - 12px)" },
+                Items = new[] { "Rounded (6px)", "Sharp (0px)", "Pill (12px)" },
                 SelectedIndex = ZeroUIConfig.CornerStyle switch
                 {
                     ZeroCornerStyle.Rounded => 0,
@@ -2722,7 +2743,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             // 2. Global Font
             var lblFont = new Label
             {
-                Text = "🔤 Font Chữ Toàn Cục (Global Default Font):",
+                Text = "🔤 Default Typography Font (Global):",
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold),
                 ForeColor = ZeroTheme.Colors.TextPrimary,
                 Location = new Point(8, curY),
@@ -2753,12 +2774,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(8, curY),
                 Size = new Size(470, 95),
-                Title = "🔍 Xem Trước Trực Quan (Live Preview)",
-                Subtitle = "Hiệu lực ngay lập tức cho toàn bộ các control"
+                Title = "🔍 Live Component Preview",
+                Subtitle = "Dynamically updates across all active controls in real time"
             };
-            var previewBtn = new ZeroButton { Location = new Point(10, 8), Size = new Size(125, 34), Text = "Nút Mẫu", ButtonStyle = ZeroButtonStyle.Primary };
-            var previewTag = new ZeroTag { Location = new Point(145, 12), Size = new Size(95, 26), Text = "Hoạt Động", TagType = ZeroTagType.Success };
-            var previewSearch = new ZeroSearchBox { Location = new Point(250, 8), Size = new Size(195, 34), PlaceholderText = "Ô nhập liệu thử..." };
+            var previewBtn = new ZeroButton { Location = new Point(10, 8), Size = new Size(125, 34), Text = "Sample Button", ButtonStyle = ZeroButtonStyle.Primary };
+            var previewTag = new ZeroTag { Location = new Point(145, 12), Size = new Size(95, 26), Text = "Active", TagType = ZeroTagType.Success };
+            var previewSearch = new ZeroSearchBox { Location = new Point(250, 8), Size = new Size(195, 34), PlaceholderText = "Search preview..." };
 
             pnlPreview.ContentPanel.Controls.Add(previewBtn);
             pnlPreview.ContentPanel.Controls.Add(previewTag);
@@ -2804,9 +2825,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             ZeroModal.Show(
                 this,
-                "⚙️ Cài Đặt Toàn Cục Ứng Dụng (ZeroUI Global Settings)",
+                "⚙️ ZeroUI Global Settings & Customization",
                 pnl,
-                okText: "Đóng",
+                okText: "Close",
                 showCancel: false,
                 width: 530,
                 height: 380);

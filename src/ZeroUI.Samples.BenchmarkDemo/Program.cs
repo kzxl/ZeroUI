@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
@@ -9,6 +10,7 @@ using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Forms;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Editors;
+using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.BenchmarkDemo
@@ -32,6 +34,11 @@ namespace ZeroUI.Samples.BenchmarkDemo
             if (args.Length > 0 && args[0].Equals("--test-datepicker-zoom", StringComparison.OrdinalIgnoreCase))
             {
                 RunDatePickerZoomTest();
+                return;
+            }
+            if (args.Length > 0 && args[0].Equals("--capture-screenshots", StringComparison.OrdinalIgnoreCase))
+            {
+                CaptureScreenshotsForReadme();
                 return;
             }
 
@@ -376,6 +383,271 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 Console.Error.WriteLine($"\n❌ TEST FAILED: {ex}");
                 Environment.Exit(1);
             }
+        }
+
+        private static void CaptureScreenshotsForReadme()
+        {
+            try
+            {
+                Console.WriteLine("📸 Capturing High-Resolution Screenshots for ZeroUI README...");
+                string outputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "docs", "images");
+                outputDir = Path.GetFullPath(outputDir);
+                if (!Directory.Exists(outputDir))
+                {
+                    Directory.CreateDirectory(outputDir);
+                }
+                Console.WriteLine($"   Output Directory: {outputDir}");
+
+                Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+
+                // 1. Launch MainForm and load realistic dataset
+                using (var form = new MainForm())
+                {
+                    form.StartPosition = FormStartPosition.Manual;
+                    form.Location = new Point(50, 50);
+                    form.Size = new Size(1366, 850);
+                    form.Show();
+                    form.LoadDatasetPublic(100_000);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(500);
+                    Application.DoEvents();
+
+                    // Tab 0: ZeroGrid
+                    form.SelectTabByIndex(0);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "01_zerogrid_benchmark.png"));
+                    Console.WriteLine("   [OK] Captured 01_zerogrid_benchmark.png");
+
+                    // Tab 2: Components Showcase
+                    form.SelectTabByIndex(2);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "02_components_showcase.png"));
+                    Console.WriteLine("   [OK] Captured 02_components_showcase.png");
+
+                    // Tab 3: MES Production Dashboard
+                    form.SelectTabByIndex(3);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "03_mes_production_dashboard.png"));
+                    Console.WriteLine("   [OK] Captured 03_mes_production_dashboard.png");
+
+                    // Tab 4: SCADA & Smart Factory Hub
+                    form.SelectTabByIndex(4);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "04_scada_smart_factory.png"));
+                    Console.WriteLine("   [OK] Captured 04_scada_smart_factory.png");
+
+                    // Tab 5: WMS Center
+                    form.SelectTabByIndex(5);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "05_wms_warehouse_rack.png"));
+                    Console.WriteLine("   [OK] Captured 05_wms_warehouse_rack.png");
+
+                    // Tab 6: Advanced Enterprise Suite (TreeList & Heatmap)
+                    form.SelectTabByIndex(6);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "06_advanced_treelist_heatmap.png"));
+                    Console.WriteLine("   [OK] Captured 06_advanced_treelist_heatmap.png");
+
+                    // Obsidian Dark Theme SCADA
+                    form.ToggleThemePublic();
+                    form.SelectTabByIndex(4); // SCADA looks striking in Dark Mode
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(300);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "08_dark_theme_scada.png"));
+                    Console.WriteLine("   [OK] Captured 08_dark_theme_scada.png");
+
+                    form.ToggleThemePublic();
+                    form.Close();
+                }
+
+                // 2. Capture DatePicker 3-Tier Multi-Tier Zoom Composite
+                CaptureDatePickerComposite(Path.Combine(outputDir, "07_datepicker_multitier_zoom.png"));
+                Console.WriteLine("   [OK] Captured 07_datepicker_multitier_zoom.png");
+
+                // 3. Capture Industrial, SCADA & MES Hardware Controls Composite
+                CaptureIndustrialShowcase(Path.Combine(outputDir, "09_industrial_hero_showcase.png"));
+                Console.WriteLine("   [OK] Captured 09_industrial_hero_showcase.png");
+
+                Console.WriteLine("\n🎉 ALL README SCREENSHOTS CAPTURED SUCCESSFULLY!");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"\n❌ SCREENSHOT CAPTURE FAILED: {ex}");
+                Environment.Exit(1);
+            }
+        }
+
+        private static void SaveFormBitmap(Form form, string path)
+        {
+            using var bmp = new Bitmap(form.Width, form.Height);
+            form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+            bmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        private static void CaptureDatePickerComposite(string path)
+        {
+            var picker = new ZeroDatePicker();
+            picker.CreateControl();
+
+            var showCalendarMethod = typeof(ZeroDatePicker).GetMethod("ShowCalendarPopup", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            showCalendarMethod?.Invoke(picker, null);
+
+            var calField = typeof(ZeroDatePicker).GetField("_calendarControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var calControl = calField?.GetValue(picker) as Control;
+            if (calControl == null) return;
+            calControl.CreateControl();
+
+            int singleW = calControl.Width;
+            int singleH = calControl.Height;
+            int compW = (singleW * 3) + 60;
+            int compH = singleH + 80;
+
+            using var compBmp = new Bitmap(compW, compH);
+            using (var g = Graphics.FromImage(compBmp))
+            {
+                g.Clear(Color.FromArgb(248, 250, 252)); // Slate 50
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                using var titleFont = new Font("Segoe UI", 12f, FontStyle.Bold);
+                using var capFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+                using var titleBrush = new SolidBrush(Color.FromArgb(15, 23, 42));
+                using var capBrush = new SolidBrush(Color.FromArgb(79, 70, 229));
+
+                g.DrawString("⚡ ZeroDatePicker — Multi-Tier Zoom Navigation (Days ↔ Months ↔ Years)", titleFont, titleBrush, 20, 14);
+
+                // Tier 1: Days View
+                using (var bmp1 = new Bitmap(singleW, singleH))
+                {
+                    calControl.DrawToBitmap(bmp1, new Rectangle(0, 0, singleW, singleH));
+                    int x = 20;
+                    g.DrawString("1. Days View (Click Header to Zoom)", capFont, capBrush, x, 48);
+                    g.DrawImage(bmp1, x, 72);
+                }
+
+                // Click Header to Months
+                var onMouseDownMethod = calControl.GetType().GetMethod("OnMouseDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                onMouseDownMethod?.Invoke(calControl, new object[] { new MouseEventArgs(MouseButtons.Left, 1, 100, 40, 0) });
+
+                // Tier 2: Months View
+                using (var bmp2 = new Bitmap(singleW, singleH))
+                {
+                    calControl.DrawToBitmap(bmp2, new Rectangle(0, 0, singleW, singleH));
+                    int x = 20 + singleW + 10;
+                    g.DrawString("2. Months View (Click Header to Zoom)", capFont, capBrush, x, 48);
+                    g.DrawImage(bmp2, x, 72);
+                }
+
+                // Click Header to Years
+                onMouseDownMethod?.Invoke(calControl, new object[] { new MouseEventArgs(MouseButtons.Left, 1, 100, 15, 0) });
+
+                // Tier 3: Years View
+                using (var bmp3 = new Bitmap(singleW, singleH))
+                {
+                    calControl.DrawToBitmap(bmp3, new Rectangle(0, 0, singleW, singleH));
+                    int x = 20 + (singleW + 10) * 2;
+                    g.DrawString("3. Years View (Click Year to Select)", capFont, capBrush, x, 48);
+                    g.DrawImage(bmp3, x, 72);
+                }
+            }
+
+            compBmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+            picker.Dispose();
+        }
+
+        private static void CaptureIndustrialShowcase(string path)
+        {
+            int compW = 890;
+            int compH = 320;
+
+            using var compBmp = new Bitmap(compW, compH);
+            using (var g = Graphics.FromImage(compBmp))
+            {
+                g.Clear(Color.FromArgb(15, 23, 42)); // Industrial Slate 900
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                using var titleFont = new Font("Segoe UI", 12f, FontStyle.Bold);
+                using var capFont = new Font("Segoe UI", 9f, FontStyle.Bold);
+                using var titleBrush = new SolidBrush(Color.White);
+                using var capBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+
+                g.DrawString("⚡ ZeroUI — Industrial, SCADA & MES Hardware Control Suite", titleFont, titleBrush, 20, 14);
+
+                // 1. ZeroLedTower
+                var tower = new ZeroLedTower { Size = new Size(80, 220), RedLight = LedState.Off, AmberLight = LedState.Off, GreenLight = LedState.On, BlueLight = LedState.Off };
+                tower.CreateControl();
+                using (var bmp = new Bitmap(80, 220))
+                {
+                    tower.DrawToBitmap(bmp, new Rectangle(0, 0, 80, 220));
+                    g.DrawString("Andon Tower", capFont, capBrush, 20, 48);
+                    g.DrawImage(bmp, 20, 72);
+                }
+                tower.Dispose();
+
+                // 2. ZeroTank3D
+                var tank = new ZeroTank3D { Size = new Size(170, 220), CapacityLiters = 10000f, CurrentLevelLiters = 7200f, TankName = "Chemical Tank", FluidName = "Solvent IPA 99%" };
+                tank.CreateControl();
+                using (var bmp = new Bitmap(170, 220))
+                {
+                    tank.DrawToBitmap(bmp, new Rectangle(0, 0, 170, 220));
+                    g.DrawString("3D Fluid Tank", capFont, capBrush, 120, 48);
+                    g.DrawImage(bmp, 120, 72);
+                }
+                tank.Dispose();
+
+                // 3. ZeroSevenSegment
+                var seg = new ZeroSevenSegment { Size = new Size(210, 56), Value = "1248.5", SegmentColor = Color.FromArgb(6, 182, 212) };
+                seg.CreateControl();
+                using (var bmp = new Bitmap(210, 56))
+                {
+                    seg.DrawToBitmap(bmp, new Rectangle(0, 0, 210, 56));
+                    g.DrawString("7-Segment Digital Readout", capFont, capBrush, 310, 48);
+                    g.DrawImage(bmp, 310, 72);
+                }
+                seg.Dispose();
+
+                // 4. ZeroLinearGauge
+                var gauge = new ZeroLinearGauge { Size = new Size(210, 68), Value = 74.2f, Unit = "Bar", Title = "Hydraulic Line Pressure" };
+                gauge.CreateControl();
+                using (var bmp = new Bitmap(210, 68))
+                {
+                    gauge.DrawToBitmap(bmp, new Rectangle(0, 0, 210, 68));
+                    g.DrawString("Linear Process Gauge", capFont, capBrush, 310, 142);
+                    g.DrawImage(bmp, 310, 166);
+                }
+                gauge.Dispose();
+
+                // 5. ZeroGauge (Circular OEE dial)
+                var dial = new ZeroGauge { Size = new Size(160, 160), Value = 92.4f, Title = "OEE Rate", Suffix = "%" };
+                dial.CreateControl();
+                using (var bmp = new Bitmap(160, 160))
+                {
+                    dial.DrawToBitmap(bmp, new Rectangle(0, 0, 160, 160));
+                    g.DrawString("OEE Dial Gauge", capFont, capBrush, 550, 48);
+                    g.DrawImage(bmp, 550, 72);
+                }
+                dial.Dispose();
+
+                // 6. ZeroTaktTimer
+                var takt = new ZeroTaktTimer { Size = new Size(140, 160), TargetTaktSeconds = 30f };
+                takt.CreateControl();
+                using (var bmp = new Bitmap(140, 160))
+                {
+                    takt.DrawToBitmap(bmp, new Rectangle(0, 0, 140, 160));
+                    g.DrawString("Takt Timer", capFont, capBrush, 730, 48);
+                    g.DrawImage(bmp, 730, 72);
+                }
+                takt.Dispose();
+            }
+
+            compBmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
         }
     }
 }
