@@ -2164,7 +2164,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardSpc = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Biểu Đồ Thống Kê Đo Kiểm SPC X-Bar (Dung Sai Phay CNC)",
+                Title = "SPC X-Bar Statistical Process Control (CNC Tolerance)",
                 Dock = DockStyle.Left,
                 Width = 560
             };
@@ -2175,21 +2175,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 NominalTarget = 12.000f,
                 USL = 12.020f,
                 LSL = 11.980f,
-                Title = "SPC X-Bar: Đường kính trục Pin định vị CNC (12.000 ± 0.020 mm)"
+                Title = "SPC X-Bar: CNC Dowel Pin Diameter (12.000 ± 0.020 mm)"
             };
             cardSpc.ContentPanel.Controls.Add(spcChart);
 
             var spcToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
             var btnAddSample = new ZeroButton
             {
-                Text = "📏 Đo Mẫu Mới (Thêm Subgroup)",
+                Text = "📏 Measure Sample (Add Subgroup)",
                 ButtonStyle = ZeroButtonStyle.Success,
                 Dock = DockStyle.Left,
                 Width = 200
             };
             var btnSpikeSpc = new ZeroButton
             {
-                Text = "⚠ Giả Lập Lỗi Vượt 3-Sigma",
+                Text = "⚠ Simulate 3-Sigma Outlier",
                 ButtonStyle = ZeroButtonStyle.Danger,
                 Dock = DockStyle.Left,
                 Width = 190
@@ -2204,7 +2204,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardKanban = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Bảng Thẻ Kanban Điện Tử Điều Phối Chuyền SMT (WIP Limit)",
+                Title = "Electronic Kanban Dispatching Board — SMT Line (WIP Limit)",
                 Dock = DockStyle.Fill
             };
 
@@ -2222,43 +2222,43 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             rack.BinClicked += (s, e) =>
             {
                 var b = e.Bin;
-                string info = $"Vị trí {b.BinCode}: {b.Status} | SKU: {(string.IsNullOrEmpty(b.Sku) ? "(Trống)" : b.Sku)} | Tồn: {b.CurrentQty} PCS | Lô: {b.LotNumber}";
+                string info = $"Location {b.BinCode}: {b.Status} | SKU: {(string.IsNullOrEmpty(b.Sku) ? "(Empty)" : b.Sku)} | Qty: {b.CurrentQty:N0} PCS | Lot: {b.LotNumber}";
                 if (b.Status == BinOccupancyStatus.Quarantine)
-                    ZeroToast.Error(this, $"[CẢNH BÁO KHÓA QC] {info}");
+                    ZeroToast.Error(this, $"[QC HOLD WARNING] {info}");
                 else if (b.Status == BinOccupancyStatus.Full)
-                    ZeroToast.Success(this, $"[VỊ TRÍ ĐẦY] {info}");
+                    ZeroToast.Success(this, $"[BIN OCCUPIED] {info}");
                 else
-                    ZeroToast.Info(this, $"[CHI TIẾT VỊ TRÍ] {info}");
+                    ZeroToast.Info(this, $"[BIN DETAILS] {info}");
             };
 
             btnAddReel.Click += (s, e) =>
             {
                 rack.SetBin(3, 2, BinOccupancyStatus.Full, "IC-MCU-STM32", "STM32F407VGT6", "LOT-20260903-NEW", 2000);
-                ZeroToast.Success(this, "Đã nhập thêm 2,000 PCS STM32 vào ngăn A-02-03!");
+                ZeroToast.Success(this, "Added 2,000 PCS STM32 to bin A-02-03!");
             };
 
             btnLockQc.Click += (s, e) =>
             {
-                rack.SetBin(2, 4, BinOccupancyStatus.Quarantine, "SMD-CAP-0805", "Tụ gốm 10uF", "LOT-20260815-HOLD", 800);
-                ZeroToast.Error(this, "Đã khóa cách ly vị trí A-04-02 chờ phòng QA tái kiểm định!");
+                rack.SetBin(2, 4, BinOccupancyStatus.Quarantine, "SMD-CAP-0805", "Ceramic Cap 10uF", "LOT-20260815-HOLD", 800);
+                ZeroToast.Error(this, "Quarantined bin A-04-02 for QA reinspection!");
             };
 
             btnPumpIn.Click += (s, e) =>
             {
                 tank.CurrentLevelLiters = Math.Min(tank.CapacityLiters, tank.CurrentLevelLiters + 1000f);
                 if (tank.AlarmState == TankAlarmState.HighOverflow)
-                    ZeroToast.Error(this, $"CẢNH BÁO TRÀN: Mức bồn đạt {tank.Percentage:F1}% (>90%)!");
+                    ZeroToast.Error(this, $"OVERFLOW ALARM: Tank level reached {tank.Percentage:F1}% (>90%)!");
                 else
-                    ZeroToast.Success(this, $"Bơm nạp thành công: {tank.CurrentLevelLiters:N0} L ({tank.Percentage:F1}%)");
+                    ZeroToast.Success(this, $"Pump In successful: {tank.CurrentLevelLiters:N0} L ({tank.Percentage:F1}%)");
             };
 
             btnDrainOut.Click += (s, e) =>
             {
                 tank.CurrentLevelLiters = Math.Max(0f, tank.CurrentLevelLiters - 1000f);
                 if (tank.AlarmState == TankAlarmState.LowLevel)
-                    ZeroToast.Warning(this, $"CẢNH BÁO CẠN BỒN: Mức bồn còn {tank.Percentage:F1}% (<15%)!");
+                    ZeroToast.Warning(this, $"LOW LEVEL ALARM: Tank level down to {tank.Percentage:F1}% (<15%)!");
                 else
-                    ZeroToast.Info(this, $"Xả bồn thành công: {tank.CurrentLevelLiters:N0} L ({tank.Percentage:F1}%)");
+                    ZeroToast.Info(this, $"Drain Out successful: {tank.CurrentLevelLiters:N0} L ({tank.Percentage:F1}%)");
             };
 
             var rand = new Random();
@@ -2266,20 +2266,20 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 float val = 12.000f + (float)(rand.NextDouble() * 0.010 - 0.005);
                 spcChart.AddSample(val);
-                ZeroToast.Success(this, $"Đã đo mẫu mới: {val:F3} mm (Trong kiểm soát)");
+                ZeroToast.Success(this, $"Measured new sample: {val:F3} mm (In Control)");
             };
 
             btnSpikeSpc.Click += (s, e) =>
             {
                 float spike = 12.028f;
-                spcChart.AddSample(spike, "Lệch dao phay CNC!");
-                ZeroToast.Error(this, $"CẢNH BÁO SPC: Mẫu {spike:F3} mm vượt giới hạn kiểm soát trên (UCL: {spcChart.UCL:F3} mm)!");
+                spcChart.AddSample(spike, "CNC Tool Drift");
+                ZeroToast.Error(this, $"SPC ALARM: Sample {spike:F3} mm breached Upper Control Limit (UCL: {spcChart.UCL:F3} mm)!");
             };
 
             kanban.CardClicked += (s, e) =>
             {
                 kanban.MoveCardNext(e.Card);
-                ZeroToast.Info(this, $"Kanban: Lệnh sản xuất {e.Card.OrderNo} ({e.Card.ProductName}) chuyển sang công đoạn kế tiếp!");
+                ZeroToast.Info(this, $"Kanban: Work Order {e.Card.OrderNo} ({e.Card.ProductName}) dispatched to next stage!");
             };
 
             // Assemble top-to-bottom layout
