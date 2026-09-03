@@ -90,6 +90,7 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroBarcodeBox`**: Specialized hardware scanner input box with auto-select on focus, auto-submit on Enter, and green flash feedback.
 
 ### ✏️ Editors Subsystem (`ZeroUI.WinForms.Editors`)
+* **`ZeroImage`**: High-performance anti-aliased image and avatar control with rounded corners, circular avatars (`IsCircle = true`), auto initials fallback ("VP"), operator status badges (Online, Busy, Away, Offline), and click-to-zoom modal Lightbox preview.
 * **`ZeroLookup`**: Virtualized searchable autocomplete dropdown & lookup box with non-activating flyweight popup, instant debounced filtering across 10,000+ items, multi-property display (Code, Name, Category), clear button (`✕`), and keyboard navigation.
 * **`ZeroDateRangePicker`**: Enterprise dual-date range selector (From Date &rarr; To Date) with 1-click presets (*Today*, *Yesterday*, *Last 7 Days*, *Last 30 Days*, *This Month*, *Last Month*, *All Time*) and visual calendar range highlight.
 * **`ZeroNumericBox`**: High-precision numeric stepper and spin box with mouse hold acceleration, unit prefixes/suffixes (`$`, `kg`, `mm`, `°C`, `pcs`), min/max bounds, and decimal formatting.
@@ -103,10 +104,10 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroProgressBar`**: Modern flat progress bar with percentage overlay and indeterminate shimmer.
 
 ### 🪟 Overlays & Navigation Subsystem (`ZeroUI.WinForms.Overlays`)
+* **`ZeroModal`**: Enterprise modal dialog suite replacing legacy `MessageBox.Show`; features 52px halo semantic badges (`Success`, `Warning`, `Error`, `Info`, `Confirm`, `Prompt`), rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), ESC key, and action buttons.
 * **`ZeroTabControl`**: Modern anti-aliased flat TabControl and container eliminating Win32 3D gray border flicker, supporting `Underline`, `Pill`, and `Card` styles, notification badges, icons, and 100% native Obsidian Dark / Clean Light theming.
 * **`ZeroToolbar`**: Flat, single-HWND enterprise action and menu bar with primary buttons, glyphs, dividers, badge counters, and elastic right spacers.
 * **`ZeroDrawer`**: Smooth 60 FPS right-docked slide-out panel for deep Master-Detail inspection without leaving the active grid.
-* **`ZeroModal`**: Enterprise modal dialog with rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), ESC key, backdrop click dismiss, and action buttons.
 * **`ZeroToast`**: Non-blocking floating toast notifications with smooth fade-in/fade-out that do not steal keyboard focus (`WS_EX_NOACTIVATE`).
 * **`ZeroListView`**: High-throughput log viewer rendering 50,000+ log lines at 60 FPS.
 

@@ -2392,6 +2392,200 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             pageAlerts.Controls.Add(alertBox);
 
+            // Page 4: ZeroImage & ZeroModal Dialogs
+            var pageImageModal = tabSuite.AddTab("Ảnh & Modal Dialogs", "🖼️");
+            pageImageModal.Padding = new Padding(10);
+
+            var pnlImgModal = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.Transparent
+            };
+
+            // Avatar Section
+            var pnlAvatars = new Panel { Size = new Size(520, 68), BackColor = Color.Transparent };
+            var lblAvatars = new Label
+            {
+                Text = "ZeroImage (Avatar & Trạng Thái):",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = ZeroTheme.Colors.TextSecondary,
+                Location = new Point(4, 2),
+                AutoSize = true
+            };
+
+            var av1 = new ZeroImage
+            {
+                Location = new Point(4, 20),
+                Size = new Size(42, 42),
+                IsCircle = true,
+                FallbackText = "Võ Tuấn Phong",
+                Status = AvatarStatus.Online
+            };
+
+            var av2 = new ZeroImage
+            {
+                Location = new Point(56, 20),
+                Size = new Size(42, 42),
+                IsCircle = true,
+                FallbackText = "Nguyễn Văn An",
+                Status = AvatarStatus.Busy
+            };
+
+            var av3 = new ZeroImage
+            {
+                Location = new Point(108, 20),
+                Size = new Size(42, 42),
+                IsCircle = true,
+                FallbackText = "Trần Thị Bích",
+                Status = AvatarStatus.Away
+            };
+
+            // PCB Inspection Image with Lightbox Preview
+            var pcbBmp = new Bitmap(240, 150);
+            using (var gPcb = Graphics.FromImage(pcbBmp))
+            {
+                gPcb.Clear(Color.FromArgb(15, 60, 40));
+                using var penTrace = new Pen(Color.FromArgb(30, 180, 100), 2f);
+                gPcb.DrawLine(penTrace, 20, 20, 100, 20);
+                gPcb.DrawLine(penTrace, 100, 20, 140, 60);
+                gPcb.DrawLine(penTrace, 140, 60, 220, 60);
+                gPcb.DrawLine(penTrace, 30, 80, 110, 80);
+                gPcb.DrawLine(penTrace, 110, 80, 150, 120);
+                using var brushChip = new SolidBrush(Color.FromArgb(30, 30, 30));
+                gPcb.FillRectangle(brushChip, new Rectangle(90, 40, 60, 60));
+                using var brushGold = new SolidBrush(Color.FromArgb(234, 179, 8));
+                for (int p = 0; p < 5; p++)
+                {
+                    gPcb.FillRectangle(brushGold, 82, 45 + (p * 10), 6, 4);
+                    gPcb.FillRectangle(brushGold, 152, 45 + (p * 10), 6, 4);
+                }
+            }
+
+            var imgPcb = new ZeroImage
+            {
+                Location = new Point(165, 14),
+                Size = new Size(84, 50),
+                BorderRadius = 6,
+                Image = pcbBmp,
+                ScaleMode = ImageScaleMode.Cover,
+                EnableZoomPreview = true
+            };
+
+            var lblZoomHint = new Label
+            {
+                Text = "🔍 Click ảnh để phóng to Lightbox",
+                Font = new Font("Segoe UI", 7.5f, FontStyle.Italic),
+                ForeColor = ZeroTheme.Colors.TextSecondary,
+                Location = new Point(255, 30),
+                AutoSize = true
+            };
+
+            pnlAvatars.Controls.Add(lblZoomHint);
+            pnlAvatars.Controls.Add(imgPcb);
+            pnlAvatars.Controls.Add(av3);
+            pnlAvatars.Controls.Add(av2);
+            pnlAvatars.Controls.Add(av1);
+            pnlAvatars.Controls.Add(lblAvatars);
+            pnlImgModal.Controls.Add(pnlAvatars);
+
+            // Modal Dialog Buttons Section
+            var pnlModalBtns = new Panel { Size = new Size(520, 80), BackColor = Color.Transparent };
+            var lblModals = new Label
+            {
+                Text = "ZeroModal (Popup Thông Báo & Xác Nhận):",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = ZeroTheme.Colors.TextSecondary,
+                Location = new Point(4, 4),
+                AutoSize = true
+            };
+
+            var btnSuccess = new ZeroButton
+            {
+                Location = new Point(4, 26),
+                Size = new Size(95, 34),
+                Text = "✔ Success",
+                ButtonStyle = ZeroButtonStyle.Success,
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold)
+            };
+            btnSuccess.Click += (s, e) =>
+            {
+                ZeroModal.Success(this, "Kiểm Định Hoàn Tất", "Đã ghi nhận 2,500 sản phẩm IoT Gateway đạt tiêu chuẩn KCS!");
+            };
+
+            var btnWarning = new ZeroButton
+            {
+                Location = new Point(105, 26),
+                Size = new Size(95, 34),
+                Text = "⚠ Warning",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold)
+            };
+            btnWarning.Click += (s, e) =>
+            {
+                ZeroModal.Warning(this, "Cảnh Báo Giới Hạn", "Nhiệt độ vùng Reflow vượt ngưỡng 248.5 °C. Kiểm tra quạt đối lưu!");
+            };
+
+            var btnError = new ZeroButton
+            {
+                Location = new Point(206, 26),
+                Size = new Size(95, 34),
+                Text = "✕ Error",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold)
+            };
+            btnError.Click += (s, e) =>
+            {
+                ZeroModal.Error(this, "Mất Kết Nối PLC", "Không nhận được phản hồi Modbus TCP từ trạm dán SMT sau 3 lần thử!");
+            };
+
+            var btnConfirm = new ZeroButton
+            {
+                Location = new Point(307, 26),
+                Size = new Size(95, 34),
+                Text = "? Confirm",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold)
+            };
+            btnConfirm.Click += (s, e) =>
+            {
+                ZeroModal.Confirm(
+                    this,
+                    "Xác Nhận Xuất Xưởng",
+                    "Bạn có chắc muốn cấp phát mã Serial cho 500 thùng hàng?",
+                    onConfirm: () => ZeroToast.Success(this, "Đã cấp phát 500 tem mã vạch thành công!"),
+                    confirmText: "Đồng ý",
+                    cancelText: "Hủy");
+            };
+
+            var btnPrompt = new ZeroButton
+            {
+                Location = new Point(408, 26),
+                Size = new Size(95, 34),
+                Text = "✏ Prompt",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Font = new Font("Segoe UI", 8f, FontStyle.Bold)
+            };
+            btnPrompt.Click += (s, e) =>
+            {
+                ZeroModal.Prompt(
+                    this,
+                    "Quét Barcode / Nhập Mã",
+                    "Vui lòng quét Serial Number linh kiện cần tra cứu:",
+                    "SN-GW-2026-8801",
+                    val => ZeroToast.Success(this, $"Đã nhận Serial: {val}"));
+            };
+
+            pnlModalBtns.Controls.Add(btnPrompt);
+            pnlModalBtns.Controls.Add(btnConfirm);
+            pnlModalBtns.Controls.Add(btnError);
+            pnlModalBtns.Controls.Add(btnWarning);
+            pnlModalBtns.Controls.Add(btnSuccess);
+            pnlModalBtns.Controls.Add(lblModals);
+            pnlImgModal.Controls.Add(pnlModalBtns);
+
+            pageImageModal.Controls.Add(pnlImgModal);
+
             cardTabs.ContentPanel.Controls.Add(tabSuite);
             cardTabs.ContentPanel.Controls.Add(tabTools);
 
