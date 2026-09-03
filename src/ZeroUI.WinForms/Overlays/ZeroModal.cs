@@ -62,17 +62,17 @@ namespace ZeroUI.WinForms.Overlays
             ShowInTaskbar = false;
             DoubleBuffered = true;
             KeyPreview = true;
-            Size = new Size(cardWidth + 80, cardHeight + 80);
-            BackColor = Color.FromArgb(15, 23, 42); // Overlay backdrop dark
-            Opacity = 0.98;
+            Size = new Size(cardWidth, cardHeight);
+            BackColor = ZeroTheme.Colors.Surface;
+            Opacity = 1.0;
 
-            _cardRect = new Rectangle(40, 40, cardWidth, cardHeight);
+            _cardRect = new Rectangle(0, 0, cardWidth - 1, cardHeight - 1);
 
             // Setup isolated body container inside card
             var bodyPanel = new Panel
             {
-                Location = new Point(_cardRect.Left + 20, _cardRect.Top + 55),
-                Size = new Size(_cardRect.Width - 40, _cardRect.Height - 115),
+                Location = new Point(20, 56),
+                Size = new Size(cardWidth - 40, cardHeight - 118),
                 BackColor = Color.Transparent
             };
             _contentControl.Dock = DockStyle.Fill;
@@ -85,7 +85,7 @@ namespace ZeroUI.WinForms.Overlays
                 Text = _okText,
                 ButtonStyle = ZeroButtonStyle.Primary,
                 Size = new Size(100, 36),
-                Location = new Point(_cardRect.Right - 120, _cardRect.Bottom - 48)
+                Location = new Point(cardWidth - 120, cardHeight - 48)
             };
             _btnOk.Click += (s, e) =>
             {
@@ -103,7 +103,7 @@ namespace ZeroUI.WinForms.Overlays
                     Text = _cancelText,
                     ButtonStyle = ZeroButtonStyle.Secondary,
                     Size = new Size(100, 36),
-                    Location = new Point(_cardRect.Right - 230, _cardRect.Bottom - 48)
+                    Location = new Point(cardWidth - 230, cardHeight - 48)
                 };
                 _btnCancel.Click += (s, e) =>
                 {
@@ -231,6 +231,17 @@ namespace ZeroUI.WinForms.Overlays
             return Show(parent, title, pnl, () => onOk(pnl.InputText), onCancel, okText, cancelText, true, 480, 260);
         }
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int CS_DROPSHADOW = 0x20000;
+                var cp = base.CreateParams;
+                cp.ClassStyle |= CS_DROPSHADOW;
+                return cp;
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -240,8 +251,8 @@ namespace ZeroUI.WinForms.Overlays
 
             var theme = ZeroTheme.Colors;
 
-            // 1. Draw Centered Card
-            int effModalRadius = ZeroUIConfig.GetEffectiveRadius(10);
+            // 1. Draw Card Background & Crisp Border
+            int effModalRadius = ZeroUIConfig.GetEffectiveRadius(8);
             using (var path = CreateRoundedRectangle(_cardRect, effModalRadius))
             {
                 using var cardBrush = new SolidBrush(theme.Surface);
@@ -252,19 +263,19 @@ namespace ZeroUI.WinForms.Overlays
             }
 
             // 2. Draw Header (Title & Divider)
-            int headerY = _cardRect.Top + 16;
-            using var titleFont = new Font("Segoe UI", 11.5f, FontStyle.Bold);
-            Rectangle titleRect = new Rectangle(_cardRect.Left + 20, headerY, _cardRect.Width - 60, 24);
-            TextRenderer.DrawText(g, _title, titleFont, titleRect, theme.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+            int headerY = 14;
+            using var titleFont = new Font("Segoe UI", 11f, FontStyle.Bold);
+            Rectangle titleRect = new Rectangle(20, headerY, Width - 65, 24);
+            TextRenderer.DrawText(g, _title, titleFont, titleRect, theme.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
 
             using (var divPen = new Pen(theme.Border, 1f))
             {
-                g.DrawLine(divPen, _cardRect.Left, _cardRect.Top + 48, _cardRect.Right, _cardRect.Top + 48);
-                g.DrawLine(divPen, _cardRect.Left, _cardRect.Bottom - 58, _cardRect.Right, _cardRect.Bottom - 58);
+                g.DrawLine(divPen, 0, 48, Width, 48);
+                g.DrawLine(divPen, 0, Height - 58, Width, Height - 58);
             }
 
             // 3. Draw Close (✕) Button
-            _closeRect = new Rectangle(_cardRect.Right - 38, _cardRect.Top + 14, 24, 24);
+            _closeRect = new Rectangle(Width - 36, 14, 24, 24);
             if (_isCloseHovered)
             {
                 int effCloseRadius = ZeroUIConfig.GetEffectiveRadius(4);
@@ -279,7 +290,7 @@ namespace ZeroUI.WinForms.Overlays
                 new Font("Segoe UI", 9.5f, FontStyle.Bold),
                 _closeRect,
                 _isCloseHovered ? theme.TextPrimary : theme.TextSecondary,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -307,7 +318,7 @@ namespace ZeroUI.WinForms.Overlays
             base.OnMouseClick(e);
             if (e.Button == MouseButtons.Left)
             {
-                if ((!_closeRect.IsEmpty && _closeRect.Contains(e.Location)) || !_cardRect.Contains(e.Location))
+                if (!_closeRect.IsEmpty && _closeRect.Contains(e.Location))
                 {
                     DialogResult = DialogResult.Cancel;
                     _onCancel?.Invoke();

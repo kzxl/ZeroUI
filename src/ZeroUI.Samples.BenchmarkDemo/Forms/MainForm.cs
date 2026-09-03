@@ -3128,18 +3128,19 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private void OpenGlobalSettingsDialog()
         {
-            var pnl = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent, Padding = new Padding(12) };
+            var pnl = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent, Padding = new Padding(8) };
 
-            int curY = 6;
+            int curY = 4;
 
             // 1. Global Rounded Corners
             var lblCorners = new Label
             {
-                Text = "📐 Corner Radius Style (Global):",
+                Text = "Corner Radius Style (Global):",
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold),
                 ForeColor = ZeroTheme.Colors.TextPrimary,
                 Location = new Point(8, curY),
-                AutoSize = true
+                Size = new Size(500, 22),
+                AutoSize = false
             };
             pnl.Controls.Add(lblCorners);
             curY += 26;
@@ -3147,7 +3148,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var segCorners = new ZeroSegmented
             {
                 Location = new Point(8, curY),
-                Size = new Size(470, 36),
+                Size = new Size(504, 36),
                 Items = new[] { "Rounded (6px)", "Sharp (0px)", "Pill (12px)" },
                 SelectedIndex = ZeroUIConfig.CornerStyle switch
                 {
@@ -3163,11 +3164,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             // 2. Global Font
             var lblFont = new Label
             {
-                Text = "🔤 Default Typography Font (Global):",
+                Text = "Default Typography Font (Global):",
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold),
                 ForeColor = ZeroTheme.Colors.TextPrimary,
                 Location = new Point(8, curY),
-                AutoSize = true
+                Size = new Size(500, 22),
+                AutoSize = false
             };
             pnl.Controls.Add(lblFont);
             curY += 26;
@@ -3176,7 +3178,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var segFont = new ZeroSegmented
             {
                 Location = new Point(8, curY),
-                Size = new Size(470, 36),
+                Size = new Size(504, 36),
                 Items = fonts,
                 SelectedIndex = ZeroUIConfig.DefaultFont.FontFamily.Name switch
                 {
@@ -3193,13 +3195,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var pnlPreview = new ZeroCard
             {
                 Location = new Point(8, curY),
-                Size = new Size(470, 95),
-                Title = "🔍 Live Component Preview",
+                Size = new Size(504, 136),
+                Title = "Live Component Preview",
                 Subtitle = "Dynamically updates across all active controls in real time"
             };
-            var previewBtn = new ZeroButton { Location = new Point(10, 8), Size = new Size(125, 34), Text = "Sample Button", ButtonStyle = ZeroButtonStyle.Primary };
-            var previewTag = new ZeroTag { Location = new Point(145, 12), Size = new Size(95, 26), Text = "Active", TagType = ZeroTagType.Success };
-            var previewSearch = new ZeroSearchBox { Location = new Point(250, 8), Size = new Size(195, 34), PlaceholderText = "Search preview..." };
+            var previewBtn = new ZeroButton { Location = new Point(14, 14), Size = new Size(130, 36), Text = "Sample Button", ButtonStyle = ZeroButtonStyle.Primary };
+            var previewTag = new ZeroTag { Location = new Point(156, 19), Size = new Size(80, 26), Text = "Active", TagType = ZeroTagType.Success };
+            var previewSearch = new ZeroSearchBox { Location = new Point(248, 14), Size = new Size(240, 36), PlaceholderText = "Search preview..." };
 
             pnlPreview.ContentPanel.Controls.Add(previewBtn);
             pnlPreview.ContentPanel.Controls.Add(previewTag);
@@ -3245,12 +3247,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             ZeroModal.Show(
                 this,
-                "⚙️ ZeroUI Global Settings & Customization",
+                "ZeroUI Global Settings & Customization",
                 pnl,
                 okText: "Close",
                 showCancel: false,
-                width: 530,
-                height: 380);
+                width: 560,
+                height: 480);
         }
 
         private void InitializeChartsDashboard()
