@@ -36,10 +36,11 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(160, 36);
-            BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark default
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.25f, FontStyle.Regular);
             Cursor = Cursors.Hand;
 
@@ -179,7 +180,7 @@ namespace ZeroUI.WinForms.Editors
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
 
             // 2. Box Background & Border
-            using (var path = CreateRoundedRectangle(rect, effRadius))
+            using (var path = ZeroUIConfig.CreateRoundedRectangle(rect, effRadius))
             {
                 using var bgBrush = new SolidBrush(palette.Surface);
                 g.FillPath(bgBrush, path);
@@ -233,28 +234,8 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
-        {
-            var path = new GraphicsPath();
-            if (radius <= 0 || rect.Width <= 0 || rect.Height <= 0)
-            {
-                path.AddRectangle(rect);
-                return path;
-            }
-
-            int diameter = radius * 2;
-            Rectangle arc = new Rectangle(rect.Location, new Size(diameter, diameter));
-
-            path.AddArc(arc, 180, 90);
-            arc.X = rect.Right - diameter;
-            path.AddArc(arc, 270, 90);
-            arc.Y = rect.Bottom - diameter;
-            path.AddArc(arc, 0, 90);
-            arc.X = rect.Left;
-            path.AddArc(arc, 90, 90);
-            path.CloseFigure();
-            return path;
-        }
+        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
+            ZeroUIConfig.CreateRoundedRectangle(rect, radius);
 
         /// <summary>
         /// 100% custom-drawn calendar popup control for ZeroDatePicker.

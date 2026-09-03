@@ -34,10 +34,11 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(240, 34);
-            BackColor = Color.White;
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
             _textBox = new TextBox
@@ -163,9 +164,9 @@ namespace ZeroUI.WinForms.Editors
             Color borderColor = _isFocused ? Color.FromArgb(79, 70, 229) : Color.FromArgb(209, 213, 219);
             float borderWidth = _isFocused ? 1.5f : 1f;
 
-            using (var path = CreateRoundedRectangle(rect, effRadius))
+            using (var path = ZeroUIConfig.CreateRoundedRectangle(rect, effRadius))
             {
-                using var bgBrush = new SolidBrush(BackColor);
+                using var bgBrush = new SolidBrush(ZeroTheme.Colors.Surface);
                 g.FillPath(bgBrush, path);
 
                 using var borderPen = new Pen(borderColor, borderWidth);
@@ -202,22 +203,8 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
-        {
-            var path = new GraphicsPath();
-            int diameter = radius * 2;
-            Rectangle arc = new Rectangle(rect.Location, new Size(diameter, diameter));
-
-            path.AddArc(arc, 180, 90);
-            arc.X = rect.Right - diameter;
-            path.AddArc(arc, 270, 90);
-            arc.Y = rect.Bottom - diameter;
-            path.AddArc(arc, 0, 90);
-            arc.X = rect.Left;
-            path.AddArc(arc, 90, 90);
-            path.CloseFigure();
-            return path;
-        }
+        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
+            ZeroUIConfig.CreateRoundedRectangle(rect, radius);
 
         protected override void Dispose(bool disposing)
         {

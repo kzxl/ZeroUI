@@ -112,27 +112,7 @@ namespace ZeroUI.WinForms.Editors
         };
 
 
-        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
-        {
-            var path = new GraphicsPath();
-            if (radius <= 0 || rect.Width <= 0 || rect.Height <= 0)
-            {
-                path.AddRectangle(rect);
-                return path;
-            }
-
-            int diameter = Math.Min(radius * 2, Math.Min(rect.Width, rect.Height));
-            Rectangle arc = new Rectangle(rect.Location, new Size(diameter, diameter));
-
-            path.AddArc(arc, 180, 90);
-            arc.X = rect.Right - diameter;
-            path.AddArc(arc, 270, 90);
-            arc.Y = rect.Bottom - diameter;
-            path.AddArc(arc, 0, 90);
-            arc.X = rect.Left;
-            path.AddArc(arc, 90, 90);
-            path.CloseFigure();
-            return path;
-        }
+        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
+            ZeroUIConfig.CreateRoundedRectangle(rect, radius);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace ZeroUI.WinForms.Theme
@@ -140,6 +141,48 @@ namespace ZeroUI.WinForms.Theme
         public static void NotifyConfigChanged()
         {
             ConfigChanged?.Invoke(null, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Creates a high-precision rounded rectangle GraphicsPath with perfectly balanced arcs on all 4 corners.
+        /// </summary>
+        public static GraphicsPath CreateRoundedRectangle(Rectangle r, int radius)
+        {
+            var path = new GraphicsPath();
+            if (radius <= 0 || r.Width <= 0 || r.Height <= 0)
+            {
+                path.AddRectangle(r);
+                return path;
+            }
+
+            int d = Math.Min(radius * 2, Math.Min(r.Width, r.Height));
+            path.AddArc(r.X, r.Y, d, d, 180, 90);
+            path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+            path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+            path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+
+        /// <summary>
+        /// Creates a floating-point high-precision rounded rectangle GraphicsPath.
+        /// </summary>
+        public static GraphicsPath CreateRoundedRectangleF(RectangleF r, float radius)
+        {
+            var path = new GraphicsPath();
+            if (radius <= 0 || r.Width <= 0 || r.Height <= 0)
+            {
+                path.AddRectangle(r);
+                return path;
+            }
+
+            float d = Math.Min(radius * 2f, Math.Min(r.Width, r.Height));
+            path.AddArc(r.X, r.Y, d, d, 180, 90);
+            path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+            path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+            path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
         }
     }
 }

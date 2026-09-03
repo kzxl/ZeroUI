@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -45,11 +46,20 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(280, 36);
-            BackColor = Color.White;
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                if (_textBox != null) _textBox.Font = Font;
+                Invalidate();
+            };
 
             _textBox = new TextBox
             {
@@ -157,11 +167,21 @@ namespace ZeroUI.WinForms.Industrial
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            var palette = ZeroTheme.Colors;
 
-            // 1. Determine Border & Fill Color based on focus and flash
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
+
+            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+
+            // 2. Determine Border & Fill Color based on focus and flash
             Color borderColor;
-            Color bgColor = Color.White;
+            Color bgColor = palette.Surface;
 
             if (_flashTicks > 0)
             {
@@ -170,16 +190,17 @@ namespace ZeroUI.WinForms.Industrial
             }
             else if (_isFocused)
             {
-                borderColor = Color.FromArgb(79, 70, 229); // Indigo active
+                borderColor = palette.Primary;
             }
             else
             {
-                borderColor = Color.FromArgb(209, 213, 219); // Neutral gray
+                borderColor = palette.Border;
             }
 
             _textBox.BackColor = bgColor;
+            _textBox.ForeColor = palette.TextPrimary;
 
-            using (var path = CreateRoundedRectangle(rect, 6))
+            using (var path = ZeroUIConfig.CreateRoundedRectangle(rect, effRadius))
             {
                 using var bgBrush = new SolidBrush(bgColor);
                 g.FillPath(bgBrush, path);
@@ -206,28 +227,8 @@ namespace ZeroUI.WinForms.Industrial
             _textBox.Focus();
         }
 
-        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
-        {
-            var path = new GraphicsPath();
-            if (radius <= 0 || rect.Width <= 0 || rect.Height <= 0)
-            {
-                path.AddRectangle(rect);
-                return path;
-            }
-
-            int diameter = radius * 2;
-            Rectangle arc = new Rectangle(rect.Location, new Size(diameter, diameter));
-
-            path.AddArc(arc, 180, 90);
-            arc.X = rect.Right - diameter;
-            path.AddArc(arc, 270, 90);
-            arc.Y = rect.Bottom - diameter;
-            path.AddArc(arc, 0, 90);
-            arc.X = rect.Left;
-            path.AddArc(arc, 90, 90);
-            path.CloseFigure();
-            return path;
-        }
+        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
+            ZeroUIConfig.CreateRoundedRectangle(rect, radius);
 
         protected override void Dispose(bool disposing)
         {

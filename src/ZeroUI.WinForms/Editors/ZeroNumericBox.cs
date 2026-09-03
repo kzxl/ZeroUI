@@ -48,18 +48,19 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(180, 36);
             Font = new Font("Segoe UI", 9.5f);
-            BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark
+            BackColor = Color.Transparent;
 
             _innerBox = new TextBox
             {
                 BorderStyle = BorderStyle.None,
                 Font = Font,
-                BackColor = BackColor,
-                ForeColor = Color.White,
+                BackColor = ZeroTheme.Colors.Surface,
+                ForeColor = ZeroTheme.Colors.TextPrimary,
                 TextAlign = HorizontalAlignment.Left
             };
             _innerBox.TextChanged += OnInnerBoxTextChanged;
@@ -257,7 +258,7 @@ namespace ZeroUI.WinForms.Editors
         private void UpdateTheme()
         {
             var palette = ZeroTheme.Colors;
-            BackColor = palette.Surface;
+            BackColor = Color.Transparent;
             _innerBox.BackColor = palette.Surface;
             _innerBox.ForeColor = palette.TextPrimary;
             Invalidate();
@@ -369,7 +370,7 @@ namespace ZeroUI.WinForms.Editors
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
 
             // 2. Box Background & Border
-            using (var path = CreateRoundedRect(rect, effRadius))
+            using (var path = ZeroUIConfig.CreateRoundedRectangle(rect, effRadius))
             {
                 using var brushBg = new SolidBrush(palette.Surface);
                 g.FillPath(brushBg, path);
@@ -424,16 +425,7 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        private static GraphicsPath CreateRoundedRect(Rectangle r, int radius)
-        {
-            var path = new GraphicsPath();
-            int d = radius * 2;
-            path.AddArc(r.X, r.Y, d, d, 180, 90);
-            path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
-            path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
-            path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
-            path.CloseFigure();
-            return path;
-        }
+        private static GraphicsPath CreateRoundedRect(Rectangle r, int radius) =>
+            ZeroUIConfig.CreateRoundedRectangle(r, radius);
     }
 }
