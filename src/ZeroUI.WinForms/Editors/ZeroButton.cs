@@ -47,7 +47,8 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             Cursor = Cursors.Hand;
 
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold);
                 Invalidate();

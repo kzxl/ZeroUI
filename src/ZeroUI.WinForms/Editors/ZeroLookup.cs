@@ -115,7 +115,8 @@ namespace ZeroUI.WinForms.Editors
             Size = new Size(260, 36);
 
             ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 _searchTextBox.Font = ZeroUIConfig.DefaultFont;

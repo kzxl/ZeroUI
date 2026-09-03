@@ -239,10 +239,15 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             _mainToolbar.AddButton("Bo Góc: Bật", "📐", (s, e) =>
             {
-                ZeroUIConfig.RoundedCorners = !ZeroUIConfig.RoundedCorners;
-                (s as ZeroToolbarButton)!.Text = ZeroUIConfig.RoundedCorners ? "Bo Góc: Bật" : "Bo Góc: Tắt (Vuông)";
-                ZeroToast.Info(this, $"Đã đổi kiểu góc toàn cục: {(ZeroUIConfig.RoundedCorners ? "Bo Tròn (Rounded - 6px)" : "Vuông Vức (Sharp - 0px)")}");
-                Invalidate(true);
+                var btn = s as ZeroToolbarButton;
+                ZeroUIConfig.ToggleRoundedCornersAnimated(this, () =>
+                {
+                    if (btn != null)
+                    {
+                        btn.Text = ZeroUIConfig.RoundedCorners ? "Bo Góc: Bật" : "Bo Góc: Tắt (Vuông)";
+                    }
+                    ZeroToast.Info(this, $"Đã chuyển góc toàn cục: {(ZeroUIConfig.RoundedCorners ? "Bo Tròn (Rounded - 6px)" : "Vuông Vức (Sharp - 0px)")}");
+                });
             });
 
             _mainToolbar.AddButton("Fullscreen", "⛶", (s, e) =>

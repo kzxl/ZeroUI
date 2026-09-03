@@ -8,6 +8,7 @@ using ZeroUI.Core.Virtualization;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Forms;
 using ZeroUI.WinForms.DataGrid;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.BenchmarkDemo
 
@@ -20,6 +21,11 @@ namespace ZeroUI.Samples.BenchmarkDemo
             if (args.Length > 0 && args[0].Equals("--benchmark", StringComparison.OrdinalIgnoreCase))
             {
                 RunHeadlessBenchmark();
+                return;
+            }
+            if (args.Length > 0 && args[0].Equals("--test-corners", StringComparison.OrdinalIgnoreCase))
+            {
+                RunCornerTest();
                 return;
             }
 
@@ -242,9 +248,62 @@ namespace ZeroUI.Samples.BenchmarkDemo
             Console.WriteLine("\n================================================================================");
             Console.WriteLine("✅ Benchmark completed successfully 100%!");
             Console.WriteLine("================================================================================");
+        }
 
+        private static void RunCornerTest()
+        {
+            try
+            {
+                Console.WriteLine("⚡ Running ZeroUI Corner Rounding & Smooth Transition Tests...");
 
+                var form = new MainForm();
+                form.CreateControl();
 
+                // 1. Test Sharp (0px)
+                Console.WriteLine("-> Testing Sharp 90-degree mode (RoundedCorners = false)...");
+                ZeroUIConfig.RoundedCorners = false;
+                using (var bmp = new Bitmap(form.Width, form.Height))
+                {
+                    form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+                }
+                Console.WriteLine("   [PASS] Sharp mode rendered without exceptions.");
+
+                // 2. Test Rounded (6px)
+                Console.WriteLine("-> Testing Rounded mode (RoundedCorners = true)...");
+                ZeroUIConfig.RoundedCorners = true;
+                using (var bmp = new Bitmap(form.Width, form.Height))
+                {
+                    form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+                }
+                Console.WriteLine("   [PASS] Rounded mode rendered without exceptions.");
+
+                // 3. Test Pill mode (12px)
+                Console.WriteLine("-> Testing Pill mode (CornerStyle = Pill)...");
+                ZeroUIConfig.CornerStyle = ZeroCornerStyle.Pill;
+                ZeroUIConfig.DefaultBorderRadius = 12;
+                using (var bmp = new Bitmap(form.Width, form.Height))
+                {
+                    form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+                }
+                Console.WriteLine("   [PASS] Pill mode rendered without exceptions.");
+
+                // 4. Test Intermediate Animated Frame values (radius = 1, 2, 3, 4, 5)
+                for (int r = 0; r <= 8; r++)
+                {
+                    ZeroUIConfig.DefaultBorderRadius = r;
+                    using var bmp = new Bitmap(form.Width, form.Height);
+                    form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+                }
+                Console.WriteLine("   [PASS] All animated intermediate radii (0..8px) rendered without exceptions.");
+
+                form.Dispose();
+                Console.WriteLine("\n🎉 ALL CORNER RENDERING AND TRANSITION TESTS PASSED SUCCESSFULLY!");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"\n❌ TEST FAILED: {ex}");
+                Environment.Exit(1);
+            }
         }
     }
 }

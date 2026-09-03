@@ -57,7 +57,8 @@ namespace ZeroUI.WinForms.Editors
 
             Controls.Add(_textBox);
 
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 _textBox.Font = ZeroUIConfig.DefaultFont;

@@ -73,7 +73,8 @@ namespace ZeroUI.WinForms.Editors
             _repeatTimer.Tick += OnRepeatTimerTick;
 
             ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 _innerBox.Font = ZeroUIConfig.DefaultFont;

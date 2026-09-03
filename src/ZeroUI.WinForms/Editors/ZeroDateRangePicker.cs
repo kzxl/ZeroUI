@@ -80,7 +80,8 @@ namespace ZeroUI.WinForms.Editors
             };
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 Invalidate();

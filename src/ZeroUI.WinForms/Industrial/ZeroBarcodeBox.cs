@@ -54,7 +54,8 @@ namespace ZeroUI.WinForms.Industrial
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 if (_textBox != null) _textBox.Font = Font;

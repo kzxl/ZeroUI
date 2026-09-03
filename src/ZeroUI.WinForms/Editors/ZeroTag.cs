@@ -43,7 +43,8 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 8.5f, FontStyle.Regular);
             Text = "Tag";
 
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 8.5f, FontStyle.Regular);
                 Invalidate();

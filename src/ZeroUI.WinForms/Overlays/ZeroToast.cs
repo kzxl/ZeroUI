@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
 {
@@ -177,22 +178,8 @@ namespace ZeroUI.WinForms.Overlays
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
         }
 
-        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
-        {
-            var path = new GraphicsPath();
-            int diameter = radius * 2;
-            Rectangle arc = new Rectangle(rect.Location, new Size(diameter, diameter));
-
-            path.AddArc(arc, 180, 90);
-            arc.X = rect.Right - diameter;
-            path.AddArc(arc, 270, 90);
-            arc.Y = rect.Bottom - diameter;
-            path.AddArc(arc, 0, 90);
-            arc.X = rect.Left;
-            path.AddArc(arc, 90, 90);
-            path.CloseFigure();
-            return path;
-        }
+        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
+            ZeroUIConfig.CreateRoundedRectangle(rect, radius);
 
         protected override void Dispose(bool disposing)
         {

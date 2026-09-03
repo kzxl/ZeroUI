@@ -45,7 +45,8 @@ namespace ZeroUI.WinForms.Editors
             Cursor = Cursors.Hand;
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
-            ZeroUIConfig.ConfigChanged += (s, e) =>
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 Invalidate();

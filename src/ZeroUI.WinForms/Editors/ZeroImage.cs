@@ -64,7 +64,7 @@ namespace ZeroUI.WinForms.Editors
             Cursor = Cursors.Hand;
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
-            ZeroUIConfig.ConfigChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
         }
 
         [Category("Appearance")]
@@ -377,19 +377,7 @@ namespace ZeroUI.WinForms.Editors
             }
 
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
-            if (effRadius <= 0)
-            {
-                path.AddRectangle(r);
-                return path;
-            }
-
-            int d = effRadius * 2;
-            path.AddArc(r.X, r.Y, d, d, 180, 90);
-            path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
-            path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
-            path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
-            path.CloseFigure();
-            return path;
+            return ZeroUIConfig.CreateRoundedRectangle(r, effRadius);
         }
 
         private static string ExtractInitials(string? text)

@@ -53,7 +53,7 @@ namespace ZeroUI.WinForms.Industrial
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
             Controls.Add(_contentPanel);
-            ZeroUIConfig.ConfigChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
         }
 
         [Category("Appearance")]
