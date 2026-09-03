@@ -36,8 +36,11 @@ namespace ZeroUI.WinForms.Controls
         public ZeroStepStatus Status { get; set; } = ZeroStepStatus.Waiting;
         public ZeroStepGlyph Glyph { get; set; } = ZeroStepGlyph.Gear;
         public string? CustomGlyphText { get; set; }
+        public string QuantityPrefix { get; set; } = "Số lượng: ";
+        public string TimestampPrefix { get; set; } = "Ngày HT cuối: ";
         public object? Tag { get; set; }
     }
+
 
     public class ZeroStepClickedEventArgs : EventArgs
     {
@@ -113,14 +116,31 @@ namespace ZeroUI.WinForms.Controls
             int count = _steps.Count;
             if (count == 0) return;
 
-            int arrowWidth = 32;
-            int totalArrowsWidth = (count - 1) * arrowWidth;
-            int availableWidthForCards = Math.Max(count * 80, Width - totalArrowsWidth - 24);
-            int cardWidth = availableWidthForCards / count;
-            int cardHeight = Height - 16;
-            int cardY = 8;
+            int sideMargin = 16;
+            int availableW = Math.Max(100, Width - (sideMargin * 2));
 
-            int currentX = 12;
+            // Well-proportioned card dimensions: optimal width between 210px and 260px
+            int idealCardWidth = 235;
+            int minGap = 24;
+
+            int cardWidth;
+            int gap;
+
+            if (availableW < (count * idealCardWidth) + ((count - 1) * minGap))
+            {
+                cardWidth = Math.Max(150, (availableW - ((count - 1) * minGap)) / count);
+                gap = (count > 1) ? Math.Max(8, (availableW - (count * cardWidth)) / (count - 1)) : 0;
+            }
+            else
+            {
+                cardWidth = idealCardWidth;
+                gap = (count > 1) ? (availableW - (count * cardWidth)) / (count - 1) : 0;
+            }
+
+            int cardHeight = Math.Min(64, Math.Max(52, Height - 12));
+            int cardY = (Height - cardHeight) / 2;
+
+            int currentX = sideMargin;
 
             for (int i = 0; i < count; i++)
             {
@@ -142,9 +162,9 @@ namespace ZeroUI.WinForms.Controls
                     g.DrawPath(borderPen, cardPath);
                 }
 
-                // 2. Draw Circular Glyph Icon
-                int iconDiameter = 34;
-                int iconX = cardRect.Left + 10;
+                // 2. Draw Circular Glyph Icon (vertically centered)
+                int iconDiameter = 36;
+                int iconX = cardRect.Left + 12;
                 int iconY = cardRect.Top + (cardHeight - iconDiameter) / 2;
                 Rectangle iconRect = new Rectangle(iconX, iconY, iconDiameter, iconDiameter);
 
@@ -166,30 +186,33 @@ namespace ZeroUI.WinForms.Controls
                     iconCol,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
-                // 3. Draw Step Text Info (Title, Quantity, Timestamp)
+                // 3. Draw Step Text Info (Vertically Centered)
                 int textX = iconRect.Right + 10;
-                int textWidth = cardRect.Right - textX - 6;
+                int textWidth = cardRect.Right - textX - 8;
 
                 if (textWidth > 20)
                 {
+                    int totalTextH = 49;
+                    int textY = cardRect.Top + (cardHeight - totalTextH) / 2;
+
                     // Title
-                    using var titleFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
-                    Rectangle titleRect = new Rectangle(textX, cardRect.Top + 8, textWidth, 20);
-                    TextRenderer.DrawText(g, step.Title, titleFont, titleRect, Color.FromArgb(17, 24, 39), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                    using var titleFont = new Font("Segoe UI", 9.25f, FontStyle.Bold);
+                    Rectangle titleRect = new Rectangle(textX, textY, textWidth, 18);
+                    TextRenderer.DrawText(g, step.Title, titleFont, titleRect, Color.FromArgb(17, 24, 39), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                     // Quantity
-                    using var qtyFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+                    using var qtyFont = new Font("Segoe UI", 8.25f, FontStyle.Regular);
                     string qtyText = step.TargetQuantity.HasValue
-                        ? $"Quantity: {step.Quantity:N0} / {step.TargetQuantity.Value:N0}"
-                        : $"Quantity: {step.Quantity:N0}";
-                    Rectangle qtyRect = new Rectangle(textX, titleRect.Bottom + 1, textWidth, 18);
-                    TextRenderer.DrawText(g, qtyText, qtyFont, qtyRect, Color.FromArgb(55, 65, 81), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                        ? $"{step.QuantityPrefix}{step.Quantity:N0} / {step.TargetQuantity.Value:N0}"
+                        : $"{step.QuantityPrefix}{step.Quantity:N0}";
+                    Rectangle qtyRect = new Rectangle(textX, textY + 17, textWidth, 15);
+                    TextRenderer.DrawText(g, qtyText, qtyFont, qtyRect, Color.FromArgb(75, 85, 99), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                     // Timestamp
-                    using var timeFont = new Font("Segoe UI", 8f, FontStyle.Regular);
-                    string timeText = $"Last finish: {step.Timestamp ?? "--"}";
-                    Rectangle timeRect = new Rectangle(textX, qtyRect.Bottom + 1, textWidth, 16);
-                    TextRenderer.DrawText(g, timeText, timeFont, timeRect, Color.FromArgb(156, 163, 175), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                    using var timeFont = new Font("Segoe UI", 7.75f, FontStyle.Regular);
+                    string timeText = $"{step.TimestampPrefix}{step.Timestamp ?? "--"}";
+                    Rectangle timeRect = new Rectangle(textX, textY + 32, textWidth, 15);
+                    TextRenderer.DrawText(g, timeText, timeFont, timeRect, Color.FromArgb(156, 163, 175), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
                 }
 
                 currentX += cardWidth;
@@ -197,19 +220,31 @@ namespace ZeroUI.WinForms.Controls
                 // 4. Draw Connecting Transition Arrow (between steps)
                 if (i < count - 1)
                 {
-                    Rectangle arrowRect = new Rectangle(currentX, cardY, arrowWidth, cardHeight);
+                    Rectangle arrowRect = new Rectangle(currentX, cardY, gap, cardHeight);
+                    int centerY = cardY + (cardHeight / 2);
+
+                    // Subtle horizontal dashed line when gap is wide
+                    if (gap >= 48)
+                    {
+                        using var linePen = new Pen(Color.FromArgb(229, 231, 235), 1.5f);
+                        linePen.DashStyle = DashStyle.Dot;
+                        g.DrawLine(linePen, currentX + 8, centerY, currentX + gap - 8, centerY);
+                    }
+
+                    // Centered transition arrow (→)
                     TextRenderer.DrawText(
                         g,
                         "→",
-                        new Font("Segoe UI", 14f, FontStyle.Bold),
+                        new Font("Segoe UI", 13f, FontStyle.Bold),
                         arrowRect,
                         Color.FromArgb(59, 130, 246),
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
-                    currentX += arrowWidth;
+                    currentX += gap;
                 }
             }
         }
+
 
         private static (Color bg, Color border, Color icon, string glyph) GetStepColorsAndGlyph(ZeroStepItem step)
         {

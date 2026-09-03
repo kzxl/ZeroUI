@@ -1058,7 +1058,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             row1.Controls.Add(cardGauge);
 
             // ROW 2: Production Line Workflow (ZeroSteps)
-            var row2 = new Panel { Dock = DockStyle.Top, Height = 140, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+            var row2 = new Panel { Dock = DockStyle.Top, Height = 125, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
 
             var cardSteps = new ZeroCard
             {
