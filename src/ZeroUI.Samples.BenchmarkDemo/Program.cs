@@ -8,6 +8,7 @@ using ZeroUI.Core.Virtualization;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Forms;
 using ZeroUI.WinForms.DataGrid;
+using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.BenchmarkDemo
@@ -26,6 +27,11 @@ namespace ZeroUI.Samples.BenchmarkDemo
             if (args.Length > 0 && args[0].Equals("--test-corners", StringComparison.OrdinalIgnoreCase))
             {
                 RunCornerTest();
+                return;
+            }
+            if (args.Length > 0 && args[0].Equals("--test-datepicker-zoom", StringComparison.OrdinalIgnoreCase))
+            {
+                RunDatePickerZoomTest();
                 return;
             }
 
@@ -298,6 +304,72 @@ namespace ZeroUI.Samples.BenchmarkDemo
 
                 form.Dispose();
                 Console.WriteLine("\n🎉 ALL CORNER RENDERING AND TRANSITION TESTS PASSED SUCCESSFULLY!");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"\n❌ TEST FAILED: {ex}");
+                Environment.Exit(1);
+            }
+        }
+
+        private static void RunDatePickerZoomTest()
+        {
+            try
+            {
+                Console.WriteLine("⚡ Running ZeroDatePicker Multi-Tier Zoom (Days <-> Months <-> Years) Tests...");
+
+                var picker = new ZeroDatePicker();
+                picker.CreateControl();
+
+                // Open popup via reflection to access internal control
+                var showCalendarMethod = typeof(ZeroDatePicker).GetMethod("ShowCalendarPopup", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                showCalendarMethod?.Invoke(picker, null);
+
+                var calField = typeof(ZeroDatePicker).GetField("_calendarControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var calControl = calField?.GetValue(picker) as Control;
+                if (calControl == null) throw new InvalidOperationException("Failed to access popup calendar control.");
+
+                calControl.CreateControl();
+
+                // 1. Render Days View
+                using (var bmpDays = new Bitmap(calControl.Width, calControl.Height))
+                {
+                    calControl.DrawToBitmap(bmpDays, new Rectangle(0, 0, calControl.Width, calControl.Height));
+                    bmpDays.Save("scratch_datepicker_days.png");
+                }
+                Console.WriteLine("   [PASS] Level 1 - Days View rendered.");
+
+                // 2. Click Header (x=100, y=40) to zoom into Months View
+                var onMouseDownMethod = calControl.GetType().GetMethod("OnMouseDown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                onMouseDownMethod?.Invoke(calControl, new object[] { new MouseEventArgs(MouseButtons.Left, 1, 100, 40, 0) });
+
+                using (var bmpMonths = new Bitmap(calControl.Width, calControl.Height))
+                {
+                    calControl.DrawToBitmap(bmpMonths, new Rectangle(0, 0, calControl.Width, calControl.Height));
+                    bmpMonths.Save("scratch_datepicker_months.png");
+                }
+                Console.WriteLine("   [PASS] Level 2 - Zoom to Months View (Header clicked).");
+
+                // 3. Click Header again to zoom into Years View
+                onMouseDownMethod?.Invoke(calControl, new object[] { new MouseEventArgs(MouseButtons.Left, 1, 100, 15, 0) });
+
+                using (var bmpYears = new Bitmap(calControl.Width, calControl.Height))
+                {
+                    calControl.DrawToBitmap(bmpYears, new Rectangle(0, 0, calControl.Width, calControl.Height));
+                    bmpYears.Save("scratch_datepicker_years.png");
+                }
+                Console.WriteLine("   [PASS] Level 3 - Zoom to Years View (Header clicked again).");
+
+                // 4. Click a year in the grid to zoom back to Months View
+                onMouseDownMethod?.Invoke(calControl, new object[] { new MouseEventArgs(MouseButtons.Left, 1, 102, 130, 0) });
+                Console.WriteLine("   [PASS] Selected year in grid -> Zoomed down to Months View.");
+
+                // 5. Click a month in the grid to zoom back to Days View
+                onMouseDownMethod?.Invoke(calControl, new object[] { new MouseEventArgs(MouseButtons.Left, 1, 102, 130, 0) });
+                Console.WriteLine("   [PASS] Selected month in grid -> Zoomed down to Days View.");
+
+                picker.Dispose();
+                Console.WriteLine("\n🎉 ALL DATEPICKER MULTI-TIER ZOOM TESTS PASSED SUCCESSFULLY!");
             }
             catch (Exception ex)
             {

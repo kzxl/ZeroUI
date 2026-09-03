@@ -238,9 +238,17 @@ namespace ZeroUI.WinForms.Editors
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
 
+        private enum CalendarViewMode
+        {
+            Days,
+            Months,
+            Years
+        }
+
         /// <summary>
         /// 100% custom-drawn calendar popup control for ZeroDatePicker.
-        /// Features year/month steppers, interactive day grid, quick presets, today highlight, and dark/light theming.
+        /// Features multi-tier zoom navigation (Days <-> Months <-> Years),
+        /// year/month steppers, interactive day grid, quick presets, today highlight, and dark/light theming.
         /// </summary>
         private sealed class ZeroCalendarPopupControl : Control
         {
@@ -248,6 +256,9 @@ namespace ZeroUI.WinForms.Editors
             private DateTime _viewMonth;
             private DateTime _selectedDate;
             private readonly bool _showPresets;
+
+            private CalendarViewMode _viewMode = CalendarViewMode.Days;
+            private bool _isHeaderHovered = false;
 
             private Rectangle _prevYearRect;
             private Rectangle _prevMonthRect;
@@ -262,6 +273,16 @@ namespace ZeroUI.WinForms.Editors
 
             private int _hoveredDayIndex = -1; // 0..41
             private DateTime[] _gridDates = new DateTime[42];
+
+            private int _hoveredMonthIndex = -1; // 0..11
+            private int _hoveredYearIndex = -1;  // 0..11
+
+            private readonly string[] _monthNames = new[]
+            {
+                "Thg 1", "Thg 2", "Thg 3", "Thg 4",
+                "Thg 5", "Thg 6", "Thg 7", "Thg 8",
+                "Thg 9", "Thg 10", "Thg 11", "Thg 12"
+            };
 
             public ZeroCalendarPopupControl(ZeroDatePicker owner, DateTime initialDate, bool showPresets)
             {
@@ -300,8 +321,9 @@ namespace ZeroUI.WinForms.Editors
             protected override void OnMouseMove(MouseEventArgs e)
             {
                 base.OnMouseMove(e);
+
                 int hovPreset = -1;
-                if (_showPresets)
+                if (_viewMode == CalendarViewMode.Days && _showPresets)
                 {
                     for (int i = 0; i < _presetRects.Length; i++)
                     {
@@ -314,30 +336,63 @@ namespace ZeroUI.WinForms.Editors
                 }
 
                 int hovDay = -1;
-                int gridTop = _showPresets ? 74 : 38;
-                int cellW = (Width - 16) / 7;
-                int cellH = 28;
+                int hovMonth = -1;
+                int hovYear = -1;
 
-                if (e.X >= 8 && e.X < Width - 8 && e.Y >= gridTop && e.Y < gridTop + (6 * cellH))
+                if (_viewMode == CalendarViewMode.Days)
                 {
-                    int col = (e.X - 8) / cellW;
-                    int row = (e.Y - gridTop) / cellH;
-                    if (col >= 0 && col < 7 && row >= 0 && row < 6)
+                    int gridTop = _showPresets ? 74 : 38;
+                    int cellW = (Width - 16) / 7;
+                    int cellH = 28;
+
+                    if (e.X >= 8 && e.X < Width - 8 && e.Y >= gridTop && e.Y < gridTop + (6 * cellH))
                     {
-                        hovDay = (row * 7) + col;
+                        int col = (e.X - 8) / cellW;
+                        int row = (e.Y - gridTop) / cellH;
+                        if (col >= 0 && col < 7 && row >= 0 && row < 6)
+                        {
+                            hovDay = (row * 7) + col;
+                        }
+                    }
+                }
+                else
+                {
+                    int gridTop = 40;
+                    int gridAvailH = (Height - 32) - gridTop;
+                    int rowH = gridAvailH / 3;
+                    int colW = (Width - 20) / 4;
+
+                    if (e.X >= 10 && e.X < Width - 10 && e.Y >= gridTop && e.Y < gridTop + (3 * rowH))
+                    {
+                        int col = (e.X - 10) / colW;
+                        int row = (e.Y - gridTop) / rowH;
+                        if (col >= 0 && col < 4 && row >= 0 && row < 3)
+                        {
+                            int idx = (row * 4) + col;
+                            if (_viewMode == CalendarViewMode.Months) hovMonth = idx;
+                            else if (_viewMode == CalendarViewMode.Years) hovYear = idx;
+                        }
                     }
                 }
 
+                bool hovHeader = _monthTitleRect.Contains(e.Location) && _viewMode != CalendarViewMode.Years;
                 bool onNav = _prevYearRect.Contains(e.Location) || _prevMonthRect.Contains(e.Location) ||
                              _nextMonthRect.Contains(e.Location) || _nextYearRect.Contains(e.Location) ||
                              _todayLinkRect.Contains(e.Location);
 
-                Cursor = (hovPreset >= 0 || hovDay >= 0 || onNav) ? Cursors.Hand : Cursors.Default;
+                Cursor = (hovPreset >= 0 || hovDay >= 0 || hovMonth >= 0 || hovYear >= 0 || onNav || hovHeader)
+                    ? Cursors.Hand
+                    : Cursors.Default;
 
-                if (_hoveredPreset != hovPreset || _hoveredDayIndex != hovDay)
+                if (_hoveredPreset != hovPreset || _hoveredDayIndex != hovDay ||
+                    _hoveredMonthIndex != hovMonth || _hoveredYearIndex != hovYear ||
+                    _isHeaderHovered != hovHeader)
                 {
                     _hoveredPreset = hovPreset;
                     _hoveredDayIndex = hovDay;
+                    _hoveredMonthIndex = hovMonth;
+                    _hoveredYearIndex = hovYear;
+                    _isHeaderHovered = hovHeader;
                     Invalidate();
                 }
             }
@@ -347,6 +402,9 @@ namespace ZeroUI.WinForms.Editors
                 base.OnMouseLeave(e);
                 _hoveredPreset = -1;
                 _hoveredDayIndex = -1;
+                _hoveredMonthIndex = -1;
+                _hoveredYearIndex = -1;
+                _isHeaderHovered = false;
                 Cursor = Cursors.Default;
                 Invalidate();
             }
@@ -355,8 +413,8 @@ namespace ZeroUI.WinForms.Editors
             {
                 base.OnMouseDown(e);
 
-                // Check Presets
-                if (_showPresets)
+                // 1. Presets (Days mode only)
+                if (_viewMode == CalendarViewMode.Days && _showPresets)
                 {
                     for (int i = 0; i < _presetRects.Length; i++)
                     {
@@ -375,47 +433,127 @@ namespace ZeroUI.WinForms.Editors
                     }
                 }
 
-                // Month / Year Navigation
-                if (_prevYearRect.Contains(e.Location))
+                // 2. Header Title Click (Zoom out)
+                if (_monthTitleRect.Contains(e.Location))
                 {
-                    _viewMonth = _viewMonth.AddYears(-1);
-                    BuildGridDates();
-                    Invalidate();
-                    return;
-                }
-                if (_prevMonthRect.Contains(e.Location))
-                {
-                    _viewMonth = _viewMonth.AddMonths(-1);
-                    BuildGridDates();
-                    Invalidate();
-                    return;
-                }
-                if (_nextMonthRect.Contains(e.Location))
-                {
-                    _viewMonth = _viewMonth.AddMonths(1);
-                    BuildGridDates();
-                    Invalidate();
-                    return;
-                }
-                if (_nextYearRect.Contains(e.Location))
-                {
-                    _viewMonth = _viewMonth.AddYears(1);
-                    BuildGridDates();
-                    Invalidate();
-                    return;
+                    if (_viewMode == CalendarViewMode.Days)
+                    {
+                        _viewMode = CalendarViewMode.Months;
+                        Invalidate();
+                        return;
+                    }
+                    if (_viewMode == CalendarViewMode.Months)
+                    {
+                        _viewMode = CalendarViewMode.Years;
+                        Invalidate();
+                        return;
+                    }
                 }
 
-                // Today Link Click
+                // 3. Navigation Buttons
+                if (_viewMode == CalendarViewMode.Days)
+                {
+                    if (_prevYearRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddYears(-1);
+                        BuildGridDates();
+                        Invalidate();
+                        return;
+                    }
+                    if (_prevMonthRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddMonths(-1);
+                        BuildGridDates();
+                        Invalidate();
+                        return;
+                    }
+                    if (_nextMonthRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddMonths(1);
+                        BuildGridDates();
+                        Invalidate();
+                        return;
+                    }
+                    if (_nextYearRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddYears(1);
+                        BuildGridDates();
+                        Invalidate();
+                        return;
+                    }
+                }
+                else if (_viewMode == CalendarViewMode.Months)
+                {
+                    if (_prevMonthRect.Contains(e.Location) || _prevYearRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddYears(-1);
+                        Invalidate();
+                        return;
+                    }
+                    if (_nextMonthRect.Contains(e.Location) || _nextYearRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddYears(1);
+                        Invalidate();
+                        return;
+                    }
+                }
+                else if (_viewMode == CalendarViewMode.Years)
+                {
+                    if (_prevMonthRect.Contains(e.Location) || _prevYearRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddYears(-10);
+                        Invalidate();
+                        return;
+                    }
+                    if (_nextMonthRect.Contains(e.Location) || _nextYearRect.Contains(e.Location))
+                    {
+                        _viewMonth = _viewMonth.AddYears(10);
+                        Invalidate();
+                        return;
+                    }
+                }
+
+                // 4. Today Link Click
                 if (_todayLinkRect.Contains(e.Location))
                 {
                     _owner.OnDateSelectedFromPopup(DateTime.Today);
                     return;
                 }
 
-                // Grid Days Click
-                if (_hoveredDayIndex >= 0 && _hoveredDayIndex < 42)
+                // 5. Grid Selection Clicks
+                if (_viewMode == CalendarViewMode.Days)
                 {
-                    _owner.OnDateSelectedFromPopup(_gridDates[_hoveredDayIndex]);
+                    if (_hoveredDayIndex >= 0 && _hoveredDayIndex < 42)
+                    {
+                        _owner.OnDateSelectedFromPopup(_gridDates[_hoveredDayIndex]);
+                    }
+                }
+                else if (_viewMode == CalendarViewMode.Months)
+                {
+                    if (_hoveredMonthIndex >= 0 && _hoveredMonthIndex < 12)
+                    {
+                        int targetMonth = _hoveredMonthIndex + 1;
+                        int maxDays = DateTime.DaysInMonth(_viewMonth.Year, targetMonth);
+                        _viewMonth = new DateTime(_viewMonth.Year, targetMonth, Math.Min(_selectedDate.Day, maxDays));
+                        _viewMode = CalendarViewMode.Days;
+                        BuildGridDates();
+                        Invalidate();
+                    }
+                }
+                else if (_viewMode == CalendarViewMode.Years)
+                {
+                    if (_hoveredYearIndex >= 0 && _hoveredYearIndex < 12)
+                    {
+                        int startDecade = (_viewMonth.Year / 10) * 10;
+                        int chosenYear = (startDecade - 1) + _hoveredYearIndex;
+                        if (chosenYear >= 1 && chosenYear <= 9999)
+                        {
+                            int maxDays = DateTime.DaysInMonth(chosenYear, _viewMonth.Month);
+                            _viewMonth = new DateTime(chosenYear, _viewMonth.Month, Math.Min(_selectedDate.Day, maxDays));
+                            _viewMode = CalendarViewMode.Months;
+                            Invalidate();
+                        }
+                    }
                 }
             }
 
@@ -436,8 +574,8 @@ namespace ZeroUI.WinForms.Editors
 
                 int curY = 6;
 
-                // 1. Quick Presets Bar (Pills)
-                if (_showPresets)
+                // 1. Quick Presets Bar (Days mode only)
+                if (_viewMode == CalendarViewMode.Days && _showPresets)
                 {
                     int pW = (Width - 20) / 4;
                     using var fontPreset = new Font(Font.FontFamily, 8f, FontStyle.Bold);
@@ -469,10 +607,24 @@ namespace ZeroUI.WinForms.Editors
                 _nextYearRect = new Rectangle(Width - 30, curY + 2, navBtnSz, navBtnSz);
                 _monthTitleRect = new Rectangle(56, curY, Width - 112, 26);
 
-                // Draw Header Title: "Tháng MM / yyyy"
-                string titleText = _viewMonth.ToString("MMMM yyyy");
+                int startDecade = (_viewMonth.Year / 10) * 10;
+                string titleText = _viewMode switch
+                {
+                    CalendarViewMode.Months => $"Năm {_viewMonth.Year} ▾",
+                    CalendarViewMode.Years => $"{startDecade} - {startDecade + 9}",
+                    _ => $"Tháng {_viewMonth.Month:D2}, {_viewMonth.Year} ▾"
+                };
+
+                // Draw Header Title with hover pill effect
+                if (_isHeaderHovered && _viewMode != CalendarViewMode.Years)
+                {
+                    using var brushHovHeader = new SolidBrush(Color.FromArgb(25, palette.Primary));
+                    using var pathHovHeader = CreateRoundedRectangle(_monthTitleRect, 5);
+                    g.FillPath(brushHovHeader, pathHovHeader);
+                }
+
                 using (var fontTitle = new Font(Font.FontFamily, 9.5f, FontStyle.Bold))
-                using (var brushTitle = new SolidBrush(palette.TextPrimary))
+                using (var brushTitle = new SolidBrush((_isHeaderHovered && _viewMode != CalendarViewMode.Years) ? palette.Primary : palette.TextPrimary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                     g.DrawString(titleText, fontTitle, brushTitle, _monthTitleRect, sf);
@@ -483,101 +635,228 @@ namespace ZeroUI.WinForms.Editors
                 using (var brushNav = new SolidBrush(palette.TextSecondary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString("«", fontNav, brushNav, _prevYearRect, sf);
-                    g.DrawString("‹", fontNav, brushNav, _prevMonthRect, sf);
-                    g.DrawString("›", fontNav, brushNav, _nextMonthRect, sf);
-                    g.DrawString("»", fontNav, brushNav, _nextYearRect, sf);
+                    if (_viewMode == CalendarViewMode.Days)
+                    {
+                        g.DrawString("«", fontNav, brushNav, _prevYearRect, sf);
+                        g.DrawString("‹", fontNav, brushNav, _prevMonthRect, sf);
+                        g.DrawString("›", fontNav, brushNav, _nextMonthRect, sf);
+                        g.DrawString("»", fontNav, brushNav, _nextYearRect, sf);
+                    }
+                    else if (_viewMode == CalendarViewMode.Months)
+                    {
+                        g.DrawString("‹", fontNav, brushNav, _prevYearRect, sf);
+                        g.DrawString("›", fontNav, brushNav, _nextYearRect, sf);
+                    }
+                    else if (_viewMode == CalendarViewMode.Years)
+                    {
+                        g.DrawString("«", fontNav, brushNav, _prevYearRect, sf);
+                        g.DrawString("»", fontNav, brushNav, _nextYearRect, sf);
+                    }
                 }
 
                 curY += 28;
 
-                // 3. Day of Week Column Headers
-                string[] dayHeaders = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
-                int cellW = (Width - 16) / 7;
-                using (var fontDOW = new Font(Font.FontFamily, 7.75f, FontStyle.Bold))
+                // 3. Grid content depending on ViewMode
+                if (_viewMode == CalendarViewMode.Days)
                 {
-                    for (int c = 0; c < 7; c++)
+                    // Day of Week Column Headers
+                    string[] dayHeaders = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+                    int cellW = (Width - 16) / 7;
+                    using (var fontDOW = new Font(Font.FontFamily, 7.75f, FontStyle.Bold))
                     {
-                        var cellRect = new Rectangle(8 + (c * cellW), curY, cellW, 18);
-                        Color cColor = (c == 0 || c == 6) ? palette.Warning : palette.TextSecondary;
-                        using var brushDOW = new SolidBrush(cColor);
+                        for (int c = 0; c < 7; c++)
+                        {
+                            var cellRect = new Rectangle(8 + (c * cellW), curY, cellW, 18);
+                            Color cColor = (c == 0 || c == 6) ? palette.Warning : palette.TextSecondary;
+                            using var brushDOW = new SolidBrush(cColor);
+                            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                            g.DrawString(dayHeaders[c], fontDOW, brushDOW, cellRect, sf);
+                        }
+                    }
+
+                    curY += 20;
+
+                    // Days Grid (42 cells: 6 rows x 7 cols)
+                    int cellH = 26;
+                    DateTime today = DateTime.Today;
+
+                    using var fontDay = new Font(Font.FontFamily, 8.5f, FontStyle.Regular);
+                    using var fontDayBold = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+                    for (int i = 0; i < 42; i++)
+                    {
+                        int r = i / 7;
+                        int c = i % 7;
+                        DateTime cellDate = _gridDates[i];
+                        var cellRect = new Rectangle(8 + (c * cellW), curY + (r * cellH), cellW, cellH);
+
+                        bool isCurrentMonth = cellDate.Month == _viewMonth.Month;
+                        bool isSelected = cellDate == _selectedDate;
+                        bool isToday = cellDate == today;
+                        bool isHovered = i == _hoveredDayIndex;
+
+                        if (isSelected)
+                        {
+                            using var brushSel = new SolidBrush(palette.Primary);
+                            using var pathSel = CreateRoundedRectangle(new Rectangle(cellRect.X + 2, cellRect.Y + 1, cellW - 4, cellH - 2), 5);
+                            g.FillPath(brushSel, pathSel);
+                        }
+                        else if (isHovered)
+                        {
+                            using var brushHov = new SolidBrush(Color.FromArgb(25, palette.Primary));
+                            using var pathHov = CreateRoundedRectangle(new Rectangle(cellRect.X + 2, cellRect.Y + 1, cellW - 4, cellH - 2), 5);
+                            g.FillPath(brushHov, pathHov);
+                        }
+
+                        if (isToday && !isSelected)
+                        {
+                            using var penToday = new Pen(palette.Primary, 1.2f);
+                            using var pathToday = CreateRoundedRectangle(new Rectangle(cellRect.X + 2, cellRect.Y + 1, cellW - 4, cellH - 2), 5);
+                            g.DrawPath(penToday, pathToday);
+                        }
+
+                        Color textColor;
+                        if (isSelected) textColor = Color.White;
+                        else if (!isCurrentMonth) textColor = Color.FromArgb(90, palette.TextSecondary);
+                        else if (isToday) textColor = palette.Primary;
+                        else textColor = palette.TextPrimary;
+
+                        using (var brushDayText = new SolidBrush(textColor))
+                        {
+                            var activeFont = (isSelected || isToday) ? fontDayBold : fontDay;
+                            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                            g.DrawString(cellDate.Day.ToString(), activeFont, brushDayText, cellRect, sf);
+                        }
+                    }
+                }
+                else if (_viewMode == CalendarViewMode.Months)
+                {
+                    int gridTop = curY + 6;
+                    int gridAvailH = (Height - 32) - gridTop;
+                    int rowH = gridAvailH / 3;
+                    int colW = (Width - 20) / 4;
+                    DateTime today = DateTime.Today;
+
+                    using var fontMonth = new Font(Font.FontFamily, 9f, FontStyle.Regular);
+                    using var fontMonthBold = new Font(Font.FontFamily, 9f, FontStyle.Bold);
+
+                    for (int i = 0; i < 12; i++)
+                    {
+                        int r = i / 4;
+                        int c = i % 4;
+                        var cellRect = new Rectangle(10 + (c * colW) + 2, gridTop + (r * rowH) + 2, colW - 4, rowH - 4);
+
+                        bool isSelected = (_viewMonth.Year == _selectedDate.Year && (i + 1) == _selectedDate.Month);
+                        bool isCurrentMonth = (_viewMonth.Year == today.Year && (i + 1) == today.Month);
+                        bool isHovered = (i == _hoveredMonthIndex);
+
+                        if (isSelected)
+                        {
+                            using var brushSel = new SolidBrush(palette.Primary);
+                            using var pathSel = CreateRoundedRectangle(cellRect, 6);
+                            g.FillPath(brushSel, pathSel);
+                        }
+                        else if (isHovered)
+                        {
+                            using var brushHov = new SolidBrush(Color.FromArgb(30, palette.Primary));
+                            using var pathHov = CreateRoundedRectangle(cellRect, 6);
+                            g.FillPath(brushHov, pathHov);
+                        }
+                        else
+                        {
+                            using var brushCard = new SolidBrush(Color.FromArgb(12, palette.Border));
+                            using var pathCard = CreateRoundedRectangle(cellRect, 6);
+                            g.FillPath(brushCard, pathCard);
+                        }
+
+                        if (isCurrentMonth && !isSelected)
+                        {
+                            using var penCurrent = new Pen(palette.Primary, 1.2f);
+                            using var pathCurrent = CreateRoundedRectangle(cellRect, 6);
+                            g.DrawPath(penCurrent, pathCurrent);
+                        }
+
+                        Color textColor = isSelected ? Color.White : (isHovered || isCurrentMonth ? palette.Primary : palette.TextPrimary);
+                        using var brushText = new SolidBrush(textColor);
+                        var activeFont = (isSelected || isCurrentMonth) ? fontMonthBold : fontMonth;
                         var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                        g.DrawString(dayHeaders[c], fontDOW, brushDOW, cellRect, sf);
+                        g.DrawString(_monthNames[i], activeFont, brushText, cellRect, sf);
                     }
                 }
-
-                curY += 20;
-
-                // 4. Days Grid (42 cells: 6 rows x 7 cols)
-                int cellH = 26;
-                DateTime today = DateTime.Today;
-
-                using var fontDay = new Font(Font.FontFamily, 8.5f, FontStyle.Regular);
-                using var fontDayBold = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
-
-                for (int i = 0; i < 42; i++)
+                else if (_viewMode == CalendarViewMode.Years)
                 {
-                    int r = i / 7;
-                    int c = i % 7;
-                    DateTime cellDate = _gridDates[i];
-                    var cellRect = new Rectangle(8 + (c * cellW), curY + (r * cellH), cellW, cellH);
+                    int gridTop = curY + 6;
+                    int gridAvailH = (Height - 32) - gridTop;
+                    int rowH = gridAvailH / 3;
+                    int colW = (Width - 20) / 4;
+                    DateTime today = DateTime.Today;
 
-                    bool isCurrentMonth = cellDate.Month == _viewMonth.Month;
-                    bool isSelected = cellDate == _selectedDate;
-                    bool isToday = cellDate == today;
-                    bool isHovered = i == _hoveredDayIndex;
+                    using var fontYear = new Font(Font.FontFamily, 9f, FontStyle.Regular);
+                    using var fontYearBold = new Font(Font.FontFamily, 9f, FontStyle.Bold);
 
-                    // Background highlight
-                    if (isSelected)
+                    for (int i = 0; i < 12; i++)
                     {
-                        using var brushSel = new SolidBrush(palette.Primary);
-                        using var pathSel = CreateRoundedRectangle(new Rectangle(cellRect.X + 2, cellRect.Y + 1, cellW - 4, cellH - 2), 5);
-                        g.FillPath(brushSel, pathSel);
-                    }
-                    else if (isHovered)
-                    {
-                        using var brushHov = new SolidBrush(Color.FromArgb(25, palette.Primary));
-                        using var pathHov = CreateRoundedRectangle(new Rectangle(cellRect.X + 2, cellRect.Y + 1, cellW - 4, cellH - 2), 5);
-                        g.FillPath(brushHov, pathHov);
-                    }
+                        int r = i / 4;
+                        int c = i % 4;
+                        var cellRect = new Rectangle(10 + (c * colW) + 2, gridTop + (r * rowH) + 2, colW - 4, rowH - 4);
+                        int year = (startDecade - 1) + i;
 
-                    // Today's subtle indicator (underline bar or border)
-                    if (isToday && !isSelected)
-                    {
-                        using var penToday = new Pen(palette.Primary, 1.2f);
-                        using var pathToday = CreateRoundedRectangle(new Rectangle(cellRect.X + 2, cellRect.Y + 1, cellW - 4, cellH - 2), 5);
-                        g.DrawPath(penToday, pathToday);
-                    }
+                        bool isSelected = (year == _selectedDate.Year);
+                        bool isCurrentYear = (year == today.Year);
+                        bool isHovered = (i == _hoveredYearIndex);
+                        bool isOutside = (year < startDecade || year > startDecade + 9);
 
-                    // Text color
-                    Color textColor;
-                    if (isSelected) textColor = Color.White;
-                    else if (!isCurrentMonth) textColor = Color.FromArgb(90, palette.TextSecondary);
-                    else if (isToday) textColor = palette.Primary;
-                    else textColor = palette.TextPrimary;
+                        if (isSelected)
+                        {
+                            using var brushSel = new SolidBrush(palette.Primary);
+                            using var pathSel = CreateRoundedRectangle(cellRect, 6);
+                            g.FillPath(brushSel, pathSel);
+                        }
+                        else if (isHovered)
+                        {
+                            using var brushHov = new SolidBrush(Color.FromArgb(30, palette.Primary));
+                            using var pathHov = CreateRoundedRectangle(cellRect, 6);
+                            g.FillPath(brushHov, pathHov);
+                        }
+                        else
+                        {
+                            using var brushCard = new SolidBrush(Color.FromArgb(12, palette.Border));
+                            using var pathCard = CreateRoundedRectangle(cellRect, 6);
+                            g.FillPath(brushCard, pathCard);
+                        }
 
-                    using (var brushDayText = new SolidBrush(textColor))
-                    {
-                        var activeFont = (isSelected || isToday) ? fontDayBold : fontDay;
+                        if (isCurrentYear && !isSelected)
+                        {
+                            using var penCurrent = new Pen(palette.Primary, 1.2f);
+                            using var pathCurrent = CreateRoundedRectangle(cellRect, 6);
+                            g.DrawPath(penCurrent, pathCurrent);
+                        }
+
+                        Color textColor;
+                        if (isSelected) textColor = Color.White;
+                        else if (isHovered || isCurrentYear) textColor = palette.Primary;
+                        else if (isOutside) textColor = Color.FromArgb(90, palette.TextSecondary);
+                        else textColor = palette.TextPrimary;
+
+                        using var brushText = new SolidBrush(textColor);
+                        var activeFont = (isSelected || isCurrentYear) ? fontYearBold : fontYear;
                         var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                        g.DrawString(cellDate.Day.ToString(), activeFont, brushDayText, cellRect, sf);
+                        g.DrawString(year.ToString(), activeFont, brushText, cellRect, sf);
                     }
                 }
 
-                curY += (6 * cellH) + 2;
-
-                // 5. Footer Bar (Divider + Today link)
-                using (var penDiv = new Pen(Color.FromArgb(15, palette.Border), 1f))
+                // 4. Footer Bar (Divider + Today link docked at bottom)
+                using (var penDiv = new Pen(Color.FromArgb(20, palette.Border), 1f))
                 {
-                    g.DrawLine(penDiv, 8, curY, Width - 8, curY);
+                    g.DrawLine(penDiv, 8, Height - 26, Width - 8, Height - 26);
                 }
 
-                _todayLinkRect = new Rectangle(8, curY + 2, Width - 16, 20);
+                _todayLinkRect = new Rectangle(8, Height - 24, Width - 16, 20);
                 using (var fontFoot = new Font(Font.FontFamily, 8f, FontStyle.Regular))
                 using (var brushFoot = new SolidBrush(palette.Primary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString($"Hôm nay: {today:yyyy-MM-dd}", fontFoot, brushFoot, _todayLinkRect, sf);
+                    g.DrawString($"Hôm nay: {DateTime.Today:yyyy-MM-dd}", fontFoot, brushFoot, _todayLinkRect, sf);
                 }
             }
         }
