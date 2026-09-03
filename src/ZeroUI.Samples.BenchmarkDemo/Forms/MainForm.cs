@@ -826,10 +826,52 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 BackColor = Color.Transparent
             };
 
-            // ROW 1: Board Info (Left 74%) + Shell Info (Right 26%)
+            // ALERT BANNER: Line Notification
+            var alertBanner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Height = 44,
+                Severity = ZeroAlertSeverity.Warning,
+                Title = "SMT Feeder Alert",
+                Message = "Reel BOA472 is running low (18 remaining). Buffer refill suggested before 14:00.",
+                IsClosable = true
+            };
+            var alertSpacer = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
+
+            // TOP ACTION TOOLBAR: Scanner & Live Simulator
+            var rowToolbar = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 8) };
+            
+            var statusBadge = new ZeroStatusBadge
+            {
+                Location = new Point(4, 8),
+                Size = new Size(160, 24),
+                Status = ZeroStatusType.Running,
+                Text = "Line 01: Running"
+            };
+            rowToolbar.Controls.Add(statusBadge);
+
+            var barcodeBox = new ZeroBarcodeBox
+            {
+                Location = new Point(175, 4),
+                Width = 320,
+                PlaceholderText = "Scan Barcode (e.g. SN-1030-88)..."
+            };
+            rowToolbar.Controls.Add(barcodeBox);
+
+            var btnSimulateScan = new ZeroButton
+            {
+                Text = "⚡ Giả lập PLC (+5 Lắp ráp, +4 QC, +3 Nhập kho)",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Size = new Size(360, 34),
+                Location = new Point(510, 4),
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold)
+            };
+            rowToolbar.Controls.Add(btnSimulateScan);
+
+            // ROW 1: Board Info + Shell Info + OEE Gauge
             var row1 = new Panel { Dock = DockStyle.Top, Height = 210, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
-            // Card 1: Board Info
+            // Card 1A: Board Info (Left Fill)
             var cardBoard = new ZeroCard
             {
                 StepNumber = 1,
@@ -841,7 +883,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             cardBoard.ActionClicked += (s, e) => ZeroToast.Info(this, "Đang mở chi tiết xuất kho theo trạng thái...");
 
-            // Embedded ZeroGrid for Board materials
             var gridBoard = new ZeroGridControl
             {
                 Dock = DockStyle.Fill,
@@ -849,7 +890,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 HeaderHeight = 26,
                 Font = new Font("Segoe UI", 9f)
             };
-
             gridBoard.Columns.Add(new ZeroColumn("Mã NVL", 140, CellAlignment.Left));
             gridBoard.Columns.Add(new ZeroColumn("SL Partlist", 100, CellAlignment.Right));
             gridBoard.Columns.Add(new ZeroColumn("Tồn kho NVL", 120, CellAlignment.Right));
@@ -857,14 +897,17 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             gridBoard.DataSource = new ZeroUI.Samples.BenchmarkDemo.Data.MesBoardSource();
             cardBoard.ContentPanel.Controls.Add(gridBoard);
 
-            // Card 2: Shell Info (Right)
+            // Splitter 1
+            var splitR1A = new Panel { Dock = DockStyle.Right, Width = 10, BackColor = Color.Transparent };
+
+            // Card 1B: Shell Info
             var cardShell = new ZeroCard
             {
                 StepNumber = 2,
                 BadgeColor = Color.FromArgb(124, 58, 237),
                 Title = "Thông tin vỏ (Shell Info)",
                 Dock = DockStyle.Right,
-                Width = 260
+                Width = 230
             };
             var descShell = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 26 };
             descShell.Add("Phiếu YCVT", "Lịch sản xuất", Color.FromArgb(107, 114, 128));
@@ -872,14 +915,34 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             descShell.Add("Trạng thái", "--", Color.FromArgb(156, 163, 175));
             cardShell.ContentPanel.Controls.Add(descShell);
 
-            var splitterTop = new Panel { Dock = DockStyle.Right, Width = 12, BackColor = Color.Transparent };
+            // Splitter 2
+            var splitR1B = new Panel { Dock = DockStyle.Right, Width = 10, BackColor = Color.Transparent };
+
+            // Card 1C: OEE Gauge Meter
+            var cardGauge = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Chỉ số OEE Chuyền",
+                Dock = DockStyle.Right,
+                Width = 145
+            };
+            var gaugeOee = new ZeroGauge
+            {
+                Dock = DockStyle.Fill,
+                Value = 88.5f,
+                Title = "Hiệu suất OEE",
+                GaugeColor = Color.FromArgb(16, 185, 129)
+            };
+            cardGauge.ContentPanel.Controls.Add(gaugeOee);
 
             row1.Controls.Add(cardBoard);
-            row1.Controls.Add(splitterTop);
+            row1.Controls.Add(splitR1A);
             row1.Controls.Add(cardShell);
+            row1.Controls.Add(splitR1B);
+            row1.Controls.Add(cardGauge);
 
             // ROW 2: Production Line Workflow (ZeroSteps)
-            var row2 = new Panel { Dock = DockStyle.Top, Height = 145, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+            var row2 = new Panel { Dock = DockStyle.Top, Height = 140, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             var cardSteps = new ZeroCard
             {
@@ -905,8 +968,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             cardSteps.ContentPanel.Controls.Add(_mesSteps);
             row2.Controls.Add(cardSteps);
 
-            // ROW 3: Summary & Product Specifications
-            var row3 = new Panel { Dock = DockStyle.Top, Height = 155, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+            // ROW 3: Summary + Product Specs + Timeline Lot Tracking
+            var row3 = new Panel { Dock = DockStyle.Top, Height = 180, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Card 3A: Summary
             var cardSummary = new ZeroCard
@@ -915,22 +978,23 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 BadgeColor = Color.FromArgb(22, 119, 255),
                 Title = "Thông tin tổng hợp (Summary)",
                 Dock = DockStyle.Left,
-                Width = 420
+                Width = 340
             };
             var descSummary = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 28 };
-            descSummary.Add("Số lượng KH / thực nhập", "0 / 0", Color.FromArgb(17, 24, 39));
+            descSummary.Add("Số lượng KH / thực nhập", "100 / 0", Color.FromArgb(17, 24, 39));
             descSummary.Add("Trễ hạn", "Không", Color.FromArgb(22, 163, 74), isHighlighted: true);
             descSummary.Add("Nguyên nhân", "--", Color.FromArgb(107, 114, 128));
             cardSummary.ContentPanel.Controls.Add(descSummary);
 
-            var splitterBottom = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+            var splitR3A = new Panel { Dock = DockStyle.Left, Width = 10, BackColor = Color.Transparent };
 
             // Card 3B: Product Specifications
             var cardProduct = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Thông tin sản phẩm (Product Specifications)",
-                Dock = DockStyle.Fill
+                Title = "Thông tin sản phẩm (Specs)",
+                Dock = DockStyle.Left,
+                Width = 320
             };
             var descProduct = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 28 };
             descProduct.Add("Mã sản phẩm", "1030MAX001", Color.FromArgb(17, 24, 39));
@@ -938,23 +1002,50 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             descProduct.Add("BOM / Partlist", "026MC02RP2.0", Color.FromArgb(79, 70, 229));
             cardProduct.ContentPanel.Controls.Add(descProduct);
 
+            var splitR3B = new Panel { Dock = DockStyle.Left, Width = 10, BackColor = Color.Transparent };
+
+            // Card 3C: Vertical Lot Tracking Timeline
+            var cardTimeline = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Nhật ký phả hệ lô hàng (Lot Traceability)",
+                Dock = DockStyle.Fill
+            };
+            var timeline = new ZeroTimeline { Dock = DockStyle.Fill, ItemSpacing = 40 };
+            timeline.Add("Nhập kho NVL", "07:30", "Lô BOA437 & BOA541 kiểm duyệt OQC", ZeroTimelineStatus.Completed);
+            timeline.Add("Cấp phát SMT", "08:15", "Gắp 420 chip lên bo mạch", ZeroTimelineStatus.Completed);
+            timeline.Add("Hàn sóng & Lắp ráp", "09:40", "Đang lắp ráp chuyền 01", ZeroTimelineStatus.InProgress);
+            cardTimeline.ContentPanel.Controls.Add(timeline);
+
+            row3.Controls.Add(cardTimeline);
+            row3.Controls.Add(splitR3B);
             row3.Controls.Add(cardProduct);
-            row3.Controls.Add(splitterBottom);
+            row3.Controls.Add(splitR3A);
             row3.Controls.Add(cardSummary);
 
-            // Top Action Toolbar for Real-time Simulation
-            var rowToolbar = new Panel { Dock = DockStyle.Top, Height = 46, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 8) };
-            var btnSimulateScan = new ZeroButton
-            {
-                Text = "⚡ Giả lập máy quét Barcode / Tín hiệu PLC (+5 Lắp ráp, +4 QC, +3 Nhập kho)",
-                ButtonStyle = ZeroButtonStyle.Primary,
-                Size = new Size(520, 36),
-                Location = new Point(0, 2),
-                Font = new Font("Segoe UI", 9f, FontStyle.Bold)
-            };
+            // Simulation Logic
             int simAssy = 0;
             int simQc = 0;
             int simWh = 0;
+
+            void ProcessScan(string barcode)
+            {
+                simAssy += 1;
+                if (simAssy >= 2) simQc += 1;
+                if (simQc >= 2) simWh += 1;
+
+                string now = DateTime.Now.ToString("HH:mm:ss");
+                _mesSteps.UpdateStep("ASSY", simAssy, now, ZeroStepStatus.Completed);
+                _mesSteps.UpdateStep("QC", simQc, now, ZeroStepStatus.InProgress);
+                _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? ZeroStepStatus.InProgress : ZeroStepStatus.Waiting);
+
+                descSummary.SetValue("Số lượng KH / thực nhập", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
+                timeline.Add($"Barcode {barcode}", now, "Quét mã trạm thành công", ZeroTimelineStatus.Completed);
+                ZeroToast.Success(this, $"Scanned: {barcode} | Lắp ráp: {simAssy}, Nhập kho: {simWh}");
+            }
+
+            barcodeBox.BarcodeScanned += (s, e) => ProcessScan(e.Barcode);
+
             btnSimulateScan.Click += (s, e) =>
             {
                 simAssy += 5;
@@ -967,16 +1058,20 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? ZeroStepStatus.InProgress : ZeroStepStatus.Waiting);
 
                 descSummary.SetValue("Số lượng KH / thực nhập", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
-                ZeroToast.Success(this, $"PLC Event: Lắp ráp: {simAssy}, QC: {simQc}, Nhập kho: {simWh}");
+                timeline.Add("PLC Signal Batch", now, $"Đồng bộ lô sản xuất (+{simWh} sp)", ZeroTimelineStatus.Completed);
+                ZeroToast.Success(this, $"PLC Signal: Lắp ráp: {simAssy}, QC: {simQc}, Nhập kho: {simWh}");
             };
-            rowToolbar.Controls.Add(btnSimulateScan);
 
-            // Add rows to mainContainer in top-to-bottom layout
+            // Assemble top-to-bottom layout
             mainContainer.Controls.Add(row3);
             mainContainer.Controls.Add(row2);
             mainContainer.Controls.Add(row1);
             mainContainer.Controls.Add(rowToolbar);
+            mainContainer.Controls.Add(alertSpacer);
+            mainContainer.Controls.Add(alertBanner);
 
+            alertBanner.BringToFront();
+            alertSpacer.BringToFront();
             rowToolbar.BringToFront();
             row1.BringToFront();
             row2.BringToFront();
@@ -986,6 +1081,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         }
     }
 }
+
 
 
 
