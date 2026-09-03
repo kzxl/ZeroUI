@@ -47,9 +47,17 @@
 * [ ] Implement column auto-resizing, clipboard TSV export (Ctrl+C), and drag-and-drop column reordering.
 
 ### Phase 5: Expanded Controls Suite (Weeks 9–10)
-* [ ] Develop `ZeroTree`: Hierarchical tree with index-based node collapse/expansion.
-* [ ] Develop `ZeroPlot`: Real-time signal graph with automated LTTB downsampling.
-* [ ] Develop `ZeroLog`: Memory-mapped log viewer with instant regex search.
+* [x] Develop `ZeroTreeList`: High-performance virtualized hierarchical Tree & Multi-Level BOM TreeList with expand/collapse chevrons, tri-state cascading checkboxes, guidelines, and search filtering.
+* [x] Develop `ZeroHeatmap`: 2D Matrix Heatmap for machine throughput, line load, and thermal distribution with multi-stop color gradients (`Industrial`, `Viridis`, `CoolWarm`, `Emerald`) and hover inspection.
+* [x] Develop `ZeroLookup`: Virtualized searchable autocomplete dropdown & lookup box with non-activating flyweight popup for 10,000+ items.
+* [x] Develop `ZeroDateRangePicker`: Enterprise dual-date range selector (From -> To) with 1-click presets (*Today*, *Last 7 Days*, *This Month*...) and visual calendar range highlight.
+* [x] Develop `ZeroNumericBox`: High-precision numeric stepper and spin box with mouse hold acceleration, unit prefixes/suffixes, and decimal formatting.
+* [x] Develop `ZeroTabControl`: Modern anti-aliased flat TabControl and container with Underline/Pill styles, notification badges, and native Obsidian Dark / Clean Light theming.
+* [x] Develop `ZeroTrendChart`: Real-time 60 FPS oscilloscope and multi-channel telemetry sensor chart.
+* [x] Develop `ZeroWarehouseRack`: 2D Smart Warehouse Storage Rack visualizer (Bay x Level x Bin).
+* [x] Develop `ZeroSpcChart`: Statistical Process Control (SPC) X-Bar Chart with control limits ($UCL$, $LCL$) and $C_{pk}$.
+* [x] Develop `ZeroKanbanBoard`: Electronic Shopfloor Kanban Dispatching Board with WIP limits.
+* [x] Develop `ZeroTank3D`: Industrial 3D cylindrical fluid storage tank with animated waves.
 
 ### Phase 6: Theming, Testing & Distribution (Weeks 11–12)
 * [ ] Build Dark Theme (Industrial/ERP Charcoal `#1e1e1e`) and Modern Windows 11 Fluent Theme.

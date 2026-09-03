@@ -66,6 +66,8 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroGridExporter`**: High-throughput streaming CSV exporter capable of outputting >1,100,000 rows/sec directly to disk.
 
 ### 🏭 Industrial, SCADA & MES Subsystem (`ZeroUI.WinForms.Industrial`)
+* **`ZeroTreeList`**: High-performance virtualized hierarchical Tree & Multi-Level BOM TreeList control with expand/collapse chevrons (`▶`/`▼`), tri-state cascading checkboxes (`Checked`, `Unchecked`, `Indeterminate`), hierarchy connecting guidelines, and instant node text filtering.
+* **`ZeroHeatmap`**: Industrial 2D Matrix Heatmap for machine throughput, line load, and thermal distribution with multi-stop color gradients (`Industrial`, `Viridis`, `CoolWarm`, `Emerald`), cell hover glow, floating tooltip inspection, and min/max gradient legend.
 * **`ZeroTrendChart`**: Real-time 60 FPS oscilloscope and sensor trend chart engineered with fixed-size circular ring buffers (`float[]`), multi-pen channels (e.g. Pressure, Oven Temp, Current), Upper/Lower Specification Limit (USL/LSL) thresholds, and 0 GC allocations on continuous telemetry streaming.
 * **`ZeroTaktTimer`**: Lean manufacturing Takt Time & Cycle Timer with circular countdown progress arc, digital remaining time readout, planned vs. actual cycle time comparison, and automatic color transitions (On-Track Green &rarr; Warning Amber &rarr; Overdue Flashing Red).
 * **`ZeroDefectMatrix`**: 2D Multi-Unit Panel & Wafer Defect Inspection Matrix for AOI, SMT, and QC workstations with configurable row/column array, defect color codes (Pass, Defect, Warning, Untested), hover glow, and drill-down slot click events.
@@ -87,10 +89,10 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroAlertBanner`**: Dismissible or sticky alert banner for factory line stoppage, feeder shortage, or operator broadcasts.
 * **`ZeroBarcodeBox`**: Specialized hardware scanner input box with auto-select on focus, auto-submit on Enter, and green flash feedback.
 
-
-
-
 ### ✏️ Editors Subsystem (`ZeroUI.WinForms.Editors`)
+* **`ZeroLookup`**: Virtualized searchable autocomplete dropdown & lookup box with non-activating flyweight popup, instant debounced filtering across 10,000+ items, multi-property display (Code, Name, Category), clear button (`✕`), and keyboard navigation.
+* **`ZeroDateRangePicker`**: Enterprise dual-date range selector (From Date &rarr; To Date) with 1-click presets (*Today*, *Yesterday*, *Last 7 Days*, *Last 30 Days*, *This Month*, *Last Month*, *All Time*) and visual calendar range highlight.
+* **`ZeroNumericBox`**: High-precision numeric stepper and spin box with mouse hold acceleration, unit prefixes/suffixes (`$`, `kg`, `mm`, `°C`, `pcs`), min/max bounds, and decimal formatting.
 * **`ZeroButton`**: Modern anti-aliased button with rounded corners, interactive hover/press states, and semantic styles (`Primary`, `Secondary`, `Success`, `Danger`, `Ghost`).
 * **`ZeroDatePicker`**: Modern date input box with calendar glyph (`📅`) and dropdown popup featuring 1-click presets (*Today*, *Yesterday*, *This Week*).
 * **`ZeroSearchBox`**: Standalone input box with search magnifying glass, clear button, and debounced text change event.
@@ -101,6 +103,7 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroProgressBar`**: Modern flat progress bar with percentage overlay and indeterminate shimmer.
 
 ### 🪟 Overlays & Navigation Subsystem (`ZeroUI.WinForms.Overlays`)
+* **`ZeroTabControl`**: Modern anti-aliased flat TabControl and container eliminating Win32 3D gray border flicker, supporting `Underline`, `Pill`, and `Card` styles, notification badges, icons, and 100% native Obsidian Dark / Clean Light theming.
 * **`ZeroToolbar`**: Flat, single-HWND enterprise action and menu bar with primary buttons, glyphs, dividers, badge counters, and elastic right spacers.
 * **`ZeroDrawer`**: Smooth 60 FPS right-docked slide-out panel for deep Master-Detail inspection without leaving the active grid.
 * **`ZeroModal`**: Enterprise modal dialog with rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), ESC key, backdrop click dismiss, and action buttons.

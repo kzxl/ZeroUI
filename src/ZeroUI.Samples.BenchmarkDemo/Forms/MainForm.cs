@@ -45,6 +45,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private TabPage _tabMes = null!;
         private TabPage _tabScada = null!;
         private TabPage _tabWms = null!;
+        private TabPage _tabAdvanced = null!;
         private ZeroSteps _mesSteps = null!;
 
         private ZeroListView _showcaseLog = null!;
@@ -230,6 +231,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _tabZero.BackColor = ZeroTheme.Colors.Background;
                 _tabMes.BackColor = ZeroTheme.Colors.Background;
                 _tabControls.BackColor = ZeroTheme.Colors.Background;
+                _tabScada.BackColor = ZeroTheme.Colors.Background;
+                _tabWms.BackColor = ZeroTheme.Colors.Background;
+                _tabAdvanced.BackColor = ZeroTheme.Colors.Background;
                 ZeroToast.Info(this, $"Switched theme to: {(ZeroTheme.IsDark ? "Obsidian Dark" : "Clean Light")}");
             });
 
@@ -279,6 +283,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabMes = new TabPage("🏭 MES Production Dashboard");
             _tabScada = new TabPage("🔬 SCADA & Smart Factory Hub");
             _tabWms = new TabPage("📦 WMS & Quality Inspection Center");
+            _tabAdvanced = new TabPage("🚀 Advanced Enterprise Suite");
 
             InitializeZeroGrid();
             InitializeDataGridView();
@@ -286,6 +291,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeMesDashboard();
             InitializeScadaHub();
             InitializeWmsCenter();
+            InitializeAdvancedSuite();
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -299,6 +305,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabControl.TabPages.Add(_tabMes);
             _tabControl.TabPages.Add(_tabScada);
             _tabControl.TabPages.Add(_tabWms);
+            _tabControl.TabPages.Add(_tabAdvanced);
 
 
 
@@ -1993,8 +2000,469 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabWms.Controls.Add(mainContainer);
         }
 
+        private void InitializeAdvancedSuite()
+        {
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                Padding = new Padding(12),
+                BackColor = Color.Transparent
+            };
+
+            // 1. Top Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "🚀 BỘ SUITE COMPONENT NÂNG CAO MỚI (ADVANCED ENTERPRISE SUITE)",
+                Message = "ZeroUI đã tích hợp đầy đủ 6 Component nâng cao: ZeroTreeList (Cây BOM đa cấp ảo hóa), ZeroHeatmap (Ma trận nhiệt 24h x 7 ngày), ZeroLookup (Tìm kiếm Catalog 5,000 vật tư), ZeroDateRangePicker (Khoảng ngày 1-click), ZeroNumericBox (Nhập số chính xác cao), và ZeroTabControl (Bộ chuyển tab phẳng không giật)."
+            };
+
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 2. Top Filter Bar (DateRangePicker, Lookup, NumericBox, Button)
+            var topBar = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 48,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0, 4, 0, 8)
+            };
+
+            var dtRange = new ZeroDateRangePicker
+            {
+                Location = new Point(0, 4),
+                Width = 260,
+                Preset = DateRangePreset.Last7Days
+            };
+            dtRange.DateRangeChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Khoảng ngày đã chọn: {dtRange.StartDate:yyyy-MM-dd} → {dtRange.EndDate:yyyy-MM-dd}");
+            };
+
+            var lookupCatalog = new ZeroLookup
+            {
+                Location = new Point(272, 4),
+                Width = 320,
+                Placeholder = "Tìm trong 5,000 vật tư linh kiện..."
+            };
+
+            // Populate 5,000 realistic electronic/industrial items
+            var catalogItems = new List<ZeroLookupItem>(5000);
+            catalogItems.Add(new ZeroLookupItem("IC-MCU-STM32", "STM32F407VGT6 Cortex-M4 168MHz", "Foxconn Precision • Tồn: 12,450 PCS • $8.50", "Active IC"));
+            catalogItems.Add(new ZeroLookupItem("IC-RAM-ISSI", "IS42S16400J 64Mb SDRAM 166MHz", "ISSI Micro • Tồn: 8,200 PCS • $2.40", "Memory"));
+            catalogItems.Add(new ZeroLookupItem("IC-ETH-LAN8720", "LAN8720A 10/100 Ethernet Transceiver", "Microchip • Tồn: 5,600 PCS • $1.15", "Interface"));
+            catalogItems.Add(new ZeroLookupItem("SEN-KEY-OPTO", "Keyence PR-M51N3 Cảm Biến Quang", "Keyence Japan • Tồn: 320 PCS • $68.00", "Sensors"));
+            catalogItems.Add(new ZeroLookupItem("PLC-FX5U-32M", "Mitsubishi FX5U-32MR/ES PLC Main", "Mitsubishi Electric • Tồn: 45 PCS • $285.00", "PLC"));
+            catalogItems.Add(new ZeroLookupItem("DRV-STEP-TMC", "TMC2209 Ultra-Silent Stepper Driver", "Trinamic GmbH • Tồn: 2,100 PCS • $4.20", "Motion"));
+
+            string[] catPrefixes = new[] { "RES", "CAP", "IND", "DIO", "MOS", "CONN", "RELAY", "FUSE", "OPTO", "SW" };
+            string[] catNames = new[] { "Điện trở dán", "Tụ gốm nhiều lớp", "Cuộn cảm cuộn dây", "Diode Schottky", "Mosfet kênh N", "Đầu nối Header", "Rơ le trung gian", "Cầu chì tự phục hồi", "Optocoupler cách ly", "Công tắc gạt" };
+
+            for (int i = 7; i <= 5000; i++)
+            {
+                int catIdx = i % catPrefixes.Length;
+                string pCode = $"{catPrefixes[catIdx]}-{i:D5}";
+                string pName = $"{catNames[catIdx]} SMD #{i}";
+                string pSub = $"Tiêu chuẩn AEC-Q200 • Tồn: {(i * 17) % 5000 + 100:N0} PCS • ${(i % 99 + 1) * 0.05f:F2}";
+                catalogItems.Add(new ZeroLookupItem(pCode, $"{pCode} • {pName}", pSub, catPrefixes[catIdx]));
+            }
+            lookupCatalog.SetItems(catalogItems);
+
+            lookupCatalog.SelectedItemChanged += (s, e) =>
+            {
+                if (lookupCatalog.SelectedItem != null)
+                {
+                    ZeroToast.Success(this, $"Đã chọn vật tư: [{lookupCatalog.SelectedItem.Key}] {lookupCatalog.SelectedItem.DisplayText}");
+                }
+            };
+
+            var numBatchSize = new ZeroNumericBox
+            {
+                Location = new Point(604, 4),
+                Width = 200,
+                Prefix = "Lô SX:",
+                Suffix = "PCS",
+                Step = 500,
+                Value = 5000,
+                MinValue = 100,
+                MaxValue = 500000
+            };
+            numBatchSize.ValueChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Sản lượng kế hoạch điều chỉnh: {numBatchSize.Value:N0} PCS");
+            };
+
+            var btnFilter = new ZeroButton
+            {
+                Location = new Point(816, 4),
+                Size = new Size(130, 36),
+                Text = "⚡ Áp Dụng Lọc",
+                ButtonStyle = ZeroButtonStyle.Primary
+            };
+            btnFilter.Click += (s, e) =>
+            {
+                ZeroToast.Success(this, $"Đã nạp dữ liệu kỳ {dtRange.StartDate:dd/MM} - {dtRange.EndDate:dd/MM} với quy mô {numBatchSize.Value:N0} PCS!");
+            };
+
+            topBar.Controls.Add(btnFilter);
+            topBar.Controls.Add(numBatchSize);
+            topBar.Controls.Add(lookupCatalog);
+            topBar.Controls.Add(dtRange);
+
+            var topBarSpacer = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
+
+            // 3. Body Panel (2 Columns)
+            var bodyPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent
+            };
+
+            // Left Column: BOM TreeList (Width = 530)
+            var leftCol = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = 530,
+                Padding = new Padding(0, 0, 10, 0),
+                BackColor = Color.Transparent
+            };
+
+            var cardBom = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Cấu Trúc Cây BOM Đa Cấp (Multi-Level BOM ZeroTreeList)",
+                Subtitle = "Ảo hóa phân cấp linh kiện, Chevron mở/đóng, Checkbox 3 trạng thái"
+            };
+
+            var bomTools = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 40,
+                BackColor = Color.Transparent,
+                Padding = new Padding(4, 2, 4, 4)
+            };
+
+            var txtBomSearch = new ZeroSearchBox
+            {
+                Location = new Point(4, 2),
+                Width = 210,
+                PlaceholderText = "Lọc linh kiện BOM..."
+            };
+
+            var btnExpandAll = new ZeroButton
+            {
+                Location = new Point(222, 2),
+                Size = new Size(88, 34),
+                Text = "➕ Mở Rộng",
+                ButtonStyle = ZeroButtonStyle.Secondary
+            };
+
+            var btnCollapseAll = new ZeroButton
+            {
+                Location = new Point(316, 2),
+                Size = new Size(88, 34),
+                Text = "➖ Thu Gọn",
+                ButtonStyle = ZeroButtonStyle.Secondary
+            };
+
+            var btnCheckStats = new ZeroButton
+            {
+                Location = new Point(410, 2),
+                Size = new Size(95, 34),
+                Text = "✔ Thống Kê",
+                ButtonStyle = ZeroButtonStyle.Success
+            };
+
+            bomTools.Controls.Add(btnCheckStats);
+            bomTools.Controls.Add(btnCollapseAll);
+            bomTools.Controls.Add(btnExpandAll);
+            bomTools.Controls.Add(txtBomSearch);
+
+            var treeBom = new ZeroTreeList
+            {
+                Dock = DockStyle.Fill,
+                ShowCheckBoxes = true,
+                ShowLines = true
+            };
+
+            // Build realistic BOM hierarchy for Industrial Smart Gateway
+            var rootBom = new ZeroTreeNode("ASM-9000: Gateway Điều Khiển IoT Công Nghiệp", "⚙️", "Tổng định mức: U$ 24.80 • 28 LK")
+            {
+                Badge = "Cụm Chính",
+                BadgeColor = ZeroTheme.Colors.Info
+            };
+
+            var pcbAssy = rootBom.AddChild("PCB-001: Bo Mạch Chủ SMT (4-Layer FR4)", "🟩", "Công đoạn: Máy dán SMT Line #1");
+            pcbAssy.Badge = "SMT Assy";
+            pcbAssy.BadgeColor = ZeroTheme.Colors.Success;
+            pcbAssy.AddChild("MCU-STM32: STM32F407VGT6 ARM Cortex-M4 168MHz", "📦", "1 PCS • U$ 8.50").Badge = "Linh Kiện Chính";
+            pcbAssy.AddChild("RAM-ISSI: 32MB SDRAM IC 133MHz High-Speed", "📦", "1 PCS • U$ 2.40");
+            pcbAssy.AddChild("ETH-PHY: LAN8720A 10/100 Ethernet Controller", "📦", "1 PCS • U$ 1.15");
+            pcbAssy.AddChild("FLASH-SPI: W25Q128JV 16MB SPI NOR Flash", "📦", "1 PCS • U$ 0.95");
+            pcbAssy.AddChild("PWR-LDO: AMS1117-3.3V Step-down Converter", "⚡", "2 PCS • U$ 0.35");
+            pcbAssy.AddChild("XTAL-8M: Thạch anh dao động 8.000MHz ±10ppm", "💎", "1 PCS • U$ 0.20");
+
+            var pwrAssy = rootBom.AddChild("ASM-002: Cụm Cấp Nguồn Cách Ly & Chống Sét 24V", "⚡", "Công đoạn: Ghép hàn THT Line #2");
+            pwrAssy.Badge = "Power Sub";
+            pwrAssy.BadgeColor = ZeroTheme.Colors.Warning;
+            pwrAssy.AddChild("TRF-24V: Biến Áp Xung Flyback 24V/2A Shielded", "🔋", "1 PCS • U$ 3.80");
+            pwrAssy.AddChild("MOV-471: Varistor 470V Chống Sét Lan Truyền", "🛡️", "2 PCS • U$ 0.45");
+            pwrAssy.AddChild("CAP-450V: Tụ Lọc Cao Áp Nichicon 100uF/450V", "📦", "2 PCS • U$ 1.20");
+            pwrAssy.AddChild("FUSE-T2A: Cầu Chì Chậm 250V 2A Chống Cháy", "🔥", "1 PCS • U$ 0.25");
+
+            var mecAssy = rootBom.AddChild("MEC-003: Khung Vỏ Nhôm Anodized IP67", "🛡️", "Công đoạn: Lắp ráp cơ khí CNC");
+            mecAssy.Badge = "Cơ Khí";
+            mecAssy.BadgeColor = ZeroTheme.Colors.Info;
+            mecAssy.AddChild("CNC-TOP: Nắp Nhôm Phay CNC Phủ Anode Đen", "🔩", "1 PCS • U$ 6.20");
+            mecAssy.AddChild("CNC-BTM: Đáy Nhôm Phay CNC Định Vị Ray DIN", "🔩", "1 PCS • U$ 4.50");
+            mecAssy.AddChild("SCR-M3: Vít Inox 304 M3x8 Chống Gỉ Chịu Rung", "🔩", "8 PCS • U$ 0.08");
+            mecAssy.AddChild("GSK-SIL: Gioăng Silicone Đúc Khuôn Chống Nước", "🛞", "1 PCS • U$ 0.90");
+
+            var pkgAssy = rootBom.AddChild("PKG-004: Hộp Đóng Gói & Serial Lot Tracking", "📦", "Công đoạn: KCS & Đóng Thùng");
+            pkgAssy.Badge = "Đóng Gói";
+            pkgAssy.BadgeColor = ZeroTheme.Colors.Success;
+            pkgAssy.AddChild("BOX-CTN: Thùng Carton 3 Lớp Chống Va Đập", "📦", "1 PCS • U$ 0.65");
+            pkgAssy.AddChild("FOAM-EVA: Mút Xốp EVA Chống Tĩnh Điện ESD", "🛡️", "2 PCS • U$ 0.40");
+            pkgAssy.AddChild("LBL-QR: Tem Nhãn Barcode Serial & QR Lot", "🏷️", "2 PCS • U$ 0.05");
+
+            treeBom.AddNode(rootBom);
+
+            txtBomSearch.DebouncedTextChanged += (s, text) =>
+            {
+                treeBom.FilterText = text;
+            };
+
+            btnExpandAll.Click += (s, e) => treeBom.ExpandAll();
+            btnCollapseAll.Click += (s, e) => treeBom.CollapseAll();
+
+            btnCheckStats.Click += (s, e) =>
+            {
+                int totalChecked = 0;
+                CountCheckedNodes(rootBom, ref totalChecked);
+                ZeroToast.Success(this, $"Đã chọn {totalChecked} hạng mục trong cây BOM sẵn sàng xuất lệnh lắp ráp!");
+            };
+
+            treeBom.NodeSelected += (s, node) =>
+            {
+                ZeroToast.Info(this, $"BOM: {node.Text} {(string.IsNullOrEmpty(node.SubText) ? "" : "• " + node.SubText)}");
+            };
+
+            cardBom.ContentPanel.Controls.Add(treeBom);
+            cardBom.ContentPanel.Controls.Add(bomTools);
+            leftCol.Controls.Add(cardBom);
+
+            // Right Column (Heatmap on Top + ZeroTabControl on Bottom)
+            var rightCol = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent
+            };
+
+            // Card Heatmap
+            var cardHeatmap = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 310,
+                Title = "Ma Trận Nhiệt Sản Lượng Chuyền SMT 24 Giờ x 7 Ngày (ZeroHeatmap)",
+                Subtitle = "Phân bố công suất theo từng khung giờ, tooltip chi tiết và chuyển đổi dải màu",
+                ActionText = "🎨 Đổi Bảng Màu"
+            };
+
+            var heatmap = new ZeroHeatmap
+            {
+                Dock = DockStyle.Fill,
+                ShowValues = true,
+                ShowLegend = true,
+                PaletteMode = HeatmapPaletteMode.Industrial
+            };
+
+            cardHeatmap.ActionClicked += (s, e) =>
+            {
+                var nextMode = heatmap.PaletteMode switch
+                {
+                    HeatmapPaletteMode.Industrial => HeatmapPaletteMode.Viridis,
+                    HeatmapPaletteMode.Viridis => HeatmapPaletteMode.CoolWarm,
+                    HeatmapPaletteMode.CoolWarm => HeatmapPaletteMode.Emerald,
+                    _ => HeatmapPaletteMode.Industrial
+                };
+                heatmap.PaletteMode = nextMode;
+                ZeroToast.Info(this, $"Đã đổi bảng màu Heatmap sang: {nextMode}");
+            };
+
+            heatmap.CellClicked += (s, e) =>
+            {
+                ZeroToast.Success(this, $"[SẢN LƯỢNG] {e.RowLabel} lúc {e.ColumnLabel}: {e.Value:0} PCS/giờ");
+            };
+
+            cardHeatmap.ContentPanel.Controls.Add(heatmap);
+
+            var heatmapSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // Card ZeroTabControl
+            var cardTabs = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Bộ Chuyển Tab Phẳng Hiện Đại Không Giật (ZeroTabControl)",
+                Subtitle = "Hỗ trợ phong cách Underline / Pill / Card, Notification Badges, và Dark Mode"
+            };
+
+            var tabTools = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 38,
+                BackColor = Color.Transparent,
+                Padding = new Padding(4, 2, 4, 4)
+            };
+
+            var segStyle = new ZeroSegmented
+            {
+                Location = new Point(4, 2),
+                Size = new Size(260, 32),
+                Items = new[] { "Underline", "Pill", "Card" },
+                SelectedIndex = 0
+            };
+
+            var tabSuite = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                TabStyle = ZeroTabStyle.Underline
+            };
+
+            segStyle.SelectedIndexChanged += (s, e) =>
+            {
+                tabSuite.TabStyle = (ZeroTabStyle)segStyle.SelectedIndex;
+            };
+
+            tabTools.Controls.Add(segStyle);
+
+            // Page 1: SMT Oven Reflow Profile
+            var pageOven = tabSuite.AddTab("Thiết Lập Lò Hàn SMT", "🔥");
+            pageOven.Padding = new Padding(12);
+
+            var pnlOven = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.Transparent
+            };
+
+            var numZ1 = CreateParamBox("Vùng 1 (Preheat):", 160.0m, "°C", 0.5m, 100m, 200m);
+            var numZ2 = CreateParamBox("Vùng 2 (Soak):", 195.0m, "°C", 0.5m, 150m, 230m);
+            var numZ3 = CreateParamBox("Vùng 3 (Peak Reflow):", 248.5m, "°C", 0.5m, 200m, 280m);
+            var numSpeed = CreateParamBox("Tốc Độ Băng Tải:", 1.15m, "m/min", 0.05m, 0.5m, 3.0m, 2);
+            var numN2 = CreateParamBox("Độ Tinh Khiết N2:", 99.98m, "%", 0.01m, 95m, 100m, 2);
+
+            pnlOven.Controls.Add(numZ1);
+            pnlOven.Controls.Add(numZ2);
+            pnlOven.Controls.Add(numZ3);
+            pnlOven.Controls.Add(numSpeed);
+            pnlOven.Controls.Add(numN2);
+            pageOven.Controls.Add(pnlOven);
+
+            // Page 2: Work Order Specifications
+            var pageOrder = tabSuite.AddTab("Thông Số Lệnh SX", "📋");
+            pageOrder.Padding = new Padding(12);
+
+            var descOrder = new ZeroDescriptions
+            {
+                Dock = DockStyle.Fill,
+                Columns = 2,
+                RowHeight = 32
+            };
+            descOrder.Add("Mã Lệnh SX", "WO-2026-GATEWAY-88");
+            descOrder.Add("Sản Phẩm Đích", "B1030 IoT Smart Gateway Rev 2.0");
+            descOrder.Add("Chuyền Gia Công", "Line SMT Alpha #01");
+            descOrder.Add("Mục Tiêu FPY", "99.45% Yield Rate", Color.FromArgb(16, 185, 129));
+            descOrder.Add("Lead Engineer", "Võ Tuấn Phong (Kỹ Sư Trưởng)");
+            descOrder.Add("Tiêu Chuẩn Hàn", "IPC-A-610 Class 3 Industrial");
+            pageOrder.Controls.Add(descOrder);
+
+            // Page 3: Line Alarms
+            var pageAlerts = tabSuite.AddTab("Cảnh Báo Chuyền", "🔔", 3);
+            pageAlerts.Padding = new Padding(12);
+
+            var alertBox = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Warning,
+                Title = "CẢNH BÁO TIỄN LIỆU KHAY SMT FEEDER BOA472",
+                Message = "Cuộn tụ gốm 10uF tại slot #18 sắp hết linh kiện (còn < 150 PCS). Đề nghị kỹ thuật viên nạp cuộn mới trong vòng 12 phút để tránh dừng chuyền!"
+            };
+            pageAlerts.Controls.Add(alertBox);
+
+            cardTabs.ContentPanel.Controls.Add(tabSuite);
+            cardTabs.ContentPanel.Controls.Add(tabTools);
+
+            rightCol.Controls.Add(cardTabs);
+            rightCol.Controls.Add(heatmapSpacer);
+            rightCol.Controls.Add(cardHeatmap);
+
+            bodyPanel.Controls.Add(rightCol);
+            bodyPanel.Controls.Add(leftCol);
+
+            // Assemble main container
+            mainContainer.Controls.Add(bodyPanel);
+            mainContainer.Controls.Add(topBarSpacer);
+            mainContainer.Controls.Add(topBar);
+            mainContainer.Controls.Add(bannerSpacer);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            bannerSpacer.BringToFront();
+            topBar.BringToFront();
+            topBarSpacer.BringToFront();
+            bodyPanel.BringToFront();
+
+            _tabAdvanced.Controls.Add(mainContainer);
+        }
+
+        private Panel CreateParamBox(string label, decimal initialVal, string unit, decimal step, decimal min, decimal max, int decimals = 1)
+        {
+            var pnl = new Panel
+            {
+                Size = new Size(230, 68),
+                Margin = new Padding(6)
+            };
+
+            var lbl = new Label
+            {
+                Text = label,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = ZeroTheme.Colors.TextSecondary,
+                Location = new Point(0, 2),
+                AutoSize = true
+            };
+
+            var num = new ZeroNumericBox
+            {
+                Location = new Point(0, 24),
+                Width = 220,
+                Suffix = unit,
+                Step = step,
+                MinValue = min,
+                MaxValue = max,
+                DecimalPlaces = decimals,
+                Value = initialVal
+            };
+
+            pnl.Controls.Add(lbl);
+            pnl.Controls.Add(num);
+            return pnl;
+        }
+
+        private void CountCheckedNodes(ZeroTreeNode node, ref int count)
+        {
+            if (node.CheckState == CheckState.Checked) count++;
+            foreach (var child in node.Children)
+            {
+                CountCheckedNodes(child, ref count);
+            }
+        }
     }
 }
+
 
 
 
