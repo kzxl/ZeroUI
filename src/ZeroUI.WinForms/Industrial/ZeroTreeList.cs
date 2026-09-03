@@ -176,7 +176,6 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.ResizeRedraw |
                 ControlStyles.Selectable, true);
 
-            Size = new Size(380, 420);
             Font = new Font("Segoe UI", 9f);
             BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark default
 
@@ -192,6 +191,8 @@ namespace ZeroUI.WinForms.Industrial
                 Invalidate();
             };
             Controls.Add(_vScrollBar);
+
+            Size = new Size(380, 420);
 
             MouseWheel += OnMouseWheelScroll;
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
@@ -405,6 +406,7 @@ namespace ZeroUI.WinForms.Industrial
 
         private void UpdateScrollBar()
         {
+            if (_vScrollBar == null || _visibleNodes == null) return;
             int totalHeight = _visibleNodes.Count * _rowHeight;
             int viewHeight = Height;
 

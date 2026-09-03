@@ -75,7 +75,6 @@ namespace ZeroUI.WinForms.Overlays
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw, true);
 
-            Size = new Size(500, 350);
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark
 
@@ -85,6 +84,8 @@ namespace ZeroUI.WinForms.Overlays
                 BackColor = Color.Transparent
             };
             Controls.Add(_contentContainer);
+
+            Size = new Size(500, 350);
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }

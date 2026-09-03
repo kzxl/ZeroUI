@@ -266,8 +266,11 @@ namespace ZeroUI.WinForms.Editors
             _upButtonRect = new Rectangle(Width - btnW - 3, 2, btnW, btnH);
             _downButtonRect = new Rectangle(Width - btnW - 3, 2 + btnH, btnW, btnH);
 
-            _innerBox.Location = new Point(10, (Height - _innerBox.Height) / 2);
-            _innerBox.Width = Width - btnW - 16;
+            if (_innerBox != null)
+            {
+                _innerBox.Location = new Point(10, (Height - _innerBox.Height) / 2);
+                _innerBox.Width = Math.Max(10, Width - btnW - 16);
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

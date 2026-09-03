@@ -67,7 +67,6 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw, true);
 
-            Size = new Size(260, 36);
             Font = new Font("Segoe UI", 9.5f);
             BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark
 
@@ -78,7 +77,7 @@ namespace ZeroUI.WinForms.Editors
                 BackColor = BackColor,
                 ForeColor = Color.White,
                 Location = new Point(32, 8),
-                Width = Width - 70
+                Width = 190
             };
             _searchTextBox.TextChanged += (s, e) => OnSearchTextChanged();
             _searchTextBox.KeyDown += OnSearchTextBoxKeyDown;
@@ -111,6 +110,8 @@ namespace ZeroUI.WinForms.Editors
                 Padding = Padding.Empty
             };
             _dropdown.Items.Add(host);
+
+            Size = new Size(260, 36);
 
             ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
             UpdateTheme();
@@ -264,8 +265,11 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            _searchTextBox.Location = new Point(32, (Height - _searchTextBox.Height) / 2);
-            _searchTextBox.Width = Width - 70;
+            if (_searchTextBox != null)
+            {
+                _searchTextBox.Location = new Point(32, (Height - _searchTextBox.Height) / 2);
+                _searchTextBox.Width = Math.Max(10, Width - 70);
+            }
 
             _chevronRect = new Rectangle(Width - 26, (Height - 16) / 2, 16, 16);
             _clearButtonRect = new Rectangle(Width - 48, (Height - 16) / 2, 16, 16);
@@ -478,7 +482,8 @@ namespace ZeroUI.WinForms.Editors
 
             private void UpdateScrollBar()
             {
-                int maxVis = Height / _itemHeight;
+                if (_vScrollBar == null || _items == null) return;
+                int maxVis = Math.Max(1, Height / _itemHeight);
                 if (_items.Count > maxVis)
                 {
                     _vScrollBar.Visible = true;
