@@ -13,8 +13,9 @@ namespace ZeroUI.WinForms.Controls
     {
         private readonly TextBox _textBox;
         private readonly Timer _debounceTimer;
-        private string _placeholder = "🔍 Tìm kiếm nhanh...";
+        private string _placeholder = "🔍 Search...";
         private int _debounceMs = 200;
+
         private bool _isFocused = false;
 
         public event EventHandler<string>? DebouncedTextChanged;

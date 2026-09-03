@@ -369,12 +369,13 @@ namespace ZeroUI.WinForms.Controls
 
                     _dibSection.SelectFont(_hHeaderFont);
                     RECT emptyTitleRect = new RECT(20, emptyCenterY, width - 20, emptyCenterY + 24);
-                    _dibSection.DrawText("Không có dữ liệu phù hợp".AsSpan(), ref emptyTitleRect, 0x00666666, CellAlignment.Center, Font.Height);
+                    _dibSection.DrawText("No matching data found".AsSpan(), ref emptyTitleRect, 0x00666666, CellAlignment.Center, Font.Height);
 
                     _dibSection.SelectFont(_hFont);
                     RECT emptySubRect = new RECT(20, emptyCenterY + 26, width - 20, emptyCenterY + 50);
-                    _dibSection.DrawText("Vui lòng thử từ khóa tìm kiếm khác hoặc xóa bộ lọc dữ liệu".AsSpan(), ref emptySubRect, 0x00999999, CellAlignment.Center, Font.Height);
+                    _dibSection.DrawText("Try adjusting your search keywords or clearing active filters".AsSpan(), ref emptySubRect, 0x00999999, CellAlignment.Center, Font.Height);
                 }
+
 
 
                 // 2. Render Header Row (Always on top with Bold Header Font)

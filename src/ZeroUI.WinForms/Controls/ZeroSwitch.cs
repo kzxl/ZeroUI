@@ -12,8 +12,9 @@ namespace ZeroUI.WinForms.Controls
     public class ZeroSwitch : Control
     {
         private bool _checked = false;
-        private string? _checkedText = "BẬT";
-        private string? _uncheckedText = "TẮT";
+        private string? _checkedText = "ON";
+        private string? _uncheckedText = "OFF";
+
 
         private Color _checkedColor = Color.FromArgb(79, 70, 229);     // ZeroUI Indigo Accent
         private Color _uncheckedColor = Color.FromArgb(0, 0, 0, 65);   // Neutral Slate Track
@@ -60,7 +61,7 @@ namespace ZeroUI.WinForms.Controls
         }
 
         [Category("Appearance")]
-        [DefaultValue("BẬT")]
+        [DefaultValue("ON")]
         public string? CheckedText
         {
             get => _checkedText;
@@ -68,12 +69,13 @@ namespace ZeroUI.WinForms.Controls
         }
 
         [Category("Appearance")]
-        [DefaultValue("TẮT")]
+        [DefaultValue("OFF")]
         public string? UncheckedText
         {
             get => _uncheckedText;
             set { _uncheckedText = value; Invalidate(); }
         }
+
 
         [Category("Appearance")]
         public Color CheckedColor

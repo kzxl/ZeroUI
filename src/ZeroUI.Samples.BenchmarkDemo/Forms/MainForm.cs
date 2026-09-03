@@ -97,21 +97,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _topPanel.Controls.Add(lblTitle);
 
             int btnX = 280;
-            Button btn100k = CreateActionButton("100K Dòng", btnX, () => LoadDataset(100_000));
+            Button btn100k = CreateActionButton("100K Rows", btnX, () => LoadDataset(100_000));
             btnX += 110;
-            Button btn500k = CreateActionButton("500K Dòng", btnX, () => LoadDataset(500_000));
+            Button btn500k = CreateActionButton("500K Rows", btnX, () => LoadDataset(500_000));
             btnX += 110;
-            Button btn1M = CreateActionButton("1 TRIỆU Dòng", btnX, () => LoadDataset(1_000_000));
-            btnX += 130;
-            Button btn10M = CreateActionButton("🔥 10 TRIỆU Dòng", btnX, () => LoadDataset(10_000_000));
+            Button btn1M = CreateActionButton("1M Rows", btnX, () => LoadDataset(1_000_000));
+            btnX += 110;
+            Button btn10M = CreateActionButton("🔥 10M Rows", btnX, () => LoadDataset(10_000_000));
             btn10M.BackColor = Color.FromArgb(190, 24, 24);
-            btnX += 150;
+            btnX += 130;
 
             _btnAutoScroll = new Button
             {
-                Text = "🚀 Chạy Auto-Scroll Stress Test (10s)",
+                Text = "🚀 Run Auto-Scroll Stress Test (10s)",
                 Location = new Point(btnX, 10),
-                Size = new Size(260, 34),
+                Size = new Size(270, 34),
                 BackColor = Color.FromArgb(79, 70, 229),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -121,6 +121,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _btnAutoScroll.FlatAppearance.BorderSize = 0;
             _btnAutoScroll.Click += (s, e) => ToggleStressTest();
             _topPanel.Controls.Add(_btnAutoScroll);
+
 
             _topPanel.Controls.Add(btn100k);
             _topPanel.Controls.Add(btn500k);
@@ -137,9 +138,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Padding = new Padding(12, 8, 12, 8)
             };
 
-            _lblStatus = CreateMetricLabel("Dữ liệu: Khởi tạo...", 12);
+            _lblStatus = CreateMetricLabel("Data: Ready", 12);
             _lblFps = CreateMetricLabel("FPS: --", 240);
-            _lblLatency = CreateMetricLabel("Độ trễ: -- ms", 400);
+            _lblLatency = CreateMetricLabel("Latency: -- ms", 400);
             _lblRam = CreateMetricLabel("RAM: -- MB", 560);
             _lblGc = CreateMetricLabel("GC Gen0: --", 730);
 
@@ -158,8 +159,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
 
             _tabZero = new TabPage("⚡ ZeroGrid (ZeroUI Core Engine)");
-            _tabDgv = new TabPage("🐢 DataGridView Mặc Định (VirtualMode)");
-            _tabControls = new TabPage("🎨 Components Showcase (Controls Mới)");
+            _tabDgv = new TabPage("🐢 Default DataGridView (VirtualMode)");
+            _tabControls = new TabPage("🎨 Components Showcase");
+
 
             InitializeZeroGrid();
             InitializeDataGridView();
@@ -227,13 +229,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
 
             _zeroGrid.Columns.Add(new ZeroColumn("ID", 70, CellAlignment.Right));
-            _zeroGrid.Columns.Add(new ZeroColumn("Mã Vật Tư", 120, CellAlignment.Left));
-            _zeroGrid.Columns.Add(new ZeroColumn("Tên Vật Tư / Linh Kiện", 280, CellAlignment.Left));
-            _zeroGrid.Columns.Add(new ZeroColumn("Số Lượng", 90, CellAlignment.Right));
-            _zeroGrid.Columns.Add(new ZeroColumn("Đơn Giá (VNĐ)", 130, CellAlignment.Right));
-            _zeroGrid.Columns.Add(new ZeroColumn("Thành Tiền (VNĐ)", 150, CellAlignment.Right));
-            _zeroGrid.Columns.Add(new ZeroColumn("Số Lô", 120, CellAlignment.Center));
-            _zeroGrid.Columns.Add(new ZeroColumn("Trạng Thái", 130, CellAlignment.Center));
+            _zeroGrid.Columns.Add(new ZeroColumn("Item Code", 120, CellAlignment.Left));
+            _zeroGrid.Columns.Add(new ZeroColumn("Item Name / Description", 280, CellAlignment.Left));
+            _zeroGrid.Columns.Add(new ZeroColumn("Quantity", 90, CellAlignment.Right));
+            _zeroGrid.Columns.Add(new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right));
+            _zeroGrid.Columns.Add(new ZeroColumn("Total Amount ($)", 150, CellAlignment.Right));
+            _zeroGrid.Columns.Add(new ZeroColumn("Batch No", 120, CellAlignment.Center));
+            _zeroGrid.Columns.Add(new ZeroColumn("Status", 130, CellAlignment.Center));
 
             _searchBar = new ZeroGridSearchBar();
             _searchBar.AttachToGrid(_zeroGrid);
@@ -245,7 +247,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _zeroGrid.ScrollToRow(_pagination.PageStartRow);
             };
         }
-
 
         private void InitializeDataGridView()
         {
@@ -270,13 +271,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 null, _dgv, new object[] { true });
 
             _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "ID", Width = 70 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Mã Vật Tư", Width = 120 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Tên Vật Tư / Linh Kiện", Width = 280 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Số Lượng", Width = 90 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Đơn Giá (VNĐ)", Width = 130 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Thành Tiền (VNĐ)", Width = 150 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Số Lô", Width = 120 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Trạng Thái", Width = 130 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Item Code", Width = 120 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Item Name / Description", Width = 280 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Quantity", Width = 90 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Unit Price ($)", Width = 130 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Total Amount ($)", Width = 150 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Batch No", Width = 120 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Status", Width = 130 });
+
 
             _dgv.CellValueNeeded += (s, e) =>
             {
@@ -305,7 +307,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             }
 
             Cursor = Cursors.WaitCursor;
-            _lblStatus.Text = $"Dữ liệu: Đang tạo {count:N0} dòng...";
+            _lblStatus.Text = $"Data: Generating {count:N0} rows...";
             Application.DoEvents();
 
             Stopwatch sw = Stopwatch.StartNew();
@@ -331,7 +333,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _pagination.TotalRows = count;
                 _searchBar.UpdateCountBadge();
                 _baselineGen0 = GC.CollectionCount(0);
-                _lblStatus.Text = $"Dữ liệu: {count:N0} dòng (ZeroUI nạp trong {sw.ElapsedMilliseconds} ms - DGV quá tải)";
+                _lblStatus.Text = $"Data: {count:N0} rows (ZeroUI initialized in {sw.ElapsedMilliseconds} ms - DGV OOM Protected)";
                 _scrollFrames = 0;
                 _scrollStopwatch.Restart();
                 return;
@@ -359,9 +361,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _pagination.TotalRows = count;
             _searchBar.UpdateCountBadge();
             _baselineGen0 = GC.CollectionCount(0);
-            _lblStatus.Text = $"Dữ liệu: {count:N0} dòng (Tải trong {sw.ElapsedMilliseconds} ms)";
+            _lblStatus.Text = $"Data: {count:N0} rows (Loaded in {sw.ElapsedMilliseconds} ms)";
             _scrollFrames = 0;
             _scrollStopwatch.Restart();
+
         }
 
 
@@ -463,10 +466,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             double elapsedSec = _scrollStopwatch.Elapsed.TotalSeconds;
             double fps = (elapsedSec > 0 && _scrollFrames > 0) ? (_scrollFrames / elapsedSec) : 0.0;
-            double latency = fps > 0 ? (1000.0 / fps) : 0.0;
+            double latencyMs = fps > 0 ? (1000.0 / fps) : 0.0;
 
-            _lblFps.Text = $"FPS: {fps:F1}";
-            _lblLatency.Text = $"Độ trễ: {latency:F1} ms";
+            _lblFps.Text = $"FPS: {fps:F0}";
+            _lblLatency.Text = $"Latency: {latencyMs:F2} ms";
             _lblRam.Text = $"RAM: {ramMb:F1} MB";
             _lblGc.Text = $"GC Gen0 Delta: {gcGen0}";
 
@@ -489,7 +492,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         {
             if (_zeroGrid.DataSource == null || _zeroGrid.RowCount == 0)
             {
-                MessageBox.Show("Không có dữ liệu để xuất!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("No data available to export!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -502,7 +505,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             if (sfd.ShowDialog(this) == DialogResult.OK)
             {
                 Cursor = Cursors.WaitCursor;
-                _lblStatus.Text = "Đang xuất CSV...";
+                _lblStatus.Text = "Exporting CSV...";
                 var sw = Stopwatch.StartNew();
 
                 try
@@ -510,20 +513,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                     int count = await ZeroUI.WinForms.Export.ZeroGridExporter.ExportToCsvAsync(_zeroGrid.DataSource, _zeroGrid, sfd.FileName);
                     sw.Stop();
                     double rowsPerSec = count / Math.Max(0.001, sw.Elapsed.TotalSeconds);
+                    ZeroToast.Success(this, $"Exported {count:N0} rows successfully ({sw.ElapsedMilliseconds} ms)");
                     MessageBox.Show(
-                        $"✅ Xuất thành công {count:N0} dòng ra file:\n{sfd.FileName}\n\nThời gian: {sw.ElapsedMilliseconds} ms ({rowsPerSec:N0} dòng/giây)",
-                        "Xuất file thành công",
+                        $"✅ Successfully exported {count:N0} rows to file:\n{sfd.FileName}\n\nTime elapsed: {sw.ElapsedMilliseconds} ms ({rowsPerSec:N0} rows/sec)",
+                        "Export Successful",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi xuất file: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Export error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {
                     Cursor = Cursors.Default;
-                    _lblStatus.Text = $"Đã xuất {sfd.FileName}";
+                    _lblStatus.Text = $"Exported: {sfd.FileName}";
                 }
             }
         }
@@ -551,19 +555,17 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 AutoSize = true,
                 Location = new Point(16, 16)
             };
-            leftPanel.Controls.Add(lblBtnTitle);
-
-            int btnY = 48;
+                       int btnY = 48;
             var btnPrimary = new ZeroButton { Text = "Primary Action", ButtonStyle = ZeroButtonStyle.Primary, Location = new Point(16, btnY), Size = new Size(130, 36) };
-            var btnSuccess = new ZeroButton { Text = "Thành Công", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(156, btnY), Size = new Size(120, 36) };
-            var btnDanger = new ZeroButton { Text = "Xóa Dữ Liệu", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(286, btnY), Size = new Size(120, 36) };
+            var btnSuccess = new ZeroButton { Text = "Success", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(156, btnY), Size = new Size(120, 36) };
+            var btnDanger = new ZeroButton { Text = "Delete / Danger", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(286, btnY), Size = new Size(130, 36) };
             leftPanel.Controls.Add(btnPrimary);
             leftPanel.Controls.Add(btnSuccess);
             leftPanel.Controls.Add(btnDanger);
 
             btnY += 46;
             var btnSecondary = new ZeroButton { Text = "Secondary", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(16, btnY), Size = new Size(130, 36) };
-            var btnBadge = new ZeroButton { Text = "Thông Báo", ButtonStyle = ZeroButtonStyle.Primary, BadgeText = "9+", Location = new Point(156, btnY), Size = new Size(140, 36) };
+            var btnBadge = new ZeroButton { Text = "Notifications", ButtonStyle = ZeroButtonStyle.Primary, BadgeText = "9+", Location = new Point(156, btnY), Size = new Size(140, 36) };
             leftPanel.Controls.Add(btnSecondary);
             leftPanel.Controls.Add(btnBadge);
 
@@ -580,14 +582,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(lblProgTitle);
 
             progY += 32;
-            var lblDeterminate = new Label { Text = "Tiến độ xác định (78%):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f) };
+            var lblDeterminate = new Label { Text = "Determinate Progress (78%):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f) };
             leftPanel.Controls.Add(lblDeterminate);
             progY += 22;
             var prog1 = new ZeroProgressBar { Location = new Point(16, progY), Size = new Size(390, 24), Value = 78, ProgressColor = Color.FromArgb(16, 185, 129) };
             leftPanel.Controls.Add(prog1);
 
             progY += 34;
-            var lblIndeterminate = new Label { Text = "Tiến độ vô hạn (Marquee 60 FPS):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f) };
+            var lblIndeterminate = new Label { Text = "Indeterminate Progress (Marquee 60 FPS):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f) };
             leftPanel.Controls.Add(lblIndeterminate);
             progY += 22;
             var prog2 = new ZeroProgressBar { Location = new Point(16, progY), Size = new Size(390, 24), IsIndeterminate = true, ProgressColor = Color.FromArgb(79, 70, 229) };
@@ -606,14 +608,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(lblSearchTitle);
 
             searchY += 30;
-            var searchDemo = new ZeroSearchBox { Location = new Point(16, searchY), Width = 390, PlaceholderText = "🔍 Nhập từ khóa thử nghiệm..." };
+            var searchDemo = new ZeroSearchBox { Location = new Point(16, searchY), Width = 390, PlaceholderText = "🔍 Enter keywords to test..." };
             leftPanel.Controls.Add(searchDemo);
 
             // Section 4: ZeroSwitch & ZeroTag
             int tagY = searchY + 44;
             var lblTagTitle = new Label
             {
-                Text = "4. ZeroSwitch & ZeroTag (Trạng thái & Công tắc)",
+                Text = "4. ZeroSwitch & ZeroTag (State & Toggle Controls)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(31, 41, 55),
                 AutoSize = true,
@@ -623,14 +625,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             tagY += 30;
             var swDemo = new ZeroSwitch { Location = new Point(16, tagY), Checked = true };
-            var tag1 = new ZeroTag { Location = new Point(78, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Success, Text = "Hoạt động" };
-            var tag2 = new ZeroTag { Location = new Point(156, tagY), Size = new Size(76, 26), TagType = ZeroTagType.Processing, Text = "Đang xử lý" };
-            var tag3 = new ZeroTag { Location = new Point(238, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Warning, Text = "Cảnh báo" };
-            var tag4 = new ZeroTag { Location = new Point(316, tagY), Size = new Size(60, 26), TagType = ZeroTagType.Error, Text = "Lỗi" };
+            var tag1 = new ZeroTag { Location = new Point(78, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Success, Text = "Active" };
+            var tag2 = new ZeroTag { Location = new Point(156, tagY), Size = new Size(80, 26), TagType = ZeroTagType.Processing, Text = "Processing" };
+            var tag3 = new ZeroTag { Location = new Point(242, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Warning, Text = "Warning" };
+            var tag4 = new ZeroTag { Location = new Point(320, tagY), Size = new Size(60, 26), TagType = ZeroTagType.Error, Text = "Error" };
             swDemo.CheckedChanged += (s, e) =>
             {
                 tag1.TagType = swDemo.Checked ? ZeroTagType.Success : ZeroTagType.Default;
-                tag1.Text = swDemo.Checked ? "Hoạt động" : "Đã tắt";
+                tag1.Text = swDemo.Checked ? "Active" : "Disabled";
             };
             leftPanel.Controls.Add(swDemo);
             leftPanel.Controls.Add(tag1);
@@ -642,7 +644,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             int segY = tagY + 38;
             var lblSegTitle = new Label
             {
-                Text = "5. ZeroSegmented (Bộ lọc viên thuốc)",
+                Text = "5. ZeroSegmented (Pill Switcher)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(31, 41, 55),
                 AutoSize = true,
@@ -655,11 +657,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(16, segY),
                 Width = 390,
-                Items = new[] { "Tất cả", "Hôm nay", "Tuần này", "Tháng này" }
+                Items = new[] { "All", "Daily", "Weekly", "Monthly" }
             };
             segDemo.SelectedIndexChanged += (s, e) =>
             {
-                ZeroToast.Info(this, $"Đã chọn chế độ xem: {segDemo.SelectedItem}");
+                ZeroToast.Info(this, $"Selected view: {segDemo.SelectedItem}");
             };
             leftPanel.Controls.Add(segDemo);
 
@@ -667,7 +669,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             int statY = segY + 44;
             var lblStatTitle = new Label
             {
-                Text = "6. ZeroStatistic (Thẻ chỉ số KPI Dashboard)",
+                Text = "6. ZeroStatistic (KPI Dashboard Cards)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(31, 41, 55),
                 AutoSize = true,
@@ -680,22 +682,22 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(16, statY),
                 Size = new Size(190, 95),
-                Title = "TỔNG TỒN KHO",
+                Title = "TOTAL INVENTORY",
                 Value = "1,248,500",
-                Suffix = "sp",
+                Suffix = "pcs",
                 Trend = ZeroTrendDirection.Up,
-                TrendText = "+12.4% so với tháng trước"
+                TrendText = "+12.4% vs last month"
             };
             var stat2 = new ZeroStatistic
             {
                 Location = new Point(216, statY),
                 Size = new Size(190, 95),
-                Title = "DOANH THU THỰC TẾ",
+                Title = "ACTUAL REVENUE",
                 Value = "3.85",
-                Prefix = "₫",
-                Suffix = "Tỷ",
+                Prefix = "$",
+                Suffix = "B",
                 Trend = ZeroTrendDirection.Down,
-                TrendText = "-2.1% chu kỳ"
+                TrendText = "-2.1% cycle"
             };
             leftPanel.Controls.Add(stat1);
             leftPanel.Controls.Add(stat2);
@@ -704,7 +706,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             int toastY = statY + 105;
             var lblToastTitle = new Label
             {
-                Text = "7. ZeroToast (Thông báo nổi Non-blocking)",
+                Text = "7. ZeroToast (Non-blocking Floating Toasts)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(31, 41, 55),
                 AutoSize = true,
@@ -712,21 +714,19 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             leftPanel.Controls.Add(lblToastTitle);
 
-
             toastY += 30;
-            var btnToastSuccess = new ZeroButton { Text = "Toast Thành Công", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(16, toastY), Size = new Size(125, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
-            btnToastSuccess.Click += (s, e) => ZeroToast.Success(this, "Dữ liệu 10 triệu dòng đã được đồng bộ vào RAM thành công!");
+            var btnToastSuccess = new ZeroButton { Text = "Toast Success", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(16, toastY), Size = new Size(125, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            btnToastSuccess.Click += (s, e) => ZeroToast.Success(this, "10 million rows synchronized into RAM successfully!");
 
-            var btnToastWarn = new ZeroButton { Text = "Toast Cảnh Báo", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(148, toastY), Size = new Size(120, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
-            btnToastWarn.Click += (s, e) => ZeroToast.Warning(this, "Hệ thống phát hiện tải bộ nhớ tăng nhanh.");
+            var btnToastWarn = new ZeroButton { Text = "Toast Warning", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(148, toastY), Size = new Size(120, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            btnToastWarn.Click += (s, e) => ZeroToast.Warning(this, "System detected rapid memory bandwidth consumption.");
 
-            var btnToastError = new ZeroButton { Text = "Toast Lỗi", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(275, toastY), Size = new Size(115, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
-            btnToastError.Click += (s, e) => ZeroToast.Error(this, "Không thể kết nối đến máy chủ cơ sở dữ liệu!");
+            var btnToastError = new ZeroButton { Text = "Toast Error", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(275, toastY), Size = new Size(115, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            btnToastError.Click += (s, e) => ZeroToast.Error(this, "Database server connection timeout!");
 
             leftPanel.Controls.Add(btnToastSuccess);
             leftPanel.Controls.Add(btnToastWarn);
             leftPanel.Controls.Add(btnToastError);
-
 
             // Right Panel: ZeroListView Log Streamer
             var rightPanel = new Panel
@@ -739,7 +739,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var topLogBar = new Panel { Dock = DockStyle.Top, Height = 46, BackColor = Color.Transparent };
             var lblLogTitle = new Label
             {
-                Text = "4. ZeroListView (Trình xem Log 100K+ dòng siêu tốc)",
+                Text = "8. ZeroListView (High-Throughput Log Viewer 100K+ Rows)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(31, 41, 55),
                 AutoSize = true,
@@ -762,7 +762,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 var batch = new List<LogEntry>(1000);
                 for (int i = 0; i < 1000; i++)
                 {
-                    batch.Add(new LogEntry(DateTime.Now, (LogSeverity)(i % 4), $"[SỰ KIỆN TỰ ĐỘNG #{i + 1}] Đồng bộ dữ liệu lô hàng vào kho thành công."));
+                    batch.Add(new LogEntry(DateTime.Now, (LogSeverity)(i % 4), $"[AUTOMATED EVENT #{i + 1}] Inventory batch sync completed successfully."));
                 }
                 _showcaseLog.AddLogs(batch);
             };
@@ -770,7 +770,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var btnClearLogs = new ZeroButton
             {
-                Text = "Xóa Log",
+                Text = "Clear Logs",
                 ButtonStyle = ZeroButtonStyle.Ghost,
                 Size = new Size(80, 30),
                 BorderRadius = 4,
@@ -782,10 +782,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             topLogBar.Controls.Add(btnClearLogs);
 
             _showcaseLog = new ZeroListView { Dock = DockStyle.Fill };
-            _showcaseLog.AddLog(LogSeverity.Info, "Hệ thống ZeroUI khởi tạo thành công.");
-            _showcaseLog.AddLog(LogSeverity.Success, "Kết nối DIBSection Memory DC hoàn tất (32bpp).");
-            _showcaseLog.AddLog(LogSeverity.Warning, "Bộ nhớ RAM đang nạp dữ liệu quy mô lớn.");
-            _showcaseLog.AddLog(LogSeverity.Error, "Cảnh báo quá tải DataGridView WinForms mặc định.");
+            _showcaseLog.AddLog(LogSeverity.Info, "ZeroUI system initialized successfully.");
+            _showcaseLog.AddLog(LogSeverity.Success, "Connected to Win32 DIBSection Memory DC (32bpp).");
+            _showcaseLog.AddLog(LogSeverity.Warning, "High-throughput streaming engine allocated.");
+            _showcaseLog.AddLog(LogSeverity.Error, "Default DataGridView load threshold exceeded.");
 
             rightPanel.Controls.Add(_showcaseLog);
             rightPanel.Controls.Add(topLogBar);
@@ -801,11 +801,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 if (_tabControl.SelectedTab == _tabControls && _showcaseLog.Entries.Count < 50000)
                 {
                     var sev = (LogSeverity)(simCount % 4);
-                    _showcaseLog.AddLog(sev, $"[Dịch vụ #{simCount++}] Xử lý giao dịch I/O qua ZeroUI engine độ trễ 0.02ms.");
+                    _showcaseLog.AddLog(sev, $"[Service #{simCount++}] Processed high-throughput transaction via ZeroUI engine with 0.02ms latency.");
                 }
             };
             _logGenTimer.Start();
         }
     }
 }
+
 

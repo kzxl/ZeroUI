@@ -12,7 +12,8 @@ namespace ZeroUI.WinForms.Controls
     public class ZeroSegmented : Control
 
     {
-        private string[] _items = new[] { "Tất cả", "Hôm nay", "Tuần này", "Tháng này" };
+        private string[] _items = new[] { "All", "Daily", "Weekly", "Monthly" };
+
         private int _selectedIndex = 0;
         private int _hoveredIndex = -1;
 

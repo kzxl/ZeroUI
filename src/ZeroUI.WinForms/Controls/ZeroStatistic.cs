@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Controls
     public class ZeroStatistic : Control
 
     {
-        private string _title = "Chỉ Số Thống Kê";
+        private string _title = "Metric Title";
         private string _value = "0";
         private string? _prefix;
         private string? _suffix;
@@ -43,12 +43,13 @@ namespace ZeroUI.WinForms.Controls
         }
 
         [Category("Data")]
-        [DefaultValue("Chỉ Số Thống Kê")]
+        [DefaultValue("Metric Title")]
         public string Title
         {
             get => _title;
             set { _title = value; Invalidate(); }
         }
+
 
         [Category("Data")]
         [DefaultValue("0")]

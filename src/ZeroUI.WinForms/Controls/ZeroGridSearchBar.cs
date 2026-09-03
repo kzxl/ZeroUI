@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Controls
 
             _searchBox = new ZeroSearchBox
             {
-                PlaceholderText = "🔍 Tìm kiếm mọi cột (gõ để lọc tức thì)...",
+                PlaceholderText = "🔍 Search all columns (live filter)...",
                 Location = new Point(12, 7),
                 Width = 320,
                 DebounceIntervalMs = 150
@@ -45,12 +45,12 @@ namespace ZeroUI.WinForms.Controls
 
             _btnDensity = new ZeroButton
             {
-                Text = "📏 Mật độ: Vừa",
+                Text = "📏 Density: Normal",
                 ButtonStyle = ZeroButtonStyle.Ghost,
-                Size = new Size(125, 32),
+                Size = new Size(135, 32),
                 BorderRadius = 4,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                Location = new Point(Width - 260, 8),
+                Location = new Point(Width - 270, 8),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
             _btnDensity.Click += (s, e) =>
@@ -66,16 +66,16 @@ namespace ZeroUI.WinForms.Controls
                 _grid.Density = next;
                 _btnDensity.Text = next switch
                 {
-                    ZeroUI.Core.Common.GridDensity.Compact => "📏 Mật độ: Dày",
-                    ZeroUI.Core.Common.GridDensity.Middle => "📏 Mật độ: Vừa",
-                    ZeroUI.Core.Common.GridDensity.Loose => "📏 Mật độ: Thoáng",
-                    _ => "📏 Mật độ"
+                    ZeroUI.Core.Common.GridDensity.Compact => "📏 Density: Compact",
+                    ZeroUI.Core.Common.GridDensity.Middle => "📏 Density: Normal",
+                    ZeroUI.Core.Common.GridDensity.Loose => "📏 Density: Comfortable",
+                    _ => "📏 Density"
                 };
             };
 
             _btnExport = new ZeroButton
             {
-                Text = "📊 Xuất CSV",
+                Text = "📊 Export CSV",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Size = new Size(110, 32),
                 BorderRadius = 4,
@@ -84,6 +84,7 @@ namespace ZeroUI.WinForms.Controls
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
             _btnExport.Click += (s, e) => ExportClicked?.Invoke(this, EventArgs.Empty);
+
 
             Controls.Add(_searchBox);
             Controls.Add(_lblMatchCount);
@@ -143,8 +144,9 @@ namespace ZeroUI.WinForms.Controls
 
             if (_grid.RowCount < _grid.DataSource.TotalRowCount)
             {
-                _lblMatchCount.Text = $"Khớp: {_grid.RowCount:N0} / {_grid.DataSource.TotalRowCount:N0} dòng";
+                _lblMatchCount.Text = $"Matches: {_grid.RowCount:N0} / {_grid.DataSource.TotalRowCount:N0} rows";
             }
+
             else
             {
                 _lblMatchCount.Text = "";

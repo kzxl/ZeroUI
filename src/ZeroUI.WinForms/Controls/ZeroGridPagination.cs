@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.Controls
 
             _lblInfo = new Label
             {
-                Text = "Dòng: 0 / 0",
+                Text = "Rows: 0 / 0",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular),
                 ForeColor = Color.FromArgb(75, 85, 99),
@@ -63,7 +63,7 @@ namespace ZeroUI.WinForms.Controls
 
             _lblPageInfo = new Label
             {
-                Text = "Trang 1 / 1",
+                Text = "Page 1 / 1",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(31, 41, 55),
@@ -92,7 +92,7 @@ namespace ZeroUI.WinForms.Controls
 
             Label lblPageSizeTitle = new Label
             {
-                Text = "Cỡ trang:",
+                Text = "Page size:",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular),
                 ForeColor = Color.FromArgb(75, 85, 99),
@@ -103,11 +103,12 @@ namespace ZeroUI.WinForms.Controls
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Font = new Font("Segoe UI", 9f),
-                Location = new Point(575, 10),
+                Location = new Point(585, 10),
                 Width = 90
             };
-            _cbPageSize.Items.AddRange(new object[] { "100", "500", "1,000", "5,000", "Tất cả" });
+            _cbPageSize.Items.AddRange(new object[] { "100", "500", "1,000", "5,000", "All" });
             _cbPageSize.SelectedIndex = 2; // 1,000
+
             _cbPageSize.SelectedIndexChanged += CbPageSize_SelectedIndexChanged;
 
             Controls.Add(_lblInfo);
@@ -195,8 +196,9 @@ namespace ZeroUI.WinForms.Controls
         {
             int start = _totalRows == 0 ? 0 : PageStartRow + 1;
             int end = PageEndRow;
-            _lblInfo.Text = $"Hiển thị {start:N0} - {end:N0} / {TotalRows:N0} dòng";
-            _lblPageInfo.Text = $"Trang {_currentPage:N0} / {TotalPages:N0}";
+            _lblInfo.Text = $"Showing {start:N0} - {end:N0} of {TotalRows:N0} rows";
+            _lblPageInfo.Text = $"Page {_currentPage:N0} of {TotalPages:N0}";
+
 
             _btnFirst.Enabled = _currentPage > 1;
             _btnPrev.Enabled = _currentPage > 1;

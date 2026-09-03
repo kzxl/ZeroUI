@@ -133,14 +133,14 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 double dgvLatencyMs = dgvSw.Elapsed.TotalMilliseconds / 500.0;
 
                 // 4. Print Comparative Table
-                Console.WriteLine("\n📊 KẾT QUẢ ĐO LƯỜNG SO SÁNH (500 FRAMES SCROLL):");
-                Console.WriteLine("| Tiêu chí đo lường                  | DataGridView (VirtualMode) | ZeroUI (ZeroGrid)       | Cải thiện        |");
+                Console.WriteLine("\n📊 PERFORMANCE BENCHMARK RESULTS (500 SCROLL FRAMES):");
+                Console.WriteLine("| Metric                             | DataGridView (VirtualMode) | ZeroUI (ZeroGrid)       | Improvement      |");
                 Console.WriteLine("| :--------------------------------- | :------------------------- | :---------------------- | :--------------- |");
-                Console.WriteLine($"| Thời gian xử lý 500 frames         | {dgvSw.ElapsedMilliseconds,8} ms               | {zeroSetupSw.ElapsedMilliseconds,8} ms            | Nhanh hơn {(double)dgvSw.ElapsedMilliseconds / Math.Max(1, zeroSetupSw.ElapsedMilliseconds):F1}x  |");
-                Console.WriteLine($"| Tốc độ tính toán khung hình (FPS)  | {dgvFps,8:F1} FPS              | {zeroFps,8:F1} FPS           | Gấp {(zeroFps / Math.Max(0.1, dgvFps)):F1} lần       |");
-                Console.WriteLine($"| Độ trễ trung bình 1 frame          | {dgvLatencyMs,8:F3} ms              | {zeroLatencyMs,8:F3} ms           | Giảm {(dgvLatencyMs / Math.Max(0.001, zeroLatencyMs)):F1} lần      |");
-                Console.WriteLine($"| Số lần GC Gen 0 kích hoạt          | {dgvGen0Delta,8} lần               | {zeroGen0Delta,8} lần            | Triệt tiêu 100%  |");
-                Console.WriteLine($"| Bộ nhớ RAM tiêu thụ                | {dgvFinalRam / 1024 / 1024,8} MB               | {zeroFinalRam / 1024 / 1024,8} MB            | Tiết kiệm RAM    |");
+                Console.WriteLine($"| 500 Frames Render Time             | {dgvSw.ElapsedMilliseconds,8} ms               | {zeroSetupSw.ElapsedMilliseconds,8} ms            | {((double)dgvSw.ElapsedMilliseconds / Math.Max(1, zeroSetupSw.ElapsedMilliseconds)):F1}x faster    |");
+                Console.WriteLine($"| Viewport Compute Rate (FPS)        | {dgvFps,8:F1} FPS              | {zeroFps,8:F1} FPS           | {(zeroFps / Math.Max(0.1, dgvFps)):F1}x higher      |");
+                Console.WriteLine($"| Average Latency per Frame          | {dgvLatencyMs,8:F3} ms              | {zeroLatencyMs,8:F3} ms           | {(dgvLatencyMs / Math.Max(0.001, zeroLatencyMs)):F1}x lower       |");
+                Console.WriteLine($"| GC Gen0 Collections Triggered      | {dgvGen0Delta,8}               | {zeroGen0Delta,8}               | 100% Zero-Alloc  |");
+                Console.WriteLine($"| Total RAM Consumption              | {dgvFinalRam / 1024 / 1024,8} MB               | {zeroFinalRam / 1024 / 1024,8} MB            | Memory Efficient |");
             }
 
             // 5. Extreme 10,000,000 Rows Benchmark
@@ -188,15 +188,15 @@ namespace ZeroUI.Samples.BenchmarkDemo
             double ultraFps = 500.0 / ultraScrollSw.Elapsed.TotalSeconds;
             double ultraLatencyMs = ultraScrollSw.Elapsed.TotalMilliseconds / 500.0;
 
-            Console.WriteLine("\n📊 KẾT QUẢ ZEROUI TRÊN 10.000.000 DÒNG:");
-            Console.WriteLine("| Tiêu chí đo lường                  | DataGridView (WinForms)    | ZeroUI (ZeroGrid)       | Đánh giá         |");
+            Console.WriteLine("\n📊 ZEROUI ULTRA SCALE RESULTS ON 10,000,000 ROWS:");
+            Console.WriteLine("| Metric                             | Standard DataGridView      | ZeroUI (ZeroGrid)       | Rating           |");
             Console.WriteLine("| :--------------------------------- | :------------------------- | :---------------------- | :--------------- |");
-            Console.WriteLine($"| Khả năng hỗ trợ 10M dòng           | CRASH / OutOfMemory        | ✅ HOÀN HẢO             | Tuyệt đối        |");
-            Console.WriteLine($"| Thời gian khởi tạo 10M dòng        | Không thể khởi tạo         | {ultraSw.ElapsedMilliseconds,8} ms            | Tức thì          |");
-            Console.WriteLine($"| Tốc độ tính toán khung hình (FPS)  | 0 FPS                      | {ultraFps,8:F1} FPS           | Siêu tốc         |");
-            Console.WriteLine($"| Độ trễ trung bình 1 frame          | Vô hạn (Treo)              | {ultraLatencyMs,8:F3} ms           | < 0.05 ms        |");
-            Console.WriteLine($"| Số lần GC Gen 0 kích hoạt          | N/A                        | {ultraGen0Delta,8} lần            | Triệt tiêu 100%  |");
-            Console.WriteLine($"| Tổng bộ nhớ RAM tiêu thụ           | > 2.5 GB (Nguy cơ Crash)   | {ultraFinalRam / 1024 / 1024,8} MB            | Chỉ tốn 40MB Map |");
+            Console.WriteLine($"| 10M Rows Support Capacity          | CRASH / OutOfMemory        | ✅ PERFECT              | Limitless        |");
+            Console.WriteLine($"| 10M Rows Initialization Time       | Cannot Allocate            | {ultraSw.ElapsedMilliseconds,8} ms            | Instantaneous    |");
+            Console.WriteLine($"| Viewport Compute Rate (FPS)        | 0 FPS (Deadlock)           | {ultraFps,8:F1} FPS           | Ultra Fast       |");
+            Console.WriteLine($"| Average Latency per Frame          | Infinite (Freeze)          | {ultraLatencyMs,8:F3} ms           | < 0.05 ms        |");
+            Console.WriteLine($"| GC Gen0 Collections Triggered      | N/A                        | {ultraGen0Delta,8}               | 100% Zero-Alloc  |");
+            Console.WriteLine($"| Total RAM Consumption              | > 2.5 GB (Risk of Crash)   | {ultraFinalRam / 1024 / 1024,8} MB            | Only ~40MB Map   |");
 
             // 4. Benchmarking Grid Toolkits (Sort, Filter, CSV Export)
             Console.WriteLine("\n>>> 🛠️ BENCHMARKING GRID TOOLKITS (SORT, FILTER, STREAMING EXPORT) <<<");
@@ -210,13 +210,13 @@ namespace ZeroUI.Samples.BenchmarkDemo
             var sortSw = Stopwatch.StartNew();
             sortMap.Sort((rowA, rowB) => string.Compare(sortDataset[rowA].ItemCode, sortDataset[rowB].ItemCode, StringComparison.OrdinalIgnoreCase));
             sortSw.Stop();
-            Console.WriteLine($"[1] Sort 1,000,000 rows on RowIndexMap: {sortSw.ElapsedMilliseconds} ms (Tức thì)");
+            Console.WriteLine($"[1] Sort 1,000,000 rows on RowIndexMap: {sortSw.ElapsedMilliseconds} ms (Instant)");
 
             // Filter 1,000,000 rows
             var filterSw = Stopwatch.StartNew();
             sortMap.Filter(row => sortDataset[row].ItemCode.IndexOf("005", StringComparison.OrdinalIgnoreCase) >= 0, 1_000_000);
             filterSw.Stop();
-            Console.WriteLine($"[2] Filter 1,000,000 rows matching query: {filterSw.ElapsedMilliseconds} ms (Khớp {sortMap.ActiveCount:N0} dòng)");
+            Console.WriteLine($"[2] Filter 1,000,000 rows matching query: {filterSw.ElapsedMilliseconds} ms (Matched {sortMap.ActiveCount:N0} rows)");
 
             // Export 100,000 rows to CSV
             string tempCsv = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "zeroui_bench.csv");
@@ -224,7 +224,7 @@ namespace ZeroUI.Samples.BenchmarkDemo
             using (var stream = new System.IO.FileStream(tempCsv, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 65536))
             using (var writer = new System.IO.StreamWriter(stream, System.Text.Encoding.UTF8, 65536))
             {
-                writer.WriteLine("ID,Mã Vật Tư,Tên Vật Tư,Số Lượng,Đơn Giá,Thành Tiền,Số Lô,Trạng Thái");
+                writer.WriteLine("ID,ItemCode,ItemName,Quantity,UnitPrice,TotalAmount,LotNumber,Status");
                 for (int i = 0; i < 100_000; i++)
                 {
                     var item = sortDataset[i];
@@ -234,13 +234,13 @@ namespace ZeroUI.Samples.BenchmarkDemo
             }
             exportSw.Stop();
             double exportThroughput = 100_000.0 / exportSw.Elapsed.TotalSeconds;
-            Console.WriteLine($"[3] Streaming CSV Export 100,000 rows: {exportSw.ElapsedMilliseconds} ms ({exportThroughput:N0} dòng/giây)");
+            Console.WriteLine($"[3] Streaming CSV Export 100,000 rows: {exportSw.ElapsedMilliseconds} ms ({exportThroughput:N0} rows/sec)");
             try { System.IO.File.Delete(tempCsv); } catch { }
 
-
             Console.WriteLine("\n================================================================================");
-            Console.WriteLine("✅ Benchmark hoàn tất thành công 100%!");
+            Console.WriteLine("✅ Benchmark completed successfully 100%!");
             Console.WriteLine("================================================================================");
+
 
 
         }
