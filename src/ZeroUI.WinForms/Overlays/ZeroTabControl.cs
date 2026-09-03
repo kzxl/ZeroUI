@@ -15,6 +15,12 @@ namespace ZeroUI.WinForms.Overlays
         Card
     }
 
+    public enum ZeroTabOrientation
+    {
+        Horizontal,
+        Vertical
+    }
+
     /// <summary>
     /// Represents an individual tab page container inside ZeroTabControl.
     /// Inherits from Panel to allow hosting child controls with zero layout constraints.
@@ -45,14 +51,14 @@ namespace ZeroUI.WinForms.Overlays
 
     /// <summary>
     /// Modern anti-aliased flat TabControl and container for ZeroUI.
-    /// Eliminates Win32 3D gray border flicker, supports Underline/Pill styles,
+    /// Supports Horizontal & Vertical orientations, Underline/Pill styles,
     /// tab notification badges, icons, and 100% seamless Obsidian Dark / Clean Light theming.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays & Navigation")]
     [DefaultEvent("SelectedIndexChanged")]
     [DefaultProperty("SelectedIndex")]
-    [Description("Modern flat TabControl container with Underline/Pill styles and notification badges")]
+    [Description("Modern flat TabControl container with Horizontal/Vertical orientations, Underline/Pill styles and notification badges")]
     public class ZeroTabControl : Control
     {
         private readonly List<ZeroTabPage> _tabPages = new List<ZeroTabPage>();
@@ -62,7 +68,9 @@ namespace ZeroUI.WinForms.Overlays
         private int _hoveredIndex = -1;
         private int _hoveredCloseIndex = -1;
         private int _tabHeight = 42;
+        private int _tabWidth = 200;
         private ZeroTabStyle _tabStyle = ZeroTabStyle.Underline;
+        private ZeroTabOrientation _orientation = ZeroTabOrientation.Horizontal;
 
         public event EventHandler? SelectedIndexChanged;
         public event EventHandler<ZeroTabPage>? TabClosed;
@@ -81,12 +89,13 @@ namespace ZeroUI.WinForms.Overlays
 
             _contentContainer = new Panel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.None,
                 BackColor = Color.Transparent
             };
             Controls.Add(_contentContainer);
 
             Size = new Size(500, 350);
+            UpdateContainerBounds();
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
@@ -101,6 +110,41 @@ namespace ZeroUI.WinForms.Overlays
         public List<ZeroTabPage> TabPages => _tabPages;
 
         [Category("Appearance")]
+        [DefaultValue(ZeroTabOrientation.Horizontal)]
+        public ZeroTabOrientation Orientation
+        {
+            get => _orientation;
+            set
+            {
+                if (_orientation != value)
+                {
+                    _orientation = value;
+                    UpdateContainerBounds();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(200)]
+        public int TabWidth
+        {
+            get => _tabWidth;
+            set
+            {
+                if (_tabWidth != value && value >= 60)
+                {
+                    _tabWidth = value;
+                    if (_orientation == ZeroTabOrientation.Vertical)
+                    {
+                        UpdateContainerBounds();
+                    }
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
         [DefaultValue(42)]
         public int TabHeight
         {
@@ -110,7 +154,10 @@ namespace ZeroUI.WinForms.Overlays
                 if (_tabHeight != value && value >= 24)
                 {
                     _tabHeight = value;
-                    UpdateContainerPadding();
+                    if (_orientation == ZeroTabOrientation.Horizontal)
+                    {
+                        UpdateContainerBounds();
+                    }
                     Invalidate();
                 }
             }
@@ -195,9 +242,20 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
-        private void UpdateContainerPadding()
+        private void UpdateContainerBounds()
         {
-            Padding = new Padding(0, _tabHeight, 0, 0);
+            if (_contentContainer == null) return;
+
+            if (_orientation == ZeroTabOrientation.Vertical)
+            {
+                _contentContainer.Location = new Point(_tabWidth, 0);
+                _contentContainer.Size = new Size(Math.Max(0, Width - _tabWidth), Height);
+            }
+            else
+            {
+                _contentContainer.Location = new Point(0, _tabHeight);
+                _contentContainer.Size = new Size(Width, Math.Max(0, Height - _tabHeight));
+            }
         }
 
         private void UpdateActiveTabContent()
@@ -213,13 +271,14 @@ namespace ZeroUI.WinForms.Overlays
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            UpdateContainerPadding();
+            UpdateContainerBounds();
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (e.Y > _tabHeight) return;
+            if (_orientation == ZeroTabOrientation.Horizontal && e.Y > _tabHeight) return;
+            if (_orientation == ZeroTabOrientation.Vertical && e.X > _tabWidth) return;
 
             int hov = -1;
             int hovClose = -1;
@@ -242,7 +301,14 @@ namespace ZeroUI.WinForms.Overlays
                 _hoveredIndex = hov;
                 _hoveredCloseIndex = hovClose;
                 Cursor = (hov >= 0) ? Cursors.Hand : Cursors.Default;
-                Invalidate(new Rectangle(0, 0, Width, _tabHeight));
+                if (_orientation == ZeroTabOrientation.Vertical)
+                {
+                    Invalidate(new Rectangle(0, 0, _tabWidth, Height));
+                }
+                else
+                {
+                    Invalidate(new Rectangle(0, 0, Width, _tabHeight));
+                }
             }
         }
 
@@ -252,13 +318,21 @@ namespace ZeroUI.WinForms.Overlays
             _hoveredIndex = -1;
             _hoveredCloseIndex = -1;
             Cursor = Cursors.Default;
-            Invalidate(new Rectangle(0, 0, Width, _tabHeight));
+            if (_orientation == ZeroTabOrientation.Vertical)
+            {
+                Invalidate(new Rectangle(0, 0, _tabWidth, Height));
+            }
+            else
+            {
+                Invalidate(new Rectangle(0, 0, Width, _tabHeight));
+            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (e.Y > _tabHeight) return;
+            if (_orientation == ZeroTabOrientation.Horizontal && e.Y > _tabHeight) return;
+            if (_orientation == ZeroTabOrientation.Vertical && e.X > _tabWidth) return;
 
             for (int i = 0; i < _tabPages.Count; i++)
             {
@@ -284,6 +358,18 @@ namespace ZeroUI.WinForms.Overlays
 
             var palette = ZeroTheme.Colors;
 
+            if (_orientation == ZeroTabOrientation.Vertical)
+            {
+                PaintVerticalTabs(g, palette);
+            }
+            else
+            {
+                PaintHorizontalTabs(g, palette);
+            }
+        }
+
+        private void PaintHorizontalTabs(Graphics g, ZeroThemePalette palette)
+        {
             // 1. Tab Header Bar Background
             var headerRect = new Rectangle(0, 0, Width, _tabHeight);
             using (var brushHeader = new SolidBrush(palette.HeaderBackground))
@@ -427,6 +513,123 @@ namespace ZeroUI.WinForms.Overlays
                 }
 
                 curX += itemW + 4;
+            }
+        }
+
+        private void PaintVerticalTabs(Graphics g, ZeroThemePalette palette)
+        {
+            // 1. Vertical Sidebar Background
+            var sidebarRect = new Rectangle(0, 0, _tabWidth, Height);
+            using (var brushHeader = new SolidBrush(palette.HeaderBackground))
+            {
+                g.FillRectangle(brushHeader, sidebarRect);
+            }
+
+            // Right border separating sidebar from content
+            using (var penRight = new Pen(palette.Border, 1f))
+            {
+                g.DrawLine(penRight, _tabWidth - 1, 0, _tabWidth - 1, Height);
+            }
+
+            if (_tabPages.Count == 0) return;
+
+            int curY = 8;
+            int itemW = _tabWidth - 16;
+            int itemH = Math.Max(36, _tabHeight);
+
+            using var fontTab = new Font(Font.FontFamily, 9.2f, FontStyle.Regular);
+            using var fontTabActive = new Font(Font.FontFamily, 9.2f, FontStyle.Bold);
+            using var fontIcon = new Font("Segoe UI Emoji", 10.5f);
+            using var fontBadge = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
+
+            for (int i = 0; i < _tabPages.Count; i++)
+            {
+                var page = _tabPages[i];
+                bool isSelected = i == _selectedIndex;
+                bool isHovered = i == _hoveredIndex;
+
+                var activeFont = isSelected ? fontTabActive : fontTab;
+                page.HeaderBounds = new Rectangle(8, curY, itemW, itemH);
+
+                int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+
+                // Draw item background based on selection/hover
+                if (isSelected)
+                {
+                    if (_tabStyle == ZeroTabStyle.Pill)
+                    {
+                        using var brushPill = new SolidBrush(palette.Primary);
+                        using var pathPill = CreateRoundedRect(page.HeaderBounds, effRadius);
+                        g.FillPath(brushPill, pathPill);
+                    }
+                    else // Underline or Card
+                    {
+                        using var brushSel = new SolidBrush(Color.FromArgb(20, palette.Primary));
+                        using var pathSel = CreateRoundedRect(page.HeaderBounds, effRadius);
+                        g.FillPath(brushSel, pathSel);
+
+                        // Left vertical accent indicator
+                        using var brushAccent = new SolidBrush(palette.Primary);
+                        using var pathAccent = CreateRoundedRect(new Rectangle(0, curY + 4, 4, itemH - 8), 2);
+                        g.FillPath(brushAccent, pathAccent);
+                    }
+                }
+                else if (isHovered)
+                {
+                    using var brushHov = new SolidBrush(Color.FromArgb(12, palette.Primary));
+                    using var pathHov = CreateRoundedRect(page.HeaderBounds, effRadius);
+                    g.FillPath(brushHov, pathHov);
+                }
+
+                int innerX = page.HeaderBounds.X + 10;
+                int textY = curY + (itemH - 18) / 2;
+
+                // Draw Icon
+                if (!string.IsNullOrEmpty(page.Icon))
+                {
+                    Color iconCol = (isSelected && _tabStyle == ZeroTabStyle.Pill) ? Color.White : (isSelected ? palette.Primary : palette.TextPrimary);
+                    using var brushIcon = new SolidBrush(iconCol);
+                    g.DrawString(page.Icon, fontIcon, brushIcon, innerX, textY - 1);
+                    innerX += 24;
+                }
+
+                // Draw Title Text
+                Color textCol;
+                if (_tabStyle == ZeroTabStyle.Pill && isSelected) textCol = Color.White;
+                else if (isSelected) textCol = palette.Primary;
+                else if (isHovered) textCol = palette.TextPrimary;
+                else textCol = palette.TextSecondary;
+
+                int maxTextW = page.HeaderBounds.Right - innerX - (page.BadgeCount > 0 ? 36 : 8);
+                RectangleF textRect = new RectangleF(innerX, textY, maxTextW, 20);
+
+                using (var brushText = new SolidBrush(textCol))
+                using (var sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, LineAlignment = StringAlignment.Center })
+                {
+                    g.DrawString(page.Title, activeFont, brushText, textRect, sf);
+                }
+
+                // Draw Badge (Aligned to right edge of tab)
+                if (page.BadgeCount > 0)
+                {
+                    string bStr = page.BadgeCount > 99 ? "99+" : page.BadgeCount.ToString();
+                    var bSz = g.MeasureString(bStr, fontBadge);
+                    int bW = Math.Max(18, (int)bSz.Width + 8);
+                    int bH = 16;
+                    int bX = page.HeaderBounds.Right - bW - 8;
+                    var bRect = new Rectangle(bX, curY + (itemH - bH) / 2, bW, bH);
+
+                    Color bColor = page.BadgeColor ?? palette.Danger;
+                    using var brushBadge = new SolidBrush(bColor);
+                    using var pathBadge = CreateRoundedRect(bRect, 8);
+                    g.FillPath(brushBadge, pathBadge);
+
+                    using var brushBadgeText = new SolidBrush(Color.White);
+                    var sfBadge = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    g.DrawString(bStr, fontBadge, brushBadgeText, bRect, sfBadge);
+                }
+
+                curY += itemH + 4;
             }
         }
 

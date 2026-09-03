@@ -15,6 +15,8 @@ using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
+using ZeroUI.WinForms.Warehouse;
+using ZeroUI.WinForms.Warehouse.Models;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
@@ -32,9 +34,32 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         // UI Controls
         private Panel _topPanel = null!;
         private Panel _hudPanel = null!;
-        private TabControl _tabControl = null!;
-        private TabPage _tabZero = null!;
-        private TabPage _tabDgv = null!;
+
+        // Vertical Master Navigation & Modular Feature Clusters
+        private ZeroTabControl _mainNav = null!;
+        private ZeroTabPage _clusterBenchmark = null!;
+        private ZeroTabPage _clusterMes = null!;
+        private ZeroTabPage _clusterWarehouse = null!;
+        private ZeroTabPage _clusterScada = null!;
+        private ZeroTabPage _clusterAnalytics = null!;
+        private ZeroTabPage _clusterComponents = null!;
+
+        // Sub-tabs
+        private ZeroTabControl _subTabsBenchmark = null!;
+        private ZeroTabPage _tabZero = null!;
+        private ZeroTabPage _tabDgv = null!;
+
+        private ZeroTabControl _subTabsWarehouse = null!;
+        private ZeroTabPage _tabWhBarcode = null!;
+        private ZeroTabPage _tabWhLot = null!;
+        private ZeroTabPage _tabWhRacks = null!;
+
+        private ZeroTabPage _tabControls = null!;
+        private ZeroTabPage _tabMes = null!;
+        private ZeroTabPage _tabScada = null!;
+        private ZeroTabPage _tabWms = null!;
+        private ZeroTabPage _tabAdvanced = null!;
+        private ZeroTabPage _tabCharts = null!;
 
         private ZeroGridControl _zeroGrid = null!;
         private DataGridView _dgv = null!;
@@ -43,12 +68,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroGridPagination _pagination = null!;
         private ZeroToolbar _mainToolbar = null!;
         private ZeroDrawer _drawer = null!;
-        private TabPage _tabControls = null!;
-        private TabPage _tabMes = null!;
-        private TabPage _tabScada = null!;
-        private TabPage _tabWms = null!;
-        private TabPage _tabAdvanced = null!;
-        private TabPage _tabCharts = null!;
         private ZeroSteps _mesSteps = null!;
 
         private ZeroListView _showcaseLog = null!;
@@ -231,13 +250,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 ZeroTheme.ToggleTheme();
                 (s as ZeroToolbarButton)!.Text = ZeroTheme.IsDark ? "☀️ Light Mode" : "🌙 Dark Mode";
-                _tabZero.BackColor = ZeroTheme.Colors.Background;
-                _tabMes.BackColor = ZeroTheme.Colors.Background;
-                _tabControls.BackColor = ZeroTheme.Colors.Background;
-                _tabScada.BackColor = ZeroTheme.Colors.Background;
-                _tabWms.BackColor = ZeroTheme.Colors.Background;
-                _tabAdvanced.BackColor = ZeroTheme.Colors.Background;
-                _tabCharts.BackColor = ZeroTheme.Colors.Background;
+                _clusterBenchmark.BackColor = ZeroTheme.Colors.Background;
+                _clusterMes.BackColor = ZeroTheme.Colors.Background;
+                _clusterWarehouse.BackColor = ZeroTheme.Colors.Background;
+                _clusterScada.BackColor = ZeroTheme.Colors.Background;
+                _clusterAnalytics.BackColor = ZeroTheme.Colors.Background;
+                _clusterComponents.BackColor = ZeroTheme.Colors.Background;
                 ZeroToast.Info(this, $"Switched theme to: {(ZeroTheme.IsDark ? "Obsidian Dark" : "Clean Light")}");
             });
 
@@ -286,23 +304,77 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             descDrawer.Add("Inspection Status", "Passed OQC", Color.FromArgb(16, 185, 129));
             _drawer.ContentPanel.Controls.Add(descDrawer);
 
-            // 4. Tab Control
-            _tabControl = new TabControl
+            // 4. Vertical Master Navigation (Modular Feature Clusters)
+            _mainNav = new ZeroTabControl
             {
                 Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-                Padding = new Point(16, 8)
+                Orientation = ZeroTabOrientation.Vertical,
+                TabWidth = 230,
+                TabHeight = 46,
+                TabStyle = ZeroTabStyle.Underline
             };
 
-            _tabZero = new TabPage("⚡ ZeroGrid (ZeroUI Core Engine)");
-            _tabDgv = new TabPage("🐢 Default DataGridView (VirtualMode)");
-            _tabControls = new TabPage("🎨 Components Showcase");
-            _tabMes = new TabPage("🏭 MES Production Dashboard");
-            _tabScada = new TabPage("🔬 SCADA & Smart Factory Hub");
-            _tabWms = new TabPage("📦 WMS & Quality Inspection Center");
-            _tabAdvanced = new TabPage("🚀 Advanced Enterprise Suite");
-            _tabCharts = new TabPage("📊 Analytics & Business Charts");
+            // Cluster 1: Core Benchmarks
+            _clusterBenchmark = new ZeroTabPage("Core Benchmarks", "⚡");
+            _subTabsBenchmark = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabZero = new ZeroTabPage("ZeroGrid (1M Rows)", "⚡");
+            _tabDgv = new ZeroTabPage("Standard DataGridView (Virtual)", "🐢");
+            _subTabsBenchmark.AddTab(_tabZero);
+            _subTabsBenchmark.AddTab(_tabDgv);
+            _clusterBenchmark.Controls.Add(_subTabsBenchmark);
 
+            // Cluster 2: MES Production
+            _clusterMes = new ZeroTabPage("MES & Smart Factory", "🏭") { BadgeCount = 3 };
+            _tabMes = _clusterMes;
+
+            // Cluster 3: Warehouse & Logistics Suite
+            _clusterWarehouse = new ZeroTabPage("Warehouse & Logistics", "📦") { BadgeCount = 4 };
+            _subTabsWarehouse = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabWhBarcode = new ZeroTabPage("Receiving & Barcode Station", "🔍");
+            _tabWhLot = new ZeroTabPage("FIFO/FEFO Lot Allocation", "📋");
+            _tabWhRacks = new ZeroTabPage("Storage Racks & Tanks", "🏢");
+            _tabWms = _tabWhRacks;
+            _subTabsWarehouse.AddTab(_tabWhBarcode);
+            _subTabsWarehouse.AddTab(_tabWhLot);
+            _subTabsWarehouse.AddTab(_tabWhRacks);
+            _clusterWarehouse.Controls.Add(_subTabsWarehouse);
+
+            // Cluster 4: SCADA & Telemetry
+            _clusterScada = new ZeroTabPage("SCADA & Telemetry", "🔬");
+            _tabScada = _clusterScada;
+
+            // Cluster 5: Analytics & Charts
+            _clusterAnalytics = new ZeroTabPage("Analytics & Charts", "📊");
+            _tabCharts = _clusterAnalytics;
+
+            // Cluster 6: UI Component Catalog
+            _clusterComponents = new ZeroTabPage("UI Component Catalog", "🎨");
+            var subTabsComponents = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabControls = new ZeroTabPage("Core Input Controls", "🎛️");
+            _tabAdvanced = new ZeroTabPage("Enterprise Suite", "🚀");
+            subTabsComponents.AddTab(_tabControls);
+            subTabsComponents.AddTab(_tabAdvanced);
+            _clusterComponents.Controls.Add(subTabsComponents);
+
+            // Build individual cluster views
             InitializeZeroGrid();
             InitializeDataGridView();
             InitializeComponentsShowcase();
@@ -311,29 +383,26 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeWmsCenter();
             InitializeAdvancedSuite();
             InitializeChartsDashboard();
+            InitializeWarehouseWorkstation();
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
             _tabZero.Controls.Add(_searchBar);
-
             _tabDgv.Controls.Add(_dgv);
 
-            _tabControl.TabPages.Add(_tabZero);
-            _tabControl.TabPages.Add(_tabDgv);
-            _tabControl.TabPages.Add(_tabControls);
-            _tabControl.TabPages.Add(_tabMes);
-            _tabControl.TabPages.Add(_tabScada);
-            _tabControl.TabPages.Add(_tabWms);
-            _tabControl.TabPages.Add(_tabAdvanced);
-            _tabControl.TabPages.Add(_tabCharts);
+            // Add all 6 clusters to master vertical navigation
+            _mainNav.AddTab(_clusterBenchmark);
+            _mainNav.AddTab(_clusterMes);
+            _mainNav.AddTab(_clusterWarehouse);
+            _mainNav.AddTab(_clusterScada);
+            _mainNav.AddTab(_clusterAnalytics);
+            _mainNav.AddTab(_clusterComponents);
 
-
-
-            _tabControl.SelectedIndexChanged += (s, e) =>
+            _subTabsBenchmark.SelectedIndexChanged += (s, e) =>
             {
                 _scrollFrames = 0;
                 _scrollStopwatch.Restart();
-                if (_tabControl.SelectedTab == _tabDgv && _dgv.RowCount != _dataset.Length && _dataset.Length > 0)
+                if (_subTabsBenchmark.SelectedTab == _tabDgv && _dgv.RowCount != _dataset.Length && _dataset.Length > 0)
                 {
                     try
                     {
@@ -346,10 +415,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 }
             };
 
-
             // Assembly Form Layout
             Controls.Add(_drawer);
-            Controls.Add(_tabControl);
+            Controls.Add(_mainNav);
             Controls.Add(_mainToolbar);
             Controls.Add(_hudPanel);
             Controls.Add(_topPanel);
@@ -357,9 +425,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         public void SelectTabByIndex(int index)
         {
-            if (_tabControl != null && index >= 0 && index < _tabControl.TabPages.Count)
+            if (_mainNav != null && index >= 0 && index < _mainNav.TabPages.Count)
             {
-                _tabControl.SelectedIndex = index;
+                _mainNav.SelectedIndex = index;
             }
         }
 
@@ -368,13 +436,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         public void ToggleThemePublic()
         {
             ZeroTheme.ToggleTheme();
-            _tabZero.BackColor = ZeroTheme.Colors.Background;
-            _tabMes.BackColor = ZeroTheme.Colors.Background;
-            _tabControls.BackColor = ZeroTheme.Colors.Background;
-            _tabScada.BackColor = ZeroTheme.Colors.Background;
-            _tabWms.BackColor = ZeroTheme.Colors.Background;
-            _tabAdvanced.BackColor = ZeroTheme.Colors.Background;
-            _tabCharts.BackColor = ZeroTheme.Colors.Background;
+            _clusterBenchmark.BackColor = ZeroTheme.Colors.Background;
+            _clusterMes.BackColor = ZeroTheme.Colors.Background;
+            _clusterWarehouse.BackColor = ZeroTheme.Colors.Background;
+            _clusterScada.BackColor = ZeroTheme.Colors.Background;
+            _clusterAnalytics.BackColor = ZeroTheme.Colors.Background;
+            _clusterComponents.BackColor = ZeroTheme.Colors.Background;
             Invalidate(true);
         }
 
@@ -545,7 +612,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _zeroGrid.DataSource = _zeroSource;
 
             // Bind to DataGridView only if active to avoid blocking UI thread
-            if (_tabControl.SelectedTab == _tabDgv)
+            if (_subTabsBenchmark != null && _subTabsBenchmark.SelectedTab == _tabDgv)
             {
                 try
                 {
@@ -606,7 +673,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 return;
             }
 
-            int total = _tabControl.SelectedTab == _tabZero
+            int total = (_subTabsBenchmark != null && _subTabsBenchmark.SelectedTab == _tabZero)
                 ? (_zeroGrid.DataSource?.TotalRowCount ?? _dataset.Length)
                 : _dgv.RowCount;
 
@@ -614,7 +681,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             int step = total >= 5_000_000 ? 2500 : 250;
 
-            if (_tabControl.SelectedTab == _tabZero)
+            if (_subTabsBenchmark != null && _subTabsBenchmark.SelectedTab == _tabZero)
             {
                 int currentY = _zeroGrid.ScrollY;
                 int rowH = _zeroGrid.RowHeight;
@@ -1002,7 +1069,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             int simCount = 1;
             _logGenTimer.Tick += (s, e) =>
             {
-                if (_tabControl.SelectedTab == _tabControls && _showcaseLog.Entries.Count < 50000)
+                if (_mainNav != null && _mainNav.SelectedTab == _clusterComponents && _showcaseLog.Entries.Count < 50000)
                 {
                     var sev = (LogSeverity)(simCount % 4);
                     _showcaseLog.AddLog(sev, $"[Service #{simCount++}] Processed high-throughput transaction via ZeroUI engine with 0.02ms latency.");
@@ -2126,6 +2193,164 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             row2.BringToFront();
 
             _tabWms.Controls.Add(mainContainer);
+        }
+
+        private void InitializeWarehouseWorkstation()
+        {
+            // 1. Receiving & Barcode Workstation Tab (_tabWhBarcode)
+            var panelBarcode = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            var bannerWh = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "Warehouse & Logistics Workstation — USB Wedge Barcode Scanner & Real-Time Stock",
+                Message = "Hardware wedge scanner auto-detection (<35ms timing delta), duplicate scan suppression, instant 1-way stock updates, and batch traceability tree.",
+                Height = 62
+            };
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            // Row 1: Barcode Scan Control + Inventory Card
+            var row1 = new Panel { Dock = DockStyle.Top, Height = 200, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 12) };
+
+            var scanControl = new ZeroBarcodeScanControl
+            {
+                Dock = DockStyle.Left,
+                Width = 440
+            };
+
+            var splitWh1 = new Panel { Dock = DockStyle.Left, Width = 16, BackColor = Color.Transparent };
+
+            var inventoryCard = new ZeroInventoryCard
+            {
+                Dock = DockStyle.Left,
+                Width = 360
+            };
+
+            row1.Controls.Add(inventoryCard);
+            row1.Controls.Add(splitWh1);
+            row1.Controls.Add(scanControl);
+
+            // Row 2: Stock Movement Timeline
+            var row2 = new Panel { Dock = DockStyle.Top, Height = 290, BackColor = Color.Transparent };
+            var timeline = new ZeroStockMovementTimeline
+            {
+                Dock = DockStyle.Fill
+            };
+            row2.Controls.Add(timeline);
+
+            // Interactive Event Link: Scanning a barcode updates inventory card and adds a trace node
+            scanControl.BarcodeScanned += (s, ev) =>
+            {
+                var result = ev.Result;
+                inventoryCard.ProductCode = string.IsNullOrEmpty(result.ProductCode) ? result.RawBarcode : result.ProductCode;
+                inventoryCard.AvailableQuantity += result.Quantity;
+
+                var trace = timeline.CollectData();
+                trace.Nodes.Add(new StockMovementNode
+                {
+                    Id = $"N{trace.Nodes.Count + 1}",
+                    Type = StockMovementType.Inward,
+                    Title = "BARCODE RECEIPT",
+                    ReferenceNo = string.IsNullOrEmpty(result.LotNumber) ? "AUTO-RCV" : result.LotNumber,
+                    Quantity = result.Quantity,
+                    Timestamp = DateTime.Now,
+                    DestinationOrSource = result.IsHardwareScanner ? "USB Hardware Scanner" : "Manual Station"
+                });
+                timeline.Populate(trace);
+
+                ZeroToast.Success(this, $"Scanned {inventoryCard.ProductCode}: +{result.Quantity:N0} pcs (Lot: {result.LotNumber})");
+            };
+
+            panelBarcode.Controls.Add(row2);
+            panelBarcode.Controls.Add(row1);
+            panelBarcode.Controls.Add(bannerSpacer);
+            panelBarcode.Controls.Add(bannerWh);
+
+            bannerWh.BringToFront();
+            bannerSpacer.BringToFront();
+            row1.BringToFront();
+            row2.BringToFront();
+
+            _tabWhBarcode.Controls.Add(panelBarcode);
+
+            // 2. FIFO / FEFO Lot Allocation Tab (_tabWhLot)
+            var panelLot = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            var bannerLot = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Warning,
+                Title = "Automated Lot Allocation Engine — FIFO & FEFO Strategies",
+                Message = "Automated lot allocation across manufacturing batches. Auto-lockouts for Quarantine and Expired batches prevent dispatch errors.",
+                Height = 62
+            };
+            var lotSpacer = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            var lotSelector = new ZeroLotSelector
+            {
+                Dock = DockStyle.Top,
+                Height = 320,
+                RequiredQuantity = 800
+            };
+
+            var lotActions = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Transparent, Padding = new Padding(0, 10, 0, 0) };
+            var btnConfirmAlloc = new ZeroButton
+            {
+                Text = "✓ Confirm Lot Allocation",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Dock = DockStyle.Left,
+                Width = 200
+            };
+            btnConfirmAlloc.Click += (s, e) =>
+            {
+                var selected = lotSelector.CollectSelectedLots();
+                decimal total = 0;
+                foreach (var l in selected) total += l.AllocatedQuantity;
+                ZeroToast.Success(this, $"Confirmed allocation of {total:N0} units across {selected.Count} batches!");
+            };
+
+            var btnResetAlloc = new ZeroButton
+            {
+                Text = "🔄 Reset Allocation",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Left,
+                Width = 150
+            };
+            btnResetAlloc.Click += (s, e) =>
+            {
+                lotSelector.AutoAllocate(800, LotAllocationStrategy.FIFO);
+                ZeroToast.Info(this, "Reset lot allocation to default FIFO.");
+            };
+
+            var splitLot = new Panel { Dock = DockStyle.Left, Width = 10, BackColor = Color.Transparent };
+            lotActions.Controls.Add(btnResetAlloc);
+            lotActions.Controls.Add(splitLot);
+            lotActions.Controls.Add(btnConfirmAlloc);
+
+            panelLot.Controls.Add(lotActions);
+            panelLot.Controls.Add(lotSelector);
+            panelLot.Controls.Add(lotSpacer);
+            panelLot.Controls.Add(bannerLot);
+
+            bannerLot.BringToFront();
+            lotSpacer.BringToFront();
+            lotSelector.BringToFront();
+            lotActions.BringToFront();
+
+            _tabWhLot.Controls.Add(panelLot);
         }
 
         private void InitializeAdvancedSuite()
