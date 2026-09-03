@@ -77,6 +77,22 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 
 ---
 
+### 📊 Analytics & Business Charts Subsystem (`ZeroUI.WinForms.Charts`)
+
+#### Universal BI & Dashboard Chart Suite
+![Business Charts Hero Showcase](docs/images/11_charts_hero_showcase.png)
+
+#### Interactive Analytics Dashboard Showcase
+![Business Charts Dashboard](docs/images/10_business_charts_dashboard.png)
+
+* **`ZeroChart`**: High-performance flagship universal chart engine supporting Cartesian (Column, Bar, Line, Spline, Area) and Polar (Pie, Donut) visualizations with subpixel GDI+ antialiasing, automatic human-friendly $Y$-axis rounding, interactive cursor crosshairs, halo tooltips, and clickable legends.
+* **`ZeroBarChart`**: Specialized Column and Bar comparison chart with grouped and stacked modes (`IsHorizontal = true/false`, `IsStacked = true/false`), rounded column caps, and custom value formatting (`ValuePrefix`, `ValueSuffix`).
+* **`ZeroLineChart`**: Specialized Line and Area trend chart featuring smooth Catmull-Rom spline curves (`IsCurved = true`), vertical translucent area gradient fills with bottom fade, point markers, and interactive hover tooltips.
+* **`ZeroPieChart`**: Categorical distribution chart supporting full Pie and Donut rings (`IsDonut = true`, `DonutHoleRatio = 0.58f`), center KPI summary metrics (`CenterTitle`, `CenterValue`), radial hover slice explosion (8px pop-out effect), and percentage calculations.
+* **Interactive Tooltips & Legend Toggle:** Hovering any series reveals a cursor-following halo card displaying category names, values, and percentage contributions. Clicking any series in the legend dynamically toggles its visibility on/off with immediate zero-alloc redraw.
+
+---
+
 ### 🏭 Industrial, SCADA & MES Subsystem (`ZeroUI.WinForms.Industrial`)
 
 #### Hardware SCADA & Industrial Indicators
@@ -178,6 +194,7 @@ ZeroUI/
 │   │   └── Layout/                               # Cell bounds, Viewport culling algorithms
 │   ├── ZeroUI.WinForms/                          # Standardized WinForms control suite
 │   │   ├── DataGrid/                             # [Subsystem] ZeroGridControl, SearchBar, Pagination, Exporter
+│   │   ├── Charts/                               # [Subsystem] ZeroChart, ZeroBarChart, ZeroLineChart, ZeroPieChart
 │   │   ├── Industrial/                           # [Subsystem] ZeroSteps, ZeroCard, ZeroGauge, ZeroTimeline...
 │   │   ├── Editors/                              # [Subsystem] ZeroButton, ZeroDatePicker, ZeroSwitch, ZeroTag...
 │   │   ├── Overlays/                             # [Subsystem] ZeroToolbar, ZeroDrawer, ZeroModal, ZeroToast...

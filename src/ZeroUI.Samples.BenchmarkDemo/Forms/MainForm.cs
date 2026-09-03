@@ -8,6 +8,8 @@ using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Diagnostics;
+using ZeroUI.WinForms.Charts;
+using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Industrial;
@@ -46,6 +48,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private TabPage _tabScada = null!;
         private TabPage _tabWms = null!;
         private TabPage _tabAdvanced = null!;
+        private TabPage _tabCharts = null!;
         private ZeroSteps _mesSteps = null!;
 
         private ZeroListView _showcaseLog = null!;
@@ -234,6 +237,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _tabScada.BackColor = ZeroTheme.Colors.Background;
                 _tabWms.BackColor = ZeroTheme.Colors.Background;
                 _tabAdvanced.BackColor = ZeroTheme.Colors.Background;
+                _tabCharts.BackColor = ZeroTheme.Colors.Background;
                 ZeroToast.Info(this, $"Switched theme to: {(ZeroTheme.IsDark ? "Obsidian Dark" : "Clean Light")}");
             });
 
@@ -297,6 +301,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabScada = new TabPage("🔬 SCADA & Smart Factory Hub");
             _tabWms = new TabPage("📦 WMS & Quality Inspection Center");
             _tabAdvanced = new TabPage("🚀 Advanced Enterprise Suite");
+            _tabCharts = new TabPage("📊 Analytics & Business Charts");
 
             InitializeZeroGrid();
             InitializeDataGridView();
@@ -305,6 +310,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeScadaHub();
             InitializeWmsCenter();
             InitializeAdvancedSuite();
+            InitializeChartsDashboard();
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -319,6 +325,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabControl.TabPages.Add(_tabScada);
             _tabControl.TabPages.Add(_tabWms);
             _tabControl.TabPages.Add(_tabAdvanced);
+            _tabControl.TabPages.Add(_tabCharts);
 
 
 
@@ -367,6 +374,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabScada.BackColor = ZeroTheme.Colors.Background;
             _tabWms.BackColor = ZeroTheme.Colors.Background;
             _tabAdvanced.BackColor = ZeroTheme.Colors.Background;
+            _tabCharts.BackColor = ZeroTheme.Colors.Background;
             Invalidate(true);
         }
 
@@ -2831,6 +2839,217 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 showCancel: false,
                 width: 530,
                 height: 380);
+        }
+
+        private void InitializeChartsDashboard()
+        {
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.FromArgb(248, 250, 252),
+                Padding = new Padding(16)
+            };
+
+            // 0. Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "📊 Business Analytics & Enterprise Charting Subsystem",
+                Message = "Comprehensive ZeroUI Chart Suite (ZeroChart, ZeroBarChart, ZeroLineChart, ZeroPieChart). Subpixel anti-aliasing, zero GC allocations, interactive tooltips, crosshair inspection, and toggleable legends.",
+                Height = 62
+            };
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // ROW 1: Grouped Column Chart (Revenue vs Target) + Smooth Spline Area Chart (Output & Energy)
+            var row1 = new Panel { Dock = DockStyle.Top, Height = 320, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 1A: Grouped Column Chart
+            var cardBar = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Monthly Financial Performance (Revenue vs. Target)",
+                Dock = DockStyle.Left,
+                Width = 630
+            };
+
+            var barChart = new ZeroBarChart
+            {
+                Dock = DockStyle.Fill,
+                ValuePrefix = "$",
+                ValueSuffix = "k",
+                LegendPosition = ZeroChartLegendPosition.Top
+            };
+
+            string[] months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+            double[] actualRev = new[] { 420.0, 530.0, 610.0, 580.0, 720.0, 890.0, 840.0, 960.0, 1020.0, 1150.0, 1280.0, 1420.0 };
+            double[] targetRev = new[] { 400.0, 500.0, 550.0, 600.0, 700.0, 800.0, 850.0, 900.0, 1000.0, 1100.0, 1200.0, 1300.0 };
+
+            barChart.SetData("Actual Revenue", months, actualRev, Color.FromArgb(79, 70, 229));
+            barChart.SetData("Target Revenue", months, targetRev, Color.FromArgb(16, 185, 129));
+            cardBar.ContentPanel.Controls.Add(barChart);
+
+            var split1 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 1B: Spline Area Chart
+            var cardSpline = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Factory Production Output & Energy Trend",
+                Dock = DockStyle.Fill
+            };
+
+            var lineChart = new ZeroLineChart
+            {
+                Dock = DockStyle.Fill,
+                IsCurved = true,
+                IsArea = true,
+                ValueSuffix = " pcs",
+                LegendPosition = ZeroChartLegendPosition.Top
+            };
+
+            string[] weeks = new[] { "W01", "W02", "W03", "W04", "W05", "W06", "W07", "W08", "W09", "W10", "W11", "W12" };
+            double[] outputUnits = new[] { 1240.0, 1450.0, 1380.0, 1620.0, 1590.0, 1780.0, 1850.0, 1920.0, 2100.0, 2050.0, 2240.0, 2380.0 };
+            double[] energyKw = new[] { 850.0, 920.0, 890.0, 1040.0, 990.0, 1120.0, 1180.0, 1210.0, 1340.0, 1290.0, 1410.0, 1490.0 };
+
+            lineChart.AddTrendSeries("SMT Line Output", outputUnits, weeks, Color.FromArgb(6, 182, 212));
+            lineChart.AddTrendSeries("Energy Usage (kWh)", energyKw, weeks, Color.FromArgb(245, 158, 11));
+            cardSpline.ContentPanel.Controls.Add(lineChart);
+
+            row1.Controls.Add(cardSpline);
+            row1.Controls.Add(split1);
+            row1.Controls.Add(cardBar);
+
+            // ROW 2: Donut Chart (Cost Breakdown) + Live Interactive Analytics
+            var row2 = new Panel { Dock = DockStyle.Top, Height = 320, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 2A: Donut Chart
+            var cardDonut = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Annual Operating Cost Breakdown (Donut)",
+                Dock = DockStyle.Left,
+                Width = 520
+            };
+
+            var pieChart = new ZeroPieChart
+            {
+                Dock = DockStyle.Fill,
+                IsDonut = true,
+                CenterTitle = "Total Budget",
+                CenterValue = "$1.245M",
+                ValuePrefix = "$",
+                LegendPosition = ZeroChartLegendPosition.None
+            };
+
+            pieChart.AddSlice("Direct Raw Materials", 540000, Color.FromArgb(79, 70, 229));
+            pieChart.AddSlice("SMT Assembly & Tooling", 320000, Color.FromArgb(16, 185, 129));
+            pieChart.AddSlice("R&D Firmware Engineering", 180000, Color.FromArgb(6, 182, 212));
+            pieChart.AddSlice("Logistics & Warehouse", 120000, Color.FromArgb(245, 158, 11));
+            pieChart.AddSlice("AOI / Quality Inspection", 85000, Color.FromArgb(244, 63, 94));
+            cardDonut.ContentPanel.Controls.Add(pieChart);
+
+            var split2 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 2B: Interactive Stream & Style Controller
+            var cardInteractive = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Interactive Analytics & Real-Time Dynamic Stream",
+                Dock = DockStyle.Fill
+            };
+
+            var dynamicChart = new ZeroChart
+            {
+                Dock = DockStyle.Fill,
+                ChartType = ZeroChartType.Spline,
+                ValueSuffix = "%",
+                LegendPosition = ZeroChartLegendPosition.Top
+            };
+
+            var dynSeries = dynamicChart.AddSeries("OEE Equipment Efficiency", Color.FromArgb(139, 92, 246));
+            string[] shifts = new[] { "06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00" };
+            double[] oeeVals = new[] { 88.2, 91.5, 89.0, 94.2, 92.8, 95.1, 93.4, 96.0, 94.7 };
+            dynSeries.AddPoints(oeeVals, shifts);
+
+            var ctrlToolbar = new Panel { Dock = DockStyle.Bottom, Height = 36, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
+            var btnRand = new ZeroButton
+            {
+                Text = "🎲 Randomize Series",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Dock = DockStyle.Left,
+                Width = 160
+            };
+            var btnToggleType = new ZeroButton
+            {
+                Text = "📊 Switch to Column",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Left,
+                Width = 160
+            };
+            var btnAddPoint = new ZeroButton
+            {
+                Text = "⚡ Add Realtime Sample",
+                ButtonStyle = ZeroButtonStyle.Success,
+                Dock = DockStyle.Left,
+                Width = 170
+            };
+
+            var rnd = new Random();
+            btnRand.Click += (s, e) =>
+            {
+                dynSeries.Clear();
+                for (int i = 0; i < shifts.Length; i++)
+                {
+                    dynSeries.AddPoint(shifts[i], 80.0 + (rnd.NextDouble() * 18.0));
+                }
+                dynamicChart.Invalidate();
+                ZeroToast.Success(this, "Regenerated random analytics data!");
+            };
+
+            bool isBar = false;
+            btnToggleType.Click += (s, e) =>
+            {
+                isBar = !isBar;
+                dynamicChart.ChartType = isBar ? ZeroChartType.Column : ZeroChartType.Spline;
+                btnToggleType.Text = isBar ? "📈 Switch to Spline" : "📊 Switch to Column";
+                dynamicChart.Invalidate();
+            };
+
+            btnAddPoint.Click += (s, e) =>
+            {
+                string nextTime = $"{DateTime.Now:HH:mm:ss}";
+                double val = 85.0 + (rnd.NextDouble() * 14.0);
+                dynSeries.AddPoint(nextTime, val);
+                if (dynSeries.Points.Count > 12) dynSeries.Points.RemoveAt(0);
+                dynamicChart.Invalidate();
+                ZeroToast.Info(this, $"Pushed telemetry point: {val:F1}% at {nextTime}");
+            };
+
+            ctrlToolbar.Controls.Add(btnAddPoint);
+            ctrlToolbar.Controls.Add(btnToggleType);
+            ctrlToolbar.Controls.Add(btnRand);
+
+            cardInteractive.ContentPanel.Controls.Add(dynamicChart);
+            cardInteractive.ContentPanel.Controls.Add(ctrlToolbar);
+            ctrlToolbar.SendToBack();
+
+            row2.Controls.Add(cardInteractive);
+            row2.Controls.Add(split2);
+            row2.Controls.Add(cardDonut);
+
+            mainContainer.Controls.Add(row2);
+            mainContainer.Controls.Add(row1);
+            mainContainer.Controls.Add(bannerSpacer);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            bannerSpacer.BringToFront();
+            row1.BringToFront();
+            row2.BringToFront();
+
+            _tabCharts.Controls.Add(mainContainer);
         }
     }
 }

@@ -8,6 +8,8 @@ using ZeroUI.Core.Data;
 using ZeroUI.Core.Virtualization;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Forms;
+using ZeroUI.WinForms.Charts;
+using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Industrial;
@@ -456,6 +458,13 @@ namespace ZeroUI.Samples.BenchmarkDemo
                     SaveFormBitmap(form, Path.Combine(outputDir, "06_advanced_treelist_heatmap.png"));
                     Console.WriteLine("   [OK] Captured 06_advanced_treelist_heatmap.png");
 
+                    // Tab 7: Analytics & Business Charts
+                    form.SelectTabByIndex(7);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "10_business_charts_dashboard.png"));
+                    Console.WriteLine("   [OK] Captured 10_business_charts_dashboard.png");
+
                     // Obsidian Dark Theme SCADA
                     form.ToggleThemePublic();
                     form.SelectTabByIndex(4); // SCADA looks striking in Dark Mode
@@ -475,6 +484,10 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 // 3. Capture Industrial, SCADA & MES Hardware Controls Composite
                 CaptureIndustrialShowcase(Path.Combine(outputDir, "09_industrial_hero_showcase.png"));
                 Console.WriteLine("   [OK] Captured 09_industrial_hero_showcase.png");
+
+                // 4. Capture Business Analytics & Chart Suite Composite
+                CaptureChartsHeroShowcase(Path.Combine(outputDir, "11_charts_hero_showcase.png"));
+                Console.WriteLine("   [OK] Captured 11_charts_hero_showcase.png");
 
                 Console.WriteLine("\n🎉 ALL README SCREENSHOTS CAPTURED SUCCESSFULLY!");
             }
@@ -645,6 +658,93 @@ namespace ZeroUI.Samples.BenchmarkDemo
                     g.DrawImage(bmp, 730, 72);
                 }
                 takt.Dispose();
+            }
+
+            compBmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        private static void CaptureChartsHeroShowcase(string path)
+        {
+            int compW = 1080;
+            int compH = 360;
+
+            using var compBmp = new Bitmap(compW, compH);
+            using (var g = Graphics.FromImage(compBmp))
+            {
+                g.Clear(Color.FromArgb(15, 23, 42)); // Industrial Slate 900
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                using var titleFont = new Font("Segoe UI", 12f, FontStyle.Bold);
+                using var capFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+                using var titleBrush = new SolidBrush(Color.White);
+                using var capBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+
+                g.DrawString("⚡ ZeroUI — Business Analytics, BI & Management Chart Suite", titleFont, titleBrush, 20, 14);
+
+                // 1. Grouped Column Chart (Revenue vs Target)
+                var colChart = new ZeroBarChart
+                {
+                    Size = new Size(420, 270),
+                    ValuePrefix = "$",
+                    ValueSuffix = "k",
+                    LegendPosition = ZeroChartLegendPosition.Top
+                };
+                colChart.CreateControl();
+                string[] qMonths = new[] { "Q1", "Q2", "Q3", "Q4" };
+                colChart.SetData("Actual Rev", qMonths, new[] { 1560.0, 2190.0, 2820.0, 3450.0 }, Color.FromArgb(129, 140, 248));
+                colChart.SetData("Budget Target", qMonths, new[] { 1450.0, 2000.0, 2700.0, 3200.0 }, Color.FromArgb(52, 211, 153));
+                using (var bmp = new Bitmap(420, 270))
+                {
+                    colChart.DrawToBitmap(bmp, new Rectangle(0, 0, 420, 270));
+                    g.DrawString("Quarterly Revenue vs. Target (Grouped Column)", capFont, capBrush, 20, 48);
+                    g.DrawImage(bmp, 20, 72);
+                }
+                colChart.Dispose();
+
+                // 2. Donut Breakdown Chart with center KPI
+                var donutChart = new ZeroPieChart
+                {
+                    Size = new Size(280, 270),
+                    IsDonut = true,
+                    CenterTitle = "Total Cost",
+                    CenterValue = "$1.25M",
+                    ValuePrefix = "$",
+                    LegendPosition = ZeroChartLegendPosition.None
+                };
+                donutChart.CreateControl();
+                donutChart.AddSlice("Materials", 540000, Color.FromArgb(129, 140, 248));
+                donutChart.AddSlice("SMT Ops", 320000, Color.FromArgb(52, 211, 153));
+                donutChart.AddSlice("R&D Eng", 180000, Color.FromArgb(34, 211, 238));
+                donutChart.AddSlice("Logistics", 120000, Color.FromArgb(251, 191, 36));
+                donutChart.AddSlice("QA/QC", 85000, Color.FromArgb(251, 113, 133));
+                using (var bmp = new Bitmap(280, 270))
+                {
+                    donutChart.DrawToBitmap(bmp, new Rectangle(0, 0, 280, 270));
+                    g.DrawString("Cost Breakdown (Donut)", capFont, capBrush, 460, 48);
+                    g.DrawImage(bmp, 460, 72);
+                }
+                donutChart.Dispose();
+
+                // 3. Spline Area Trend Chart
+                var splineChart = new ZeroLineChart
+                {
+                    Size = new Size(300, 270),
+                    IsCurved = true,
+                    IsArea = true,
+                    ValueSuffix = "k",
+                    LegendPosition = ZeroChartLegendPosition.Top
+                };
+                splineChart.CreateControl();
+                string[] wks = new[] { "W1", "W2", "W3", "W4", "W5", "W6" };
+                splineChart.AddTrendSeries("Throughput", new[] { 24.0, 31.0, 29.0, 42.0, 39.0, 51.0 }, wks, Color.FromArgb(34, 211, 238));
+                splineChart.AddTrendSeries("Target", new[] { 22.0, 26.0, 30.0, 35.0, 40.0, 45.0 }, wks, Color.FromArgb(251, 191, 36));
+                using (var bmp = new Bitmap(300, 270))
+                {
+                    splineChart.DrawToBitmap(bmp, new Rectangle(0, 0, 300, 270));
+                    g.DrawString("Throughput Trend (Spline Area)", capFont, capBrush, 760, 48);
+                    g.DrawImage(bmp, 760, 72);
+                }
+                splineChart.Dispose();
             }
 
             compBmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
