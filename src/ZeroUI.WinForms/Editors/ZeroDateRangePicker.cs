@@ -20,8 +20,8 @@ namespace ZeroUI.WinForms.Editors
     }
 
     /// <summary>
-    /// Enterprise Dual-Date Range Selector (From Date -> To Date) with 1-click quick preset filters
-    /// and interactive calendar range popup.
+    /// Enterprise Dual-Date Range Selector (From Date -> To Date) with connected range ribbon,
+    /// 1-click quick preset filters, interactive hover range preview, and calendar popup.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
@@ -36,8 +36,10 @@ namespace ZeroUI.WinForms.Editors
         private DateRangePreset _preset = DateRangePreset.Last7Days;
 
         private bool _isHovered = false;
+        private bool _isFocused = false;
         private readonly ToolStripDropDown _dropdown;
         private readonly DateRangePopupControl _popupControl;
+        private Rectangle _chevronRect;
 
         public event EventHandler? DateRangeChanged;
 
@@ -49,8 +51,8 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw, true);
 
-            Size = new Size(250, 36);
-            Font = new Font("Segoe UI", 9.5f);
+            Size = new Size(260, 36);
+            Font = new Font("Segoe UI", 9.25f);
             BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark
             Cursor = Cursors.Hand;
 
@@ -70,6 +72,11 @@ namespace ZeroUI.WinForms.Editors
                 Padding = Padding.Empty
             };
             _dropdown.Items.Add(host);
+            _dropdown.Closed += (s, e) =>
+            {
+                _isFocused = false;
+                Invalidate();
+            };
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
@@ -188,6 +195,12 @@ namespace ZeroUI.WinForms.Editors
             DateRangeChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            _chevronRect = new Rectangle(Width - 24, (Height - 14) / 2, 14, 14);
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -208,8 +221,10 @@ namespace ZeroUI.WinForms.Editors
             if (!_dropdown.Visible)
             {
                 _popupControl.SyncFromPicker(_startDate, _endDate);
-                _popupControl.Size = new Size(480, 270);
-                _dropdown.Size = new Size(480, 270);
+                _popupControl.Size = new Size(500, 280);
+                _dropdown.Size = new Size(500, 280);
+                _isFocused = true;
+                Invalidate();
                 _dropdown.Show(this, new Point(0, Height + 2), ToolStripDropDownDirection.BelowRight);
             }
             else
@@ -232,43 +247,64 @@ namespace ZeroUI.WinForms.Editors
             var palette = ZeroTheme.Colors;
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            // 1. Background
+            // 1. Box Background & Rounded Border
             using (var path = CreateRoundedRect(rect, 6))
             {
                 using var brushBg = new SolidBrush(palette.Surface);
                 g.FillPath(brushBg, path);
 
-                Color borderCol = _isHovered ? palette.Primary : palette.Border;
-                using var penBorder = new Pen(borderCol, 1.2f);
+                Color borderCol = _isFocused ? palette.Primary : (_isHovered ? palette.PrimaryHover : palette.Border);
+                using var penBorder = new Pen(borderCol, _isFocused ? 1.5f : 1f);
                 g.DrawPath(penBorder, path);
             }
 
             // 2. Calendar Glyph (📅)
-            using (var iconFont = new Font("Segoe UI Emoji", 10f))
+            using (var iconFont = new Font("Segoe UI Emoji", 9.5f))
             using (var brushIcon = new SolidBrush(palette.Primary))
             {
-                g.DrawString("📅", iconFont, brushIcon, 10, (Height - 19) / 2);
+                g.DrawString("📅", iconFont, brushIcon, 8, (Height - 18) / 2);
             }
 
-            // 3. Date Range Text: "2026-09-01  →  2026-09-03"
-            string text = $"{_startDate.ToString(_dateFormat)}  →  {_endDate.ToString(_dateFormat)}";
+            // 3. Date Range Text with pill accent: "2026-09-01  →  2026-09-03"
+            string sText = _startDate.ToString(_dateFormat);
+            string eText = _endDate.ToString(_dateFormat);
+
             using (var fontText = new Font(Font.FontFamily, 9f, FontStyle.Bold))
             using (var brushText = new SolidBrush(palette.TextPrimary))
+            using (var brushArrow = new SolidBrush(palette.Primary))
             {
-                g.DrawString(text, fontText, brushText, 34, (Height - 16) / 2);
+                g.DrawString(sText, fontText, brushText, 32, (Height - 16) / 2);
+
+                int arrowX = 32 + (int)g.MeasureString(sText, fontText).Width + 4;
+                g.DrawString("→", fontText, brushArrow, arrowX, (Height - 16) / 2);
+
+                int endX = arrowX + 16;
+                g.DrawString(eText, fontText, brushText, endX, (Height - 16) / 2);
             }
 
-            // 4. Dropdown Chevron (▼)
-            using (var chevBrush = new SolidBrush(palette.TextSecondary))
+            // 4. Dropdown Chevron (▼ / ▲)
+            using (var chevBrush = new SolidBrush(_isFocused ? palette.Primary : palette.TextSecondary))
             {
-                int cx = Width - 16;
-                int cy = Height / 2;
-                PointF[] pts = new[]
+                PointF center = new PointF(_chevronRect.X + (_chevronRect.Width / 2f), _chevronRect.Y + (_chevronRect.Height / 2f));
+                PointF[] pts;
+                if (_isFocused)
                 {
-                    new PointF(cx - 3.5f, cy - 2f),
-                    new PointF(cx + 3.5f, cy - 2f),
-                    new PointF(cx, cy + 2.5f)
-                };
+                    pts = new[]
+                    {
+                        new PointF(center.X - 3.5f, center.Y + 2f),
+                        new PointF(center.X + 3.5f, center.Y + 2f),
+                        new PointF(center.X, center.Y - 2.5f)
+                    };
+                }
+                else
+                {
+                    pts = new[]
+                    {
+                        new PointF(center.X - 3.5f, center.Y - 2f),
+                        new PointF(center.X + 3.5f, center.Y - 2f),
+                        new PointF(center.X, center.Y + 2.5f)
+                    };
+                }
                 g.FillPolygon(chevBrush, pts);
             }
         }
@@ -286,20 +322,26 @@ namespace ZeroUI.WinForms.Editors
         }
 
         /// <summary>
-        /// Inner calendar & preset popup container.
+        /// Inner calendar & preset popup container with connected range ribbon and hover preview.
         /// </summary>
         private class DateRangePopupControl : Control
         {
             private readonly ZeroDateRangePicker _picker;
             private DateTime _tempStart;
             private DateTime _tempEnd;
+            private DateTime _hoverDate;
             private DateTime _viewMonth;
             private int _clickStep = 0; // 0: picking start, 1: picking end
+
+            private Rectangle _prevYearRect;
+            private Rectangle _prevMonthRect;
+            private Rectangle _nextMonthRect;
+            private Rectangle _nextYearRect;
 
             private Rectangle[] _presetRects = new Rectangle[7];
             private readonly string[] _presetNames = new[]
             {
-                "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month", "Last Month", "Year-to-Date"
+                "Hôm nay", "Hôm qua", "7 Ngày qua", "30 Ngày qua", "Tháng này", "Tháng trước", "Từ đầu năm"
             };
             private readonly DateRangePreset[] _presetValues = new[]
             {
@@ -318,13 +360,14 @@ namespace ZeroUI.WinForms.Editors
                     ControlStyles.ResizeRedraw, true);
 
                 Font = new Font("Segoe UI", 9f);
-                BackColor = Color.FromArgb(30, 41, 59);
+                BackColor = ZeroTheme.Colors.CardBackground;
             }
 
             public void SyncFromPicker(DateTime start, DateTime end)
             {
                 _tempStart = start;
                 _tempEnd = end;
+                _hoverDate = end;
                 _viewMonth = new DateTime(start.Year, start.Month, 1);
                 _clickStep = 0;
                 Invalidate();
@@ -333,6 +376,7 @@ namespace ZeroUI.WinForms.Editors
             protected override void OnMouseMove(MouseEventArgs e)
             {
                 base.OnMouseMove(e);
+
                 int hov = -1;
                 for (int i = 0; i < _presetRects.Length; i++)
                 {
@@ -342,6 +386,32 @@ namespace ZeroUI.WinForms.Editors
                         break;
                     }
                 }
+
+                int calLeft = 140;
+                int startY = 60;
+                int dayW = (Width - calLeft - 20) / 7;
+                int dayH = 26;
+
+                if (e.X >= calLeft && e.X < Width - 20 && e.Y >= startY && e.Y < startY + (6 * dayH))
+                {
+                    int col = (e.X - calLeft) / dayW;
+                    int row = (e.Y - startY) / dayH;
+
+                    int firstDayOfWeek = (int)_viewMonth.DayOfWeek;
+                    int dayIndex = (row * 7) + col - firstDayOfWeek + 1;
+                    int daysInMonth = DateTime.DaysInMonth(_viewMonth.Year, _viewMonth.Month);
+
+                    if (dayIndex >= 1 && dayIndex <= daysInMonth)
+                    {
+                        var d = new DateTime(_viewMonth.Year, _viewMonth.Month, dayIndex);
+                        if (_hoverDate != d)
+                        {
+                            _hoverDate = d;
+                            Invalidate();
+                        }
+                    }
+                }
+
                 if (_hoveredPreset != hov)
                 {
                     _hoveredPreset = hov;
@@ -360,7 +430,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 base.OnMouseDown(e);
 
-                // Check presets
+                // Check Presets
                 for (int i = 0; i < _presetRects.Length; i++)
                 {
                     if (_presetRects[i].Contains(e.Location))
@@ -371,25 +441,33 @@ namespace ZeroUI.WinForms.Editors
                     }
                 }
 
-                // Month navigation
-                int calLeft = 140;
-                var prevRect = new Rectangle(calLeft + 6, 10, 24, 24);
-                var nextRect = new Rectangle(Width - 36, 10, 24, 24);
-
-                if (prevRect.Contains(e.Location))
+                // Month / Year Navigation
+                if (_prevYearRect.Contains(e.Location))
+                {
+                    _viewMonth = _viewMonth.AddYears(-1);
+                    Invalidate();
+                    return;
+                }
+                if (_prevMonthRect.Contains(e.Location))
                 {
                     _viewMonth = _viewMonth.AddMonths(-1);
                     Invalidate();
                     return;
                 }
-                if (nextRect.Contains(e.Location))
+                if (_nextMonthRect.Contains(e.Location))
                 {
                     _viewMonth = _viewMonth.AddMonths(1);
                     Invalidate();
                     return;
                 }
+                if (_nextYearRect.Contains(e.Location))
+                {
+                    _viewMonth = _viewMonth.AddYears(1);
+                    Invalidate();
+                    return;
+                }
 
-                // Apply button
+                // Apply Button
                 var applyRect = new Rectangle(Width - 85, Height - 34, 75, 26);
                 if (applyRect.Contains(e.Location))
                 {
@@ -398,8 +476,9 @@ namespace ZeroUI.WinForms.Editors
                     return;
                 }
 
-                // Day grid click
-                int startY = 65;
+                // Day Grid Click
+                int calLeft = 140;
+                int startY = 60;
                 int dayW = (Width - calLeft - 20) / 7;
                 int dayH = 26;
 
@@ -408,7 +487,7 @@ namespace ZeroUI.WinForms.Editors
                     int col = (e.X - calLeft) / dayW;
                     int row = (e.Y - startY) / dayH;
 
-                    int firstDayOfWeek = (int)_viewMonth.DayOfWeek; // 0 is Sunday
+                    int firstDayOfWeek = (int)_viewMonth.DayOfWeek;
                     int dayIndex = (row * 7) + col - firstDayOfWeek + 1;
                     int daysInMonth = DateTime.DaysInMonth(_viewMonth.Year, _viewMonth.Month);
 
@@ -448,8 +527,13 @@ namespace ZeroUI.WinForms.Editors
                 var palette = ZeroTheme.Colors;
                 g.Clear(palette.CardBackground);
 
-                // 1. Left Preset Sidebar (Width = 130)
-                int sideW = 130;
+                using (var penBorder = new Pen(palette.Border, 1f))
+                {
+                    g.DrawRectangle(penBorder, 0, 0, Width - 1, Height - 1);
+                }
+
+                // 1. Left Preset Sidebar (Width = 135)
+                int sideW = 135;
                 using (var brushSide = new SolidBrush(palette.Surface))
                 {
                     g.FillRectangle(brushSide, new Rectangle(0, 0, sideW, Height));
@@ -462,8 +546,8 @@ namespace ZeroUI.WinForms.Editors
                 using var fontPreset = new Font(Font.FontFamily, 8.5f, FontStyle.Regular);
                 for (int i = 0; i < _presetNames.Length; i++)
                 {
-                    int py = 12 + (i * 32);
-                    _presetRects[i] = new Rectangle(8, py, sideW - 16, 26);
+                    int py = 10 + (i * 34);
+                    _presetRects[i] = new Rectangle(8, py, sideW - 16, 28);
 
                     bool isHov = i == _hoveredPreset;
                     bool isCur = _picker.Preset == _presetValues[i];
@@ -471,58 +555,82 @@ namespace ZeroUI.WinForms.Editors
                     if (isCur)
                     {
                         using var brushCur = new SolidBrush(Color.FromArgb(40, palette.Primary));
-                        using var pathCur = CreateRoundedRect(_presetRects[i], 4);
+                        using var pathCur = CreateRoundedRect(_presetRects[i], 5);
                         g.FillPath(brushCur, pathCur);
+
+                        // Active left pill accent
+                        using var penLeft = new SolidBrush(palette.Primary);
+                        g.FillRectangle(penLeft, new Rectangle(_presetRects[i].X, _presetRects[i].Y + 4, 3, _presetRects[i].Height - 8));
                     }
                     else if (isHov)
                     {
                         using var brushHov = new SolidBrush(Color.FromArgb(20, palette.Primary));
-                        using var pathHov = CreateRoundedRect(_presetRects[i], 4);
+                        using var pathHov = CreateRoundedRect(_presetRects[i], 5);
                         g.FillPath(brushHov, pathHov);
                     }
 
-                    Color textColor = isCur ? palette.Primary : palette.TextPrimary;
+                    Color textColor = isCur ? palette.Primary : (isHov ? palette.TextPrimary : palette.TextSecondary);
                     using var brushText = new SolidBrush(textColor);
                     var sf = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-                    g.DrawString(_presetNames[i], fontPreset, brushText, new Rectangle(_presetRects[i].X + 8, _presetRects[i].Y, _presetRects[i].Width - 8, _presetRects[i].Height), sf);
+                    g.DrawString(_presetNames[i], fontPreset, brushText, new Rectangle(_presetRects[i].X + 10, _presetRects[i].Y, _presetRects[i].Width - 10, _presetRects[i].Height), sf);
                 }
 
                 // 2. Right Calendar Area
-                int calLeft = sideW + 12;
-                int calW = Width - calLeft - 12;
+                int calLeft = sideW + 14;
+                int calW = Width - calLeft - 14;
 
-                // Month Title & Arrows
-                using var fontTitle = new Font(Font.FontFamily, 10f, FontStyle.Bold);
+                // Month Title & Navigation Buttons
+                int btnSz = 22;
+                _prevYearRect = new Rectangle(calLeft, 10, btnSz, btnSz);
+                _prevMonthRect = new Rectangle(calLeft + 24, 10, btnSz, btnSz);
+                _nextMonthRect = new Rectangle(Width - 50, 10, btnSz, btnSz);
+                _nextYearRect = new Rectangle(Width - 26, 10, btnSz, btnSz);
+
+                // Title: "MMMM yyyy"
+                using var fontTitle = new Font(Font.FontFamily, 9.5f, FontStyle.Bold);
                 using var brushTitle = new SolidBrush(palette.TextPrimary);
                 string monthName = _viewMonth.ToString("MMMM yyyy");
-                g.DrawString(monthName, fontTitle, brushTitle, calLeft + 40, 12);
+                var titleRect = new Rectangle(calLeft + 48, 10, calW - 96, 22);
+                var sfTitle = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                g.DrawString(monthName, fontTitle, brushTitle, titleRect, sfTitle);
 
-                // Prev / Next Buttons (◀ / ▶)
-                using var brushArrow = new SolidBrush(palette.TextSecondary);
-                g.DrawString("◀", fontPreset, brushArrow, calLeft + 10, 13);
-                g.DrawString("▶", fontPreset, brushArrow, Width - 30, 13);
-
-                // Day-of-week headers
-                string[] dayHeaders = new[] { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
-                int dayW = calW / 7;
-                int dayH = 26;
-                int startY = 40;
-
-                using var fontHeader = new Font(Font.FontFamily, 8f, FontStyle.Bold);
-                using var brushHeader = new SolidBrush(palette.TextSecondary);
-                for (int c = 0; c < 7; c++)
+                // Navigation Glyph Arrows («, ‹, ›, »)
+                using (var fontNav = new Font("Segoe UI", 9f, FontStyle.Bold))
+                using (var brushNav = new SolidBrush(palette.TextSecondary))
                 {
-                    var rect = new Rectangle(calLeft + (c * dayW), startY, dayW, 20);
-                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(dayHeaders[c], fontHeader, brushHeader, rect, sf);
+                    var sfNav = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    g.DrawString("«", fontNav, brushNav, _prevYearRect, sfNav);
+                    g.DrawString("‹", fontNav, brushNav, _prevMonthRect, sfNav);
+                    g.DrawString("›", fontNav, brushNav, _nextMonthRect, sfNav);
+                    g.DrawString("»", fontNav, brushNav, _nextYearRect, sfNav);
                 }
 
-                // Render Calendar Days
+                // Day-of-week headers
+                string[] dayHeaders = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+                int dayW = calW / 7;
+                int dayH = 26;
+                int startY = 38;
+
+                using var fontHeader = new Font(Font.FontFamily, 7.75f, FontStyle.Bold);
+                for (int c = 0; c < 7; c++)
+                {
+                    var cellRect = new Rectangle(calLeft + (c * dayW), startY, dayW, 18);
+                    Color cColor = (c == 0 || c == 6) ? palette.Warning : palette.TextSecondary;
+                    using var brushHeader = new SolidBrush(cColor);
+                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    g.DrawString(dayHeaders[c], fontHeader, brushHeader, cellRect, sf);
+                }
+
+                // Render Calendar Days with Connected Ribbon
                 int firstDayOfWeek = (int)_viewMonth.DayOfWeek;
                 int daysInMonth = DateTime.DaysInMonth(_viewMonth.Year, _viewMonth.Month);
-                int gridY = startY + 22;
+                int gridY = startY + 20;
 
                 using var fontDay = new Font(Font.FontFamily, 8.5f, FontStyle.Regular);
+                using var fontDayBold = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+                DateTime rangeStart = _tempStart;
+                DateTime rangeEnd = (_clickStep == 1 && _hoverDate >= _tempStart) ? _hoverDate : _tempEnd;
 
                 for (int d = 1; d <= daysInMonth; d++)
                 {
@@ -533,41 +641,60 @@ namespace ZeroUI.WinForms.Editors
                     DateTime curDate = new DateTime(_viewMonth.Year, _viewMonth.Month, d);
                     var cellRect = new Rectangle(calLeft + (c * dayW), gridY + (r * dayH), dayW, dayH);
 
-                    bool isStart = curDate == _tempStart;
-                    bool isEnd = curDate == _tempEnd;
-                    bool inRange = curDate > _tempStart && curDate < _tempEnd;
+                    bool isStart = curDate == rangeStart;
+                    bool isEnd = curDate == rangeEnd;
+                    bool inRange = curDate > rangeStart && curDate < rangeEnd;
 
+                    // Connected Range Ribbon (Continuous soft highlight)
                     if (inRange)
                     {
                         using var brushRange = new SolidBrush(Color.FromArgb(35, palette.Primary));
-                        g.FillRectangle(brushRange, cellRect);
+                        g.FillRectangle(brushRange, new Rectangle(cellRect.X, cellRect.Y + 2, dayW, dayH - 4));
                     }
 
-                    if (isStart || isEnd)
+                    // Rounded Capsule on Start Date
+                    if (isStart)
                     {
+                        if (rangeEnd > rangeStart)
+                        {
+                            using var brushHalf = new SolidBrush(Color.FromArgb(35, palette.Primary));
+                            g.FillRectangle(brushHalf, new Rectangle(cellRect.X + (dayW / 2), cellRect.Y + 2, dayW / 2, dayH - 4));
+                        }
                         using var brushEndpoint = new SolidBrush(palette.Primary);
-                        using var pathEp = CreateRoundedRect(new Rectangle(cellRect.X + 2, cellRect.Y + 2, dayW - 4, dayH - 4), 4);
+                        using var pathEp = CreateRoundedRect(new Rectangle(cellRect.X + 2, cellRect.Y + 2, dayW - 4, dayH - 4), 5);
+                        g.FillPath(brushEndpoint, pathEp);
+                    }
+
+                    // Rounded Capsule on End Date
+                    if (isEnd && !isStart)
+                    {
+                        using var brushHalf = new SolidBrush(Color.FromArgb(35, palette.Primary));
+                        g.FillRectangle(brushHalf, new Rectangle(cellRect.X, cellRect.Y + 2, dayW / 2, dayH - 4));
+
+                        using var brushEndpoint = new SolidBrush(palette.Primary);
+                        using var pathEp = CreateRoundedRect(new Rectangle(cellRect.X + 2, cellRect.Y + 2, dayW - 4, dayH - 4), 5);
                         g.FillPath(brushEndpoint, pathEp);
                     }
 
                     Color dayColor = (isStart || isEnd) ? Color.White : palette.TextPrimary;
                     using var brushDay = new SolidBrush(dayColor);
+                    var activeFont = (isStart || isEnd) ? fontDayBold : fontDay;
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(d.ToString(), fontDay, brushDay, cellRect, sf);
+                    g.DrawString(d.ToString(), activeFont, brushDay, cellRect, sf);
                 }
 
                 // 3. Bottom Action Bar (Apply button)
-                var applyRect = new Rectangle(Width - 85, Height - 34, 75, 26);
+                var applyRect = new Rectangle(Width - 85, Height - 32, 75, 24);
                 using (var brushApply = new SolidBrush(palette.Primary))
                 using (var pathApply = CreateRoundedRect(applyRect, 4))
                 {
                     g.FillPath(brushApply, pathApply);
                 }
                 using (var brushApplyText = new SolidBrush(Color.White))
-                using (var fontApply = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
+                using (var fontApply = new Font(Font.FontFamily, 8f, FontStyle.Bold))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString("Apply", fontApply, brushApplyText, applyRect, sf);
+                    g.DrawString("Áp Dụng", fontApply, brushApplyText, applyRect, sf);
                 }
             }
         }
