@@ -68,19 +68,28 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
                     buffer.Text = item.Status.AsSpan();
                     buffer.Alignment = CellAlignment.Center;
                     // Colors in Win32 0x00BBGGRR format
-                    if (item.Status == "Đã nhập kho" || item.Status == "Hoàn thành")
+                    if (item.Status == "Đạt tiêu chuẩn OQC" || item.Status == "Đã nhập kho" || item.Status == "Hoàn thành")
                     {
                         buffer.TextColor = 0x002E7D32; // Green
                     }
-                    else if (item.Status == "Chờ kiểm tra")
+                    else if (item.Status == "Chờ kiểm định IQC" || item.Status == "Chờ kiểm tra")
                     {
-                        buffer.TextColor = 0x000080FF; // Orange
+                        buffer.TextColor = 0x000080FF; // Amber / Orange
                     }
-                    else if (item.Status == "Tạm giữ")
+                    else if (item.Status == "Đang cấp chuyền SMT")
+                    {
+                        buffer.TextColor = 0x00B05010; // Blue
+                    }
+                    else if (item.Status == "Tạm giữ cách ly QC" || item.Status == "Tạm giữ")
+                    {
+                        buffer.TextColor = 0x00802080; // Purple
+                    }
+                    else if (item.Status == "Cảnh báo sắp hết tồn")
                     {
                         buffer.TextColor = 0x002020D0; // Red
                     }
                     break;
+
             }
         }
 

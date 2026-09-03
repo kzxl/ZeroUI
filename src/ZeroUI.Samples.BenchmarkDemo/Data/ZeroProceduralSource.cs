@@ -17,17 +17,34 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
 
         private static readonly string[] Categories = new[]
         {
-            "Thép hình I-Beam 200x100",
-            "Nhôm đúc định hình AL6063",
-            "Bulong cường độ cao M16x80",
-            "Tấm lót cao su EPDM 5mm",
-            "Vòng bi công nghiệp SKF-6205",
-            "Dây hàn Mig 1.2mm Cu-Coated",
-            "Cáp điện hạ thế 3x16+1x10mm",
-            "Ống thép không gỉ SUS304",
-            "Bản mã hàn gia cường 10mm",
-            "Sơn chống rỉ Epoxy 2 thành phần"
+            "Vi điều khiển STM32F407VGT6 LQFP100",
+            "IC Nguồn Buck TI TPS54302DDCR 28V 3A",
+            "Chip nhớ Flash Winbond W25Q128JVS 128Mb",
+            "Module Wi-Fi/BLE ESP32-WROOM-32E",
+            "Tụ gốm nhiều lớp SMD 0805 10uF 25V X7R",
+            "Điện trở màng mỏng chính xác 0603 10kΩ 1%",
+            "Cuộn cảm công suất SMD 10uH 3.5A Shielded",
+            "Thạch anh dao động SMD 3225 16.000MHz 10ppm",
+            "Diode Schottky chỉnh lưu SS34 40V 3A SMC",
+            "Cổng kết nối USB Type-C 16-Pin SMT IPX7",
+            "Cầu đấu Terminal Block Phoenix 5.08mm 4P",
+            "Rơ-le bán dẫn thể rắn Omron G3MB-202P 5V",
+            "Van điện từ khí nén Airtac 4V210-08 24VDC",
+            "Xy lanh khí nén compact SMC MGPM25-50Z",
+            "Cảm biến quang học Keyence PZ-G41N",
+            "Động cơ bước Hybrid Nema 23 2.8Nm",
+            "Thanh trượt vuông tuyến tính HIWIN HGH20CA",
+            "Trục vít me bi TBI Motion SFU1605-600mm",
+            "Vòng bi đũa cầu SKF 6205-2RSH/C3",
+            "Kem hàn không chì SMT Senju M705 SAC305"
         };
+
+        private static readonly string[] CodePrefixes = new[]
+        {
+            "IC", "PWR", "MEM", "IOT", "CAP", "RES", "IND", "XTAL", "DIO", "USBC",
+            "TERM", "REL", "VAL", "CYL", "SENS", "STEP", "RAIL", "SCREW", "BRG", "SOLD"
+        };
+
 
         private static readonly string[] Statuses = new[]
         {
@@ -77,9 +94,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
                     break;
 
                 case 1: // Mã Vật Tư
-                    buffer.Text = ("VT-" + (rowIndex + 1).ToString("D8")).AsSpan();
+                    buffer.Text = (CodePrefixes[catIdx] + "-" + (rowIndex + 1).ToString("D7")).AsSpan();
                     buffer.Alignment = CellAlignment.Left;
                     break;
+
 
                 case 2: // Tên Vật Tư
                     buffer.Text = Categories[catIdx].AsSpan();
