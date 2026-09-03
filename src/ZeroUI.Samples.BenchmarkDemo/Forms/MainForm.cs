@@ -237,6 +237,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ZeroToast.Info(this, $"Switched theme to: {(ZeroTheme.IsDark ? "Obsidian Dark" : "Clean Light")}");
             });
 
+            _mainToolbar.AddButton("Bo Góc: Bật", "📐", (s, e) =>
+            {
+                ZeroUIConfig.RoundedCorners = !ZeroUIConfig.RoundedCorners;
+                (s as ZeroToolbarButton)!.Text = ZeroUIConfig.RoundedCorners ? "Bo Góc: Bật" : "Bo Góc: Tắt (Vuông)";
+                ZeroToast.Info(this, $"Đã đổi kiểu góc toàn cục: {(ZeroUIConfig.RoundedCorners ? "Bo Tròn (Rounded - 6px)" : "Vuông Vức (Sharp - 0px)")}");
+                Invalidate(true);
+            });
+
             _mainToolbar.AddButton("Fullscreen", "⛶", (s, e) =>
             {
                 WindowState = (WindowState == FormWindowState.Maximized) ? FormWindowState.Normal : FormWindowState.Maximized;
@@ -244,7 +252,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             _mainToolbar.AddButton("Settings", "⚙️", (s, e) =>
             {
-                ZeroToast.Info(this, "ZeroUI Core v1.0.0 Configuration: Ready");
+                OpenGlobalSettingsDialog();
             });
 
             _mainToolbar.AddButton("Help", "❓", (s, e) =>
@@ -2670,6 +2678,133 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 CountCheckedNodes(child, ref count);
             }
+        }
+
+        private void OpenGlobalSettingsDialog()
+        {
+            var pnl = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent, Padding = new Padding(12) };
+
+            int curY = 6;
+
+            // 1. Corner Style
+            var lblCorners = new Label
+            {
+                Text = "📐 Kiểu Bo Góc Toàn Cục (Global Corner Style - DevExpress Style):",
+                Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold),
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                Location = new Point(8, curY),
+                AutoSize = true
+            };
+            pnl.Controls.Add(lblCorners);
+            curY += 26;
+
+            var segCorners = new ZeroSegmented
+            {
+                Location = new Point(8, curY),
+                Size = new Size(470, 36),
+                Items = new[] { "Bo Tròn (Rounded - 6px)", "Vuông Vức (Sharp - 0px)", "Viên Thuốc (Pill - 12px)" },
+                SelectedIndex = ZeroUIConfig.CornerStyle switch
+                {
+                    ZeroCornerStyle.Rounded => 0,
+                    ZeroCornerStyle.Sharp => 1,
+                    ZeroCornerStyle.Pill => 2,
+                    _ => 0
+                }
+            };
+            pnl.Controls.Add(segCorners);
+            curY += 46;
+
+            // 2. Global Font
+            var lblFont = new Label
+            {
+                Text = "🔤 Font Chữ Toàn Cục (Global Default Font):",
+                Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold),
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                Location = new Point(8, curY),
+                AutoSize = true
+            };
+            pnl.Controls.Add(lblFont);
+            curY += 26;
+
+            string[] fonts = new[] { "Segoe UI", "Aptos", "Tahoma", "Consolas" };
+            var segFont = new ZeroSegmented
+            {
+                Location = new Point(8, curY),
+                Size = new Size(470, 36),
+                Items = fonts,
+                SelectedIndex = ZeroUIConfig.DefaultFont.FontFamily.Name switch
+                {
+                    "Aptos" => 1,
+                    "Tahoma" => 2,
+                    "Consolas" => 3,
+                    _ => 0
+                }
+            };
+            pnl.Controls.Add(segFont);
+            curY += 46;
+
+            // 3. Live Preview Card
+            var pnlPreview = new ZeroCard
+            {
+                Location = new Point(8, curY),
+                Size = new Size(470, 95),
+                Title = "🔍 Xem Trước Trực Quan (Live Preview)",
+                Subtitle = "Hiệu lực ngay lập tức cho toàn bộ các control"
+            };
+            var previewBtn = new ZeroButton { Location = new Point(10, 8), Size = new Size(125, 34), Text = "Nút Mẫu", ButtonStyle = ZeroButtonStyle.Primary };
+            var previewTag = new ZeroTag { Location = new Point(145, 12), Size = new Size(95, 26), Text = "Hoạt Động", TagType = ZeroTagType.Success };
+            var previewSearch = new ZeroSearchBox { Location = new Point(250, 8), Size = new Size(195, 34), PlaceholderText = "Ô nhập liệu thử..." };
+
+            pnlPreview.ContentPanel.Controls.Add(previewBtn);
+            pnlPreview.ContentPanel.Controls.Add(previewTag);
+            pnlPreview.ContentPanel.Controls.Add(previewSearch);
+            pnl.Controls.Add(pnlPreview);
+
+            segCorners.SelectedIndexChanged += (s, e) =>
+            {
+                switch (segCorners.SelectedIndex)
+                {
+                    case 0:
+                        ZeroUIConfig.CornerStyle = ZeroCornerStyle.Rounded;
+                        ZeroUIConfig.DefaultBorderRadius = 6;
+                        break;
+                    case 1:
+                        ZeroUIConfig.CornerStyle = ZeroCornerStyle.Sharp;
+                        ZeroUIConfig.DefaultBorderRadius = 0;
+                        break;
+                    case 2:
+                        ZeroUIConfig.CornerStyle = ZeroCornerStyle.Pill;
+                        ZeroUIConfig.DefaultBorderRadius = 12;
+                        break;
+                }
+                ZeroUIConfig.NotifyConfigChanged();
+                pnlPreview.Invalidate(true);
+            };
+
+            segFont.SelectedIndexChanged += (s, e) =>
+            {
+                string family = segFont.SelectedIndex switch
+                {
+                    1 => "Aptos",
+                    2 => "Tahoma",
+                    3 => "Consolas",
+                    _ => "Segoe UI"
+                };
+                ZeroUIConfig.DefaultFont = new Font(family, 9.25f, FontStyle.Regular);
+                ZeroUIConfig.NotifyConfigChanged();
+                lblCorners.Font = new Font(family, 9.5f, FontStyle.Bold);
+                lblFont.Font = new Font(family, 9.5f, FontStyle.Bold);
+                pnlPreview.Invalidate(true);
+            };
+
+            ZeroModal.Show(
+                this,
+                "⚙️ Cài Đặt Toàn Cục Ứng Dụng (ZeroUI Global Settings)",
+                pnl,
+                okText: "Đóng",
+                showCancel: false,
+                width: 530,
+                height: 380);
         }
     }
 }

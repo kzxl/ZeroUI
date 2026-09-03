@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
@@ -41,6 +42,12 @@ namespace ZeroUI.WinForms.Editors
             Size = new Size(80, 24);
             Font = new Font("Segoe UI", 8.5f, FontStyle.Regular);
             Text = "Tag";
+
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 8.5f, FontStyle.Regular);
+                Invalidate();
+            };
         }
 
         [Category("Appearance")]
@@ -67,8 +74,17 @@ namespace ZeroUI.WinForms.Editors
 
             var (bg, border, fg) = GetTagColors(_tagType);
 
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
+
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
-            using (var path = CreateRoundedRectangle(rect, _borderRadius))
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+
+            using (var path = CreateRoundedRectangle(rect, effRadius))
             {
                 using var brush = new SolidBrush(bg);
                 g.FillPath(brush, path);

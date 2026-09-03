@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
@@ -37,6 +38,12 @@ namespace ZeroUI.WinForms.Editors
             Size = new Size(320, 34);
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             Cursor = Cursors.Hand;
+
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9f, FontStyle.Regular);
+                Invalidate();
+            };
         }
 
         [Category("Data")]
@@ -113,10 +120,18 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            Rectangle trackRect = new Rectangle(0, 0, Width - 1, Height - 1);
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
 
-            // 1. Draw Track Background
-            using (var trackPath = CreateRoundedRectangle(trackRect, 6))
+            Rectangle trackRect = new Rectangle(0, 0, Width - 1, Height - 1);
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+
+            // 2. Draw Track Background
+            using (var trackPath = CreateRoundedRectangle(trackRect, effRadius))
             {
                 using var trackBrush = new SolidBrush(Color.FromArgb(243, 244, 246)); // Gray 100
                 g.FillPath(trackBrush, trackPath);
@@ -127,11 +142,12 @@ namespace ZeroUI.WinForms.Editors
             float itemW = (float)(Width - 4) / _items.Length;
             float itemH = Height - 4;
 
-            // 2. Draw Active Pill
+            // 3. Draw Active Pill
             if (_selectedIndex >= 0 && _selectedIndex < _items.Length)
             {
                 RectangleF pillRect = new RectangleF(2 + (_selectedIndex * itemW), 2, itemW, itemH);
-                using (var pillPath = CreateRoundedRectangleF(pillRect, 5))
+                int effPillRadius = ZeroUIConfig.GetEffectiveRadius(5);
+                using (var pillPath = CreateRoundedRectangleF(pillRect, effPillRadius))
                 {
                     using var pillBrush = new SolidBrush(Color.White);
                     g.FillPath(pillBrush, pillPath);

@@ -114,6 +114,12 @@ namespace ZeroUI.WinForms.Editors
             Size = new Size(260, 36);
 
             ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                _searchTextBox.Font = ZeroUIConfig.DefaultFont;
+                Invalidate();
+            };
             UpdateTheme();
         }
 
@@ -320,10 +326,19 @@ namespace ZeroUI.WinForms.Editors
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var palette = ZeroTheme.Colors;
-            Rectangle borderRect = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            // 1. Background
-            using (var path = CreateRoundedRect(borderRect, 6))
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
+
+            Rectangle borderRect = new Rectangle(0, 0, Width - 1, Height - 1);
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+
+            // 2. Box Background & Border
+            using (var path = CreateRoundedRect(borderRect, effRadius))
             {
                 using var brushBg = new SolidBrush(palette.Surface);
                 g.FillPath(brushBg, path);

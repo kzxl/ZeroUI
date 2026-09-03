@@ -241,7 +241,8 @@ namespace ZeroUI.WinForms.Overlays
             var theme = ZeroTheme.Colors;
 
             // 1. Draw Centered Card
-            using (var path = CreateRoundedRectangle(_cardRect, 10))
+            int effModalRadius = ZeroUIConfig.GetEffectiveRadius(10);
+            using (var path = CreateRoundedRectangle(_cardRect, effModalRadius))
             {
                 using var cardBrush = new SolidBrush(theme.Surface);
                 g.FillPath(cardBrush, path);
@@ -266,7 +267,8 @@ namespace ZeroUI.WinForms.Overlays
             _closeRect = new Rectangle(_cardRect.Right - 38, _cardRect.Top + 14, 24, 24);
             if (_isCloseHovered)
             {
-                using var bPath = CreateRoundedRectangle(_closeRect, 4);
+                int effCloseRadius = ZeroUIConfig.GetEffectiveRadius(4);
+                using var bPath = CreateRoundedRectangle(_closeRect, effCloseRadius);
                 using var bBrush = new SolidBrush(theme.Hover);
                 g.FillPath(bBrush, bPath);
             }

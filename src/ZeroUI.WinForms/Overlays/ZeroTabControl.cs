@@ -76,7 +76,7 @@ namespace ZeroUI.WinForms.Overlays
                 ControlStyles.ResizeRedraw, true);
 
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
-            BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark
+            BackColor = Color.Transparent;
 
             _contentContainer = new Panel
             {
@@ -88,6 +88,11 @@ namespace ZeroUI.WinForms.Overlays
             Size = new Size(500, 350);
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                Invalidate();
+            };
         }
 
         [Browsable(false)]
@@ -319,16 +324,17 @@ namespace ZeroUI.WinForms.Overlays
                 {
                     int pillH = _tabHeight - 12;
                     var pillRect = new Rectangle(curX + 2, 6, itemW - 4, pillH);
+                    int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
                     if (isSelected)
                     {
                         using var brushPill = new SolidBrush(palette.Primary);
-                        using var pathPill = CreateRoundedRect(pillRect, 6);
+                        using var pathPill = CreateRoundedRect(pillRect, effRadius);
                         g.FillPath(brushPill, pathPill);
                     }
                     else if (isHovered)
                     {
                         using var brushPillHov = new SolidBrush(Color.FromArgb(20, palette.Primary));
-                        using var pathPillHov = CreateRoundedRect(pillRect, 6);
+                        using var pathPillHov = CreateRoundedRect(pillRect, effRadius);
                         g.FillPath(brushPillHov, pathPillHov);
                     }
                 }
@@ -337,8 +343,9 @@ namespace ZeroUI.WinForms.Overlays
                     if (isSelected)
                     {
                         var cardRect = new Rectangle(curX, 4, itemW, _tabHeight - 4);
+                        int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
                         using var brushCard = new SolidBrush(palette.Background);
-                        using var pathCard = CreateTopRoundedRect(cardRect, 6);
+                        using var pathCard = CreateTopRoundedRect(cardRect, effRadius);
                         g.FillPath(brushCard, pathCard);
                         using var penCard = new Pen(palette.Border, 1f);
                         g.DrawPath(penCard, pathCard);

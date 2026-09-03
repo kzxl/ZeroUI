@@ -177,7 +177,7 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.Selectable, true);
 
             Font = new Font("Segoe UI", 9f);
-            BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark default
+            BackColor = Color.Transparent;
 
             _vScrollBar = new VScrollBar
             {
@@ -196,6 +196,11 @@ namespace ZeroUI.WinForms.Industrial
 
             MouseWheel += OnMouseWheelScroll;
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                Invalidate();
+            };
         }
 
         [Browsable(false)]
@@ -656,7 +661,8 @@ namespace ZeroUI.WinForms.Industrial
                     var bColor = node.BadgeColor ?? palette.Primary;
                     using var bBrush = new SolidBrush(Color.FromArgb(35, bColor));
                     using var bPen = new Pen(bColor, 1f);
-                    using var bPath = CreateRoundedRect(badgeRect, 4);
+                    int effBadgeRadius = ZeroUIConfig.GetEffectiveRadius(4);
+                    using var bPath = CreateRoundedRect(badgeRect, effBadgeRadius);
                     g.FillPath(bBrush, bPath);
                     g.DrawPath(bPen, bPath);
 

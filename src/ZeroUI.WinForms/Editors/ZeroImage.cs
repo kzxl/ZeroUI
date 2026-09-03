@@ -64,6 +64,7 @@ namespace ZeroUI.WinForms.Editors
             Cursor = Cursors.Hand;
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroUIConfig.ConfigChanged += (s, e) => Invalidate();
         }
 
         [Category("Appearance")]
@@ -232,7 +233,14 @@ namespace ZeroUI.WinForms.Editors
             var palette = ZeroTheme.Colors;
             Rectangle clientRect = new Rectangle(0, 0, Width, Height);
 
-            // Calculate Clipping Path
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, clientRect);
+            }
+
+            // 2. Calculate Clipping Path
             using (var clipPath = CreateShapePath(clientRect))
             {
                 g.SetClip(clipPath);
@@ -368,13 +376,14 @@ namespace ZeroUI.WinForms.Editors
                 return path;
             }
 
-            if (_borderRadius <= 0)
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+            if (effRadius <= 0)
             {
                 path.AddRectangle(r);
                 return path;
             }
 
-            int d = _borderRadius * 2;
+            int d = effRadius * 2;
             path.AddArc(r.X, r.Y, d, d, 180, 90);
             path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
             path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);

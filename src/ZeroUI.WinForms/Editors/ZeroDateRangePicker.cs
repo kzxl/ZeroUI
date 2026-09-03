@@ -79,6 +79,11 @@ namespace ZeroUI.WinForms.Editors
             };
 
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                Invalidate();
+            };
         }
 
         [Category("Data")]
@@ -245,10 +250,19 @@ namespace ZeroUI.WinForms.Editors
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var palette = ZeroTheme.Colors;
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            // 1. Box Background & Rounded Border
-            using (var path = CreateRoundedRect(rect, 6))
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
+
+            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+
+            // 2. Box Background & Rounded Border
+            using (var path = CreateRoundedRect(rect, effRadius))
             {
                 using var brushBg = new SolidBrush(palette.Surface);
                 g.FillPath(brushBg, path);

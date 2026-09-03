@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -52,6 +53,7 @@ namespace ZeroUI.WinForms.Industrial
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
             Controls.Add(_contentPanel);
+            ZeroUIConfig.ConfigChanged += (s, e) => Invalidate();
         }
 
         [Category("Appearance")]
@@ -139,10 +141,18 @@ namespace ZeroUI.WinForms.Industrial
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
 
-            // 1. Draw Card Background & Rounded Border
-            using (var path = CreateRoundedRectangle(rect, _borderRadius))
+            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+
+            // 2. Draw Card Background & Rounded Border
+            using (var path = CreateRoundedRectangle(rect, effRadius))
             {
                 using var bgBrush = new SolidBrush(BackColor);
                 g.FillPath(bgBrush, path);

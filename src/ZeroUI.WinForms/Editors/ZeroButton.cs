@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
@@ -45,6 +46,12 @@ namespace ZeroUI.WinForms.Editors
             Size = new Size(130, 36);
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             Cursor = Cursors.Hand;
+
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold);
+                Invalidate();
+            };
         }
 
         [Category("Appearance")]
@@ -111,10 +118,18 @@ namespace ZeroUI.WinForms.Editors
 
             var (bg, fg, border) = GetColors();
 
+            // 1. Fill parent background to eliminate black corner artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
+
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
 
             // Draw Button Body
-            using (var path = CreateRoundedRectangle(rect, _borderRadius))
+            using (var path = CreateRoundedRectangle(rect, effRadius))
             {
                 using var brush = new SolidBrush(bg);
                 g.FillPath(brush, path);

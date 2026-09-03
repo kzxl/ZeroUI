@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
@@ -54,6 +55,13 @@ namespace ZeroUI.WinForms.Editors
             _textBox.KeyDown += TextBox_KeyDown;
 
             Controls.Add(_textBox);
+
+            ZeroUIConfig.ConfigChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                _textBox.Font = ZeroUIConfig.DefaultFont;
+                Invalidate();
+            };
 
             _debounceTimer = new Timer { Interval = _debounceMs };
             _debounceTimer.Tick += (s, e) =>
@@ -141,13 +149,21 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            // 1. Fill parent background to eliminate black corner clipping artifacts
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            using (var brushParent = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(brushParent, ClientRectangle);
+            }
 
-            // 1. Background and Border
+            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+
+            // 2. Background and Border
             Color borderColor = _isFocused ? Color.FromArgb(79, 70, 229) : Color.FromArgb(209, 213, 219);
             float borderWidth = _isFocused ? 1.5f : 1f;
 
-            using (var path = CreateRoundedRectangle(rect, 6))
+            using (var path = CreateRoundedRectangle(rect, effRadius))
             {
                 using var bgBrush = new SolidBrush(BackColor);
                 g.FillPath(bgBrush, path);
