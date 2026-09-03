@@ -34,8 +34,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroGridSearchBar _searchBar = null!;
         private ZeroGridPagination _pagination = null!;
         private TabPage _tabControls = null!;
+        private TabPage _tabMes = null!;
+        private ZeroSteps _mesSteps = null!;
         private ZeroListView _showcaseLog = null!;
         private System.Windows.Forms.Timer? _logGenTimer;
+
 
 
         // HUD Labels
@@ -161,11 +164,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabZero = new TabPage("⚡ ZeroGrid (ZeroUI Core Engine)");
             _tabDgv = new TabPage("🐢 Default DataGridView (VirtualMode)");
             _tabControls = new TabPage("🎨 Components Showcase");
-
+            _tabMes = new TabPage("🏭 MES Production Dashboard");
 
             InitializeZeroGrid();
             InitializeDataGridView();
             InitializeComponentsShowcase();
+            InitializeMesDashboard();
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -176,6 +180,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabControl.TabPages.Add(_tabZero);
             _tabControl.TabPages.Add(_tabDgv);
             _tabControl.TabPages.Add(_tabControls);
+            _tabControl.TabPages.Add(_tabMes);
+
             _tabControl.SelectedIndexChanged += (s, e) =>
             {
                 _scrollFrames = 0;
@@ -806,7 +812,180 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             _logGenTimer.Start();
         }
+
+        private void InitializeMesDashboard()
+        {
+            _tabMes.BackColor = Color.FromArgb(243, 244, 246);
+            _tabMes.Padding = new Padding(16);
+            _tabMes.AutoScroll = true;
+
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = Color.Transparent
+            };
+
+            // ROW 1: Board Info (Left 74%) + Shell Info (Right 26%)
+            var row1 = new Panel { Dock = DockStyle.Top, Height = 210, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 1: Board Info
+            var cardBoard = new ZeroCard
+            {
+                StepNumber = 1,
+                BadgeColor = Color.FromArgb(22, 119, 255),
+                Title = "Thông tin board (Board Information)",
+                Subtitle = "Board sử dụng theo partlist: 026MC02RP2.0",
+                ActionText = "Thông tin xuất kho: Theo trạng thái",
+                Dock = DockStyle.Fill
+            };
+            cardBoard.ActionClicked += (s, e) => ZeroToast.Info(this, "Đang mở chi tiết xuất kho theo trạng thái...");
+
+            // Embedded ZeroGrid for Board materials
+            var gridBoard = new ZeroGridControl
+            {
+                Dock = DockStyle.Fill,
+                Density = GridDensity.Compact,
+                HeaderHeight = 26,
+                Font = new Font("Segoe UI", 9f)
+            };
+
+            gridBoard.Columns.Add(new ZeroColumn("Mã NVL", 140, CellAlignment.Left));
+            gridBoard.Columns.Add(new ZeroColumn("SL Partlist", 100, CellAlignment.Right));
+            gridBoard.Columns.Add(new ZeroColumn("Tồn kho NVL", 120, CellAlignment.Right));
+            gridBoard.Columns.Add(new ZeroColumn("Tồn kho BTP", 120, CellAlignment.Right));
+            gridBoard.DataSource = new ZeroUI.Samples.BenchmarkDemo.Data.MesBoardSource();
+            cardBoard.ContentPanel.Controls.Add(gridBoard);
+
+            // Card 2: Shell Info (Right)
+            var cardShell = new ZeroCard
+            {
+                StepNumber = 2,
+                BadgeColor = Color.FromArgb(124, 58, 237),
+                Title = "Thông tin vỏ (Shell Info)",
+                Dock = DockStyle.Right,
+                Width = 260
+            };
+            var descShell = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 26 };
+            descShell.Add("Phiếu YCVT", "Lịch sản xuất", Color.FromArgb(107, 114, 128));
+            descShell.Add("Mã phiếu", "(Chưa tạo)", Color.FromArgb(156, 163, 175));
+            descShell.Add("Trạng thái", "--", Color.FromArgb(156, 163, 175));
+            cardShell.ContentPanel.Controls.Add(descShell);
+
+            var splitterTop = new Panel { Dock = DockStyle.Right, Width = 12, BackColor = Color.Transparent };
+
+            row1.Controls.Add(cardBoard);
+            row1.Controls.Add(splitterTop);
+            row1.Controls.Add(cardShell);
+
+            // ROW 2: Production Line Workflow (ZeroSteps)
+            var row2 = new Panel { Dock = DockStyle.Top, Height = 145, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            var cardSteps = new ZeroCard
+            {
+                StepNumber = 3,
+                BadgeColor = Color.FromArgb(22, 119, 255),
+                Title = "Thông tin trên chuyền sản xuất (Production Line Workflow)",
+                Dock = DockStyle.Fill
+            };
+
+            _mesSteps = new ZeroSteps { Dock = DockStyle.Fill };
+            _mesSteps.SetSteps(new[]
+            {
+                new ZeroStepItem { Key = "ASSY", Title = "Thông tin lắp ráp", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.InProgress, Glyph = ZeroStepGlyph.Gear },
+                new ZeroStepItem { Key = "QC", Title = "Thông tin QC", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.Completed, Glyph = ZeroStepGlyph.Checkmark },
+                new ZeroStepItem { Key = "WH", Title = "Số lượng nhập kho", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.Waiting, Glyph = ZeroStepGlyph.Warehouse }
+            });
+
+            _mesSteps.StepClicked += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Đã chọn công đoạn: {e.Step.Title} | Sản lượng hiện tại: {e.Step.Quantity:N0}");
+            };
+
+            cardSteps.ContentPanel.Controls.Add(_mesSteps);
+            row2.Controls.Add(cardSteps);
+
+            // ROW 3: Summary & Product Specifications
+            var row3 = new Panel { Dock = DockStyle.Top, Height = 155, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 3A: Summary
+            var cardSummary = new ZeroCard
+            {
+                StepNumber = 4,
+                BadgeColor = Color.FromArgb(22, 119, 255),
+                Title = "Thông tin tổng hợp (Summary)",
+                Dock = DockStyle.Left,
+                Width = 420
+            };
+            var descSummary = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 28 };
+            descSummary.Add("Số lượng KH / thực nhập", "0 / 0", Color.FromArgb(17, 24, 39));
+            descSummary.Add("Trễ hạn", "Không", Color.FromArgb(22, 163, 74), isHighlighted: true);
+            descSummary.Add("Nguyên nhân", "--", Color.FromArgb(107, 114, 128));
+            cardSummary.ContentPanel.Controls.Add(descSummary);
+
+            var splitterBottom = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Card 3B: Product Specifications
+            var cardProduct = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Thông tin sản phẩm (Product Specifications)",
+                Dock = DockStyle.Fill
+            };
+            var descProduct = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 28 };
+            descProduct.Add("Mã sản phẩm", "1030MAX001", Color.FromArgb(17, 24, 39));
+            descProduct.Add("Tên sản phẩm", "B1030 MAX", Color.FromArgb(17, 24, 39));
+            descProduct.Add("BOM / Partlist", "026MC02RP2.0", Color.FromArgb(79, 70, 229));
+            cardProduct.ContentPanel.Controls.Add(descProduct);
+
+            row3.Controls.Add(cardProduct);
+            row3.Controls.Add(splitterBottom);
+            row3.Controls.Add(cardSummary);
+
+            // Top Action Toolbar for Real-time Simulation
+            var rowToolbar = new Panel { Dock = DockStyle.Top, Height = 46, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 8) };
+            var btnSimulateScan = new ZeroButton
+            {
+                Text = "⚡ Giả lập máy quét Barcode / Tín hiệu PLC (+5 Lắp ráp, +4 QC, +3 Nhập kho)",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Size = new Size(520, 36),
+                Location = new Point(0, 2),
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold)
+            };
+            int simAssy = 0;
+            int simQc = 0;
+            int simWh = 0;
+            btnSimulateScan.Click += (s, e) =>
+            {
+                simAssy += 5;
+                if (simAssy >= 5) simQc += 4;
+                if (simQc >= 4) simWh += 3;
+
+                string now = DateTime.Now.ToString("HH:mm:ss");
+                _mesSteps.UpdateStep("ASSY", simAssy, now, ZeroStepStatus.Completed);
+                _mesSteps.UpdateStep("QC", simQc, now, ZeroStepStatus.InProgress);
+                _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? ZeroStepStatus.InProgress : ZeroStepStatus.Waiting);
+
+                descSummary.SetValue("Số lượng KH / thực nhập", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
+                ZeroToast.Success(this, $"PLC Event: Lắp ráp: {simAssy}, QC: {simQc}, Nhập kho: {simWh}");
+            };
+            rowToolbar.Controls.Add(btnSimulateScan);
+
+            // Add rows to mainContainer in top-to-bottom layout
+            mainContainer.Controls.Add(row3);
+            mainContainer.Controls.Add(row2);
+            mainContainer.Controls.Add(row1);
+            mainContainer.Controls.Add(rowToolbar);
+
+            rowToolbar.BringToFront();
+            row1.BringToFront();
+            row2.BringToFront();
+            row3.BringToFront();
+
+            _tabMes.Controls.Add(mainContainer);
+        }
     }
 }
+
 
 
