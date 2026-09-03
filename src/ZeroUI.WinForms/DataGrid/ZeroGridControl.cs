@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Input;
@@ -11,8 +13,10 @@ using ZeroUI.Core.Layout;
 using ZeroUI.Core.Virtualization;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Rendering;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.DataGrid
+
 {
     public class ZeroGridControl : Control
 
@@ -606,7 +610,26 @@ namespace ZeroUI.WinForms.DataGrid
                     SelectedVisualRow = hit.RowIndex;
                 }
             }
+            else if (e.Button == MouseButtons.Right)
+            {
+                var hit = SpatialHitTester.HitTest(
+                    e.X,
+                    e.Y,
+                    _headerHeight,
+                    _rowHeight,
+                    _scrollX,
+                    _scrollY,
+                    GetVisibleColumnWidths(),
+                    _columns.Count,
+                    _dataSource?.TotalRowCount ?? 0);
+
+                if (hit.Region == HitRegion.Header)
+                {
+                    ShowHeaderContextMenu(hit.ColumnIndex, e.Location);
+                }
+            }
         }
+
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -684,7 +707,7 @@ namespace ZeroUI.WinForms.DataGrid
             Invalidate();
         }
 
-        protected virtual async void OnHeaderClicked(int columnIndex)
+        protected virtual void OnHeaderClicked(int columnIndex)
         {
             if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null || _isSorting) return;
 
@@ -696,6 +719,15 @@ namespace ZeroUI.WinForms.DataGrid
                 SortDirection.Descending => SortDirection.None,
                 _ => SortDirection.Ascending
             };
+
+            _ = SortColumnAsync(columnIndex, newDirection);
+        }
+
+        public async Task SortColumnAsync(int columnIndex, SortDirection newDirection)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null || _isSorting) return;
+
+            var col = _columns[columnIndex];
 
             // Reset other columns
             for (int i = 0; i < _columns.Count; i++)
@@ -779,6 +811,151 @@ namespace ZeroUI.WinForms.DataGrid
                 Invalidate();
             }
         }
+
+        public void AutoFitColumnWidth(int columnIndex)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count) return;
+            var col = _columns[columnIndex];
+            int maxW = TextRenderer.MeasureText(col.HeaderText, Font).Width + 32;
+
+            if (_dataSource != null)
+            {
+                int sampleCount = Math.Min(200, _rowIndexMap.ActiveCount);
+                CellValueBuffer buf = new CellValueBuffer();
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    int modelRow = _rowIndexMap[i];
+                    _dataSource.GetCellValue(modelRow, columnIndex, ref buf);
+                    if (buf.Text.Length > 0)
+                    {
+                        int w = TextRenderer.MeasureText(buf.Text.ToString(), Font).Width + 24;
+                        if (w > maxW) maxW = w;
+                    }
+                }
+            }
+
+            col.Width = Math.Max(col.MinWidth, Math.Min(col.MaxWidth, maxW));
+            UpdateScrollBars();
+            Invalidate();
+        }
+
+        public void AutoFitAllColumns()
+        {
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (_columns[i].IsVisible)
+                {
+                    AutoFitColumnWidth(i);
+                }
+            }
+        }
+
+        protected virtual void ShowHeaderContextMenu(int columnIndex, Point location)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null) return;
+            var col = _columns[columnIndex];
+
+            var menu = new ContextMenuStrip
+            {
+                Renderer = new ZeroMenuRenderer(),
+                ShowImageMargin = false,
+                Font = new Font("Segoe UI", 9.5f)
+            };
+
+            // 1. Sort Ascending
+            var itemAsc = new ToolStripMenuItem("▲  Sort Ascending (Tăng dần)", null, (s, e) =>
+            {
+                _ = SortColumnAsync(columnIndex, SortDirection.Ascending);
+            })
+            {
+                Checked = col.SortOrder == SortDirection.Ascending
+            };
+
+            // 2. Sort Descending
+            var itemDesc = new ToolStripMenuItem("▼  Sort Descending (Giảm dần)", null, (s, e) =>
+            {
+                _ = SortColumnAsync(columnIndex, SortDirection.Descending);
+            })
+            {
+                Checked = col.SortOrder == SortDirection.Descending
+            };
+
+            // 3. Clear Sort
+            var itemClear = new ToolStripMenuItem("✕  Clear Sorting (Bỏ sắp xếp)", null, (s, e) =>
+            {
+                _ = SortColumnAsync(columnIndex, SortDirection.None);
+            })
+            {
+                Enabled = col.SortOrder != SortDirection.None
+            };
+
+            menu.Items.Add(itemAsc);
+            menu.Items.Add(itemDesc);
+            menu.Items.Add(itemClear);
+            menu.Items.Add(new ToolStripSeparator());
+
+            // 4. Auto-fit Width
+            var itemFit = new ToolStripMenuItem("↔  Best Fit Column (Tự căn độ rộng cột)", null, (s, e) =>
+            {
+                AutoFitColumnWidth(columnIndex);
+            });
+            var itemFitAll = new ToolStripMenuItem("⇹  Best Fit All Columns (Tự căn tất cả cột)", null, (s, e) =>
+            {
+                AutoFitAllColumns();
+            });
+            menu.Items.Add(itemFit);
+            menu.Items.Add(itemFitAll);
+
+            // 5. Alignment Submenu
+            var itemAlign = new ToolStripMenuItem("⬌  Alignment (Căn lề dữ liệu)");
+            var alignLeft = new ToolStripMenuItem("⬅  Left (Trái)", null, (s, e) => { col.Alignment = CellAlignment.Left; Invalidate(); })
+            {
+                Checked = col.Alignment == CellAlignment.Left
+            };
+            var alignCenter = new ToolStripMenuItem("⬌  Center (Giữa)", null, (s, e) => { col.Alignment = CellAlignment.Center; Invalidate(); })
+            {
+                Checked = col.Alignment == CellAlignment.Center
+            };
+            var alignRight = new ToolStripMenuItem("➡  Right (Phải)", null, (s, e) => { col.Alignment = CellAlignment.Right; Invalidate(); })
+            {
+                Checked = col.Alignment == CellAlignment.Right
+            };
+            itemAlign.DropDownItems.Add(alignLeft);
+            itemAlign.DropDownItems.Add(alignCenter);
+            itemAlign.DropDownItems.Add(alignRight);
+            menu.Items.Add(itemAlign);
+
+            menu.Items.Add(new ToolStripSeparator());
+
+            // 6. Hide Column
+            var itemHide = new ToolStripMenuItem($"👁  Hide '{col.HeaderText}' (Ẩn cột này)", null, (s, e) =>
+            {
+                col.IsVisible = false;
+                UpdateScrollBars();
+                Invalidate();
+            });
+            menu.Items.Add(itemHide);
+
+            // 7. Show All Columns (if any is hidden)
+            bool hasHidden = false;
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (!_columns[i].IsVisible) { hasHidden = true; break; }
+            }
+            if (hasHidden)
+            {
+                var itemShowAll = new ToolStripMenuItem("📋  Show All Columns (Hiện tất cả cột)", null, (s, e) =>
+                {
+                    for (int i = 0; i < _columns.Count; i++) _columns[i].IsVisible = true;
+                    UpdateScrollBars();
+                    Invalidate();
+                });
+                menu.Items.Add(itemShowAll);
+            }
+
+            menu.Show(this, location);
+        }
+
 
         private sealed class FastSortableComparer : System.Collections.Generic.IComparer<int>
         {

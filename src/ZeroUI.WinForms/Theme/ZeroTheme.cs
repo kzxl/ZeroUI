@@ -86,8 +86,10 @@ namespace ZeroUI.WinForms.Theme
         }
 
         public static ZeroThemePalette Colors => _currentMode == ZeroThemeMode.Dark ? Dark : Light;
+        public static ZeroThemePalette Palette => Colors;
 
         public static bool IsDark => _currentMode == ZeroThemeMode.Dark;
+
 
         public static void ToggleTheme()
         {
