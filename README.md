@@ -21,11 +21,13 @@
 Standard Windows desktop controls (such as standard `DataGridView`, WinForms `ToolStrip`, or legacy visual tree controls) suffer from critical performance bottlenecks:
 - **Win32 Handle (`HWND`) Explosion:** Complex views with nested panels, labels, and picture boxes consume hundreds of OS handles, causing severe flicker, lag, and crashing at the 10,000 OS handle limit.
 - **Garbage Collection (GC) Pressure:** Excessive boxing, formatting strings, and allocations during scrolling trigger frequent Gen 0/1/2 GC pauses, causing stutter and frame drops.
+- **GDI Handle Churn:** Recreating `Font`, `Pen`, and `StringFormat` instances inside `OnPaint` invokes Win32 `CreateFontIndirectW`, exhausting the OS GDI handle limit (10,000 handles) and spiking memory churn.
 - **Out-Of-Memory on Big Data:** Standard grids fail or freeze completely when attempting to load 1M to 10M rows.
 
 **ZeroUI** solves these fundamental issues from the ground up:
 * **Zero Allocation (`Zero-Alloc`):** Hot render loops generate **0 bytes** of GC allocations using `Span<T>`, `ReadOnlySpan<T>`, `ArrayPool<T>`, `ref struct`, and unmanaged DIBSection memory buffers.
-* **Single-HWND Architecture:** Composite controls (`ZeroGridControl`, `ZeroSteps`, `ZeroToolbar`, `ZeroTimeline`) maintain 1 top-level OS handle, eliminating handle leaks and rendering 100% flicker-free.
+* **Zero-Allocation Rendering Engine:** Dedicated `ZeroFontCache` (thread-safe binary-keyed font memoization) and `ZeroStringFormats` (immutable singletons) completely eliminate Win32 GDI handle leaks and object churn on 60 FPS repaint cycles.
+* **Single-HWND Architecture:** Composite controls (`ZeroGridControl`, `ZeroSteps`, `ZeroToolbar`, `ZeroTimeline`, `ZeroSideNav`) maintain 1 top-level OS handle, eliminating handle leaks and rendering 100% flicker-free.
 * **Win32 Memory DC DIBSection Engine:** High-speed ClearType GDI text rasterization with unmanaged double buffering and zero-copy `BitBlt` (100% resilient across Remote Desktop, Citrix, and virtual machines).
 * **Enterprise Dual-Runtime Support:** Full native compatibility with legacy **.NET Framework 4.6.2** as well as modern **.NET 8.0 / 9.0**.
 * **Unified Theme Engine:** Built-in **Clean Light Mode** and **Obsidian Dark Mode** with instant reactive switching across all controls.
@@ -89,7 +91,18 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 * **`ZeroBarChart`**: Specialized Column and Bar comparison chart with grouped and stacked modes (`IsHorizontal = true/false`, `IsStacked = true/false`), rounded column caps, and custom value formatting (`ValuePrefix`, `ValueSuffix`).
 * **`ZeroLineChart`**: Specialized Line and Area trend chart featuring smooth Catmull-Rom spline curves (`IsCurved = true`), vertical translucent area gradient fills with bottom fade, point markers, and interactive hover tooltips.
 * **`ZeroPieChart`**: Categorical distribution chart supporting full Pie and Donut rings (`IsDonut = true`, `DonutHoleRatio = 0.58f`), center KPI summary metrics (`CenterTitle`, `CenterValue`), radial hover slice explosion (8px pop-out effect), and percentage calculations.
-* **Interactive Tooltips & Legend Toggle:** Hovering any series reveals a cursor-following halo card displaying category names, values, and percentage contributions. Clicking any series in the legend dynamically toggles its visibility on/off with immediate zero-alloc redraw.
+* **`ZeroCandlestickChart`**: High-performance OHLC candlestick chart with volume histogram, moving average (MA) curve, interactive crosshair HUD inspection, and bullish/bearish color theming.
+* **`ZeroRadarChart`**: Multi-dimensional radar and spider chart with customizable concentric web rings, radial spokes, polygonal series fills, vertex markers, and tooltips.
+* **`ZeroFunnelChart`**: Conversion funnel chart with sleek trapezoid stages, percentage drops, stage descriptions, and automated inward yield rate computation.
+* **`ZeroWaterfallChart`**: Financial and variance waterfall chart visualizing cumulative effects of sequential positive and negative values with bridge connectors and total columns.
+
+---
+
+### 📦 Smart Warehouse & Logistics Subsystem (`ZeroUI.WinForms.Warehouse`)
+* **`ZeroBarcodeScanControl`**: Industrial barcode & QR code scanner workstation control with hardware USB wedge scanner timing detection (<35ms delta auto-detection), duplicate scan suppression, instant audio chime, and parsed metadata cards.
+* **`ZeroInventoryCard`**: Industrial stock telemetry card featuring the Three Golden Metrics (Available, Waiting, Reserved), dynamic segment distribution bar, and warehouse location info.
+* **`ZeroLotSelector`**: Automated FIFO (First-In, First-Out) and FEFO (First-Expired, First-Out) lot allocation selector with quarantine/expiry locks, available quantity counters, and 1-Way Data Flow.
+* **`ZeroStockMovementTimeline`**: Industrial batch traceability timeline tree visualizing lot lifecycle from receipt to production dispatch, sales shipment, and stock balance.
 
 ---
 
@@ -100,7 +113,7 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 
 * **`ZeroLedTower`**: Industrial Andon Signal Tower Light control with Red, Amber, Green, and Blue lamp segments. Features 3D cylindrical glass reflection, mounting pole/base, and configurable Solid, Blinking (1Hz/2Hz flash), or Off states for real-time SCADA machine status.
 * **`ZeroTank3D`**: Industrial 3D cylindrical fluid storage tank with animated sinusoidal liquid surface waves, glass sight-gauge tube, graduated level markings, and High/Low limit sensor trips.
-* **`ZeroSevenSegment`**: Industrial 7-Segment Digital LED Display for Takt time and production counters with polygon beveled segment geometry, authentic segment ghosting, customizable colors (Neon Cyan, Emerald, Amber), decimals, and colons.
+* **`ZeroSevenSegment`**: Industrial 7-Segment Digital LED Display for Takt time and production counters with polygon beveled segment geometry, authentic segment ghosting, custom slant angles (0° to 15°), smart blinking colon, unit badges, and customizable colors (Neon Cyan, Emerald, Amber).
 * **`ZeroLinearGauge`**: Industrial linear level, temperature, and pressure gauge with multi-zone threshold indicators (Normal, Warning, Critical), tick marks, and real-time floating value readout.
 * **`ZeroGauge`**: Anti-aliased circular progress dial for **OEE %**, Yield Rate, and equipment efficiency.
 * **`ZeroTaktTimer`**: Lean manufacturing Takt Time & Cycle Timer with circular countdown progress arc, digital remaining time readout, planned vs. actual cycle time comparison, and automatic color transitions (On-Track Green &rarr; Warning Amber &rarr; Overdue Flashing Red).
@@ -118,6 +131,8 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 
 * **`ZeroSteps`**: Data-driven manufacturing workflow control with vector glyph nodes (Gear ⚙, Checkmark ✔, Warehouse 🏠), Title, Quantity, Timestamp, and dynamic horizontal transition arrows (`→`). Supports real-time `UpdateStep(...)` telemetry in 0.01 ms and `StepClicked` events.
 * **`ZeroCard`**: Modern rounded container card with Step Number Badge (`1`, `2`, `3`...), Title, Subtitle, Action Link, and inner `ContentPanel`.
+* **`ZeroGridCard`**: High-performance composite card combining responsive data grid telemetry, status badges, progress bars, alert highlights, and search filter.
+* **`ZeroWorkflowCard`**: Composite multi-stage manufacturing workflow pipeline card with icon glyph nodes, real-time quantity telemetry, and transition chevrons.
 * **`ZeroTimeline`**: Vertical lot-tracking and audit trail journal (*Material Inbound &rarr; SMT &rarr; Assembly &rarr; QC &rarr; Packaging*).
 * **`ZeroStatusBadge`**: Real-time machine status indicator with smooth expanding pulse wave ring animation (`Running`, `Idle`, `Alarm`, `Processing`, `Offline`).
 * **`ZeroAlertBanner`**: Dismissible or sticky alert banner for factory line stoppage, feeder shortage, or operator broadcasts.
@@ -125,15 +140,15 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 #### Smart Warehouse & Quality Inspection Center
 ![WMS Warehouse Rack](docs/images/05_wms_warehouse_rack.png)
 
-* **`ZeroWarehouseRack`**: 2D Smart Warehouse Storage Rack visualizer (Bay $\times$ Level $\times$ Bin) showing occupancy (Empty, Partial, Full, Quarantine), SKU info, Lot number, hover inspection, and click events.
-* **`ZeroSpcChart`**: Statistical Process Control (SPC) X-Bar Chart for Six Sigma quality inspection. Automatically computes Mean ($\bar{X}$), Upper/Lower Control Limits ($UCL = \bar{X} + 3\sigma$, $LCL = \bar{X} - 3\sigma$), $C_{pk}$ index, and flags Western Electric rule violations.
+* **`ZeroWarehouseRack`**: 2D Smart Warehouse Storage Rack visualizer (Bay $\times$ Level $\times$ Bin) showing occupancy (Empty, Available, Full, Quarantine), SKU info, Lot number, collision-free adaptive stacked & side-by-side bin code and quantity layout with pill badges.
+* **`ZeroSpcChart`**: Statistical Process Control (SPC) X-Bar Chart for Six Sigma quality inspection. Automatically computes Mean ($\bar{X}$), Upper/Lower Control Limits ($UCL = \bar{X} + 3\sigma$, $LCL = \bar{X} - 3\sigma$), $C_{pk}$ index, non-overlapping header layout, and flags Western Electric rule violations.
 * **`ZeroKanbanBoard`**: Electronic Shopfloor Kanban Dispatching Board for MES manufacturing workflows. Features configurable stage columns, Work-In-Progress (WIP) limit enforcement, priority tags, and interactive card transitions.
 
 #### Advanced Enterprise Hierarchy & Thermal Analysis
 ![Advanced Enterprise Suite](docs/images/06_advanced_treelist_heatmap.png)
 
 * **`ZeroTreeList`**: High-performance virtualized hierarchical Tree & Multi-Level BOM TreeList control with expand/collapse chevrons (`▶`/`▼`), tri-state cascading checkboxes (`Checked`, `Unchecked`, `Indeterminate`), hierarchy connecting guidelines, and instant node text filtering.
-* **`ZeroHeatmap`**: Industrial 2D Matrix Heatmap for machine throughput, line load, and thermal distribution with multi-stop color gradients (`Industrial`, `Viridis`, `CoolWarm`, `Emerald`), cell hover glow, floating tooltip inspection, and min/max gradient legend.
+* **`ZeroHeatmap`**: Industrial 2D Matrix Heatmap for machine throughput, line load, and thermal distribution with multi-stop color gradients (`Industrial`, `Viridis`, `CoolWarm`, `Emerald`), cell hover glow, floating tooltip inspection, and zero-bitmap gradient legend.
 
 ---
 
@@ -150,7 +165,7 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 * **`ZeroStatistic`**: KPI executive dashboard metric card with prefixes, suffixes, and trend indicators (▲ / ▼).
 * **`ZeroProgressBar`**: Modern flat progress bar with percentage overlay and indeterminate shimmer.
 * **`ZeroSearchBox`**: Standalone input box with search magnifying glass, clear button, and debounced text change event.
-* **`ZeroImage`**: High-performance anti-aliased image and avatar control with rounded corners, circular avatars (`IsCircle = true`), auto initials fallback ("VP"), operator status badges (Online, Busy, Away, Offline), and click-to-zoom modal Lightbox preview.
+* **`ZeroImage`**: High-performance anti-aliased image and avatar control with rounded corners, circular avatars (`IsCircle = true`), auto initials fallback ("VP"), operator status badges (Online, Busy, Away, Offline), and interactive Lightbox modal zoom preview with pan, drag, wheel zoom, clipboard copy, and file save.
 * **`ZeroLookup`**: Virtualized searchable autocomplete dropdown & lookup box with non-activating flyweight popup, instant debounced filtering across 10,000+ items, multi-property display (Code, Name, Category), clear button (`✕`), and keyboard navigation.
 * **`ZeroDateRangePicker`**: Enterprise dual-date range selector (From Date &rarr; To Date) with 1-click presets (*Today*, *Yesterday*, *Last 7 Days*, *Last 30 Days*, *This Month*, *Last Month*, *All Time*) and visual calendar range highlight.
 
@@ -162,9 +177,10 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 ---
 
 ### 🪟 Overlays & Navigation Subsystem (`ZeroUI.WinForms.Overlays`)
+* **`ZeroSideNav`**: Enterprise collapsible vertical navigation bar with category headers, icon glyphs, notification badges, active state indicators, and bottom rail utility footer.
+* **`ZeroTabControl`**: Modern anti-aliased flat TabControl supporting both **Horizontal** and **Vertical** tab layout orientation (`Orientation = TabOrientation.Vertical`), `Underline`, `Pill`, and `Card` styles, notification badges, icons, and 100% native Obsidian Dark / Clean Light theming.
 * **`ZeroContextMenu`**: Modern anti-aliased context menu strip with rounded pill highlights, danger actions (soft red hover for delete/cancel), shortcut key alignments, badge tags, checkable items, submenus, and 100% theme reactivity.
 * **`ZeroModal`**: Enterprise modal dialog suite replacing legacy `MessageBox.Show`; features 52px halo semantic badges (`Success`, `Warning`, `Error`, `Info`, `Confirm`, `Prompt`), rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), ESC key, and action buttons.
-* **`ZeroTabControl`**: Modern anti-aliased flat TabControl and container eliminating Win32 3D gray border flicker, supporting `Underline`, `Pill`, and `Card` styles, notification badges, icons, and 100% native Obsidian Dark / Clean Light theming.
 * **`ZeroToolbar`**: Flat, single-HWND enterprise action and menu bar with primary buttons, glyphs, dividers, badge counters, and elastic right spacers.
 * **`ZeroDrawer`**: Smooth 60 FPS right-docked slide-out panel for deep Master-Detail inspection without leaving the active grid.
 * **`ZeroToast`**: Non-blocking floating toast notifications with smooth fade-in/fade-out that do not steal keyboard focus (`WS_EX_NOACTIVATE`).
@@ -173,6 +189,8 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 ---
 
 ### 🎨 Foundation & Theme Engine (`ZeroUI.WinForms.Theme`, `Rendering`)
+* **`ZeroFontCache`**: High-performance thread-safe font memoization engine that eliminates Win32 `CreateFontIndirectW` calls in hot rendering paths.
+* **`ZeroStringFormats`**: Immutable pre-allocated GDI+ string formats eliminating unmanaged native handle leaks.
 * **`ZeroTheme`**: Unified Design Token & Theme Engine supporting **Clean Light Mode** and **Obsidian Dark Mode** with reactive global `ThemeChanged` event.
 * **`ZeroUIConfig`**: Global configuration singleton for application-wide corner radius (`ZeroUIConfig.UseRoundedCorners`, `ToggleRoundedCornersAnimated`) and typography scaling (`ZeroUIConfig.FontFamilyName`).
 * **`MemoryDIBSection`**: Direct Win32 Memory DC surface avoiding GDI object leaks and double buffering artifacts.
@@ -194,12 +212,13 @@ ZeroUI/
 │   │   └── Layout/                               # Cell bounds, Viewport culling algorithms
 │   ├── ZeroUI.WinForms/                          # Standardized WinForms control suite
 │   │   ├── DataGrid/                             # [Subsystem] ZeroGridControl, SearchBar, Pagination, Exporter
-│   │   ├── Charts/                               # [Subsystem] ZeroChart, ZeroBarChart, ZeroLineChart, ZeroPieChart
-│   │   ├── Industrial/                           # [Subsystem] ZeroSteps, ZeroCard, ZeroGauge, ZeroTimeline...
-│   │   ├── Editors/                              # [Subsystem] ZeroButton, ZeroDatePicker, ZeroSwitch, ZeroTag...
-│   │   ├── Overlays/                             # [Subsystem] ZeroToolbar, ZeroDrawer, ZeroModal, ZeroToast...
+│   │   ├── Charts/                               # [Subsystem] ZeroChart, Candlestick, Radar, Funnel, Waterfall...
+│   │   ├── Warehouse/                            # [Subsystem] BarcodeScanControl, InventoryCard, LotSelector, Timeline...
+│   │   ├── Industrial/                           # [Subsystem] ZeroSteps, ZeroCard, ZeroGridCard, ZeroWorkflowCard...
+│   │   ├── Editors/                              # [Subsystem] ZeroButton, ZeroDatePicker, ZeroSwitch, ZeroImage...
+│   │   ├── Overlays/                             # [Subsystem] ZeroSideNav, ZeroTabControl, ZeroToolbar, ZeroModal...
 │   │   ├── Theme/                                # [Foundation] ZeroTheme, Token Engine (Light / Dark)
-│   │   ├── Rendering/                            # [Foundation] Win32 Memory DC DIBSection double buffer
+│   │   ├── Rendering/                            # [Foundation] ZeroFontCache, ZeroStringFormats, Win32 Memory DC
 │   │   └── Native/                               # Win32 GDI32/User32 P/Invoke interop layer
 │   └── ZeroUI.Samples.BenchmarkDemo/             # Comprehensive benchmark & showcase application
 │       ├── Forms/                                # MainForm testbed with telemetry HUD & tabs
@@ -238,4 +257,3 @@ dotnet run --project src/ZeroUI.Samples.BenchmarkDemo/ZeroUI.Samples.BenchmarkDe
 
 ## 7. License
 MIT License. Free for commercial, industrial, enterprise, and open-source use.
-
