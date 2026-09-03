@@ -233,7 +233,7 @@ namespace ZeroUI.WinForms.Controls
 
             int clientH = ClientSize.Height - _headerHeight;
             int clientW = ClientSize.Width;
-            int totalRows = _dataSource?.TotalRowCount ?? 0;
+            int totalRows = _rowIndexMap.ActiveCount;
             int totalH = totalRows * _rowHeight;
             int totalW = GetTotalColumnsWidth();
 
@@ -278,11 +278,12 @@ namespace ZeroUI.WinForms.Controls
                 _dibSection.Clear(_rowBgColor);
 
                 int totalCols = _columns.Count;
-                int totalRows = _dataSource?.TotalRowCount ?? 0;
+                int totalRows = _rowIndexMap.ActiveCount;
                 int[] colWidths = GetVisibleColumnWidths();
 
                 // 1. Render Cells
                 if (_dataSource != null && totalRows > 0 && totalCols > 0)
+
                 {
                     _dibSection.SelectFont(_hFont);
 
@@ -604,11 +605,152 @@ namespace ZeroUI.WinForms.Controls
             }
         }
 
+        [Browsable(false)]
+        public int RowCount => _rowIndexMap.ActiveCount;
+
+        public int GetModelRowIndex(int visualRowIndex)
+        {
+            if (visualRowIndex >= 0 && visualRowIndex < _rowIndexMap.ActiveCount)
+            {
+                return _rowIndexMap[visualRowIndex];
+            }
+            return -1;
+        }
+
+        public void ApplyFilter(Func<int, bool>? predicate)
+        {
+            if (_dataSource == null) return;
+            if (predicate == null)
+            {
+                _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+            }
+            else
+            {
+                _rowIndexMap.Filter(predicate, _dataSource.TotalRowCount);
+            }
+            _scrollY = 0;
+            _selectedVisualRow = -1;
+            UpdateScrollBars();
+            Invalidate();
+        }
+
         protected virtual void OnHeaderClicked(int columnIndex)
         {
-            // Default sort: if column has SortOrder, toggle it
-            // Subclasses or users can hook into sorting
+            if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null) return;
+
+            var col = _columns[columnIndex];
+            SortDirection newDirection = col.SortOrder switch
+            {
+                SortDirection.None => SortDirection.Ascending,
+                SortDirection.Ascending => SortDirection.Descending,
+                SortDirection.Descending => SortDirection.None,
+                _ => SortDirection.Ascending
+            };
+
+            // Reset other columns
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (i != columnIndex) _columns[i].SortOrder = SortDirection.None;
+            }
+            col.SortOrder = newDirection;
+
+            if (newDirection == SortDirection.None)
+            {
+                _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+            }
+            else
+            {
+                _rowIndexMap.Sort(new GridColumnComparer(_dataSource, columnIndex, newDirection));
+            }
+
+            Invalidate();
         }
+
+        private sealed class GridColumnComparer : System.Collections.Generic.IComparer<int>
+        {
+            private readonly IZeroVirtualSource _source;
+            private readonly int _columnIndex;
+            private readonly SortDirection _direction;
+
+            public GridColumnComparer(IZeroVirtualSource source, int columnIndex, SortDirection direction)
+            {
+                _source = source;
+                _columnIndex = columnIndex;
+                _direction = direction;
+            }
+
+            public int Compare(int rowA, int rowB)
+            {
+                CellValueBuffer bufA = new CellValueBuffer();
+                CellValueBuffer bufB = new CellValueBuffer();
+                _source.GetCellValue(rowA, _columnIndex, ref bufA);
+                _source.GetCellValue(rowB, _columnIndex, ref bufB);
+
+                int cmp = bufA.Text.CompareTo(bufB.Text, StringComparison.OrdinalIgnoreCase);
+                return _direction == SortDirection.Ascending ? cmp : -cmp;
+            }
+        }
+
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.Control && e.KeyCode == Keys.C)
+            {
+                CopySelectionToClipboard();
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Up && _selectedVisualRow > 0)
+            {
+                SelectedVisualRow--;
+                EnsureRowVisible(_selectedVisualRow);
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Down && _selectedVisualRow < _rowIndexMap.ActiveCount - 1)
+            {
+                SelectedVisualRow++;
+                EnsureRowVisible(_selectedVisualRow);
+                e.Handled = true;
+            }
+        }
+
+        public void EnsureRowVisible(int visualRowIndex)
+        {
+            if (visualRowIndex < 0 || visualRowIndex >= _rowIndexMap.ActiveCount) return;
+            int rowTop = visualRowIndex * _rowHeight;
+            int rowBottom = rowTop + _rowHeight;
+            int viewH = ClientSize.Height - _headerHeight;
+
+            if (rowTop < _scrollY)
+            {
+                ScrollY = rowTop;
+            }
+            else if (rowBottom > _scrollY + viewH)
+            {
+                ScrollY = rowBottom - viewH;
+            }
+        }
+
+        public void CopySelectionToClipboard()
+        {
+            if (_selectedVisualRow < 0 || _selectedVisualRow >= _rowIndexMap.ActiveCount || _dataSource == null) return;
+
+            int modelRow = _rowIndexMap[_selectedVisualRow];
+            CellValueBuffer buf = new CellValueBuffer();
+            var sb = new System.Text.StringBuilder();
+
+            for (int c = 0; c < _columns.Count; c++)
+            {
+                if (!_columns[c].IsVisible) continue;
+                if (c > 0) sb.Append('\t');
+                buf.Reset();
+                _dataSource.GetCellValue(modelRow, c, ref buf);
+                sb.Append(buf.Text.ToString());
+            }
+
+            try { Clipboard.SetText(sb.ToString()); } catch { }
+        }
+
 
         protected override void Dispose(bool disposing)
         {

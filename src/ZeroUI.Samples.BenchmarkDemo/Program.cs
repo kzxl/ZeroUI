@@ -198,9 +198,50 @@ namespace ZeroUI.Samples.BenchmarkDemo
             Console.WriteLine($"| Số lần GC Gen 0 kích hoạt          | N/A                        | {ultraGen0Delta,8} lần            | Triệt tiêu 100%  |");
             Console.WriteLine($"| Tổng bộ nhớ RAM tiêu thụ           | > 2.5 GB (Nguy cơ Crash)   | {ultraFinalRam / 1024 / 1024,8} MB            | Chỉ tốn 40MB Map |");
 
+            // 4. Benchmarking Grid Toolkits (Sort, Filter, CSV Export)
+            Console.WriteLine("\n>>> 🛠️ BENCHMARKING GRID TOOLKITS (SORT, FILTER, STREAMING EXPORT) <<<");
+            Console.WriteLine("--------------------------------------------------------------------------------");
+
+            // Sort 1,000,000 rows
+            var sortMap = new RowIndexMap(1_000_000);
+            sortMap.ResetIdentity(1_000_000);
+            var sortDataset = MockDataGenerator.Generate(1_000_000);
+
+            var sortSw = Stopwatch.StartNew();
+            sortMap.Sort((rowA, rowB) => string.Compare(sortDataset[rowA].ItemCode, sortDataset[rowB].ItemCode, StringComparison.OrdinalIgnoreCase));
+            sortSw.Stop();
+            Console.WriteLine($"[1] Sort 1,000,000 rows on RowIndexMap: {sortSw.ElapsedMilliseconds} ms (Tức thì)");
+
+            // Filter 1,000,000 rows
+            var filterSw = Stopwatch.StartNew();
+            sortMap.Filter(row => sortDataset[row].ItemCode.IndexOf("005", StringComparison.OrdinalIgnoreCase) >= 0, 1_000_000);
+            filterSw.Stop();
+            Console.WriteLine($"[2] Filter 1,000,000 rows matching query: {filterSw.ElapsedMilliseconds} ms (Khớp {sortMap.ActiveCount:N0} dòng)");
+
+            // Export 100,000 rows to CSV
+            string tempCsv = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "zeroui_bench.csv");
+            var exportSw = Stopwatch.StartNew();
+            using (var stream = new System.IO.FileStream(tempCsv, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 65536))
+            using (var writer = new System.IO.StreamWriter(stream, System.Text.Encoding.UTF8, 65536))
+            {
+                writer.WriteLine("ID,Mã Vật Tư,Tên Vật Tư,Số Lượng,Đơn Giá,Thành Tiền,Số Lô,Trạng Thái");
+                for (int i = 0; i < 100_000; i++)
+                {
+                    var item = sortDataset[i];
+                    writer.WriteLine($"{item.Id},{item.ItemCode},\"{item.ItemName}\",{item.Quantity},{item.UnitPrice:F2},{item.TotalAmount:F2},{item.LotNumber},{item.Status}");
+                }
+                writer.Flush();
+            }
+            exportSw.Stop();
+            double exportThroughput = 100_000.0 / exportSw.Elapsed.TotalSeconds;
+            Console.WriteLine($"[3] Streaming CSV Export 100,000 rows: {exportSw.ElapsedMilliseconds} ms ({exportThroughput:N0} dòng/giây)");
+            try { System.IO.File.Delete(tempCsv); } catch { }
+
+
             Console.WriteLine("\n================================================================================");
             Console.WriteLine("✅ Benchmark hoàn tất thành công 100%!");
             Console.WriteLine("================================================================================");
+
 
         }
     }

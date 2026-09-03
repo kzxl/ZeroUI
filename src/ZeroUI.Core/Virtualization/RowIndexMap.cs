@@ -57,6 +57,30 @@ namespace ZeroUI.Core.Virtualization
             Array.Sort(_map, 0, _activeCount, new ComparisonComparer<int>(comparison));
         }
 
+        public void Sort(System.Collections.Generic.IComparer<int> comparer)
+        {
+            if (_activeCount <= 1) return;
+            Array.Sort(_map, 0, _activeCount, comparer);
+        }
+
+
+        public void Filter(Func<int, bool> predicate, int totalModelCount)
+        {
+            EnsureCapacity(totalModelCount);
+            int count = 0;
+            for (int i = 0; i < totalModelCount; i++)
+            {
+                if (predicate(i))
+                {
+                    _map[count++] = i;
+                }
+            }
+            _activeCount = count;
+        }
+
+        public Span<int> AsSpan() => new Span<int>(_map, 0, _activeCount);
+
+
         private sealed class ComparisonComparer<T> : System.Collections.Generic.IComparer<T>
         {
             private readonly Comparison<T> _comparison;
