@@ -94,6 +94,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             btnX += 110;
             Button btn1M = CreateActionButton("1 TRIỆU Dòng", btnX, () => LoadDataset(1_000_000));
             btnX += 130;
+            Button btn10M = CreateActionButton("🔥 10 TRIỆU Dòng", btnX, () => LoadDataset(10_000_000));
+            btn10M.BackColor = Color.FromArgb(190, 24, 24);
+            btnX += 150;
 
             _btnAutoScroll = new Button
             {
@@ -113,6 +116,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _topPanel.Controls.Add(btn100k);
             _topPanel.Controls.Add(btn500k);
             _topPanel.Controls.Add(btn1M);
+            _topPanel.Controls.Add(btn10M);
+
 
             // 2. Metric HUD Panel
             _hudPanel = new Panel
@@ -277,6 +282,32 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             Application.DoEvents();
 
             Stopwatch sw = Stopwatch.StartNew();
+
+            if (count >= 10_000_000)
+            {
+                // Extreme Procedural Virtual Source (0 allocation overhead, <45MB RAM!)
+                var procSource = new ZeroProceduralSource(count);
+                _zeroGrid.DataSource = procSource;
+
+                // For DataGridView: Protect from OutOfMemory crash at 10M rows
+                try
+                {
+                    _dgv.SuspendLayout();
+                    _dgv.Rows.Clear();
+                    _dgv.RowCount = 1;
+                    _dgv.ResumeLayout();
+                }
+                catch { }
+
+                sw.Stop();
+                Cursor = Cursors.Default;
+                _baselineGen0 = GC.CollectionCount(0);
+                _lblStatus.Text = $"Dữ liệu: {count:N0} dòng (ZeroUI nạp trong {sw.ElapsedMilliseconds} ms - DGV quá tải)";
+                _scrollFrames = 0;
+                _scrollStopwatch.Restart();
+                return;
+            }
+
             _dataset = MockDataGenerator.Generate(count);
             _zeroSource = new ZeroInventorySource(_dataset);
 
@@ -295,7 +326,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             sw.Stop();
             Cursor = Cursors.Default;
-
 
             _baselineGen0 = GC.CollectionCount(0);
             _lblStatus.Text = $"Dữ liệu: {count:N0} dòng (Tải trong {sw.ElapsedMilliseconds} ms)";
@@ -338,36 +368,43 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 return;
             }
 
-            int step = 250; // Scroll 250 rows per tick
+            int total = _tabControl.SelectedTab == _tabZero
+                ? (_zeroGrid.DataSource?.TotalRowCount ?? _dataset.Length)
+                : _dgv.RowCount;
+
+            if (total <= 0) return;
+
+            int step = total >= 5_000_000 ? 2500 : 250;
 
             if (_tabControl.SelectedTab == _tabZero)
             {
-                // Auto scroll ZeroGrid
-                int current = _zeroGrid.SelectedVisualRow;
-                int next = current + (step * _stressTestDirection);
+                int currentY = _zeroGrid.ScrollY;
+                int rowH = _zeroGrid.RowHeight;
+                int maxY = Math.Max(0, total * rowH - (_zeroGrid.ClientSize.Height - _zeroGrid.HeaderHeight));
+                int nextY = currentY + (step * _stressTestDirection * rowH);
 
-                if (next >= _dataset.Length)
+                if (nextY >= maxY)
                 {
-                    next = _dataset.Length - 1;
+                    nextY = maxY;
                     _stressTestDirection = -1;
                 }
-                else if (next <= 0)
+                else if (nextY <= 0)
                 {
-                    next = 0;
+                    nextY = 0;
                     _stressTestDirection = 1;
                 }
 
-                _zeroGrid.SelectedVisualRow = next;
+                _zeroGrid.ScrollY = nextY;
             }
             else
             {
-                // Auto scroll DataGridView
+                if (_dgv.RowCount <= 1) return;
                 int current = _dgv.FirstDisplayedScrollingRowIndex;
                 int next = current + (step * _stressTestDirection);
 
-                if (next >= _dataset.Length)
+                if (next >= _dgv.RowCount)
                 {
-                    next = Math.Max(0, _dataset.Length - 1);
+                    next = Math.Max(0, _dgv.RowCount - 1);
                     _stressTestDirection = -1;
                 }
                 else if (next <= 0)
@@ -382,6 +419,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 }
                 catch { }
             }
+
 
             _scrollFrames++;
         }

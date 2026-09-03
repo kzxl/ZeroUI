@@ -58,14 +58,24 @@ namespace ZeroUI.WinForms.Rendering
             NativeMethods.SetBkMode(_hMemDC, NativeMethods.TRANSPARENT);
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static uint ColorRefToDIBPixel(uint colorRef)
+        {
+            // Win32 COLORREF is 0x00BBGGRR
+            // Top-down 32bpp DIB Section in memory (x86 little endian) is [B, G, R, 0] = 0x00RRGGBB
+            uint r = colorRef & 0xFF;
+            uint g = (colorRef >> 8) & 0xFF;
+            uint b = (colorRef >> 16) & 0xFF;
+            return (r << 16) | (g << 8) | b;
+        }
+
         public void Clear(uint colorRef)
         {
-            if (_hMemDC == IntPtr.Zero || _width <= 0 || _height <= 0) return;
+            if (_pBits == null || _width <= 0 || _height <= 0) return;
 
-            RECT rc = new RECT(0, 0, _width, _height);
-            IntPtr hbr = NativeMethods.CreateSolidBrush(colorRef);
-            NativeMethods.FillRect(_hMemDC, ref rc, hbr);
-            NativeMethods.DeleteObject(hbr);
+            uint pixel = ColorRefToDIBPixel(colorRef);
+            int totalPixels = _width * _height;
+            new Span<uint>(_pBits, totalPixels).Fill(pixel);
         }
 
         private IntPtr _hOldFont;
@@ -82,13 +92,25 @@ namespace ZeroUI.WinForms.Rendering
 
         public void FillRectangle(int x, int y, int width, int height, uint colorRef)
         {
-            if (_hMemDC == IntPtr.Zero || width <= 0 || height <= 0) return;
+            if (_pBits == null || width <= 0 || height <= 0 || _width <= 0 || _height <= 0) return;
 
-            RECT rc = new RECT(x, y, x + width, y + height);
-            IntPtr hbr = NativeMethods.CreateSolidBrush(colorRef);
-            NativeMethods.FillRect(_hMemDC, ref rc, hbr);
-            NativeMethods.DeleteObject(hbr);
+            int right = Math.Min(_width, x + width);
+            int bottom = Math.Min(_height, y + height);
+            int startX = Math.Max(0, x);
+            int startY = Math.Max(0, y);
+            int fillW = right - startX;
+            if (fillW <= 0 || startY >= bottom) return;
+
+            uint pixel = ColorRefToDIBPixel(colorRef);
+            uint* basePtr = (uint*)_pBits;
+
+            for (int line = startY; line < bottom; line++)
+            {
+                uint* linePtr = basePtr + (line * _width) + startX;
+                new Span<uint>(linePtr, fillW).Fill(pixel);
+            }
         }
+
 
         public void DrawText(ReadOnlySpan<char> text, ref RECT rect, uint textColor, CellAlignment alignment, int textHeight)
         {

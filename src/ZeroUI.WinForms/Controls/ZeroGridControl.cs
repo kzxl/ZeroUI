@@ -121,6 +121,28 @@ namespace ZeroUI.WinForms.Controls
             set { _rowHeight = Math.Max(16, value); UpdateScrollBars(); Invalidate(); }
         }
 
+        public int ScrollY
+        {
+            get => _scrollY;
+            set
+            {
+                int maxScroll = Math.Max(0, (_dataSource?.TotalRowCount ?? 0) * _rowHeight - (ClientSize.Height - _headerHeight));
+                int clamped = Math.Max(0, Math.Min(maxScroll, value));
+                if (_scrollY != clamped)
+                {
+                    _scrollY = clamped;
+                    UpdateScrollBars();
+                    Invalidate();
+                }
+            }
+        }
+
+        public void ScrollToRow(int visualRowIndex)
+        {
+            if (visualRowIndex < 0) visualRowIndex = 0;
+            ScrollY = visualRowIndex * _rowHeight;
+        }
+
         public int SelectedVisualRow
         {
             get => _selectedVisualRow;
@@ -133,6 +155,7 @@ namespace ZeroUI.WinForms.Controls
                 }
             }
         }
+
 
         public int SelectedDataRowIndex
         {
