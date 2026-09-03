@@ -65,7 +65,10 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroGridPagination`**: Enterprise pagination toolbar with page size selector (`50`, `100`, `500`, `1000`, `All`), row statistics, and navigation buttons.
 * **`ZeroGridExporter`**: High-throughput streaming CSV exporter capable of outputting >1,100,000 rows/sec directly to disk.
 
-### 🏭 Industrial & MES Subsystem (`ZeroUI.WinForms.Industrial`)
+### 🏭 Industrial, SCADA & MES Subsystem (`ZeroUI.WinForms.Industrial`)
+* **`ZeroLedTower`**: Industrial Andon Signal Tower Light control with Red, Amber, Green, and Blue lamp segments. Features 3D cylindrical glass reflection, mounting pole/base, and configurable Solid, Blinking (1Hz/2Hz flash), or Off states for real-time SCADA machine status.
+* **`ZeroSevenSegment`**: Industrial 7-Segment Digital LED Display for Takt time and production counters with polygon beveled segment geometry, authentic segment ghosting, customizable colors (Neon Cyan, Emerald, Amber), decimals, and colons.
+* **`ZeroLinearGauge`**: Industrial linear level, temperature, and pressure gauge with multi-zone threshold indicators (Normal, Warning, Critical), tick marks, and real-time floating value readout.
 * **`ZeroCard`**: Modern rounded container card with Step Number Badge (`1`, `2`, `3`...), Title, Subtitle, Action Link, and inner `ContentPanel`.
 * **`ZeroSteps`**: Data-driven manufacturing workflow control with vector glyph nodes (Gear ⚙, Checkmark ✔, Warehouse 🏠), Title, Quantity, Timestamp, and dynamic horizontal transition arrows (`→`). Supports real-time `UpdateStep(...)` telemetry in 0.01 ms and `StepClicked` events.
 * **`ZeroDescriptions`**: Key-value property metadata grid for entity specifications with muted labels and bold values.
@@ -74,6 +77,7 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroGauge`**: Anti-aliased circular progress dial for **OEE %**, Yield Rate, and equipment efficiency.
 * **`ZeroAlertBanner`**: Dismissible or sticky alert banner for factory line stoppage, feeder shortage, or operator broadcasts.
 * **`ZeroBarcodeBox`**: Specialized hardware scanner input box with auto-select on focus, auto-submit on Enter, and green flash feedback.
+
 
 ### ✏️ Editors Subsystem (`ZeroUI.WinForms.Editors`)
 * **`ZeroButton`**: Modern anti-aliased button with rounded corners, interactive hover/press states, and semantic styles (`Primary`, `Secondary`, `Success`, `Danger`, `Ghost`).

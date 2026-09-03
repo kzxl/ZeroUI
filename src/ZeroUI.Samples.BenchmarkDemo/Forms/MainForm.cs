@@ -1177,6 +1177,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             int simQc = 0;
             int simWh = 0;
 
+            ZeroSevenSegment? segOutput = null;
+            ZeroLinearGauge? gaugePressure = null;
+
             void ProcessScan(string barcode)
             {
                 simAssy += 1;
@@ -1190,6 +1193,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
                 descSummary.SetValue("Số lượng KH / thực nhập", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
                 timeline.Add($"Barcode {barcode}", now, "Quét mã trạm thành công", ZeroTimelineStatus.Completed);
+                if (segOutput != null) segOutput.Value = (1420 + simWh).ToString("D6");
+                if (gaugePressure != null) gaugePressure.Value = 72.5f + (simWh % 12);
                 ZeroToast.Success(this, $"Scanned: {barcode} | Lắp ráp: {simAssy}, Nhập kho: {simWh}");
             }
 
@@ -1208,10 +1213,167 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
                 descSummary.SetValue("Số lượng KH / thực nhập", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
                 timeline.Add("PLC Signal Batch", now, $"Đồng bộ lô sản xuất (+{simWh} sp)", ZeroTimelineStatus.Completed);
+                if (segOutput != null) segOutput.Value = (1420 + simWh).ToString("D6");
+                if (gaugePressure != null) gaugePressure.Value = 72.5f + (simWh % 12);
                 ZeroToast.Success(this, $"PLC Signal: Lắp ráp: {simAssy}, QC: {simQc}, Nhập kho: {simWh}");
             };
 
+
+            // ROW 4: SCADA Telemetry & Industrial Andon Control
+            var row4 = new Panel { Dock = DockStyle.Top, Height = 175, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Card 4A: Andon Signal Tower Light
+            var cardAndon = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Đèn Tháp Andon (SCADA Signal)",
+                Dock = DockStyle.Left,
+                Width = 280
+            };
+
+            var andonTower = new ZeroLedTower
+            {
+                Location = new Point(14, 6),
+                Size = new Size(54, 120),
+                RedLight = LedState.Off,
+                AmberLight = LedState.Off,
+                GreenLight = LedState.On,
+                BlueLight = LedState.Off
+            };
+            cardAndon.ContentPanel.Controls.Add(andonTower);
+
+            var btnAndonRun = new ZeroButton
+            {
+                Text = "▶ Running",
+                ButtonStyle = ZeroButtonStyle.Success,
+                Location = new Point(80, 8),
+                Size = new Size(130, 26)
+            };
+            btnAndonRun.Click += (s, e) =>
+            {
+                andonTower.SetStatus(running: true, warning: false, alarm: false);
+                statusBadge.Status = ZeroStatusType.Running;
+                statusBadge.Text = "Line 01: Running";
+                ZeroToast.Success(this, "SCADA: Chuyền chuyển RUNNING (Đèn xanh sáng)");
+            };
+            cardAndon.ContentPanel.Controls.Add(btnAndonRun);
+
+            var btnAndonWarn = new ZeroButton
+            {
+                Text = "⚠ Warning",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(80, 38),
+                Size = new Size(130, 26)
+            };
+            btnAndonWarn.Click += (s, e) =>
+            {
+                andonTower.SetStatus(running: false, warning: true, alarm: false);
+                statusBadge.Status = ZeroStatusType.Idle;
+                statusBadge.Text = "Line 01: Low Feeder Alert";
+                ZeroToast.Warning(this, "SCADA: Cảnh báo Feeder SMT (Đèn vàng sáng)");
+            };
+            cardAndon.ContentPanel.Controls.Add(btnAndonWarn);
+
+            var btnAndonAlarm = new ZeroButton
+            {
+                Text = "⛔ E-Stop Alarm",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Location = new Point(80, 68),
+                Size = new Size(130, 26)
+            };
+            btnAndonAlarm.Click += (s, e) =>
+            {
+                andonTower.SetStatus(running: false, warning: false, alarm: true);
+                statusBadge.Status = ZeroStatusType.Alarm;
+                statusBadge.Text = "Line 01: EMERGENCY STOP";
+                ZeroToast.Error(this, "SCADA: Dừng khẩn cấp E-STOP! Đèn đỏ Andon nhấp nháy 2Hz!");
+            };
+            cardAndon.ContentPanel.Controls.Add(btnAndonAlarm);
+
+            var splitR4A = new Panel { Dock = DockStyle.Left, Width = 10, BackColor = Color.Transparent };
+
+            // Card 4B: Industrial 7-Segment Digital Readouts
+            var cardLed = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Bảng Số LED 7 Đoạn (Takt & Output)",
+                Dock = DockStyle.Left,
+                Width = 340
+            };
+
+            var lblTakt = new Label { Text = "Takt Time Mục Tiêu (giây):", Location = new Point(10, 4), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            var segTakt = new ZeroSevenSegment
+            {
+                Location = new Point(10, 20),
+                Size = new Size(305, 34),
+                DigitCount = 6,
+                Value = "00:28",
+                SegmentColor = Color.FromArgb(56, 189, 248) // Neon Cyan
+            };
+
+            var lblActual = new Label { Text = "Sản Lượng Thực Tế Lô (sp):", Location = new Point(10, 58), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            segOutput = new ZeroSevenSegment
+            {
+                Location = new Point(10, 74),
+                Size = new Size(305, 34),
+                DigitCount = 6,
+                Value = "001420",
+                SegmentColor = Color.FromArgb(52, 211, 153) // Neon Emerald
+            };
+
+            cardLed.ContentPanel.Controls.Add(lblTakt);
+            cardLed.ContentPanel.Controls.Add(segTakt);
+            cardLed.ContentPanel.Controls.Add(lblActual);
+            cardLed.ContentPanel.Controls.Add(segOutput);
+
+            var splitR4B = new Panel { Dock = DockStyle.Left, Width = 10, BackColor = Color.Transparent };
+
+            // Card 4C: Linear Gauges (Hydraulic Pressure & Oven Temp)
+            var cardSensors = new ZeroCard
+            {
+                StepNumber = null,
+                Title = "Giám Sát Áp Suất & Nhiệt Độ (SCADA Telemetry)",
+                Dock = DockStyle.Fill
+            };
+
+            gaugePressure = new ZeroLinearGauge
+            {
+                Location = new Point(12, 4),
+                Size = new Size(260, 50),
+                Title = "Áp Suất Thủy Lực Ép",
+
+                Unit = "Bar",
+                Minimum = 0,
+                Maximum = 120,
+                Value = 72.5f,
+                WarningThreshold = 85,
+                CriticalThreshold = 105
+            };
+
+            var gaugeTemp = new ZeroLinearGauge
+            {
+                Location = new Point(285, 4),
+                Size = new Size(260, 50),
+                Title = "Nhiệt Độ Lò Hàn SMT (Zone 3)",
+                Unit = "°C",
+                Minimum = 50,
+                Maximum = 300,
+                Value = 245.0f,
+                WarningThreshold = 265,
+                CriticalThreshold = 285
+            };
+
+            cardSensors.ContentPanel.Controls.Add(gaugePressure);
+            cardSensors.ContentPanel.Controls.Add(gaugeTemp);
+
+            row4.Controls.Add(cardSensors);
+            row4.Controls.Add(splitR4B);
+            row4.Controls.Add(cardLed);
+            row4.Controls.Add(splitR4A);
+            row4.Controls.Add(cardAndon);
+
             // Assemble top-to-bottom layout
+            mainContainer.Controls.Add(row4);
             mainContainer.Controls.Add(row3);
             mainContainer.Controls.Add(row2);
             mainContainer.Controls.Add(row1);
@@ -1225,9 +1387,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             row1.BringToFront();
             row2.BringToFront();
             row3.BringToFront();
+            row4.BringToFront();
 
             _tabMes.Controls.Add(mainContainer);
         }
+
     }
 }
 
