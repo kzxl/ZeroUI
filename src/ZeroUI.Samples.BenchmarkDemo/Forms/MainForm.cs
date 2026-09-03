@@ -1358,33 +1358,119 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 StepNumber = null,
                 Title = "Bảng Số LED 7 Đoạn (Takt & Output)",
                 Dock = DockStyle.Left,
-                Width = 340
+                Width = 365
             };
 
             var lblTakt = new Label { Text = "Takt Time Mục Tiêu (giây):", Location = new Point(10, 4), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
             var segTakt = new ZeroSevenSegment
             {
                 Location = new Point(10, 20),
-                Size = new Size(305, 34),
-                DigitCount = 6,
+                Size = new Size(340, 34),
+                DigitCount = 5,
                 Value = "00:28",
-                SegmentColor = Color.FromArgb(56, 189, 248) // Neon Cyan
+                ColorPreset = SevenSegmentColorPreset.NeonCyan,
+                BlinkColon = true,
+                SlantAngle = 7f,
+                Unit = "s"
             };
 
-            var lblActual = new Label { Text = "Sản Lượng Thực Tế Lô (sp):", Location = new Point(10, 58), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            var lblActual = new Label { Text = "Sản Lượng Thực Tế Lô (sp):", Location = new Point(10, 56), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
             segOutput = new ZeroSevenSegment
             {
-                Location = new Point(10, 74),
-                Size = new Size(305, 34),
+                Location = new Point(10, 72),
+                Size = new Size(340, 34),
                 DigitCount = 6,
                 Value = "001420",
-                SegmentColor = Color.FromArgb(52, 211, 153) // Neon Emerald
+                ColorPreset = SevenSegmentColorPreset.NeonEmerald,
+                LeadingZeroMode = LeadingZeroDisplayMode.DimmedGhost,
+                SlantAngle = 7f,
+                Unit = "pcs"
+            };
+
+            // Interactive options toolbar to demo advanced LED options
+            var btnCycleColor = new ZeroButton
+            {
+                Text = "🎨 Màu LED",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(10, 110),
+                Size = new Size(95, 24)
+            };
+            int colorIndex = 0;
+            var presets = new[]
+            {
+                SevenSegmentColorPreset.NeonCyan,
+                SevenSegmentColorPreset.NeonEmerald,
+                SevenSegmentColorPreset.NeonAmber,
+                SevenSegmentColorPreset.NeonRed,
+                SevenSegmentColorPreset.CrispWhite,
+                SevenSegmentColorPreset.UltraViolet
+            };
+            btnCycleColor.Click += (s, e) =>
+            {
+                colorIndex = (colorIndex + 1) % presets.Length;
+                segOutput.ColorPreset = presets[colorIndex];
+                ZeroToast.Info(this, $"Bảng LED: Đổi theme {presets[colorIndex]}");
+            };
+
+            var btnToggleSlant = new ZeroButton
+            {
+                Text = "📐 Nghiêng 7°",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(110, 110),
+                Size = new Size(105, 24)
+            };
+            btnToggleSlant.Click += (s, e) =>
+            {
+                if (segOutput.SlantAngle > 0)
+                {
+                    segTakt.SlantAngle = 0f;
+                    segOutput.SlantAngle = 0f;
+                    btnToggleSlant.Text = "📐 Đứng 0°";
+                    ZeroToast.Info(this, "Bảng LED: Chuyển sang chế độ thẳng đứng 0°");
+                }
+                else
+                {
+                    segTakt.SlantAngle = 7f;
+                    segOutput.SlantAngle = 7f;
+                    btnToggleSlant.Text = "📐 Nghiêng 7°";
+                    ZeroToast.Info(this, "Bảng LED: Chuyển sang góc nghiêng Italic 7°");
+                }
+            };
+
+            var btnCycleMsg = new ZeroButton
+            {
+                Text = "⚡ Ký Tự SCADA",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(220, 110),
+                Size = new Size(130, 24)
+            };
+            int msgIndex = 0;
+            var sampleMsgs = new[]
+            {
+                ("001420", SevenSegmentColorPreset.NeonEmerald, false),
+                ("1248.5", SevenSegmentColorPreset.NeonCyan, false),
+                ("COOL", SevenSegmentColorPreset.NeonCyan, false),
+                ("ALARM", SevenSegmentColorPreset.NeonRed, true),
+                ("PASS", SevenSegmentColorPreset.NeonEmerald, false),
+                ("P-01", SevenSegmentColorPreset.NeonAmber, false)
+            };
+            btnCycleMsg.Click += (s, e) =>
+            {
+                msgIndex = (msgIndex + 1) % sampleMsgs.Length;
+                var sample = sampleMsgs[msgIndex];
+                segOutput.Value = sample.Item1;
+                segOutput.ColorPreset = sample.Item2;
+                segOutput.Blink = sample.Item3;
+                ZeroToast.Success(this, $"Bảng LED hiển thị: {sample.Item1}");
             };
 
             cardLed.ContentPanel.Controls.Add(lblTakt);
             cardLed.ContentPanel.Controls.Add(segTakt);
             cardLed.ContentPanel.Controls.Add(lblActual);
             cardLed.ContentPanel.Controls.Add(segOutput);
+            cardLed.ContentPanel.Controls.Add(btnCycleColor);
+            cardLed.ContentPanel.Controls.Add(btnToggleSlant);
+            cardLed.ContentPanel.Controls.Add(btnCycleMsg);
 
             var splitR4B = new Panel { Dock = DockStyle.Left, Width = 10, BackColor = Color.Transparent };
 
