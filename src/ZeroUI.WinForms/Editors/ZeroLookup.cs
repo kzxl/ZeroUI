@@ -605,11 +605,12 @@ namespace ZeroUI.WinForms.Editors
                         g.DrawString(item.Category, fontCat, pillText, pillRect, sfPill);
                     }
 
-                    // SubText (Description / Cost)
+                    // SubText (Description / Cost with boundary guard)
                     if (!string.IsNullOrEmpty(item.SubText))
                     {
-                        using var brushSub = new SolidBrush(palette.TextSecondary);
-                        g.DrawString(item.SubText, fontSub, brushSub, 12, y + 19);
+                        var subRect = new Rectangle(12, y + 18, clientW - 24, 16);
+                        TextRenderer.DrawText(g, item.SubText, fontSub, subRect, palette.TextSecondary,
+                            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
                     }
 
                     // Divider

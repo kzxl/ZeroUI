@@ -2139,38 +2139,38 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var bomTools = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 40,
+                Height = 44,
                 BackColor = Color.Transparent,
-                Padding = new Padding(4, 2, 4, 4)
+                Padding = new Padding(4, 4, 4, 4)
             };
 
             var txtBomSearch = new ZeroSearchBox
             {
-                Location = new Point(4, 2),
-                Width = 210,
+                Location = new Point(4, 4),
+                Width = 200,
                 PlaceholderText = "Lọc linh kiện BOM..."
             };
 
             var btnExpandAll = new ZeroButton
             {
-                Location = new Point(222, 2),
-                Size = new Size(88, 34),
+                Location = new Point(210, 4),
+                Size = new Size(92, 34),
                 Text = "➕ Mở Rộng",
                 ButtonStyle = ZeroButtonStyle.Secondary
             };
 
             var btnCollapseAll = new ZeroButton
             {
-                Location = new Point(316, 2),
-                Size = new Size(88, 34),
+                Location = new Point(308, 4),
+                Size = new Size(92, 34),
                 Text = "➖ Thu Gọn",
                 ButtonStyle = ZeroButtonStyle.Secondary
             };
 
             var btnCheckStats = new ZeroButton
             {
-                Location = new Point(410, 2),
-                Size = new Size(95, 34),
+                Location = new Point(406, 4),
+                Size = new Size(98, 34),
                 Text = "✔ Thống Kê",
                 ButtonStyle = ZeroButtonStyle.Success
             };
@@ -2267,6 +2267,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             cardBom.ContentPanel.Controls.Add(treeBom);
             cardBom.ContentPanel.Controls.Add(bomTools);
+            bomTools.BringToFront();
             leftCol.Controls.Add(cardBom);
 
             // Right Column (Heatmap on Top + ZeroTabControl on Bottom)

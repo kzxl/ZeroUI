@@ -149,7 +149,7 @@ namespace ZeroUI.WinForms.Industrial
         private readonly List<ZeroTreeNode> _nodes = new List<ZeroTreeNode>();
         private readonly List<ZeroTreeNode> _visibleNodes = new List<ZeroTreeNode>();
 
-        private int _rowHeight = 30;
+        private int _rowHeight = 34;
         private int _indentWidth = 24;
         private bool _showCheckBoxes = true;
         private bool _showLines = true;
@@ -599,45 +599,70 @@ namespace ZeroUI.WinForms.Industrial
                     curX += 20;
                 }
 
-                // 6. Draw Primary Text
-                Color textColor = isSelected ? palette.Primary : palette.TextPrimary;
-                using (var brushText = new SolidBrush(textColor))
-                {
-                    var activeFont = node.HasChildren ? fontBold : fontText;
-                    g.DrawString(node.Text, activeFont, brushText, curX, y + ((_rowHeight - 18) / 2));
-                    var sz = g.MeasureString(node.Text, activeFont);
-                    curX += (int)sz.Width + 8;
-                }
-
-                // 7. Draw SubText (e.g. description, part code, quantity)
-                if (!string.IsNullOrEmpty(node.SubText) && curX < clientWidth - 70)
-                {
-                    using var brushSub = new SolidBrush(palette.TextSecondary);
-                    g.DrawString(node.SubText, fontSub, brushSub, curX, y + ((_rowHeight - 14) / 2) + 1);
-                    var szSub = g.MeasureString(node.SubText, fontSub);
-                    curX += (int)szSub.Width + 8;
-                }
-
-                // 8. Draw Status Badge (if any)
+                // 6. Calculate Right Margin Reserved for Badge (Zero Overlap Guaranteed)
+                int badgeReserved = 0;
+                Rectangle badgeRect = Rectangle.Empty;
                 if (!string.IsNullOrEmpty(node.Badge))
                 {
                     var bColor = node.BadgeColor ?? palette.Primary;
                     var bTextSz = g.MeasureString(node.Badge, fontBadge);
-                    int badgeW = (int)bTextSz.Width + 10;
-                    int badgeH = 18;
-                    int badgeX = clientWidth - badgeW - 12;
+                    int badgeW = (int)bTextSz.Width + 12;
+                    int badgeH = 20;
+                    int badgeX = clientWidth - badgeW - 10;
                     int badgeY = y + ((_rowHeight - badgeH) / 2);
+                    badgeRect = new Rectangle(badgeX, badgeY, badgeW, badgeH);
+                    badgeReserved = badgeW + 16;
+                }
 
-                    var bRect = new Rectangle(badgeX, badgeY, badgeW, badgeH);
+                int rightLimit = clientWidth - badgeReserved - 6;
+                int availableW = Math.Max(20, rightLimit - curX);
+
+                Color textColor = isSelected ? palette.Primary : palette.TextPrimary;
+                var activeFont = node.HasChildren ? fontBold : fontText;
+
+                // 7. Render Primary Text & SubText without colliding into Badge
+                bool hasSub = !string.IsNullOrEmpty(node.SubText) && availableW >= 180;
+
+                if (hasSub)
+                {
+                    var titleSz = g.MeasureString(node.Text, activeFont);
+                    int desiredTitleW = (int)titleSz.Width + 6;
+                    int titleW = Math.Min(desiredTitleW, (int)(availableW * 0.55f));
+                    if (titleW < 100 && availableW > 140) titleW = Math.Min(desiredTitleW, availableW - 70);
+
+                    var titleRect = new Rectangle(curX, y, titleW, _rowHeight);
+                    TextRenderer.DrawText(g, node.Text, activeFont, titleRect, textColor,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+
+                    int subX = curX + titleW + 8;
+                    int subW = Math.Max(0, rightLimit - subX);
+                    if (subW > 25)
+                    {
+                        var subRect = new Rectangle(subX, y, subW, _rowHeight);
+                        TextRenderer.DrawText(g, node.SubText, fontSub, subRect, palette.TextSecondary,
+                            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                    }
+                }
+                else
+                {
+                    var titleRect = new Rectangle(curX, y, availableW, _rowHeight);
+                    TextRenderer.DrawText(g, node.Text, activeFont, titleRect, textColor,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                }
+
+                // 8. Draw Status Badge (anchored on far right, completely separated from text)
+                if (!badgeRect.IsEmpty)
+                {
+                    var bColor = node.BadgeColor ?? palette.Primary;
                     using var bBrush = new SolidBrush(Color.FromArgb(35, bColor));
                     using var bPen = new Pen(bColor, 1f);
-                    using var bPath = CreateRoundedRect(bRect, 4);
+                    using var bPath = CreateRoundedRect(badgeRect, 4);
                     g.FillPath(bBrush, bPath);
                     g.DrawPath(bPen, bPath);
 
                     using var bTextBrush = new SolidBrush(bColor);
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(node.Badge, fontBadge, bTextBrush, bRect, sf);
+                    g.DrawString(node.Badge, fontBadge, bTextBrush, badgeRect, sf);
                 }
 
                 // Separator bottom line

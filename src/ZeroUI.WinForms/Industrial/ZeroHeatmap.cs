@@ -363,9 +363,11 @@ namespace ZeroUI.WinForms.Industrial
             using var fontValue = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
             using var brushLabel = new SolidBrush(palette.TextSecondary);
 
-            // 1. Draw X Header Labels (Top)
+            // 1. Draw X Header Labels (Top, smart step when narrow to prevent overlap)
+            int step = cellW < 20 ? 4 : (cellW < 30 ? 2 : 1);
             for (int c = 0; c < cols; c++)
             {
+                if (c % step != 0 && c != cols - 1) continue;
                 float x = leftMargin + (c * cellW) + (cellW / 2f);
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Far };
                 g.DrawString(_xLabels[c], fontLabel, brushLabel, x, topMargin - 4, sf);
