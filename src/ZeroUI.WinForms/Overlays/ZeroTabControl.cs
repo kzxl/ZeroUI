@@ -73,7 +73,8 @@ namespace ZeroUI.WinForms.Overlays
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;

@@ -174,7 +174,8 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable, true);
+                ControlStyles.Selectable |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Font = new Font("Segoe UI", 9f);
             BackColor = Color.Transparent;
