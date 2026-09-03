@@ -22,8 +22,13 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Specialized high-speed barcode and QR code scanner input control for factory workstations.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultEvent("BarcodeScanned")]
+    [Description("Hardware barcode and QR code scanner input control for factory workstations")]
     public class ZeroBarcodeBox : Control
     {
+
         private readonly TextBox _textBox;
         private string _placeholder = "Scan or type barcode...";
         private bool _clearOnSubmit = true;

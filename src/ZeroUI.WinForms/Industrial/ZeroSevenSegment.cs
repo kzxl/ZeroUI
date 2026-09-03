@@ -11,8 +11,13 @@ namespace ZeroUI.WinForms.Industrial
     /// Features polygon beveled segment geometry, authentic segment ghosting, customizable LED colors,
     /// and support for numbers, decimals, negative signs, and colons.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultProperty("Value")]
+    [Description("Industrial 7-Segment Digital LED Display for SCADA & MES telemetry")]
     public class ZeroSevenSegment : Control
     {
+
         private string _value = "1420";
         private Color _segmentColor = Color.FromArgb(52, 211, 153); // Emerald Neon Green
         private Color _dimColor = Color.FromArgb(20, 45, 35);       // Subtle unlit ghost segment

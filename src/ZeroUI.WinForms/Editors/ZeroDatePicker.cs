@@ -11,8 +11,14 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Modern date picker input control with interactive calendar dropdown and quick-select presets.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Value")]
+    [DefaultEvent("ValueChanged")]
+    [Description("Modern date picker control with popup calendar and quick-select presets")]
     public class ZeroDatePicker : Control
     {
+
         private DateTime _selectedDate = DateTime.Today;
         private string _dateFormat = "yyyy-MM-dd";
         private bool _isHovered = false;

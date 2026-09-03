@@ -86,8 +86,12 @@ namespace ZeroUI.WinForms.Overlays
     /// <summary>
     /// Modern single-HWND flat enterprise action toolbar for ZeroUI.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Overlays")]
+    [Description("Flat enterprise action toolbar with buttons, dividers, and elastic spacers")]
     public class ZeroToolbar : Control
     {
+
         private readonly List<ZeroToolbarItem> _items = new List<ZeroToolbarItem>();
         private Color _borderColor = Color.FromArgb(229, 231, 235);
         private int _itemHeight = 32;

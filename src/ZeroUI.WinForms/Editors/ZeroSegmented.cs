@@ -10,9 +10,14 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Modern Segmented Control (Pill switcher) for ZeroUI providing clean, compact view and filter switching.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("SelectedIndexChanged")]
+    [DefaultProperty("SelectedIndex")]
+    [Description("Segmented pill switcher for view and filter options")]
     public class ZeroSegmented : Control
-
     {
+
         private string[] _items = new[] { "All", "Daily", "Weekly", "Monthly" };
 
         private int _selectedIndex = 0;

@@ -10,8 +10,13 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Modern container card for ZeroUI with rounded corners, optional Step Badge, Title, Subtitle, and Action Link.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultProperty("Title")]
+    [Description("Modern container card with rounded corners, optional Step Badge, and Title")]
     public class ZeroCard : Panel
     {
+
         private int? _stepNumber = 1;
         private Color _badgeColor = Color.FromArgb(79, 70, 229); // Indigo Accent
         private string _title = "Card Title";

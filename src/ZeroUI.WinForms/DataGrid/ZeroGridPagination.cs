@@ -10,8 +10,13 @@ namespace ZeroUI.WinForms.DataGrid
     /// <summary>
     /// High-performance pagination toolbar control designed for virtual grids and large datasets.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - DataGrid")]
+    [DefaultEvent("PageChanged")]
+    [Description("High-performance pagination toolbar control for virtual grids")]
     public class ZeroGridPagination : Panel
     {
+
         private int _totalRows = 0;
         private int _pageSize = 1000;
         private int _currentPage = 1;

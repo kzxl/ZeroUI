@@ -3,16 +3,21 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
 {
-
     /// <summary>
     /// Modern right-docked slide-out drawer panel for Master-Detail inspection and side forms.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Overlays")]
+    [DefaultProperty("Title")]
+    [Description("Right-docked slide-out drawer panel for Master-Detail inspection")]
     public class ZeroDrawer : Panel
     {
+
         private string _title = "Detail Inspection";
         private string? _subtitle;
         private int _drawerWidth = 420;

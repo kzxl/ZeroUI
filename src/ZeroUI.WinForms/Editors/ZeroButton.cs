@@ -19,8 +19,14 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Modern flat button control with stateful hover effects, smooth rounded corners, and badge counter support.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("Click")]
+    [DefaultProperty("Text")]
+    [Description("Modern anti-aliased button with rounded corners and stateful styling")]
     public class ZeroButton : Control
     {
+
         private ZeroButtonStyle _style = ZeroButtonStyle.Primary;
         private int _borderRadius = 6;
         private string? _badgeText;

@@ -10,8 +10,14 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Modern search input with placeholder text, clear button, and debounced text change events.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("DebouncedTextChanged")]
+    [DefaultProperty("PlaceholderText")]
+    [Description("Modern search box with debounced input and clear button")]
     public class ZeroSearchBox : Control
     {
+
         private readonly TextBox _textBox;
         private readonly Timer _debounceTimer;
         private string _placeholder = "🔍 Search...";

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -18,6 +19,9 @@ namespace ZeroUI.WinForms.Industrial
     /// Industrial Andon Signal Tower Light control (SCADA / MES) with Red, Amber, Green, and Blue segments.
     /// Supports solid illumination, high-visibility 1Hz/2Hz flashing, and vector anti-aliased 3D glass rendering.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [Description("Industrial Andon Signal Tower Light with Red, Amber, Green, and Blue segments")]
     public class ZeroLedTower : Control
     {
         private LedState _red = LedState.Off;
@@ -29,7 +33,6 @@ namespace ZeroUI.WinForms.Industrial
         private bool _blinkPhase = false;
 
         public ZeroLedTower()
-
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -51,8 +54,13 @@ namespace ZeroUI.WinForms.Industrial
                     Invalidate();
                 }
             };
-            _blinkTimer.Start();
+
+            if (!ZeroDesignHelper.IsInDesignMode(this))
+            {
+                _blinkTimer.Start();
+            }
         }
+
 
         [Category("Andon Lights")]
         [DefaultValue(LedState.Off)]

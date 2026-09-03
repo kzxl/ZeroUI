@@ -10,8 +10,13 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Modern anti-aliased circular gauge/meter for OEE, Yield rate, and equipment efficiency.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultProperty("Value")]
+    [Description("Circular gauge meter for OEE, Yield, and equipment efficiency")]
     public class ZeroGauge : Control
     {
+
         private float _value = 85f; // 0 to 100
         private string _title = "OEE Rate";
         private string _suffix = "%";

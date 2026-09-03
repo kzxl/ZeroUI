@@ -58,8 +58,13 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Modern Data-Driven Workflow Process Steps control for ZeroUI with vector nodes and transition arrows.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultEvent("StepClicked")]
+    [Description("Data-Driven Manufacturing Workflow Steps control")]
     public class ZeroSteps : Control
     {
+
         private readonly List<ZeroStepItem> _steps = new List<ZeroStepItem>();
         private readonly List<Rectangle> _stepRects = new List<Rectangle>();
         private int _hoveredIndex = -1;

@@ -3,11 +3,11 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Native;
 
 namespace ZeroUI.WinForms.Industrial
 {
     public enum ZeroStatusType
-
     {
         Running,    // Green
         Idle,       // Amber
@@ -19,6 +19,9 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Modern real-time status indicator with smooth expanding pulse ring animation.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [Description("Real-time equipment status indicator with animated pulse ring")]
     public class ZeroStatusBadge : Control
     {
         private ZeroStatusType _status = ZeroStatusType.Running;
@@ -52,11 +55,12 @@ namespace ZeroUI.WinForms.Industrial
                 }
             };
 
-            if (!DesignMode)
+            if (!ZeroDesignHelper.IsInDesignMode(this))
             {
                 _pulseTimer.Start();
             }
         }
+
 
         [Category("Appearance")]
         [DefaultValue(ZeroStatusType.Running)]

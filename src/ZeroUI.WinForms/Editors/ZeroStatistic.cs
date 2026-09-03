@@ -17,9 +17,13 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Modern KPI Metric Card component for ZeroUI executive dashboards and analytical summaries.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Value")]
+    [Description("KPI Metric Card component for dashboards and analytical summaries")]
     public class ZeroStatistic : Control
-
     {
+
         private string _title = "Metric Title";
         private string _value = "0";
         private string? _prefix;

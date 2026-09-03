@@ -11,8 +11,13 @@ namespace ZeroUI.WinForms.Industrial
     /// Industrial Linear Level & Pressure Gauge for SCADA / MES telemetry (Tank level, temperature, pressure, flow).
     /// Features multi-zone scale thresholds (Normal, Warning, Critical), graduations with tick marks, and value badges.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultProperty("Value")]
+    [Description("Industrial Linear Level and Pressure Gauge for SCADA telemetry")]
     public class ZeroLinearGauge : Control
     {
+
         private float _value = 65f;
         private float _minimum = 0f;
         private float _maximum = 100f;

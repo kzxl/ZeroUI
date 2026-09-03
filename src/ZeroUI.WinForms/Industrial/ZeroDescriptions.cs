@@ -28,8 +28,12 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Modern Key-Value metadata description grid component for ZeroUI.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [Description("Key-Value metadata description grid component")]
     public class ZeroDescriptions : Control
     {
+
         private readonly List<ZeroDescriptionItem> _items = new List<ZeroDescriptionItem>();
         private int _columns = 2;
         private int _rowHeight = 28;

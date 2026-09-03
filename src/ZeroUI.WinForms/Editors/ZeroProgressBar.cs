@@ -3,15 +3,20 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Native;
 
 namespace ZeroUI.WinForms.Editors
 {
-
     /// <summary>
     /// Modern flat progress bar with smooth anti-aliased fill, percentage overlay, and indeterminate animation.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Value")]
+    [Description("Modern flat progress bar with percentage overlay and indeterminate shimmer")]
     public class ZeroProgressBar : Control
     {
+
         private int _value = 0;
         private int _maximum = 100;
         private int _minimum = 0;
@@ -95,8 +100,12 @@ namespace ZeroUI.WinForms.Editors
                             Invalidate();
                         };
                     }
-                    _marqueeTimer.Start();
+                    if (!ZeroDesignHelper.IsInDesignMode(this))
+                    {
+                        _marqueeTimer.Start();
+                    }
                 }
+
                 else
                 {
                     _marqueeTimer?.Stop();

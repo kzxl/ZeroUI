@@ -38,8 +38,12 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Modern vertical timeline control for lot tracking, manufacturing journals, and audit trails.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [Description("Vertical timeline control for lot tracking and manufacturing audit trails")]
     public class ZeroTimeline : Control
     {
+
         private readonly List<ZeroTimelineItem> _items = new List<ZeroTimelineItem>();
         private int _itemSpacing = 52;
         private int _nodeX = 24;

@@ -18,8 +18,14 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Modern dismissible alert banner for factory floor stoppage, defect alarms, and system broadcasts.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultProperty("Title")]
+    [DefaultEvent("Closed")]
+    [Description("Dismissible alert banner for factory floor stoppages and system notifications")]
     public class ZeroAlertBanner : Control
     {
+
         private ZeroAlertSeverity _severity = ZeroAlertSeverity.Warning;
         private string _title = "Alert Title";
         private string _message = "Alert detailed notification message.";

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Rendering;
@@ -34,8 +36,13 @@ namespace ZeroUI.WinForms.Overlays
     /// High-performance virtualized event and log viewer capable of displaying 100,000+ items smoothly.
     /// Utilizes double-buffered Win32 Memory DC for flicker-free rendering.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Overlays")]
+    [DefaultEvent("ItemSelected")]
+    [Description("High-throughput log viewer and virtual list view")]
     public class ZeroListView : Control
     {
+
         private readonly List<LogEntry> _entries = new List<LogEntry>(10000);
         private readonly MemoryDIBSection _dibSection = new MemoryDIBSection();
 

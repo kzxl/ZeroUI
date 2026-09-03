@@ -19,9 +19,13 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Lightweight status tag component for ZeroUI with soft backgrounds, clean borders, and clear status typography.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Text")]
+    [Description("Lightweight status tag badge with clean border and status typography")]
     public class ZeroTag : Control
-
     {
+
         private ZeroTagType _tagType = ZeroTagType.Default;
         private int _borderRadius = 4;
 

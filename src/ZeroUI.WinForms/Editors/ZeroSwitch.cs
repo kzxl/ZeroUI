@@ -3,24 +3,27 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Native;
 
 namespace ZeroUI.WinForms.Editors
 {
-
     /// <summary>
     /// Smooth animated toggle switch control for ZeroUI with keyboard interaction and custom state labels.
     /// </summary>
+    [ToolboxItem(true)]
+    [DefaultProperty("Checked")]
+    [DefaultEvent("CheckedChanged")]
+    [Category("ZeroUI - Editors")]
+    [Description("Smooth sliding animated toggle switch")]
     public class ZeroSwitch : Control
     {
         private bool _checked = false;
         private string? _checkedText = "ON";
         private string? _uncheckedText = "OFF";
 
-
         private Color _checkedColor = Color.FromArgb(79, 70, 229);     // ZeroUI Indigo Accent
         private Color _uncheckedColor = Color.FromArgb(0, 0, 0, 65);   // Neutral Slate Track
         private Color _thumbColor = Color.White;
-
 
         private float _thumbPosition = 0f; // 0.0 (left) to 1.0 (right)
         private readonly Timer _animationTimer;
@@ -55,11 +58,20 @@ namespace ZeroUI.WinForms.Editors
                 if (_checked != value)
                 {
                     _checked = value;
-                    _animationTimer.Start();
+                    if (!ZeroDesignHelper.IsInDesignMode(this))
+                    {
+                        _animationTimer.Start();
+                    }
+                    else
+                    {
+                        _thumbPosition = value ? 1f : 0f;
+                        Invalidate();
+                    }
                     CheckedChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
+
 
         [Category("Appearance")]
         [DefaultValue("ON")]

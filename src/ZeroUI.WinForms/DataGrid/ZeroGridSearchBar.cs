@@ -1,17 +1,23 @@
 using System;
 using System.Drawing;
+using System.ComponentModel;
 using System.Windows.Forms;
+
 using ZeroUI.Core.Data;
 using ZeroUI.WinForms.Editors;
 
 namespace ZeroUI.WinForms.DataGrid
 {
-
     /// <summary>
     /// Integrated search and action toolbar control for ZeroGridControl with debounced filtering and export shortcuts.
     /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - DataGrid")]
+    [DefaultEvent("ExportClicked")]
+    [Description("Integrated search bar and toolbar for ZeroGridControl")]
     public class ZeroGridSearchBar : Panel
     {
+
         private ZeroGridControl? _grid;
         private readonly ZeroSearchBox _searchBox;
         private readonly Label _lblMatchCount;

@@ -16,12 +16,15 @@ using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.DataGrid
-
 {
+    [ToolboxItem(true)]
+    [Category("ZeroUI - DataGrid")]
+    [DefaultProperty("DataSource")]
+    [Description("High-performance virtual DataGrid with direct Win32 DIBSection rendering")]
     public class ZeroGridControl : Control
-
     {
         private readonly List<ZeroColumn> _columns = new List<ZeroColumn>();
+
         private readonly RowIndexMap _rowIndexMap = new RowIndexMap(10000);
         private readonly MemoryDIBSection _dibSection = new MemoryDIBSection();
 
