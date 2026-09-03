@@ -38,8 +38,20 @@ namespace ZeroUI.WinForms.DataGrid
         private int _resizeStartX = 0;
         private int _resizeStartWidth = 0;
 
+        // Asynchronous Sorting
+        private bool _isSorting = false;
+        private int _sortingColumnIndex = -1;
+        private System.Threading.CancellationTokenSource? _sortCts;
+
+        [Browsable(false)]
+        public bool IsSorting => _isSorting;
+
+        public event EventHandler? SortingStarted;
+        public event EventHandler<TimeSpan>? SortingCompleted;
+
         // Color Palettes (Win32 0x00BBGGRR format)
         private uint _headerBgColor = 0x00F0F0F0;
+
         private uint _headerTextColor = 0x00202020;
         private uint _rowBgColor = 0x00FFFFFF;
         private uint _altRowBgColor = 0x00FAFAFA;
@@ -393,7 +405,11 @@ namespace ZeroUI.WinForms.DataGrid
                     RECT colRect = new RECT(headerX, 0, headerX + colW, _headerHeight);
                     string text = _columns[c].HeaderText;
 
-                    if (_columns[c].SortOrder == SortDirection.Ascending)
+                    if (_isSorting && _sortingColumnIndex == c)
+                    {
+                        text += " ⏳";
+                    }
+                    else if (_columns[c].SortOrder == SortDirection.Ascending)
                     {
                         text += " ▲";
                     }
@@ -401,6 +417,7 @@ namespace ZeroUI.WinForms.DataGrid
                     {
                         text += " ▼";
                     }
+
 
                     _dibSection.DrawText(text.AsSpan(), ref colRect, _headerTextColor, _columns[c].Alignment, textHeight);
 
@@ -667,9 +684,9 @@ namespace ZeroUI.WinForms.DataGrid
             Invalidate();
         }
 
-        protected virtual void OnHeaderClicked(int columnIndex)
+        protected virtual async void OnHeaderClicked(int columnIndex)
         {
-            if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null) return;
+            if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null || _isSorting) return;
 
             var col = _columns[columnIndex];
             SortDirection newDirection = col.SortOrder switch
@@ -690,13 +707,97 @@ namespace ZeroUI.WinForms.DataGrid
             if (newDirection == SortDirection.None)
             {
                 _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
-            }
-            else
-            {
-                _rowIndexMap.Sort(new GridColumnComparer(_dataSource, columnIndex, newDirection));
+                _scrollY = 0;
+                UpdateScrollBars();
+                Invalidate();
+                return;
             }
 
+            int count = _rowIndexMap.ActiveCount;
+            if (count <= 0) return;
+
+            _isSorting = true;
+            _sortingColumnIndex = columnIndex;
+            Cursor = Cursors.WaitCursor;
+            SortingStarted?.Invoke(this, EventArgs.Empty);
             Invalidate();
+
+            var source = _dataSource;
+            _sortCts?.Cancel();
+            _sortCts = new System.Threading.CancellationTokenSource();
+            var token = _sortCts.Token;
+
+            // Copy active indices into a background working buffer
+            int[] working = new int[count];
+            for (int i = 0; i < count; i++)
+            {
+                working[i] = _rowIndexMap[i];
+            }
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            try
+            {
+                await System.Threading.Tasks.Task.Run(() =>
+                {
+                    if (source is IZeroSortableSource sortable)
+                    {
+                        var comparer = new FastSortableComparer(sortable, columnIndex, newDirection);
+                        Array.Sort(working, 0, count, comparer);
+                    }
+                    else
+                    {
+                        var comparer = new GridColumnComparer(source, columnIndex, newDirection);
+                        Array.Sort(working, 0, count, comparer);
+                    }
+                }, token);
+
+                sw.Stop();
+
+                if (!token.IsCancellationRequested && !IsDisposed)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        _rowIndexMap[i] = working[i];
+                    }
+
+                    _scrollY = 0;
+                    UpdateScrollBars();
+                    SortingCompleted?.Invoke(this, sw.Elapsed);
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Sorting error: {ex}");
+            }
+            finally
+            {
+                _isSorting = false;
+                _sortingColumnIndex = -1;
+                Cursor = Cursors.Default;
+                Invalidate();
+            }
+        }
+
+        private sealed class FastSortableComparer : System.Collections.Generic.IComparer<int>
+        {
+            private readonly IZeroSortableSource _source;
+            private readonly int _columnIndex;
+            private readonly SortDirection _direction;
+
+            public FastSortableComparer(IZeroSortableSource source, int columnIndex, SortDirection direction)
+            {
+                _source = source;
+                _columnIndex = columnIndex;
+                _direction = direction;
+            }
+
+            public int Compare(int rowA, int rowB)
+            {
+                int cmp = _source.CompareRows(rowA, rowB, _columnIndex);
+                return _direction == SortDirection.Ascending ? cmp : -cmp;
+            }
         }
 
         private sealed class GridColumnComparer : System.Collections.Generic.IComparer<int>
@@ -723,6 +824,7 @@ namespace ZeroUI.WinForms.DataGrid
                 return _direction == SortDirection.Ascending ? cmp : -cmp;
             }
         }
+
 
 
         protected override void OnKeyDown(KeyEventArgs e)

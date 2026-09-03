@@ -366,6 +366,16 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _zeroGrid.Columns.Add(new ZeroColumn("Batch No", 120, CellAlignment.Center));
             _zeroGrid.Columns.Add(new ZeroColumn("Status", 130, CellAlignment.Center));
 
+            _zeroGrid.SortingStarted += (s, e) =>
+            {
+                _lblStatus.Text = "Data: Sorting rows asynchronously (0ms UI freeze)...";
+            };
+
+            _zeroGrid.SortingCompleted += (s, elapsed) =>
+            {
+                _lblStatus.Text = $"Data: {_zeroGrid.RowCount:N0} rows (Sorted in {elapsed.TotalMilliseconds:F1} ms)";
+            };
+
             _searchBar = new ZeroGridSearchBar();
             _searchBar.AttachToGrid(_zeroGrid);
             _searchBar.ExportClicked += HandleExportCsv;
@@ -376,6 +386,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _zeroGrid.ScrollToRow(_pagination.PageStartRow);
             };
         }
+
 
         private void InitializeDataGridView()
         {

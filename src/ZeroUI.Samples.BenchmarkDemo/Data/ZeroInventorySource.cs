@@ -4,8 +4,9 @@ using ZeroUI.Core.Data;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Data
 {
-    public sealed class ZeroInventorySource : IZeroVirtualSource
+    public sealed class ZeroInventorySource : IZeroVirtualSource, IZeroSortableSource
     {
+
         private readonly InventoryItem[] _items;
         // Small thread-local or instance scratch buffers for zero-alloc formatting
         private readonly char[] _formatBuffer = new char[64];
@@ -82,5 +83,26 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
                     break;
             }
         }
+
+        public int CompareRows(int rowA, int rowB, int columnIndex)
+        {
+            if (rowA < 0 || rowA >= _items.Length || rowB < 0 || rowB >= _items.Length) return 0;
+            ref readonly var a = ref _items[rowA];
+            ref readonly var b = ref _items[rowB];
+
+            return columnIndex switch
+            {
+                0 => a.Id.CompareTo(b.Id),
+                1 => string.Compare(a.ItemCode, b.ItemCode, StringComparison.OrdinalIgnoreCase),
+                2 => string.Compare(a.ItemName, b.ItemName, StringComparison.OrdinalIgnoreCase),
+                3 => a.Quantity.CompareTo(b.Quantity),
+                4 => a.UnitPrice.CompareTo(b.UnitPrice),
+                5 => a.TotalAmount.CompareTo(b.TotalAmount),
+                6 => string.Compare(a.LotNumber, b.LotNumber, StringComparison.OrdinalIgnoreCase),
+                7 => string.Compare(a.Status, b.Status, StringComparison.OrdinalIgnoreCase),
+                _ => 0
+            };
+        }
     }
 }
+

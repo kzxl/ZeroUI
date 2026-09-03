@@ -9,8 +9,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
     /// Generates cell values completely on-the-fly without keeping multi-gigabyte managed objects in RAM.
     /// Memory footprint is virtually ZERO beyond the grid's own index map.
     /// </summary>
-    public sealed class ZeroProceduralSource : IZeroVirtualSource
+    public sealed class ZeroProceduralSource : IZeroVirtualSource, IZeroSortableSource
     {
+
         private readonly int _totalRowCount;
         private readonly char[] _scratch = new char[64];
 
@@ -113,5 +114,55 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
                     break;
             }
         }
+
+        public int CompareRows(int rowA, int rowB, int columnIndex)
+        {
+            switch (columnIndex)
+            {
+                case 0:
+                case 1:
+                    return rowA.CompareTo(rowB);
+
+                case 2:
+                    int catA = (rowA ^ 0x5555) % Categories.Length;
+                    if (catA < 0) catA = -catA;
+                    int catB = (rowB ^ 0x5555) % Categories.Length;
+                    if (catB < 0) catB = -catB;
+                    return string.Compare(Categories[catA], Categories[catB], StringComparison.OrdinalIgnoreCase);
+
+                case 3:
+                    long qtyA = ((long)rowA * 37) % 2500 + 1;
+                    long qtyB = ((long)rowB * 37) % 2500 + 1;
+                    return qtyA.CompareTo(qtyB);
+
+                case 4:
+                    double priceA = (((rowA * 17) % 500) + 15) * 1000.0;
+                    double priceB = (((rowB * 17) % 500) + 15) * 1000.0;
+                    return priceA.CompareTo(priceB);
+
+                case 5:
+                    long qA = ((long)rowA * 37) % 2500 + 1;
+                    double pA = (((rowA * 17) % 500) + 15) * 1000.0;
+                    long qB = ((long)rowB * 37) % 2500 + 1;
+                    double pB = (((rowB * 17) % 500) + 15) * 1000.0;
+                    return (qA * pA).CompareTo(qB * pB);
+
+                case 6:
+                    int lotA = (rowA % 9999) + 1;
+                    int lotB = (rowB % 9999) + 1;
+                    return lotA.CompareTo(lotB);
+
+                case 7:
+                    int statA = (rowA ^ 0xAAAA) % Statuses.Length;
+                    if (statA < 0) statA = -statA;
+                    int statB = (rowB ^ 0xAAAA) % Statuses.Length;
+                    if (statB < 0) statB = -statB;
+                    return string.Compare(Statuses[statA], Statuses[statB], StringComparison.OrdinalIgnoreCase);
+
+                default:
+                    return rowA.CompareTo(rowB);
+            }
+        }
     }
 }
+
