@@ -2,10 +2,12 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Overlays
 {
+
     /// <summary>
     /// Modern enterprise modal dialog with rounded container, backdrop dimming, and action buttons.
     /// </summary>

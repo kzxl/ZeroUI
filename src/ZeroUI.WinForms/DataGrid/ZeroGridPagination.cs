@@ -2,9 +2,11 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Editors;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.DataGrid
 {
+
     /// <summary>
     /// High-performance pagination toolbar control designed for virtual grids and large datasets.
     /// </summary>

@@ -4,8 +4,9 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Editors
 {
+
     /// <summary>
     /// Modern flat progress bar with smooth anti-aliased fill, percentage overlay, and indeterminate animation.
     /// </summary>

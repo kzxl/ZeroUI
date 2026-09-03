@@ -4,8 +4,9 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Industrial
 {
+
     /// <summary>
     /// Modern container card for ZeroUI with rounded corners, optional Step Badge, Title, Subtitle, and Action Link.
     /// </summary>

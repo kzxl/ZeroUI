@@ -4,9 +4,10 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Industrial
 {
     public class ZeroDescriptionItem
+
     {
         public string Label { get; set; } = "";
         public string Value { get; set; } = "";

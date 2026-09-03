@@ -12,9 +12,10 @@ using ZeroUI.Core.Virtualization;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Rendering;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.DataGrid
 {
     public class ZeroGridControl : Control
+
     {
         private readonly List<ZeroColumn> _columns = new List<ZeroColumn>();
         private readonly RowIndexMap _rowIndexMap = new RowIndexMap(10000);

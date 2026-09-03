@@ -7,9 +7,10 @@ using ZeroUI.Core.Data;
 using ZeroUI.Core.Virtualization;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Forms;
-using ZeroUI.WinForms.Controls;
+using ZeroUI.WinForms.DataGrid;
 
 namespace ZeroUI.Samples.BenchmarkDemo
+
 {
     internal static class Program
     {

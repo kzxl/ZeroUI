@@ -3,9 +3,10 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Overlays
 {
     public enum ZeroToastType
+
     {
         Info,
         Success,

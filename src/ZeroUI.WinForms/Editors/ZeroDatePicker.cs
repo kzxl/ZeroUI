@@ -5,8 +5,9 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Editors
 {
+
     /// <summary>
     /// Modern date picker input control with interactive calendar dropdown and quick-select presets.
     /// </summary>

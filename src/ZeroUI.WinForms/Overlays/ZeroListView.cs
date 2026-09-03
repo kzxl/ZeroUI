@@ -5,9 +5,10 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Rendering;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Overlays
 {
     public enum LogSeverity : byte
+
     {
         Info = 0,
         Success = 1,

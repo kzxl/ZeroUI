@@ -5,8 +5,9 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Overlays
 {
+
     /// <summary>
     /// Modern right-docked slide-out drawer panel for Master-Detail inspection and side forms.
     /// </summary>

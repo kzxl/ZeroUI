@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ZeroUI.Core.Data;
 
-namespace ZeroUI.WinForms.Export
+namespace ZeroUI.WinForms.DataGrid
 {
     /// <summary>
     /// High-throughput zero-allocation streaming CSV exporter for ZeroUI controls.
@@ -15,8 +15,9 @@ namespace ZeroUI.WinForms.Export
     {
         public static Task<int> ExportToCsvAsync(
             IZeroVirtualSource dataSource,
-            ZeroUI.WinForms.Controls.ZeroGridControl grid,
+            ZeroGridControl grid,
             string filePath,
+
             IProgress<int>? progress = null,
             CancellationToken cancellationToken = default)
         {

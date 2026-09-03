@@ -4,8 +4,9 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace ZeroUI.WinForms.Controls
+namespace ZeroUI.WinForms.Industrial
 {
+
     /// <summary>
     /// Modern anti-aliased circular gauge/meter for OEE, Yield rate, and equipment efficiency.
     /// </summary>

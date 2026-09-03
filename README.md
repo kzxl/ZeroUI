@@ -59,12 +59,13 @@ Tested on a standard development machine using headless automated stress-tests (
 
 ZeroUI provides an end-to-end suite of modern enterprise controls:
 
-### 🚀 Core Data Grid & Navigation
+### 🚀 DataGrid Subsystem (`ZeroUI.WinForms.DataGrid`)
 * **`ZeroGridControl`**: High-performance virtual grid with Win32 Memory DC DIBSection rendering, custom column definitions, alignments, sorting, and row density switching (`Compact = 24px`, `Normal = 28px`, `Comfortable = 36px`).
 * **`ZeroGridSearchBar`**: Integrated live search bar with debounced input (150ms), live match counter, density switcher, and CSV export trigger.
 * **`ZeroGridPagination`**: Enterprise pagination toolbar with page size selector (`50`, `100`, `500`, `1000`, `All`), row statistics, and navigation buttons.
+* **`ZeroGridExporter`**: High-throughput streaming CSV exporter capable of outputting >1,100,000 rows/sec directly to disk.
 
-### 🏭 Industrial & MES Suite
+### 🏭 Industrial & MES Subsystem (`ZeroUI.WinForms.Industrial`)
 * **`ZeroCard`**: Modern rounded container card with Step Number Badge (`1`, `2`, `3`...), Title, Subtitle, Action Link, and inner `ContentPanel`.
 * **`ZeroSteps`**: Data-driven manufacturing workflow control with vector glyph nodes (Gear ⚙, Checkmark ✔, Warehouse 🏠), Title, Quantity, Timestamp, and dynamic horizontal transition arrows (`→`). Supports real-time `UpdateStep(...)` telemetry in 0.01 ms and `StepClicked` events.
 * **`ZeroDescriptions`**: Key-value property metadata grid for entity specifications with muted labels and bold values.
@@ -74,17 +75,26 @@ ZeroUI provides an end-to-end suite of modern enterprise controls:
 * **`ZeroAlertBanner`**: Dismissible or sticky alert banner for factory line stoppage, feeder shortage, or operator broadcasts.
 * **`ZeroBarcodeBox`**: Specialized hardware scanner input box with auto-select on focus, auto-submit on Enter, and green flash feedback.
 
-### 🎨 Next-Gen Enterprise Suite
-* **`ZeroToolbar`**: Flat, single-HWND enterprise action and menu bar with primary buttons, glyphs, dividers, badge counters, and elastic right spacers.
-* **`ZeroTheme`**: Unified Design Token & Theme Engine supporting **Clean Light Mode** and **Obsidian Dark Mode** with reactive global `ThemeChanged` event.
-* **`ZeroDrawer`**: Smooth 60 FPS right-docked slide-out panel for deep Master-Detail inspection without leaving the active grid.
-* **`ZeroModal`**: Enterprise modal dialog with rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), and Primary/Cancel action buttons.
+### ✏️ Editors Subsystem (`ZeroUI.WinForms.Editors`)
+* **`ZeroButton`**: Modern anti-aliased button with rounded corners, interactive hover/press states, and semantic styles (`Primary`, `Secondary`, `Success`, `Danger`, `Ghost`).
 * **`ZeroDatePicker`**: Modern date input box with calendar glyph (`📅`) and dropdown popup featuring 1-click presets (*Today*, *Yesterday*, *This Week*).
-* **`ZeroTag`**: Soft pastel status badges with 1px border (`Emerald`, `Sapphire`, `Amber`, `Ruby`, `Slate`).
+* **`ZeroSearchBox`**: Standalone input box with search magnifying glass, clear button, and debounced text change event.
 * **`ZeroSwitch`**: 60 FPS animated sliding toggle switch with keyboard support and custom text (`ON` / `OFF`).
-* **`ZeroToast`**: Non-blocking floating toast notifications with smooth fade-in/fade-out that do not steal keyboard focus (`WS_EX_NOACTIVATE`).
-* **`ZeroStatistic`**: KPI executive dashboard metric card with prefixes, suffixes, and trend indicators (▲ / ▼).
 * **`ZeroSegmented`**: Pill-style segmented switcher on slate track with smooth white active indicator.
+* **`ZeroTag`**: Soft pastel status badges with 1px border (`Emerald`, `Sapphire`, `Amber`, `Ruby`, `Slate`).
+* **`ZeroStatistic`**: KPI executive dashboard metric card with prefixes, suffixes, and trend indicators (▲ / ▼).
+* **`ZeroProgressBar`**: Modern flat progress bar with percentage overlay and indeterminate shimmer.
+
+### 🪟 Overlays & Navigation Subsystem (`ZeroUI.WinForms.Overlays`)
+* **`ZeroToolbar`**: Flat, single-HWND enterprise action and menu bar with primary buttons, glyphs, dividers, badge counters, and elastic right spacers.
+* **`ZeroDrawer`**: Smooth 60 FPS right-docked slide-out panel for deep Master-Detail inspection without leaving the active grid.
+* **`ZeroModal`**: Enterprise modal dialog with rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), ESC key, backdrop click dismiss, and action buttons.
+* **`ZeroToast`**: Non-blocking floating toast notifications with smooth fade-in/fade-out that do not steal keyboard focus (`WS_EX_NOACTIVATE`).
+* **`ZeroListView`**: High-throughput log viewer rendering 50,000+ log lines at 60 FPS.
+
+### 🎨 Foundation & Theme Engine (`ZeroUI.WinForms.Theme`, `Rendering`)
+* **`ZeroTheme`**: Unified Design Token & Theme Engine supporting **Clean Light Mode** and **Obsidian Dark Mode** with reactive global `ThemeChanged` event.
+* **`MemoryDIBSection`**: Direct Win32 Memory DC surface avoiding GDI object leaks and double buffering artifacts.
 
 ---
 
@@ -95,20 +105,24 @@ ZeroUI/
 ├── ZeroUI.slnx                                   # Visual Studio / .NET Solution
 ├── README.md                                     # Project overview & documentation
 ├── src/
-│   ├── ZeroUI.Core/                              # Core headless platform-agnostic engine
+│   ├── ZeroUI.Core/                              # Platform-agnostic data virtualization engine
 │   │   ├── Common/                               # Memory pooling, Enums, Math utilities
 │   │   ├── Data/                                 # IZeroVirtualSource, RowIndexMap, Filter & Sort engines
-│   │   ├── Layout/                               # Cell bounds, Viewport culling algorithms
-│   │   └── Export/                               # Zero-alloc streaming CSV & text exporter
-│   ├── ZeroUI.WinForms/                          # High-performance WinForms controls
-│   │   ├── Controls/                             # ZeroGridControl, ZeroToolbar, ZeroDrawer, ZeroCard...
-│   │   ├── Rendering/                            # Win32 Memory DC DIBSection double buffer
-│   │   └── Theme/                                # ZeroTheme design token engine (Light / Dark)
+│   │   └── Layout/                               # Cell bounds, Viewport culling algorithms
+│   ├── ZeroUI.WinForms/                          # Standardized WinForms control suite
+│   │   ├── DataGrid/                             # [Subsystem] ZeroGridControl, SearchBar, Pagination, Exporter
+│   │   ├── Industrial/                           # [Subsystem] ZeroSteps, ZeroCard, ZeroGauge, ZeroTimeline...
+│   │   ├── Editors/                              # [Subsystem] ZeroButton, ZeroDatePicker, ZeroSwitch, ZeroTag...
+│   │   ├── Overlays/                             # [Subsystem] ZeroToolbar, ZeroDrawer, ZeroModal, ZeroToast...
+│   │   ├── Theme/                                # [Foundation] ZeroTheme, Token Engine (Light / Dark)
+│   │   ├── Rendering/                            # [Foundation] Win32 Memory DC DIBSection double buffer
+│   │   └── Native/                               # Win32 GDI32/User32 P/Invoke interop layer
 │   └── ZeroUI.Samples.BenchmarkDemo/             # Comprehensive benchmark & showcase application
 │       ├── Forms/                                # MainForm testbed with telemetry HUD & tabs
 │       ├── Data/                                 # 100K, 1M, 10M rows mock & procedural data sources
 │       └── Diagnostics/                          # Real-time FPS, Latency, and Memory telemetry
 ```
+
 
 ---
 
