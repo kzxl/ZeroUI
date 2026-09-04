@@ -45,9 +45,10 @@ namespace ZeroUI.WinForms.Editors
             {
                 BorderStyle = BorderStyle.None,
                 Font = Font,
-                Location = new Point(10, 7),
+                Location = new Point(12, (Height - 18) / 2),
                 Width = Width - 36,
-                BackColor = Color.White
+                BackColor = ZeroTheme.Colors.Surface,
+                ForeColor = ZeroTheme.Colors.TextPrimary
             };
 
             _textBox.TextChanged += TextBox_TextChanged;
@@ -57,6 +58,7 @@ namespace ZeroUI.WinForms.Editors
 
             Controls.Add(_textBox);
 
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -71,6 +73,21 @@ namespace ZeroUI.WinForms.Editors
                 _debounceTimer.Stop();
                 DebouncedTextChanged?.Invoke(this, _textBox.Text);
             };
+
+            UpdateTheme();
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e)
+        {
+            UpdateTheme();
+        }
+
+        private void UpdateTheme()
+        {
+            var palette = ZeroTheme.Colors;
+            _textBox.BackColor = palette.Surface;
+            _textBox.ForeColor = palette.TextPrimary;
+            Invalidate();
         }
 
         [Category("Appearance")]
@@ -151,8 +168,12 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
+            var palette = ZeroTheme.Colors;
+            _textBox.BackColor = palette.Surface;
+            _textBox.ForeColor = palette.TextPrimary;
+
             // 1. Fill parent background to eliminate black corner clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
             using (var brushParent = new SolidBrush(parentBg))
             {
                 g.FillRectangle(brushParent, ClientRectangle);
@@ -162,19 +183,19 @@ namespace ZeroUI.WinForms.Editors
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
 
             // 2. Background and Border
-            Color borderColor = _isFocused ? Color.FromArgb(79, 70, 229) : Color.FromArgb(209, 213, 219);
-            float borderWidth = _isFocused ? 1.5f : 1f;
+            Color borderColor = _isFocused ? palette.Primary : palette.Border;
+            float borderWidth = 1f;
 
             using (var path = ZeroUIConfig.CreateRoundedRectangle(rect, effRadius))
             {
-                using var bgBrush = new SolidBrush(ZeroTheme.Colors.Surface);
+                using var bgBrush = new SolidBrush(palette.Surface);
                 g.FillPath(bgBrush, path);
 
                 using var borderPen = new Pen(borderColor, borderWidth);
                 g.DrawPath(borderPen, path);
             }
 
-            // 2. Placeholder Text (when empty and not typing)
+            // 3. Placeholder Text (when empty and not typing)
             if (string.IsNullOrEmpty(_textBox.Text) && !_isFocused)
             {
                 Rectangle phRect = new Rectangle(12, 0, Width - 36, Height);
@@ -183,15 +204,15 @@ namespace ZeroUI.WinForms.Editors
                     _placeholder,
                     Font,
                     phRect,
-                    Color.FromArgb(156, 163, 175),
+                    palette.TextSecondary,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
             }
 
-            // 3. Clear Button (✕) when text exists
+            // 4. Clear Button (✕) when text exists
             if (!string.IsNullOrEmpty(_textBox.Text))
             {
                 Rectangle clearRect = new Rectangle(Width - 28, (Height - 18) / 2, 18, 18);
-                using var clearBg = new SolidBrush(Color.FromArgb(229, 231, 235));
+                using var clearBg = new SolidBrush(palette.Hover);
                 g.FillEllipse(clearBg, clearRect);
 
                 TextRenderer.DrawText(
@@ -199,7 +220,7 @@ namespace ZeroUI.WinForms.Editors
                     "✕",
                     new Font("Segoe UI", 7.5f, FontStyle.Bold),
                     clearRect,
-                    Color.FromArgb(107, 114, 128),
+                    palette.TextSecondary,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
             }
         }
@@ -211,6 +232,7 @@ namespace ZeroUI.WinForms.Editors
         {
             if (disposing)
             {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _debounceTimer.Dispose();
             }
             base.Dispose(disposing);
