@@ -1,0 +1,240 @@
+using System;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
+
+namespace ZeroUI.WinForms.Editors
+{
+    /// <summary>
+    /// Modern anti-aliased masked text box for ZeroUI.
+    /// Supports formatted input for IP addresses, MAC addresses, serial numbers, phone numbers, and lot codes.
+    /// Provides theme synchronization and clean vector rendering.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Mask")]
+    [DefaultEvent("TextChanged")]
+    [Description("Modern anti-aliased masked text box")]
+    public class ZeroMaskedTextBox : Control
+    {
+        private readonly MaskedTextBox _innerBox;
+        private bool _isFocused = false;
+        private bool _isHovered = false;
+
+        public ZeroMaskedTextBox()
+        {
+            SetStyle(
+                ControlStyles.UserPaint |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
+
+            BackColor = Color.Transparent;
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+
+            _innerBox = new MaskedTextBox
+            {
+                BorderStyle = BorderStyle.None,
+                Font = Font,
+                BackColor = ZeroTheme.Colors.Surface,
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                PromptChar = '_'
+            };
+
+            _innerBox.TextChanged += (s, e) =>
+            {
+                OnTextChanged(e);
+                Invalidate();
+            };
+            _innerBox.GotFocus += (s, e) =>
+            {
+                _isFocused = true;
+                Invalidate();
+            };
+            _innerBox.LostFocus += (s, e) =>
+            {
+                _isFocused = false;
+                Invalidate();
+            };
+            _innerBox.KeyDown += (s, e) => OnKeyDown(e);
+            _innerBox.KeyPress += (s, e) => OnKeyPress(e);
+            _innerBox.KeyUp += (s, e) => OnKeyUp(e);
+
+            Controls.Add(_innerBox);
+            Size = new Size(220, 36);
+
+            ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                _innerBox.Font = ZeroUIConfig.DefaultFont;
+                UpdateInnerBounds();
+                Invalidate();
+            };
+
+            UpdateTheme();
+            UpdateInnerBounds();
+        }
+
+        private void UpdateTheme()
+        {
+            var p = ZeroTheme.Colors;
+            _innerBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
+            _innerBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
+            Invalidate();
+        }
+
+        [Category("Behavior")]
+        [DefaultValue("")]
+        public string Mask
+        {
+            get => _innerBox.Mask;
+            set
+            {
+                _innerBox.Mask = value ?? "";
+                Invalidate();
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue("")]
+#pragma warning disable CS8765, CS8764
+        public override string Text
+        {
+            get => _innerBox.Text;
+            set
+            {
+                if (_innerBox.Text != value)
+                {
+                    _innerBox.Text = value ?? "";
+                    Invalidate();
+                }
+            }
+        }
+#pragma warning restore CS8765, CS8764
+
+        [Category("Behavior")]
+        [DefaultValue('_')]
+        public char PromptChar
+        {
+            get => _innerBox.PromptChar;
+            set
+            {
+                _innerBox.PromptChar = value;
+                Invalidate();
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly
+        {
+            get => _innerBox.ReadOnly;
+            set
+            {
+                _innerBox.ReadOnly = value;
+                UpdateTheme();
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        public bool BeepOnError
+        {
+            get => _innerBox.BeepOnError;
+            set => _innerBox.BeepOnError = value;
+        }
+
+        public void SelectAll() => _innerBox.SelectAll();
+        public void Clear() => _innerBox.Clear();
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            UpdateInnerBounds();
+        }
+
+        private void UpdateInnerBounds()
+        {
+            if (_innerBox == null) return;
+
+            int leftPad = 12;
+            int rightPad = 12;
+            int innerH = _innerBox.PreferredHeight;
+            int innerY = Math.Max(2, (Height - innerH) / 2);
+            int innerW = Math.Max(10, Width - leftPad - rightPad);
+
+            _innerBox.SetBounds(leftPad, innerY, innerW, innerH);
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _isHovered = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _isHovered = false;
+            Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+            var palette = ZeroTheme.Colors;
+            bool isDark = ZeroTheme.IsDark;
+
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+            var borderRect = new Rectangle(1, 1, Width - 2, Height - 2);
+
+            Color borderColor;
+            Color bgColor;
+
+            if (!Enabled)
+            {
+                borderColor = isDark ? Color.FromArgb(55, 60, 70) : Color.FromArgb(215, 220, 228);
+                bgColor = isDark ? Color.FromArgb(28, 33, 43) : Color.FromArgb(243, 246, 249);
+            }
+            else if (_isFocused)
+            {
+                borderColor = palette.Primary;
+                bgColor = ReadOnly ? palette.HeaderBackground : palette.Surface;
+            }
+            else if (_isHovered)
+            {
+                borderColor = palette.Primary;
+                bgColor = ReadOnly ? palette.HeaderBackground : palette.Surface;
+            }
+            else
+            {
+                borderColor = palette.Border;
+                bgColor = ReadOnly ? palette.HeaderBackground : palette.Surface;
+            }
+
+            // Draw Background and Border
+            using (var path = ZeroUIConfig.CreateRoundedRectangle(borderRect, effRadius))
+            {
+                using (var bgBrush = new SolidBrush(bgColor))
+                {
+                    g.FillPath(bgBrush, path);
+                }
+
+                float penWidth = _isFocused ? 1.5f : 1.0f;
+                using (var pen = new Pen(borderColor, penWidth))
+                {
+                    g.DrawPath(pen, path);
+                }
+            }
+        }
+    }
+}

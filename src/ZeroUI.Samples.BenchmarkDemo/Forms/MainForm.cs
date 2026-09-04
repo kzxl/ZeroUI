@@ -1435,6 +1435,196 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(txtValidate);
             leftPanel.Controls.Add(btnCheckValid);
 
+            // Section 12: ZeroRadioButton & ZeroRadioGroup (Single-Choice Options)
+            int radioY = errY + 54;
+            var lblRadioTitle = new Label
+            {
+                Text = "12. ZeroRadioButton & ZeroRadioGroup (Choice)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, radioY)
+            };
+            leftPanel.Controls.Add(lblRadioTitle);
+
+            radioY += 30;
+            var radioGroup = new ZeroRadioGroup
+            {
+                Location = new Point(16, radioY),
+                Size = new Size(390, 32),
+                Orientation = Orientation.Horizontal,
+                Items = new[] { "Standard", "Express (+10%)", "Priority Rush" },
+                ItemWidth = 125,
+                SelectedIndex = 0
+            };
+            radioGroup.SelectedIndexChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Shipping mode: {radioGroup.SelectedItem}");
+            };
+            leftPanel.Controls.Add(radioGroup);
+
+            // Section 13: ZeroComboBox (Standard Lightweight Dropdown)
+            int comboY = radioY + 44;
+            var lblComboTitle = new Label
+            {
+                Text = "13. ZeroComboBox (Standard Dropdown Select)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, comboY)
+            };
+            leftPanel.Controls.Add(lblComboTitle);
+
+            comboY += 30;
+            var cmbOptions = new ZeroComboBox
+            {
+                Location = new Point(16, comboY),
+                Size = new Size(390, 34),
+                Placeholder = "Select manufacturing plant..."
+            };
+            cmbOptions.SetItems(new[]
+            {
+                "Plant Alpha - Line 01 (SMT High-Speed)",
+                "Plant Alpha - Line 02 (Through-Hole DIP)",
+                "Plant Beta - Line 03 (Automated Optical Inspection)",
+                "Plant Beta - Line 04 (Box Build & Packaging)",
+                "Plant Gamma - Line 05 (Cleanroom ISO Class 7)"
+            });
+            cmbOptions.SelectedIndex = 0;
+            cmbOptions.SelectedIndexChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Selected Plant: {cmbOptions.SelectedItem}");
+            };
+            leftPanel.Controls.Add(cmbOptions);
+
+            // Section 14: ZeroMemoEdit (Multi-line Text Editor)
+            int memoY = comboY + 44;
+            var lblMemoTitle = new Label
+            {
+                Text = "14. ZeroMemoEdit (Multi-Line Notes & SQL)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, memoY)
+            };
+            leftPanel.Controls.Add(lblMemoTitle);
+
+            memoY += 30;
+            var memoEdit = new ZeroMemoEdit
+            {
+                Location = new Point(16, memoY),
+                Size = new Size(390, 80),
+                PlaceholderText = "Enter maintenance remarks or operator handover notes...",
+                ShowCharacterCount = true,
+                MaxLength = 250,
+                Text = "Routine preventive maintenance completed on SMT Feeder BOA472. Calibration within ±0.02mm."
+            };
+            leftPanel.Controls.Add(memoEdit);
+
+            // Section 15: ZeroSlider (Industrial Setpoint Trackbar)
+            int sliderY = memoY + 92;
+            var lblSliderTitle = new Label
+            {
+                Text = "15. ZeroSlider (Industrial Setpoint 0..100%)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, sliderY)
+            };
+            leftPanel.Controls.Add(lblSliderTitle);
+
+            sliderY += 30;
+            var sliderDemo = new ZeroSlider
+            {
+                Location = new Point(16, sliderY),
+                Size = new Size(390, 36),
+                Minimum = 0,
+                Maximum = 100,
+                Value = 75,
+                Unit = "% Speed"
+            };
+            sliderDemo.ValueChanged += (s, e) =>
+            {
+                // Live visual feedback
+            };
+            leftPanel.Controls.Add(sliderDemo);
+
+            // Section 16: ZeroTimePicker (Segmented Shift Time Picker)
+            int timeY = sliderY + 46;
+            var lblTimeTitle = new Label
+            {
+                Text = "16. ZeroTimePicker (Shift Hours:Minutes:Seconds)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, timeY)
+            };
+            leftPanel.Controls.Add(lblTimeTitle);
+
+            timeY += 30;
+            var timePicker1 = new ZeroTimePicker
+            {
+                Location = new Point(16, timeY),
+                Size = new Size(185, 34),
+                Value = new TimeSpan(8, 0, 0),
+                ShowSeconds = true
+            };
+            var timePicker2 = new ZeroTimePicker
+            {
+                Location = new Point(210, timeY),
+                Size = new Size(185, 34),
+                Value = new TimeSpan(16, 30, 0),
+                ShowSeconds = false
+            };
+            timePicker1.ValueChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Shift Start: {timePicker1.Value:hh\\:mm\\:ss}");
+            };
+            timePicker2.ValueChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Shift End: {timePicker2.Value:hh\\:mm}");
+            };
+            leftPanel.Controls.Add(timePicker1);
+            leftPanel.Controls.Add(timePicker2);
+
+            // Section 17: ZeroMaskedTextBox (IP & MAC Address Input)
+            int maskY = timeY + 44;
+            var lblMaskTitle = new Label
+            {
+                Text = "17. ZeroMaskedTextBox (PLC IP & Lot Code)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, maskY)
+            };
+            leftPanel.Controls.Add(lblMaskTitle);
+
+            maskY += 30;
+            var lblIpPrompt = new Label { Text = "PLC Ethernet IP:", AutoSize = true, Location = new Point(16, maskY), Font = new Font("Segoe UI", 8.5f), ForeColor = colors.TextSecondary };
+            leftPanel.Controls.Add(lblIpPrompt);
+            maskY += 20;
+
+            var txtIp = new ZeroMaskedTextBox
+            {
+                Location = new Point(16, maskY),
+                Size = new Size(185, 32),
+                Mask = "000.000.000.000",
+                Text = "192.168.001.100"
+            };
+            var txtLot = new ZeroMaskedTextBox
+            {
+                Location = new Point(210, maskY),
+                Size = new Size(185, 32),
+                Mask = "LOT-0000-AAAA",
+                Text = "LOT-2026-PROD"
+            };
+            leftPanel.Controls.Add(txtIp);
+            leftPanel.Controls.Add(txtLot);
+
+            // Bottom spacer
+            var bottomSpacer = new Label { Location = new Point(16, maskY + 44), Size = new Size(390, 20), Text = "" };
+            leftPanel.Controls.Add(bottomSpacer);
+
             // Right Panel: ZeroListView Log Streamer
             var rightPanel = new Panel
             {
