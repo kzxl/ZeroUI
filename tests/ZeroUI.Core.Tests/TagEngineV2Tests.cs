@@ -7,6 +7,7 @@ using ZeroUI.Core.Scada;
 
 namespace ZeroUI.Core.Tests
 {
+    [Collection("ScadaTagEngine")]
     public class TagEngineV2Tests
     {
         private sealed class MockBindableControl : IScadaBindable

@@ -55,6 +55,14 @@ namespace ZeroUI.Core.Scada
         public static ZeroTripleBuffer TripleBuffer { get; } = new ZeroTripleBuffer(4096);
 
         /// <summary>
+        /// When true (activated by ScadaPipelineCoordinator for high-throughput SCADA pipelines),
+        /// UI controls are not directly posted to upon every SetNumeric/SetBoolean call at 10 kHz.
+        /// Instead, dirty tags are marked and flushed in coalesced batches at 30-60 Hz via FlushUiBatch
+        /// or TripleBuffer, preventing Windows message queue saturation.
+        /// </summary>
+        public static bool IsDecoupledUiMode { get; set; } = false;
+
+        /// <summary>
         /// Global event fired whenever any tag in the registry is updated.
         /// </summary>
         public static event Action<IScadaTag>? TagUpdated;
@@ -116,7 +124,7 @@ namespace ZeroUI.Core.Scada
         /// Fast, zero-boxing numeric setter using TagId.
         /// Updates flat TagStorage, evaluates deadband, and dispatches via Inverted Index.
         /// </summary>
-        public static bool SetNumeric(int tagId, double value, ScadaQuality quality = ScadaQuality.Good, long timestampUtcMs = 0)
+        public static bool SetNumeric(int tagId, double value, ScadaQuality quality = ScadaQuality.Good, long timestampUtcMs = 0, bool dispatchUi = true)
         {
             ScadaTagRecord record;
             lock (_registryLock)
@@ -153,7 +161,10 @@ namespace ZeroUI.Core.Scada
                 _attachedHistorian?.LogSample(record.TagPath, value, quality, nowDt);
 
                 DispatchSubscribers(tagId, record.TagPath, newTag);
-                DispatchInvertedIndex(tagId, newTag);
+                if (dispatchUi && !IsDecoupledUiMode)
+                {
+                    DispatchInvertedIndex(tagId, newTag);
+                }
 
                 TagUpdated?.Invoke(newTag);
                 return true;
@@ -163,7 +174,7 @@ namespace ZeroUI.Core.Scada
         /// <summary>
         /// Fast, zero-boxing boolean setter using TagId.
         /// </summary>
-        public static bool SetBoolean(int tagId, bool value, ScadaQuality quality = ScadaQuality.Good, long timestampUtcMs = 0)
+        public static bool SetBoolean(int tagId, bool value, ScadaQuality quality = ScadaQuality.Good, long timestampUtcMs = 0, bool dispatchUi = true)
         {
             ScadaTagRecord record;
             lock (_registryLock)
@@ -181,7 +192,10 @@ namespace ZeroUI.Core.Scada
             record.CurrentTag = newTag;
 
             DispatchSubscribers(tagId, record.TagPath, newTag);
-            DispatchInvertedIndex(tagId, newTag);
+            if (dispatchUi && !IsDecoupledUiMode)
+            {
+                DispatchInvertedIndex(tagId, newTag);
+            }
 
             TagUpdated?.Invoke(newTag);
             return true;
@@ -191,7 +205,7 @@ namespace ZeroUI.Core.Scada
         /// Backward-compatible tag setter accepting string path and boxed object.
         /// Resolves TagId and routes to optimized zero-alloc storage.
         /// </summary>
-        public static bool SetTagValue(string tagPath, object? value, ScadaQuality quality = ScadaQuality.Good, DateTime? timestamp = null)
+        public static bool SetTagValue(string tagPath, object? value, ScadaQuality quality = ScadaQuality.Good, DateTime? timestamp = null, bool dispatchUi = true)
         {
             if (string.IsNullOrWhiteSpace(tagPath)) return false;
 
@@ -202,11 +216,11 @@ namespace ZeroUI.Core.Scada
 
             if (TryGetNumeric(value, out double numVal))
             {
-                return SetNumeric(tagId, numVal, quality, nowMs);
+                return SetNumeric(tagId, numVal, quality, nowMs, dispatchUi);
             }
             if (value is bool bVal)
             {
-                return SetBoolean(tagId, bVal, quality, nowMs);
+                return SetBoolean(tagId, bVal, quality, nowMs, dispatchUi);
             }
 
             // Fallback for null or custom types
@@ -225,7 +239,10 @@ namespace ZeroUI.Core.Scada
                 Storage.Set(tagId, new ScadaValue(0.0, ScadaQuality.Bad), nowMs);
 
                 DispatchSubscribers(tagId, tagPath, newTag);
-                DispatchInvertedIndex(tagId, newTag);
+                if (dispatchUi && !IsDecoupledUiMode)
+                {
+                    DispatchInvertedIndex(tagId, newTag);
+                }
 
                 TagUpdated?.Invoke(newTag);
                 return true;

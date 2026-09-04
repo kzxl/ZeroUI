@@ -142,16 +142,19 @@ namespace ZeroUI.Core.Scada
 
         private static int GetBitIndex(ulong singleBit)
         {
-            // De Bruijn multiplication for 64-bit trailing zero count
-            const ulong debruijn = 0x03f79d71b4ca8b09UL;
-            int[] indexTable =
-            {
-                0, 1, 56, 2, 57, 49, 28, 3, 61, 58, 42, 50, 38, 29, 17, 4,
-                62, 47, 59, 36, 45, 43, 51, 22, 53, 39, 34, 30, 18, 12, 5, 14,
-                63, 55, 48, 27, 60, 41, 37, 16, 46, 35, 44, 21, 52, 33, 11, 13,
-                54, 26, 40, 15, 20, 10, 25, 19, 9, 24, 8, 23, 7, 6, 31, 32
-            };
-            return indexTable[(singleBit * debruijn) >> 58];
+#if NETCOREAPP || NET8_0_OR_GREATER
+            return System.Numerics.BitOperations.TrailingZeroCount(singleBit);
+#else
+            if (singleBit == 0) return 0;
+            int c = 0;
+            if ((singleBit & 0x00000000FFFFFFFFUL) == 0) { singleBit >>= 32; c += 32; }
+            if ((singleBit & 0x000000000000FFFFUL) == 0) { singleBit >>= 16; c += 16; }
+            if ((singleBit & 0x00000000000000FFUL) == 0) { singleBit >>= 8; c += 8; }
+            if ((singleBit & 0x000000000000000FUL) == 0) { singleBit >>= 4; c += 4; }
+            if ((singleBit & 0x0000000000000003UL) == 0) { singleBit >>= 2; c += 2; }
+            if ((singleBit & 0x0000000000000001UL) == 0) { c += 1; }
+            return c;
+#endif
         }
     }
 }

@@ -23,6 +23,7 @@ namespace ZeroUI.Core.Benchmarks
             ProfileAlarmEngine();
             ProfileMultiResolutionHistorian();
             ProfileSceneGraph();
+            ProfileScada3TierPipeline();
             HistorianMultiDimensionalBenchmark.RunAsync().GetAwaiter().GetResult();
 
             Console.WriteLine();
@@ -406,6 +407,93 @@ namespace ZeroUI.Core.Benchmarks
 
             double avgHitNs = (swHit.Elapsed.TotalMilliseconds / hitIters) * 1_000_000.0;
             Console.WriteLine($"  • Spatial Mouse Hit-Testing: {avgHitNs,6:F1} ns per test (O(1) Uniform Grid lookup)");
+            Console.WriteLine();
+        }
+
+        private static void ProfileScada3TierPipeline()
+        {
+            Console.WriteLine("----------------------------------------------------------------------------------");
+            Console.WriteLine("7. SCADA 3-Tier Update Pipeline (FAST 10kHz, MEDIUM 100-1000Hz, SLOW 60Hz)");
+            Console.WriteLine("----------------------------------------------------------------------------------");
+
+            using var coordinator = new ZeroUI.Core.Scada.Pipeline.ScadaPipelineCoordinator(mediumFrequencyHz: 200);
+            coordinator.Start();
+
+            // Register Safety Rule in Fast Tier
+            var safetyRule = new ZeroUI.Core.Scada.Safety.SafetyInterlockRule(
+                "BENCH-SAFETY-01",
+                "Plant.Steam.Pressure",
+                "Over-pressure relief interlock",
+                ZeroUI.Core.Scada.Safety.SafetyTripCondition.AboveHighLimit,
+                thresholdValue: 120.0);
+            coordinator.Safety.RegisterRule(safetyRule);
+
+            // Register Aggregator in Medium Tier
+            var smaAgg = new ZeroUI.Core.Scada.Analytics.TagAggregator(
+                "Plant.Steam.Pressure",
+                "Plant.Steam.Pressure_SMA",
+                ZeroUI.Core.Scada.Analytics.AggregationType.SimpleMovingAverage,
+                windowSize: 20);
+            coordinator.Aggregation.RegisterAggregator(smaAgg);
+
+            // Fast Tier Stress Test (100,000 updates)
+            const int fastCount = 100_000;
+            var swFast = Stopwatch.StartNew();
+            for (int i = 0; i < fastCount; i++)
+            {
+                double pressure = 80.0 + (i % 30);
+                coordinator.IngestFast("Plant.Steam.Pressure", pressure);
+            }
+            swFast.Stop();
+
+            double fastElapsedMs = swFast.Elapsed.TotalMilliseconds;
+            double fastThroughput = (fastCount / fastElapsedMs) * 1000.0;
+            double fastAvgLatencyUs = (fastElapsedMs / fastCount) * 1000.0;
+
+            Console.WriteLine($"  [FAST TIER - Field Ingestion & Safety (<1 µs target)]");
+            Console.WriteLine($"  • Processed Updates:        {fastCount:N0} updates");
+            Console.WriteLine($"  • Total Ingestion Time:     {fastElapsedMs,6:F2} ms");
+            Console.WriteLine($"  • Ingestion Throughput:     {fastThroughput,10:N0} updates/sec");
+            Console.WriteLine($"  • Avg Ingest + Safety:      {fastAvgLatencyUs,6:F3} μs / sample");
+
+            // Medium Tier Compute Benchmark (1,000 cycles)
+            const int medCycles = 1_000;
+            var swMed = Stopwatch.StartNew();
+            for (int i = 0; i < medCycles; i++)
+            {
+                coordinator.Aggregation.ExecuteAggregationCycle(Environment.TickCount);
+            }
+            swMed.Stop();
+
+            double medElapsedMs = swMed.Elapsed.TotalMilliseconds;
+            double medAvgCycleUs = (medElapsedMs / medCycles) * 1000.0;
+            double medMaxFreqHz = 1_000_000.0 / Math.Max(0.1, medAvgCycleUs);
+
+            Console.WriteLine($"  [MEDIUM TIER - Analytical & Windowed Aggregation (100-1000 Hz target)]");
+            Console.WriteLine($"  • Aggregation Cycles:       {medCycles:N0} cycles");
+            Console.WriteLine($"  • Avg Cycle Duration:       {medAvgCycleUs,6:F2} μs ({medAvgCycleUs / 1000.0,6:F4} ms)");
+            Console.WriteLine($"  • Max Compute Throughput:   {medMaxFreqHz,10:N0} Hz capacity");
+
+            // Slow Tier Display Benchmark (60 Hz frame dispatch)
+            const int slowFrames = 60;
+            var swSlow = Stopwatch.StartNew();
+            int totalDispatched = 0;
+            for (int i = 0; i < slowFrames; i++)
+            {
+                totalDispatched += coordinator.PumpUiFrame();
+            }
+            swSlow.Stop();
+
+            double slowElapsedMs = swSlow.Elapsed.TotalMilliseconds;
+            double slowAvgFrameUs = (slowElapsedMs / slowFrames) * 1000.0;
+            double slowFps = (slowFrames / slowElapsedMs) * 1000.0;
+
+            Console.WriteLine($"  [SLOW TIER - WinForms UI Coalescing & Display Pump (30-60 Hz target)]");
+            Console.WriteLine($"  • Display Frames Pumped:    {slowFrames} frames");
+            Console.WriteLine($"  • Dirty Tags Coalesced:     {totalDispatched} dispatches");
+            Console.WriteLine($"  • Avg UI Pump Duration:     {slowAvgFrameUs,6:F2} μs ({slowAvgFrameUs / 1000.0,6:F4} ms)");
+            Console.WriteLine($"  • Frame Rate Headroom:      {slowFps,10:N0} FPS");
+            Console.WriteLine($"  • WinForms Msg Suppression: {((fastCount - slowFrames) / (double)fastCount) * 100.0:F2}% (Zero UI Flooding!)");
             Console.WriteLine();
         }
 

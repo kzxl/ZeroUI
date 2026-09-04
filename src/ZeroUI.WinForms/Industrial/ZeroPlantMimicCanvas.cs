@@ -115,6 +115,12 @@ namespace ZeroUI.WinForms.Industrial
             long elapsed = Math.Max(1, now - _lastTick);
             _lastTick = now;
 
+            // Slow Tier (30-60 Hz): Flush coalesced dirty tags to visual controls
+            if (ZeroTagEngine.IsDecoupledUiMode)
+            {
+                ZeroTagEngine.FlushUiBatch(1024);
+            }
+
             for (int i = 0; i < _scene.RootNodes.Count; i++)
             {
                 _scene.RootNodes[i].UpdateAnimation(elapsed);
