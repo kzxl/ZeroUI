@@ -9,6 +9,8 @@
         xmlns:tree="clr-namespace:ZeroUI.Wpf.TreeList;assembly=ZeroUI.Wpf"
         xmlns:prop="clr-namespace:ZeroUI.Wpf.PropertyGrid;assembly=ZeroUI.Wpf"
         xmlns:nav="clr-namespace:ZeroUI.Wpf.Navigation;assembly=ZeroUI.Wpf"
+        xmlns:dock="clr-namespace:ZeroUI.Wpf.Docking;assembly=ZeroUI.Wpf"
+        xmlns:diag="clr-namespace:ZeroUI.Wpf.Diagram;assembly=ZeroUI.Wpf"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="860" Width="1340"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -98,6 +100,8 @@
                         <Button x:Name="BtnSortQuantity" Click="BtnSortQuantity_Click" Content="📦 Sort Quantity" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                         <Button x:Name="BtnTogglePinning" Click="BtnTogglePinning_Click" Content="📌 Toggle Pinning" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                         <Button x:Name="BtnToggleFooter" Click="BtnToggleFooter_Click" Content="∑ Toggle Footer" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnToggleGroupPanel" Click="BtnToggleGroupPanel_Click" Content="🗂️ Group Panel" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnToggleSummaries" Click="BtnToggleSummaries_Click" Content="∑ Group Subtotals" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                         <Button x:Name="BtnLoadGenericList" Click="BtnLoadGenericList_Click" Content="🧬 Generic List (5K)" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                         <Button x:Name="BtnBandedHeaders" Click="BtnBandedHeaders_Click" Content="🏛️ Multi-Tier Bands" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                         <Button x:Name="BtnBlockSelection" Click="BtnBlockSelection_Click" Content="📐 Block Marquee" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
@@ -108,12 +112,12 @@
                     <StackPanel Grid.Row="2" Margin="14,0,14,6">
                         <grid:ZeroGridSearchBar x:Name="GridSearch" />
                         <TextBlock Margin="2,4,0,0" FontSize="11.5" Foreground="#94A3B8"
-                                   Text="💡 In-Place Editing: F2 or Double-Click | Vector CheckBox: 1-Click Toggle | Multi-Selection: Ctrl/Shift+Click &amp; Ctrl+C | Grouping: Click Group Row to Expand/Collapse | In-Cell DataBars: Live % visual" />
+                                   Text="💡 Drag headers into Group Panel to group | Click [✕] to remove group | Header [▼] for Excel distinct filter | In-Place Editing: F2 | In-Cell DataBars: Live % visual" />
                     </StackPanel>
 
                     <!-- ZeroGridControl -->
                     <Border Grid.Row="3" Margin="14,0,14,0" BorderThickness="1" BorderBrush="#2E344E">
-                        <grid:ZeroGridControl x:Name="VirtualGrid" />
+                        <grid:ZeroGridControl x:Name="VirtualGrid" ShowGroupPanel="True" />
                     </Border>
 
                     <!-- Pagination -->
@@ -685,6 +689,89 @@
                             </Grid>
                         </Border>
                     </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 8: PIVOT GRID (OLAP CROSS-TAB) -->
+            <TabItem Header="📊 8. Pivot Grid (OLAP)">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Margin="0,0,0,12" Background="#181B26" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="📊 Multi-Dimensional OLAP Pivot Grid (ZeroPivotGrid)" FontSize="15" FontWeight="Bold" Foreground="#818CF8" />
+                                <TextBlock Text="Cross-tab multi-axis slicing: Region × Quarter with live Grand Totals and dynamic aggregation (Sum / Count / Average)" FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <TextBlock Text="Aggregation:" VerticalAlignment="Center" Foreground="#94A3B8" Margin="0,0,8,0" FontSize="12" />
+                                <ComboBox x:Name="ComboPivotAgg" Width="120" Height="28" SelectionChanged="ComboPivotAgg_SelectionChanged" Margin="0,0,12,0" />
+                                <Button x:Name="BtnRefreshPivot" Click="BtnRefreshPivot_Click" Content="🔄 Regenerate Data" Height="28" Padding="12,0,12,0" Cursor="Hand" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <ind:ZeroPivotGrid x:Name="DemoPivotGrid" />
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 9: GANTT CHART (MES SCHEDULE) -->
+            <TabItem Header="📅 9. Gantt Chart (Schedule)">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Margin="0,0,0,12" Background="#181B26" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="📅 Industrial Production Gantt Schedule (ZeroGanttChart)" FontSize="15" FontWeight="Bold" Foreground="#818CF8" />
+                                <TextBlock Text="Interactive timeline with task bars, milestone diamonds, predecessor dependency links, and completion %" FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <Button x:Name="BtnGanttZoomIn" Click="BtnGanttZoomIn_Click" Content="🔍+ Zoom In" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                <Button x:Name="BtnGanttZoomOut" Click="BtnGanttZoomOut_Click" Content="🔍- Zoom Out" Height="28" Padding="10,0,10,0" Margin="0,0,12,0" Cursor="Hand" />
+                                <Button x:Name="BtnGanttAddDemo" Click="BtnGanttAddDemo_Click" Content="➕ Add Task" Height="28" Padding="10,0,10,0" Cursor="Hand" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <ind:ZeroGanttChart x:Name="DemoGanttChart" />
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 10: DOCK MANAGER & DIAGRAM CANVAS -->
+            <TabItem Header="🏗️ 10. Docking &amp; Diagram Studio">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Margin="0,0,0,12" Background="#181B26" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="🏗️ Visual Studio-Style Docking Manager &amp; P&amp;ID Flow Canvas" FontSize="15" FontWeight="Bold" Foreground="#818CF8" />
+                                <TextBlock Text="Drag nodes, connect port pins with Bezier pipes, pan/zoom canvas, resize docking panels with splitters" FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <Button x:Name="BtnAddNode" Click="BtnAddNode_Click" Content="➕ Add Station Node" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                <Button x:Name="BtnResetDiagram" Click="BtnResetDiagram_Click" Content="🔄 Reset Layout" Height="28" Padding="10,0,10,0" Cursor="Hand" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <dock:ZeroDockManager x:Name="DemoDockManager" />
+                    </Border>
                 </Grid>
             </TabItem>
         </TabControl>

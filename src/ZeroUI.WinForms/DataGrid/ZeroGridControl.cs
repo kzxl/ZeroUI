@@ -362,12 +362,75 @@ namespace ZeroUI.WinForms.DataGrid
                 return buf.Text.ToString();
             });
 
+            if (_groupSummaries.Count > 0)
+            {
+                RecalculateGroupSummaries();
+            }
+
             _scrollY = 0;
             _selectedVisualRow = -1;
             _selectedVisualRows.Clear();
             UpdateScrollBars();
             Invalidate();
         }
+
+        public void RecalculateGroupSummaries()
+        {
+            if (_dataSource == null || !_groupedMap.HasGrouping) return;
+
+            if (_groupSummaries.Count == 0)
+            {
+                _groupedMap.CalculateSummaries(_groupSummaries, (r, c) => 0);
+            }
+            else
+            {
+                _groupedMap.CalculateSummaries(_groupSummaries, (modelRow, colIdx) =>
+                {
+                    CellValueBuffer buf = new CellValueBuffer();
+                    _dataSource.GetCellValue(modelRow, colIdx, ref buf);
+                    var s = buf.Text.ToString();
+                    if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double val)) return val;
+                    if (double.TryParse(s, NumberStyles.Any, CultureInfo.CurrentCulture, out double val2)) return val2;
+                    return 0;
+                });
+            }
+            Invalidate();
+        }
+
+        private bool _showGroupPanel = false;
+        private int _groupPanelHeight = 34;
+        private readonly List<GroupSummaryItem> _groupSummaries = new List<GroupSummaryItem>();
+        private readonly List<ConditionalFormattingRule> _conditionalRules = new List<ConditionalFormattingRule>();
+
+        public bool ShowGroupPanel
+        {
+            get => _showGroupPanel;
+            set
+            {
+                if (_showGroupPanel != value)
+                {
+                    _showGroupPanel = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        public int GroupPanelHeight
+        {
+            get => _groupPanelHeight;
+            set
+            {
+                if (_groupPanelHeight != value)
+                {
+                    _groupPanelHeight = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        public int TotalTopOffset => (_showGroupPanel ? _groupPanelHeight : 0) + EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+        public List<GroupSummaryItem> GroupSummaries => _groupSummaries;
+        public List<ConditionalFormattingRule> ConditionalRules => _conditionalRules;
 
         public void ClearGrouping()
         {
@@ -1376,6 +1439,10 @@ namespace ZeroUI.WinForms.DataGrid
                                     ? _columns[groupInfo.ColumnIndex].HeaderText
                                     : "Group";
                                 string groupText = $"{expandIcon}{colHdr}: {(groupInfo?.GroupKey ?? string.Empty)} ({groupInfo?.TotalDataRowCount ?? 0} items)";
+                                if (groupInfo != null && !string.IsNullOrEmpty(groupInfo.FormattedSummaryText))
+                                {
+                                    groupText += $"  •  {groupInfo.FormattedSummaryText}";
+                                }
                                 RECT groupRect = new RECT(8 + indent, currentY, width - 8, currentY + _rowHeight);
                                 _dibSection.SelectFont(_hHeaderFont);
                                 _dibSection.DrawText(groupText.AsSpan(), ref groupRect, _pinnedBorderColor, CellAlignment.Left, textHeight);

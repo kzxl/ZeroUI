@@ -71,6 +71,15 @@ namespace ZeroUI.Core.Virtualization
         public List<int> DataRowIndices { get; } = new List<int>();
         public List<GroupRowInfo> SubGroups { get; } = new List<GroupRowInfo>();
         public Dictionary<int, double>? Summaries { get; set; }
+        public Dictionary<(int ColumnIndex, ZeroUI.Core.Data.GroupSummaryType Type), double> DetailedSummaries { get; } = new Dictionary<(int, ZeroUI.Core.Data.GroupSummaryType), double>();
+        public string? FormattedSummaryText { get; set; }
+
+        public double GetSummary(int columnIndex, ZeroUI.Core.Data.GroupSummaryType type = ZeroUI.Core.Data.GroupSummaryType.Sum)
+        {
+            if (DetailedSummaries.TryGetValue((columnIndex, type), out double val)) return val;
+            if (Summaries != null && Summaries.TryGetValue(columnIndex, out double legacyVal)) return legacyVal;
+            return 0.0;
+        }
 
         public int TotalDataRowCount => DataRowIndices.Count;
 
@@ -302,6 +311,104 @@ namespace ZeroUI.Core.Virtualization
                 return _allGroups[groupId];
             }
             return null;
+        }
+
+        /// <summary>
+        /// Calculates multi-level aggregations across all grouped hierarchy nodes.
+        /// </summary>
+        public void CalculateSummaries(IReadOnlyList<ZeroUI.Core.Data.GroupSummaryItem> summaryItems, Func<int, int, double> getNumericValue)
+        {
+            if (summaryItems == null || summaryItems.Count == 0 || _allGroups.Count == 0)
+            {
+                for (int g = 0; g < _allGroups.Count; g++)
+                {
+                    _allGroups[g].FormattedSummaryText = null;
+                    _allGroups[g].Summaries?.Clear();
+                }
+                return;
+            }
+
+            var sb = new System.Text.StringBuilder(128);
+
+            for (int g = 0; g < _allGroups.Count; g++)
+            {
+                var group = _allGroups[g];
+                group.Summaries ??= new Dictionary<int, double>();
+                group.Summaries.Clear();
+                group.DetailedSummaries.Clear();
+                sb.Clear();
+
+                var rows = group.DataRowIndices;
+                int rowCount = rows.Count;
+
+                for (int s = 0; s < summaryItems.Count; s++)
+                {
+                    var item = summaryItems[s];
+                    double result = 0;
+
+                    switch (item.SummaryType)
+                    {
+                        case ZeroUI.Core.Data.GroupSummaryType.Count:
+                            result = rowCount;
+                            break;
+
+                        case ZeroUI.Core.Data.GroupSummaryType.Sum:
+                            for (int r = 0; r < rowCount; r++)
+                            {
+                                result += getNumericValue(rows[r], item.ColumnIndex);
+                            }
+                            break;
+
+                        case ZeroUI.Core.Data.GroupSummaryType.Average:
+                            if (rowCount > 0)
+                            {
+                                double sum = 0;
+                                for (int r = 0; r < rowCount; r++) sum += getNumericValue(rows[r], item.ColumnIndex);
+                                result = sum / rowCount;
+                            }
+                            break;
+
+                        case ZeroUI.Core.Data.GroupSummaryType.Min:
+                            if (rowCount > 0)
+                            {
+                                result = getNumericValue(rows[0], item.ColumnIndex);
+                                for (int r = 1; r < rowCount; r++)
+                                {
+                                    double v = getNumericValue(rows[r], item.ColumnIndex);
+                                    if (v < result) result = v;
+                                }
+                            }
+                            break;
+
+                        case ZeroUI.Core.Data.GroupSummaryType.Max:
+                            if (rowCount > 0)
+                            {
+                                result = getNumericValue(rows[0], item.ColumnIndex);
+                                for (int r = 1; r < rowCount; r++)
+                                {
+                                    double v = getNumericValue(rows[r], item.ColumnIndex);
+                                    if (v > result) result = v;
+                                }
+                            }
+                            break;
+
+                        case ZeroUI.Core.Data.GroupSummaryType.Custom:
+                            if (item.CustomAggregator != null)
+                            {
+                                result = item.CustomAggregator(rows);
+                            }
+                            break;
+                    }
+
+                    group.DetailedSummaries[(item.ColumnIndex, item.SummaryType)] = result;
+                    group.Summaries[item.ColumnIndex] = result;
+
+                    if (sb.Length > 0) sb.Append("  •  ");
+                    sb.Append(item.FormatValue(result));
+                }
+
+                group.FormattedSummaryText = sb.ToString();
+            }
         }
 
         public ReadOnlySpan<VisualRowEntry> AsSpan() => new ReadOnlySpan<VisualRowEntry>(_map, 0, _activeCount);

@@ -14,6 +14,9 @@ using ZeroUI.Core.Theme;
 using ZeroUI.Samples.WpfDemo.Data;
 using ZeroUI.Wpf.Charts.Model;
 using ZeroUI.Wpf.Editors;
+using ZeroUI.Wpf.Industrial;
+using ZeroUI.Wpf.Docking;
+using ZeroUI.Wpf.Diagram;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Samples.WpfDemo
@@ -47,6 +50,9 @@ namespace ZeroUI.Samples.WpfDemo
             SetupTelemetry();
             SetupScadaSimulation();
             SetupEnterpriseControls();
+            SetupPivotGrid();
+            SetupGanttChart();
+            SetupDockAndDiagram();
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
@@ -231,7 +237,23 @@ namespace ZeroUI.Samples.WpfDemo
             VirtualGrid.Columns.Add(colStatus);
 
             VirtualGrid.ShowFooter = true;
+            VirtualGrid.ShowGroupPanel = true;
             VirtualGrid.SelectionMode = ZeroGridSelectionMode.MultiRow;
+
+            // Enterprise Group Summaries
+            VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(-1, GroupSummaryType.Count, null, "Items"));
+            VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(5, GroupSummaryType.Sum, "{0:N0}", "Total Qty"));
+            VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(6, GroupSummaryType.Average, "${0:N2}", "Avg Price"));
+            VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(7, GroupSummaryType.Sum, "${0:N2}", "Total Amount"));
+
+            // Conditional Formatting Rule: Highlight high quantity
+            VirtualGrid.ConditionalRules.Add(new ConditionalFormattingRule(
+                columnIndex: 5,
+                op: ConditionOperator.GreaterThan,
+                value1: 400,
+                backColor: 0x4010B981,
+                textColor: 0xFF34D399
+            ));
 
             VirtualGrid.CellValueChanged += (s, args) =>
             {
@@ -504,6 +526,30 @@ namespace ZeroUI.Samples.WpfDemo
             BtnClearGrid.Background = ZeroWpfTheme.BgInput;
             BtnClearGrid.Foreground = ZeroWpfTheme.TextPrimary;
 
+            BtnToggleGroupPanel.Background = ZeroWpfTheme.BgInput;
+            BtnToggleGroupPanel.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnToggleSummaries.Background = ZeroWpfTheme.BgInput;
+            BtnToggleSummaries.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnRefreshPivot.Background = ZeroWpfTheme.PrimaryAccent;
+            BtnRefreshPivot.Foreground = ZeroWpfTheme.SelectionForeground;
+
+            BtnGanttZoomIn.Background = ZeroWpfTheme.BgInput;
+            BtnGanttZoomIn.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnGanttZoomOut.Background = ZeroWpfTheme.BgInput;
+            BtnGanttZoomOut.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnGanttAddDemo.Background = ZeroWpfTheme.PrimaryAccent;
+            BtnGanttAddDemo.Foreground = ZeroWpfTheme.SelectionForeground;
+
+            BtnAddNode.Background = ZeroWpfTheme.PrimaryAccent;
+            BtnAddNode.Foreground = ZeroWpfTheme.SelectionForeground;
+
+            BtnResetDiagram.Background = ZeroWpfTheme.BgInput;
+            BtnResetDiagram.Foreground = ZeroWpfTheme.TextPrimary;
+
             BtnToggleSim.Background = ZeroWpfTheme.BgInput;
             BtnToggleSim.Foreground = ZeroWpfTheme.TextPrimary;
 
@@ -548,6 +594,31 @@ namespace ZeroUI.Samples.WpfDemo
         {
             VirtualGrid.ClearGrouping();
             TxtLatency.Text = $"Grouping cleared ({VirtualGrid.VisualRowCount:N0} rows)";
+        }
+
+        private void BtnToggleGroupPanel_Click(object sender, RoutedEventArgs e)
+        {
+            VirtualGrid.ShowGroupPanel = !VirtualGrid.ShowGroupPanel;
+            TxtLatency.Text = $"Group Panel {(VirtualGrid.ShowGroupPanel ? "Shown" : "Hidden")}";
+        }
+
+        private void BtnToggleSummaries_Click(object sender, RoutedEventArgs e)
+        {
+            if (VirtualGrid.GroupSummaries.Count > 0)
+            {
+                VirtualGrid.GroupSummaries.Clear();
+                TxtLatency.Text = "Group summaries cleared";
+            }
+            else
+            {
+                VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(-1, GroupSummaryType.Count, null, "Items"));
+                VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(5, GroupSummaryType.Sum, "{0:N0}", "Total Qty"));
+                VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(6, GroupSummaryType.Average, "${0:N2}", "Avg Price"));
+                VirtualGrid.GroupSummaries.Add(new GroupSummaryItem(7, GroupSummaryType.Sum, "${0:N2}", "Total Amount"));
+                TxtLatency.Text = "Group summaries enabled";
+            }
+            VirtualGrid.RecalculateGroupSummaries();
+            VirtualGrid.InvalidateVisual();
         }
 
         private bool _allGroupsExpanded = true;
@@ -828,6 +899,236 @@ namespace ZeroUI.Samples.WpfDemo
                 DemoPropertyGrid.SelectedObject = nodeConfig;
             };
         }
+
+        #region Pivot Grid OLAP Setup
+
+        private void SetupPivotGrid()
+        {
+            ComboPivotAgg.ItemsSource = new[] { "Sum of Revenue", "Average Revenue", "Count of Orders" };
+            ComboPivotAgg.SelectedIndex = 0;
+            RebuildPivotData(GroupSummaryType.Sum);
+        }
+
+        private void RebuildPivotData(GroupSummaryType summaryType)
+        {
+            DemoPivotGrid.Engine.RowDimensions.Clear();
+            DemoPivotGrid.Engine.ColumnDimensions.Clear();
+            DemoPivotGrid.Engine.Measures.Clear();
+
+            DemoPivotGrid.Engine.RowDimensions.Add(new PivotDimension(0, "Region"));
+            DemoPivotGrid.Engine.ColumnDimensions.Add(new PivotDimension(1, "Quarter"));
+
+            string formatStr = summaryType == GroupSummaryType.Count ? "{0:N0}" : "${0:N2}";
+            DemoPivotGrid.Engine.Measures.Add(new PivotMeasure(2, "Revenue", summaryType, formatStr));
+
+            // Generate sample regional sales data
+            string[] regions = { "North America", "Europe EMEA", "Asia-Pacific", "Latin America", "Middle East" };
+            string[] quarters = { "Q1 2026", "Q2 2026", "Q3 2026", "Q4 2026" };
+
+            var rawRows = new List<(string Region, string Quarter, double Amount)>();
+            var rand = new Random(101);
+
+            foreach (var reg in regions)
+            {
+                foreach (var qtr in quarters)
+                {
+                    int orders = rand.Next(10, 30);
+                    for (int i = 0; i < orders; i++)
+                    {
+                        double amount = rand.Next(1200, 85000);
+                        rawRows.Add((reg, qtr, amount));
+                    }
+                }
+            }
+
+            DemoPivotGrid.Engine.Compute(rawRows.Count,
+                (r, field) => field == 0 ? rawRows[r].Region : (field == 1 ? rawRows[r].Quarter : rawRows[r].Amount.ToString()),
+                (r, field) => field == 2 ? rawRows[r].Amount : 1.0);
+
+            DemoPivotGrid.RefreshData();
+        }
+
+        private void ComboPivotAgg_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DemoPivotGrid == null || ComboPivotAgg == null) return;
+            GroupSummaryType agg = ComboPivotAgg.SelectedIndex switch
+            {
+                1 => GroupSummaryType.Average,
+                2 => GroupSummaryType.Count,
+                _ => GroupSummaryType.Sum
+            };
+            RebuildPivotData(agg);
+        }
+
+        private void BtnRefreshPivot_Click(object sender, RoutedEventArgs e)
+        {
+            GroupSummaryType agg = ComboPivotAgg.SelectedIndex switch
+            {
+                1 => GroupSummaryType.Average,
+                2 => GroupSummaryType.Count,
+                _ => GroupSummaryType.Sum
+            };
+            RebuildPivotData(agg);
+        }
+
+        #endregion
+
+        #region Gantt Chart Setup
+
+        private void SetupGanttChart()
+        {
+            DemoGanttChart.ProjectStart = DateTime.Today.AddDays(-3);
+            DemoGanttChart.ProjectEnd = DateTime.Today.AddDays(30);
+            DemoGanttChart.PixelsPerDay = 38.0;
+
+            var baseDate = DateTime.Today;
+
+            var t1 = new GanttTaskItem(1, "1. Process Safety & Hazard Audit", baseDate.AddDays(-2), baseDate.AddDays(3), 1.0f, false, "HSE Team") { BarColor = 0xFF10B981 };
+            var t2 = new GanttTaskItem(2, "2. SMT Stencil & Tooling Setup", baseDate.AddDays(2), baseDate.AddDays(7), 0.85f, false, "Tooling Lead") { BarColor = 0xFF3B82F6 };
+            t2.PredecessorIds.Add(1);
+
+            var t3 = new GanttTaskItem(3, "3. Pilot Lot SMT Component Placement", baseDate.AddDays(7), baseDate.AddDays(14), 0.50f, false, "Line Operator A") { BarColor = 0xFF8B5CF6 };
+            t3.PredecessorIds.Add(2);
+
+            var t4 = new GanttTaskItem(4, "4. Nitrogen Reflow Oven Thermal Profiling", baseDate.AddDays(12), baseDate.AddDays(18), 0.25f, false, "Thermal Specialist") { BarColor = 0xFFF59E0B };
+            t4.PredecessorIds.Add(3);
+
+            var t5 = new GanttTaskItem(5, "★ Factory Acceptance Gate (FAT)", baseDate.AddDays(19), baseDate.AddDays(19), 0.0f, true, "Executive Committee") { BarColor = 0xFFEF4444 };
+            t5.PredecessorIds.Add(4);
+
+            var t6 = new GanttTaskItem(6, "5. Mass Production Ramp & Packaging", baseDate.AddDays(20), baseDate.AddDays(28), 0.0f, false, "Shift Supervisor") { BarColor = 0xFF06B6D4 };
+            t6.PredecessorIds.Add(5);
+
+            DemoGanttChart.Tasks.Add(t1);
+            DemoGanttChart.Tasks.Add(t2);
+            DemoGanttChart.Tasks.Add(t3);
+            DemoGanttChart.Tasks.Add(t4);
+            DemoGanttChart.Tasks.Add(t5);
+            DemoGanttChart.Tasks.Add(t6);
+        }
+
+        private void BtnGanttZoomIn_Click(object sender, RoutedEventArgs e)
+        {
+            DemoGanttChart.PixelsPerDay = Math.Min(100.0, DemoGanttChart.PixelsPerDay * 1.25);
+        }
+
+        private void BtnGanttZoomOut_Click(object sender, RoutedEventArgs e)
+        {
+            DemoGanttChart.PixelsPerDay = Math.Max(12.0, DemoGanttChart.PixelsPerDay * 0.8);
+        }
+
+        private void BtnGanttAddDemo_Click(object sender, RoutedEventArgs e)
+        {
+            int nextId = DemoGanttChart.Tasks.Count + 1;
+            var lastTask = DemoGanttChart.Tasks.Count > 0 ? DemoGanttChart.Tasks[DemoGanttChart.Tasks.Count - 1] : null;
+            DateTime start = lastTask != null ? lastTask.EndDate.AddDays(1) : DateTime.Today;
+            DateTime end = start.AddDays(5);
+
+            var newTask = new GanttTaskItem(nextId, $"Task {nextId}: Quality Burn-in & Aging", start, end, 0.1f, false, "QC Team") { BarColor = 0xFF6366F1 };
+            if (lastTask != null) newTask.PredecessorIds.Add(lastTask.Id);
+
+            DemoGanttChart.Tasks.Add(newTask);
+        }
+
+        #endregion
+
+        #region Dock Manager & P&ID Diagram Setup
+
+        private ZeroDiagramCanvas? _diagramCanvas;
+
+        private void SetupDockAndDiagram()
+        {
+            // Left Toolbox Panel
+            var leftPanel = new ZeroDockPanel { Title = "Toolbox & Asset Library", DockPosition = ZeroDockPosition.Left };
+            var toolboxStack = new StackPanel { Margin = new Thickness(12) };
+            toolboxStack.Children.Add(new TextBlock { Text = "📐 Process Library", FontWeight = FontWeights.Bold, Foreground = ZeroWpfTheme.TextPrimary, Margin = new Thickness(0, 0, 0, 8) });
+            toolboxStack.Children.Add(new TextBlock { Text = "• Primary Buffer Tank (TK-101)\n• Centrifugal Feed Pump (P-201)\n• Proportional Control Valve (XV-301)\n• Exothermic Reactor Vessel (RX-401)\n• RTD Temperature Sensor (TE-501)", Foreground = ZeroWpfTheme.TextSecondary, LineHeight = 20 });
+            leftPanel.Content = toolboxStack;
+            DemoDockManager.AddPanel(leftPanel);
+
+            // Center Document: ZeroDiagramCanvas
+            var centerDoc = new ZeroDockPanel { Title = "P&ID Process Diagram Loop", DockPosition = ZeroDockPosition.Document };
+            _diagramCanvas = new ZeroDiagramCanvas();
+            centerDoc.Content = _diagramCanvas;
+            DemoDockManager.AddPanel(centerDoc);
+
+            // Bottom Output Panel
+            var bottomPanel = new ZeroDockPanel { Title = "Output & Fieldbus Telemetry", DockPosition = ZeroDockPosition.Bottom };
+            var outputBox = new TextBox
+            {
+                IsReadOnly = true,
+                Background = ZeroWpfTheme.BgInput,
+                Foreground = ZeroWpfTheme.TextSecondary,
+                BorderThickness = new Thickness(0),
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11.5,
+                Text = "[SYS] Process loop initialized. Baud: 115200. OPC-UA server listening on opc.tcp://10.0.1.50:4840\n[DIAG] Single-Visual Diagram engine ready. Drag nodes or connect port dots to route pipes."
+            };
+            bottomPanel.Content = outputBox;
+            DemoDockManager.AddPanel(bottomPanel);
+
+            // Right Properties Panel
+            var rightPanel = new ZeroDockPanel { Title = "Node Inspector", DockPosition = ZeroDockPosition.Right };
+            var rightStack = new StackPanel { Margin = new Thickness(12) };
+            var lblInspector = new TextBlock { Text = "Select a diagram node to inspect parameters", TextWrapping = TextWrapping.Wrap, Foreground = ZeroWpfTheme.TextMuted };
+            rightStack.Children.Add(lblInspector);
+            rightPanel.Content = rightStack;
+            DemoDockManager.AddPanel(rightPanel);
+
+            // Connect diagram selection event to update inspector
+            _diagramCanvas.NodeSelected += (s, node) =>
+            {
+                if (node != null)
+                {
+                    lblInspector.Text = $"Node ID: {node.Id}\nTitle: {node.Title}\nRole: {node.Subtitle}\nCoordinates: ({node.X:0}, {node.Y:0})\nPorts: {node.Ports.Count}";
+                }
+                else
+                {
+                    lblInspector.Text = "No node selected. Click a node to view properties.";
+                }
+            };
+
+            ResetDiagramContent();
+        }
+
+        private void ResetDiagramContent()
+        {
+            if (_diagramCanvas == null) return;
+            _diagramCanvas.Nodes.Clear();
+            _diagramCanvas.Connections.Clear();
+
+            var nodeTank = new DiagramNode("tank1", "Buffer Tank TK-101", "Raw Material Feed", 40, 60, Color.FromRgb(59, 130, 246), "🛢");
+            var nodePump = new DiagramNode("pump1", "Feed Pump P-201", "Centrifugal 45kW", 240, 60, Color.FromRgb(16, 185, 129), "⚙");
+            var nodeValve = new DiagramNode("valve1", "Pneumatic Valve XV-301", "Linear Throttle", 440, 60, Color.FromRgb(245, 158, 11), "🚰");
+            var nodeReactor = new DiagramNode("reactor1", "Batch Reactor RX-401", "Exothermic Mixing", 640, 60, Color.FromRgb(239, 68, 68), "⚡");
+            var nodeSensor = new DiagramNode("sensor1", "Temp Sensor TE-501", "RTD Dual Pt100", 640, 190, Color.FromRgb(139, 92, 246), "📡");
+
+            _diagramCanvas.Nodes.Add(nodeTank);
+            _diagramCanvas.Nodes.Add(nodePump);
+            _diagramCanvas.Nodes.Add(nodeValve);
+            _diagramCanvas.Nodes.Add(nodeReactor);
+            _diagramCanvas.Nodes.Add(nodeSensor);
+
+            _diagramCanvas.Connections.Add(new DiagramConnection("tank1", "out", "pump1", "in", "Slurry Feed"));
+            _diagramCanvas.Connections.Add(new DiagramConnection("pump1", "out", "valve1", "in", "14.5 Bar"));
+            _diagramCanvas.Connections.Add(new DiagramConnection("valve1", "out", "reactor1", "in", "Rate: 85 L/min"));
+            _diagramCanvas.Connections.Add(new DiagramConnection("reactor1", "out", "sensor1", "in", "Thermal feedback"));
+        }
+
+        private void BtnAddNode_Click(object sender, RoutedEventArgs e)
+        {
+            if (_diagramCanvas == null) return;
+            int count = _diagramCanvas.Nodes.Count + 1;
+            var newNode = new DiagramNode($"custom{count}", $"Station #{count}", "Sub-process Unit", 180 + (count * 20), 180, Color.FromRgb(14, 165, 233), "🔄");
+            _diagramCanvas.Nodes.Add(newNode);
+        }
+
+        private void BtnResetDiagram_Click(object sender, RoutedEventArgs e)
+        {
+            ResetDiagramContent();
+        }
+
+        #endregion
     }
 
     public class RoboticCellConfig

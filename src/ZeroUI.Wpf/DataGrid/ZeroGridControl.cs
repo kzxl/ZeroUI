@@ -71,6 +71,93 @@ namespace ZeroUI.Wpf.DataGrid
             return maxDepth;
         }
 
+        // Interactive Group Panel & Summaries
+        private bool _showGroupPanel = false;
+        private int _groupPanelHeight = 34;
+        private readonly ObservableCollection<GroupSummaryItem> _groupSummaries = new ObservableCollection<GroupSummaryItem>();
+        private readonly ObservableCollection<ConditionalFormattingRule> _conditionalRules = new ObservableCollection<ConditionalFormattingRule>();
+        private readonly Dictionary<int, HashSet<string>> _columnDistinctFilters = new Dictionary<int, HashSet<string>>();
+        private readonly Dictionary<int, Rect> _columnFilterButtonBounds = new Dictionary<int, Rect>();
+
+        // Master-Detail
+        private bool _allowMasterDetail = false;
+        private readonly HashSet<int> _expandedMasterRows = new HashSet<int>();
+        public event EventHandler<int>? MasterRowExpanded;
+        public event EventHandler<int>? MasterRowCollapsed;
+
+        // Group Chip Hit Testing & Dragging
+        private struct GroupChipInfo
+        {
+            public int ColumnIndex;
+            public Rect ChipRect;
+            public Rect CloseRect;
+        }
+        private readonly List<GroupChipInfo> _groupChipBounds = new List<GroupChipInfo>();
+        private bool _isDraggingHeader = false;
+        private int _draggedHeaderCol = -1;
+        private Point _headerDragStart;
+        private Point _currentMousePos;
+
+        public bool ShowGroupPanel
+        {
+            get => _showGroupPanel;
+            set
+            {
+                if (_showGroupPanel != value)
+                {
+                    _showGroupPanel = value;
+                    InvalidateVisual();
+                }
+            }
+        }
+
+        public int GroupPanelHeight
+        {
+            get => _groupPanelHeight;
+            set
+            {
+                if (_groupPanelHeight != value)
+                {
+                    _groupPanelHeight = value;
+                    InvalidateVisual();
+                }
+            }
+        }
+
+        public int TotalTopOffset => (ShowGroupPanel ? _groupPanelHeight : 0) + EffectiveHeaderHeight;
+        public ObservableCollection<GroupSummaryItem> GroupSummaries => _groupSummaries;
+        public ObservableCollection<ConditionalFormattingRule> ConditionalRules => _conditionalRules;
+
+        public bool AllowMasterDetail
+        {
+            get => _allowMasterDetail;
+            set
+            {
+                if (_allowMasterDetail != value)
+                {
+                    _allowMasterDetail = value;
+                    InvalidateVisual();
+                }
+            }
+        }
+
+        public bool IsMasterRowExpanded(int modelRowIndex) => _expandedMasterRows.Contains(modelRowIndex);
+
+        public void ToggleMasterRow(int modelRowIndex)
+        {
+            if (_expandedMasterRows.Contains(modelRowIndex))
+            {
+                _expandedMasterRows.Remove(modelRowIndex);
+                MasterRowCollapsed?.Invoke(this, modelRowIndex);
+            }
+            else
+            {
+                _expandedMasterRows.Add(modelRowIndex);
+                MasterRowExpanded?.Invoke(this, modelRowIndex);
+            }
+            InvalidateVisual();
+        }
+
         // Selection & Interaction
         private int _selectedVisualRow = -1;
         private int _hoveredVisualRow = -1;
@@ -254,10 +341,126 @@ namespace ZeroUI.Wpf.DataGrid
                 return buf.Text.ToString();
             });
 
+            if (_groupSummaries.Count > 0)
+            {
+                RecalculateGroupSummaries();
+            }
+
             _scrollY = 0;
             _selectedVisualRow = -1;
             _selectedVisualRows.Clear();
             InvalidateVisual();
+        }
+
+        public void RecalculateGroupSummaries()
+        {
+            if (_dataSource == null || !_groupedMap.HasGrouping) return;
+
+            if (_groupSummaries.Count == 0)
+            {
+                _groupedMap.CalculateSummaries(_groupSummaries, (r, c) => 0);
+            }
+            else
+            {
+                _groupedMap.CalculateSummaries(_groupSummaries, (modelRow, colIdx) =>
+                {
+                    CellValueBuffer buf = new CellValueBuffer();
+                    _dataSource.GetCellValue(modelRow, colIdx, ref buf);
+                    var s = buf.Text.ToString();
+                    if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double val)) return val;
+                    if (double.TryParse(s, NumberStyles.Any, CultureInfo.CurrentCulture, out double val2)) return val2;
+                    return 0;
+                });
+            }
+            InvalidateVisual();
+        }
+
+        public bool IsColumnFiltered(int columnIndex) => _columnDistinctFilters.ContainsKey(columnIndex);
+
+        public List<string> GetDistinctColumnValues(int columnIndex)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (_dataSource != null)
+            {
+                int total = _dataSource.TotalRowCount;
+                CellValueBuffer buf = new CellValueBuffer();
+                for (int r = 0; r < total; r++)
+                {
+                    _dataSource.GetCellValue(r, columnIndex, ref buf);
+                    set.Add(buf.Text.ToString());
+                }
+            }
+            var list = new List<string>(set);
+            list.Sort(StringComparer.OrdinalIgnoreCase);
+            return list;
+        }
+
+        public void ApplyDistinctColumnFilter(int columnIndex, HashSet<string>? selectedValues)
+        {
+            if (selectedValues == null || selectedValues.Count == 0)
+            {
+                _columnDistinctFilters.Remove(columnIndex);
+            }
+            else
+            {
+                _columnDistinctFilters[columnIndex] = selectedValues;
+            }
+
+            ReapplyAllFilters();
+        }
+
+        public void ClearAllFilters()
+        {
+            _columnDistinctFilters.Clear();
+            ReapplyAllFilters();
+        }
+
+        public void ReapplyAllFilters()
+        {
+            if (_dataSource == null) return;
+            int total = _dataSource.TotalRowCount;
+
+            if (_columnDistinctFilters.Count == 0)
+            {
+                _rowIndexMap.ResetIdentity(total);
+            }
+            else
+            {
+                _rowIndexMap.Filter(modelRow =>
+                {
+                    CellValueBuffer buf = new CellValueBuffer();
+                    foreach (var kvp in _columnDistinctFilters)
+                    {
+                        _dataSource.GetCellValue(modelRow, kvp.Key, ref buf);
+                        if (!kvp.Value.Contains(buf.Text.ToString())) return false;
+                    }
+                    return true;
+                }, total);
+            }
+
+            if (_groupedMap.HasGrouping && _groupColumnIndices.Length > 0)
+            {
+                GroupBy(_groupColumnIndices);
+            }
+            else
+            {
+                _scrollY = 0;
+                InvalidateVisual();
+            }
+        }
+
+        public void ShowColumnFilterPopup(int columnIndex)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count) return;
+            var col = _columns[columnIndex];
+            var distinctValues = GetDistinctColumnValues(columnIndex);
+            _columnDistinctFilters.TryGetValue(columnIndex, out var currentSelection);
+
+            var popup = new ZeroColumnFilterPopup(this, columnIndex, col.HeaderText, distinctValues, currentSelection, (colIdx, selected) =>
+            {
+                ApplyDistinctColumnFilter(colIdx, selected);
+            });
+            popup.IsOpen = true;
         }
 
         public void ClearGrouping()
@@ -392,6 +595,8 @@ namespace ZeroUI.Wpf.DataGrid
             _visualChildren.Add(_maskedEditor);
 
             _columns.CollectionChanged += (s, e) => InvalidateVisual();
+            _groupSummaries.CollectionChanged += (s, e) => RecalculateGroupSummaries();
+            _conditionalRules.CollectionChanged += (s, e) => InvalidateVisual();
             ZeroWpfTheme.ThemeChanged += () =>
             {
                 UpdateEditorTheme();
@@ -421,7 +626,7 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 var rect = GetCellRectangle(_editingVisualRow, _editingColIndex);
                 int footerH = ShowFooter ? _footerHeight : 0;
-                if (rect.Y < EffectiveHeaderHeight || rect.Bottom > finalSize.Height - footerH)
+                if (rect.Y < TotalTopOffset || rect.Bottom > finalSize.Height - footerH)
                 {
                     CommitEdit();
                 }
@@ -627,7 +832,7 @@ namespace ZeroUI.Wpf.DataGrid
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalRows = VisualRowCount;
             int totalH = totalRows * _rowHeight;
-            int clientH = (int)Math.Max(0, ActualHeight - EffectiveHeaderHeight - footerH);
+            int clientH = (int)Math.Max(0, ActualHeight - TotalTopOffset - footerH);
             return Math.Max(0, totalH - clientH);
         }
 
@@ -844,9 +1049,11 @@ namespace ZeroUI.Wpf.DataGrid
             int pinnedW = GetPinnedColumnsWidth();
             int footerH = ShowFooter ? _footerHeight : 0;
             int effHeaderH = EffectiveHeaderHeight;
+            int groupPanelH = ShowGroupPanel ? _groupPanelHeight : 0;
+            int totalTopOffset = groupPanelH + effHeaderH;
             int bandDepth = (_bands.Count > 0) ? GetMaxBandDepth() : 0;
             int bandH = bandDepth * _headerHeight;
-            int clientDataH = (int)Math.Max(0, height - effHeaderH - footerH);
+            int clientDataH = (int)Math.Max(0, height - totalTopOffset - footerH);
 
             // 2. Render Virtual Cells
             if (_dataSource != null && totalRows > 0 && totalCols > 0)
@@ -856,11 +1063,11 @@ namespace ZeroUI.Wpf.DataGrid
                 int endRow = Math.Min(totalRows - 1, startRow + visibleRowCount);
 
                 CellValueBuffer cellBuffer = new CellValueBuffer();
-                double currentY = effHeaderH + (startRow * _rowHeight) - _scrollY;
+                double currentY = totalTopOffset + (startRow * _rowHeight) - _scrollY;
 
                 for (int r = startRow; r <= endRow && r < totalRows; r++)
                 {
-                    if (currentY >= effHeaderH + clientDataH) break;
+                    if (currentY >= totalTopOffset + clientDataH) break;
 
                     if (_groupedMap.HasGrouping)
                     {
@@ -878,6 +1085,16 @@ namespace ZeroUI.Wpf.DataGrid
 
                             var ftGroup = CreateFormattedText(groupText, ZeroWpfTheme.BoldTypeface, 12.0, ZeroWpfTheme.PrimaryAccent, dpi);
                             dc.DrawText(ftGroup, new Point(8 + indent, currentY + (_rowHeight - ftGroup.Height) / 2.0));
+
+                            if (groupInfo != null && !string.IsNullOrEmpty(groupInfo.FormattedSummaryText))
+                            {
+                                var ftSummary = CreateFormattedText(groupInfo.FormattedSummaryText!, ZeroWpfTheme.BoldTypeface, 11.5, ZeroWpfTheme.TextSecondary, dpi);
+                                double sX = 8 + indent + ftGroup.Width + 18.0;
+                                if (sX + ftSummary.Width < width - ScrollBarThickness)
+                                {
+                                    dc.DrawText(ftSummary, new Point(sX, currentY + (_rowHeight - ftSummary.Height) / 2.0));
+                                }
+                            }
 
                             dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(0, currentY + _rowHeight - 0.5), new Point(width - ScrollBarThickness, currentY + _rowHeight - 0.5));
                             currentY += _rowHeight;
@@ -1130,7 +1347,7 @@ namespace ZeroUI.Wpf.DataGrid
 
                 if (pinnedW > 0)
                 {
-                    dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, effHeaderH), new Point(pinnedW - 1, height - footerH));
+                    dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, totalTopOffset), new Point(pinnedW - 1, height - footerH));
                 }
             }
             else
@@ -1139,18 +1356,56 @@ namespace ZeroUI.Wpf.DataGrid
                 var emptyTitle = CreateFormattedText("No records to display", ZeroWpfTheme.BoldTypeface, 14.0, ZeroWpfTheme.TextSecondary, dpi);
                 var emptySub = CreateFormattedText("Try adjusting your filters or loading sample data", ZeroWpfTheme.RegularTypeface, 12.0, ZeroWpfTheme.TextMuted, dpi);
 
-                double midY = (effHeaderH + height - footerH) / 2.0 - 20;
+                double midY = (totalTopOffset + height - footerH) / 2.0 - 20;
                 dc.DrawText(emptyTitle, new Point((width - emptyTitle.Width) / 2.0, midY));
                 dc.DrawText(emptySub, new Point((width - emptySub.Width) / 2.0, midY + 24));
             }
 
             // 3. Render Header Row (Always pinned on top)
-            dc.DrawRectangle(ZeroWpfTheme.BgCard, null, new Rect(0, 0, width, effHeaderH));
-            dc.DrawLine(ZeroWpfTheme.BorderPen, new Point(0, effHeaderH - 0.5), new Point(width, effHeaderH - 0.5));
+            if (ShowGroupPanel && groupPanelH > 0)
+            {
+                dc.DrawRectangle(ZeroWpfTheme.BgInput, null, new Rect(0, 0, width, groupPanelH));
+                dc.DrawLine(ZeroWpfTheme.BorderPen, new Point(0, groupPanelH - 0.5), new Point(width, groupPanelH - 0.5));
+
+                _groupChipBounds.Clear();
+
+                if (_groupColumnIndices.Length == 0)
+                {
+                    var phText = CreateFormattedText("Drag a column header here to group by that column", ZeroWpfTheme.RegularTypeface, 11.5, ZeroWpfTheme.TextMuted, dpi);
+                    dc.DrawText(phText, new Point(14, (groupPanelH - phText.Height) / 2.0));
+                }
+                else
+                {
+                    double chipX = 12;
+                    for (int i = 0; i < _groupColumnIndices.Length; i++)
+                    {
+                        int colIdx = _groupColumnIndices[i];
+                        string colName = (colIdx >= 0 && colIdx < _columns.Count) ? _columns[colIdx].HeaderText : $"Col {colIdx}";
+                        var cft = CreateFormattedText(colName, ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
+                        double chipW = cft.Width + 32;
+                        double chipY = 4;
+                        double chipH = groupPanelH - 8;
+                        Rect chipRect = new Rect(chipX, chipY, chipW, chipH);
+                        Rect closeRect = new Rect(chipX + chipW - 18, chipY, 16, chipH);
+
+                        dc.DrawRoundedRectangle(ZeroWpfTheme.BgCard, new Pen(ZeroWpfTheme.PrimaryAccent, 1.2), chipRect, 4, 4);
+                        dc.DrawText(cft, new Point(chipX + 8, chipY + (chipH - cft.Height) / 2.0));
+
+                        var xft = CreateFormattedText("✕", ZeroWpfTheme.BoldTypeface, 10.5, ZeroWpfTheme.TextSecondary, dpi);
+                        dc.DrawText(xft, new Point(closeRect.X + (closeRect.Width - xft.Width) / 2.0, chipY + (chipH - xft.Height) / 2.0));
+
+                        _groupChipBounds.Add(new GroupChipInfo { ColumnIndex = colIdx, ChipRect = chipRect, CloseRect = closeRect });
+                        chipX += chipW + 8;
+                    }
+                }
+            }
+
+            dc.DrawRectangle(ZeroWpfTheme.BgCard, null, new Rect(0, groupPanelH, width, effHeaderH));
+            dc.DrawLine(ZeroWpfTheme.BorderPen, new Point(0, totalTopOffset - 0.5), new Point(width, totalTopOffset - 0.5));
 
             if (_bands.Count > 0)
             {
-                var bandEntries = GridBand.ComputeLayout(_bands, (int)(pinnedW - _scrollX), 0, _headerHeight, bandDepth);
+                var bandEntries = GridBand.ComputeLayout(_bands, (int)(pinnedW - _scrollX), groupPanelH, _headerHeight, bandDepth);
                 for (int b = 0; b < bandEntries.Count; b++)
                 {
                     var entry = bandEntries[b];
@@ -1165,6 +1420,8 @@ namespace ZeroUI.Wpf.DataGrid
                     }
                 }
             }
+
+            _columnFilterButtonBounds.Clear();
 
             // (A) Draw Unpinned Headers
             double unpinnedHdrX = pinnedW - _scrollX;
@@ -1183,13 +1440,24 @@ namespace ZeroUI.Wpf.DataGrid
 
                     var hft = CreateFormattedText(headerText, ZeroWpfTheme.BoldTypeface, 12.0, ZeroWpfTheme.TextPrimary, dpi);
                     double hTextX = unpinnedHdrX + 8;
-                    if (_columns[c].Alignment == CellAlignment.Right) hTextX = unpinnedHdrX + colW - hft.Width - 8;
+                    if (_columns[c].Alignment == CellAlignment.Right) hTextX = unpinnedHdrX + colW - hft.Width - 24;
                     else if (_columns[c].Alignment == CellAlignment.Center) hTextX = unpinnedHdrX + (colW - hft.Width) / 2.0;
 
-                    double hTextY = bandH + (_headerHeight - hft.Height) / 2.0;
+                    double hTextY = groupPanelH + bandH + (_headerHeight - hft.Height) / 2.0;
                     dc.DrawText(hft, new Point(hTextX, hTextY));
 
-                    dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(unpinnedHdrX + colW - 0.5, bandH + 4), new Point(unpinnedHdrX + colW - 0.5, bandH + _headerHeight - 4));
+                    if (_columns[c].AllowFiltering)
+                    {
+                        Rect filterBtnRect = new Rect(unpinnedHdrX + colW - 20, groupPanelH + bandH + (_headerHeight - 14) / 2.0, 16, 14);
+                        _columnFilterButtonBounds[c] = filterBtnRect;
+
+                        bool isFiltered = IsColumnFiltered(c);
+                        Brush fBrush = isFiltered ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.TextMuted;
+                        var ftFilter = CreateFormattedText("▼", ZeroWpfTheme.BoldTypeface, 8.5, fBrush, dpi);
+                        dc.DrawText(ftFilter, new Point(filterBtnRect.X + (filterBtnRect.Width - ftFilter.Width) / 2.0, filterBtnRect.Y + (filterBtnRect.Height - ftFilter.Height) / 2.0));
+                    }
+
+                    dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(unpinnedHdrX + colW - 0.5, groupPanelH + bandH + 4), new Point(unpinnedHdrX + colW - 0.5, groupPanelH + bandH + _headerHeight - 4));
                 }
 
                 unpinnedHdrX += colW;
@@ -1210,20 +1478,42 @@ namespace ZeroUI.Wpf.DataGrid
 
                 var hft = CreateFormattedText(headerText, ZeroWpfTheme.BoldTypeface, 12.0, ZeroWpfTheme.TextPrimary, dpi);
                 double hTextX = pinnedHdrX + 8;
-                if (_columns[c].Alignment == CellAlignment.Right) hTextX = pinnedHdrX + colW - hft.Width - 8;
+                if (_columns[c].Alignment == CellAlignment.Right) hTextX = pinnedHdrX + colW - hft.Width - 24;
                 else if (_columns[c].Alignment == CellAlignment.Center) hTextX = pinnedHdrX + (colW - hft.Width) / 2.0;
 
-                double hTextY = bandH + (_headerHeight - hft.Height) / 2.0;
+                double hTextY = groupPanelH + bandH + (_headerHeight - hft.Height) / 2.0;
                 dc.DrawText(hft, new Point(hTextX, hTextY));
 
-                dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(pinnedHdrX + colW - 0.5, bandH + 4), new Point(pinnedHdrX + colW - 0.5, bandH + _headerHeight - 4));
+                if (_columns[c].AllowFiltering)
+                {
+                    Rect filterBtnRect = new Rect(pinnedHdrX + colW - 20, groupPanelH + bandH + (_headerHeight - 14) / 2.0, 16, 14);
+                    _columnFilterButtonBounds[c] = filterBtnRect;
+
+                    bool isFiltered = IsColumnFiltered(c);
+                    Brush fBrush = isFiltered ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.TextMuted;
+                    var ftFilter = CreateFormattedText("▼", ZeroWpfTheme.BoldTypeface, 8.5, fBrush, dpi);
+                    dc.DrawText(ftFilter, new Point(filterBtnRect.X + (filterBtnRect.Width - ftFilter.Width) / 2.0, filterBtnRect.Y + (filterBtnRect.Height - ftFilter.Height) / 2.0));
+                }
+
+                dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(pinnedHdrX + colW - 0.5, groupPanelH + bandH + 4), new Point(pinnedHdrX + colW - 0.5, groupPanelH + bandH + _headerHeight - 4));
 
                 pinnedHdrX += colW;
             }
 
             if (pinnedW > 0)
             {
-                dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, 0), new Point(pinnedW - 1, effHeaderH));
+                dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, groupPanelH), new Point(pinnedW - 1, totalTopOffset));
+            }
+
+            if (_isDraggingHeader && _draggedHeaderCol >= 0 && _draggedHeaderCol < _columns.Count)
+            {
+                string dragText = _columns[_draggedHeaderCol].HeaderText;
+                var dft = CreateFormattedText(dragText, ZeroWpfTheme.BoldTypeface, 11.5, Brushes.White, dpi);
+                double badgeW = dft.Width + 24;
+                double badgeH = 26;
+                Rect badgeRect = new Rect(_currentMousePos.X - badgeW / 2.0, _currentMousePos.Y - badgeH / 2.0, badgeW, badgeH);
+                dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, new Pen(Brushes.White, 1.0), badgeRect, 4, 4);
+                dc.DrawText(dft, new Point(badgeRect.X + 12, badgeRect.Y + (badgeH - dft.Height) / 2.0));
             }
 
             // 4. Render Footer Summary Bar (if enabled)
@@ -1298,13 +1588,13 @@ namespace ZeroUI.Wpf.DataGrid
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalRows = VisualRowCount;
             int totalH = totalRows * _rowHeight;
-            int effHeaderH = EffectiveHeaderHeight;
-            double clientH = Math.Max(0, height - effHeaderH - footerH);
+            int topOffset = TotalTopOffset;
+            double clientH = Math.Max(0, height - topOffset - footerH);
 
             if (totalH <= clientH || clientH <= 0) return;
 
             double trackX = width - ScrollBarThickness;
-            double trackY = effHeaderH;
+            double trackY = topOffset;
             double trackH = clientH;
 
             // Track background
@@ -1324,12 +1614,28 @@ namespace ZeroUI.Wpf.DataGrid
         {
             base.OnMouseMove(e);
             Point pt = e.GetPosition(this);
+            _currentMousePos = pt;
             int footerH = ShowFooter ? _footerHeight : 0;
-            int effHeaderH = EffectiveHeaderHeight;
+            int topOffset = TotalTopOffset;
+            int groupPanelH = ShowGroupPanel ? _groupPanelHeight : 0;
+
+            if (e.LeftButton == MouseButtonState.Pressed && _draggedHeaderCol >= 0 && !_isDraggingHeader && !_isResizingColumn)
+            {
+                if (Math.Abs(pt.X - _headerDragStart.X) > 6 || Math.Abs(pt.Y - _headerDragStart.Y) > 6)
+                {
+                    _isDraggingHeader = true;
+                }
+            }
+
+            if (_isDraggingHeader)
+            {
+                InvalidateVisual();
+                return;
+            }
 
             if (_isDraggingVThumb)
             {
-                double clientH = Math.Max(0, ActualHeight - effHeaderH - footerH);
+                double clientH = Math.Max(0, ActualHeight - topOffset - footerH);
                 int totalRows = VisualRowCount;
                 int totalH = totalRows * _rowHeight;
                 double maxScroll = totalH - clientH;
@@ -1351,7 +1657,7 @@ namespace ZeroUI.Wpf.DataGrid
             if (_isSelectingBlock && _selectionMode == ZeroGridSelectionMode.Block)
             {
                 int clickedCol = HitTestColumn(pt.X);
-                int vRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
+                int vRow = (int)((pt.Y - topOffset + _scrollY) / _rowHeight);
                 vRow = Math.Max(0, Math.Min(VisualRowCount - 1, vRow));
                 clickedCol = Math.Max(0, Math.Min(_columns.Count - 1, clickedCol));
                 if (vRow != _selectedBlock.EndRow || clickedCol != _selectedBlock.EndColumn)
@@ -1378,11 +1684,11 @@ namespace ZeroUI.Wpf.DataGrid
 
             // Check scrollbar hover
             bool prevVThumbHover = _isVThumbHovered;
-            _isVThumbHovered = (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= effHeaderH && pt.Y < ActualHeight - footerH);
+            _isVThumbHovered = (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= topOffset && pt.Y < ActualHeight - footerH);
             if (prevVThumbHover != _isVThumbHovered) InvalidateVisual();
 
             // Check header column resize handle
-            if (pt.Y <= effHeaderH)
+            if (pt.Y >= groupPanelH && pt.Y <= topOffset)
             {
                 int colIdx = HitTestColumnDivider(pt.X);
                 if (colIdx >= 0)
@@ -1397,7 +1703,7 @@ namespace ZeroUI.Wpf.DataGrid
             Cursor = Cursors.Arrow;
 
             // Row hover
-            int visualRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
+            int visualRow = (int)((pt.Y - topOffset + _scrollY) / _rowHeight);
             if (visualRow >= 0 && visualRow < VisualRowCount && pt.Y < ActualHeight - footerH)
             {
                 if (_hoveredVisualRow != visualRow)
@@ -1430,14 +1736,43 @@ namespace ZeroUI.Wpf.DataGrid
             Focus();
             Point pt = e.GetPosition(this);
             int footerH = ShowFooter ? _footerHeight : 0;
-            int effHeaderH = EffectiveHeaderHeight;
+            int topOffset = TotalTopOffset;
+            int groupPanelH = ShowGroupPanel ? _groupPanelHeight : 0;
 
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                // Double click cell editing
-                if (e.ClickCount == 2 && pt.Y > effHeaderH && pt.Y < ActualHeight - footerH)
+                // 1. Group Panel Chip close button click
+                if (ShowGroupPanel && pt.Y < groupPanelH)
                 {
-                    int vRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
+                    for (int i = 0; i < _groupChipBounds.Count; i++)
+                    {
+                        var chip = _groupChipBounds[i];
+                        if (chip.CloseRect.Contains(pt))
+                        {
+                            var remaining = new List<int>(_groupColumnIndices);
+                            remaining.Remove(chip.ColumnIndex);
+                            if (remaining.Count > 0) GroupBy(remaining.ToArray());
+                            else ClearGrouping();
+                            return;
+                        }
+                    }
+                    return;
+                }
+
+                // 2. Filter button click on column headers
+                foreach (var kvp in _columnFilterButtonBounds)
+                {
+                    if (kvp.Value.Contains(pt))
+                    {
+                        ShowColumnFilterPopup(kvp.Key);
+                        return;
+                    }
+                }
+
+                // 3. Double click cell editing
+                if (e.ClickCount == 2 && pt.Y > topOffset && pt.Y < ActualHeight - footerH)
+                {
+                    int vRow = (int)((pt.Y - topOffset + _scrollY) / _rowHeight);
                     int col = HitTestColumn(pt.X);
                     if (vRow >= 0 && vRow < VisualRowCount && col >= 0)
                     {
@@ -1452,8 +1787,8 @@ namespace ZeroUI.Wpf.DataGrid
                     }
                 }
 
-                // Check ScrollBar thumb click
-                if (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= effHeaderH && pt.Y < ActualHeight - footerH)
+                // 4. Check ScrollBar thumb click
+                if (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= topOffset && pt.Y < ActualHeight - footerH)
                 {
                     _isDraggingVThumb = true;
                     _dragThumbStartY = pt.Y;
@@ -1462,8 +1797,8 @@ namespace ZeroUI.Wpf.DataGrid
                     return;
                 }
 
-                // Check Column Header click or resize
-                if (pt.Y <= effHeaderH)
+                // 5. Check Column Header click or resize / drag
+                if (pt.Y >= groupPanelH && pt.Y <= topOffset)
                 {
                     if (_isEditing) CommitEdit();
 
@@ -1478,17 +1813,18 @@ namespace ZeroUI.Wpf.DataGrid
                         return;
                     }
 
-                    // Column header click for sort
                     int col = HitTestColumn(pt.X);
                     if (col >= 0)
                     {
-                        ColumnHeaderClicked?.Invoke(this, col);
+                        _draggedHeaderCol = col;
+                        _headerDragStart = pt;
+                        CaptureMouse();
                     }
                     return;
                 }
 
-                // Row click selection
-                int visualRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
+                // 6. Row click selection or Master-Detail toggle
+                int visualRow = (int)((pt.Y - topOffset + _scrollY) / _rowHeight);
                 int clickedCol = HitTestColumn(pt.X);
                 if (visualRow >= 0 && visualRow < VisualRowCount && pt.Y < ActualHeight - footerH)
                 {
@@ -1496,6 +1832,13 @@ namespace ZeroUI.Wpf.DataGrid
                     {
                         _groupedMap.ToggleGroup(visualRow);
                         InvalidateVisual();
+                        return;
+                    }
+
+                    int modelRow = GetModelRowIndex(visualRow);
+                    if (_allowMasterDetail && pt.X < 24 && modelRow >= 0)
+                    {
+                        ToggleMasterRow(modelRow);
                         return;
                     }
 
@@ -1569,6 +1912,33 @@ namespace ZeroUI.Wpf.DataGrid
         protected override void OnMouseUp(MouseButtonEventArgs e)
         {
             base.OnMouseUp(e);
+            if (_isDraggingHeader)
+            {
+                _isDraggingHeader = false;
+                ReleaseMouseCapture();
+                Point pt = e.GetPosition(this);
+                int groupPanelH = ShowGroupPanel ? _groupPanelHeight : 0;
+                if (ShowGroupPanel && pt.Y < groupPanelH && _draggedHeaderCol >= 0)
+                {
+                    if (Array.IndexOf(_groupColumnIndices, _draggedHeaderCol) < 0)
+                    {
+                        int[] newCols = new int[_groupColumnIndices.Length + 1];
+                        Array.Copy(_groupColumnIndices, newCols, _groupColumnIndices.Length);
+                        newCols[_groupColumnIndices.Length] = _draggedHeaderCol;
+                        GroupBy(newCols);
+                    }
+                }
+                _draggedHeaderCol = -1;
+                InvalidateVisual();
+                return;
+            }
+            if (_draggedHeaderCol >= 0)
+            {
+                int col = _draggedHeaderCol;
+                _draggedHeaderCol = -1;
+                ReleaseMouseCapture();
+                ColumnHeaderClicked?.Invoke(this, col);
+            }
             if (_isDraggingVThumb)
             {
                 _isDraggingVThumb = false;
@@ -1652,7 +2022,7 @@ namespace ZeroUI.Wpf.DataGrid
             int rowTop = visualRowIndex * _rowHeight;
             int rowBottom = rowTop + _rowHeight;
             int footerH = ShowFooter ? _footerHeight : 0;
-            int viewH = (int)Math.Max(0, ActualHeight - EffectiveHeaderHeight - footerH);
+            int viewH = (int)Math.Max(0, ActualHeight - TotalTopOffset - footerH);
 
             if (rowTop < _scrollY)
             {
@@ -1766,7 +2136,7 @@ namespace ZeroUI.Wpf.DataGrid
         {
             if (visualRow < 0 || colIndex < 0 || colIndex >= _columns.Count) return Rect.Empty;
 
-            double cellY = EffectiveHeaderHeight + (visualRow * _rowHeight) - _scrollY;
+            double cellY = TotalTopOffset + (visualRow * _rowHeight) - _scrollY;
             int pinnedW = GetPinnedColumnsWidth();
 
             double cellX;
