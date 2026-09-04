@@ -19,6 +19,7 @@ using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Industrial;
+using ZeroTreeNode = ZeroUI.WinForms.Industrial.ZeroTreeNode;
 using ZeroUI.WinForms.Layout;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;

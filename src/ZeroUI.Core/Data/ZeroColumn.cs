@@ -30,6 +30,7 @@ namespace ZeroUI.Core.Data
         public string? BandTitle { get; set; }
         public bool AllowCellMerge { get; set; } = false;
         public SparklineType Sparkline { get; set; } = SparklineType.None;
+        public bool AllowFiltering { get; set; } = true;
 
         public ZeroColumn() { }
 

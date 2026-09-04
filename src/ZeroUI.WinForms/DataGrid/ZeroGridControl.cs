@@ -41,6 +41,7 @@ namespace ZeroUI.WinForms.DataGrid
         private Font? _cachedFont;
 
         private IZeroVirtualSource? _dataSource;
+        private readonly List<GridBand> _bands = new List<GridBand>();
         private int _headerHeight = 28;
         private int _rowHeight = 26;
         private int _scrollX = 0;
@@ -50,6 +51,8 @@ namespace ZeroUI.WinForms.DataGrid
         private int _selectedVisualRow = -1;
         private readonly HashSet<int> _selectedVisualRows = new HashSet<int>();
         private ZeroGridSelectionMode _selectionMode = ZeroGridSelectionMode.SingleRow;
+        private CellRange _selectedBlock = CellRange.Empty;
+        private bool _isSelectingBlock = false;
         private bool _isResizingColumn = false;
         private int _resizingColIndex = -1;
         private int _resizeStartX = 0;
@@ -417,6 +420,36 @@ namespace ZeroUI.WinForms.DataGrid
             return false;
         }
 
+        [Browsable(false)]
+        public List<GridBand> Bands => _bands;
+
+        [Browsable(false)]
+        public int EffectiveHeaderHeight
+        {
+            get
+            {
+                if (_bands.Count == 0) return _headerHeight;
+                int maxDepth = 0;
+                for (int i = 0; i < _bands.Count; i++)
+                {
+                    int d = _bands[i].GetMaxDepth();
+                    if (d > maxDepth) maxDepth = d;
+                }
+                return (maxDepth + 1) * _headerHeight;
+            }
+        }
+
+        private int GetMaxBandDepth()
+        {
+            int maxDepth = 0;
+            for (int i = 0; i < _bands.Count; i++)
+            {
+                int d = _bands[i].GetMaxDepth();
+                if (d > maxDepth) maxDepth = d;
+            }
+            return maxDepth;
+        }
+
         public int HeaderHeight
         {
             get => _headerHeight;
@@ -451,7 +484,7 @@ namespace ZeroUI.WinForms.DataGrid
             get => _scrollY;
             set
             {
-                int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+                int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
                 int footerH = ShowFooter ? _footerHeight : 0;
                 int maxScroll = Math.Max(0, (_dataSource?.TotalRowCount ?? 0) * _rowHeight - (ClientSize.Height - topOffset - footerH));
                 int clamped = Math.Max(0, Math.Min(maxScroll, value));
@@ -492,8 +525,19 @@ namespace ZeroUI.WinForms.DataGrid
         public ZeroGridSelectionMode SelectionMode
         {
             get => _selectionMode;
-            set { _selectionMode = value; Invalidate(); }
+            set
+            {
+                if (_selectionMode != value)
+                {
+                    _selectionMode = value;
+                    _selectedBlock = CellRange.Empty;
+                    Invalidate();
+                }
+            }
         }
+
+        [Browsable(false)]
+        public CellRange SelectedBlock => _selectedBlock;
 
         [Browsable(false)]
         public IReadOnlyCollection<int> SelectedVisualRows => _selectedVisualRows;
@@ -748,7 +792,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (!_showAutoFilterRow || colIndex < 0 || colIndex >= _columns.Count) return Rectangle.Empty;
 
-            int filterY = _headerHeight;
+            int filterY = EffectiveHeaderHeight;
             int filterH = _autoFilterRowHeight;
             int pinnedW = GetPinnedColumnsWidth();
 
@@ -1244,7 +1288,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (!IsHandleCreated) return;
 
-            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
             int clientH = ClientSize.Height - topOffset - footerH;
             int clientW = ClientSize.Width;
@@ -1298,7 +1342,7 @@ namespace ZeroUI.WinForms.DataGrid
                 int totalRows = VisualRowCount;
                 int[] colWidths = GetVisibleColumnWidths();
                 int pinnedW = GetPinnedColumnsWidth();
-                int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+                int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
                 int footerH = ShowFooter ? _footerHeight : 0;
                 int clientDataHeight = Math.Max(0, height - topOffset - footerH);
 
@@ -1382,32 +1426,61 @@ namespace ZeroUI.WinForms.DataGrid
                                     _dibSection.FillRectangle(cellRect.Left, cellRect.Top, cellRect.Right - cellRect.Left, _rowHeight, cellBuffer.BackColor);
                                 }
 
-                                if (_columns[c].ColumnType == GridColumnType.Boolean)
+                                bool isBlockSelected = (_selectionMode == ZeroGridSelectionMode.Block && _selectedBlock.Contains(r, c));
+                                if (isBlockSelected)
                                 {
-                                    bool isChecked = IsTruthy(cellBuffer.Text);
-                                    int cbSize = 15;
-                                    int cbX = unpinnedX + (colW - cbSize) / 2;
-                                    int cbY = currentY + (_rowHeight - cbSize) / 2;
-                                    DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
+                                    _dibSection.FillRectangle(cellRect.Left, cellRect.Top, cellRect.Right - cellRect.Left, _rowHeight, _selectedBgColor);
+                                    if (r == _selectedBlock.TopRow)
+                                        _dibSection.FillRectangle(cellRect.Left, cellRect.Top, cellRect.Right - cellRect.Left, 2, _pinnedBorderColor);
+                                    if (r == _selectedBlock.BottomRow)
+                                        _dibSection.FillRectangle(cellRect.Left, cellRect.Top + _rowHeight - 2, cellRect.Right - cellRect.Left, 2, _pinnedBorderColor);
+                                    if (c == _selectedBlock.LeftColumn)
+                                        _dibSection.FillRectangle(cellRect.Left, cellRect.Top, 2, _rowHeight, _pinnedBorderColor);
+                                    if (c == _selectedBlock.RightColumn)
+                                        _dibSection.FillRectangle(cellRect.Right - 2, cellRect.Top, 2, _rowHeight, _pinnedBorderColor);
                                 }
-                                else if (cellBuffer.DataBarPercent >= 0)
+
+                                bool isMergedWithPrevious = false;
+                                if (_columns[c].AllowCellMerge && r > 0)
                                 {
-                                    float clamped = Math.Max(0.0f, Math.Min(1.0f, cellBuffer.DataBarPercent));
-                                    int barH = Math.Max(6, _rowHeight - 8);
-                                    int barMaxW = Math.Max(0, colW - 16);
-                                    int barFillW = (int)(barMaxW * clamped);
-                                    int barX = unpinnedX + 8;
-                                    int barY = currentY + (_rowHeight - barH) / 2;
-                                    _dibSection.FillRectangle(barX, barY, barMaxW, barH, _altRowBgColor);
-                                    if (barFillW > 0)
+                                    int prevModelRow = GetModelRowIndex(r - 1);
+                                    if (prevModelRow >= 0)
                                     {
-                                        _dibSection.FillRectangle(barX, barY, barFillW, barH, _pinnedBorderColor);
+                                        CellValueBuffer prevBuf = new CellValueBuffer();
+                                        _dataSource.GetCellValue(prevModelRow, c, ref prevBuf);
+                                        if (cellBuffer.Text.SequenceEqual(prevBuf.Text)) isMergedWithPrevious = true;
                                     }
                                 }
-                                else
+
+                                if (!isMergedWithPrevious)
                                 {
-                                    RECT textRect = new RECT(unpinnedX + 4, currentY, unpinnedX + colW - 4, currentY + _rowHeight);
-                                    _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                                    if (_columns[c].ColumnType == GridColumnType.Boolean)
+                                    {
+                                        bool isChecked = IsTruthy(cellBuffer.Text);
+                                        int cbSize = 15;
+                                        int cbX = unpinnedX + (colW - cbSize) / 2;
+                                        int cbY = currentY + (_rowHeight - cbSize) / 2;
+                                        DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
+                                    }
+                                    else if (cellBuffer.DataBarPercent >= 0)
+                                    {
+                                        float clamped = Math.Max(0.0f, Math.Min(1.0f, cellBuffer.DataBarPercent));
+                                        int barH = Math.Max(6, _rowHeight - 8);
+                                        int barMaxW = Math.Max(0, colW - 16);
+                                        int barFillW = (int)(barMaxW * clamped);
+                                        int barX = unpinnedX + 8;
+                                        int barY = currentY + (_rowHeight - barH) / 2;
+                                        _dibSection.FillRectangle(barX, barY, barMaxW, barH, _altRowBgColor);
+                                        if (barFillW > 0)
+                                        {
+                                            _dibSection.FillRectangle(barX, barY, barFillW, barH, _pinnedBorderColor);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        RECT textRect = new RECT(unpinnedX + 4, currentY, unpinnedX + colW - 4, currentY + _rowHeight);
+                                        _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                                    }
                                 }
 
                                 // Vertical Gridline
@@ -1449,32 +1522,61 @@ namespace ZeroUI.WinForms.DataGrid
                                 _dibSection.FillRectangle(cellRect.Left, cellRect.Top, colW, _rowHeight, cellBuffer.BackColor);
                             }
 
-                            if (_columns[c].ColumnType == GridColumnType.Boolean)
+                            bool isBlockSelected = (_selectionMode == ZeroGridSelectionMode.Block && _selectedBlock.Contains(r, c));
+                            if (isBlockSelected)
                             {
-                                bool isChecked = IsTruthy(cellBuffer.Text);
-                                int cbSize = 15;
-                                int cbX = pinnedX + (colW - cbSize) / 2;
-                                int cbY = currentY + (_rowHeight - cbSize) / 2;
-                                DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
+                                _dibSection.FillRectangle(cellRect.Left, cellRect.Top, colW, _rowHeight, _selectedBgColor);
+                                if (r == _selectedBlock.TopRow)
+                                    _dibSection.FillRectangle(cellRect.Left, cellRect.Top, colW, 2, _pinnedBorderColor);
+                                if (r == _selectedBlock.BottomRow)
+                                    _dibSection.FillRectangle(cellRect.Left, cellRect.Top + _rowHeight - 2, colW, 2, _pinnedBorderColor);
+                                if (c == _selectedBlock.LeftColumn)
+                                    _dibSection.FillRectangle(cellRect.Left, cellRect.Top, 2, _rowHeight, _pinnedBorderColor);
+                                if (c == _selectedBlock.RightColumn)
+                                    _dibSection.FillRectangle(cellRect.Right - 2, cellRect.Top, 2, _rowHeight, _pinnedBorderColor);
                             }
-                            else if (cellBuffer.DataBarPercent >= 0)
+
+                            bool isMergedWithPrevious = false;
+                            if (_columns[c].AllowCellMerge && r > 0)
                             {
-                                float clamped = Math.Max(0.0f, Math.Min(1.0f, cellBuffer.DataBarPercent));
-                                int barH = Math.Max(6, _rowHeight - 8);
-                                int barMaxW = Math.Max(0, colW - 16);
-                                int barFillW = (int)(barMaxW * clamped);
-                                int barX = pinnedX + 8;
-                                int barY = currentY + (_rowHeight - barH) / 2;
-                                _dibSection.FillRectangle(barX, barY, barMaxW, barH, _altRowBgColor);
-                                if (barFillW > 0)
+                                int prevModelRow = GetModelRowIndex(r - 1);
+                                if (prevModelRow >= 0)
                                 {
-                                    _dibSection.FillRectangle(barX, barY, barFillW, barH, _pinnedBorderColor);
+                                    CellValueBuffer prevBuf = new CellValueBuffer();
+                                    _dataSource.GetCellValue(prevModelRow, c, ref prevBuf);
+                                    if (cellBuffer.Text.SequenceEqual(prevBuf.Text)) isMergedWithPrevious = true;
                                 }
                             }
-                            else
+
+                            if (!isMergedWithPrevious)
                             {
-                                RECT textRect = new RECT(pinnedX + 4, currentY, pinnedX + colW - 4, currentY + _rowHeight);
-                                _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                                if (_columns[c].ColumnType == GridColumnType.Boolean)
+                                {
+                                    bool isChecked = IsTruthy(cellBuffer.Text);
+                                    int cbSize = 15;
+                                    int cbX = pinnedX + (colW - cbSize) / 2;
+                                    int cbY = currentY + (_rowHeight - cbSize) / 2;
+                                    DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
+                                }
+                                else if (cellBuffer.DataBarPercent >= 0)
+                                {
+                                    float clamped = Math.Max(0.0f, Math.Min(1.0f, cellBuffer.DataBarPercent));
+                                    int barH = Math.Max(6, _rowHeight - 8);
+                                    int barMaxW = Math.Max(0, colW - 16);
+                                    int barFillW = (int)(barMaxW * clamped);
+                                    int barX = pinnedX + 8;
+                                    int barY = currentY + (_rowHeight - barH) / 2;
+                                    _dibSection.FillRectangle(barX, barY, barMaxW, barH, _altRowBgColor);
+                                    if (barFillW > 0)
+                                    {
+                                        _dibSection.FillRectangle(barX, barY, barFillW, barH, _pinnedBorderColor);
+                                    }
+                                }
+                                else
+                                {
+                                    RECT textRect = new RECT(pinnedX + 4, currentY, pinnedX + colW - 4, currentY + _rowHeight);
+                                    _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                                }
                             }
 
                             // Vertical Gridline
@@ -1483,8 +1585,84 @@ namespace ZeroUI.WinForms.DataGrid
                             pinnedX += colW;
                         }
 
-                        // Horizontal Gridline
-                        _dibSection.FillRectangle(0, currentY + _rowHeight - 1, width, 1, _gridLineColor);
+                        // Horizontal Gridline (draw per cell if merging is used to avoid cutting through merged cells)
+                        bool hasAnyMerge = false;
+                        for (int mc = 0; mc < totalCols; mc++)
+                        {
+                            if (_columns[mc].AllowCellMerge) { hasAnyMerge = true; break; }
+                        }
+
+                        if (!hasAnyMerge)
+                        {
+                            _dibSection.FillRectangle(0, currentY + _rowHeight - 1, width, 1, _gridLineColor);
+                        }
+                        else
+                        {
+                            int hUnpinnedX = pinnedW - _scrollX;
+                            for (int c = 0; c < totalCols; c++)
+                            {
+                                if (!_columns[c].IsVisible || _columns[c].IsPinned) continue;
+                                int colW = colWidths[c];
+                                if (colW > 0 && hUnpinnedX + colW > pinnedW && hUnpinnedX < width)
+                                {
+                                    bool mergesNext = false;
+                                    if (_columns[c].AllowCellMerge && r + 1 < totalRows)
+                                    {
+                                        int nextMRow = GetModelRowIndex(r + 1);
+                                        if (nextMRow >= 0)
+                                        {
+                                            CellValueBuffer nextBuf = new CellValueBuffer();
+                                            _dataSource.GetCellValue(nextMRow, c, ref nextBuf);
+                                            cellBuffer.Reset();
+                                            _dataSource.GetCellValue(modelRow, c, ref cellBuffer);
+                                            if (cellBuffer.Text.SequenceEqual(nextBuf.Text)) mergesNext = true;
+                                        }
+                                    }
+                                    if (!mergesNext)
+                                    {
+                                        int segLeft = Math.Max(pinnedW, hUnpinnedX);
+                                        int segRight = Math.Min(width, hUnpinnedX + colW);
+                                        if (segRight > segLeft)
+                                        {
+                                            _dibSection.FillRectangle(segLeft, currentY + _rowHeight - 1, segRight - segLeft, 1, _gridLineColor);
+                                        }
+                                    }
+                                }
+                                hUnpinnedX += colW;
+                            }
+
+                            int hPinnedX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                            for (int c = 0; c < totalCols; c++)
+                            {
+                                if (!_columns[c].IsVisible || !_columns[c].IsPinned) continue;
+                                int colW = colWidths[c];
+                                if (colW > 0)
+                                {
+                                    bool mergesNext = false;
+                                    if (_columns[c].AllowCellMerge && r + 1 < totalRows)
+                                    {
+                                        int nextMRow = GetModelRowIndex(r + 1);
+                                        if (nextMRow >= 0)
+                                        {
+                                            CellValueBuffer nextBuf = new CellValueBuffer();
+                                            _dataSource.GetCellValue(nextMRow, c, ref nextBuf);
+                                            cellBuffer.Reset();
+                                            _dataSource.GetCellValue(modelRow, c, ref cellBuffer);
+                                            if (cellBuffer.Text.SequenceEqual(nextBuf.Text)) mergesNext = true;
+                                        }
+                                    }
+                                    if (!mergesNext)
+                                    {
+                                        _dibSection.FillRectangle(hPinnedX, currentY + _rowHeight - 1, colW, 1, _gridLineColor);
+                                    }
+                                    hPinnedX += colW;
+                                }
+                            }
+                            if (_showCheckBoxSelectorColumn)
+                            {
+                                _dibSection.FillRectangle(0, currentY + _rowHeight - 1, CheckBoxColWidth, 1, _gridLineColor);
+                            }
+                        }
 
                         currentY += _rowHeight;
                     }
@@ -1511,7 +1689,27 @@ namespace ZeroUI.WinForms.DataGrid
 
                 // 2. Render Header Row (Always pinned on top)
                 _dibSection.SelectFont(_hHeaderFont);
-                _dibSection.FillRectangle(0, 0, width, _headerHeight, _headerBgColor);
+                int effHeaderH = EffectiveHeaderHeight;
+                int bandDepth = (_bands.Count > 0) ? GetMaxBandDepth() : 0;
+                int bandH = bandDepth * _headerHeight;
+                _dibSection.FillRectangle(0, 0, width, effHeaderH, _headerBgColor);
+
+                if (_bands.Count > 0)
+                {
+                    var bandEntries = GridBand.ComputeLayout(_bands, pinnedW - _scrollX, 0, _headerHeight, bandDepth);
+                    for (int b = 0; b < bandEntries.Count; b++)
+                    {
+                        var entry = bandEntries[b];
+                        if (entry.X + entry.Width > 0 && entry.X < width)
+                        {
+                            RECT bRect = new RECT(entry.X, entry.Y, entry.X + entry.Width, entry.Y + entry.Height);
+                            _dibSection.FillRectangle(entry.X, entry.Y, entry.Width, entry.Height, _headerBgColor);
+                            _dibSection.DrawText(entry.Band.Title.AsSpan(), ref bRect, _headerTextColor, CellAlignment.Center, textHeight);
+                            _dibSection.FillRectangle(entry.X + entry.Width - 1, entry.Y, 1, entry.Height, 0x00CCCCCC);
+                            _dibSection.FillRectangle(entry.X, entry.Y + entry.Height - 1, entry.Width, 1, 0x00CCCCCC);
+                        }
+                    }
+                }
 
                 // (A) Draw Unpinned Headers
                 int unpinnedHdrX = pinnedW - _scrollX;
@@ -1523,7 +1721,7 @@ namespace ZeroUI.WinForms.DataGrid
 
                     if (unpinnedHdrX + colW > pinnedW && unpinnedHdrX < width)
                     {
-                        RECT colRect = new RECT(unpinnedHdrX, 0, unpinnedHdrX + colW, _headerHeight);
+                        RECT colRect = new RECT(unpinnedHdrX, bandH, unpinnedHdrX + colW, bandH + _headerHeight);
                         string text = _columns[c].HeaderText;
 
                         if (_isSorting && _sortingColumnIndex == c) text += " ⏳";
@@ -1531,7 +1729,7 @@ namespace ZeroUI.WinForms.DataGrid
                         else if (_columns[c].SortOrder == SortDirection.Descending) text += " ▼";
 
                         _dibSection.DrawText(text.AsSpan(), ref colRect, _headerTextColor, _columns[c].Alignment, textHeight);
-                        _dibSection.FillRectangle(unpinnedHdrX + colW - 1, 4, 1, _headerHeight - 8, 0x00CCCCCC);
+                        _dibSection.FillRectangle(unpinnedHdrX + colW - 1, bandH + 4, 1, _headerHeight - 8, 0x00CCCCCC);
                     }
                     unpinnedHdrX += colW;
                 }
@@ -1542,7 +1740,7 @@ namespace ZeroUI.WinForms.DataGrid
                 {
                     int cbSize = 16;
                     int cbX = (CheckBoxColWidth - cbSize) / 2;
-                    int cbY = (_headerHeight - cbSize) / 2;
+                    int cbY = bandH + (_headerHeight - cbSize) / 2;
                     CheckState allState = CheckState.Unchecked;
                     if (totalRows > 0)
                     {
@@ -1550,7 +1748,7 @@ namespace ZeroUI.WinForms.DataGrid
                         else if (_selectedVisualRows.Count > 0) allState = CheckState.Indeterminate;
                     }
                     DrawCheckBoxGlyph(cbX, cbY, cbSize, allState);
-                    _dibSection.FillRectangle(CheckBoxColWidth - 1, 4, 1, _headerHeight - 8, 0x00CCCCCC);
+                    _dibSection.FillRectangle(CheckBoxColWidth - 1, bandH + 4, 1, _headerHeight - 8, 0x00CCCCCC);
                     pinnedHdrX += CheckBoxColWidth;
                 }
 
@@ -1560,7 +1758,7 @@ namespace ZeroUI.WinForms.DataGrid
                     int colW = colWidths[c];
                     if (colW <= 0) continue;
 
-                    RECT colRect = new RECT(pinnedHdrX, 0, pinnedHdrX + colW, _headerHeight);
+                    RECT colRect = new RECT(pinnedHdrX, bandH, pinnedHdrX + colW, bandH + _headerHeight);
                     string text = _columns[c].HeaderText;
 
                     if (_isSorting && _sortingColumnIndex == c) text += " ⏳";
@@ -1568,21 +1766,21 @@ namespace ZeroUI.WinForms.DataGrid
                     else if (_columns[c].SortOrder == SortDirection.Descending) text += " ▼";
 
                     _dibSection.DrawText(text.AsSpan(), ref colRect, _headerTextColor, _columns[c].Alignment, textHeight);
-                    _dibSection.FillRectangle(pinnedHdrX + colW - 1, 4, 1, _headerHeight - 8, 0x00CCCCCC);
+                    _dibSection.FillRectangle(pinnedHdrX + colW - 1, bandH + 4, 1, _headerHeight - 8, 0x00CCCCCC);
 
                     pinnedHdrX += colW;
                 }
 
-                _dibSection.FillRectangle(0, _headerHeight - 1, width, 1, 0x00CCCCCC);
+                _dibSection.FillRectangle(0, effHeaderH - 1, width, 1, 0x00CCCCCC);
                 if (pinnedW > 0)
                 {
-                    _dibSection.FillRectangle(pinnedW - 2, 0, 2, _headerHeight, _pinnedBorderColor);
+                    _dibSection.FillRectangle(pinnedW - 2, 0, 2, effHeaderH, _pinnedBorderColor);
                 }
 
                 // 2.5. Render Auto Filter Row (if enabled)
                 if (_showAutoFilterRow)
                 {
-                    int filterY = _headerHeight;
+                    int filterY = effHeaderH;
                     int filterH = _autoFilterRowHeight;
                     uint filterBg = _rowBgColor;
                     _dibSection.FillRectangle(0, filterY, width, filterH, filterBg);
@@ -1774,7 +1972,8 @@ namespace ZeroUI.WinForms.DataGrid
             int action = unchecked((short)(long)wParam);
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
-            int maxScroll = Math.Max(0, totalH - (ClientSize.Height - _headerHeight - footerH));
+            int effHeaderH = EffectiveHeaderHeight;
+            int maxScroll = Math.Max(0, totalH - (ClientSize.Height - effHeaderH - footerH));
 
             switch (action)
             {
@@ -1785,10 +1984,10 @@ namespace ZeroUI.WinForms.DataGrid
                     _scrollY = Math.Min(maxScroll, _scrollY + _rowHeight);
                     break;
                 case NativeMethods.SB_PAGEUP:
-                    _scrollY = Math.Max(0, _scrollY - (ClientSize.Height - _headerHeight - footerH));
+                    _scrollY = Math.Max(0, _scrollY - (ClientSize.Height - effHeaderH - footerH));
                     break;
                 case NativeMethods.SB_PAGEDOWN:
-                    _scrollY = Math.Min(maxScroll, _scrollY + (ClientSize.Height - _headerHeight - footerH));
+                    _scrollY = Math.Min(maxScroll, _scrollY + (ClientSize.Height - effHeaderH - footerH));
                     break;
                 case NativeMethods.SB_THUMBTRACK:
                 case NativeMethods.SB_THUMBPOSITION:
@@ -1857,7 +2056,8 @@ namespace ZeroUI.WinForms.DataGrid
 
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
-            int maxScroll = Math.Max(0, totalH - (ClientSize.Height - _headerHeight - footerH));
+            int effHeaderH = EffectiveHeaderHeight;
+            int maxScroll = Math.Max(0, totalH - (ClientSize.Height - effHeaderH - footerH));
 
             _scrollY = Math.Max(0, Math.Min(maxScroll, _scrollY - scrollDelta));
             UpdateScrollBars();
@@ -1870,6 +2070,7 @@ namespace ZeroUI.WinForms.DataGrid
             base.OnMouseDown(e);
             Focus();
 
+            int effHeaderH = EffectiveHeaderHeight;
             int footerH = ShowFooter ? _footerHeight : 0;
             int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
             int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
@@ -1879,7 +2080,7 @@ namespace ZeroUI.WinForms.DataGrid
                 var hit = SpatialHitTester.HitTest(
                     e.X,
                     e.Y,
-                    _headerHeight,
+                    effHeaderH,
                     _rowHeight,
                     _scrollX,
                     _scrollY,
@@ -1976,6 +2177,19 @@ namespace ZeroUI.WinForms.DataGrid
                         ToggleBooleanCell(hit.RowIndex, hit.ColumnIndex);
                     }
 
+                    if (_selectionMode == ZeroGridSelectionMode.Block)
+                    {
+                        _isSelectingBlock = true;
+                        _selectedBlock = new CellRange(hit.RowIndex, hit.RowIndex, hit.ColumnIndex, hit.ColumnIndex);
+                        _selectedVisualRow = hit.RowIndex;
+                        _selectedVisualRows.Clear();
+                        _selectedVisualRows.Add(hit.RowIndex);
+                        Capture = true;
+                        SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        Invalidate();
+                        return;
+                    }
+
                     if (_selectionMode == ZeroGridSelectionMode.MultiRow)
                     {
                         if ((ModifierKeys & Keys.Control) != 0)
@@ -2015,7 +2229,7 @@ namespace ZeroUI.WinForms.DataGrid
                 var hit = SpatialHitTester.HitTest(
                     e.X,
                     e.Y,
-                    _headerHeight,
+                    effHeaderH,
                     _rowHeight,
                     _scrollX,
                     _scrollY,
@@ -2040,13 +2254,14 @@ namespace ZeroUI.WinForms.DataGrid
             base.OnMouseDoubleClick(e);
             if (e.Button == MouseButtons.Left)
             {
+                int effHeaderH = EffectiveHeaderHeight;
                 int footerH = ShowFooter ? _footerHeight : 0;
                 int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
                 int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
                 var hit = SpatialHitTester.HitTest(
                     e.X,
                     e.Y,
-                    _headerHeight,
+                    effHeaderH,
                     _rowHeight,
                     _scrollX,
                     _scrollY,
@@ -2076,6 +2291,47 @@ namespace ZeroUI.WinForms.DataGrid
         {
             base.OnMouseMove(e);
 
+            int effHeaderH = EffectiveHeaderHeight;
+            int footerH = ShowFooter ? _footerHeight : 0;
+            int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+            int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
+
+            if (_isSelectingBlock && e.Button == MouseButtons.Left)
+            {
+                var blockHit = SpatialHitTester.HitTest(
+                    e.X,
+                    e.Y,
+                    effHeaderH,
+                    _rowHeight,
+                    _scrollX,
+                    _scrollY,
+                    GetVisibleColumnWidths(),
+                    GetColumnPinnedFlags(),
+                    _columns.Count,
+                    VisualRowCount,
+                    footerH,
+                    ClientSize.Height,
+                    pinnedOffset,
+                    autoFilterH);
+
+                if (blockHit.Region == HitRegion.Cell && blockHit.RowIndex >= 0 && blockHit.ColumnIndex >= 0)
+                {
+                    int anchorRow = _selectedVisualRow >= 0 ? _selectedVisualRow : blockHit.RowIndex;
+                    int anchorCol = _selectedBlock.IsEmpty ? blockHit.ColumnIndex : _selectedBlock.LeftColumn;
+                    int top = Math.Min(anchorRow, blockHit.RowIndex);
+                    int bottom = Math.Max(anchorRow, blockHit.RowIndex);
+                    int left = Math.Min(anchorCol, blockHit.ColumnIndex);
+                    int right = Math.Max(anchorCol, blockHit.ColumnIndex);
+                    var newRange = new CellRange(top, bottom, left, right);
+                    if (!_selectedBlock.Equals(newRange))
+                    {
+                        _selectedBlock = newRange;
+                        Invalidate();
+                    }
+                }
+                return;
+            }
+
             if (_allowColumnReordering && e.Button == MouseButtons.Left && _potentialDragColIndex >= 0 && !_isResizingColumn)
             {
                 if (!_isDraggingColumn && (Math.Abs(e.X - _dragStartPoint.X) > 6 || Math.Abs(e.Y - _dragStartPoint.Y) > 6))
@@ -2104,13 +2360,10 @@ namespace ZeroUI.WinForms.DataGrid
                 return;
             }
 
-            int footerH = ShowFooter ? _footerHeight : 0;
-            int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
-            int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
             var hit = SpatialHitTester.HitTest(
                 e.X,
                 e.Y,
-                _headerHeight,
+                effHeaderH,
                 _rowHeight,
                 _scrollX,
                 _scrollY,
@@ -2140,6 +2393,13 @@ namespace ZeroUI.WinForms.DataGrid
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+
+            if (_isSelectingBlock)
+            {
+                _isSelectingBlock = false;
+                Capture = false;
+            }
+
             if (_isResizingColumn)
             {
                 _isResizingColumn = false;
@@ -2552,7 +2812,7 @@ namespace ZeroUI.WinForms.DataGrid
             if (visualRowIndex < 0 || visualRowIndex >= _rowIndexMap.ActiveCount) return;
             int rowTop = visualRowIndex * _rowHeight;
             int rowBottom = rowTop + _rowHeight;
-            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
             int viewH = ClientSize.Height - topOffset - footerH;
 
@@ -2569,6 +2829,46 @@ namespace ZeroUI.WinForms.DataGrid
         public void CopySelectionToClipboard()
         {
             if (_dataSource == null) return;
+
+            if (_selectionMode == ZeroGridSelectionMode.Block && !_selectedBlock.IsEmpty)
+            {
+                CellValueBuffer bbuf = new CellValueBuffer();
+                var bsb = new System.Text.StringBuilder();
+
+                // Header for selected columns
+                bool bFirstCol = true;
+                for (int c = _selectedBlock.LeftColumn; c <= _selectedBlock.RightColumn; c++)
+                {
+                    if (c < 0 || c >= _columns.Count || !_columns[c].IsVisible) continue;
+                    if (!bFirstCol) bsb.Append('\t');
+                    bsb.Append(_columns[c].HeaderText);
+                    bFirstCol = false;
+                }
+                bsb.AppendLine();
+
+                // Cells
+                for (int r = _selectedBlock.TopRow; r <= _selectedBlock.BottomRow; r++)
+                {
+                    if (r < 0 || r >= VisualRowCount) continue;
+                    int modelRow = GetModelRowIndex(r);
+                    if (modelRow < 0) continue;
+
+                    bFirstCol = true;
+                    for (int c = _selectedBlock.LeftColumn; c <= _selectedBlock.RightColumn; c++)
+                    {
+                        if (c < 0 || c >= _columns.Count || !_columns[c].IsVisible) continue;
+                        if (!bFirstCol) bsb.Append('\t');
+                        bbuf.Reset();
+                        _dataSource.GetCellValue(modelRow, c, ref bbuf);
+                        bsb.Append(bbuf.Text.ToString());
+                        bFirstCol = false;
+                    }
+                    bsb.AppendLine();
+                }
+
+                try { Clipboard.SetText(bsb.ToString()); } catch { }
+                return;
+            }
 
             var rowsToCopy = new List<int>();
             if (_selectedVisualRows.Count > 0)
@@ -2624,7 +2924,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (visualRow < 0 || colIndex < 0 || colIndex >= _columns.Count) return Rectangle.Empty;
 
-            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int cellY = topOffset + (visualRow * _rowHeight) - _scrollY;
             int pinnedW = GetPinnedColumnsWidth();
 
@@ -2898,7 +3198,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (!_isEditing || _editingVisualRow < 0 || _editingColIndex < 0 || _activeInPlaceEditor == null) return;
             var rect = GetCellRectangle(_editingVisualRow, _editingColIndex);
-            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
             if (rect.Y < topOffset || rect.Bottom > ClientSize.Height - footerH)
             {

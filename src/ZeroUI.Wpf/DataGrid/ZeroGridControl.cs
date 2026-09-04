@@ -35,6 +35,7 @@ namespace ZeroUI.Wpf.DataGrid
         private RowIndexMap _rowIndexMap = new RowIndexMap(10000);
         private readonly GroupedRowIndexMap _groupedMap = new GroupedRowIndexMap();
         private int[] _groupColumnIndices = Array.Empty<int>();
+        private readonly ObservableCollection<GridBand> _bands = new ObservableCollection<GridBand>();
         private IZeroVirtualSource? _dataSource;
 
         private int _headerHeight = 32;
@@ -42,12 +43,44 @@ namespace ZeroUI.Wpf.DataGrid
         private int _scrollX = 0;
         private int _scrollY = 0;
 
+        public ObservableCollection<GridBand> Bands => _bands;
+
+        public int EffectiveHeaderHeight
+        {
+            get
+            {
+                if (_bands.Count == 0) return _headerHeight;
+                int maxDepth = 0;
+                for (int i = 0; i < _bands.Count; i++)
+                {
+                    int d = _bands[i].GetMaxDepth();
+                    if (d > maxDepth) maxDepth = d;
+                }
+                return (maxDepth + 1) * _headerHeight;
+            }
+        }
+
+        private int GetMaxBandDepth()
+        {
+            int maxDepth = 0;
+            for (int i = 0; i < _bands.Count; i++)
+            {
+                int d = _bands[i].GetMaxDepth();
+                if (d > maxDepth) maxDepth = d;
+            }
+            return maxDepth;
+        }
+
         // Selection & Interaction
         private int _selectedVisualRow = -1;
         private int _hoveredVisualRow = -1;
         private readonly HashSet<int> _selectedVisualRows = new HashSet<int>();
         private ZeroGridSelectionMode _selectionMode = ZeroGridSelectionMode.SingleRow;
+        private CellRange _selectedBlock = CellRange.Empty;
+        private bool _isSelectingBlock = false;
         private bool _isResizingColumn = false;
+
+        public CellRange SelectedBlock => _selectedBlock;
         private int _resizingColIndex = -1;
         private double _resizeStartX = 0;
         private int _resizeStartWidth = 0;
@@ -277,7 +310,13 @@ namespace ZeroUI.Wpf.DataGrid
         public ZeroGridSelectionMode SelectionMode
         {
             get => _selectionMode;
-            set { _selectionMode = value; InvalidateVisual(); }
+            set
+            {
+                _selectionMode = value;
+                _selectedBlock = CellRange.Empty;
+                _selectedVisualRows.Clear();
+                InvalidateVisual();
+            }
         }
 
         public IReadOnlyCollection<int> SelectedVisualRows => _selectedVisualRows;
@@ -382,7 +421,7 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 var rect = GetCellRectangle(_editingVisualRow, _editingColIndex);
                 int footerH = ShowFooter ? _footerHeight : 0;
-                if (rect.Y < _headerHeight || rect.Bottom > finalSize.Height - footerH)
+                if (rect.Y < EffectiveHeaderHeight || rect.Bottom > finalSize.Height - footerH)
                 {
                     CommitEdit();
                 }
@@ -588,7 +627,7 @@ namespace ZeroUI.Wpf.DataGrid
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalRows = VisualRowCount;
             int totalH = totalRows * _rowHeight;
-            int clientH = (int)Math.Max(0, ActualHeight - _headerHeight - footerH);
+            int clientH = (int)Math.Max(0, ActualHeight - EffectiveHeaderHeight - footerH);
             return Math.Max(0, totalH - clientH);
         }
 
@@ -804,7 +843,10 @@ namespace ZeroUI.Wpf.DataGrid
             int[] colWidths = GetVisibleColumnWidths();
             int pinnedW = GetPinnedColumnsWidth();
             int footerH = ShowFooter ? _footerHeight : 0;
-            int clientDataH = (int)Math.Max(0, height - _headerHeight - footerH);
+            int effHeaderH = EffectiveHeaderHeight;
+            int bandDepth = (_bands.Count > 0) ? GetMaxBandDepth() : 0;
+            int bandH = bandDepth * _headerHeight;
+            int clientDataH = (int)Math.Max(0, height - effHeaderH - footerH);
 
             // 2. Render Virtual Cells
             if (_dataSource != null && totalRows > 0 && totalCols > 0)
@@ -814,11 +856,11 @@ namespace ZeroUI.Wpf.DataGrid
                 int endRow = Math.Min(totalRows - 1, startRow + visibleRowCount);
 
                 CellValueBuffer cellBuffer = new CellValueBuffer();
-                double currentY = _headerHeight + (startRow * _rowHeight) - _scrollY;
+                double currentY = effHeaderH + (startRow * _rowHeight) - _scrollY;
 
                 for (int r = startRow; r <= endRow && r < totalRows; r++)
                 {
-                    if (currentY >= _headerHeight + clientDataH) break;
+                    if (currentY >= effHeaderH + clientDataH) break;
 
                     if (_groupedMap.HasGrouping)
                     {
@@ -882,7 +924,28 @@ namespace ZeroUI.Wpf.DataGrid
                             cellBuffer.Alignment = _columns[c].Alignment;
                             _dataSource.GetCellValue(modelRow, c, ref cellBuffer);
 
-                            if (cellBuffer.HasCustomBackground && !isSelected)
+                            bool isBlockSelected = (_selectionMode == ZeroGridSelectionMode.Block && !_selectedBlock.IsEmpty && _selectedBlock.Contains(r, c));
+                            if (isBlockSelected && !isSelected)
+                            {
+                                dc.DrawRectangle(ZeroWpfTheme.SelectionBackground, null, new Rect(unpinnedX, currentY, colW, _rowHeight));
+                            }
+
+                            bool isMerged = false;
+                            if (_columns[c].AllowCellMerge && r > startRow)
+                            {
+                                int prevModel = GetModelRowIndex(r - 1);
+                                if (prevModel >= 0)
+                                {
+                                    CellValueBuffer prevBuf = new CellValueBuffer();
+                                    _dataSource.GetCellValue(prevModel, c, ref prevBuf);
+                                    if (prevBuf.Text.SequenceEqual(cellBuffer.Text))
+                                    {
+                                        isMerged = true;
+                                    }
+                                }
+                            }
+
+                            if (cellBuffer.HasCustomBackground && !isSelected && !isBlockSelected)
                             {
                                 byte a = (byte)((cellBuffer.BackColor >> 24) & 0xFF);
                                 byte b = (byte)((cellBuffer.BackColor >> 16) & 0xFF);
@@ -907,16 +970,16 @@ namespace ZeroUI.Wpf.DataGrid
                                 SparklineType sType = _columns[c].Sparkline != SparklineType.None ? _columns[c].Sparkline : SparklineType.Line;
                                 DrawSparkline(dc, unpinnedX, currentY, colW, _rowHeight, cellBuffer.SparklineValues, sType);
                             }
-                            else
+                            else if (!isMerged)
                             {
                                 var textSpan = cellBuffer.Text;
                                 if (!textSpan.IsEmpty)
                                 {
                                     string text = cellBuffer.Text.ToString();
-                                    Brush textBrush = isSelected ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
-                                    Typeface tf = isSelected ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
+                                    Brush textBrush = (isSelected || isBlockSelected) ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
+                                    Typeface tf = (isSelected || isBlockSelected) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
 
-                                    if (!isSelected && cellBuffer.TextColor != 0)
+                                    if (!isSelected && !isBlockSelected && cellBuffer.TextColor != 0)
                                     {
                                         byte tr = (byte)(cellBuffer.TextColor & 0xFF);
                                         byte tg = (byte)((cellBuffer.TextColor >> 8) & 0xFF);
@@ -934,6 +997,19 @@ namespace ZeroUI.Wpf.DataGrid
                                     double textY = currentY + (_rowHeight - ft.Height) / 2.0;
                                     dc.DrawText(ft, new Point(textX, textY));
                                 }
+                            }
+
+                            if (isBlockSelected)
+                            {
+                                var blockPen = new Pen(ZeroWpfTheme.PrimaryAccent, 1.5);
+                                if (r == _selectedBlock.TopRow)
+                                    dc.DrawLine(blockPen, new Point(unpinnedX, currentY), new Point(unpinnedX + colW, currentY));
+                                if (r == _selectedBlock.BottomRow)
+                                    dc.DrawLine(blockPen, new Point(unpinnedX, currentY + _rowHeight), new Point(unpinnedX + colW, currentY + _rowHeight));
+                                if (c == _selectedBlock.LeftColumn)
+                                    dc.DrawLine(blockPen, new Point(unpinnedX, currentY), new Point(unpinnedX, currentY + _rowHeight));
+                                if (c == _selectedBlock.RightColumn)
+                                    dc.DrawLine(blockPen, new Point(unpinnedX + colW, currentY), new Point(unpinnedX + colW, currentY + _rowHeight));
                             }
 
                             dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(unpinnedX + colW - 0.5, currentY), new Point(unpinnedX + colW - 0.5, currentY + _rowHeight));
@@ -954,7 +1030,28 @@ namespace ZeroUI.Wpf.DataGrid
                         cellBuffer.Alignment = _columns[c].Alignment;
                         _dataSource.GetCellValue(modelRow, c, ref cellBuffer);
 
-                        if (cellBuffer.HasCustomBackground && !isSelected)
+                        bool isBlockSelected = (_selectionMode == ZeroGridSelectionMode.Block && !_selectedBlock.IsEmpty && _selectedBlock.Contains(r, c));
+                        if (isBlockSelected && !isSelected)
+                        {
+                            dc.DrawRectangle(ZeroWpfTheme.SelectionBackground, null, new Rect(pinnedX, currentY, colW, _rowHeight));
+                        }
+
+                        bool isMerged = false;
+                        if (_columns[c].AllowCellMerge && r > startRow)
+                        {
+                            int prevModel = GetModelRowIndex(r - 1);
+                            if (prevModel >= 0)
+                            {
+                                CellValueBuffer prevBuf = new CellValueBuffer();
+                                _dataSource.GetCellValue(prevModel, c, ref prevBuf);
+                                if (prevBuf.Text.SequenceEqual(cellBuffer.Text))
+                                {
+                                    isMerged = true;
+                                }
+                            }
+                        }
+
+                        if (cellBuffer.HasCustomBackground && !isSelected && !isBlockSelected)
                         {
                             byte a = (byte)((cellBuffer.BackColor >> 24) & 0xFF);
                             byte b = (byte)((cellBuffer.BackColor >> 16) & 0xFF);
@@ -979,16 +1076,16 @@ namespace ZeroUI.Wpf.DataGrid
                             SparklineType sType = _columns[c].Sparkline != SparklineType.None ? _columns[c].Sparkline : SparklineType.Line;
                             DrawSparkline(dc, pinnedX, currentY, colW, _rowHeight, cellBuffer.SparklineValues, sType);
                         }
-                        else
+                        else if (!isMerged)
                         {
                             var textSpan = cellBuffer.Text;
                             if (!textSpan.IsEmpty)
                             {
                                 string text = cellBuffer.Text.ToString();
-                                Brush textBrush = isSelected ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
-                                Typeface tf = isSelected ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
+                                Brush textBrush = (isSelected || isBlockSelected) ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
+                                Typeface tf = (isSelected || isBlockSelected) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
 
-                                if (!isSelected && cellBuffer.TextColor != 0)
+                                if (!isSelected && !isBlockSelected && cellBuffer.TextColor != 0)
                                 {
                                     byte tr = (byte)(cellBuffer.TextColor & 0xFF);
                                     byte tg = (byte)((cellBuffer.TextColor >> 8) & 0xFF);
@@ -1008,6 +1105,19 @@ namespace ZeroUI.Wpf.DataGrid
                             }
                         }
 
+                        if (isBlockSelected)
+                        {
+                            var blockPen = new Pen(ZeroWpfTheme.PrimaryAccent, 1.5);
+                            if (r == _selectedBlock.TopRow)
+                                dc.DrawLine(blockPen, new Point(pinnedX, currentY), new Point(pinnedX + colW, currentY));
+                            if (r == _selectedBlock.BottomRow)
+                                dc.DrawLine(blockPen, new Point(pinnedX, currentY + _rowHeight), new Point(pinnedX + colW, currentY + _rowHeight));
+                            if (c == _selectedBlock.LeftColumn)
+                                dc.DrawLine(blockPen, new Point(pinnedX, currentY), new Point(pinnedX, currentY + _rowHeight));
+                            if (c == _selectedBlock.RightColumn)
+                                dc.DrawLine(blockPen, new Point(pinnedX + colW, currentY), new Point(pinnedX + colW, currentY + _rowHeight));
+                        }
+
                         dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(pinnedX + colW - 0.5, currentY), new Point(pinnedX + colW - 0.5, currentY + _rowHeight));
 
                         pinnedX += colW;
@@ -1020,7 +1130,7 @@ namespace ZeroUI.Wpf.DataGrid
 
                 if (pinnedW > 0)
                 {
-                    dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, _headerHeight), new Point(pinnedW - 1, height - footerH));
+                    dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, effHeaderH), new Point(pinnedW - 1, height - footerH));
                 }
             }
             else
@@ -1029,14 +1139,32 @@ namespace ZeroUI.Wpf.DataGrid
                 var emptyTitle = CreateFormattedText("No records to display", ZeroWpfTheme.BoldTypeface, 14.0, ZeroWpfTheme.TextSecondary, dpi);
                 var emptySub = CreateFormattedText("Try adjusting your filters or loading sample data", ZeroWpfTheme.RegularTypeface, 12.0, ZeroWpfTheme.TextMuted, dpi);
 
-                double midY = (_headerHeight + height - footerH) / 2.0 - 20;
+                double midY = (effHeaderH + height - footerH) / 2.0 - 20;
                 dc.DrawText(emptyTitle, new Point((width - emptyTitle.Width) / 2.0, midY));
                 dc.DrawText(emptySub, new Point((width - emptySub.Width) / 2.0, midY + 24));
             }
 
             // 3. Render Header Row (Always pinned on top)
-            dc.DrawRectangle(ZeroWpfTheme.BgCard, null, new Rect(0, 0, width, _headerHeight));
-            dc.DrawLine(ZeroWpfTheme.BorderPen, new Point(0, _headerHeight - 0.5), new Point(width, _headerHeight - 0.5));
+            dc.DrawRectangle(ZeroWpfTheme.BgCard, null, new Rect(0, 0, width, effHeaderH));
+            dc.DrawLine(ZeroWpfTheme.BorderPen, new Point(0, effHeaderH - 0.5), new Point(width, effHeaderH - 0.5));
+
+            if (_bands.Count > 0)
+            {
+                var bandEntries = GridBand.ComputeLayout(_bands, (int)(pinnedW - _scrollX), 0, _headerHeight, bandDepth);
+                for (int b = 0; b < bandEntries.Count; b++)
+                {
+                    var entry = bandEntries[b];
+                    if (entry.X + entry.Width > 0 && entry.X < width)
+                    {
+                        Rect bRect = new Rect(entry.X, entry.Y, entry.Width, entry.Height);
+                        dc.DrawRectangle(ZeroWpfTheme.BgInput, null, bRect);
+                        var bft = CreateFormattedText(entry.Band.Title, ZeroWpfTheme.BoldTypeface, 12.0, ZeroWpfTheme.TextPrimary, dpi);
+                        dc.DrawText(bft, new Point(entry.X + (entry.Width - bft.Width) / 2.0, entry.Y + (entry.Height - bft.Height) / 2.0));
+                        dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(entry.X + entry.Width - 0.5, entry.Y), new Point(entry.X + entry.Width - 0.5, entry.Y + entry.Height));
+                        dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(entry.X, entry.Y + entry.Height - 0.5), new Point(entry.X + entry.Width, entry.Y + entry.Height - 0.5));
+                    }
+                }
+            }
 
             // (A) Draw Unpinned Headers
             double unpinnedHdrX = pinnedW - _scrollX;
@@ -1058,11 +1186,12 @@ namespace ZeroUI.Wpf.DataGrid
                     if (_columns[c].Alignment == CellAlignment.Right) hTextX = unpinnedHdrX + colW - hft.Width - 8;
                     else if (_columns[c].Alignment == CellAlignment.Center) hTextX = unpinnedHdrX + (colW - hft.Width) / 2.0;
 
-                    double hTextY = (_headerHeight - hft.Height) / 2.0;
+                    double hTextY = bandH + (_headerHeight - hft.Height) / 2.0;
                     dc.DrawText(hft, new Point(hTextX, hTextY));
 
-                    dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(unpinnedHdrX + colW - 0.5, 4), new Point(unpinnedHdrX + colW - 0.5, _headerHeight - 4));
+                    dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(unpinnedHdrX + colW - 0.5, bandH + 4), new Point(unpinnedHdrX + colW - 0.5, bandH + _headerHeight - 4));
                 }
+
                 unpinnedHdrX += colW;
             }
 
@@ -1084,17 +1213,17 @@ namespace ZeroUI.Wpf.DataGrid
                 if (_columns[c].Alignment == CellAlignment.Right) hTextX = pinnedHdrX + colW - hft.Width - 8;
                 else if (_columns[c].Alignment == CellAlignment.Center) hTextX = pinnedHdrX + (colW - hft.Width) / 2.0;
 
-                double hTextY = (_headerHeight - hft.Height) / 2.0;
+                double hTextY = bandH + (_headerHeight - hft.Height) / 2.0;
                 dc.DrawText(hft, new Point(hTextX, hTextY));
 
-                dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(pinnedHdrX + colW - 0.5, 4), new Point(pinnedHdrX + colW - 0.5, _headerHeight - 4));
+                dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(pinnedHdrX + colW - 0.5, bandH + 4), new Point(pinnedHdrX + colW - 0.5, bandH + _headerHeight - 4));
 
                 pinnedHdrX += colW;
             }
 
             if (pinnedW > 0)
             {
-                dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, 0), new Point(pinnedW - 1, _headerHeight));
+                dc.DrawLine(new Pen(ZeroWpfTheme.PrimaryAccent, 2.0), new Point(pinnedW - 1, 0), new Point(pinnedW - 1, effHeaderH));
             }
 
             // 4. Render Footer Summary Bar (if enabled)
@@ -1169,12 +1298,13 @@ namespace ZeroUI.Wpf.DataGrid
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalRows = VisualRowCount;
             int totalH = totalRows * _rowHeight;
-            double clientH = Math.Max(0, height - _headerHeight - footerH);
+            int effHeaderH = EffectiveHeaderHeight;
+            double clientH = Math.Max(0, height - effHeaderH - footerH);
 
             if (totalH <= clientH || clientH <= 0) return;
 
             double trackX = width - ScrollBarThickness;
-            double trackY = _headerHeight;
+            double trackY = effHeaderH;
             double trackH = clientH;
 
             // Track background
@@ -1195,10 +1325,11 @@ namespace ZeroUI.Wpf.DataGrid
             base.OnMouseMove(e);
             Point pt = e.GetPosition(this);
             int footerH = ShowFooter ? _footerHeight : 0;
+            int effHeaderH = EffectiveHeaderHeight;
 
             if (_isDraggingVThumb)
             {
-                double clientH = Math.Max(0, ActualHeight - _headerHeight - footerH);
+                double clientH = Math.Max(0, ActualHeight - effHeaderH - footerH);
                 int totalRows = VisualRowCount;
                 int totalH = totalRows * _rowHeight;
                 double maxScroll = totalH - clientH;
@@ -1213,6 +1344,21 @@ namespace ZeroUI.Wpf.DataGrid
                     _scrollY = (int)Math.Max(0, Math.Min(maxScroll, _dragScrollStartY + scrollDelta));
                     if (_isEditing) InvalidateArrange();
                     InvalidateVisual();
+                }
+                return;
+            }
+
+            if (_isSelectingBlock && _selectionMode == ZeroGridSelectionMode.Block)
+            {
+                int clickedCol = HitTestColumn(pt.X);
+                int vRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
+                vRow = Math.Max(0, Math.Min(VisualRowCount - 1, vRow));
+                clickedCol = Math.Max(0, Math.Min(_columns.Count - 1, clickedCol));
+                if (vRow != _selectedBlock.EndRow || clickedCol != _selectedBlock.EndColumn)
+                {
+                    _selectedBlock = new CellRange(_selectedBlock.StartRow, _selectedBlock.StartColumn, vRow, clickedCol);
+                    InvalidateVisual();
+                    SelectionChanged?.Invoke(this, EventArgs.Empty);
                 }
                 return;
             }
@@ -1232,11 +1378,11 @@ namespace ZeroUI.Wpf.DataGrid
 
             // Check scrollbar hover
             bool prevVThumbHover = _isVThumbHovered;
-            _isVThumbHovered = (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= _headerHeight && pt.Y < ActualHeight - footerH);
+            _isVThumbHovered = (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= effHeaderH && pt.Y < ActualHeight - footerH);
             if (prevVThumbHover != _isVThumbHovered) InvalidateVisual();
 
             // Check header column resize handle
-            if (pt.Y <= _headerHeight)
+            if (pt.Y <= effHeaderH)
             {
                 int colIdx = HitTestColumnDivider(pt.X);
                 if (colIdx >= 0)
@@ -1251,7 +1397,7 @@ namespace ZeroUI.Wpf.DataGrid
             Cursor = Cursors.Arrow;
 
             // Row hover
-            int visualRow = (int)((pt.Y - _headerHeight + _scrollY) / _rowHeight);
+            int visualRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
             if (visualRow >= 0 && visualRow < VisualRowCount && pt.Y < ActualHeight - footerH)
             {
                 if (_hoveredVisualRow != visualRow)
@@ -1284,13 +1430,14 @@ namespace ZeroUI.Wpf.DataGrid
             Focus();
             Point pt = e.GetPosition(this);
             int footerH = ShowFooter ? _footerHeight : 0;
+            int effHeaderH = EffectiveHeaderHeight;
 
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 // Double click cell editing
-                if (e.ClickCount == 2 && pt.Y > _headerHeight && pt.Y < ActualHeight - footerH)
+                if (e.ClickCount == 2 && pt.Y > effHeaderH && pt.Y < ActualHeight - footerH)
                 {
-                    int vRow = (int)((pt.Y - _headerHeight + _scrollY) / _rowHeight);
+                    int vRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
                     int col = HitTestColumn(pt.X);
                     if (vRow >= 0 && vRow < VisualRowCount && col >= 0)
                     {
@@ -1306,7 +1453,7 @@ namespace ZeroUI.Wpf.DataGrid
                 }
 
                 // Check ScrollBar thumb click
-                if (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= _headerHeight && pt.Y < ActualHeight - footerH)
+                if (pt.X >= ActualWidth - ScrollBarThickness && pt.Y >= effHeaderH && pt.Y < ActualHeight - footerH)
                 {
                     _isDraggingVThumb = true;
                     _dragThumbStartY = pt.Y;
@@ -1316,7 +1463,7 @@ namespace ZeroUI.Wpf.DataGrid
                 }
 
                 // Check Column Header click or resize
-                if (pt.Y <= _headerHeight)
+                if (pt.Y <= effHeaderH)
                 {
                     if (_isEditing) CommitEdit();
 
@@ -1341,7 +1488,8 @@ namespace ZeroUI.Wpf.DataGrid
                 }
 
                 // Row click selection
-                int visualRow = (int)((pt.Y - _headerHeight + _scrollY) / _rowHeight);
+                int visualRow = (int)((pt.Y - effHeaderH + _scrollY) / _rowHeight);
+                int clickedCol = HitTestColumn(pt.X);
                 if (visualRow >= 0 && visualRow < VisualRowCount && pt.Y < ActualHeight - footerH)
                 {
                     if (_groupedMap.HasGrouping && visualRow < _groupedMap.ActiveCount && _groupedMap[visualRow].IsGroup)
@@ -1351,7 +1499,6 @@ namespace ZeroUI.Wpf.DataGrid
                         return;
                     }
 
-                    int clickedCol = HitTestColumn(pt.X);
                     if (clickedCol >= 0 && clickedCol < _columns.Count && _columns[clickedCol].ColumnType == GridColumnType.Boolean)
                     {
                         ToggleBooleanCell(visualRow, clickedCol);
@@ -1371,6 +1518,16 @@ namespace ZeroUI.Wpf.DataGrid
                         }
                     }
 
+                    if (_selectionMode == ZeroGridSelectionMode.Block)
+                    {
+                        _selectedBlock = new CellRange(visualRow, clickedCol, visualRow, clickedCol);
+                        _isSelectingBlock = true;
+                        CaptureMouse();
+                        InvalidateVisual();
+                        SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        return;
+                    }
+
                     if (_selectionMode == ZeroGridSelectionMode.MultiRow)
                     {
                         if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
@@ -1383,10 +1540,11 @@ namespace ZeroUI.Wpf.DataGrid
                         }
                         else if ((Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) && _selectedVisualRow >= 0)
                         {
+                            int start = (_selectedVisualRow >= 0) ? _selectedVisualRow : visualRow;
+                            int min = Math.Min(start, visualRow);
+                            int max = Math.Max(start, visualRow);
                             _selectedVisualRows.Clear();
-                            int minR = Math.Min(_selectedVisualRow, visualRow);
-                            int maxR = Math.Max(_selectedVisualRow, visualRow);
-                            for (int r = minR; r <= maxR; r++) _selectedVisualRows.Add(r);
+                            for (int r = min; r <= max; r++) _selectedVisualRows.Add(r);
                         }
                         else
                         {
@@ -1414,6 +1572,12 @@ namespace ZeroUI.Wpf.DataGrid
             if (_isDraggingVThumb)
             {
                 _isDraggingVThumb = false;
+                ReleaseMouseCapture();
+                InvalidateVisual();
+            }
+            if (_isSelectingBlock)
+            {
+                _isSelectingBlock = false;
                 ReleaseMouseCapture();
                 InvalidateVisual();
             }
@@ -1488,7 +1652,7 @@ namespace ZeroUI.Wpf.DataGrid
             int rowTop = visualRowIndex * _rowHeight;
             int rowBottom = rowTop + _rowHeight;
             int footerH = ShowFooter ? _footerHeight : 0;
-            int viewH = (int)Math.Max(0, ActualHeight - _headerHeight - footerH);
+            int viewH = (int)Math.Max(0, ActualHeight - EffectiveHeaderHeight - footerH);
 
             if (rowTop < _scrollY)
             {
@@ -1505,6 +1669,48 @@ namespace ZeroUI.Wpf.DataGrid
         public void CopySelectionToClipboard()
         {
             if (_dataSource == null) return;
+
+            if (_selectionMode == ZeroGridSelectionMode.Block && !_selectedBlock.IsEmpty)
+            {
+                int topR = _selectedBlock.TopRow;
+                int botR = _selectedBlock.BottomRow;
+                int leftC = _selectedBlock.LeftColumn;
+                int rightC = _selectedBlock.RightColumn;
+
+                CellValueBuffer blockBuf = new CellValueBuffer();
+                var blockSb = new System.Text.StringBuilder();
+
+                bool first = true;
+                for (int c = leftC; c <= rightC && c < _columns.Count; c++)
+                {
+                    if (!_columns[c].IsVisible) continue;
+                    if (!first) blockSb.Append('\t');
+                    blockSb.Append(_columns[c].HeaderText);
+                    first = false;
+                }
+                blockSb.AppendLine();
+
+                for (int r = topR; r <= botR && r < VisualRowCount; r++)
+                {
+                    int modelRow = GetModelRowIndex(r);
+                    if (modelRow < 0) continue;
+
+                    first = true;
+                    for (int c = leftC; c <= rightC && c < _columns.Count; c++)
+                    {
+                        if (!_columns[c].IsVisible) continue;
+                        if (!first) blockSb.Append('\t');
+                        blockBuf.Reset();
+                        _dataSource.GetCellValue(modelRow, c, ref blockBuf);
+                        blockSb.Append(blockBuf.Text.ToString());
+                        first = false;
+                    }
+                    blockSb.AppendLine();
+                }
+
+                try { Clipboard.SetText(blockSb.ToString()); } catch { }
+                return;
+            }
 
             var rowsToCopy = new List<int>();
             if (_selectedVisualRows.Count > 0)
@@ -1560,7 +1766,7 @@ namespace ZeroUI.Wpf.DataGrid
         {
             if (visualRow < 0 || colIndex < 0 || colIndex >= _columns.Count) return Rect.Empty;
 
-            double cellY = _headerHeight + (visualRow * _rowHeight) - _scrollY;
+            double cellY = EffectiveHeaderHeight + (visualRow * _rowHeight) - _scrollY;
             int pinnedW = GetPinnedColumnsWidth();
 
             double cellX;

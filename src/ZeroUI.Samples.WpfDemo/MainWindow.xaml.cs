@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -45,6 +46,7 @@ namespace ZeroUI.Samples.WpfDemo
             SetupCharts();
             SetupTelemetry();
             SetupScadaSimulation();
+            SetupEnterpriseControls();
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
@@ -662,6 +664,223 @@ namespace ZeroUI.Samples.WpfDemo
                 "Developed with Deepmind Advanced Agentic Engineering.",
                 "ZeroUI Architecture Overview", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
+        private bool _isBanded = false;
+
+        private void BtnBandedHeaders_Click(object sender, RoutedEventArgs e)
+        {
+            _isBanded = !_isBanded;
+            VirtualGrid.Bands.Clear();
+
+            if (_isBanded && VirtualGrid.Columns.Count >= 7)
+            {
+                // Band 1: Master Identification (cols 0, 1)
+                var bandMaster = new GridBand("📦 Product Master & Identification");
+                bandMaster.AddColumn(VirtualGrid.Columns[0]);
+                bandMaster.AddColumn(VirtualGrid.Columns[1]);
+
+                // Band 2: Commercial & Inventory (cols 2, 3, 4, 5)
+                var bandCommercial = new GridBand("💰 Commercial & Inventory Metrics");
+                bandCommercial.AddColumn(VirtualGrid.Columns[2]);
+                bandCommercial.AddColumn(VirtualGrid.Columns[3]);
+                bandCommercial.AddColumn(VirtualGrid.Columns[4]);
+                bandCommercial.AddColumn(VirtualGrid.Columns[5]);
+
+                // Band 3: Categorization & Status (cols 6..)
+                var bandCategory = new GridBand("🏷️ Categorization");
+                for (int i = 6; i < VirtualGrid.Columns.Count; i++)
+                {
+                    bandCategory.AddColumn(VirtualGrid.Columns[i]);
+                }
+
+                VirtualGrid.Bands.Add(bandMaster);
+                VirtualGrid.Bands.Add(bandCommercial);
+                VirtualGrid.Bands.Add(bandCategory);
+
+                if (VirtualGrid.Columns.Count > 6)
+                {
+                    VirtualGrid.Columns[6].AllowCellMerge = true;
+                }
+
+                BtnBandedHeaders.Content = "🏛️ Multi-Tier Bands: ON";
+            }
+            else
+            {
+                if (VirtualGrid.Columns.Count > 6)
+                {
+                    VirtualGrid.Columns[6].AllowCellMerge = false;
+                }
+                BtnBandedHeaders.Content = "🏛️ Multi-Tier Bands";
+            }
+
+            VirtualGrid.InvalidateVisual();
+        }
+
+        private void BtnBlockSelection_Click(object sender, RoutedEventArgs e)
+        {
+            if (VirtualGrid.SelectionMode == ZeroGridSelectionMode.Block)
+            {
+                VirtualGrid.SelectionMode = ZeroGridSelectionMode.SingleRow;
+                BtnBlockSelection.Content = "📐 Block Marquee";
+            }
+            else
+            {
+                VirtualGrid.SelectionMode = ZeroGridSelectionMode.Block;
+                BtnBlockSelection.Content = "📐 Block Marquee: ON";
+            }
+        }
+
+        private void BtnExpandAllTree_Click(object sender, RoutedEventArgs e)
+        {
+            DemoTreeList.Model.ExpandAll();
+            DemoTreeList.InvalidateVisual();
+        }
+
+        private void BtnCollapseAllTree_Click(object sender, RoutedEventArgs e)
+        {
+            DemoTreeList.Model.CollapseAll();
+            DemoTreeList.InvalidateVisual();
+        }
+
+        private void SetupEnterpriseControls()
+        {
+            // Configure DemoTreeList columns
+            DemoTreeList.Columns.Add(new ZeroColumn("Component / Asset", 210, CellAlignment.Left));
+            DemoTreeList.Columns.Add(new ZeroColumn("Asset Tag", 85, CellAlignment.Center));
+            DemoTreeList.Columns.Add(new ZeroColumn("Status", 80, CellAlignment.Center));
+            DemoTreeList.Columns.Add(new ZeroColumn("OEE %", 75, CellAlignment.Right));
+            DemoTreeList.Columns.Add(new ZeroColumn("Next Maintenance", 115, CellAlignment.Center));
+
+            // Populate hierarchical model
+            var model = new ZeroTreeModel();
+
+            // Root 1: Gigafactory
+            var root1 = new ZeroTreeNode("🏭 North American Gigafactory", "FAC-001", "Online", "94.2%", "2026-11-15");
+            var line1 = new ZeroTreeNode("⚙️ Assembly Line 01 (Welding)", "LNE-010", "Running", "96.5%", "2026-10-01");
+            line1.AddChild(new ZeroTreeNode("🦾 KUKA Titan Welder Arm", "ROB-101", "Running", "98.1%", "2026-09-20"));
+            line1.AddChild(new ZeroTreeNode("🦾 Fanuc M-20iA Feed Cell", "ROB-102", "Running", "97.4%", "2026-09-28"));
+            line1.AddChild(new ZeroTreeNode("📷 Cognex In-Sight 3D Vision", "CAM-105", "Running", "99.2%", "2026-12-10"));
+
+            var line2 = new ZeroTreeNode("📦 Packaging & Case Packing", "LNE-020", "Standby", "91.8%", "2026-09-18");
+            line2.AddChild(new ZeroTreeNode("🤖 Omron Delta High-Speed Robot", "ROB-201", "Standby", "93.4%", "2026-09-22"));
+            line2.AddChild(new ZeroTreeNode("🌀 Automated Stretch Wrapper", "WRP-202", "Running", "95.0%", "2026-10-15"));
+
+            root1.AddChild(line1);
+            root1.AddChild(line2);
+            model.AddRoot(root1);
+
+            // Root 2: European Distribution Hub
+            var root2 = new ZeroTreeNode("🌐 European Logistics Center", "FAC-002", "Online", "88.9%", "2026-10-30");
+            var asrs = new ZeroTreeNode("🏗️ High-Bay ASRS Storage Bay A", "ASRS-01", "Running", "99.5%", "2026-12-01");
+            asrs.AddChild(new ZeroTreeNode("🪜 Dual-Mast Crane Stacker 01", "CRN-301", "Running", "99.1%", "2026-11-10"));
+            asrs.AddChild(new ZeroTreeNode("🪜 Dual-Mast Crane Stacker 02", "CRN-302", "Running", "98.7%", "2026-11-12"));
+
+            var agvFleet = new ZeroTreeNode("🚜 Autonomous Mobile Robots (AMR)", "AMR-GRP", "Running", "86.4%", "2026-09-15");
+            agvFleet.AddChild(new ZeroTreeNode("🤖 Tugger AMR Unit #04", "AMR-004", "Charging", "82.0%", "2026-09-16"));
+            agvFleet.AddChild(new ZeroTreeNode("🤖 Forklift AMR Unit #09", "AMR-009", "Running", "91.5%", "2026-09-25"));
+
+            root2.AddChild(asrs);
+            root2.AddChild(agvFleet);
+            model.AddRoot(root2);
+
+            DemoTreeList.Model = model;
+
+            // PropertyGrid initial object
+            var cellConfig = new RoboticCellConfig
+            {
+                CellName = "KUKA Titan Heavy Welder ROB-101",
+                AssetTag = "AST-ROB-101",
+                ControllerIp = "192.168.1.101",
+                ModbusPort = 502,
+                TargetCycleTimeSec = 14.5,
+                MaxPayloadKg = 1000.0,
+                IsSafetyCurtainActive = true,
+                AutoRestartOnClear = false,
+                EmergencyStopTripped = false,
+                OperatingMode = "Continuous Auto-Weld"
+            };
+            DemoPropertyGrid.SelectedObject = cellConfig;
+
+            // Wire up TreeList selection to update PropertyGrid and Breadcrumb
+            DemoTreeList.NodeSelected += (s, node) =>
+            {
+                // Build Breadcrumb path
+                var pathStack = new List<string>();
+                var curr = node;
+                while (curr != null)
+                {
+                    string rawText = curr.GetValue(0);
+                    int spIdx = rawText.IndexOf(' ');
+                    pathStack.Insert(0, spIdx >= 0 ? rawText.Substring(spIdx + 1) : rawText);
+                    curr = curr.Parent;
+                }
+                DemoBreadcrumb.Path = string.Join(" / ", pathStack);
+
+                // Update PropertyGrid
+                var nodeConfig = new RoboticCellConfig
+                {
+                    CellName = node.GetValue(0),
+                    AssetTag = node.GetValue(1),
+                    OperatingMode = node.GetValue(2),
+                    TargetCycleTimeSec = 12.0,
+                    IsSafetyCurtainActive = true
+                };
+                DemoPropertyGrid.SelectedObject = nodeConfig;
+            };
+        }
+    }
+
+    public class RoboticCellConfig
+    {
+        [Category("1. Identification")]
+        [DisplayName("Asset Cell Name")]
+        [Description("Descriptive human-readable identifier of the automated machinery or work cell.")]
+        public string CellName { get; set; } = "Workstation Cell";
+
+        [Category("1. Identification")]
+        [DisplayName("Asset Tag Code")]
+        [Description("Global enterprise asset barcode / ERP registration identifier.")]
+        public string AssetTag { get; set; } = "AST-001";
+
+        [Category("2. Industrial Network")]
+        [DisplayName("Fieldbus IP Address")]
+        [Description("IPv4 static endpoint assigned on the machine OT subnet.")]
+        public string ControllerIp { get; set; } = "192.168.1.100";
+
+        [Category("2. Industrial Network")]
+        [DisplayName("Modbus TCP Port")]
+        [Description("Port number for Modbus or OPC-UA fieldbus telemetry ingestion.")]
+        public int ModbusPort { get; set; } = 502;
+
+        [Category("3. Process Kinematics")]
+        [DisplayName("Target Cycle (sec)")]
+        [Description("Expected takt time per finished workpiece assembly in seconds.")]
+        public double TargetCycleTimeSec { get; set; } = 15.0;
+
+        [Category("3. Process Kinematics")]
+        [DisplayName("Max Rated Payload (kg)")]
+        [Description("Maximum allowable mechanical lifting payload on robot end effector.")]
+        public double MaxPayloadKg { get; set; } = 500.0;
+
+        [Category("3. Process Kinematics")]
+        [DisplayName("Operational Mode")]
+        [Description("Current supervisory state machine operation mode.")]
+        public string OperatingMode { get; set; } = "Automatic";
+
+        [Category("4. Safety & Interlocks")]
+        [DisplayName("Optoelectronic Light Curtain")]
+        [Description("Active optical safety curtain barrier protecting human operator envelope.")]
+        public bool IsSafetyCurtainActive { get; set; } = true;
+
+        [Category("4. Safety & Interlocks")]
+        [DisplayName("Auto Restart on Clear")]
+        [Description("Automatically resume production cycle after safety zone breach reset.")]
+        public bool AutoRestartOnClear { get; set; } = false;
+
+        [Category("4. Safety & Interlocks")]
+        [DisplayName("Emergency Stop Latched")]
+        [Description("Hardware SIL-3 E-Stop circuit trip indicator.")]
+        public bool EmergencyStopTripped { get; set; } = false;
     }
 
     public class DemoProduct
