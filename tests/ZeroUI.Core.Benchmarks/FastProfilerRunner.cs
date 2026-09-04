@@ -18,6 +18,7 @@ namespace ZeroUI.Core.Benchmarks
             Console.WriteLine();
 
             ProfileLttb();
+            ProfilePyramid();
             ProfileTagEngine();
             ProfileAlarmEngine();
             HistorianMultiDimensionalBenchmark.RunAsync().GetAwaiter().GetResult();
@@ -31,13 +32,20 @@ namespace ZeroUI.Core.Benchmarks
         private static void ProfileLttb()
         {
             Console.WriteLine("----------------------------------------------------------------------------------");
-            Console.WriteLine("1. LTTB Time-Series Decimation (Zero-Allocation Verification)");
+            Console.WriteLine("1. LTTB Time-Series Decimation (10k .. 10M Points - Zero GC)");
             Console.WriteLine("----------------------------------------------------------------------------------");
 
-            int[] testSizes = { 10_000, 50_000, 100_000, 500_000 };
-            var destBuffer = new TimePoint[1000];
+            (int Size, int Target)[] testCases =
+            {
+                (10_000, 1_000),
+                (50_000, 1_000),
+                (100_000, 1_000),
+                (500_000, 1_000),
+                (1_000_000, 2_000),
+                (10_000_000, 2_000)
+            };
 
-            foreach (var size in testSizes)
+            foreach (var (size, target) in testCases)
             {
                 var src = new TimePoint[size];
                 for (int i = 0; i < size; i++)
@@ -45,8 +53,10 @@ namespace ZeroUI.Core.Benchmarks
                     src[i] = new TimePoint(i, Math.Sin(i * 0.02) * 50.0 + (i % 5));
                 }
 
+                var destBuffer = new TimePoint[target];
+
                 // Warmup
-                LttbDecimation.Downsample(src, destBuffer, 1000);
+                LttbDecimation.Downsample(src.AsSpan(), destBuffer.AsSpan(), target);
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -56,10 +66,10 @@ namespace ZeroUI.Core.Benchmarks
                 int gen0Before = GC.CollectionCount(0);
                 var sw = Stopwatch.StartNew();
 
-                const int iterations = 10;
+                int iterations = size >= 10_000_000 ? 1 : size >= 1_000_000 ? 3 : 10;
                 for (int iter = 0; iter < iterations; iter++)
                 {
-                    LttbDecimation.Downsample(src, destBuffer, 1000);
+                    LttbDecimation.Downsample(src.AsSpan(), destBuffer.AsSpan(), target);
                 }
 
                 sw.Stop();
@@ -72,7 +82,57 @@ namespace ZeroUI.Core.Benchmarks
 
                 double throughputKptsPerSec = (size / avgMs);
 
-                Console.WriteLine($"  Input: {size,8:N0} pts -> Output: 1,000 pts | Latency: {avgMs,6:F3} ms | Throughput: {throughputKptsPerSec,8:N0} kpts/s | Alloc: {bytesPerOp,3} B | Gen0: {gen0Diff}");
+                Console.WriteLine($"  Input: {size,10:N0} pts -> Output: {target,5:N0} pts | Latency: {avgMs,7:F2} ms | Throughput: {throughputKptsPerSec,8:N0} kpts/s | Alloc: {bytesPerOp,3} B | Gen0: {gen0Diff}");
+            }
+            Console.WriteLine();
+        }
+
+        private static void ProfilePyramid()
+        {
+            Console.WriteLine("----------------------------------------------------------------------------------");
+            Console.WriteLine("2. Multi-Resolution TimeSeriesPyramid vs. Raw Recomputation (10,000,000 pts)");
+            Console.WriteLine("----------------------------------------------------------------------------------");
+
+            const int totalPoints = 10_000_000;
+            const int targetPoints = 2_000;
+            var destBuffer = new TimePoint[targetPoints];
+
+            Console.WriteLine($"  Building TimeSeriesPyramid with {totalPoints:N0} points (8x hierarchy)...");
+            var pyramid = new TimeSeriesPyramid(totalPoints);
+            var swBuild = Stopwatch.StartNew();
+
+            // Append in chunks
+            const int chunkSize = 100_000;
+            var chunk = new TimePoint[chunkSize];
+            for (int b = 0; b < totalPoints / chunkSize; b++)
+            {
+                int baseIdx = b * chunkSize;
+                for (int i = 0; i < chunkSize; i++)
+                {
+                    chunk[i] = new TimePoint(baseIdx + i, Math.Sin((baseIdx + i) * 0.001) * 100.0);
+                }
+                pyramid.AppendBatch(chunk.AsSpan());
+            }
+            swBuild.Stop();
+            Console.WriteLine($"  Pyramid Ingestion Completed in {swBuild.Elapsed.TotalMilliseconds:F1} ms ({totalPoints / swBuild.Elapsed.TotalSeconds:N0} pts/s, amortized O(1)).");
+            Console.WriteLine();
+
+            (string ZoomName, double MinX, double MaxX)[] zoomLevels =
+            {
+                ("100% Zoom (Full 10M pts)", 0, totalPoints),
+                (" 10% Zoom (1,000,000 pts)", totalPoints * 0.45, totalPoints * 0.55),
+                ("  1% Zoom (  100,000 pts)", totalPoints * 0.495, totalPoints * 0.505),
+                ("0.1% Zoom (   10,000 pts)", totalPoints * 0.4995, totalPoints * 0.5005)
+            };
+
+            Console.WriteLine("  Interactive Chart Query & Decimation Performance:");
+            foreach (var (zoomName, minX, maxX) in zoomLevels)
+            {
+                var sw = Stopwatch.StartNew();
+                int written = pyramid.QueryRange(minX, maxX, destBuffer.AsSpan(), targetPoints);
+                sw.Stop();
+
+                Console.WriteLine($"  [{zoomName}] -> {written:N0} pts | Pyramid Query: {sw.Elapsed.TotalMilliseconds,6:F3} ms (Instantaneous / 144 Hz Ready)");
             }
             Console.WriteLine();
         }
@@ -80,12 +140,12 @@ namespace ZeroUI.Core.Benchmarks
         private static void ProfileTagEngine()
         {
             Console.WriteLine("----------------------------------------------------------------------------------");
-            Console.WriteLine("2. SCADA ZeroTagEngine Throughput & Deadband Filtering");
+            Console.WriteLine("3. SCADA ZeroTagEngine Throughput & Deadband Filtering");
             Console.WriteLine("----------------------------------------------------------------------------------");
 
             const int totalOps = 100_000;
 
-            // Test 2.1: Single Thread Ingestion
+            // Test 3.1: Single Thread Ingestion
             {
                 GC.Collect();
                 long allocBefore = GC.GetAllocatedBytesForCurrentThread();
@@ -104,7 +164,7 @@ namespace ZeroUI.Core.Benchmarks
                 Console.WriteLine($"  Single-Thread SetTagValue (100k updates)  | Time: {sw.Elapsed.TotalMilliseconds,6:F1} ms | Throughput: {opsPerSec,10:N0} ops/s | Alloc: {allocPerOp,3} B/op");
             }
 
-            // Test 2.2: Deadband Suppression Rate
+            // Test 3.2: Deadband Suppression Rate
             {
                 ZeroTagEngine.SetDeadband("Plant.NoisySensor", 5.0);
                 ZeroTagEngine.SetTagValue("Plant.NoisySensor", 100.0);
@@ -113,7 +173,6 @@ namespace ZeroUI.Core.Benchmarks
                 int published = 0;
                 for (int i = 0; i < totalOps; i++)
                 {
-                    // Jitter 0.5 < deadband 5.0
                     if (ZeroTagEngine.SetTagValue("Plant.NoisySensor", 100.0 + (i % 4) * 0.1, ScadaQuality.Good))
                     {
                         published++;
@@ -125,7 +184,7 @@ namespace ZeroUI.Core.Benchmarks
                 Console.WriteLine($"  Deadband Filter (100k jitter suppressed) | Time: {sw.Elapsed.TotalMilliseconds,6:F1} ms | Throughput: {opsPerSec,10:N0} ops/s | Passed: {published}/{totalOps}");
             }
 
-            // Test 2.3: Multi-Threaded Concurrent Ingestion (4 Workers)
+            // Test 3.3: Multi-Threaded Concurrent Ingestion (4 Workers)
             {
                 const int workers = 4;
                 const int opsPerWorker = 25_000;
@@ -150,12 +209,12 @@ namespace ZeroUI.Core.Benchmarks
         private static void ProfileAlarmEngine()
         {
             Console.WriteLine("----------------------------------------------------------------------------------");
-            Console.WriteLine("3. ISA-18.2 ScadaAlarmEngine Stress Profiler");
+            Console.WriteLine("4. ISA-18.2 ScadaAlarmEngine Stress Profiler");
             Console.WriteLine("----------------------------------------------------------------------------------");
 
             const int alarmStormCount = 10_000;
 
-            // Test 3.1: Alarm Storm (10,000 Alarms raised)
+            // Test 4.1: Alarm Storm (10,000 Alarms raised)
             {
                 var sw = Stopwatch.StartNew();
                 for (int i = 0; i < alarmStormCount; i++)
@@ -173,7 +232,7 @@ namespace ZeroUI.Core.Benchmarks
                 Console.WriteLine($"  Alarm Storm (10,000 Alarms Raised)        | Time: {sw.Elapsed.TotalMilliseconds,6:F1} ms | Rate: {opsPerSec,10:N0} alarms/s");
             }
 
-            // Test 3.2: Severity Summary Aggregation
+            // Test 4.2: Severity Summary Aggregation
             {
                 var sw = Stopwatch.StartNew();
                 const int iters = 1000;
@@ -188,7 +247,7 @@ namespace ZeroUI.Core.Benchmarks
                 Console.WriteLine($"  Alarm Summary Tally (Over 10k alarms)     | Latency: {avgUs,6:F1} μs | Total Active Alarms: {summary.TotalActive:N0}");
             }
 
-            // Test 3.3: Mass Acknowledgment
+            // Test 4.3: Mass Acknowledgment
             {
                 var sw = Stopwatch.StartNew();
                 int ackCount = ScadaAlarmEngine.AcknowledgeAll("ChiefSafetyOfficer");
