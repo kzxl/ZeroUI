@@ -271,6 +271,33 @@ namespace ZeroUI.Core.Scada
             return false;
         }
 
+        public int ActiveCount => _activeAlarms.Count;
+
+        public int UnacknowledgedCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (var kvp in _activeAlarms)
+                {
+                    if (kvp.Value.State == ScadaAlarmState.ActiveUnacknowledged ||
+                        kvp.Value.State == ScadaAlarmState.ClearedUnacknowledged)
+                    {
+                        count++;
+                    }
+                }
+                return count;
+            }
+        }
+
+        public void AcknowledgeAll(string user)
+        {
+            foreach (var kvp in _activeAlarms)
+            {
+                Acknowledge(kvp.Key, user);
+            }
+        }
+
         public IReadOnlyList<ScadaAlarmRecord> GetActiveAlarms()
         {
             return new List<ScadaAlarmRecord>(_activeAlarms.Values);

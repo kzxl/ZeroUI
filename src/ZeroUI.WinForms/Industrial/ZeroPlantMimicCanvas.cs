@@ -320,7 +320,15 @@ namespace ZeroUI.WinForms.Industrial
 
             for (int i = 0; i < _visibleNodesBuffer.Count; i++)
             {
-                _visibleNodesBuffer[i].Render(g, renderContext);
+                var node = _visibleNodesBuffer[i];
+                if (node is ZeroSceneNode zsn)
+                {
+                    RenderZeroSceneNode(g, zsn, renderContext);
+                }
+                else
+                {
+                    node.Render(g, renderContext);
+                }
             }
 
             // 4. Render Legacy/Fallback Elements (if any)
@@ -369,6 +377,193 @@ namespace ZeroUI.WinForms.Industrial
                 int totalCount = _scene.RootNodes.Count + _elements.Count;
                 string hud = $"ZOOM: {_zoomFactor * 100:0}% | NODES: {totalCount} | VISIBLE: {_visibleNodesBuffer.Count} | PAN: [SPACE+DRAG]";
                 g.DrawString(hud, hudFont, hudBrush, 10, Height - 22);
+            }
+        }
+
+        private void RenderZeroSceneNode(Graphics g, ZeroSceneNode node, in RenderContext context)
+        {
+            if (!node.IsVisible) return;
+
+            var bounds = node.WorldBounds;
+            float x = bounds.X;
+            float y = bounds.Y;
+            float w = bounds.Width;
+            float h = bounds.Height;
+            bool isDark = context.IsDarkTheme;
+
+            Color borderColor = isDark ? Color.FromArgb(71, 85, 105) : Color.FromArgb(203, 213, 225);
+            Color bodyColor = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(248, 250, 252);
+            Color textColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
+            Color subTextColor = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+
+            switch (node.NodeType)
+            {
+                case IndustrialNodeType.Tank:
+                    using (var shellBrush = new SolidBrush(bodyColor))
+                    using (var shellPen = new Pen(borderColor, 1.5f))
+                    using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+                    using (var textBrush = new SolidBrush(textColor))
+                    using (var subBrush = new SolidBrush(subTextColor))
+                    {
+                        g.FillRectangle(shellBrush, x, y, w, h);
+
+                        // Liquid Fill
+                        double pct = Math.Max(0.0, Math.Min(100.0, node.Value));
+                        float fillH = (float)(h * (pct / 100.0));
+                        float fillY = y + h - fillH;
+                        if (fillH > 0)
+                        {
+                            Color fluidColor = node.State == ScadaNodeState.Fault ? Color.FromArgb(239, 68, 68) : Color.FromArgb(14, 165, 233);
+                            using (var fluidBrush = new SolidBrush(Color.FromArgb(180, fluidColor)))
+                            {
+                                g.FillRectangle(fluidBrush, x + 1, fillY, w - 2, fillH);
+                            }
+                        }
+
+                        g.DrawRectangle(shellPen, x, y, w, h);
+                        g.DrawString(node.Label, font, textBrush, x + 4, y + 4);
+                        g.DrawString($"{pct:0.0} %", font, subBrush, x + 4, y + 20);
+                    }
+                    break;
+
+                case IndustrialNodeType.Pump:
+                    using (var pumpBrush = new SolidBrush(bodyColor))
+                    using (var pumpPen = new Pen(borderColor, 1.5f))
+                    using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+                    using (var textBrush = new SolidBrush(textColor))
+                    using (var subBrush = new SolidBrush(subTextColor))
+                    {
+                        g.FillEllipse(pumpBrush, x, y, w, h);
+
+                        // Running state indicator
+                        Color ringColor = node.State == ScadaNodeState.Running ? Color.FromArgb(16, 185, 129) :
+                                          node.State == ScadaNodeState.Fault ? Color.FromArgb(239, 68, 68) : borderColor;
+                        using (var statePen = new Pen(ringColor, 2.5f))
+                        {
+                            g.DrawEllipse(statePen, x + 2, y + 2, w - 4, h - 4);
+                        }
+
+                        g.DrawEllipse(pumpPen, x, y, w, h);
+
+                        // Impeller cross
+                        float cx = x + w / 2f;
+                        float cy = y + h / 2f;
+                        float r = Math.Min(w, h) * 0.3f;
+                        using (var impellerPen = new Pen(ringColor, 1.5f))
+                        {
+                            g.DrawLine(impellerPen, cx - r, cy, cx + r, cy);
+                            g.DrawLine(impellerPen, cx, cy - r, cx, cy + r);
+                        }
+
+                        g.DrawString(node.Label, font, textBrush, x, y + h + 2);
+                        if (node.Value > 0)
+                        {
+                            g.DrawString($"{node.Value:0} RPM", font, subBrush, x, y + h + 15);
+                        }
+                    }
+                    break;
+
+                case IndustrialNodeType.Sensor:
+                    using (var pillBrush = new SolidBrush(bodyColor))
+                    using (var pillPen = new Pen(borderColor, 1.2f))
+                    using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+                    using (var textBrush = new SolidBrush(textColor))
+                    using (var subBrush = new SolidBrush(subTextColor))
+                    {
+                        g.FillRectangle(pillBrush, x, y, w, h);
+                        g.DrawRectangle(pillPen, x, y, w, h);
+
+                        Color statusDot = node.State == ScadaNodeState.Fault ? Color.FromArgb(239, 68, 68) :
+                                          node.State == ScadaNodeState.Warning ? Color.FromArgb(245, 158, 11) : Color.FromArgb(16, 185, 129);
+                        using (var dotBrush = new SolidBrush(statusDot))
+                        {
+                            g.FillEllipse(dotBrush, x + 4, y + 6, 6, 6);
+                        }
+
+                        g.DrawString(node.Label, font, subBrush, x + 14, y + 3);
+                        string valText = $"{node.Value:0.0} {node.EngineeringUnit}".Trim();
+                        g.DrawString(valText, font, textBrush, x + 4, y + 17);
+                    }
+                    break;
+
+                case IndustrialNodeType.Valve:
+                    using (var bodyBrush = new SolidBrush(bodyColor))
+                    using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+                    using (var textBrush = new SolidBrush(textColor))
+                    {
+                        Color valveColor = node.State == ScadaNodeState.Running ? Color.FromArgb(16, 185, 129) :
+                                           node.State == ScadaNodeState.Fault ? Color.FromArgb(239, 68, 68) : borderColor;
+                        using (var vBrush = new SolidBrush(valveColor))
+                        using (var vPen = new Pen(valveColor, 1.5f))
+                        {
+                            // Bowtie: 2 triangles meeting at center
+                            var ptsLeft = new PointF[] { new PointF(x, y), new PointF(x, y + h), new PointF(x + w / 2f, y + h / 2f) };
+                            var ptsRight = new PointF[] { new PointF(x + w, y), new PointF(x + w, y + h), new PointF(x + w / 2f, y + h / 2f) };
+                            g.FillPolygon(vBrush, ptsLeft);
+                            g.FillPolygon(vBrush, ptsRight);
+                            g.DrawPolygon(vPen, ptsLeft);
+                            g.DrawPolygon(vPen, ptsRight);
+
+                            // Actuator Stem
+                            g.DrawLine(vPen, x + w / 2f, y + h / 2f, x + w / 2f, y - 6);
+                            g.DrawRectangle(vPen, x + w / 2f - 6, y - 12, 12, 6);
+                        }
+
+                        g.DrawString(node.Label, font, textBrush, x, y + h + 2);
+                    }
+                    break;
+
+                case IndustrialNodeType.Motor:
+                    using (var motorBrush = new SolidBrush(bodyColor))
+                    using (var motorPen = new Pen(borderColor, 1.5f))
+                    using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+                    using (var textBrush = new SolidBrush(textColor))
+                    using (var subBrush = new SolidBrush(subTextColor))
+                    {
+                        g.FillRectangle(motorBrush, x, y, w, h);
+                        g.DrawRectangle(motorPen, x, y, w, h);
+
+                        // Cooling fins
+                        using (var finPen = new Pen(borderColor, 1f))
+                        {
+                            for (float fy = y + 8; fy < y + h - 6; fy += 6)
+                            {
+                                g.DrawLine(finPen, x + 4, fy, x + w - 4, fy);
+                            }
+                        }
+
+                        g.DrawString(node.Label, font, textBrush, x + 4, y + 3);
+                        g.DrawString($"{node.Value:0} RPM", font, subBrush, x + 4, y + h - 16);
+                    }
+                    break;
+
+                default:
+                    using (var genBrush = new SolidBrush(bodyColor))
+                    using (var genPen = new Pen(borderColor, 1f))
+                    using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+                    using (var textBrush = new SolidBrush(textColor))
+                    {
+                        g.FillRectangle(genBrush, x, y, w, h);
+                        g.DrawRectangle(genPen, x, y, w, h);
+                        g.DrawString(node.Label, font, textBrush, x + 4, y + 4);
+                    }
+                    break;
+            }
+
+            // Selection & Hover highlights
+            if (node.IsSelected)
+            {
+                using (var selPen = new Pen(Color.FromArgb(245, 158, 11), 2f) { DashStyle = DashStyle.Dash })
+                {
+                    g.DrawRectangle(selPen, x - 3, y - 3, w + 6, h + 6);
+                }
+            }
+            else if (node.IsHovered)
+            {
+                using (var hovPen = new Pen(Color.FromArgb(59, 130, 246), 1.5f))
+                {
+                    g.DrawRectangle(hovPen, x - 2, y - 2, w + 4, h + 4);
+                }
             }
         }
 
