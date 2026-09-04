@@ -22,6 +22,7 @@ namespace ZeroUI.Core.Benchmarks
             ProfileTagEngine();
             ProfileAlarmEngine();
             ProfileMultiResolutionHistorian();
+            ProfileSceneGraph();
             HistorianMultiDimensionalBenchmark.RunAsync().GetAwaiter().GetResult();
 
             Console.WriteLine();
@@ -344,6 +345,82 @@ namespace ZeroUI.Core.Benchmarks
                     }
                 }
                 catch { }
+            }
+        }
+
+        private static void ProfileSceneGraph()
+        {
+            Console.WriteLine("----------------------------------------------------------------------------------");
+            Console.WriteLine("6. Industrial Scene Graph & Spatial Culling (10,000 SCADA Nodes)");
+            Console.WriteLine("----------------------------------------------------------------------------------");
+
+            var scene = new ZeroUI.Core.Scene.ZeroScene(new ZeroUI.Core.Scene.GridSpatialIndex(256f));
+            const int totalNodes = 10_000;
+            var rand = new Random(42);
+
+            // Populate 10,000 SCADA nodes across 20,000 x 20,000 px plant world
+            var swBuild = Stopwatch.StartNew();
+            for (int i = 0; i < totalNodes; i++)
+            {
+                float x = (float)(rand.NextDouble() * 20_000);
+                float y = (float)(rand.NextDouble() * 20_000);
+                var node = new BenchmarkDummyNode($"DEV_{i}", x, y, 60f, 60f);
+                scene.AddNode(node);
+            }
+            swBuild.Stop();
+            Console.WriteLine($"  Loaded {totalNodes:N0} SCADA nodes into ZeroScene: {swBuild.Elapsed.TotalMilliseconds:F1} ms ({totalNodes / swBuild.Elapsed.TotalSeconds:N0} nodes/s).");
+
+            // Viewport Frustum Culling Test: Full HD Screen (1920x1080) at center of plant
+            var viewport = new ZeroUI.Core.Scene.SceneRect(9_000f, 9_000f, 1920f, 1080f);
+            var visibleNodes = new System.Collections.Generic.List<ZeroUI.Core.Scene.SceneNode>(500);
+
+            // Warmup
+            scene.QueryVisibleNodes(viewport, visibleNodes);
+
+            const int cullingIters = 10_000;
+            var swCull = Stopwatch.StartNew();
+            for (int i = 0; i < cullingIters; i++)
+            {
+                scene.QueryVisibleNodes(viewport, visibleNodes);
+            }
+            swCull.Stop();
+
+            double avgCullUs = (swCull.Elapsed.TotalMilliseconds / cullingIters) * 1000.0;
+            double fpsPotential = 1_000_000.0 / Math.Max(1.0, avgCullUs);
+
+            Console.WriteLine($"  Viewport Frustum Culling (1920x1080 over 10k nodes):");
+            Console.WriteLine($"  • Visible Nodes Found:      {visibleNodes.Count} nodes (culls {totalNodes - visibleNodes.Count:N0} nodes!)");
+            Console.WriteLine($"  • Average Culling Latency:  {avgCullUs,6:F2} μs ({fpsPotential,9:N0} potential FPS)");
+
+            // Pointer Hit-Test Test
+            const int hitIters = 100_000;
+            var swHit = Stopwatch.StartNew();
+            int hits = 0;
+            for (int i = 0; i < hitIters; i++)
+            {
+                float hx = 9_000f + (i % 1920);
+                float hy = 9_000f + (i % 1080);
+                if (scene.HitTest(hx, hy) != null) hits++;
+            }
+            swHit.Stop();
+
+            double avgHitNs = (swHit.Elapsed.TotalMilliseconds / hitIters) * 1_000_000.0;
+            Console.WriteLine($"  • Spatial Mouse Hit-Testing: {avgHitNs,6:F1} ns per test (O(1) Uniform Grid lookup)");
+            Console.WriteLine();
+        }
+
+        private class BenchmarkDummyNode : ZeroUI.Core.Scene.SceneNode
+        {
+            public BenchmarkDummyNode(string id, float x, float y, float w, float h)
+            {
+                Id = id;
+                Transform.SetPosition(x, y);
+                Width = w;
+                Height = h;
+            }
+
+            public override void Render(object graphicsContext, in ZeroUI.Core.Scene.RenderContext context)
+            {
             }
         }
     }

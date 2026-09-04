@@ -5,21 +5,26 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.Core.Scene;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
     /// <summary>
-    /// Single-HWND high-performance SCADA plant mimic canvas.
-    /// Solves the Windows 10,000 HWND limit trap by rendering hundreds of process elements
-    /// (Tanks, Valves, Pumps, Pipes, Sensors) on a single virtual viewport with Pan, Zoom, and Viewport Culling.
+    /// Single-HWND high-performance SCADA plant mimic canvas powered by ZeroScene graph engine.
+    /// Solves the Windows 10,000 HWND limit trap by rendering thousands of process elements
+    /// (Tanks, Valves, Pumps, Pipes, Sensors) on a single virtual viewport with Pan, Zoom, and Spatial Grid Culling.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
-    [Description("Single-HWND high-performance P&ID plant mimic canvas with pan, zoom, and spatial culling")]
+    [Description("Single-HWND high-performance P&ID plant mimic canvas with ZeroScene graph engine and spatial culling")]
     public class ZeroPlantMimicCanvas : Control
     {
+        private ZeroScene _scene;
+        private readonly List<SceneNode> _visibleNodesBuffer = new List<SceneNode>(256);
         private readonly List<IScadaDrawable> _elements = new List<IScadaDrawable>();
+        private readonly System.Windows.Forms.Timer _animTimer;
+        private long _lastTick = Environment.TickCount;
         private float _zoomFactor = 1.0f;
         private float _panOffsetX = 0f;
         private float _panOffsetY = 0f;
@@ -29,6 +34,23 @@ namespace ZeroUI.WinForms.Industrial
         private IScadaDrawable? _selectedElement;
 
         public event EventHandler<IScadaDrawable>? ElementClicked;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ZeroScene Scene
+        {
+            get => _scene;
+            set
+            {
+                if (_scene != value)
+                {
+                    if (_scene != null) _scene.SceneDirty -= OnSceneDirty;
+                    _scene = value ?? new ZeroScene();
+                    _scene.SceneDirty += OnSceneDirty;
+                    Invalidate();
+                }
+            }
+        }
 
         [Category("Viewport")]
         [DefaultValue(1.0f)]
@@ -73,11 +95,51 @@ namespace ZeroUI.WinForms.Industrial
 
             Size = new Size(800, 500);
             BackColor = Color.FromArgb(15, 23, 42); // Industrial slate dark
+
+            _scene = new ZeroScene();
+            _scene.SceneDirty += OnSceneDirty;
+
+            _animTimer = new System.Windows.Forms.Timer { Interval = 33 }; // ~30 FPS animation loop
+            _animTimer.Tick += (s, e) => OnAnimationTick();
+            _animTimer.Start();
+        }
+
+        private void OnSceneDirty(object? sender, EventArgs e)
+        {
+            Invalidate();
+        }
+
+        private void OnAnimationTick()
+        {
+            long now = Environment.TickCount;
+            long elapsed = Math.Max(1, now - _lastTick);
+            _lastTick = now;
+
+            for (int i = 0; i < _scene.RootNodes.Count; i++)
+            {
+                _scene.RootNodes[i].UpdateAnimation(elapsed);
+            }
+        }
+
+        public void AddNode(SceneNode node)
+        {
+            _scene.AddNode(node);
+        }
+
+        public bool RemoveNode(SceneNode node)
+        {
+            return _scene.RemoveNode(node);
         }
 
         public void AddElement(IScadaDrawable element)
         {
             if (element == null) return;
+            if (element is SceneNode sn)
+            {
+                AddNode(sn);
+                return;
+            }
+
             if (!_elements.Contains(element))
             {
                 _elements.Add(element);
@@ -88,6 +150,12 @@ namespace ZeroUI.WinForms.Industrial
         public void RemoveElement(IScadaDrawable element)
         {
             if (element == null) return;
+            if (element is SceneNode sn)
+            {
+                RemoveNode(sn);
+                return;
+            }
+
             if (_elements.Remove(element))
             {
                 Invalidate();
@@ -96,6 +164,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public void ClearElements()
         {
+            _scene.Clear();
             _elements.Clear();
             Invalidate();
         }
@@ -116,10 +185,12 @@ namespace ZeroUI.WinForms.Industrial
             if (e.Button == MouseButtons.Left)
             {
                 var worldPt = ScreenToWorld(e.Location);
-                IScadaDrawable? hit = FindElementAt(worldPt.X, worldPt.Y);
+                IScadaDrawable? hit = _scene.HitTest(worldPt.X, worldPt.Y) ?? FindElementAt(worldPt.X, worldPt.Y);
 
                 if (_selectedElement != null) _selectedElement.IsSelected = false;
                 _selectedElement = hit;
+                _scene.SelectedNode = hit as SceneNode;
+
                 if (_selectedElement != null)
                 {
                     _selectedElement.IsSelected = true;
@@ -146,12 +217,14 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             var worldPt = ScreenToWorld(e.Location);
-            var hit = FindElementAt(worldPt.X, worldPt.Y);
+            var hit = (IScadaDrawable?)_scene.HitTest(worldPt.X, worldPt.Y) ?? FindElementAt(worldPt.X, worldPt.Y);
 
             if (hit != _hoveredElement)
             {
                 if (_hoveredElement != null) _hoveredElement.IsHovered = false;
                 _hoveredElement = hit;
+                _scene.HoveredNode = hit as SceneNode;
+
                 if (_hoveredElement != null) _hoveredElement.IsHovered = true;
                 Invalidate();
             }
@@ -229,52 +302,62 @@ namespace ZeroUI.WinForms.Industrial
             float vwTop = -_panOffsetY / _zoomFactor;
             float vwRight = vwLeft + (Width / _zoomFactor);
             float vwBottom = vwTop + (Height / _zoomFactor);
-            var viewportRect = new RectangleF(vwLeft, vwTop, vwRight - vwLeft, vwBottom - vwTop);
+            var viewportRect = new SceneRect(vwLeft, vwTop, vwRight - vwLeft, vwBottom - vwTop);
 
-            // 3. Render Elements with Spatial Culling
-            using (var elemBorderPen = new Pen(Color.FromArgb(59, 130, 246), 1.5f))
-            using (var selPen = new Pen(Color.FromArgb(245, 158, 11), 2.5f) { DashStyle = DashStyle.Dash })
-            using (var textBrush = new SolidBrush(isDark ? Color.White : Color.Black))
-            using (var font = new Font("Segoe UI", 8f, FontStyle.Bold))
+            // 3. Render ZeroScene Nodes with Spatial Culling
+            _scene.QueryVisibleNodes(viewportRect, _visibleNodesBuffer);
+            var renderContext = new RenderContext(viewportRect, _zoomFactor, isDark, Environment.TickCount);
+
+            for (int i = 0; i < _visibleNodesBuffer.Count; i++)
             {
-                for (int i = 0; i < _elements.Count; i++)
+                _visibleNodesBuffer[i].Render(g, renderContext);
+            }
+
+            // 4. Render Legacy/Fallback Elements (if any)
+            if (_elements.Count > 0)
+            {
+                var gdiViewport = new RectangleF(vwLeft, vwTop, vwRight - vwLeft, vwBottom - vwTop);
+                using (var elemBorderPen = new Pen(Color.FromArgb(59, 130, 246), 1.5f))
+                using (var selPen = new Pen(Color.FromArgb(245, 158, 11), 2.5f) { DashStyle = DashStyle.Dash })
+                using (var textBrush = new SolidBrush(isDark ? Color.White : Color.Black))
+                using (var font = new Font("Segoe UI", 8f, FontStyle.Bold))
                 {
-                    var el = _elements[i];
-                    if (!el.IsVisible) continue;
-
-                    var elBounds = new RectangleF(el.X, el.Y, el.Width, el.Height);
-
-                    // Viewport Culling: Skip items that are outside visible view
-                    if (!viewportRect.IntersectsWith(elBounds))
-                        continue;
-
-                    // Draw Element Container / Placeholder Vector
-                    using (var bodyBrush = new SolidBrush(isDark ? Color.FromArgb(30, 41, 59) : Color.White))
+                    for (int i = 0; i < _elements.Count; i++)
                     {
-                        g.FillRectangle(bodyBrush, elBounds);
-                    }
+                        var el = _elements[i];
+                        if (!el.IsVisible) continue;
 
-                    if (el.IsSelected)
-                    {
-                        g.DrawRectangle(selPen, elBounds.X - 2, elBounds.Y - 2, elBounds.Width + 4, elBounds.Height + 4);
-                    }
-                    else
-                    {
-                        g.DrawRectangle(elemBorderPen, elBounds.X, elBounds.Y, elBounds.Width, elBounds.Height);
-                    }
+                        var elBounds = new RectangleF(el.X, el.Y, el.Width, el.Height);
+                        if (!gdiViewport.IntersectsWith(elBounds))
+                            continue;
 
-                    // Draw Tag Label
-                    g.DrawString(el.Label, font, textBrush, el.X + 4, el.Y + 4);
+                        using (var bodyBrush = new SolidBrush(isDark ? Color.FromArgb(30, 41, 59) : Color.White))
+                        {
+                            g.FillRectangle(bodyBrush, elBounds);
+                        }
+
+                        if (el.IsSelected)
+                        {
+                            g.DrawRectangle(selPen, elBounds.X - 2, elBounds.Y - 2, elBounds.Width + 4, elBounds.Height + 4);
+                        }
+                        else
+                        {
+                            g.DrawRectangle(elemBorderPen, elBounds.X, elBounds.Y, elBounds.Width, elBounds.Height);
+                        }
+
+                        g.DrawString(el.Label, font, textBrush, el.X + 4, el.Y + 4);
+                    }
                 }
             }
 
             g.ResetTransform();
 
-            // 4. Viewport HUD (Zoom & Element count readout)
+            // 5. Viewport HUD (Zoom & Spatial node counts)
             using (var hudFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             using (var hudBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
             {
-                string hud = $"ZOOM: {_zoomFactor * 100:0}% | OBJECTS: {_elements.Count} | PAN: [SPACE+DRAG]";
+                int totalCount = _scene.RootNodes.Count + _elements.Count;
+                string hud = $"ZOOM: {_zoomFactor * 100:0}% | NODES: {totalCount} | VISIBLE: {_visibleNodesBuffer.Count} | PAN: [SPACE+DRAG]";
                 g.DrawString(hud, hudFont, hudBrush, 10, Height - 22);
             }
         }
@@ -298,6 +381,16 @@ namespace ZeroUI.WinForms.Industrial
                     g.DrawLine(gridPen, 0, y, Width, y);
                 }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _animTimer.Stop();
+                _animTimer.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
