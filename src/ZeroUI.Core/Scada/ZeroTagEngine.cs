@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using ZeroUI.Core.Collections;
+using ZeroUI.Core.Data;
+using ZeroUI.Core.Historian;
 
 namespace ZeroUI.Core.Scada
 {
@@ -18,6 +21,7 @@ namespace ZeroUI.Core.Scada
             new Dictionary<string, List<Action<IScadaTag>>>(StringComparer.OrdinalIgnoreCase);
 
         private static readonly List<IScadaBindable> _boundControls = new List<IScadaBindable>();
+        private static IHistorianEngine? _attachedHistorian;
 
         /// <summary>
         /// Global event fired whenever any tag in the registry is updated.
@@ -55,6 +59,12 @@ namespace ZeroUI.Core.Scada
 
                 var newTag = new ScadaTag(tagPath, value, quality, now);
                 record.CurrentTag = newTag;
+
+                if (TryGetNumeric(value, out double numVal))
+                {
+                    record.HistoryBuffer?.Write(new TimePoint(new DateTimeOffset(now).ToUnixTimeMilliseconds(), numVal));
+                    _attachedHistorian?.LogSample(tagPath, numVal, quality, now);
+                }
 
                 // Dispatch to specific subscribers
                 List<Action<IScadaTag>>? callbacks = null;
@@ -209,8 +219,49 @@ namespace ZeroUI.Core.Scada
             return list.AsReadOnly();
         }
 
-        private static bool TryGetNumeric(object val, out double result)
+        /// <summary>
+        /// Attaches an industrial historian engine to automatically receive all valid tag updates.
+        /// </summary>
+        public static void AttachHistorian(IHistorianEngine? historian)
         {
+            _attachedHistorian = historian;
+        }
+
+        /// <summary>
+        /// Enables an in-memory RingBuffer for a tag to retain high-speed telemetry history for real-time trends.
+        /// </summary>
+        public static void EnableTagHistoryBuffer(string tagPath, int capacity = 1024)
+        {
+            if (string.IsNullOrWhiteSpace(tagPath)) return;
+            var record = _registry.GetOrAdd(tagPath, path => new ScadaTagRecord(path));
+            lock (record)
+            {
+                record.HistoryBuffer = new RingBuffer<TimePoint>(capacity);
+            }
+        }
+
+        /// <summary>
+        /// Gets the in-memory telemetry points recorded for a tag.
+        /// </summary>
+        public static IReadOnlyList<TimePoint> GetRecentHistory(string tagPath)
+        {
+            if (string.IsNullOrWhiteSpace(tagPath)) return Array.Empty<TimePoint>();
+            if (_registry.TryGetValue(tagPath, out var record))
+            {
+                lock (record)
+                {
+                    if (record.HistoryBuffer != null)
+                    {
+                        return record.HistoryBuffer.ToArray();
+                    }
+                }
+            }
+            return Array.Empty<TimePoint>();
+        }
+
+        private static bool TryGetNumeric(object? val, out double result)
+        {
+            if (val == null) { result = 0; return false; }
             if (val is double d) { result = d; return true; }
             if (val is float f) { result = f; return true; }
             if (val is int i) { result = i; return true; }
@@ -227,6 +278,7 @@ namespace ZeroUI.Core.Scada
             public string TagPath { get; }
             public IScadaTag? CurrentTag { get; set; }
             public double Deadband { get; set; }
+            public RingBuffer<TimePoint>? HistoryBuffer { get; set; }
 
             public ScadaTagRecord(string tagPath)
             {
