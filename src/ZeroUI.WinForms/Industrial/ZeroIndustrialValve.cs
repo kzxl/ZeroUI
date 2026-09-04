@@ -3,8 +3,10 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -41,8 +43,8 @@ namespace ZeroUI.WinForms.Industrial
         private double _positionPercent = 100.0; // 0 = closed, 100 = fully open
         private string _tagLabel = "XV-101";
         private bool _isHovered;
-        private Timer? _blinkTimer;
-        private bool _blinkToggle;
+        private IDisposable? _clockToken;
+        private bool _lastBlinkState;
 
         [Category("SCADA Telemetry")]
         public string? BoundTagPath { get; set; }
@@ -104,19 +106,41 @@ namespace ZeroUI.WinForms.Industrial
             Size = new Size(54, 62);
             Cursor = Cursors.Hand;
 
-            _blinkTimer = new Timer { Interval = 400 };
-            _blinkTimer.Tick += (s, e) =>
-            {
-                if (_state == ZeroValveState.InTransit || _state == ZeroValveState.Fault)
-                {
-                    _blinkToggle = !_blinkToggle;
-                    Invalidate();
-                }
-            };
-            _blinkTimer.Start();
-
             ZeroTheme.ThemeChanged += OnThemeChanged;
-            ZeroTagEngine.RegisterBindable(this);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (!ZeroDesignHelper.IsInDesignMode(this))
+            {
+                _clockToken = ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+                ZeroTagEngine.RegisterBindable(this);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+            ZeroTagEngine.UnregisterBindable(this);
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            if (_state == ZeroValveState.InTransit || _state == ZeroValveState.Fault)
+            {
+                bool currentBlink = ZeroAnimationClock.BlinkSlow;
+                if (currentBlink != _lastBlinkState)
+                {
+                    _lastBlinkState = currentBlink;
+                    if (IsHandleCreated && Visible)
+                    {
+                        Invalidate();
+                    }
+                }
+            }
         }
 
         private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
@@ -195,9 +219,9 @@ namespace ZeroUI.WinForms.Industrial
             Color stateColor = _state switch
             {
                 ZeroValveState.Open => palette.Success,
-                ZeroValveState.Closed => palette.Danger,
-                ZeroValveState.InTransit => (_blinkToggle ? palette.Warning : Color.FromArgb(70, palette.Warning)),
-                ZeroValveState.Fault => (_blinkToggle ? palette.Danger : Color.FromArgb(70, palette.Danger)),
+                ZeroValveState.Closed => palette.TextSecondary,
+                ZeroValveState.InTransit => (ZeroAnimationClock.BlinkSlow ? palette.Warning : Color.FromArgb(70, palette.Warning)),
+                ZeroValveState.Fault => (ZeroAnimationClock.BlinkSlow ? palette.Danger : Color.FromArgb(70, palette.Danger)),
                 _ => palette.Border
             };
 
@@ -284,9 +308,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                _blinkTimer?.Stop();
-                _blinkTimer?.Dispose();
-                _blinkTimer = null;
+                _clockToken?.Dispose();
+                _clockToken = null;
                 ZeroTheme.ThemeChanged -= OnThemeChanged;
                 ZeroTagEngine.UnregisterBindable(this);
             }

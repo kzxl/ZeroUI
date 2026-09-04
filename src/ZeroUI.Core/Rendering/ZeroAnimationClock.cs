@@ -27,8 +27,8 @@ namespace ZeroUI.Core.Rendering
     public static class ZeroAnimationClock
     {
         private static readonly object _lock = new object();
-        private static readonly List<Action<double, long>> _actionListeners = new List<Action<double, long>>(64);
-        private static readonly List<IAnimationFrameListener> _contractListeners = new List<IAnimationFrameListener>(64);
+        private static Action<double, long>[] _actionListeners = Array.Empty<Action<double, long>>();
+        private static IAnimationFrameListener[] _contractListeners = Array.Empty<IAnimationFrameListener>();
 
         private static Timer? _timer;
         private static readonly Stopwatch _stopwatch = new Stopwatch();
@@ -39,11 +39,46 @@ namespace ZeroUI.Core.Rendering
         private static SynchronizationContext? _syncContext;
 
         private static IDisposable? _runtimeSub;
+        private static double _totalElapsedTime;
 
         /// <summary>
         /// Total monotonic frames rendered since clock startup.
         /// </summary>
         public static long FrameCount => _frameCount;
+
+        /// <summary>
+        /// Total elapsed time in seconds accumulated by this animation clock.
+        /// </summary>
+        public static double TotalElapsedTime => _totalElapsedTime;
+
+        /// <summary>
+        /// Global synchronized ISA-18.2 fast blink phase (2 Hz / 250 ms toggle).
+        /// Standardized across all annunciators, LED towers, and unacknowledged alarms.
+        /// </summary>
+        public static bool BlinkFast => ((long)(_totalElapsedTime * 4.0) % 2) == 0;
+
+        /// <summary>
+        /// Global synchronized ISA-18.2 slow blink phase (1 Hz / 500 ms toggle).
+        /// Standardized across all warning beacons, valves, and acknowledged alarm states.
+        /// </summary>
+        public static bool BlinkSlow => ((long)(_totalElapsedTime * 2.0) % 2) == 0;
+
+        /// <summary>
+        /// Continuous sinusoidal pulse / breath phase in range [0.0, 1.0].
+        /// Ideal for glowing halos, status badge pulses, and alert rings.
+        /// </summary>
+        public static float PulsePhase => (float)((Math.Sin(_totalElapsedTime * Math.PI * 2.0) + 1.0) * 0.5);
+
+        /// <summary>
+        /// Continuous linear translation phase in range [0.0, 1.0).
+        /// Ideal for fluid dynamics in pipes, moving conveyor belts, and marquee progress indicators.
+        /// </summary>
+        public static float FluidPhase => (float)(_totalElapsedTime % 1.0);
+
+        /// <summary>
+        /// Gets the total active subscriber count.
+        /// </summary>
+        public static int SubscriberCount => _actionListeners.Length + _contractListeners.Length;
 
         /// <summary>
         /// True if the central clock is actively ticking.
@@ -124,12 +159,15 @@ namespace ZeroUI.Core.Rendering
 
             lock (_lock)
             {
-                if (!_actionListeners.Contains(callback))
+                if (Array.IndexOf(_actionListeners, callback) < 0)
                 {
-                    _actionListeners.Add(callback);
+                    var newArray = new Action<double, long>[_actionListeners.Length + 1];
+                    Array.Copy(_actionListeners, newArray, _actionListeners.Length);
+                    newArray[newArray.Length - 1] = callback;
+                    _actionListeners = newArray;
                 }
 
-                if (!_isRunning && (_actionListeners.Count > 0 || _contractListeners.Count > 0))
+                if (!_isRunning && (_actionListeners.Length > 0 || _contractListeners.Length > 0))
                 {
                     Start(_targetFps);
                 }
@@ -146,12 +184,15 @@ namespace ZeroUI.Core.Rendering
             if (listener == null) return;
             lock (_lock)
             {
-                if (!_contractListeners.Contains(listener))
+                if (Array.IndexOf(_contractListeners, listener) < 0)
                 {
-                    _contractListeners.Add(listener);
+                    var newArray = new IAnimationFrameListener[_contractListeners.Length + 1];
+                    Array.Copy(_contractListeners, newArray, _contractListeners.Length);
+                    newArray[newArray.Length - 1] = listener;
+                    _contractListeners = newArray;
                 }
 
-                if (!_isRunning && (_actionListeners.Count > 0 || _contractListeners.Count > 0))
+                if (!_isRunning && (_actionListeners.Length > 0 || _contractListeners.Length > 0))
                 {
                     Start(_targetFps);
                 }
@@ -166,8 +207,18 @@ namespace ZeroUI.Core.Rendering
             if (callback == null) return;
             lock (_lock)
             {
-                _actionListeners.Remove(callback);
-                if (_actionListeners.Count == 0 && _contractListeners.Count == 0)
+                int idx = Array.IndexOf(_actionListeners, callback);
+                if (idx >= 0)
+                {
+                    var newArray = new Action<double, long>[_actionListeners.Length - 1];
+                    if (idx > 0)
+                        Array.Copy(_actionListeners, 0, newArray, 0, idx);
+                    if (idx < _actionListeners.Length - 1)
+                        Array.Copy(_actionListeners, idx + 1, newArray, idx, _actionListeners.Length - idx - 1);
+                    _actionListeners = newArray;
+                }
+
+                if (_actionListeners.Length == 0 && _contractListeners.Length == 0)
                 {
                     Stop();
                 }
@@ -182,8 +233,18 @@ namespace ZeroUI.Core.Rendering
             if (listener == null) return;
             lock (_lock)
             {
-                _contractListeners.Remove(listener);
-                if (_actionListeners.Count == 0 && _contractListeners.Count == 0)
+                int idx = Array.IndexOf(_contractListeners, listener);
+                if (idx >= 0)
+                {
+                    var newArray = new IAnimationFrameListener[_contractListeners.Length - 1];
+                    if (idx > 0)
+                        Array.Copy(_contractListeners, 0, newArray, 0, idx);
+                    if (idx < _contractListeners.Length - 1)
+                        Array.Copy(_contractListeners, idx + 1, newArray, idx, _contractListeners.Length - idx - 1);
+                    _contractListeners = newArray;
+                }
+
+                if (_actionListeners.Length == 0 && _contractListeners.Length == 0)
                 {
                     Stop();
                 }
@@ -231,34 +292,30 @@ namespace ZeroUI.Core.Rendering
         private static void TriggerFrame(double delta)
         {
             long currentFrame = Interlocked.Increment(ref _frameCount);
+            _totalElapsedTime += delta;
 
-            Action<double, long>[]? actionsCopy = null;
-            IAnimationFrameListener[]? contractsCopy = null;
-
-            lock (_lock)
+            // Automatically flush queued dirty UI actions on the animation frame boundary
+            try
             {
-                if (_actionListeners.Count > 0)
-                    actionsCopy = _actionListeners.ToArray();
-                if (_contractListeners.Count > 0)
-                    contractsCopy = _contractListeners.ToArray();
+                UiDispatcher.FlushPending();
+            }
+            catch
+            {
+                // Guard against individual UI flush exceptions
             }
 
-            if (actionsCopy != null)
+            var actions = _actionListeners;
+            for (int i = 0; i < actions.Length; i++)
             {
-                for (int i = 0; i < actionsCopy.Length; i++)
-                {
-                    try { actionsCopy[i](delta, currentFrame); }
-                    catch { /* Swallow exception to prevent one broken control from halting the clock */ }
-                }
+                try { actions[i](delta, currentFrame); }
+                catch { /* Swallow exception to prevent one broken control from halting the clock */ }
             }
 
-            if (contractsCopy != null)
+            var contracts = _contractListeners;
+            for (int i = 0; i < contracts.Length; i++)
             {
-                for (int i = 0; i < contractsCopy.Length; i++)
-                {
-                    try { contractsCopy[i].OnAnimationFrame(delta, currentFrame); }
-                    catch { /* Swallow exception */ }
-                }
+                try { contracts[i].OnAnimationFrame(delta, currentFrame); }
+                catch { /* Swallow exception */ }
             }
         }
 

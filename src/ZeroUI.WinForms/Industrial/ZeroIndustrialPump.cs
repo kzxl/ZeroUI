@@ -3,8 +3,10 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -31,7 +33,7 @@ namespace ZeroUI.WinForms.Industrial
         private double _powerKw = 18.5;
         private string _tagLabel = "P-101A";
         private float _impellerAngle = 0f;
-        private Timer? _animTimer;
+        private IDisposable? _clockToken;
         private bool _isHovered;
 
         [Category("SCADA Telemetry")]
@@ -84,20 +86,38 @@ namespace ZeroUI.WinForms.Industrial
             Size = new Size(80, 84);
             Cursor = Cursors.Hand;
 
-            _animTimer = new Timer { Interval = 33 }; // 30 FPS animation
-            _animTimer.Tick += (s, e) =>
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (!ZeroDesignHelper.IsInDesignMode(this))
             {
-                if (_state == ZeroPumpState.Running && _speedRpm > 0)
+                _clockToken = ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+                ZeroTagEngine.RegisterBindable(this);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+            ZeroTagEngine.UnregisterBindable(this);
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            if (_state == ZeroPumpState.Running && _speedRpm > 0)
+            {
+                float delta = (float)(_speedRpm / 60.0 * 360.0 * deltaSeconds);
+                _impellerAngle = (_impellerAngle + delta) % 360f;
+                if (IsHandleCreated && Visible)
                 {
-                    float delta = (float)(_speedRpm / 60.0 * 360.0 * 0.033);
-                    _impellerAngle = (_impellerAngle + delta) % 360f;
                     Invalidate();
                 }
-            };
-            _animTimer.Start();
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-            ZeroTagEngine.RegisterBindable(this);
+            }
         }
 
         private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
@@ -252,9 +272,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                _animTimer?.Stop();
-                _animTimer?.Dispose();
-                _animTimer = null;
+                _clockToken?.Dispose();
+                _clockToken = null;
                 ZeroTheme.ThemeChanged -= OnThemeChanged;
                 ZeroTagEngine.UnregisterBindable(this);
             }

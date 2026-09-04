@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -26,10 +27,9 @@ namespace ZeroUI.WinForms.Industrial
     public class ZeroStatusBadge : Control
     {
         private ZeroStatusType _status = ZeroStatusType.Running;
-        private bool _pulseEnabled = true;
         private int _dotSize = 10;
-        private readonly Timer _pulseTimer;
-        private float _pulseProgress = 0f; // 0.0 to 1.0
+        private bool _pulseEnabled = true;
+        private IDisposable? _clockToken;
 
         public ZeroStatusBadge()
         {
@@ -45,23 +45,34 @@ namespace ZeroUI.WinForms.Industrial
             Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             Text = "Active / Running";
 
-            _pulseTimer = new Timer { Interval = 35 }; // ~30 FPS
-            _pulseTimer.Tick += (s, e) =>
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (!ZeroDesignHelper.IsInDesignMode(this) && _pulseEnabled)
             {
-                if (_pulseEnabled && IsHandleCreated && Visible)
+                _clockToken = ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            if (_pulseEnabled && (_status == ZeroStatusType.Running || _status == ZeroStatusType.Alarm || _status == ZeroStatusType.Processing))
+            {
+                if (IsHandleCreated && Visible)
                 {
-                    _pulseProgress += 0.04f;
-                    if (_pulseProgress > 1f) _pulseProgress = 0f;
                     Invalidate();
                 }
-            };
-
-            if (!ZeroDesignHelper.IsInDesignMode(this))
-            {
-                _pulseTimer.Start();
             }
-
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
 
@@ -81,8 +92,15 @@ namespace ZeroUI.WinForms.Industrial
             set
             {
                 _pulseEnabled = value;
-                if (value) _pulseTimer.Start();
-                else _pulseTimer.Stop();
+                if (value && IsHandleCreated && !ZeroDesignHelper.IsInDesignMode(this))
+                {
+                    _clockToken ??= ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+                }
+                else if (!value)
+                {
+                    _clockToken?.Dispose();
+                    _clockToken = null;
+                }
                 Invalidate();
             }
         }
@@ -111,8 +129,9 @@ namespace ZeroUI.WinForms.Industrial
             // 1. Draw Expanding Pulse Wave (if enabled and status has pulse)
             if (_pulseEnabled && (_status == ZeroStatusType.Running || _status == ZeroStatusType.Alarm || _status == ZeroStatusType.Processing))
             {
-                float currentRadius = _dotSize / 2f + (_pulseProgress * (_dotSize * 0.9f));
-                int alpha = (int)((1f - _pulseProgress) * 180);
+                float progress = ZeroAnimationClock.FluidPhase;
+                float currentRadius = _dotSize / 2f + (progress * (_dotSize * 0.9f));
+                int alpha = (int)((1f - progress) * 180);
                 Color ringColor = Color.FromArgb(Math.Max(0, Math.Min(255, alpha)), pulseColor);
 
                 using var ringBrush = new SolidBrush(ringColor);
@@ -155,7 +174,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                _pulseTimer.Dispose();
+                _clockToken?.Dispose();
+                _clockToken = null;
             }
             base.Dispose(disposing);
         }

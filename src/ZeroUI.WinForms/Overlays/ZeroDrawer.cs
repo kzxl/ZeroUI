@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -26,7 +27,7 @@ namespace ZeroUI.WinForms.Overlays
         private Rectangle _closeRect;
         private bool _isCloseHovered = false;
 
-        private readonly Timer _animTimer;
+        private IDisposable? _animSub;
         private int _currentWidth = 0;
         private int _targetWidth = 0;
 
@@ -63,9 +64,6 @@ namespace ZeroUI.WinForms.Overlays
 
             Controls.Add(_contentPanel);
             Controls.Add(headerSpacer);
-
-            _animTimer = new Timer { Interval = 16 };
-            _animTimer.Tick += AnimTimer_Tick;
 
             ZeroTheme.ThemeChanged += (s, e) =>
             {
@@ -111,7 +109,7 @@ namespace ZeroUI.WinForms.Overlays
             Visible = true;
             BringToFront();
             _targetWidth = _drawerWidth;
-            _animTimer.Start();
+            StartAnimation();
             Opened?.Invoke(this, EventArgs.Empty);
         }
 
@@ -120,7 +118,7 @@ namespace ZeroUI.WinForms.Overlays
             if (!_isOpen) return;
             _isOpen = false;
             _targetWidth = 0;
-            _animTimer.Start();
+            StartAnimation();
         }
 
         public void Toggle()
@@ -129,7 +127,18 @@ namespace ZeroUI.WinForms.Overlays
             else Open();
         }
 
-        private void AnimTimer_Tick(object? sender, EventArgs e)
+        private void StartAnimation()
+        {
+            _animSub ??= ZeroAnimationClock.Subscribe(OnAnimationStep);
+        }
+
+        private void StopAnimation()
+        {
+            _animSub?.Dispose();
+            _animSub = null;
+        }
+
+        private void OnAnimationStep(double deltaSeconds, long frameCount)
         {
             int step = Math.Max(30, Math.Abs(_targetWidth - _currentWidth) / 3);
 
@@ -139,7 +148,7 @@ namespace ZeroUI.WinForms.Overlays
                 if (_currentWidth >= _targetWidth)
                 {
                     _currentWidth = _targetWidth;
-                    _animTimer.Stop();
+                    StopAnimation();
                 }
             }
             else if (_currentWidth > _targetWidth)
@@ -148,17 +157,23 @@ namespace ZeroUI.WinForms.Overlays
                 if (_currentWidth <= _targetWidth)
                 {
                     _currentWidth = _targetWidth;
-                    _animTimer.Stop();
+                    StopAnimation();
                     Visible = false;
                     Closed?.Invoke(this, EventArgs.Empty);
                 }
             }
             else
             {
-                _animTimer.Stop();
+                StopAnimation();
             }
 
-            Width = _currentWidth;
+            if (Parent != null)
+            {
+                Width = _currentWidth;
+                Left = Parent.ClientSize.Width - _currentWidth;
+                Height = Parent.ClientSize.Height;
+                Invalidate();
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -260,7 +275,7 @@ namespace ZeroUI.WinForms.Overlays
         {
             if (disposing)
             {
-                _animTimer.Dispose();
+                StopAnimation();
             }
             base.Dispose(disposing);
         }

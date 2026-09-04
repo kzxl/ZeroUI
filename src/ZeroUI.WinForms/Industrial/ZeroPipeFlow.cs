@@ -3,7 +3,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -42,7 +44,7 @@ namespace ZeroUI.WinForms.Industrial
         private bool _reverseFlow = false;
         private int _pipeDiameter = 18;
         private float _pulseOffset = 0f;
-        private Timer? _animTimer;
+        private IDisposable? _clockToken;
 
         [Category("SCADA Telemetry")]
         public string? BoundTagPath { get; set; }
@@ -107,21 +109,39 @@ namespace ZeroUI.WinForms.Industrial
             BackColor = Color.Transparent;
             Size = new Size(160, 24);
 
-            _animTimer = new Timer { Interval = 33 }; // ~30 FPS fluid dynamics
-            _animTimer.Tick += (s, e) =>
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (!ZeroDesignHelper.IsInDesignMode(this))
             {
-                if (_isFlowing && _flowVelocity > 0)
+                _clockToken = ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+                ZeroTagEngine.RegisterBindable(this);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+            ZeroTagEngine.UnregisterBindable(this);
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            if (_isFlowing && _flowVelocity > 0)
+            {
+                float step = (float)(_flowVelocity * 45.0 * deltaSeconds);
+                _pulseOffset = _reverseFlow ? (_pulseOffset - step) : (_pulseOffset + step);
+                if (_pulseOffset > 1000f || _pulseOffset < -1000f) _pulseOffset = 0f;
+                if (IsHandleCreated && Visible)
                 {
-                    float step = (float)(_flowVelocity * 1.5);
-                    _pulseOffset = _reverseFlow ? (_pulseOffset - step) : (_pulseOffset + step);
-                    if (_pulseOffset > 1000f || _pulseOffset < -1000f) _pulseOffset = 0f;
                     Invalidate();
                 }
-            };
-            _animTimer.Start();
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-            ZeroTagEngine.RegisterBindable(this);
+            }
         }
 
         private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
@@ -306,9 +326,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                _animTimer?.Stop();
-                _animTimer?.Dispose();
-                _animTimer = null;
+                _clockToken?.Dispose();
+                _clockToken = null;
                 ZeroTheme.ThemeChanged -= OnThemeChanged;
                 ZeroTagEngine.UnregisterBindable(this);
             }

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 
@@ -24,11 +25,11 @@ namespace ZeroUI.WinForms.Editors
         private string? _uncheckedText = "OFF";
 
         private Color _checkedColor = Color.FromArgb(79, 70, 229);     // ZeroUI Indigo Accent
-        private Color _uncheckedColor = Color.FromArgb(0, 0, 0, 65);   // Neutral Slate Track
+        private Color _uncheckedColor = Color.FromArgb(203, 213, 225); // Slate 300
         private Color _thumbColor = Color.White;
+        private IDisposable? _animSub;
 
         private float _thumbPosition = 0f; // 0.0 (left) to 1.0 (right)
-        private readonly Timer _animationTimer;
 
         public event EventHandler? CheckedChanged;
 
@@ -45,9 +46,6 @@ namespace ZeroUI.WinForms.Editors
             Size = new Size(52, 26);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 7.5f, FontStyle.Bold);
-
-            _animationTimer = new Timer { Interval = 16 }; // ~60 FPS
-            _animationTimer.Tick += AnimationTimer_Tick;
         }
 
         [Category("Behavior")]
@@ -60,9 +58,9 @@ namespace ZeroUI.WinForms.Editors
                 if (_checked != value)
                 {
                     _checked = value;
-                    if (!ZeroDesignHelper.IsInDesignMode(this))
+                    if (!ZeroDesignHelper.IsInDesignMode(this) && IsHandleCreated)
                     {
-                        _animationTimer.Start();
+                        _animSub ??= ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
                     }
                     else
                     {
@@ -106,21 +104,26 @@ namespace ZeroUI.WinForms.Editors
             set { _uncheckedColor = value; Invalidate(); }
         }
 
-        private void AnimationTimer_Tick(object? sender, EventArgs e)
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
         {
             float target = _checked ? 1.0f : 0.0f;
-            float step = 0.18f;
+            float step = (float)(deltaSeconds * 10.0); // Smooth ~100ms transition
 
             if (Math.Abs(_thumbPosition - target) <= step)
             {
                 _thumbPosition = target;
-                _animationTimer.Stop();
+                _animSub?.Dispose();
+                _animSub = null;
             }
             else
             {
                 _thumbPosition += (_thumbPosition < target) ? step : -step;
             }
-            Invalidate();
+
+            if (IsHandleCreated && Visible)
+            {
+                Invalidate();
+            }
         }
 
         protected override void OnClick(EventArgs e)
@@ -223,7 +226,8 @@ namespace ZeroUI.WinForms.Editors
         {
             if (disposing)
             {
-                _animationTimer.Dispose();
+                _animSub?.Dispose();
+                _animSub = null;
             }
             base.Dispose(disposing);
         }

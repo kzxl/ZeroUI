@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -24,7 +25,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _showPercentage = true;
         private bool _isIndeterminate = false;
         private int _marqueeOffset = 0;
-        private Timer? _marqueeTimer;
+        private IDisposable? _clockToken;
 
         private Color _progressColor = Color.FromArgb(79, 70, 229); // Indigo 600
         private Color _trackColor = Color.FromArgb(243, 244, 246);   // Gray 100
@@ -92,25 +93,48 @@ namespace ZeroUI.WinForms.Editors
                 _isIndeterminate = value;
                 if (_isIndeterminate)
                 {
-                    if (_marqueeTimer == null)
+                    if (!ZeroDesignHelper.IsInDesignMode(this) && IsHandleCreated)
                     {
-                        _marqueeTimer = new Timer { Interval = 20 };
-                        _marqueeTimer.Tick += (s, e) =>
-                        {
-                            _marqueeOffset = (_marqueeOffset + 5) % (Width + 60);
-                            Invalidate();
-                        };
-                    }
-                    if (!ZeroDesignHelper.IsInDesignMode(this))
-                    {
-                        _marqueeTimer.Start();
+                        _clockToken ??= ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
                     }
                 }
-
                 else
                 {
-                    _marqueeTimer?.Stop();
+                    _clockToken?.Dispose();
+                    _clockToken = null;
                     Invalidate();
+                }
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (!ZeroDesignHelper.IsInDesignMode(this) && _isIndeterminate)
+            {
+                _clockToken ??= ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            if (_isIndeterminate)
+            {
+                int span = Width + 60;
+                if (span > 0)
+                {
+                    _marqueeOffset = (int)(ZeroAnimationClock.FluidPhase * span);
+                    if (IsHandleCreated && Visible)
+                    {
+                        Invalidate();
+                    }
                 }
             }
         }
@@ -192,8 +216,8 @@ namespace ZeroUI.WinForms.Editors
         {
             if (disposing)
             {
-                _marqueeTimer?.Dispose();
-                _marqueeTimer = null;
+                _clockToken?.Dispose();
+                _clockToken = null;
             }
             base.Dispose(disposing);
         }

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
@@ -31,8 +32,8 @@ namespace ZeroUI.WinForms.Industrial
         private LedState _green = LedState.On;
         private LedState _blue = LedState.Off;
 
-        private readonly Timer _blinkTimer;
-        private bool _blinkPhase = false;
+        private IDisposable? _clockToken;
+        private bool _lastBlink;
 
         public ZeroLedTower()
         {
@@ -45,21 +46,38 @@ namespace ZeroUI.WinForms.Industrial
 
             Size = new Size(54, 180);
             BackColor = Color.Transparent;
+        }
 
-            _blinkTimer = new Timer { Interval = 450 };
-            _blinkTimer.Tick += (s, e) =>
-            {
-                if (_red == LedState.Blinking || _amber == LedState.Blinking || 
-                    _green == LedState.Blinking || _blue == LedState.Blinking)
-                {
-                    _blinkPhase = !_blinkPhase;
-                    Invalidate();
-                }
-            };
-
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
             if (!ZeroDesignHelper.IsInDesignMode(this))
             {
-                _blinkTimer.Start();
+                _clockToken = ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            if (_red == LedState.Blinking || _amber == LedState.Blinking ||
+                _green == LedState.Blinking || _blue == LedState.Blinking)
+            {
+                bool currentBlink = ZeroAnimationClock.BlinkSlow;
+                if (currentBlink != _lastBlink)
+                {
+                    _lastBlink = currentBlink;
+                    if (IsHandleCreated && Visible)
+                    {
+                        Invalidate();
+                    }
+                }
             }
         }
 
@@ -128,7 +146,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                _blinkTimer.Dispose();
+                _clockToken?.Dispose();
+                _clockToken = null;
             }
             base.Dispose(disposing);
         }
@@ -185,7 +204,7 @@ namespace ZeroUI.WinForms.Industrial
 
         private void DrawSegment(Graphics g, int x, int y, int w, int h, LedState state, Color brightColor, Color darkColor)
         {
-            bool isLit = (state == LedState.On) || (state == LedState.Blinking && _blinkPhase);
+            bool isLit = (state == LedState.On) || (state == LedState.Blinking && ZeroAnimationClock.BlinkSlow);
             Rectangle rect = new Rectangle(x, y, w, h);
 
             Color cMain = isLit ? brightColor : darkColor;

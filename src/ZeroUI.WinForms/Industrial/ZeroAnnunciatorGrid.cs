@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -45,10 +47,9 @@ namespace ZeroUI.WinForms.Industrial
         private readonly List<IsaAlarmTile> _tiles = new List<IsaAlarmTile>();
         private int _columns = 4;
         private int _rows = 3;
-        private Timer? _flashTimer;
-        private bool _flashFastToggle;
-        private bool _flashSlowToggle;
-        private int _slowCounter;
+        private IDisposable? _clockToken;
+        private bool _lastBlinkFast;
+        private bool _lastBlinkSlow;
         private bool _isTestMode;
         private bool _isSilenced;
 
@@ -101,22 +102,7 @@ namespace ZeroUI.WinForms.Industrial
             BackColor = Color.Transparent;
             Size = new Size(420, 240);
 
-            _flashTimer = new Timer { Interval = 200 }; // 5 Hz clock for ISA flash rates
-            _flashTimer.Tick += (s, e) =>
-            {
-                _flashFastToggle = !_flashFastToggle;
-                _slowCounter++;
-                if (_slowCounter >= 4)
-                {
-                    _slowCounter = 0;
-                    _flashSlowToggle = !_flashSlowToggle;
-                }
-                Invalidate();
-            };
-            _flashTimer.Start();
-
             ZeroTheme.ThemeChanged += OnThemeChanged;
-            ZeroTagEngine.RegisterBindable(this);
 
             // Populate default industrial factory alarm matrix
             AddAlarm("Line1.Alarm.EmergencyStop", "EMERGENCY STOP (E-STOP)", IsaAlarmSeverity.Critical);
@@ -131,6 +117,52 @@ namespace ZeroUI.WinForms.Industrial
             AddAlarm("Line1.Alarm.UpsPower", "UPS ON BATTERY BACKUP", IsaAlarmSeverity.Medium);
             AddAlarm("Line1.Alarm.PlcComm", "PLC COMM TIMEOUT (ET200)", IsaAlarmSeverity.High);
             AddAlarm("Line1.Alarm.DoorInterlock", "SAFETY ENCLOSURE DOOR OPEN", IsaAlarmSeverity.Medium);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (!ZeroDesignHelper.IsInDesignMode(this))
+            {
+                _clockToken = ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+                ZeroTagEngine.RegisterBindable(this);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+            ZeroTagEngine.UnregisterBindable(this);
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            bool hasFlashingAlarm = false;
+            for (int i = 0; i < _tiles.Count; i++)
+            {
+                if (_tiles[i].State == IsaAlarmState.Unacknowledged || _tiles[i].State == IsaAlarmState.ReturnToNormal)
+                {
+                    hasFlashingAlarm = true;
+                    break;
+                }
+            }
+
+            if (hasFlashingAlarm)
+            {
+                bool bf = ZeroAnimationClock.BlinkFast;
+                bool bs = ZeroAnimationClock.BlinkSlow;
+                if (bf != _lastBlinkFast || bs != _lastBlinkSlow)
+                {
+                    _lastBlinkFast = bf;
+                    _lastBlinkSlow = bs;
+                    if (IsHandleCreated && Visible)
+                    {
+                        Invalidate();
+                    }
+                }
+            }
         }
 
         private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
@@ -352,7 +384,7 @@ namespace ZeroUI.WinForms.Industrial
                     {
                         case IsaAlarmState.Unacknowledged:
                             // Fast flash
-                            bool fastLit = _flashFastToggle;
+                            bool fastLit = ZeroAnimationClock.BlinkFast;
                             Color alarmColor = tile.Severity == IsaAlarmSeverity.Critical ? palette.Danger : palette.Warning;
                             tileBg = fastLit ? alarmColor : palette.Surface;
                             tileText = fastLit ? Color.White : palette.TextPrimary;
@@ -369,7 +401,7 @@ namespace ZeroUI.WinForms.Industrial
 
                         case IsaAlarmState.ReturnToNormal:
                             // Slow Flash Green
-                            bool slowLit = _flashSlowToggle;
+                            bool slowLit = ZeroAnimationClock.BlinkSlow;
                             tileBg = slowLit ? palette.Success : palette.Surface;
                             tileText = slowLit ? Color.White : palette.TextPrimary;
                             tileBorder = palette.Success;
@@ -422,9 +454,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                _flashTimer?.Stop();
-                _flashTimer?.Dispose();
-                _flashTimer = null;
+                _clockToken?.Dispose();
+                _clockToken = null;
                 ZeroTheme.ThemeChanged -= OnThemeChanged;
                 ZeroTagEngine.UnregisterBindable(this);
             }
