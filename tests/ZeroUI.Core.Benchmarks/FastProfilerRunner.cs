@@ -21,6 +21,7 @@ namespace ZeroUI.Core.Benchmarks
             ProfilePyramid();
             ProfileTagEngine();
             ProfileAlarmEngine();
+            ProfileMultiResolutionHistorian();
             HistorianMultiDimensionalBenchmark.RunAsync().GetAwaiter().GetResult();
 
             Console.WriteLine();
@@ -256,6 +257,94 @@ namespace ZeroUI.Core.Benchmarks
                 Console.WriteLine($"  Mass AcknowledgeAll ({ackCount:N0} alarms)      | Time: {sw.Elapsed.TotalMilliseconds,6:F1} ms");
             }
             Console.WriteLine();
+        }
+
+        private static void ProfileMultiResolutionHistorian()
+        {
+            Console.WriteLine("----------------------------------------------------------------------------------");
+            Console.WriteLine("5. Multi-Resolution Telemetry Storage (O(screen pixels) vs O(raw history))");
+            Console.WriteLine("----------------------------------------------------------------------------------");
+
+            string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ZeroUI_MRes_Bench_" + Guid.NewGuid().ToString("N"));
+            if (!System.IO.Directory.Exists(tempDir))
+            {
+                System.IO.Directory.CreateDirectory(tempDir);
+            }
+
+            try
+            {
+                using var engine = new ZeroUI.Core.Historian.SqliteHistorianEngine(
+                    storageDirectory: tempDir,
+                    batchSize: 1000,
+                    flushIntervalMs: 1000);
+
+                string tagPath = "Turbine.PowerOutput.MegaWatts";
+                var baseTime = new DateTime(2026, 9, 4, 0, 0, 0, DateTimeKind.Utc);
+                const int sampleCount = 100_000;
+
+                // 100,000 samples across 1 hour (36ms per sample = ~28 Hz industrial rate)
+                Console.WriteLine($"  Ingesting {sampleCount:N0} raw telemetry points (1 hour @ 28 Hz) with continuous rollups...");
+                var swIngest = Stopwatch.StartNew();
+
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    var ts = baseTime.AddMilliseconds(i * 36);
+                    double val = 450.0 + Math.Sin(i * 0.05) * 30.0;
+                    if (i == 50000) val = 999.9; // Transient surge spike
+
+                    engine.LogSample(tagPath, val, ScadaQuality.Good, ts);
+                }
+
+                engine.FlushAsync().GetAwaiter().GetResult();
+                swIngest.Stop();
+                Console.WriteLine($"  Ingestion & continuous rollup completed in {swIngest.Elapsed.TotalMilliseconds:F1} ms ({sampleCount / swIngest.Elapsed.TotalSeconds:N0} rec/s).");
+                Console.WriteLine();
+
+                var startTime = baseTime;
+                var endTime = baseTime.AddHours(1);
+                const int targetPoints = 1000;
+
+                // Warmup
+                _ = engine.QueryDecimatedAsync(tagPath, startTime, endTime, targetPoints, ZeroUI.Core.Historian.TelemetryResolution.Raw).GetAwaiter().GetResult();
+                _ = engine.QueryDecimatedAsync(tagPath, startTime, endTime, targetPoints).GetAwaiter().GetResult();
+
+                // Query 1: Raw scan (O(raw history) - 100k rows)
+                var swRaw = Stopwatch.StartNew();
+                var rawResult = engine.QueryDecimatedAsync(tagPath, startTime, endTime, targetPoints, ZeroUI.Core.Historian.TelemetryResolution.Raw).GetAwaiter().GetResult();
+                swRaw.Stop();
+
+                // Query 2: Multi-resolution rollups (O(screen pixels) - Level 2 1s: ~3,600 buckets)
+                var swRollup = Stopwatch.StartNew();
+                var rollupResult = engine.QueryDecimatedAsync(tagPath, startTime, endTime, targetPoints).GetAwaiter().GetResult();
+                swRollup.Stop();
+
+                double speedup = swRaw.Elapsed.TotalMilliseconds / Math.Max(0.001, swRollup.Elapsed.TotalMilliseconds);
+
+                Console.WriteLine($"  Query Performance Comparison (Range: 1.0 hour, Target: {targetPoints} pts):");
+                Console.WriteLine($"  • Raw Scan + LTTB [O(N = 100k)]:      {swRaw.Elapsed.TotalMilliseconds,6:F2} ms ({rawResult.Count} pts returned)");
+                Console.WriteLine($"  • Multi-Res Rollup [O(pixels = 3.6k)]: {swRollup.Elapsed.TotalMilliseconds,6:F2} ms ({rollupResult.Count} pts returned)");
+                Console.WriteLine($"  • Speedup Factor:                     {speedup:F1}x faster range query!");
+
+                // Check peak preservation
+                bool peakFound = false;
+                for (int i = 0; i < rollupResult.Count; i++)
+                {
+                    if (rollupResult[i].Y >= 990.0) peakFound = true;
+                }
+                Console.WriteLine($"  • Waveform Fidelity Check:            Critical Surge Peak (999.9 MW) Preserved: {(peakFound ? "PASS" : "FAIL")}");
+                Console.WriteLine();
+            }
+            finally
+            {
+                try
+                {
+                    if (System.IO.Directory.Exists(tempDir))
+                    {
+                        System.IO.Directory.Delete(tempDir, recursive: true);
+                    }
+                }
+                catch { }
+            }
         }
     }
 }

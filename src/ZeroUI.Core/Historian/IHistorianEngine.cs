@@ -36,6 +36,19 @@ namespace ZeroUI.Core.Historian
             CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Queries historical data for a specific tag within a time window,
+        /// automatically routed to the optimal multi-resolution tier (or explicit override)
+        /// and decimated using LTTB down to targetPoints.
+        /// </summary>
+        Task<IReadOnlyList<TimePoint>> QueryDecimatedAsync(
+            string tagPath,
+            DateTime startTime,
+            DateTime endTime,
+            int targetPoints,
+            TelemetryResolution? resolution,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Purges database partitions older than the specified retention window in days.
         /// </summary>
         Task<int> PurgeExpiredPartitionsAsync(int retentionDays, CancellationToken cancellationToken = default);

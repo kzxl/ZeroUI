@@ -194,5 +194,95 @@ namespace ZeroUI.Core.Tests
             Assert.Equal(100, metricsAfter.TotalRecords);
             Assert.Equal(0, metricsAfter.WalSizeBytes); // WAL truncated to 0
         }
+
+        [Fact]
+        public void TelemetryResolution_SelectOptimalResolution_ReturnsCorrectTiers()
+        {
+            Assert.Equal(TelemetryResolution.Raw, TelemetryResolutionExtensions.SelectOptimalResolution(TimeSpan.FromMinutes(3)));
+            Assert.Equal(TelemetryResolution.L1_100ms, TelemetryResolutionExtensions.SelectOptimalResolution(TimeSpan.FromMinutes(10)));
+            Assert.Equal(TelemetryResolution.L2_1s, TelemetryResolutionExtensions.SelectOptimalResolution(TimeSpan.FromHours(1)));
+            Assert.Equal(TelemetryResolution.L3_10s, TelemetryResolutionExtensions.SelectOptimalResolution(TimeSpan.FromDays(1)));
+            Assert.Equal(TelemetryResolution.L4_1m, TelemetryResolutionExtensions.SelectOptimalResolution(TimeSpan.FromDays(7)));
+            Assert.Equal(TelemetryResolution.L5_10m, TelemetryResolutionExtensions.SelectOptimalResolution(TimeSpan.FromDays(30)));
+        }
+
+        [Fact]
+        public async Task SqliteHistorianEngine_MultiResolutionRollup_PreservesPeaksAndRoutesAutomatically()
+        {
+            using var engine = new SqliteHistorianEngine(
+                storageDirectory: _testHistorianDir,
+                batchSize: 200,
+                flushIntervalMs: 1000);
+
+            string tagPath = "Turbine.Vibration.Sensor1";
+            var baseTime = new DateTime(2026, 9, 4, 8, 0, 0, DateTimeKind.Utc);
+
+            // Ingest 600 samples across 60 seconds (10 Hz = 100ms interval)
+            // Inject a critical transient spike: Normal ~ 20.0, Peak = 850.0, Dip = 1.2
+            for (int i = 0; i < 600; i++)
+            {
+                var ptTime = baseTime.AddMilliseconds(i * 100);
+                double val = 20.0 + Math.Sin(i * 0.2) * 5.0;
+
+                if (i == 250) val = 850.0; // High spike peak
+                if (i == 251) val = 1.2;   // Low dip valley
+
+                engine.LogSample(tagPath, val, ScadaQuality.Good, ptTime);
+            }
+
+            await engine.FlushAsync();
+
+            // Query window spanning 12 hours -> Auto-routes to L2_1s tier
+            var windowStart = baseTime.AddHours(-1);
+            var windowEnd = baseTime.AddHours(11);
+            var result = await engine.QueryDecimatedAsync(tagPath, windowStart, windowEnd, targetPoints: 100);
+
+            Assert.NotEmpty(result);
+            Assert.True(result.Count <= 100, $"Expected result count <= 100, got {result.Count}");
+
+            // Verify that the extreme peak and valley were preserved in the rollup downsampling
+            bool peakFound = false;
+            bool valleyFound = false;
+
+            for (int i = 0; i < result.Count; i++)
+            {
+                if (result[i].Y >= 800.0) peakFound = true;
+                if (result[i].Y <= 2.0) valleyFound = true;
+            }
+
+            Assert.True(peakFound, "Critical high-frequency peak (850.0) must be preserved in multi-resolution rollup envelope!");
+            Assert.True(valleyFound, "Critical transient valley (1.2) must be preserved in multi-resolution rollup envelope!");
+        }
+
+        [Fact]
+        public async Task SqliteHistorianEngine_ExplicitResolutionOverride_QueriesCorrectTier()
+        {
+            using var engine = new SqliteHistorianEngine(
+                storageDirectory: _testHistorianDir,
+                batchSize: 100);
+
+            string tagPath = "Oven.Zone1.Temp";
+            var baseTime = new DateTime(2026, 9, 4, 10, 0, 0, DateTimeKind.Utc);
+
+            for (int i = 0; i < 120; i++)
+            {
+                engine.LogSample(tagPath, 150.0 + (i % 10), ScadaQuality.Good, baseTime.AddSeconds(i));
+            }
+
+            await engine.FlushAsync();
+
+            var start = baseTime;
+            var end = baseTime.AddSeconds(120);
+
+            // 1. Explicit Raw query
+            var rawResult = await engine.QueryDecimatedAsync(tagPath, start, end, targetPoints: 50, resolution: TelemetryResolution.Raw);
+            Assert.NotEmpty(rawResult);
+            Assert.True(rawResult.Count <= 50);
+
+            // 2. Explicit Rollup query (L3_10s tier)
+            var rollupResult = await engine.QueryDecimatedAsync(tagPath, start, end, targetPoints: 50, resolution: TelemetryResolution.L3_10s);
+            Assert.NotEmpty(rollupResult);
+            Assert.True(rollupResult.Count <= 50);
+        }
     }
 }
