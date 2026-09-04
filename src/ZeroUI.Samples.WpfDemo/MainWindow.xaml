@@ -318,15 +318,50 @@
                         </WrapPanel>
 
                         <!-- 2. Text Inputs Section -->
-                        <TextBlock Text="2. Fluent Text Inputs (TextBox)" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <TextBlock Text="2. Fluent Text Inputs (TextBox &amp; ZeroTextBox)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <WrapPanel Margin="0,0,0,24">
-                            <TextBox Width="220" Height="32" Text="Standard input field" Margin="0,0,12,10" />
-                            <TextBox Width="260" Height="32" Text="Focus to view brand border" Margin="0,0,12,10" />
+                            <TextBox Width="200" Height="32" Text="Standard input field" Margin="0,0,12,10" />
+                            <edit:ZeroTextBox Width="240" Height="32" Placeholder="Enter SKU or barcode..." LeadingText="🔍" Margin="0,0,12,10" />
+                            <edit:ZeroTextBox Width="230" Height="32" Text="Focus to view brand border" Margin="0,0,12,10" />
                             <TextBox Width="180" Height="32" Text="Disabled field" IsEnabled="False" Margin="0,0,12,10" />
                         </WrapPanel>
 
-                        <!-- 3. Selection & Checkboxes Section -->
-                        <TextBlock Text="3. Flat Vector CheckBoxes &amp; RadioButtons" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <!-- 3. High-Precision Number Steppers (ZeroNumericBox - DevExpress Parity) -->
+                        <TextBlock Text="3. High-Precision Number Steppers (ZeroNumericBox - DevExpress Parity)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <!-- Integer Quantity Stepper -->
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Integer Quantity (pcs)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroNumericBox Width="180" Value="150" MinValue="0" MaxValue="10000" Step="10" Suffix=" pcs" />
+                            </StackPanel>
+
+                            <!-- High-Precision Tolerance Stepper (3 Decimals) -->
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Precision Setpoint (mm)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroNumericBox Width="180" Value="12.750" MinValue="0" MaxValue="100" Step="0.025" DecimalPlaces="3" Suffix=" mm" />
+                            </StackPanel>
+
+                            <!-- Currency Stepper -->
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Unit Price (VNĐ)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroNumericBox Width="200" Value="24500000" MinValue="0" MaxValue="500000000" Step="500000" DecimalPlaces="0" Prefix="₫ " ThousandsSeparator="True" />
+                            </StackPanel>
+
+                            <!-- Percentage Stepper -->
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Inspection Yield (%)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroNumericBox Width="170" Value="98.5" MinValue="0" MaxValue="100" Step="0.5" DecimalPlaces="1" Suffix=" %" />
+                            </StackPanel>
+
+                            <!-- Read-only / Disabled Stepper -->
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Locked Setpoint" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroNumericBox Width="160" Value="500" IsEnabled="False" Suffix=" pcs" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 4. Selection & Checkboxes Section -->
+                        <TextBlock Text="4. Flat Vector CheckBoxes &amp; RadioButtons" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <WrapPanel Margin="0,0,0,24">
                             <CheckBox Content="Enable Hardware Acceleration" IsChecked="True" Margin="0,0,20,10" />
                             <CheckBox Content="Auto-commit on build" IsChecked="False" Margin="0,0,20,10" />
@@ -336,25 +371,25 @@
                             <RadioButton Content="Offline Line C" GroupName="Lines" IsEnabled="False" Margin="0,0,20,10" />
                         </WrapPanel>
 
-                        <!-- 4. Interactive Switches Section -->
-                        <TextBlock Text="4. Interactive Switches" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <!-- 5. Interactive Switches Section -->
+                        <TextBlock Text="5. Interactive Switches" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <StackPanel Margin="0,0,0,24">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <edit:ZeroSwitch x:Name="SwitchTelemetry" IsChecked="True" Margin="0,0,12,0" />
-                                <TextBlock Text="Enable Real-Time Hardware Telemetry" VerticalAlignment="Center" Foreground="#F1F5F9" />
+                                <TextBlock Text="Enable Real-Time Hardware Telemetry" VerticalAlignment="Center" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <edit:ZeroSwitch x:Name="SwitchClearType" IsChecked="True" Margin="0,0,12,0" />
-                                <TextBlock Text="Enable Subpixel Vector ClearType Rendering" VerticalAlignment="Center" Foreground="#F1F5F9" />
+                                <TextBlock Text="Enable Subpixel Vector ClearType Rendering" VerticalAlignment="Center" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <edit:ZeroSwitch x:Name="SwitchCache" IsChecked="False" Margin="0,0,12,0" />
-                                <TextBlock Text="Strict Hotpath Zero-Allocation Verification Mode" VerticalAlignment="Center" Foreground="#F1F5F9" />
+                                <TextBlock Text="Strict Hotpath Zero-Allocation Verification Mode" VerticalAlignment="Center" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
                             </StackPanel>
                         </StackPanel>
 
-                        <!-- 5. ComboBoxes Section -->
-                        <TextBlock Text="5. High-Contrast ComboBox &amp; Dropdowns" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <!-- 6. ComboBoxes Section -->
+                        <TextBlock Text="6. High-Contrast ComboBox &amp; Dropdowns" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
                             <edit:ZeroComboBox Width="200" Height="32" SelectedIndex="0" Margin="0,0,14,0">
                                 <ComboBoxItem Content="50 items per page" />
@@ -370,8 +405,8 @@
                             </ComboBox>
                         </StackPanel>
 
-                        <!-- 6. ToolTip & ContextMenu Section -->
-                        <TextBlock Text="6. ToolTips &amp; ContextMenu (Right-Click)" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <!-- 7. ToolTip & ContextMenu Section -->
+                        <TextBlock Text="7. ToolTips &amp; ContextMenu (Right-Click)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <Border Background="{DynamicResource ZeroUI.BgInput}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="6" Padding="20" Margin="0,0,0,24" ToolTip="This is a themed ZeroUI ToolTip with drop shadow and border!">
                             <Border.ContextMenu>
                                 <ContextMenu>
@@ -390,21 +425,21 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 7. Progress Bars Section -->
-                        <TextBlock Text="7. Fluent Progress Indicators" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <!-- 8. Progress Bars Section -->
+                        <TextBlock Text="8. Fluent Progress Indicators" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="Storage Quota" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4" />
+                            <TextBlock Text="Storage Quota" FontSize="12" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
                             <edit:ZeroProgressBar Value="38" Margin="0,0,0,12" />
-                            <TextBlock Text="Batch Transfer Speed" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4" />
+                            <TextBlock Text="Batch Transfer Speed" FontSize="12" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
                             <edit:ZeroProgressBar Value="76" Margin="0,0,0,12" />
-                            <TextBlock Text="Buffer Saturation" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4" />
+                            <TextBlock Text="Buffer Saturation" FontSize="12" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
                             <edit:ZeroProgressBar Value="94" Margin="0,0,0,12" />
                         </StackPanel>
 
-                        <!-- 8. Surface Cards Section -->
-                        <TextBlock Text="8. Fluent Surface Cards" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <!-- 9. Surface Cards Section -->
+                        <TextBlock Text="9. Fluent Surface Cards" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <ind:ZeroCard HeaderText="Active System Cluster" SubtitleText="High availability node cluster in Tokyo DC-2" Margin="0,0,0,24">
-                            <TextBlock Text="All 16 worker instances operational. Average CPU load 12.4%, memory utilization 182 MB. Zero GC pauses recorded in the past 24 hours. Slim Fluent ScrollBar active on the right." Foreground="#94A3B8" TextWrapping="Wrap" />
+                            <TextBlock Text="All 16 worker instances operational. Average CPU load 12.4%, memory utilization 182 MB. Zero GC pauses recorded in the past 24 hours. Slim Fluent ScrollBar active on the right." Foreground="{DynamicResource ZeroUI.TextSecondary}" TextWrapping="Wrap" />
                         </ind:ZeroCard>
                     </StackPanel>
                 </ScrollViewer>

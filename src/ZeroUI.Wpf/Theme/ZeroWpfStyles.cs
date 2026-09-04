@@ -48,7 +48,8 @@ namespace ZeroUI.Wpf.Theme
         {
             const string xaml = @"
 <ResourceDictionary xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
-                    xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                    xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
+                    xmlns:edit=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf"">
 
     <!-- 1. SLIM FLUENT SCROLLBAR -->
     <ControlTemplate x:Key=""ZeroVerticalScrollBar"" TargetType=""{x:Type ScrollBar}"">
@@ -121,7 +122,7 @@ namespace ZeroUI.Wpf.Theme
         <Setter Property=""Template"">
             <Setter.Value>
                 <ControlTemplate TargetType=""{x:Type ScrollViewer}"">
-                    <Grid>
+                    <Grid SnapsToDevicePixels=""True"">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width=""*"" />
                             <ColumnDefinition Width=""Auto"" />
@@ -133,18 +134,34 @@ namespace ZeroUI.Wpf.Theme
                         <ScrollContentPresenter Grid.Column=""0"" Grid.Row=""0"" Margin=""{TemplateBinding Padding}"" />
                         <ScrollBar x:Name=""PART_VerticalScrollBar""
                                    Grid.Column=""1"" Grid.Row=""0""
+                                   Width=""8""
                                    Value=""{TemplateBinding VerticalOffset}""
                                    Maximum=""{TemplateBinding ScrollableHeight}""
                                    ViewportSize=""{TemplateBinding ViewportHeight}""
                                    Visibility=""{TemplateBinding ComputedVerticalScrollBarVisibility}"" />
                         <ScrollBar x:Name=""PART_HorizontalScrollBar""
                                    Grid.Column=""0"" Grid.Row=""1""
+                                   Height=""8""
                                    Orientation=""Horizontal""
                                    Value=""{TemplateBinding HorizontalOffset}""
                                    Maximum=""{TemplateBinding ScrollableWidth}""
                                    ViewportSize=""{TemplateBinding ViewportWidth}""
                                    Visibility=""{TemplateBinding ComputedHorizontalScrollBarVisibility}"" />
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""ComputedVerticalScrollBarVisibility"" Value=""Collapsed"">
+                            <Setter TargetName=""PART_VerticalScrollBar"" Property=""Visibility"" Value=""Collapsed"" />
+                        </Trigger>
+                        <Trigger Property=""ComputedVerticalScrollBarVisibility"" Value=""Hidden"">
+                            <Setter TargetName=""PART_VerticalScrollBar"" Property=""Visibility"" Value=""Collapsed"" />
+                        </Trigger>
+                        <Trigger Property=""ComputedHorizontalScrollBarVisibility"" Value=""Collapsed"">
+                            <Setter TargetName=""PART_HorizontalScrollBar"" Property=""Visibility"" Value=""Collapsed"" />
+                        </Trigger>
+                        <Trigger Property=""ComputedHorizontalScrollBarVisibility"" Value=""Hidden"">
+                            <Setter TargetName=""PART_HorizontalScrollBar"" Property=""Visibility"" Value=""Collapsed"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -454,7 +471,8 @@ namespace ZeroUI.Wpf.Theme
         <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
         <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
         <Setter Property=""BorderThickness"" Value=""1"" />
-        <Setter Property=""Padding"" Value=""10,6,10,6"" />
+        <Setter Property=""Padding"" Value=""10,0,10,0"" />
+        <Setter Property=""VerticalContentAlignment"" Value=""Center"" />
         <Setter Property=""FontSize"" Value=""12.5"" />
         <Setter Property=""CaretBrush"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
         <Setter Property=""SelectionBrush"" Value=""{DynamicResource ZeroUI.SelectionBackground}"" />
@@ -467,9 +485,13 @@ namespace ZeroUI.Wpf.Theme
                             BorderBrush=""{TemplateBinding BorderBrush}""
                             BorderThickness=""{TemplateBinding BorderThickness}""
                             CornerRadius=""5""
-                            Padding=""{TemplateBinding Padding}""
                             SnapsToDevicePixels=""True"">
-                        <ScrollViewer x:Name=""PART_ContentHost"" Focusable=""False"" HorizontalScrollBarVisibility=""Hidden"" VerticalScrollBarVisibility=""Hidden"" />
+                        <ScrollViewer x:Name=""PART_ContentHost""
+                                      Focusable=""False""
+                                      HorizontalScrollBarVisibility=""Hidden""
+                                      VerticalScrollBarVisibility=""Hidden""
+                                      VerticalAlignment=""Center""
+                                      Margin=""{TemplateBinding Padding}"" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property=""IsMouseOver"" Value=""True"">
@@ -658,6 +680,206 @@ namespace ZeroUI.Wpf.Theme
                             <Setter TargetName=""tabBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
                             <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
                             <Setter Property=""FontWeight"" Value=""SemiBold"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+ 
+    <!-- 10. ZEROTEXTBOX STYLE -->
+    <Style TargetType=""{x:Type edit:ZeroTextBox}"">
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgInput}"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""BorderThickness"" Value=""1"" />
+        <Setter Property=""Padding"" Value=""10,0,10,0"" />
+        <Setter Property=""VerticalContentAlignment"" Value=""Center"" />
+        <Setter Property=""FontSize"" Value=""12.5"" />
+        <Setter Property=""CaretBrush"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+        <Setter Property=""SelectionBrush"" Value=""{DynamicResource ZeroUI.SelectionBackground}"" />
+        <Setter Property=""SelectionOpacity"" Value=""0.6"" />
+        <Setter Property=""Height"" Value=""32"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:ZeroTextBox}"">
+                    <Border x:Name=""txtBorder""
+                            Background=""{TemplateBinding Background}""
+                            BorderBrush=""{TemplateBinding BorderBrush}""
+                            BorderThickness=""{TemplateBinding BorderThickness}""
+                            CornerRadius=""{TemplateBinding CornerRadius}""
+                            SnapsToDevicePixels=""True"">
+                        <Grid Margin=""{TemplateBinding Padding}"">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""*"" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Name=""PART_Leading""
+                                       Grid.Column=""0""
+                                       Text=""{TemplateBinding LeadingText}""
+                                       Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                       VerticalAlignment=""Center""
+                                       Margin=""0,0,6,0""
+                                       Visibility=""Collapsed"" />
+
+                            <Grid Grid.Column=""1"">
+                                <TextBlock x:Name=""PART_Placeholder""
+                                           Text=""{TemplateBinding Placeholder}""
+                                           Foreground=""{DynamicResource ZeroUI.TextMuted}""
+                                           VerticalAlignment=""Center""
+                                           IsHitTestVisible=""False""
+                                           Visibility=""Collapsed"" />
+
+                                <ScrollViewer x:Name=""PART_ContentHost""
+                                              Focusable=""False""
+                                              HorizontalScrollBarVisibility=""Hidden""
+                                              VerticalScrollBarVisibility=""Hidden""
+                                              VerticalAlignment=""Center"" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""Text"" Value="""">
+                            <Setter TargetName=""PART_Placeholder"" Property=""Visibility"" Value=""Visible"" />
+                        </Trigger>
+                        <Trigger Property=""LeadingText"" Value="""">
+                            <Setter TargetName=""PART_Leading"" Property=""Visibility"" Value=""Collapsed"" />
+                        </Trigger>
+                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                            <Setter TargetName=""txtBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderFocus}"" />
+                        </Trigger>
+                        <Trigger Property=""IsKeyboardFocused"" Value=""True"">
+                            <Setter TargetName=""txtBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderFocus}"" />
+                        </Trigger>
+                        <Trigger Property=""IsEnabled"" Value=""False"">
+                            <Setter TargetName=""txtBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgDisabled}"" />
+                            <Setter TargetName=""txtBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderSubtle}"" />
+                            <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextMuted}"" />
+                            <Setter Property=""Opacity"" Value=""0.5"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 11. ZERONUMERICBOX STYLE -->
+    <Style TargetType=""{x:Type edit:ZeroNumericBox}"">
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgInput}"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""BorderThickness"" Value=""1"" />
+        <Setter Property=""FontSize"" Value=""12.5"" />
+        <Setter Property=""Height"" Value=""32"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:ZeroNumericBox}"">
+                    <Border x:Name=""boxBorder""
+                            Background=""{TemplateBinding Background}""
+                            BorderBrush=""{TemplateBinding BorderBrush}""
+                            BorderThickness=""{TemplateBinding BorderThickness}""
+                            CornerRadius=""5""
+                            SnapsToDevicePixels=""True"">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width=""*"" />
+                                <ColumnDefinition Width=""24"" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox x:Name=""PART_TextBox""
+                                     Grid.Column=""0""
+                                     Background=""Transparent""
+                                     BorderThickness=""0""
+                                     Padding=""10,0,8,0""
+                                     VerticalContentAlignment=""Center""
+                                     TextAlignment=""{TemplateBinding TextAlignment}""
+                                     Foreground=""{TemplateBinding Foreground}""
+                                     FontSize=""{TemplateBinding FontSize}""
+                                     CaretBrush=""{DynamicResource ZeroUI.PrimaryAccent}""
+                                     IsReadOnly=""{TemplateBinding IsReadOnly}"" />
+
+                            <Border Grid.Column=""1""
+                                    BorderBrush=""{DynamicResource ZeroUI.BorderSubtle}""
+                                    BorderThickness=""1,0,0,0"">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height=""*"" />
+                                        <RowDefinition Height=""*"" />
+                                    </Grid.RowDefinitions>
+
+                                    <RepeatButton x:Name=""PART_UpButton""
+                                                  Grid.Row=""0""
+                                                  Interval=""60""
+                                                  Delay=""250""
+                                                  Focusable=""False""
+                                                  Background=""Transparent""
+                                                  BorderThickness=""0""
+                                                  Cursor=""Hand"">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType=""{x:Type RepeatButton}"">
+                                                <Border x:Name=""upBorder"" Background=""{TemplateBinding Background}"">
+                                                    <Path Data=""M 0 3 L 3 0 L 6 3 Z""
+                                                          Fill=""{DynamicResource ZeroUI.TextSecondary}""
+                                                          HorizontalAlignment=""Center""
+                                                          VerticalAlignment=""Center"" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property=""IsMouseOver"" Value=""True"">
+                                                        <Setter TargetName=""upBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgHover}"" />
+                                                    </Trigger>
+                                                    <Trigger Property=""IsPressed"" Value=""True"">
+                                                        <Setter TargetName=""upBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgActive}"" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+
+                                    <RepeatButton x:Name=""PART_DownButton""
+                                                  Grid.Row=""1""
+                                                  Interval=""60""
+                                                  Delay=""250""
+                                                  Focusable=""False""
+                                                  Background=""Transparent""
+                                                  BorderThickness=""0""
+                                                  Cursor=""Hand"">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType=""{x:Type RepeatButton}"">
+                                                <Border x:Name=""downBorder"" Background=""{TemplateBinding Background}"" BorderBrush=""{DynamicResource ZeroUI.BorderSubtle}"" BorderThickness=""0,1,0,0"">
+                                                    <Path Data=""M 0 0 L 3 3 L 6 0 Z""
+                                                          Fill=""{DynamicResource ZeroUI.TextSecondary}""
+                                                          HorizontalAlignment=""Center""
+                                                          VerticalAlignment=""Center"" />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property=""IsMouseOver"" Value=""True"">
+                                                        <Setter TargetName=""downBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgHover}"" />
+                                                    </Trigger>
+                                                    <Trigger Property=""IsPressed"" Value=""True"">
+                                                        <Setter TargetName=""downBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgActive}"" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                            <Setter TargetName=""boxBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderFocus}"" />
+                        </Trigger>
+                        <Trigger Property=""IsKeyboardFocusWithin"" Value=""True"">
+                            <Setter TargetName=""boxBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderFocus}"" />
+                        </Trigger>
+                        <Trigger Property=""IsEnabled"" Value=""False"">
+                            <Setter TargetName=""boxBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgDisabled}"" />
+                            <Setter TargetName=""boxBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderSubtle}"" />
+                            <Setter Property=""Opacity"" Value=""0.5"" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
