@@ -44,14 +44,41 @@ namespace ZeroUI.Samples.WpfDemo
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
-            // Setup DevExpress-Style Skin Selector
-            ComboSkinSelector.ItemsSource = ZeroSkinManager.AvailableSkins;
-            ComboSkinSelector.SelectedItem = ZeroSkinManager.CurrentSkin;
-            ZeroSkinManager.SkinChanged += skin => ApplySkin(skin);
+            // Setup DevExpress-Style Skin Selector & Studio
+            RefreshSkinSelector();
+            ZeroSkinManager.SkinChanged += skin =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (ComboSkinSelector.SelectedItem != skin)
+                    {
+                        ComboSkinSelector.SelectedItem = skin;
+                    }
+                    ApplySkin(skin);
+                });
+            };
+            ZeroSkinManager.RegistryChanged += () =>
+            {
+                Dispatcher.Invoke(RefreshSkinSelector);
+            };
 
             // Load initial 100k records for instant wow factor
             LoadData(100000);
             ApplySkin(ZeroSkinManager.CurrentSkin);
+        }
+
+        private void RefreshSkinSelector()
+        {
+            var cur = ZeroSkinManager.CurrentSkin;
+            ComboSkinSelector.ItemsSource = null;
+            ComboSkinSelector.ItemsSource = ZeroSkinManager.AvailableSkins;
+            ComboSkinSelector.SelectedItem = cur;
+        }
+
+        private void BtnSkinStudio_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new ZeroSkinStudioDialog { Owner = this };
+            dialog.ShowDialog();
         }
 
         private void SetupColumns()
@@ -287,6 +314,9 @@ namespace ZeroUI.Samples.WpfDemo
             HeaderBar.BorderBrush = ZeroWpfTheme.BorderDefault;
             HudBorder.Background = ZeroWpfTheme.BgCard;
             HudBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
+
+            BtnSkinStudio.Background = ZeroWpfTheme.PrimaryAccent;
+            BtnSkinStudio.Foreground = ZeroWpfTheme.SelectionForeground;
 
             BtnAbout.Background = ZeroWpfTheme.BgInput;
             BtnAbout.Foreground = ZeroWpfTheme.TextPrimary;

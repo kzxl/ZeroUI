@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using ZeroUI.Core.Theme;
 
 namespace ZeroUI.WinForms.Theme
 {
@@ -28,49 +29,62 @@ namespace ZeroUI.WinForms.Theme
     }
 
     /// <summary>
-    /// Unified Design Token & Theme Engine for ZeroUI supporting Light and Obsidian Dark modes.
+    /// Unified Design Token & Theme Engine for ZeroUI WinForms.
+    /// Synchronized with ZeroUI.Core.Theme.ZeroSkinManager for cross-platform skinning.
     /// </summary>
     public static class ZeroTheme
     {
-        private static ZeroThemeMode _currentMode = ZeroThemeMode.Light;
+        private static ZeroThemeMode _currentMode = ZeroThemeMode.Dark;
+        private static ZeroThemePalette _currentPalette;
 
         public static event EventHandler? ThemeChanged;
 
         public static readonly ZeroThemePalette Light = new ZeroThemePalette
         {
-            Background = Color.FromArgb(245, 246, 250),
+            Background = Color.FromArgb(248, 249, 252),
             Surface = Color.FromArgb(255, 255, 255),
             CardBackground = Color.FromArgb(255, 255, 255),
-            TextPrimary = Color.FromArgb(17, 24, 39),
-            TextSecondary = Color.FromArgb(107, 114, 128),
-            Border = Color.FromArgb(229, 231, 235),
+            TextPrimary = Color.FromArgb(15, 23, 42),
+            TextSecondary = Color.FromArgb(71, 85, 105),
+            Border = Color.FromArgb(220, 225, 238),
             Primary = Color.FromArgb(79, 70, 229),
-            PrimaryHover = Color.FromArgb(99, 102, 241),
-            Success = Color.FromArgb(16, 185, 129),
-            Warning = Color.FromArgb(245, 158, 11),
-            Danger = Color.FromArgb(239, 68, 68),
-            Info = Color.FromArgb(59, 130, 246),
-            Hover = Color.FromArgb(243, 244, 246),
-            HeaderBackground = Color.FromArgb(249, 250, 251)
+            PrimaryHover = Color.FromArgb(67, 56, 202),
+            Success = Color.FromArgb(22, 163, 74),
+            Warning = Color.FromArgb(217, 119, 6),
+            Danger = Color.FromArgb(220, 38, 38),
+            Info = Color.FromArgb(2, 132, 199),
+            Hover = Color.FromArgb(232, 237, 248),
+            HeaderBackground = Color.FromArgb(241, 243, 249)
         };
 
         public static readonly ZeroThemePalette Dark = new ZeroThemePalette
         {
-            Background = Color.FromArgb(15, 23, 42),       // Slate 900
-            Surface = Color.FromArgb(30, 41, 59),         // Slate 800
-            CardBackground = Color.FromArgb(30, 41, 59),
-            TextPrimary = Color.FromArgb(248, 250, 252),   // Slate 50
-            TextSecondary = Color.FromArgb(148, 163, 184), // Slate 400
-            Border = Color.FromArgb(51, 65, 85),          // Slate 700
-            Primary = Color.FromArgb(99, 102, 241),       // Indigo 500
-            PrimaryHover = Color.FromArgb(129, 140, 248),
-            Success = Color.FromArgb(52, 211, 153),
-            Warning = Color.FromArgb(251, 191, 36),
-            Danger = Color.FromArgb(248, 113, 113),
-            Info = Color.FromArgb(96, 165, 250),
-            Hover = Color.FromArgb(51, 65, 85),
-            HeaderBackground = Color.FromArgb(24, 33, 47)
+            Background = Color.FromArgb(17, 19, 31),
+            Surface = Color.FromArgb(24, 26, 40),
+            CardBackground = Color.FromArgb(24, 26, 40),
+            TextPrimary = Color.FromArgb(241, 245, 249),
+            TextSecondary = Color.FromArgb(148, 163, 184),
+            Border = Color.FromArgb(46, 52, 78),
+            Primary = Color.FromArgb(129, 140, 248),
+            PrimaryHover = Color.FromArgb(99, 102, 241),
+            Success = Color.FromArgb(166, 227, 161),
+            Warning = Color.FromArgb(249, 226, 175),
+            Danger = Color.FromArgb(243, 139, 168),
+            Info = Color.FromArgb(137, 220, 235),
+            Hover = Color.FromArgb(38, 42, 68),
+            HeaderBackground = Color.FromArgb(29, 32, 52)
         };
+
+        static ZeroTheme()
+        {
+            _currentPalette = Dark;
+
+            // Automatically synchronize with central ZeroSkinManager
+            ZeroSkinManager.SkinChanged += skin =>
+            {
+                ApplyPalette(skin.Tokens, skin.IsDark);
+            };
+        }
 
         public static ZeroThemeMode CurrentMode
         {
@@ -80,20 +94,71 @@ namespace ZeroUI.WinForms.Theme
                 if (_currentMode != value)
                 {
                     _currentMode = value;
+                    _currentPalette = _currentMode == ZeroThemeMode.Dark ? Dark : Light;
                     ThemeChanged?.Invoke(null, EventArgs.Empty);
                 }
             }
         }
 
-        public static ZeroThemePalette Colors => _currentMode == ZeroThemeMode.Dark ? Dark : Light;
-        public static ZeroThemePalette Palette => Colors;
+        public static ZeroThemePalette Colors => _currentPalette;
+        public static ZeroThemePalette Palette => _currentPalette;
 
         public static bool IsDark => _currentMode == ZeroThemeMode.Dark;
+        public static ZeroSkin CurrentSkin => ZeroSkinManager.CurrentSkin;
 
+        public static void ApplySkin(string skinName) => ZeroSkinManager.ApplySkin(skinName);
+        public static void ApplySkin(ZeroSkin skin) => ZeroSkinManager.ApplySkin(skin);
+
+        public static void ApplyPalette(ZeroPaletteTokens tokens, bool isDark)
+        {
+            if (tokens == null) throw new ArgumentNullException(nameof(tokens));
+
+            _currentMode = isDark ? ZeroThemeMode.Dark : ZeroThemeMode.Light;
+            _currentPalette = new ZeroThemePalette
+            {
+                Background = SafeColor(tokens.BgPrimary, isDark ? Dark.Background : Light.Background),
+                Surface = SafeColor(tokens.BgCard, isDark ? Dark.Surface : Light.Surface),
+                CardBackground = SafeColor(tokens.BgCard, isDark ? Dark.CardBackground : Light.CardBackground),
+                TextPrimary = SafeColor(tokens.TextPrimary, isDark ? Dark.TextPrimary : Light.TextPrimary),
+                TextSecondary = SafeColor(tokens.TextSecondary, isDark ? Dark.TextSecondary : Light.TextSecondary),
+                Border = SafeColor(tokens.BorderDefault, isDark ? Dark.Border : Light.Border),
+                Primary = SafeColor(tokens.PrimaryAccent, isDark ? Dark.Primary : Light.Primary),
+                PrimaryHover = SafeColor(tokens.PrimaryAccentDark, isDark ? Dark.PrimaryHover : Light.PrimaryHover),
+                Success = SafeColor(tokens.Success, isDark ? Dark.Success : Light.Success),
+                Warning = SafeColor(tokens.Warning, isDark ? Dark.Warning : Light.Warning),
+                Danger = SafeColor(tokens.Danger, isDark ? Dark.Danger : Light.Danger),
+                Info = SafeColor(tokens.Info, isDark ? Dark.Info : Light.Info),
+                Hover = SafeColor(tokens.BgHover, isDark ? Dark.Hover : Light.Hover),
+                HeaderBackground = SafeColor(tokens.BgInput, isDark ? Dark.HeaderBackground : Light.HeaderBackground)
+            };
+
+            ThemeChanged?.Invoke(null, EventArgs.Empty);
+        }
+
+        private static Color SafeColor(string hex, Color fallback)
+        {
+            if (string.IsNullOrWhiteSpace(hex)) return fallback;
+            try
+            {
+                var rgb = ZeroColorUtils.ParseHex(hex);
+                return Color.FromArgb(rgb.R, rgb.G, rgb.B);
+            }
+            catch
+            {
+                return fallback;
+            }
+        }
 
         public static void ToggleTheme()
         {
-            CurrentMode = (_currentMode == ZeroThemeMode.Light) ? ZeroThemeMode.Dark : ZeroThemeMode.Light;
+            if (IsDark)
+            {
+                ApplySkin("clean_light");
+            }
+            else
+            {
+                ApplySkin("obsidian_dark");
+            }
         }
     }
 }
