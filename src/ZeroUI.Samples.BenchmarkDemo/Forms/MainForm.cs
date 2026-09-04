@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Theme;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Diagnostics;
 using ZeroUI.WinForms.Charts;
@@ -70,6 +72,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroGridSearchBar _searchBar = null!;
         private ZeroGridPagination _pagination = null!;
         private ZeroToolbar _mainToolbar = null!;
+        private ZeroToolbarButton _btnThemeToggle = null!;
+        private ZeroToolbarDropdown _btnSkinsDropdown = null!;
         private ZeroDrawer _drawer = null!;
         private ZeroSteps _mesSteps = null!;
 
@@ -101,6 +105,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         public MainForm()
         {
             InitializeComponents();
+
+            // Synchronize application shell with central ZeroSkinManager
+            ZeroSkinManager.SkinChanged += skin =>
+            {
+                if (IsHandleCreated && InvokeRequired)
+                {
+                    BeginInvoke(new Action(() => ApplyGlobalThemeToForm(skin)));
+                }
+                else
+                {
+                    ApplyGlobalThemeToForm(skin);
+                }
+            };
+
+            ApplyGlobalThemeToForm(ZeroSkinManager.CurrentSkin);
 
             _hudTimer.Interval = 200;
             _hudTimer.Tick += (s, e) => UpdateHud();
@@ -249,17 +268,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             _mainToolbar.AddSpacer(); // Elastic right spacer
 
-            var btnTheme = _mainToolbar.AddButton("🌙 Dark Mode", null, (s, e) =>
+            _btnSkinsDropdown = _mainToolbar.AddDropdown($"🎨 {ZeroSkinManager.CurrentSkin.DisplayName}", null, (s, e) =>
+            {
+                ShowSkinGalleryMenu();
+            });
+
+            _btnThemeToggle = _mainToolbar.AddButton(ZeroTheme.IsDark ? "☀️ Light Mode" : "🌙 Dark Mode", null, (s, e) =>
             {
                 ZeroTheme.ToggleTheme();
-                (s as ZeroToolbarButton)!.Text = ZeroTheme.IsDark ? "☀️ Light Mode" : "🌙 Dark Mode";
-                _clusterBenchmark.BackColor = ZeroTheme.Colors.Background;
-                _clusterMes.BackColor = ZeroTheme.Colors.Background;
-                _clusterWarehouse.BackColor = ZeroTheme.Colors.Background;
-                _clusterScada.BackColor = ZeroTheme.Colors.Background;
-                _clusterAnalytics.BackColor = ZeroTheme.Colors.Background;
-                _clusterComponents.BackColor = ZeroTheme.Colors.Background;
-                ZeroToast.Info(this, $"Switched theme to: {(ZeroTheme.IsDark ? "Obsidian Dark" : "Clean Light")}");
             });
 
             _mainToolbar.AddButton("Corners: Rounded", "📐", (s, e) =>
@@ -451,15 +467,72 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         public void LoadDatasetPublic(int count) => LoadDataset(count);
 
-        public void ToggleThemePublic()
+        public void ToggleThemePublic() => ZeroTheme.ToggleTheme();
+
+        private void ShowSkinGalleryMenu()
         {
-            ZeroTheme.ToggleTheme();
-            _clusterBenchmark.BackColor = ZeroTheme.Colors.Background;
-            _clusterMes.BackColor = ZeroTheme.Colors.Background;
-            _clusterWarehouse.BackColor = ZeroTheme.Colors.Background;
-            _clusterScada.BackColor = ZeroTheme.Colors.Background;
-            _clusterAnalytics.BackColor = ZeroTheme.Colors.Background;
-            _clusterComponents.BackColor = ZeroTheme.Colors.Background;
+            var menu = new ZeroContextMenu();
+            var curSkin = ZeroSkinManager.CurrentSkin;
+
+            foreach (var sk in ZeroSkinManager.AvailableSkins)
+            {
+                var target = sk;
+                string icon = sk.Name switch
+                {
+                    "obsidian_dark" => "🌙",
+                    "clean_light" => "☀️",
+                    "nordic_slate" => "❄️",
+                    "cyberpunk_neon" => "⚡",
+                    "emerald_industrial" => "🟢",
+                    "solar_amber" => "🟠",
+                    "amethyst_violet" => "🟣",
+                    "crimson_ruby" => "🔴",
+                    "oled_midnight" => "⬛",
+                    _ => "🎨"
+                };
+
+                bool isCur = string.Equals(sk.Name, curSkin.Name, StringComparison.OrdinalIgnoreCase);
+                string label = isCur ? $"{sk.DisplayName}  ✓" : sk.DisplayName;
+
+                menu.AddAction(label, () =>
+                {
+                    ZeroSkinManager.ApplySkin(target);
+                    ZeroToast.Info(this, $"Applied Skin: {target.DisplayName} ({(target.IsDark ? "Dark" : "Light")})");
+                }, icon: icon);
+            }
+
+            menu.Show(Cursor.Position);
+        }
+
+        private void ApplyGlobalThemeToForm(ZeroSkin skin)
+        {
+            var colors = ZeroTheme.Colors;
+
+            this.BackColor = colors.Background;
+            if (_topPanel != null) _topPanel.BackColor = colors.HeaderBackground;
+            if (_hudPanel != null) _hudPanel.BackColor = colors.Background;
+            if (_mainToolbar != null)
+            {
+                _mainToolbar.BackColor = colors.Surface;
+                _mainToolbar.BorderColor = colors.Border;
+            }
+
+            if (_clusterBenchmark != null) _clusterBenchmark.BackColor = colors.Background;
+            if (_clusterMes != null) _clusterMes.BackColor = colors.Background;
+            if (_clusterWarehouse != null) _clusterWarehouse.BackColor = colors.Background;
+            if (_clusterScada != null) _clusterScada.BackColor = colors.Background;
+            if (_clusterAnalytics != null) _clusterAnalytics.BackColor = colors.Background;
+            if (_clusterComponents != null) _clusterComponents.BackColor = colors.Background;
+
+            if (_btnThemeToggle != null)
+            {
+                _btnThemeToggle.Text = skin.IsDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+            }
+            if (_btnSkinsDropdown != null)
+            {
+                _btnSkinsDropdown.Text = $"🎨 {skin.DisplayName}";
+            }
+
             Invalidate(true);
         }
 
@@ -3137,6 +3210,59 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             int curY = 4;
 
+            // 0. Visual Skin Palette Gallery (Enterprise Skin Manager)
+            var lblSkins = new Label
+            {
+                Text = "Visual Skin Palette (9 Curated Enterprise Palettes):",
+                Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold),
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                Location = new Point(8, curY),
+                Size = new Size(500, 22),
+                AutoSize = false
+            };
+            pnl.Controls.Add(lblSkins);
+            curY += 26;
+
+            var skinFlow = new FlowLayoutPanel
+            {
+                Location = new Point(8, curY),
+                Size = new Size(504, 76),
+                AutoScroll = false,
+                BackColor = Color.Transparent,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty
+            };
+
+            var curSkin = ZeroSkinManager.CurrentSkin;
+            var skinButtons = new List<ZeroButton>();
+            foreach (var sk in ZeroSkinManager.AvailableSkins)
+            {
+                var target = sk;
+                bool isCur = string.Equals(sk.Name, curSkin.Name, StringComparison.OrdinalIgnoreCase);
+                var btnSkin = new ZeroButton
+                {
+                    Text = sk.DisplayName,
+                    Size = new Size(160, 32),
+                    ButtonStyle = isCur ? ZeroButtonStyle.Primary : ZeroButtonStyle.Secondary,
+                    Margin = new Padding(2, 2, 4, 4)
+                };
+                skinButtons.Add(btnSkin);
+                btnSkin.Click += (s, e) =>
+                {
+                    ZeroSkinManager.ApplySkin(target);
+                    foreach (var b in skinButtons)
+                    {
+                        b.ButtonStyle = (b.Text == target.DisplayName) ? ZeroButtonStyle.Primary : ZeroButtonStyle.Secondary;
+                        b.Invalidate();
+                    }
+                    lblSkins.ForeColor = ZeroTheme.Colors.TextPrimary;
+                    pnl.Invalidate(true);
+                };
+                skinFlow.Controls.Add(btnSkin);
+            }
+            pnl.Controls.Add(skinFlow);
+            curY += 84;
+
             // 1. Global Rounded Corners
             var lblCorners = new Label
             {
@@ -3257,7 +3383,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 okText: "Close",
                 showCancel: false,
                 width: 560,
-                height: 480);
+                height: 560);
         }
 
         private void InitializeChartsDashboard()
