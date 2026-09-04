@@ -176,7 +176,17 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 
 ---
 
+### 📐 High-Performance Layout Subsystem (`ZeroUI.WinForms.Layout`)
+* **`ZeroStackPanel`**: Modern zero-flicker stack panel arranging child controls vertically or horizontally with spacing, padding, and alignments (`Start`, `Center`, `End`, `Stretch`) with 0 GC allocations.
+* **`ZeroTablePanel`**: Responsive grid layout container supporting WPF-style columns and rows (`Absolute`, `Percent`, `AutoSize`) with instant layout math and zero Win32 handle cascade thrashing.
+* **`ZeroSplitContainer`**: Sleek anti-aliased split container supporting horizontal and vertical orientations, hover drag feedback, grip indicators, and one-click collapsible panel toggling.
+* **`ZeroScrollBar`**: Standalone flat anti-aliased scrollbar (`Orientation = Horizontal | Vertical`) with rounded pill thumb geometry and seamless Obsidian Dark / Clean Light theme synchronization.
+
+---
+
 ### 🪟 Overlays & Navigation Subsystem (`ZeroUI.WinForms.Overlays`)
+* **`ZeroAccordion`**: High-performance 100% Single-HWND multi-tier collapsible navigation tree with group headers, vector glyphs, live search filter, status badges, and zero child window handles.
+* **`ZeroSplashScreen`**: Thread-safe, non-blocking enterprise splash screen manager running on an independent background STA thread for 60 FPS smooth shimmer animation and responsive status updates.
 * **`ZeroSideNav`**: Enterprise collapsible vertical navigation bar with category headers, icon glyphs, notification badges, active state indicators, and bottom rail utility footer.
 * **`ZeroTabControl`**: Modern anti-aliased flat TabControl supporting both **Horizontal** and **Vertical** tab layout orientation (`Orientation = TabOrientation.Vertical`), `Underline`, `Pill`, and `Card` styles, notification badges, icons, and 100% native Obsidian Dark / Clean Light theming.
 * **`ZeroContextMenu`**: Modern anti-aliased context menu strip with rounded pill highlights, danger actions (soft red hover for delete/cancel), shortcut key alignments, badge tags, checkable items, submenus, and 100% theme reactivity.

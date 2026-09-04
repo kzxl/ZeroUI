@@ -13,6 +13,7 @@ using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Industrial;
+using ZeroUI.WinForms.Layout;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 using ZeroUI.WinForms.Warehouse;
@@ -61,6 +62,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _tabWms = null!;
         private ZeroTabPage _tabAdvanced = null!;
         private ZeroTabPage _tabCharts = null!;
+        private ZeroTabPage _tabLayout = null!;
 
         private ZeroGridControl _zeroGrid = null!;
         private DataGridView _dgv = null!;
@@ -382,8 +384,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             _tabControls = new ZeroTabPage("Core Input Controls", "🎛️");
             _tabAdvanced = new ZeroTabPage("Enterprise Suite", "🚀");
+            _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐");
             subTabsComponents.AddTab(_tabControls);
             subTabsComponents.AddTab(_tabAdvanced);
+            subTabsComponents.AddTab(_tabLayout);
             _clusterComponents.Controls.Add(subTabsComponents);
 
             // Build individual cluster views
@@ -397,6 +401,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeAdvancedSuite();
             InitializeChartsDashboard();
             InitializeWarehouseWorkstation();
+            InitializeLayoutShowcase(_tabLayout);
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -3658,6 +3663,215 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             subTabsCharts.AddTab(tabBridgesSub);
 
             _tabCharts.Controls.Add(subTabsCharts);
+        }
+
+        private void InitializeLayoutShowcase(ZeroTabPage parent)
+        {
+            // Root SplitContainer: Left = ZeroAccordion navigation tree, Right = Layout & Workspace Panels
+            var splitRoot = new ZeroSplitContainer
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Vertical,
+                SplitterDistance = 270,
+                SplitterWidth = 8,
+                MinSizePanel1 = 180,
+                MinSizePanel2 = 300
+            };
+
+            // 1. Left Panel: ZeroAccordion (Single-HWND)
+            var accordion = new ZeroAccordion
+            {
+                Dock = DockStyle.Fill,
+                ShowSearchBox = true,
+                SearchPlaceholder = "Filter modules & views..."
+            };
+
+            var grpWh = accordion.AddGroup("Warehouse Operations", "📦", isExpanded: true);
+            grpWh.BadgeText = "4 alerts";
+            grpWh.AddItem("Receiving Inspection", "📥", (s, e) => ZeroToast.Info(this, "Navigating to Receiving Inspection..."), "New");
+            grpWh.AddItem("FIFO/FEFO Lot Allocator", "📋", (s, e) => ZeroToast.Info(this, "Navigating to FIFO/FEFO Allocator..."));
+            grpWh.AddItem("Smart Storage Racks", "🏢", (s, e) => ZeroToast.Info(this, "Navigating to Smart Storage Racks..."));
+            grpWh.AddItem("Barcode Workstation", "🔍", (s, e) => ZeroToast.Info(this, "Navigating to Barcode Workstation..."));
+
+            var grpMes = accordion.AddGroup("Production MES", "🏭", isExpanded: true);
+            grpMes.BadgeText = "Running";
+            grpMes.AddItem("Live Line Dispatching", "⚡", (s, e) => ZeroToast.Info(this, "Navigating to Live Line Dispatching..."));
+            grpMes.AddItem("Takt Timer & Cycle HUD", "⏱️", (s, e) => ZeroToast.Info(this, "Navigating to Takt Timer HUD..."));
+            grpMes.AddItem("AOI Inspection Defect Matrix", "🎯", (s, e) => ZeroToast.Info(this, "Navigating to AOI Defect Matrix..."), "Critical");
+
+            var grpQa = accordion.AddGroup("Quality & Analytics", "📊", isExpanded: false);
+            grpQa.AddItem("SPC X-Bar Six Sigma Chart", "📈", (s, e) => ZeroToast.Info(this, "Navigating to SPC Chart..."));
+            grpQa.AddItem("Thermal Line Heatmap", "🔥", (s, e) => ZeroToast.Info(this, "Navigating to Line Heatmap..."));
+            grpQa.AddItem("Lot Traceability Timeline", "⏳", (s, e) => ZeroToast.Info(this, "Navigating to Traceability Timeline..."));
+
+            var grpCfg = accordion.AddGroup("System Administration", "⚙️", isExpanded: false);
+            grpCfg.AddItem("Theme & Visual Skins", "🎨", (s, e) => ZeroToast.Info(this, "Navigating to Theme Settings..."));
+            grpCfg.AddItem("Diagnostic Log Terminal", "💻", (s, e) => ZeroToast.Info(this, "Navigating to Log Terminal..."));
+
+            splitRoot.Panel1.Controls.Add(accordion);
+
+            // 2. Right Panel: ZeroStackPanel holding TablePanel and Showcase Sections
+            var rightStack = new ZeroStackPanel
+            {
+                Dock = DockStyle.Fill,
+                Orientation = StackOrientation.Vertical,
+                Alignment = StackAlignment.Stretch,
+                Spacing = 16,
+                Padding = new Padding(16),
+                AutoScroll = true
+            };
+
+            // Section 1: ZeroTablePanel Showcase Card
+            var cardTable = new ZeroCard
+            {
+                StepNumber = 1,
+                Title = "ZeroTablePanel (Responsive Grid with Zero-Alloc Layout Math)",
+                Subtitle = "WPF-style columns & rows (Star %, Pixel, Auto) calculating instant flicker-free layouts",
+                Height = 220
+            };
+
+            var tablePanel = new ZeroTablePanel
+            {
+                Dock = DockStyle.Fill,
+                ShowGridLines = true,
+                CellSpacing = 8,
+                Padding = new Padding(8)
+            };
+            tablePanel.Columns.Add(TableColumnDefinition.Percent(35f));
+            tablePanel.Columns.Add(TableColumnDefinition.Percent(35f));
+            tablePanel.Columns.Add(TableColumnDefinition.Percent(30f));
+
+            tablePanel.Rows.Add(TableRowDefinition.Absolute(36));
+            tablePanel.Rows.Add(TableRowDefinition.Absolute(36));
+            tablePanel.Rows.Add(TableRowDefinition.Absolute(38));
+
+            // Row 0
+            var btnOrder = new ZeroButton { Text = "Submit Dispatch Order", ButtonStyle = ZeroButtonStyle.Primary, Height = 34 };
+            btnOrder.Click += (s, e) => ZeroToast.Success(this, "Dispatch order submitted via ZeroTablePanel!");
+            var numQty = new ZeroNumericBox { Prefix = "Qty: ", Value = 2500, MinValue = 1, MaxValue = 100000, DecimalPlaces = 0, Height = 34 };
+            var swAuto = new ZeroSwitch { Text = "Auto Lot", Checked = true, Height = 34 };
+
+            tablePanel.SetCell(btnOrder, 0, 0);
+            tablePanel.SetCell(numQty, 0, 1);
+            tablePanel.SetCell(swAuto, 0, 2);
+
+            // Row 1
+            var txtSearch = new ZeroSearchBox { PlaceholderText = "Filter part SKU or Lot...", Height = 34 };
+            var segMode = new ZeroSegmented { Height = 34, Items = new[] { "FIFO", "FEFO", "LIFO" } };
+            segMode.SelectedIndex = 0;
+            var btnAbort = new ZeroButton { Text = "Emergency Stop", ButtonStyle = ZeroButtonStyle.Danger, Height = 34 };
+            btnAbort.Click += (s, e) => ZeroToast.Warning(this, "Line dispatch operation aborted!");
+
+            tablePanel.SetCell(txtSearch, 1, 0);
+            tablePanel.SetCell(segMode, 1, 1);
+            tablePanel.SetCell(btnAbort, 1, 2);
+
+            // Row 2 (Spanning 3 columns)
+            var alertBanner = new ZeroAlertBanner
+            {
+                Title = "Zero Allocation Guarantee",
+                Message = "ZeroTablePanel arranges child boundaries purely in memory with 0 handle cascades and 0 GC allocations on resize.",
+                Severity = ZeroAlertSeverity.Info,
+                Height = 36
+            };
+            tablePanel.SetCell(alertBanner, 2, 0, rowSpan: 1, colSpan: 3);
+
+            cardTable.ContentPanel.Controls.Add(tablePanel);
+            rightStack.Controls.Add(cardTable);
+
+            // Section 2: ZeroScrollBar Showcase Card
+            var cardScroll = new ZeroCard
+            {
+                StepNumber = 2,
+                Title = "ZeroScrollBar (Flat Anti-Aliased Custom Scrollbar)",
+                Subtitle = "Replaces Win32 scrollbars with rounded pill geometry and dark/light theme integration",
+                Height = 130
+            };
+
+            var scrollContainer = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12) };
+            var lblScrollVal = new Label
+            {
+                Text = "Interactive Scroll Value: 42%",
+                ForeColor = Color.FromArgb(79, 70, 229),
+                Font = new Font("Segoe UI", 10.5f, FontStyle.Bold),
+                Location = new Point(12, 10),
+                AutoSize = true
+            };
+
+            var hScrollBar = new ZeroScrollBar
+            {
+                Orientation = ZeroScrollOrientation.Horizontal,
+                Location = new Point(12, 42),
+                Size = new Size(460, 14),
+                Minimum = 0,
+                Maximum = 100,
+                Value = 42,
+                LargeChange = 10
+            };
+            hScrollBar.ValueChanged += (s, e) =>
+            {
+                lblScrollVal.Text = $"Interactive Scroll Value: {hScrollBar.Value}%";
+            };
+
+            scrollContainer.Controls.Add(lblScrollVal);
+            scrollContainer.Controls.Add(hScrollBar);
+            cardScroll.ContentPanel.Controls.Add(scrollContainer);
+            rightStack.Controls.Add(cardScroll);
+
+            // Section 3: ZeroSplashScreen Showcase Card
+            var cardSplash = new ZeroCard
+            {
+                StepNumber = 3,
+                Title = "ZeroSplashScreen (Thread-Safe Non-Blocking Splash Manager)",
+                Subtitle = "Runs on independent background STA thread for 60 FPS flicker-free animation during heavy app boot",
+                Height = 120
+            };
+
+            var splashContainer = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12) };
+            var btnLaunchSplash = new ZeroButton
+            {
+                Text = "🚀 Launch Enterprise Splash Screen Demo",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Location = new Point(12, 12),
+                Size = new Size(320, 38)
+            };
+            btnLaunchSplash.Click += (s, e) =>
+            {
+                ZeroSplashScreen.Show(
+                    "MDS MES Smart Factory Suite",
+                    "ZeroUI High-Performance Enterprise Edition",
+                    "Starting ZeroUI Core Engine...");
+
+                var worker = new System.ComponentModel.BackgroundWorker();
+                worker.DoWork += (ws, we) =>
+                {
+                    System.Threading.Thread.Sleep(500);
+                    ZeroSplashScreen.SetStatus("Connecting to MES Database...", 30);
+                    System.Threading.Thread.Sleep(600);
+                    ZeroSplashScreen.SetStatus("Loading cached BOM models & lots...", 70);
+                    System.Threading.Thread.Sleep(600);
+                    ZeroSplashScreen.SetStatus("Initialization complete. Launching workspace...", 100);
+                    System.Threading.Thread.Sleep(500);
+                    ZeroSplashScreen.Close();
+                };
+                worker.RunWorkerAsync();
+            };
+
+            var lblSplashDesc = new Label
+            {
+                Text = "Click to run 4-step splash simulation on background thread without blocking main UI.",
+                Location = new Point(345, 22),
+                AutoSize = true,
+                ForeColor = Color.FromArgb(148, 163, 184)
+            };
+
+            splashContainer.Controls.Add(btnLaunchSplash);
+            splashContainer.Controls.Add(lblSplashDesc);
+            cardSplash.ContentPanel.Controls.Add(splashContainer);
+            rightStack.Controls.Add(cardSplash);
+
+            splitRoot.Panel2.Controls.Add(rightStack);
+            parent.Controls.Add(splitRoot);
         }
     }
 }
