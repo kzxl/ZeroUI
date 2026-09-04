@@ -25,7 +25,8 @@ namespace ZeroUI.Core.Common
     {
         SingleRow = 0,
         MultiRow = 1,
-        Cell = 2
+        Cell = 2,
+        Block = 3
     }
 
     public enum SummaryType : byte
@@ -46,6 +47,15 @@ namespace ZeroUI.Core.Common
         Boolean = 3,
         Custom = 4,
         Masked = 5
+    }
+
+    public enum SparklineType : byte
+    {
+        None = 0,
+        Line = 1,
+        Area = 2,
+        Bar = 3,
+        WinLoss = 4
     }
 }
 

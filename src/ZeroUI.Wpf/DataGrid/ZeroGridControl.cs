@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,8 +23,18 @@ namespace ZeroUI.Wpf.DataGrid
     /// </summary>
     public class ZeroGridControl : FrameworkElement
     {
+        private static readonly Pen WhiteCheckPen;
+
+        static ZeroGridControl()
+        {
+            WhiteCheckPen = new Pen(Brushes.White, 1.8);
+            WhiteCheckPen.Freeze();
+        }
+
         private readonly ObservableCollection<ZeroColumn> _columns = new ObservableCollection<ZeroColumn>();
         private RowIndexMap _rowIndexMap = new RowIndexMap(10000);
+        private readonly GroupedRowIndexMap _groupedMap = new GroupedRowIndexMap();
+        private int[] _groupColumnIndices = Array.Empty<int>();
         private IZeroVirtualSource? _dataSource;
 
         private int _headerHeight = 32;
@@ -117,10 +128,19 @@ namespace ZeroUI.Wpf.DataGrid
                 if (_dataSource != null)
                 {
                     _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+                    if (_groupColumnIndices.Length > 0)
+                    {
+                        GroupBy(_groupColumnIndices);
+                    }
+                    else
+                    {
+                        _groupedMap.ResetIdentity(_dataSource.TotalRowCount);
+                    }
                 }
                 else
                 {
                     _rowIndexMap.ActiveCount = 0;
+                    _groupedMap.ResetIdentity(0);
                 }
                 _scrollY = 0;
                 _selectedVisualRow = -1;
@@ -129,16 +149,30 @@ namespace ZeroUI.Wpf.DataGrid
             }
         }
 
-        public int SelectedIndex
+        public int VisualRowCount => _groupedMap.HasGrouping ? _groupedMap.ActiveCount : _rowIndexMap.ActiveCount;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetModelRowIndex(int visualRowIndex)
         {
-            get
+            if (_groupedMap.HasGrouping)
             {
-                if (_selectedVisualRow >= 0 && _selectedVisualRow < _rowIndexMap.ActiveCount)
+                if (visualRowIndex >= 0 && visualRowIndex < _groupedMap.ActiveCount)
                 {
-                    return _rowIndexMap[_selectedVisualRow];
+                    var entry = _groupedMap[visualRowIndex];
+                    return entry.IsData ? entry.ModelRowIndex : -1;
                 }
                 return -1;
             }
+            if (visualRowIndex >= 0 && visualRowIndex < _rowIndexMap.ActiveCount)
+            {
+                return _rowIndexMap[visualRowIndex];
+            }
+            return -1;
+        }
+
+        public int SelectedIndex
+        {
+            get => GetModelRowIndex(_selectedVisualRow);
             set
             {
                 if (value < 0 || _dataSource == null || value >= _dataSource.TotalRowCount)
@@ -148,10 +182,10 @@ namespace ZeroUI.Wpf.DataGrid
                 }
                 else
                 {
-                    // Find visual row matching model index
-                    for (int i = 0; i < _rowIndexMap.ActiveCount; i++)
+                    int total = VisualRowCount;
+                    for (int i = 0; i < total; i++)
                     {
-                        if (_rowIndexMap[i] == value)
+                        if (GetModelRowIndex(i) == value)
                         {
                             _selectedVisualRow = i;
                             _selectedVisualRows.Clear();
@@ -163,6 +197,81 @@ namespace ZeroUI.Wpf.DataGrid
                 InvalidateVisual();
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
             }
+        }
+
+        public bool HasGrouping => _groupedMap.HasGrouping;
+        public IReadOnlyList<GroupRowInfo> RootGroups => _groupedMap.RootGroups;
+        public GroupedRowIndexMap GroupedMap => _groupedMap;
+
+        public void GroupBy(params int[] columnIndices)
+        {
+            if (_dataSource == null || columnIndices == null || columnIndices.Length == 0)
+            {
+                ClearGrouping();
+                return;
+            }
+
+            _groupColumnIndices = (int[])columnIndices.Clone();
+            int totalRows = _dataSource.TotalRowCount;
+
+            _groupedMap.BuildGroups(totalRows, columnIndices, (modelRow, colIdx) =>
+            {
+                CellValueBuffer buf = new CellValueBuffer();
+                _dataSource.GetCellValue(modelRow, colIdx, ref buf);
+                return buf.Text.ToString();
+            });
+
+            _scrollY = 0;
+            _selectedVisualRow = -1;
+            _selectedVisualRows.Clear();
+            InvalidateVisual();
+        }
+
+        public void ClearGrouping()
+        {
+            _groupColumnIndices = Array.Empty<int>();
+            if (_dataSource != null)
+            {
+                _groupedMap.ResetIdentity(_dataSource.TotalRowCount);
+                _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+            }
+            else
+            {
+                _groupedMap.ResetIdentity(0);
+                _rowIndexMap.ActiveCount = 0;
+            }
+            _scrollY = 0;
+            _selectedVisualRow = -1;
+            _selectedVisualRows.Clear();
+            InvalidateVisual();
+        }
+
+        public void ExpandAllGroups()
+        {
+            if (_groupedMap.HasGrouping)
+            {
+                _groupedMap.ExpandAll();
+                InvalidateVisual();
+            }
+        }
+
+        public void CollapseAllGroups()
+        {
+            if (_groupedMap.HasGrouping)
+            {
+                _groupedMap.CollapseAll();
+                InvalidateVisual();
+            }
+        }
+
+        public bool ToggleGroup(int visualRowIndex)
+        {
+            if (_groupedMap.HasGrouping && _groupedMap.ToggleGroup(visualRowIndex))
+            {
+                InvalidateVisual();
+                return true;
+            }
+            return false;
         }
 
         public ZeroGridSelectionMode SelectionMode
@@ -477,7 +586,7 @@ namespace ZeroUI.Wpf.DataGrid
         private int GetMaxScrollY()
         {
             int footerH = ShowFooter ? _footerHeight : 0;
-            int totalRows = _rowIndexMap.ActiveCount;
+            int totalRows = VisualRowCount;
             int totalH = totalRows * _rowHeight;
             int clientH = (int)Math.Max(0, ActualHeight - _headerHeight - footerH);
             return Math.Max(0, totalH - clientH);
@@ -489,6 +598,176 @@ namespace ZeroUI.Wpf.DataGrid
             int pinnedW = GetPinnedColumnsWidth();
             int scrollableW = (int)Math.Max(0, ActualWidth - pinnedW - ScrollBarThickness);
             return Math.Max(0, unpinnedW - scrollableW);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsTruthy(ReadOnlySpan<char> span)
+        {
+            if (span.IsEmpty) return false;
+            if (span.Length == 1)
+            {
+                char c = span[0];
+                return c == '1' || c == 't' || c == 'T' || c == 'y' || c == 'Y';
+            }
+            if (span.Length == 4)
+            {
+                return (span[0] == 't' || span[0] == 'T') &&
+                       (span[1] == 'r' || span[1] == 'R') &&
+                       (span[2] == 'u' || span[2] == 'U') &&
+                       (span[3] == 'e' || span[3] == 'E');
+            }
+            if (span.Length == 3)
+            {
+                return (span[0] == 'y' || span[0] == 'Y') &&
+                       (span[1] == 'e' || span[1] == 'E') &&
+                       (span[2] == 's' || span[2] == 'S');
+            }
+            return false;
+        }
+
+        private void DrawVectorCheckBox(DrawingContext dc, double x, double y, double width, double height, bool isChecked, bool isSelected)
+        {
+            double cbSize = 16.0;
+            double cbX = x + (width - cbSize) / 2.0;
+            double cbY = y + (height - cbSize) / 2.0;
+            var rect = new Rect(cbX, cbY, cbSize, cbSize);
+
+            if (isChecked)
+            {
+                dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, null, rect, 3.0, 3.0);
+
+                var checkGeometry = new StreamGeometry();
+                using (var ctx = checkGeometry.Open())
+                {
+                    ctx.BeginFigure(new Point(cbX + 3.5, cbY + 8.0), false, false);
+                    ctx.LineTo(new Point(cbX + 6.5, cbY + 11.5), true, false);
+                    ctx.LineTo(new Point(cbX + 12.5, cbY + 4.5), true, false);
+                }
+                checkGeometry.Freeze();
+                dc.DrawGeometry(null, WhiteCheckPen, checkGeometry);
+            }
+            else
+            {
+                Brush bg = isSelected ? ZeroWpfTheme.SelectionBackground : ZeroWpfTheme.BgInput;
+                dc.DrawRoundedRectangle(bg, ZeroWpfTheme.BorderPen, rect, 3.0, 3.0);
+            }
+        }
+
+        private void DrawDataBar(DrawingContext dc, double x, double y, double width, double height, float percent, Brush? barBrush = null)
+        {
+            float clamped = Math.Max(0.0f, Math.Min(1.0f, percent));
+            double barH = Math.Max(6.0, height - 10.0);
+            double barMaxW = Math.Max(0.0, width - 16.0);
+            double barFillW = barMaxW * clamped;
+            double barX = x + 8.0;
+            double barY = y + (height - barH) / 2.0;
+
+            // Track
+            dc.DrawRoundedRectangle(ZeroWpfTheme.BgInput, null, new Rect(barX, barY, barMaxW, barH), 2.0, 2.0);
+            // Fill
+            if (barFillW > 0)
+            {
+                Brush brush = barBrush ?? ZeroWpfTheme.PrimaryAccent;
+                dc.DrawRoundedRectangle(brush, null, new Rect(barX, barY, barFillW, barH), 2.0, 2.0);
+            }
+        }
+
+        private void DrawSparkline(DrawingContext dc, double x, double y, double width, double height, ReadOnlySpan<float> values, SparklineType type, Brush? strokeBrush = null)
+        {
+            if (values.Length < 2) return;
+
+            double padX = 6.0;
+            double padY = 4.0;
+            double availW = Math.Max(0.0, width - (padX * 2.0));
+            double availH = Math.Max(0.0, height - (padY * 2.0));
+            if (availW <= 0 || availH <= 0) return;
+
+            float min = values[0];
+            float max = values[0];
+            for (int i = 1; i < values.Length; i++)
+            {
+                if (values[i] < min) min = values[i];
+                if (values[i] > max) max = values[i];
+            }
+            float range = (max - min <= 0.0001f) ? 1.0f : (max - min);
+
+            Brush brush = strokeBrush ?? ZeroWpfTheme.PrimaryAccent;
+            Pen pen = new Pen(brush, 1.5);
+            pen.Freeze();
+
+            if (type == SparklineType.Bar)
+            {
+                double barSlotW = availW / values.Length;
+                double barWidth = Math.Max(1.0, barSlotW - 2.0);
+                for (int i = 0; i < values.Length; i++)
+                {
+                    float norm = (values[i] - min) / range;
+                    double bh = Math.Max(2.0, norm * availH);
+                    double bx = x + padX + (i * barSlotW) + 1.0;
+                    double by = y + padY + availH - bh;
+                    dc.DrawRectangle(brush, null, new Rect(bx, by, barWidth, bh));
+                }
+            }
+            else
+            {
+                // Line or Area
+                var geom = new StreamGeometry();
+                using (var ctx = geom.Open())
+                {
+                    double stepX = availW / (values.Length - 1);
+                    double firstY = y + padY + availH - (((values[0] - min) / range) * availH);
+                    ctx.BeginFigure(new Point(x + padX, firstY), type == SparklineType.Area, type == SparklineType.Area);
+
+                    for (int i = 1; i < values.Length; i++)
+                    {
+                        double px = x + padX + (i * stepX);
+                        double py = y + padY + availH - (((values[i] - min) / range) * availH);
+                        ctx.LineTo(new Point(px, py), true, false);
+                    }
+
+                    if (type == SparklineType.Area)
+                    {
+                        ctx.LineTo(new Point(x + padX + availW, y + padY + availH), true, false);
+                        ctx.LineTo(new Point(x + padX, y + padY + availH), true, false);
+                    }
+                }
+                geom.Freeze();
+
+                if (type == SparklineType.Area)
+                {
+                    var areaBrush = brush.Clone();
+                    areaBrush.Opacity = 0.25;
+                    areaBrush.Freeze();
+                    dc.DrawGeometry(areaBrush, pen, geom);
+                }
+                else
+                {
+                    dc.DrawGeometry(null, pen, geom);
+                }
+            }
+        }
+
+        private void ToggleBooleanCell(int visualRow, int colIndex)
+        {
+            if (_dataSource == null || visualRow < 0 || visualRow >= VisualRowCount || colIndex < 0 || colIndex >= _columns.Count) return;
+            var col = _columns[colIndex];
+            if (col.ReadOnly || !col.IsVisible) return;
+
+            int modelRow = GetModelRowIndex(visualRow);
+            if (modelRow < 0) return;
+            if (_dataSource is IZeroEditableSource editable && !editable.IsCellEditable(modelRow, colIndex)) return;
+
+            CellValueBuffer buf = new CellValueBuffer();
+            _dataSource.GetCellValue(modelRow, colIndex, ref buf);
+            bool isTrue = IsTruthy(buf.Text);
+            string newVal = isTrue ? "false" : "true";
+
+            if (_dataSource is IZeroEditableSource editableSrc)
+            {
+                editableSrc.SetCellValue(modelRow, colIndex, newVal);
+                CellValueChanged?.Invoke(this, new CellValueChangedEventArgs(visualRow, modelRow, colIndex, buf.Text.ToString(), newVal));
+                InvalidateVisual();
+            }
         }
 
         #if NETFRAMEWORK
@@ -521,7 +800,7 @@ namespace ZeroUI.Wpf.DataGrid
             dc.DrawRectangle(ZeroWpfTheme.BgPrimary, null, new Rect(0, 0, width, height));
 
             int totalCols = _columns.Count;
-            int totalRows = _rowIndexMap.ActiveCount;
+            int totalRows = VisualRowCount;
             int[] colWidths = GetVisibleColumnWidths();
             int pinnedW = GetPinnedColumnsWidth();
             int footerH = ShowFooter ? _footerHeight : 0;
@@ -541,7 +820,36 @@ namespace ZeroUI.Wpf.DataGrid
                 {
                     if (currentY >= _headerHeight + clientDataH) break;
 
-                    int modelRow = _rowIndexMap[r];
+                    if (_groupedMap.HasGrouping)
+                    {
+                        var rowEntry = _groupedMap[r];
+                        if (rowEntry.IsGroup)
+                        {
+                            var groupInfo = _groupedMap.GetGroupInfo(rowEntry.GroupId);
+                            dc.DrawRectangle(ZeroWpfTheme.BgCard, null, new Rect(0, currentY, width - ScrollBarThickness, _rowHeight));
+                            double indent = rowEntry.Level * 18.0;
+                            string expandIcon = rowEntry.IsExpanded ? "▼ " : "▶ ";
+                            string colHeader = (groupInfo != null && groupInfo.ColumnIndex >= 0 && groupInfo.ColumnIndex < _columns.Count)
+                                ? _columns[groupInfo.ColumnIndex].HeaderText
+                                : "Group";
+                            string groupText = $"{expandIcon}{colHeader}: {(groupInfo?.GroupKey ?? string.Empty)} ({groupInfo?.TotalDataRowCount ?? 0} items)";
+
+                            var ftGroup = CreateFormattedText(groupText, ZeroWpfTheme.BoldTypeface, 12.0, ZeroWpfTheme.PrimaryAccent, dpi);
+                            dc.DrawText(ftGroup, new Point(8 + indent, currentY + (_rowHeight - ftGroup.Height) / 2.0));
+
+                            dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(0, currentY + _rowHeight - 0.5), new Point(width - ScrollBarThickness, currentY + _rowHeight - 0.5));
+                            currentY += _rowHeight;
+                            continue;
+                        }
+                    }
+
+                    int modelRow = GetModelRowIndex(r);
+                    if (modelRow < 0)
+                    {
+                        currentY += _rowHeight;
+                        continue;
+                    }
+
                     bool isSelected = (_selectionMode == ZeroGridSelectionMode.MultiRow)
                         ? _selectedVisualRows.Contains(r)
                         : (r == _selectedVisualRow);
@@ -585,29 +893,47 @@ namespace ZeroUI.Wpf.DataGrid
                                 dc.DrawRectangle(customBrush, null, new Rect(unpinnedX, currentY, colW, _rowHeight));
                             }
 
-                            string text = cellBuffer.Text.ToString();
-                            if (!string.IsNullOrEmpty(text))
+                            if (_columns[c].ColumnType == GridColumnType.Boolean)
                             {
-                                Brush textBrush = isSelected ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
-                                Typeface tf = isSelected ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
-
-                                if (!isSelected && cellBuffer.TextColor != 0)
+                                bool isChecked = IsTruthy(cellBuffer.Text);
+                                DrawVectorCheckBox(dc, unpinnedX, currentY, colW, _rowHeight, isChecked, isSelected);
+                            }
+                            else if (cellBuffer.DataBarPercent >= 0)
+                            {
+                                DrawDataBar(dc, unpinnedX, currentY, colW, _rowHeight, cellBuffer.DataBarPercent);
+                            }
+                            else if (!cellBuffer.SparklineValues.IsEmpty || _columns[c].Sparkline != SparklineType.None)
+                            {
+                                SparklineType sType = _columns[c].Sparkline != SparklineType.None ? _columns[c].Sparkline : SparklineType.Line;
+                                DrawSparkline(dc, unpinnedX, currentY, colW, _rowHeight, cellBuffer.SparklineValues, sType);
+                            }
+                            else
+                            {
+                                var textSpan = cellBuffer.Text;
+                                if (!textSpan.IsEmpty)
                                 {
-                                    byte tr = (byte)(cellBuffer.TextColor & 0xFF);
-                                    byte tg = (byte)((cellBuffer.TextColor >> 8) & 0xFF);
-                                    byte tb = (byte)((cellBuffer.TextColor >> 16) & 0xFF);
-                                    var customTextBrush = new SolidColorBrush(Color.FromRgb(tr, tg, tb));
-                                    customTextBrush.Freeze();
-                                    textBrush = customTextBrush;
+                                    string text = cellBuffer.Text.ToString();
+                                    Brush textBrush = isSelected ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
+                                    Typeface tf = isSelected ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
+
+                                    if (!isSelected && cellBuffer.TextColor != 0)
+                                    {
+                                        byte tr = (byte)(cellBuffer.TextColor & 0xFF);
+                                        byte tg = (byte)((cellBuffer.TextColor >> 8) & 0xFF);
+                                        byte tb = (byte)((cellBuffer.TextColor >> 16) & 0xFF);
+                                        var customTextBrush = new SolidColorBrush(Color.FromRgb(tr, tg, tb));
+                                        customTextBrush.Freeze();
+                                        textBrush = customTextBrush;
+                                    }
+
+                                    var ft = CreateFormattedText(text, tf, 12.0, textBrush, dpi);
+                                    double textX = unpinnedX + 8;
+                                    if (cellBuffer.Alignment == CellAlignment.Right) textX = unpinnedX + colW - ft.Width - 8;
+                                    else if (cellBuffer.Alignment == CellAlignment.Center) textX = unpinnedX + (colW - ft.Width) / 2.0;
+
+                                    double textY = currentY + (_rowHeight - ft.Height) / 2.0;
+                                    dc.DrawText(ft, new Point(textX, textY));
                                 }
-
-                                var ft = CreateFormattedText(text, tf, 12.0, textBrush, dpi);
-                                double textX = unpinnedX + 8;
-                                if (cellBuffer.Alignment == CellAlignment.Right) textX = unpinnedX + colW - ft.Width - 8;
-                                else if (cellBuffer.Alignment == CellAlignment.Center) textX = unpinnedX + (colW - ft.Width) / 2.0;
-
-                                double textY = currentY + (_rowHeight - ft.Height) / 2.0;
-                                dc.DrawText(ft, new Point(textX, textY));
                             }
 
                             dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(unpinnedX + colW - 0.5, currentY), new Point(unpinnedX + colW - 0.5, currentY + _rowHeight));
@@ -639,29 +965,47 @@ namespace ZeroUI.Wpf.DataGrid
                             dc.DrawRectangle(customBrush, null, new Rect(pinnedX, currentY, colW, _rowHeight));
                         }
 
-                        string text = cellBuffer.Text.ToString();
-                        if (!string.IsNullOrEmpty(text))
+                        if (_columns[c].ColumnType == GridColumnType.Boolean)
                         {
-                            Brush textBrush = isSelected ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
-                            Typeface tf = isSelected ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
-
-                            if (!isSelected && cellBuffer.TextColor != 0)
+                            bool isChecked = IsTruthy(cellBuffer.Text);
+                            DrawVectorCheckBox(dc, pinnedX, currentY, colW, _rowHeight, isChecked, isSelected);
+                        }
+                        else if (cellBuffer.DataBarPercent >= 0)
+                        {
+                            DrawDataBar(dc, pinnedX, currentY, colW, _rowHeight, cellBuffer.DataBarPercent);
+                        }
+                        else if (!cellBuffer.SparklineValues.IsEmpty || _columns[c].Sparkline != SparklineType.None)
+                        {
+                            SparklineType sType = _columns[c].Sparkline != SparklineType.None ? _columns[c].Sparkline : SparklineType.Line;
+                            DrawSparkline(dc, pinnedX, currentY, colW, _rowHeight, cellBuffer.SparklineValues, sType);
+                        }
+                        else
+                        {
+                            var textSpan = cellBuffer.Text;
+                            if (!textSpan.IsEmpty)
                             {
-                                byte tr = (byte)(cellBuffer.TextColor & 0xFF);
-                                byte tg = (byte)((cellBuffer.TextColor >> 8) & 0xFF);
-                                byte tb = (byte)((cellBuffer.TextColor >> 16) & 0xFF);
-                                var customTextBrush = new SolidColorBrush(Color.FromRgb(tr, tg, tb));
-                                customTextBrush.Freeze();
-                                textBrush = customTextBrush;
+                                string text = cellBuffer.Text.ToString();
+                                Brush textBrush = isSelected ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
+                                Typeface tf = isSelected ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
+
+                                if (!isSelected && cellBuffer.TextColor != 0)
+                                {
+                                    byte tr = (byte)(cellBuffer.TextColor & 0xFF);
+                                    byte tg = (byte)((cellBuffer.TextColor >> 8) & 0xFF);
+                                    byte tb = (byte)((cellBuffer.TextColor >> 16) & 0xFF);
+                                    var customTextBrush = new SolidColorBrush(Color.FromRgb(tr, tg, tb));
+                                    customTextBrush.Freeze();
+                                    textBrush = customTextBrush;
+                                }
+
+                                var ft = CreateFormattedText(text, tf, 12.0, textBrush, dpi);
+                                double textX = pinnedX + 8;
+                                if (cellBuffer.Alignment == CellAlignment.Right) textX = pinnedX + colW - ft.Width - 8;
+                                else if (cellBuffer.Alignment == CellAlignment.Center) textX = pinnedX + (colW - ft.Width) / 2.0;
+
+                                double textY = currentY + (_rowHeight - ft.Height) / 2.0;
+                                dc.DrawText(ft, new Point(textX, textY));
                             }
-
-                            var ft = CreateFormattedText(text, tf, 12.0, textBrush, dpi);
-                            double textX = pinnedX + 8;
-                            if (cellBuffer.Alignment == CellAlignment.Right) textX = pinnedX + colW - ft.Width - 8;
-                            else if (cellBuffer.Alignment == CellAlignment.Center) textX = pinnedX + (colW - ft.Width) / 2.0;
-
-                            double textY = currentY + (_rowHeight - ft.Height) / 2.0;
-                            dc.DrawText(ft, new Point(textX, textY));
                         }
 
                         dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(pinnedX + colW - 0.5, currentY), new Point(pinnedX + colW - 0.5, currentY + _rowHeight));
@@ -823,7 +1167,7 @@ namespace ZeroUI.Wpf.DataGrid
         private void RenderSlimScrollBar(DrawingContext dc, double width, double height)
         {
             int footerH = ShowFooter ? _footerHeight : 0;
-            int totalRows = _rowIndexMap.ActiveCount;
+            int totalRows = VisualRowCount;
             int totalH = totalRows * _rowHeight;
             double clientH = Math.Max(0, height - _headerHeight - footerH);
 
@@ -855,7 +1199,7 @@ namespace ZeroUI.Wpf.DataGrid
             if (_isDraggingVThumb)
             {
                 double clientH = Math.Max(0, ActualHeight - _headerHeight - footerH);
-                int totalRows = _rowIndexMap.ActiveCount;
+                int totalRows = VisualRowCount;
                 int totalH = totalRows * _rowHeight;
                 double maxScroll = totalH - clientH;
                 double trackH = clientH;
@@ -908,7 +1252,7 @@ namespace ZeroUI.Wpf.DataGrid
 
             // Row hover
             int visualRow = (int)((pt.Y - _headerHeight + _scrollY) / _rowHeight);
-            if (visualRow >= 0 && visualRow < _rowIndexMap.ActiveCount && pt.Y < ActualHeight - footerH)
+            if (visualRow >= 0 && visualRow < VisualRowCount && pt.Y < ActualHeight - footerH)
             {
                 if (_hoveredVisualRow != visualRow)
                 {
@@ -948,8 +1292,14 @@ namespace ZeroUI.Wpf.DataGrid
                 {
                     int vRow = (int)((pt.Y - _headerHeight + _scrollY) / _rowHeight);
                     int col = HitTestColumn(pt.X);
-                    if (vRow >= 0 && vRow < _rowIndexMap.ActiveCount && col >= 0)
+                    if (vRow >= 0 && vRow < VisualRowCount && col >= 0)
                     {
+                        if (_groupedMap.HasGrouping && vRow < _groupedMap.ActiveCount && _groupedMap[vRow].IsGroup)
+                        {
+                            _groupedMap.ToggleGroup(vRow);
+                            InvalidateVisual();
+                            return;
+                        }
                         StartEdit(vRow, col);
                         return;
                     }
@@ -992,11 +1342,29 @@ namespace ZeroUI.Wpf.DataGrid
 
                 // Row click selection
                 int visualRow = (int)((pt.Y - _headerHeight + _scrollY) / _rowHeight);
-                if (visualRow >= 0 && visualRow < _rowIndexMap.ActiveCount && pt.Y < ActualHeight - footerH)
+                if (visualRow >= 0 && visualRow < VisualRowCount && pt.Y < ActualHeight - footerH)
                 {
+                    if (_groupedMap.HasGrouping && visualRow < _groupedMap.ActiveCount && _groupedMap[visualRow].IsGroup)
+                    {
+                        _groupedMap.ToggleGroup(visualRow);
+                        InvalidateVisual();
+                        return;
+                    }
+
+                    int clickedCol = HitTestColumn(pt.X);
+                    if (clickedCol >= 0 && clickedCol < _columns.Count && _columns[clickedCol].ColumnType == GridColumnType.Boolean)
+                    {
+                        ToggleBooleanCell(visualRow, clickedCol);
+                        _selectedVisualRow = visualRow;
+                        _selectedVisualRows.Clear();
+                        _selectedVisualRows.Add(visualRow);
+                        InvalidateVisual();
+                        SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        return;
+                    }
+
                     if (_isEditing)
                     {
-                        int clickedCol = HitTestColumn(pt.X);
                         if (visualRow != _editingVisualRow || clickedCol != _editingColIndex)
                         {
                             CommitEdit();
@@ -1077,7 +1445,7 @@ namespace ZeroUI.Wpf.DataGrid
             }
             else if (e.Key == Key.F2 || (e.Key == Key.Enter && !_isEditing))
             {
-                if (_selectedVisualRow >= 0 && _selectedVisualRow < _rowIndexMap.ActiveCount)
+                if (_selectedVisualRow >= 0 && _selectedVisualRow < VisualRowCount)
                 {
                     for (int c = 0; c < _columns.Count; c++)
                     {
@@ -1101,7 +1469,7 @@ namespace ZeroUI.Wpf.DataGrid
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
                 e.Handled = true;
             }
-            else if (e.Key == Key.Down && _selectedVisualRow < _rowIndexMap.ActiveCount - 1)
+            else if (e.Key == Key.Down && _selectedVisualRow < VisualRowCount - 1)
             {
                 if (_isEditing) CommitEdit();
                 _selectedVisualRow++;
@@ -1116,7 +1484,7 @@ namespace ZeroUI.Wpf.DataGrid
 
         public void EnsureRowVisible(int visualRowIndex)
         {
-            if (visualRowIndex < 0 || visualRowIndex >= _rowIndexMap.ActiveCount) return;
+            if (visualRowIndex < 0 || visualRowIndex >= VisualRowCount) return;
             int rowTop = visualRowIndex * _rowHeight;
             int rowBottom = rowTop + _rowHeight;
             int footerH = ShowFooter ? _footerHeight : 0;
@@ -1144,7 +1512,7 @@ namespace ZeroUI.Wpf.DataGrid
                 rowsToCopy.AddRange(_selectedVisualRows);
                 rowsToCopy.Sort();
             }
-            else if (_selectedVisualRow >= 0 && _selectedVisualRow < _rowIndexMap.ActiveCount)
+            else if (_selectedVisualRow >= 0 && _selectedVisualRow < VisualRowCount)
             {
                 rowsToCopy.Add(_selectedVisualRow);
             }
@@ -1168,8 +1536,10 @@ namespace ZeroUI.Wpf.DataGrid
             // Data rows
             foreach (int vRow in rowsToCopy)
             {
-                if (vRow < 0 || vRow >= _rowIndexMap.ActiveCount) continue;
-                int modelRow = _rowIndexMap[vRow];
+                if (vRow < 0 || vRow >= VisualRowCount) continue;
+                int modelRow = GetModelRowIndex(vRow);
+                if (modelRow < 0) continue;
+
                 firstCol = true;
                 for (int c = 0; c < _columns.Count; c++)
                 {
@@ -1216,13 +1586,17 @@ namespace ZeroUI.Wpf.DataGrid
 
         public void StartEdit(int visualRow, int colIndex)
         {
-            if (_dataSource == null || visualRow < 0 || visualRow >= _rowIndexMap.ActiveCount ||
+            if (_dataSource == null || visualRow < 0 || visualRow >= VisualRowCount ||
                 colIndex < 0 || colIndex >= _columns.Count) return;
+
+            if (_groupedMap.HasGrouping && visualRow < _groupedMap.ActiveCount && _groupedMap[visualRow].IsGroup) return;
 
             var col = _columns[colIndex];
             if (col.ReadOnly || !col.IsVisible) return;
 
-            int modelRow = _rowIndexMap[visualRow];
+            int modelRow = GetModelRowIndex(visualRow);
+            if (modelRow < 0) return;
+
             if (_dataSource is IZeroEditableSource editable && !editable.IsCellEditable(modelRow, colIndex))
             {
                 return;
@@ -1298,7 +1672,14 @@ namespace ZeroUI.Wpf.DataGrid
 
             int visualRow = _editingVisualRow;
             int colIndex = _editingColIndex;
-            if (visualRow < 0 || visualRow >= _rowIndexMap.ActiveCount || colIndex < 0 || colIndex >= _columns.Count)
+            if (visualRow < 0 || visualRow >= VisualRowCount || colIndex < 0 || colIndex >= _columns.Count)
+            {
+                CancelEdit();
+                return;
+            }
+
+            int modelRow = GetModelRowIndex(visualRow);
+            if (modelRow < 0)
             {
                 CancelEdit();
                 return;
@@ -1344,7 +1725,6 @@ namespace ZeroUI.Wpf.DataGrid
             _editingVisualRow = -1;
             _editingColIndex = -1;
 
-            int modelRow = _rowIndexMap[visualRow];
             CellValueBuffer buf = new CellValueBuffer();
             _dataSource.GetCellValue(modelRow, colIndex, ref buf);
             string oldText = buf.Text.ToString();
@@ -1385,7 +1765,7 @@ namespace ZeroUI.Wpf.DataGrid
             if (e.Key == Key.Enter)
             {
                 CommitEdit();
-                if (_selectedVisualRow < _rowIndexMap.ActiveCount - 1)
+                if (_selectedVisualRow < VisualRowCount - 1)
                 {
                     _selectedVisualRow++;
                     _selectedVisualRows.Clear();

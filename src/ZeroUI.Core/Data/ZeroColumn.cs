@@ -24,6 +24,13 @@ namespace ZeroUI.Core.Data
         public string? Mask { get; set; }
         public Func<string, (bool IsValid, string? ErrorMessage)>? CustomValidator { get; set; }
 
+        // Advanced Enterprise Extensions
+        public int GroupIndex { get; set; } = -1;
+        public bool AllowGrouping { get; set; } = true;
+        public string? BandTitle { get; set; }
+        public bool AllowCellMerge { get; set; } = false;
+        public SparklineType Sparkline { get; set; } = SparklineType.None;
+
         public ZeroColumn() { }
 
         public ZeroColumn(string headerText, int width = 100, CellAlignment alignment = CellAlignment.Left)

@@ -34,7 +34,7 @@ namespace ZeroUI.Samples.WpfDemo.Data
         }
 
         public int TotalRowCount => _totalRowCount;
-        public int TotalColumnCount => 8;
+        public int TotalColumnCount => 11;
 
         public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer)
         {
@@ -45,37 +45,49 @@ namespace ZeroUI.Samples.WpfDemo.Data
             switch (columnIndex)
             {
                 case 0:
-                    buffer.Text = (rowIndex + 1).ToString().AsSpan();
-                    buffer.Alignment = CellAlignment.Right;
+                    buffer.Text = (rowIndex % 3 != 0) ? "true".AsSpan() : "false".AsSpan();
+                    buffer.Alignment = CellAlignment.Center;
                     break;
                 case 1:
-                    buffer.Text = $"SKU-{(1000000 + rowIndex % 9000000)}".AsSpan();
-                    buffer.Alignment = CellAlignment.Left;
-                    break;
-                case 2:
                     buffer.Text = Categories[catIdx].AsSpan();
                     buffer.Alignment = CellAlignment.Left;
                     break;
+                case 2:
+                    buffer.Text = (rowIndex + 1).ToString().AsSpan();
+                    buffer.Alignment = CellAlignment.Right;
+                    break;
                 case 3:
+                    buffer.Text = $"SKU-{(1000000 + rowIndex % 9000000)}".AsSpan();
+                    buffer.Alignment = CellAlignment.Left;
+                    break;
+                case 4:
+                    buffer.Text = Categories[(catIdx + 3) % Categories.Length].AsSpan();
+                    buffer.Alignment = CellAlignment.Left;
+                    break;
+                case 5:
                     int qty = 10 + (int)((uint)(rowIndex * 17) % 15000);
                     buffer.Text = qty.ToString().AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
-                case 4:
+                case 6:
                     double price = 500.0 + ((uint)(rowIndex * 31) % 450000);
                     buffer.Text = price.ToString("N0").AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
-                case 5:
+                case 7:
                     double total = (10 + ((rowIndex * 17) % 15000)) * (500.0 + ((rowIndex * 31) % 450000));
                     buffer.Text = total.ToString("N0").AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
-                case 6:
+                case 8:
+                    buffer.DataBarPercent = (70f + ((rowIndex * 7) % 30)) / 100f;
+                    buffer.Alignment = CellAlignment.Center;
+                    break;
+                case 9:
                     buffer.Text = $"LOT-{202600 + (rowIndex % 99):000000}".AsSpan();
                     buffer.Alignment = CellAlignment.Center;
                     break;
-                case 7:
+                case 10:
                     string status = Statuses[(rowIndex % Statuses.Length)];
                     buffer.Text = status.AsSpan();
                     buffer.Alignment = CellAlignment.Center;
@@ -88,9 +100,12 @@ namespace ZeroUI.Samples.WpfDemo.Data
             if (rowA == rowB) return 0;
             return columnIndex switch
             {
-                0 => rowA.CompareTo(rowB),
-                3 => ((rowA * 17) % 15000).CompareTo((rowB * 17) % 15000),
-                4 => ((rowA * 31) % 450000).CompareTo((rowB * 31) % 450000),
+                0 => (rowA % 3).CompareTo(rowB % 3),
+                1 => string.Compare(Categories[rowA % Categories.Length], Categories[rowB % Categories.Length], StringComparison.Ordinal),
+                2 => rowA.CompareTo(rowB),
+                5 => ((rowA * 17) % 15000).CompareTo((rowB * 17) % 15000),
+                6 => ((rowA * 31) % 450000).CompareTo((rowB * 31) % 450000),
+                8 => ((rowA * 7) % 30).CompareTo((rowB * 7) % 30),
                 _ => rowA.CompareTo(rowB)
             };
         }

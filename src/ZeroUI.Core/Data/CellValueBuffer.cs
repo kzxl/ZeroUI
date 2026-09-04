@@ -14,6 +14,8 @@ namespace ZeroUI.Core.Data
         public uint BackColor;       // 0x00BBGGRR
         public bool HasCustomBackground;
         public bool IsBold;
+        public float DataBarPercent; // -1.0f to 1.0f (0 = no data bar, > 0 = positive bar, < 0 = negative bar)
+        public ReadOnlySpan<float> SparklineValues; // in-cell micro-trend series
 
         public CellValueBuffer(ReadOnlySpan<char> initialText)
         {
@@ -23,6 +25,8 @@ namespace ZeroUI.Core.Data
             BackColor = 0x00FFFFFF;  // Default white
             HasCustomBackground = false;
             IsBold = false;
+            DataBarPercent = 0.0f;
+            SparklineValues = ReadOnlySpan<float>.Empty;
         }
 
         public void Reset()
@@ -33,6 +37,8 @@ namespace ZeroUI.Core.Data
             BackColor = 0x00FFFFFF;
             HasCustomBackground = false;
             IsBold = false;
+            DataBarPercent = 0.0f;
+            SparklineValues = ReadOnlySpan<float>.Empty;
         }
     }
 }

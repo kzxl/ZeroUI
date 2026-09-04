@@ -84,23 +84,26 @@
                     </Border>
 
                     <!-- Action Toolbar -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="14,4,14,6">
-                        <Button x:Name="BtnLoad100K" Click="BtnLoad100K_Click" Content="⚡ Load 100K Rows" Height="32" Padding="14,0,14,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnLoad1M" Click="BtnLoad1M_Click" Content="🔥 Load 1,000,000 Rows" Height="32" Padding="14,0,14,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnLoad10M" Click="BtnLoad10M_Click" Content="🚀 10,000,000 Rows (Procedural)" Height="32" Padding="14,0,14,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnSortPrice" Click="BtnSortPrice_Click" Content="📊 Sort UnitPrice" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnSortQuantity" Click="BtnSortQuantity_Click" Content="📦 Sort Quantity" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnTogglePinning" Click="BtnTogglePinning_Click" Content="📌 Toggle Pinning" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnToggleFooter" Click="BtnToggleFooter_Click" Content="∑ Toggle Footer" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnLoadGenericList" Click="BtnLoadGenericList_Click" Content="🧬 Generic List (5K)" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
-                        <Button x:Name="BtnClearGrid" Click="BtnClearGrid_Click" Content="🗑️ Clear Grid" Height="32" Padding="12,0,12,0" Cursor="Hand" />
-                    </StackPanel>
+                    <WrapPanel Grid.Row="1" Margin="14,4,14,6">
+                        <Button x:Name="BtnLoad100K" Click="BtnLoad100K_Click" Content="⚡ Load 100K Rows" Height="32" Padding="14,0,14,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnLoad1M" Click="BtnLoad1M_Click" Content="🔥 Load 1,000,000 Rows" Height="32" Padding="14,0,14,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnLoad10M" Click="BtnLoad10M_Click" Content="🚀 10,000,000 Rows (Procedural)" Height="32" Padding="14,0,14,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnGroupCategory" Click="BtnGroupCategory_Click" Content="📂 Group by Category" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnClearGrouping" Click="BtnClearGrouping_Click" Content="🔄 Clear Grouping" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnToggleExpand" Click="BtnToggleExpand_Click" Content="↕️ Toggle Expand All" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnSortPrice" Click="BtnSortPrice_Click" Content="📊 Sort UnitPrice" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnSortQuantity" Click="BtnSortQuantity_Click" Content="📦 Sort Quantity" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnTogglePinning" Click="BtnTogglePinning_Click" Content="📌 Toggle Pinning" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnToggleFooter" Click="BtnToggleFooter_Click" Content="∑ Toggle Footer" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnLoadGenericList" Click="BtnLoadGenericList_Click" Content="🧬 Generic List (5K)" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                        <Button x:Name="BtnClearGrid" Click="BtnClearGrid_Click" Content="🗑️ Clear Grid" Height="32" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                    </WrapPanel>
 
                     <!-- Search Bar & Hint -->
                     <StackPanel Grid.Row="2" Margin="14,0,14,6">
                         <grid:ZeroGridSearchBar x:Name="GridSearch" />
                         <TextBlock Margin="2,4,0,0" FontSize="11.5" Foreground="#94A3B8"
-                                   Text="💡 In-Place Editing: F2 or Double-Click | Multi-Selection: Ctrl/Shift+Click &amp; Ctrl+C to Copy | Pinned Columns: Freeze left during horizontal scroll | Summary: Automatic footer aggregations" />
+                                   Text="💡 In-Place Editing: F2 or Double-Click | Vector CheckBox: 1-Click Toggle | Multi-Selection: Ctrl/Shift+Click &amp; Ctrl+C | Grouping: Click Group Row to Expand/Collapse | In-Cell DataBars: Live % visual" />
                     </StackPanel>
 
                     <!-- ZeroGridControl -->

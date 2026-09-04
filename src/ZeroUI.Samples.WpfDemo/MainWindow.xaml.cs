@@ -160,10 +160,19 @@ namespace ZeroUI.Samples.WpfDemo
 
         private void SetupColumns()
         {
-            var colId = new ZeroColumn("ID", 75, CellAlignment.Right) { ReadOnly = true, IsPinned = true, Summary = SummaryType.Count, SummaryFormat = "{0:N0} items" };
-            var colCode = new ZeroColumn("Material Code", 130, CellAlignment.Left) { ReadOnly = true, IsPinned = true };
-            var colName = new ZeroColumn("Description / Component Name", 240, CellAlignment.Left);
-            var colQty = new ZeroColumn("Quantity", 95, CellAlignment.Right)
+            VirtualGrid.Columns.Clear();
+
+            var colActive = new ZeroColumn("Active", 65, CellAlignment.Center)
+            {
+                ColumnType = GridColumnType.Boolean,
+                Summary = SummaryType.Count,
+                SummaryFormat = "{0:N0} total"
+            };
+            var colCategory = new ZeroColumn("Category", 145, CellAlignment.Left) { AllowGrouping = true };
+            var colId = new ZeroColumn("ID", 75, CellAlignment.Right) { ReadOnly = true, IsPinned = true };
+            var colCode = new ZeroColumn("Material Code", 125, CellAlignment.Left) { ReadOnly = true, IsPinned = true };
+            var colName = new ZeroColumn("Description / Component Name", 230, CellAlignment.Left);
+            var colQty = new ZeroColumn("Quantity", 90, CellAlignment.Right)
             {
                 ColumnType = GridColumnType.Numeric,
                 Summary = SummaryType.Sum,
@@ -175,7 +184,7 @@ namespace ZeroUI.Samples.WpfDemo
                     return (false, "Quantity must be an integer between 0 and 100,000");
                 }
             };
-            var colPrice = new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right)
+            var colPrice = new ZeroColumn("Unit Price ($)", 115, CellAlignment.Right)
             {
                 ColumnType = GridColumnType.Numeric,
                 Summary = SummaryType.Average,
@@ -187,8 +196,14 @@ namespace ZeroUI.Samples.WpfDemo
                     return (false, "Unit Price must be non-negative");
                 }
             };
-            var colTotal = new ZeroColumn("Total Amount ($)", 150, CellAlignment.Right) { ReadOnly = true, Summary = SummaryType.Sum, SummaryFormat = "${0:N2}" };
-            var colLot = new ZeroColumn("Lot Number", 130, CellAlignment.Center)
+            var colTotal = new ZeroColumn("Total Amount ($)", 135, CellAlignment.Right) { ReadOnly = true, Summary = SummaryType.Sum, SummaryFormat = "${0:N2}" };
+            var colYield = new ZeroColumn("Yield %", 120, CellAlignment.Center)
+            {
+                ColumnType = GridColumnType.Numeric,
+                Summary = SummaryType.Average,
+                SummaryFormat = "Avg: {0:P0}"
+            };
+            var colLot = new ZeroColumn("Lot Number", 120, CellAlignment.Center)
             {
                 ColumnType = GridColumnType.Masked,
                 Mask = "LOT-000000",
@@ -199,14 +214,17 @@ namespace ZeroUI.Samples.WpfDemo
                     return (true, null);
                 }
             };
-            var colStatus = new ZeroColumn("Inspection Status", 160, CellAlignment.Center);
+            var colStatus = new ZeroColumn("Inspection Status", 135, CellAlignment.Center);
 
+            VirtualGrid.Columns.Add(colActive);
+            VirtualGrid.Columns.Add(colCategory);
             VirtualGrid.Columns.Add(colId);
             VirtualGrid.Columns.Add(colCode);
             VirtualGrid.Columns.Add(colName);
             VirtualGrid.Columns.Add(colQty);
             VirtualGrid.Columns.Add(colPrice);
             VirtualGrid.Columns.Add(colTotal);
+            VirtualGrid.Columns.Add(colYield);
             VirtualGrid.Columns.Add(colLot);
             VirtualGrid.Columns.Add(colStatus);
 
@@ -284,6 +302,7 @@ namespace ZeroUI.Samples.WpfDemo
             {
                 if (items[i].ItemName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
                     items[i].ItemCode.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    items[i].Category.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
                     items[i].LotNumber.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     VirtualGrid.IndexMap[matchCount++] = i;
@@ -456,6 +475,15 @@ namespace ZeroUI.Samples.WpfDemo
             BtnLoad10M.Background = ZeroWpfTheme.SecondaryAccent;
             BtnLoad10M.Foreground = Brushes.White;
 
+            BtnGroupCategory.Background = ZeroWpfTheme.BgInput;
+            BtnGroupCategory.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnClearGrouping.Background = ZeroWpfTheme.BgInput;
+            BtnClearGrouping.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnToggleExpand.Background = ZeroWpfTheme.BgInput;
+            BtnToggleExpand.Foreground = ZeroWpfTheme.TextPrimary;
+
             BtnSortPrice.Background = ZeroWpfTheme.BgInput;
             BtnSortPrice.Foreground = ZeroWpfTheme.TextPrimary;
 
@@ -508,14 +536,43 @@ namespace ZeroUI.Samples.WpfDemo
             TxtLatency.Text = $"{sw.ElapsedMilliseconds} ms (Init)";
         }
 
+        private void BtnGroupCategory_Click(object sender, RoutedEventArgs e)
+        {
+            VirtualGrid.GroupBy(1);
+            TxtLatency.Text = $"Grouped by Category ({VirtualGrid.VisualRowCount:N0} visual rows)";
+        }
+
+        private void BtnClearGrouping_Click(object sender, RoutedEventArgs e)
+        {
+            VirtualGrid.ClearGrouping();
+            TxtLatency.Text = $"Grouping cleared ({VirtualGrid.VisualRowCount:N0} rows)";
+        }
+
+        private bool _allGroupsExpanded = true;
+        private void BtnToggleExpand_Click(object sender, RoutedEventArgs e)
+        {
+            if (_allGroupsExpanded)
+            {
+                VirtualGrid.CollapseAllGroups();
+                _allGroupsExpanded = false;
+                BtnToggleExpand.Content = "➕ Expand All";
+            }
+            else
+            {
+                VirtualGrid.ExpandAllGroups();
+                _allGroupsExpanded = true;
+                BtnToggleExpand.Content = "➖ Collapse All";
+            }
+        }
+
         private async void BtnSortPrice_Click(object sender, RoutedEventArgs e)
         {
-            await VirtualGrid.SortByColumnAsync(4);
+            await VirtualGrid.SortByColumnAsync(6);
         }
 
         private async void BtnSortQuantity_Click(object sender, RoutedEventArgs e)
         {
-            await VirtualGrid.SortByColumnAsync(3);
+            await VirtualGrid.SortByColumnAsync(5);
         }
 
         private void BtnClearGrid_Click(object sender, RoutedEventArgs e)
@@ -534,11 +591,11 @@ namespace ZeroUI.Samples.WpfDemo
 
         private void BtnTogglePinning_Click(object sender, RoutedEventArgs e)
         {
-            if (VirtualGrid.Columns.Count > 1)
+            if (VirtualGrid.Columns.Count > 3)
             {
-                bool newState = !VirtualGrid.Columns[0].IsPinned;
-                VirtualGrid.Columns[0].IsPinned = newState;
-                VirtualGrid.Columns[1].IsPinned = newState;
+                bool newState = !VirtualGrid.Columns[2].IsPinned;
+                VirtualGrid.Columns[2].IsPinned = newState;
+                VirtualGrid.Columns[3].IsPinned = newState;
                 BtnTogglePinning.Content = newState ? "📌 Unpin Columns" : "📌 Pin Columns";
                 VirtualGrid.InvalidateVisual();
             }
