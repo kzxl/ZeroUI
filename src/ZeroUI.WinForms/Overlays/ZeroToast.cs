@@ -136,27 +136,28 @@ namespace ZeroUI.WinForms.Overlays
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
+            var palette = ZeroTheme.Colors;
+
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
             // 1. Draw Card Background & Shadow
             using (var path = CreateRoundedRectangle(rect, 8))
             {
-                using var bgBrush = new SolidBrush(Color.White);
+                using var bgBrush = new SolidBrush(palette.Surface);
                 g.FillPath(bgBrush, path);
 
-                using var borderPen = new Pen(Color.FromArgb(229, 231, 235), 1.2f);
+                using var borderPen = new Pen(palette.Border, 1.2f);
                 g.DrawPath(borderPen, path);
             }
 
             // 2. Draw Type Icon / Glyph
             var (iconChar, iconColor) = _type switch
             {
-                ZeroToastType.Success => ("✔", Color.FromArgb(82, 196, 26)),    // Emerald Green
-                ZeroToastType.Warning => ("⚠", Color.FromArgb(250, 173, 20)),   // Amber Gold
-                ZeroToastType.Error => ("✖", Color.FromArgb(255, 77, 79)),      // Ruby Red
-                _ => ("ℹ", Color.FromArgb(22, 119, 255))                        // Cobalt Blue
+                ZeroToastType.Success => ("✔", palette.Success),
+                ZeroToastType.Warning => ("⚠", palette.Warning),
+                ZeroToastType.Error => ("✖", palette.Danger),
+                _ => ("ℹ", palette.Info)
             };
-
 
             Rectangle iconRect = new Rectangle(14, 0, 26, Height);
             TextRenderer.DrawText(
@@ -174,7 +175,7 @@ namespace ZeroUI.WinForms.Overlays
                 _message,
                 new Font("Segoe UI", 9.5f, FontStyle.Regular),
                 textRect,
-                Color.FromArgb(31, 41, 55),
+                palette.TextPrimary,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
         }
 

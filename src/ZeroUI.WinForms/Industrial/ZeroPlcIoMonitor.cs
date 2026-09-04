@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -47,8 +48,21 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.ResizeRedraw, true);
 
             Size = new Size(340, 110);
-            BackColor = Color.FromArgb(15, 23, 42); // Industrial dark enclosure
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 8f);
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         [Category("PLC Registers")]
@@ -117,20 +131,21 @@ namespace ZeroUI.WinForms.Industrial
 
             int w = Width;
             int h = Height;
+            var palette = ZeroTheme.Colors;
 
             // 1. Enclosure Frame
-            using (var brush = new SolidBrush(BackColor))
+            using (var brush = new SolidBrush(palette.CardBackground))
             {
                 g.FillRectangle(brush, 0, 0, w, h);
             }
-            using (var borderPen = new Pen(Color.FromArgb(51, 65, 85), 1f))
+            using (var borderPen = new Pen(palette.Border, 1f))
             {
                 g.DrawRectangle(borderPen, 0, 0, w - 1, h - 1);
             }
 
             // 2. Title & Status Bar
             using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
-            using (var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
+            using (var titleBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString("PLC I/O Bit Matrix (16-DI / 16-DO)", titleFont, titleBrush, 8, 6);
             }
@@ -146,9 +161,10 @@ namespace ZeroUI.WinForms.Industrial
         private void DrawBitBank(Graphics g, int x, int y, string label, ushort register, Rectangle[] rects, Color onColor, bool isOutput)
         {
             int w = Width;
+            var palette = ZeroTheme.Colors;
             // Bank Label
             using (var lblFont = new Font("Segoe UI", 8f, FontStyle.Bold))
-            using (var lblBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
+            using (var lblBrush = new SolidBrush(palette.TextSecondary))
             {
                 g.DrawString(label, lblFont, lblBrush, x, y + 4);
             }
@@ -156,7 +172,7 @@ namespace ZeroUI.WinForms.Industrial
             // Hex Word Readout
             string hexText = $"0x{register:X4}";
             using (var hexFont = new Font("Consolas", 8.5f, FontStyle.Bold))
-            using (var hexBrush = new SolidBrush(Color.FromArgb(203, 213, 225)))
+            using (var hexBrush = new SolidBrush(palette.TextPrimary))
             {
                 var sz = g.MeasureString(hexText, hexFont);
                 g.DrawString(hexText, hexFont, hexBrush, w - sz.Width - 10, y + 4);

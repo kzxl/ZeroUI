@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -52,6 +53,8 @@ namespace ZeroUI.WinForms.Industrial
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
             Size = new Size(400, 90);
+
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
         [Browsable(false)]
@@ -146,28 +149,29 @@ namespace ZeroUI.WinForms.Industrial
                 Rectangle valRect = new Rectangle(colLeft + labelWidth + 4, rowTop, valWidth, _rowHeight);
 
                 // Draw Label
+                Color effLabelColor = (_labelColor != Color.Empty && _labelColor != Color.FromArgb(107, 114, 128)) ? _labelColor : ZeroTheme.Colors.TextSecondary;
                 TextRenderer.DrawText(
                     g,
                     item.Label + ":",
                     labelFont,
                     labelRect,
-                    _labelColor,
+                    effLabelColor,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                 // Draw Value
-                Color valCol = item.ValueColor ?? _valueColor;
+                Color effValueColor = item.ValueColor ?? ((_valueColor != Color.Empty && _valueColor != Color.FromArgb(17, 24, 39)) ? _valueColor : ZeroTheme.Colors.TextPrimary);
                 TextRenderer.DrawText(
                     g,
                     item.Value,
                     valFont,
                     valRect,
-                    valCol,
+                    effValueColor,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                 // Draw Vertical Column Divider (if multiple columns)
                 if (c > 0 && r == 0)
                 {
-                    using var divPen = new Pen(Color.FromArgb(243, 244, 246), 1f);
+                    using var divPen = new Pen(ZeroTheme.Colors.Border, 1f);
                     g.DrawLine(divPen, colLeft, 4, colLeft, Height - 8);
                 }
             }

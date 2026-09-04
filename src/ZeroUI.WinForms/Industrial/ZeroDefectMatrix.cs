@@ -65,10 +65,22 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.ResizeRedraw, true);
 
             Size = new Size(360, 190);
-            BackColor = Color.FromArgb(15, 23, 42); // Dark acrylic
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 8f);
 
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             InitializeSlots();
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         [Category("Matrix Layout")]
@@ -198,13 +210,14 @@ namespace ZeroUI.WinForms.Industrial
 
             int w = Width;
             int h = Height;
+            var palette = ZeroTheme.Colors;
 
             // 1. Frame Background
-            using (var brush = new SolidBrush(BackColor))
+            using (var brush = new SolidBrush(palette.CardBackground))
             {
                 g.FillRectangle(brush, 0, 0, w, h);
             }
-            using (var borderPen = new Pen(Color.FromArgb(51, 65, 85), 1f))
+            using (var borderPen = new Pen(palette.Border, 1f))
             {
                 g.DrawRectangle(borderPen, 0, 0, w - 1, h - 1);
             }
@@ -222,7 +235,7 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
-            using (var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
+            using (var titleBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString(_title, titleFont, titleBrush, 8, 6);
             }
@@ -230,7 +243,7 @@ namespace ZeroUI.WinForms.Industrial
             // Stats badge
             string stats = $"Pass: {passCount} | Fail: {failCount} | Warn: {warnCount}";
             using (var statFont = new Font("Segoe UI", 7.5f))
-            using (var statBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
+            using (var statBrush = new SolidBrush(palette.TextSecondary))
             {
                 var sz = g.MeasureString(stats, statFont);
                 g.DrawString(stats, statFont, statBrush, w - sz.Width - 8, 8);
@@ -318,7 +331,7 @@ namespace ZeroUI.WinForms.Industrial
             using var brush = new SolidBrush(color);
             g.FillRectangle(brush, x, y + 2, 8, 8);
             using var font = new Font("Segoe UI", 7.5f);
-            using var txtBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+            using var txtBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary);
             g.DrawString(label, font, txtBrush, x + 12, y);
         }
     }

@@ -39,7 +39,19 @@ namespace ZeroUI.WinForms.Warehouse
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
 
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             LoadSampleTrace();
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         private void LoadSampleTrace()
@@ -150,29 +162,30 @@ namespace ZeroUI.WinForms.Warehouse
 
             int w = Width;
             int h = Height;
+            var palette = ZeroTheme.Colors;
 
             // 1. Enclosure Card
             using (var cardPath = ZeroUIConfig.CreateRoundedRectangle(new Rectangle(0, 0, w - 1, h - 1), 8))
             {
-                using var bgBrush = new SolidBrush(Color.White);
+                using var bgBrush = new SolidBrush(palette.CardBackground);
                 g.FillPath(bgBrush, cardPath);
-                using var borderPen = new Pen(Color.FromArgb(226, 232, 240), 1f);
+                using var borderPen = new Pen(palette.Border, 1f);
                 g.DrawPath(borderPen, cardPath);
             }
 
             // 2. Header
             var titleFont = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold);
-            using (var titleBrush = new SolidBrush(Color.FromArgb(15, 23, 42)))
+            using (var titleBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString($"BATCH TRACEABILITY: {_traceData.LotNumber}", titleFont, titleBrush, 12, 10);
             }
             var subFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Regular);
-            using (var subBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
+            using (var subBrush = new SolidBrush(palette.TextSecondary))
             {
                 g.DrawString($"Product: {_traceData.ProductCode} | Warehouse: {_traceData.WarehouseCode}", subFont, subBrush, 12, 28);
             }
 
-            using (var sepPen = new Pen(Color.FromArgb(241, 245, 249), 1f))
+            using (var sepPen = new Pen(palette.Border, 1f))
             {
                 g.DrawLine(sepPen, 12, 46, w - 12, 46);
             }
@@ -186,7 +199,7 @@ namespace ZeroUI.WinForms.Warehouse
             if (nodes.Count > 1)
             {
                 int endSpineY = startY + (nodes.Count - 1) * nodeGap;
-                using var spinePen = new Pen(Color.FromArgb(203, 213, 225), 1.8f)
+                using var spinePen = new Pen(palette.Border, 1.8f)
                 {
                     DashStyle = DashStyle.Solid
                 };
@@ -197,10 +210,10 @@ namespace ZeroUI.WinForms.Warehouse
             var nodeDetailFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
             var qtyFont = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold);
 
-            using var branchPen = new Pen(Color.FromArgb(203, 213, 225), 1.8f);
+            using var branchPen = new Pen(palette.Border, 1.8f);
             using var tBrush = new SolidBrush(Color.Empty);
-            using var refBrush = new SolidBrush(Color.FromArgb(71, 85, 105));
-            using var detBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+            using var refBrush = new SolidBrush(palette.TextSecondary);
+            using var detBrush = new SolidBrush(palette.TextSecondary);
             using var qBrush = new SolidBrush(Color.Empty);
 
             for (int i = 0; i < nodes.Count; i++)
@@ -231,8 +244,8 @@ namespace ZeroUI.WinForms.Warehouse
                         qtyPrefix = "+";
                         break;
                     case StockMovementType.Balance:
-                        titleColor = Color.FromArgb(67, 56, 202);
-                        qtyColor = Color.FromArgb(67, 56, 202);
+                        titleColor = Color.FromArgb(79, 70, 229);
+                        qtyColor = Color.FromArgb(79, 70, 229);
                         qtyPrefix = "=";
                         break;
                     default:
@@ -264,23 +277,21 @@ namespace ZeroUI.WinForms.Warehouse
         {
             int r = 6;
             Color fillColor;
-            Color borderColor;
 
             switch (type)
             {
                 case StockMovementType.Inward:
                     fillColor = Color.FromArgb(16, 185, 129); // Emerald
-                    borderColor = Color.FromArgb(209, 250, 229);
                     break;
                 case StockMovementType.Balance:
                     fillColor = Color.FromArgb(79, 70, 229); // Indigo
-                    borderColor = Color.FromArgb(224, 231, 255);
                     break;
                 default:
                     fillColor = Color.FromArgb(239, 68, 68); // Rose/Red
-                    borderColor = Color.FromArgb(254, 226, 226);
                     break;
             }
+
+            Color borderColor = Color.FromArgb(50, fillColor);
 
             using (var borderBrush = new SolidBrush(borderColor))
             {

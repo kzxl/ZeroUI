@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -59,6 +60,8 @@ namespace ZeroUI.WinForms.Industrial
             {
                 _pulseTimer.Start();
             }
+
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
 
@@ -128,12 +131,13 @@ namespace ZeroUI.WinForms.Industrial
             {
                 int textLeft = (int)(dotCenterX + (_dotSize / 2f) + 8);
                 Rectangle textRect = new Rectangle(textLeft, 0, Width - textLeft, Height);
+                Color textColor = (ForeColor != Color.Empty && ForeColor != Color.FromArgb(31, 41, 55)) ? ForeColor : ZeroTheme.Colors.TextPrimary;
                 TextRenderer.DrawText(
                     g,
                     Text,
                     Font,
                     textRect,
-                    Color.FromArgb(31, 41, 55),
+                    textColor,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
         }

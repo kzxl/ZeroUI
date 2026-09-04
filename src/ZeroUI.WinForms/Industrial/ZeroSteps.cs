@@ -81,8 +81,10 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.ResizeRedraw, true);
 
             Size = new Size(600, 85);
-            BackColor = Color.White;
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
+
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
         [Browsable(false)]
@@ -156,16 +158,17 @@ namespace ZeroUI.WinForms.Industrial
                 _stepRects.Add(cardRect);
 
                 bool isHovered = (i == _hoveredIndex);
+                var palette = ZeroTheme.Colors;
 
                 // 1. Draw Step Card Background
                 var (bgCol, borderCol, iconCol, glyphChar) = GetStepColorsAndGlyph(step);
 
                 using (var cardPath = CreateRoundedRectangle(cardRect, 8))
                 {
-                    using var bgBrush = new SolidBrush(isHovered ? Color.FromArgb(249, 250, 251) : Color.FromArgb(254, 254, 254));
+                    using var bgBrush = new SolidBrush(isHovered ? palette.Hover : palette.CardBackground);
                     g.FillPath(bgBrush, cardPath);
 
-                    using var borderPen = new Pen(isHovered ? Color.FromArgb(79, 70, 229) : Color.FromArgb(229, 231, 235), isHovered ? 1.5f : 1f);
+                    using var borderPen = new Pen(isHovered ? palette.Primary : palette.Border, isHovered ? 1.5f : 1f);
                     g.DrawPath(borderPen, cardPath);
                 }
 
@@ -205,7 +208,7 @@ namespace ZeroUI.WinForms.Industrial
                     // Title
                     using var titleFont = new Font("Segoe UI", 9.25f, FontStyle.Bold);
                     Rectangle titleRect = new Rectangle(textX, textY, textWidth, 18);
-                    TextRenderer.DrawText(g, step.Title, titleFont, titleRect, Color.FromArgb(17, 24, 39), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    TextRenderer.DrawText(g, step.Title, titleFont, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                     // Quantity
                     using var qtyFont = new Font("Segoe UI", 8.25f, FontStyle.Regular);
@@ -213,13 +216,13 @@ namespace ZeroUI.WinForms.Industrial
                         ? $"{step.QuantityPrefix}{step.Quantity:N0} / {step.TargetQuantity.Value:N0}"
                         : $"{step.QuantityPrefix}{step.Quantity:N0}";
                     Rectangle qtyRect = new Rectangle(textX, textY + 17, textWidth, 15);
-                    TextRenderer.DrawText(g, qtyText, qtyFont, qtyRect, Color.FromArgb(75, 85, 99), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    TextRenderer.DrawText(g, qtyText, qtyFont, qtyRect, palette.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                     // Timestamp
                     using var timeFont = new Font("Segoe UI", 7.75f, FontStyle.Regular);
                     string timeText = $"{step.TimestampPrefix}{step.Timestamp ?? "--"}";
                     Rectangle timeRect = new Rectangle(textX, textY + 32, textWidth, 15);
-                    TextRenderer.DrawText(g, timeText, timeFont, timeRect, Color.FromArgb(156, 163, 175), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    TextRenderer.DrawText(g, timeText, timeFont, timeRect, palette.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
                 }
 
                 currentX += cardWidth;

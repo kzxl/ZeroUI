@@ -75,12 +75,25 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.ResizeRedraw, true);
 
             Size = new Size(380, 160);
-            BackColor = Color.FromArgb(15, 23, 42); // Industrial Slate Dark
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 8.5f);
 
             // Default demo channels
             _channels.Add(new TrendChannel("Pressure", "Bar", Color.FromArgb(56, 189, 248), 0, 100));
             _channels.Add(new TrendChannel("Oven Temp", "°C", Color.FromArgb(245, 158, 11), 0, 300));
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         [Category("Appearance")]
@@ -134,13 +147,14 @@ namespace ZeroUI.WinForms.Industrial
 
             int w = Width;
             int h = Height;
+            var palette = ZeroTheme.Colors;
 
             // 1. Dark Enclosure Background
-            using (var bgBrush = new SolidBrush(BackColor))
+            using (var bgBrush = new SolidBrush(palette.CardBackground))
             {
                 g.FillRectangle(bgBrush, 0, 0, w, h);
             }
-            using (var borderPen = new Pen(Color.FromArgb(51, 65, 85), 1f))
+            using (var borderPen = new Pen(palette.Border, 1f))
             {
                 g.DrawRectangle(borderPen, 0, 0, w - 1, h - 1);
             }
@@ -148,7 +162,7 @@ namespace ZeroUI.WinForms.Industrial
             // 2. Header Area: Title & Channel Legend
             int headerH = 26;
             using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
-            using (var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
+            using (var titleBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString(_title, titleFont, titleBrush, 8, 6);
             }
@@ -168,7 +182,7 @@ namespace ZeroUI.WinForms.Industrial
                     g.FillEllipse(dotBrush, legendX - 10, 10, 6, 6);
 
                     // Text
-                    using var txtBrush = new SolidBrush(Color.FromArgb(203, 213, 225));
+                    using var txtBrush = new SolidBrush(palette.TextSecondary);
                     g.DrawString(txt, legendFont, txtBrush, legendX, 6);
 
                     legendX -= 12;
@@ -184,13 +198,13 @@ namespace ZeroUI.WinForms.Industrial
             if (plotW <= 10 || plotH <= 10) return;
 
             // Plot Background
-            using (var plotBrush = new SolidBrush(Color.FromArgb(10, 15, 30)))
+            using (var plotBrush = new SolidBrush(palette.Background))
             {
                 g.FillRectangle(plotBrush, plotX, plotY, plotW, plotH);
             }
 
             // 4. Grid Lines (Horizontal & Vertical)
-            using (var gridPen = new Pen(Color.FromArgb(30, 41, 59), 1f) { DashStyle = DashStyle.Dot })
+            using (var gridPen = new Pen(palette.Border, 1f) { DashStyle = DashStyle.Dot })
             {
                 for (int i = 0; i <= _gridDivisionsY; i++)
                 {

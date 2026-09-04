@@ -86,6 +86,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
 
 
+        // Top Action Controls
+        private Label _lblTitle = null!;
+        private Button _btn100k = null!;
+        private Button _btn500k = null!;
+        private Button _btn1M = null!;
+        private Button _btn10M = null!;
+
         // HUD Labels
         private Label _lblStatus = null!;
         private Label _lblFps = null!;
@@ -150,25 +157,26 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Padding = new Padding(12, 10, 12, 10)
             };
 
-            Label lblTitle = new Label
+            _lblTitle = new Label
             {
                 Text = "⚡ ZeroUI Benchmark Suite",
-                ForeColor = Color.White,
+                ForeColor = ZeroTheme.Colors.TextPrimary,
                 Font = new Font("Segoe UI", 12f, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(12, 14)
             };
-            _topPanel.Controls.Add(lblTitle);
+            _topPanel.Controls.Add(_lblTitle);
 
             int btnX = 280;
-            Button btn100k = CreateActionButton("100K Rows", btnX, () => LoadDataset(100_000));
+            _btn100k = CreateActionButton("100K Rows", btnX, () => LoadDataset(100_000));
             btnX += 110;
-            Button btn500k = CreateActionButton("500K Rows", btnX, () => LoadDataset(500_000));
+            _btn500k = CreateActionButton("500K Rows", btnX, () => LoadDataset(500_000));
             btnX += 110;
-            Button btn1M = CreateActionButton("1M Rows", btnX, () => LoadDataset(1_000_000));
+            _btn1M = CreateActionButton("1M Rows", btnX, () => LoadDataset(1_000_000));
             btnX += 110;
-            Button btn10M = CreateActionButton("🔥 10M Rows", btnX, () => LoadDataset(10_000_000));
-            btn10M.BackColor = Color.FromArgb(190, 24, 24);
+            _btn10M = CreateActionButton("🔥 10M Rows", btnX, () => LoadDataset(10_000_000));
+            _btn10M.BackColor = ZeroTheme.Colors.Danger;
+            _btn10M.ForeColor = Color.White;
             btnX += 130;
 
             _btnAutoScroll = new Button
@@ -176,7 +184,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Text = "🚀 Run Auto-Scroll Stress Test (10s)",
                 Location = new Point(btnX, 10),
                 Size = new Size(270, 34),
-                BackColor = Color.FromArgb(79, 70, 229),
+                BackColor = ZeroTheme.Colors.Primary,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
@@ -186,11 +194,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _btnAutoScroll.Click += (s, e) => ToggleStressTest();
             _topPanel.Controls.Add(_btnAutoScroll);
 
-
-            _topPanel.Controls.Add(btn100k);
-            _topPanel.Controls.Add(btn500k);
-            _topPanel.Controls.Add(btn1M);
-            _topPanel.Controls.Add(btn10M);
+            _topPanel.Controls.Add(_btn100k);
+            _topPanel.Controls.Add(_btn500k);
+            _topPanel.Controls.Add(_btn1M);
+            _topPanel.Controls.Add(_btn10M);
 
 
             // 2. Metric HUD Panel
@@ -517,6 +524,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _mainToolbar.BorderColor = colors.Border;
             }
 
+            if (_lblTitle != null) _lblTitle.ForeColor = colors.TextPrimary;
+
+            if (_btn100k != null) { _btn100k.BackColor = colors.Surface; _btn100k.ForeColor = colors.TextPrimary; }
+            if (_btn500k != null) { _btn500k.BackColor = colors.Surface; _btn500k.ForeColor = colors.TextPrimary; }
+            if (_btn1M != null) { _btn1M.BackColor = colors.Surface; _btn1M.ForeColor = colors.TextPrimary; }
+            if (_btn10M != null) { _btn10M.BackColor = colors.Danger; _btn10M.ForeColor = Color.White; }
+            if (_btnAutoScroll != null) { _btnAutoScroll.BackColor = colors.Primary; _btnAutoScroll.ForeColor = Color.White; }
+
+            Color hudMetricColor = skin.IsDark ? colors.Success : Color.FromArgb(22, 101, 52);
+            if (_lblStatus != null) _lblStatus.ForeColor = hudMetricColor;
+            if (_lblFps != null) _lblFps.ForeColor = hudMetricColor;
+            if (_lblLatency != null) _lblLatency.ForeColor = hudMetricColor;
+            if (_lblRam != null) _lblRam.ForeColor = hudMetricColor;
+            if (_lblGc != null) _lblGc.ForeColor = hudMetricColor;
+
             if (_clusterBenchmark != null) _clusterBenchmark.BackColor = colors.Background;
             if (_clusterMes != null) _clusterMes.BackColor = colors.Background;
             if (_clusterWarehouse != null) _clusterWarehouse.BackColor = colors.Background;
@@ -538,13 +560,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private Button CreateActionButton(string text, int x, Action onClick)
         {
+            var colors = ZeroTheme.Colors;
             Button btn = new Button
             {
                 Text = text,
                 Location = new Point(x, 10),
                 Size = new Size(100, 34),
-                BackColor = Color.FromArgb(38, 42, 68),
-                ForeColor = Color.FromArgb(241, 245, 249),
+                BackColor = colors.Surface,
+                ForeColor = colors.TextPrimary,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold),
                 Cursor = Cursors.Hand
@@ -556,10 +579,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private Label CreateMetricLabel(string text, int x)
         {
+            var colors = ZeroTheme.Colors;
+            Color metricColor = ZeroTheme.IsDark ? colors.Success : Color.FromArgb(22, 101, 52);
             return new Label
             {
                 Text = text,
-                ForeColor = Color.FromArgb(166, 227, 161),
+                ForeColor = metricColor,
                 Font = new Font("Consolas", 10f, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(x, 12)

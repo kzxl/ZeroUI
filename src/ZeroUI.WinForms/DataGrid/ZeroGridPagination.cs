@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Editors;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.DataGrid
 {
@@ -28,6 +29,7 @@ namespace ZeroUI.WinForms.DataGrid
         private readonly ZeroButton _btnNext;
         private readonly ZeroButton _btnLast;
         private readonly ComboBox _cbPageSize;
+        private readonly Label _lblPageSizeTitle;
 
         public event EventHandler? PageChanged;
 
@@ -35,7 +37,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             Dock = DockStyle.Bottom;
             Height = 46;
-            BackColor = Color.FromArgb(249, 250, 251);
+            BackColor = ZeroTheme.Colors.Surface;
             Padding = new Padding(12, 6, 12, 6);
 
             _lblInfo = new Label
@@ -43,7 +45,7 @@ namespace ZeroUI.WinForms.DataGrid
                 Text = "Rows: 0 / 0",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular),
-                ForeColor = Color.FromArgb(75, 85, 99),
+                ForeColor = ZeroTheme.Colors.TextSecondary,
                 Location = new Point(14, 14)
             };
 
@@ -73,7 +75,7 @@ namespace ZeroUI.WinForms.DataGrid
                 Text = "Page 1 / 1",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = ZeroTheme.Colors.TextPrimary,
                 Location = new Point(310, 14)
             };
 
@@ -97,12 +99,12 @@ namespace ZeroUI.WinForms.DataGrid
             };
             _btnLast.Click += (s, e) => NavigateToPage(TotalPages);
 
-            Label lblPageSizeTitle = new Label
+            _lblPageSizeTitle = new Label
             {
                 Text = "Page size:",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9f, FontStyle.Regular),
-                ForeColor = Color.FromArgb(75, 85, 99),
+                ForeColor = ZeroTheme.Colors.TextSecondary,
                 Location = new Point(510, 14)
             };
 
@@ -111,7 +113,9 @@ namespace ZeroUI.WinForms.DataGrid
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Font = new Font("Segoe UI", 9f),
                 Location = new Point(585, 10),
-                Width = 90
+                Width = 90,
+                BackColor = ZeroTheme.Colors.Surface,
+                ForeColor = ZeroTheme.Colors.TextPrimary
             };
             _cbPageSize.Items.AddRange(new object[] { "100", "500", "1,000", "5,000", "All" });
             _cbPageSize.SelectedIndex = 2; // 1,000
@@ -124,10 +128,24 @@ namespace ZeroUI.WinForms.DataGrid
             Controls.Add(_lblPageInfo);
             Controls.Add(_btnNext);
             Controls.Add(_btnLast);
-            Controls.Add(lblPageSizeTitle);
+            Controls.Add(_lblPageSizeTitle);
             Controls.Add(_cbPageSize);
 
+            ZeroTheme.ThemeChanged += (s, e) => ApplyTheme();
+            ApplyTheme();
             UpdateState();
+        }
+
+        private void ApplyTheme()
+        {
+            var p = ZeroTheme.Colors;
+            BackColor = p.Surface;
+            _lblInfo.ForeColor = p.TextSecondary;
+            _lblPageInfo.ForeColor = p.TextPrimary;
+            _lblPageSizeTitle.ForeColor = p.TextSecondary;
+            _cbPageSize.BackColor = p.Surface;
+            _cbPageSize.ForeColor = p.TextPrimary;
+            Invalidate();
         }
 
         [Category("Data")]
@@ -217,7 +235,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             base.OnPaint(e);
             // Top border line
-            using var pen = new Pen(Color.FromArgb(229, 231, 235), 1f);
+            using var pen = new Pen(ZeroTheme.Colors.Border, 1f);
             e.Graphics.DrawLine(pen, 0, 0, Width, 0);
         }
     }

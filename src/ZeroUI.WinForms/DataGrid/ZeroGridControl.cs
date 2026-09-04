@@ -107,6 +107,39 @@ namespace ZeroUI.WinForms.DataGrid
             _inPlaceEditor.KeyDown += InPlaceEditor_KeyDown;
             _inPlaceEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_inPlaceEditor);
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+            UpdateTheme();
+        }
+
+        private static uint ToBgr(Color c) => (uint)(c.R | (c.G << 8) | (c.B << 16));
+
+        private void OnThemeChanged(object? sender, EventArgs e)
+        {
+            UpdateTheme();
+        }
+
+        public void UpdateTheme()
+        {
+            var p = ZeroTheme.Colors;
+            _headerBgColor = ToBgr(p.HeaderBackground);
+            _headerTextColor = ToBgr(p.TextPrimary);
+            _rowBgColor = ToBgr(p.Surface);
+            _altRowBgColor = ToBgr(ZeroTheme.IsDark
+                ? Color.FromArgb(Math.Min(255, p.Surface.R + 6), Math.Min(255, p.Surface.G + 6), Math.Min(255, p.Surface.B + 10))
+                : Color.FromArgb(249, 250, 251));
+            _selectedBgColor = ToBgr(ZeroTheme.IsDark
+                ? Color.FromArgb(45, 55, 90)
+                : Color.FromArgb(224, 208, 176));
+            _gridLineColor = ToBgr(p.Border);
+            _cellTextColor = ToBgr(p.TextPrimary);
+            _footerBgColor = ToBgr(p.HeaderBackground);
+            _pinnedBorderColor = ToBgr(p.Primary);
+
+            _inPlaceEditor.BackColor = p.Surface;
+            _inPlaceEditor.ForeColor = p.TextPrimary;
+
+            Invalidate();
         }
 
         private void EnsureFonts()
@@ -569,11 +602,11 @@ namespace ZeroUI.WinForms.DataGrid
 
                     _dibSection.SelectFont(_hHeaderFont);
                     RECT emptyTitleRect = new RECT(20, emptyCenterY, width - 20, emptyCenterY + 24);
-                    _dibSection.DrawText("No matching data found".AsSpan(), ref emptyTitleRect, 0x00666666, CellAlignment.Center, Font.Height);
+                    _dibSection.DrawText("No matching data found".AsSpan(), ref emptyTitleRect, _headerTextColor, CellAlignment.Center, Font.Height);
 
                     _dibSection.SelectFont(_hFont);
                     RECT emptySubRect = new RECT(20, emptyCenterY + 26, width - 20, emptyCenterY + 50);
-                    _dibSection.DrawText("Try adjusting your search keywords or clearing active filters".AsSpan(), ref emptySubRect, 0x00999999, CellAlignment.Center, Font.Height);
+                    _dibSection.DrawText("Try adjusting your search keywords or clearing active filters".AsSpan(), ref emptySubRect, ToBgr(ZeroTheme.Colors.TextSecondary), CellAlignment.Center, Font.Height);
                 }
 
                 // 2. Render Header Row (Always pinned on top)
@@ -1684,6 +1717,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (disposing)
             {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _inPlaceEditor.Dispose();
                 _dibSection.Dispose();
                 if (_hFont != IntPtr.Zero)

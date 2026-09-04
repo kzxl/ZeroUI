@@ -46,6 +46,19 @@ namespace ZeroUI.WinForms.Warehouse
             Size = new Size(280, 190);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         #region Public Properties
@@ -151,31 +164,32 @@ namespace ZeroUI.WinForms.Warehouse
 
             int w = Width;
             int h = Height;
+            var palette = ZeroTheme.Colors;
 
             // 1. Outer Container Card
             Rectangle cardRect = new Rectangle(0, 0, w - 1, h - 1);
             using (var cardPath = ZeroUIConfig.CreateRoundedRectangle(cardRect, 8))
             {
-                using var bgBrush = new SolidBrush(Color.White);
+                using var bgBrush = new SolidBrush(palette.CardBackground);
                 g.FillPath(bgBrush, cardPath);
 
-                using var borderPen = new Pen(Color.FromArgb(226, 232, 240), 1f);
+                using var borderPen = new Pen(palette.Border, 1f);
                 g.DrawPath(borderPen, cardPath);
             }
 
             // 2. Product Header Area
             var codeFont = ZeroFontCache.Get("Segoe UI", 11f, FontStyle.Bold);
             var nameFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Regular);
-            using (var codeBrush = new SolidBrush(Color.FromArgb(15, 23, 42)))
-            using (var nameBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
+            using (var codeBrush = new SolidBrush(palette.TextPrimary))
+            using (var nameBrush = new SolidBrush(palette.TextSecondary))
             {
                 g.DrawString(_data.ProductCode, codeFont, codeBrush, 14, 10);
                 g.DrawString(_data.ProductName, nameFont, nameBrush, 14, 32);
             }
 
             // Top-right Warehouse Pill
-            using (var whPillBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
-            using (var whTextBrush = new SolidBrush(Color.FromArgb(51, 65, 85)))
+            using (var whPillBrush = new SolidBrush(palette.Hover))
+            using (var whTextBrush = new SolidBrush(palette.TextPrimary))
             {
                 var whFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Bold);
                 string whLabel = $"WH: {_data.WarehouseCode}";
@@ -188,7 +202,7 @@ namespace ZeroUI.WinForms.Warehouse
             }
 
             // Separator Line
-            using (var sepPen = new Pen(Color.FromArgb(241, 245, 249), 1f))
+            using (var sepPen = new Pen(palette.Border, 1f))
             {
                 g.DrawLine(sepPen, 12, 54, w - 12, 54);
             }
@@ -197,7 +211,7 @@ namespace ZeroUI.WinForms.Warehouse
             int metricStartY = 62;
             var labelFont = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Regular);
             var valFont = ZeroFontCache.Get("Segoe UI", 9.5f, FontStyle.Bold);
-            using (var lblBrush = new SolidBrush(Color.FromArgb(71, 85, 105)))
+            using (var lblBrush = new SolidBrush(palette.TextSecondary))
             {
                 // Metric 1: Available - Emerald Green
                 using var greenBrush = new SolidBrush(Color.FromArgb(16, 185, 129));
@@ -221,7 +235,7 @@ namespace ZeroUI.WinForms.Warehouse
             int barH = 8;
             decimal total = _data.TotalQuantity;
 
-            using (var barBgBrush = new SolidBrush(Color.FromArgb(226, 232, 240)))
+            using (var barBgBrush = new SolidBrush(palette.Border))
             {
                 g.FillRectangle(barBgBrush, 14, barY, barW, barH);
             }
@@ -260,8 +274,8 @@ namespace ZeroUI.WinForms.Warehouse
             int footerY = barY + 14;
             var footFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Regular);
             var footBoldFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Bold);
-            using (var footBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
-            using (var totalBrush = new SolidBrush(Color.FromArgb(30, 41, 59)))
+            using (var footBrush = new SolidBrush(palette.TextSecondary))
+            using (var totalBrush = new SolidBrush(palette.TextPrimary))
             {
                 string totalStr = $"Total: {total:N0} {_data.UnitOfMeasure}";
                 var totSize = g.MeasureString(totalStr, footBoldFont);

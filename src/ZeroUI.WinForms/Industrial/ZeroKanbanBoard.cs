@@ -80,10 +80,22 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.ResizeRedraw, true);
 
             Size = new Size(540, 240);
-            BackColor = Color.FromArgb(15, 23, 42); // Dark slate
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 8.5f);
 
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             InitializeDefaultBoard();
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         [Browsable(false)]
@@ -212,20 +224,21 @@ namespace ZeroUI.WinForms.Industrial
                 int ch = h - (pad * 2);
                 col.Bounds = new Rectangle(cx, cy, colW, ch);
 
-                DrawColumn(g, col, c);
+                DrawColumn(g, col);
             }
         }
 
-        private void DrawColumn(Graphics g, KanbanColumn col, int colIndex)
+        private void DrawColumn(Graphics g, KanbanColumn col)
         {
             var rect = col.Bounds;
+            var palette = ZeroTheme.Colors;
 
             // Column container background
-            using (var colBrush = new SolidBrush(Color.FromArgb(30, 41, 59)))
+            using (var colBrush = new SolidBrush(palette.CardBackground))
             {
                 g.FillRectangle(colBrush, rect);
             }
-            using (var colPen = new Pen(Color.FromArgb(51, 65, 85), 1f))
+            using (var colPen = new Pen(palette.Border, 1f))
             {
                 g.DrawRectangle(colPen, rect);
             }
@@ -233,14 +246,14 @@ namespace ZeroUI.WinForms.Industrial
             // Column Header
             int headerH = 28;
             var headerRect = new Rectangle(rect.X, rect.Y, rect.Width, headerH);
-            using (var hBrush = new SolidBrush(Color.FromArgb(15, 23, 42)))
+            using (var hBrush = new SolidBrush(palette.HeaderBackground))
             {
                 g.FillRectangle(hBrush, headerRect);
             }
 
             // Column Title
             using (var titleFont = new Font("Segoe UI", 8f, FontStyle.Bold))
-            using (var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
+            using (var titleBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString(col.Title, titleFont, titleBrush, rect.X + 6, rect.Y + 6);
             }
@@ -248,7 +261,7 @@ namespace ZeroUI.WinForms.Industrial
             // WIP Limit Badge
             bool isOverWip = (col.WipLimit > 0 && col.Cards.Count > col.WipLimit);
             string countText = col.WipLimit > 0 ? $"{col.Cards.Count}/{col.WipLimit}" : $"{col.Cards.Count}";
-            Color badgeBg = isOverWip ? Color.FromArgb(239, 68, 68) : Color.FromArgb(51, 65, 85);
+            Color badgeBg = isOverWip ? Color.FromArgb(239, 68, 68) : palette.Border;
 
             using (var badgeFont = new Font("Segoe UI", 7f, FontStyle.Bold))
             {
@@ -257,7 +270,7 @@ namespace ZeroUI.WinForms.Industrial
                 int by = rect.Y + 5;
                 using var bBrush = new SolidBrush(badgeBg);
                 g.FillRectangle(bBrush, bx - 2, by, (int)bsz.Width + 6, 16);
-                using var tBrush = new SolidBrush(Color.White);
+                using var tBrush = new SolidBrush(palette.TextPrimary);
                 g.DrawString(countText, badgeFont, tBrush, bx + 1, by + 1);
             }
 
@@ -279,16 +292,17 @@ namespace ZeroUI.WinForms.Industrial
         private void DrawCard(Graphics g, KanbanCard card, bool isHovered)
         {
             var r = card.Bounds;
+            var palette = ZeroTheme.Colors;
 
             // Card Background
-            Color bg = isHovered ? Color.FromArgb(51, 65, 85) : Color.FromArgb(15, 23, 42);
+            Color bg = isHovered ? palette.Hover : palette.Surface;
             using (var brush = new SolidBrush(bg))
             {
                 g.FillRectangle(brush, r);
             }
 
             // Border
-            Color borderC = isHovered ? Color.FromArgb(96, 165, 250) : Color.FromArgb(71, 85, 105);
+            Color borderC = isHovered ? palette.Primary : palette.Border;
             using (var pen = new Pen(borderC, isHovered ? 1.5f : 1f))
             {
                 g.DrawRectangle(pen, r);
@@ -298,7 +312,7 @@ namespace ZeroUI.WinForms.Industrial
             Color pColor = card.Priority switch
             {
                 KanbanPriority.Urgent => Color.FromArgb(239, 68, 68),
-                KanbanPriority.Low => Color.FromArgb(100, 116, 139),
+                KanbanPriority.Low => palette.TextSecondary,
                 _ => Color.FromArgb(59, 130, 246)
             };
             using (var pBrush = new SolidBrush(pColor))
@@ -308,14 +322,14 @@ namespace ZeroUI.WinForms.Industrial
 
             // Order No
             using (var orderFont = new Font("Segoe UI", 7.5f, FontStyle.Bold))
-            using (var orderBrush = new SolidBrush(Color.FromArgb(96, 165, 250)))
+            using (var orderBrush = new SolidBrush(palette.Primary))
             {
                 g.DrawString(card.OrderNo, orderFont, orderBrush, r.X + 8, r.Y + 4);
             }
 
             // Qty
             using (var qtyFont = new Font("Segoe UI", 7f))
-            using (var qtyBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
+            using (var qtyBrush = new SolidBrush(palette.TextSecondary))
             {
                 string q = $"{card.Quantity} PCS";
                 var qsz = g.MeasureString(q, qtyFont);
@@ -324,14 +338,14 @@ namespace ZeroUI.WinForms.Industrial
 
             // Product Name
             using (var nameFont = new Font("Segoe UI", 7.5f))
-            using (var nameBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
+            using (var nameBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString(card.ProductName, nameFont, nameBrush, r.X + 8, r.Y + 20);
             }
 
             // Operator
             using (var opFont = new Font("Segoe UI", 6.5f))
-            using (var opBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
+            using (var opBrush = new SolidBrush(palette.TextSecondary))
             {
                 g.DrawString($"👤 {card.OperatorName}", opFont, opBrush, r.X + 8, r.Y + 36);
             }

@@ -72,10 +72,22 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.ResizeRedraw, true);
 
             Size = new Size(460, 240);
-            BackColor = Color.FromArgb(15, 23, 42); // Dark industrial frame
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 8.5f);
 
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             InitializeRack();
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         [Category("Rack Configuration")]
@@ -247,20 +259,21 @@ namespace ZeroUI.WinForms.Industrial
 
             int w = Width;
             int h = Height;
+            var palette = ZeroTheme.Colors;
 
             // 1. Rack Enclosure
-            using (var brush = new SolidBrush(BackColor))
+            using (var brush = new SolidBrush(palette.CardBackground))
             {
                 g.FillRectangle(brush, 0, 0, w, h);
             }
-            using (var enclosurePen = new Pen(Color.FromArgb(51, 65, 85), 1f))
+            using (var enclosurePen = new Pen(palette.Border, 1f))
             {
                 g.DrawRectangle(enclosurePen, 0, 0, w - 1, h - 1);
             }
 
             // 2. Title & Occupancy Summary
             var titleFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
-            using (var titleBrush = new SolidBrush(Color.FromArgb(241, 245, 249)))
+            using (var titleBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString(_rackTitle, titleFont, titleBrush, 8, 6);
             }
@@ -282,7 +295,7 @@ namespace ZeroUI.WinForms.Industrial
 
             string summary = $"Occupancy: {fullCount + availCount}/{_levels * _bays} | QC Hold: {quarCount}";
             var statFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
-            using (var statBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
+            using (var statBrush = new SolidBrush(palette.TextSecondary))
             {
                 var sz = g.MeasureString(summary, statFont);
                 g.DrawString(summary, statFont, statBrush, w - sz.Width - 10, 8);
@@ -303,7 +316,7 @@ namespace ZeroUI.WinForms.Industrial
             int startX = marginX + (availableW - ((binW * _bays) + ((_bays - 1) * gapX))) / 2;
 
             // Draw Upright Columns (Metallic beams)
-            using (var beamPen = new Pen(Color.FromArgb(71, 85, 105), 3f))
+            using (var beamPen = new Pen(palette.Border, 3f))
             {
                 for (int b = 0; b <= _bays; b++)
                 {
@@ -313,7 +326,7 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // Draw Shelf Beams (Horizontal)
-            using (var shelfPen = new Pen(Color.FromArgb(100, 116, 139), 2f))
+            using (var shelfPen = new Pen(palette.Border, 2f))
             {
                 for (int l = 0; l <= _levels; l++)
                 {
@@ -346,7 +359,7 @@ namespace ZeroUI.WinForms.Industrial
 
             // 5. Bottom Legend
             int legY = h - 18;
-            using var legTxtBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+            using var legTxtBrush = new SolidBrush(palette.TextSecondary);
             DrawLegend(g, 10, legY, Color.FromArgb(51, 65, 85), "Empty", statFont, legTxtBrush);
             DrawLegend(g, 85, legY, Color.FromArgb(59, 130, 246), "Available", statFont, legTxtBrush);
             DrawLegend(g, 175, legY, Color.FromArgb(16, 185, 129), "Full", statFont, legTxtBrush);

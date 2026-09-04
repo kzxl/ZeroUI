@@ -110,9 +110,19 @@ namespace ZeroUI.WinForms.Overlays
 
             Dock = DockStyle.Top;
             Height = 44;
-            BackColor = Color.White;
+            BackColor = ZeroTheme.Colors.Surface;
+            _borderColor = ZeroTheme.Colors.Border;
             Font = new Font("Segoe UI", 9.25f, FontStyle.Regular);
             Padding = new Padding(8, 6, 8, 6);
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e)
+        {
+            BackColor = ZeroTheme.Colors.Surface;
+            _borderColor = ZeroTheme.Colors.Border;
+            Invalidate();
         }
 
         [Browsable(false)]
@@ -206,30 +216,25 @@ namespace ZeroUI.WinForms.Overlays
                 bool isPressed = (item == _pressedItem && item.IsEnabled);
 
                 // Draw Button Background
+                var palette = ZeroTheme.Colors;
                 if (item is ZeroToolbarButton btn && btn.IsPrimary)
                 {
-                    Color primaryBg = isPressed ? Color.FromArgb(67, 56, 202) : (isHovered ? Color.FromArgb(99, 102, 241) : Color.FromArgb(79, 70, 229));
+                    Color primaryBg = isPressed ? palette.PrimaryHover : (isHovered ? palette.PrimaryHover : palette.Primary);
                     using var path = CreateRoundedRectangle(item.Bounds, 6);
                     using var brush = new SolidBrush(primaryBg);
                     g.FillPath(brush, path);
                 }
-                else if (isPressed)
+                else if (isPressed || isHovered)
                 {
                     using var path = CreateRoundedRectangle(item.Bounds, 6);
-                    using var brush = new SolidBrush(Color.FromArgb(229, 231, 235));
-                    g.FillPath(brush, path);
-                }
-                else if (isHovered)
-                {
-                    using var path = CreateRoundedRectangle(item.Bounds, 6);
-                    using var brush = new SolidBrush(Color.FromArgb(243, 244, 246));
+                    using var brush = new SolidBrush(palette.Hover);
                     g.FillPath(brush, path);
                 }
 
                 // Draw Content (Glyph, Text, Shortcut, Dropdown Chevron)
                 int contentX = item.Bounds.Left + 10;
-                Color textColor = !item.IsEnabled ? Color.FromArgb(156, 163, 175)
-                    : ((item is ZeroToolbarButton b && b.IsPrimary) ? Color.White : Color.FromArgb(31, 41, 55));
+                Color textColor = !item.IsEnabled ? palette.TextSecondary
+                    : ((item is ZeroToolbarButton b && b.IsPrimary) ? Color.White : palette.TextPrimary);
 
                 // Glyph
                 if (!string.IsNullOrEmpty(item.Glyph))
@@ -422,6 +427,7 @@ namespace ZeroUI.WinForms.Overlays
         {
             if (disposing)
             {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _toolTip.Dispose();
             }
             base.Dispose(disposing);

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -61,7 +62,11 @@ namespace ZeroUI.WinForms.Industrial
             {
                 _animTimer.Start();
             }
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
 
         [Category("Tank Parameters")]
         [DefaultValue(10000f)]
@@ -140,7 +145,7 @@ namespace ZeroUI.WinForms.Industrial
 
             // 1. Header: Tank Name
             using (var titleFont = new Font("Segoe UI", 8f, FontStyle.Bold))
-            using (var titleBrush = new SolidBrush(Color.FromArgb(15, 23, 42)))
+            using (var titleBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
             {
                 var sz = g.MeasureString(_tankName, titleFont);
                 g.DrawString(_tankName, titleFont, titleBrush, (w - sz.Width) / 2, 2);
@@ -258,7 +263,7 @@ namespace ZeroUI.WinForms.Industrial
 
                 // Tick marks (0%, 25%, 50%, 75%, 100%)
                 using var tickFont = new Font("Segoe UI", 6f);
-                using var tickBrush = new SolidBrush(Color.FromArgb(100, 116, 139));
+                using var tickBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary);
                 for (int pct = 0; pct <= 100; pct += 25)
                 {
                     int ty = tankBodyRect.Bottom - (int)(tankBodyRect.Height * (pct / 100f));
@@ -290,14 +295,14 @@ namespace ZeroUI.WinForms.Industrial
             // 8. Bottom Digital Value Readout
             string valText = $"{_currentLevelLiters:N0} L ({Percentage:F1}%)";
             using (var valFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
-            using (var valBrush = new SolidBrush(Color.FromArgb(15, 23, 42)))
+            using (var valBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
             {
                 var sz = g.MeasureString(valText, valFont);
                 g.DrawString(valText, valFont, valBrush, (w - sz.Width) / 2, h - 28);
             }
 
             using (var subFont = new Font("Segoe UI", 7f))
-            using (var subBrush = new SolidBrush(Color.FromArgb(100, 116, 139)))
+            using (var subBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary))
             {
                 var sz = g.MeasureString(_fluidName, subFont);
                 g.DrawString(_fluidName, subFont, subBrush, (w - sz.Width) / 2, h - 14);
@@ -308,6 +313,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _animTimer.Dispose();
             }
             base.Dispose(disposing);

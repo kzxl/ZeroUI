@@ -103,7 +103,11 @@ namespace ZeroUI.WinForms.Industrial
             {
                 _slaTimer.Start();
             }
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
 
         public void TriggerCall(AndonCallType type, bool active)
         {
@@ -188,13 +192,14 @@ namespace ZeroUI.WinForms.Industrial
         private void DrawTile(Graphics g, CallTile tile, bool isHovered)
         {
             var rect = tile.Bounds;
+            var palette = ZeroTheme.Colors;
 
             Color baseBg = tile.IsActive
                 ? (_blinkPhase ? tile.Color : Color.FromArgb(180, tile.Color))
-                : (isHovered ? Color.FromArgb(241, 245, 249) : Color.White);
+                : (isHovered ? palette.Hover : palette.CardBackground);
 
-            Color textColor = tile.IsActive ? Color.White : Color.FromArgb(15, 23, 42);
-            Color subColor = tile.IsActive ? Color.FromArgb(241, 245, 249) : Color.FromArgb(100, 116, 139);
+            Color textColor = tile.IsActive ? Color.White : palette.TextPrimary;
+            Color subColor = tile.IsActive ? Color.FromArgb(241, 245, 249) : palette.TextSecondary;
 
             // Rounded Tile Background
             using (var path = CreateRoundedRectangle(rect, 6))
@@ -204,7 +209,7 @@ namespace ZeroUI.WinForms.Industrial
                     g.FillPath(brush, path);
                 }
 
-                Color borderC = tile.IsActive ? tile.Color : (isHovered ? tile.Color : Color.FromArgb(226, 232, 240));
+                Color borderC = tile.IsActive ? tile.Color : (isHovered ? tile.Color : palette.Border);
                 using var pen = new Pen(borderC, isHovered || tile.IsActive ? 2f : 1f);
                 g.DrawPath(pen, path);
             }
@@ -245,6 +250,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _slaTimer.Dispose();
             }
             base.Dispose(disposing);

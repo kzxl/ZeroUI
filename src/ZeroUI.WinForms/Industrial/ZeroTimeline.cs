@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -56,9 +57,11 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.White;
+            BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
             Size = new Size(320, 240);
+
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
         [Browsable(false)]
@@ -95,11 +98,13 @@ namespace ZeroUI.WinForms.Industrial
 
             int startY = 20;
 
+            var palette = ZeroTheme.Colors;
+
             // 1. Draw Vertical Connecting Line
             if (count > 1)
             {
                 int endY = startY + (count - 1) * _itemSpacing;
-                using var linePen = new Pen(Color.FromArgb(229, 231, 235), 2f);
+                using var linePen = new Pen(palette.Border, 2f);
                 g.DrawLine(linePen, _nodeX, startY, _nodeX, endY);
             }
 
@@ -136,14 +141,14 @@ namespace ZeroUI.WinForms.Industrial
                     using var titleFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
                     Size titleSize = TextRenderer.MeasureText(g, item.Title, titleFont);
                     Rectangle titleRect = new Rectangle(textX, currentY - 8, titleSize.Width + 4, 18);
-                    TextRenderer.DrawText(g, item.Title, titleFont, titleRect, Color.FromArgb(17, 24, 39), TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, item.Title, titleFont, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
                     // Timestamp
                     if (!string.IsNullOrEmpty(item.Timestamp))
                     {
                         using var timeFont = new Font("Segoe UI", 8f, FontStyle.Regular);
                         Rectangle timeRect = new Rectangle(titleRect.Right + 6, currentY - 8, textWidth - titleRect.Width - 10, 18);
-                        TextRenderer.DrawText(g, item.Timestamp, timeFont, timeRect, Color.FromArgb(156, 163, 175), TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                        TextRenderer.DrawText(g, item.Timestamp, timeFont, timeRect, palette.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
                     }
 
                     // Description (if present)
@@ -151,7 +156,7 @@ namespace ZeroUI.WinForms.Industrial
                     {
                         using var descFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
                         Rectangle descRect = new Rectangle(textX, currentY + 11, textWidth, 18);
-                        TextRenderer.DrawText(g, item.Description, descFont, descRect, Color.FromArgb(75, 85, 99), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                        TextRenderer.DrawText(g, item.Description, descFont, descRect, palette.TextSecondary, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
                     }
                 }
             }

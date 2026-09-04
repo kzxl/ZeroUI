@@ -32,7 +32,7 @@ namespace ZeroUI.WinForms.Editors
         private ZeroTrendDirection _trend = ZeroTrendDirection.None;
         private string? _trendText;
 
-        private Color _valueColor = Color.FromArgb(17, 24, 39);
+        private Color _valueColor = Color.Empty;
         private int _borderRadius = 8;
 
         public ZeroStatistic()
@@ -45,7 +45,13 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(200, 95);
-            BackColor = Color.White;
+            BackColor = ZeroTheme.Colors.CardBackground;
+
+            ZeroTheme.ThemeChanged += (s, e) =>
+            {
+                BackColor = ZeroTheme.Colors.CardBackground;
+                Invalidate();
+            };
         }
 
         [Category("Data")]
@@ -112,13 +118,15 @@ namespace ZeroUI.WinForms.Editors
 
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
+            var palette = ZeroTheme.Colors;
+
             // 1. Card Container
             using (var path = CreateRoundedRectangle(rect, _borderRadius))
             {
                 using var bgBrush = new SolidBrush(BackColor);
                 g.FillPath(bgBrush, path);
 
-                using var borderPen = new Pen(Color.FromArgb(229, 231, 235), 1f);
+                using var borderPen = new Pen(palette.Border, 1f);
                 g.DrawPath(borderPen, path);
             }
 
@@ -129,26 +137,27 @@ namespace ZeroUI.WinForms.Editors
                 _title,
                 new Font("Segoe UI", 8.5f, FontStyle.Regular),
                 titleRect,
-                Color.FromArgb(107, 114, 128),
+                palette.TextSecondary,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
             // 3. Value with Prefix & Suffix (Large Bold)
             string fullVal = $"{_prefix}{_value} {_suffix}".Trim();
             Rectangle valRect = new Rectangle(16, 32, Width - 32, 34);
+            Color effValCol = (_valueColor != Color.Empty && _valueColor != Color.FromArgb(17, 24, 39)) ? _valueColor : palette.TextPrimary;
             TextRenderer.DrawText(
                 g,
                 fullVal,
                 new Font("Segoe UI", 18f, FontStyle.Bold),
                 valRect,
-                _valueColor,
+                effValCol,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
             // 4. Trend Indicator (Optional footer note)
             if (_trend != ZeroTrendDirection.None && !string.IsNullOrEmpty(_trendText))
             {
                 var (trendChar, trendColor) = _trend == ZeroTrendDirection.Up
-                    ? ("▲", Color.FromArgb(56, 158, 13))   // Green
-                    : ("▼", Color.FromArgb(207, 19, 34));   // Red
+                    ? ("▲", palette.Success)
+                    : ("▼", palette.Danger);
 
                 string trendFull = $"{trendChar} {_trendText}";
                 Rectangle trendRect = new Rectangle(16, 68, Width - 32, 18);

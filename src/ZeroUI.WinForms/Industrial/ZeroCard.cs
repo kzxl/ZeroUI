@@ -42,7 +42,9 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw, true);
 
-            BackColor = Color.White;
+            BackColor = ZeroTheme.Colors.CardBackground;
+            _borderColor = ZeroTheme.Colors.Border;
+            _badgeColor = ZeroTheme.Colors.Primary;
             Padding = new Padding(12);
 
             _contentPanel = new Panel
@@ -53,6 +55,12 @@ namespace ZeroUI.WinForms.Industrial
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
             Controls.Add(_contentPanel);
+            ZeroTheme.ThemeChanged += (s, e) =>
+            {
+                BackColor = ZeroTheme.Colors.CardBackground;
+                _borderColor = ZeroTheme.Colors.Border;
+                Invalidate();
+            };
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
         }
 
@@ -191,14 +199,14 @@ namespace ZeroUI.WinForms.Industrial
             using var titleFont = new Font("Segoe UI", 10.5f, FontStyle.Bold);
             Size titleSize = TextRenderer.MeasureText(g, _title, titleFont);
             Rectangle titleRect = new Rectangle(currentX, headerCenterY - (titleSize.Height / 2), Width - currentX - 16, titleSize.Height);
-            TextRenderer.DrawText(g, _title, titleFont, titleRect, Color.FromArgb(17, 24, 39), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+            TextRenderer.DrawText(g, _title, titleFont, titleRect, ZeroTheme.Colors.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
             // Draw Subtitle (if available)
             if (!string.IsNullOrEmpty(_subtitle))
             {
                 using var subFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
                 Rectangle subRect = new Rectangle(currentX, titleRect.Bottom + 2, Width - currentX - 16, 20);
-                TextRenderer.DrawText(g, _subtitle, subFont, subRect, Color.FromArgb(75, 85, 99), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(g, _subtitle, subFont, subRect, ZeroTheme.Colors.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
             // 3. Draw Action Link (Bottom-left or footer)
@@ -207,7 +215,8 @@ namespace ZeroUI.WinForms.Industrial
                 using var actionFont = new Font("Segoe UI", 9f, _isActionHovered ? FontStyle.Underline : FontStyle.Regular);
                 Size actSize = TextRenderer.MeasureText(g, _actionText, actionFont);
                 _actionRect = new Rectangle(14, Height - actSize.Height - 8, actSize.Width + 4, actSize.Height + 2);
-                TextRenderer.DrawText(g, _actionText, actionFont, _actionRect, _actionColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                Color actCol = _actionColor != Color.FromArgb(22, 119, 255) ? _actionColor : ZeroTheme.Colors.Primary;
+                TextRenderer.DrawText(g, _actionText, actionFont, _actionRect, actCol, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
             }
             else
             {

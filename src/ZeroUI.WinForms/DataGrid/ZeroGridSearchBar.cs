@@ -5,6 +5,7 @@ using System.Windows.Forms;
 
 using ZeroUI.Core.Data;
 using ZeroUI.WinForms.Editors;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.DataGrid
 {
@@ -30,7 +31,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             Dock = DockStyle.Top;
             Height = 48;
-            BackColor = Color.FromArgb(249, 250, 251);
+            BackColor = ZeroTheme.Colors.Surface;
             Padding = new Padding(12, 7, 12, 7);
 
             _searchBox = new ZeroSearchBox
@@ -47,7 +48,7 @@ namespace ZeroUI.WinForms.DataGrid
                 Text = "",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(79, 70, 229),
+                ForeColor = ZeroTheme.Colors.Primary,
                 Location = new Point(345, 14)
             };
 
@@ -98,6 +99,17 @@ namespace ZeroUI.WinForms.DataGrid
             Controls.Add(_lblMatchCount);
             Controls.Add(_btnDensity);
             Controls.Add(_btnExport);
+
+            ZeroTheme.ThemeChanged += (s, e) => ApplyTheme();
+            ApplyTheme();
+        }
+
+        private void ApplyTheme()
+        {
+            var p = ZeroTheme.Colors;
+            BackColor = p.Surface;
+            _lblMatchCount.ForeColor = p.Primary;
+            Invalidate();
         }
 
 
@@ -171,7 +183,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             base.OnPaint(e);
             // Bottom border line
-            using var pen = new Pen(Color.FromArgb(229, 231, 235), 1f);
+            using var pen = new Pen(ZeroTheme.Colors.Border, 1f);
             e.Graphics.DrawLine(pen, 0, Height - 1, Width, Height - 1);
         }
     }

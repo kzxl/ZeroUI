@@ -37,6 +37,19 @@ namespace ZeroUI.WinForms.Industrial
 
             Size = new Size(200, 70);
             BackColor = Color.Transparent;
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         [Category("Data")]
@@ -135,7 +148,7 @@ namespace ZeroUI.WinForms.Industrial
             // Track Background
             var trackRect = new Rectangle(barX, barY, barW, barH);
             using (var trackPath = CreateRoundedRectangle(trackRect, 4))
-            using (var trackBrush = new SolidBrush(Color.FromArgb(229, 231, 235)))
+            using (var trackBrush = new SolidBrush(theme.Border))
             {
                 g.FillPath(trackBrush, trackPath);
             }
@@ -160,9 +173,9 @@ namespace ZeroUI.WinForms.Industrial
 
             // 3. Graduations & Scale Ticks
             int tickY = barY + barH + 4;
-            using var tickPen = new Pen(Color.FromArgb(156, 163, 175), 1f);
+            using var tickPen = new Pen(theme.Border, 1f);
             using var tickFont = new Font("Segoe UI", 7.5f);
-            using var tickBrush = new SolidBrush(Color.FromArgb(107, 114, 128));
+            using var tickBrush = new SolidBrush(theme.TextSecondary);
 
             int tickSteps = 4;
             for (int i = 0; i <= tickSteps; i++)

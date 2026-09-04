@@ -47,6 +47,19 @@ namespace ZeroUI.WinForms.Industrial
             Size = new Size(500, 48);
             Dock = DockStyle.Top;
             Font = new Font("Segoe UI", 9f);
+
+            ZeroTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         [Category("Appearance")]
@@ -120,29 +133,30 @@ namespace ZeroUI.WinForms.Industrial
 
             using var titleFont = new Font("Segoe UI", 9f, FontStyle.Bold);
             Size titleSize = TextRenderer.MeasureText(g, _title, titleFont);
+            var palette = ZeroTheme.Colors;
 
             if (string.IsNullOrEmpty(_message))
             {
                 Rectangle singleRect = new Rectangle(textLeft, 0, textWidth, Height);
-                TextRenderer.DrawText(g, _title, titleFont, singleRect, Color.FromArgb(17, 24, 39), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(g, _title, titleFont, singleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
             else
             {
                 // Title and message inline or stacked
                 Rectangle titleRect = new Rectangle(textLeft, 0, titleSize.Width + 4, Height);
-                TextRenderer.DrawText(g, _title + ":", titleFont, titleRect, Color.FromArgb(17, 24, 39), TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, _title + ":", titleFont, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
                 int msgLeft = titleRect.Right + 4;
                 using var msgFont = new Font("Segoe UI", 9f, FontStyle.Regular);
                 Rectangle msgRect = new Rectangle(msgLeft, 0, textRight - msgLeft, Height);
-                TextRenderer.DrawText(g, _message, msgFont, msgRect, Color.FromArgb(55, 65, 81), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(g, _message, msgFont, msgRect, palette.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
             // 4. Draw Close Button
             if (_isClosable)
             {
                 _closeRect = new Rectangle(Width - 28, centerY - 10, 20, 20);
-                Color closeColor = _isCloseHovered ? Color.FromArgb(17, 24, 39) : Color.FromArgb(156, 163, 175);
+                Color closeColor = _isCloseHovered ? palette.TextPrimary : palette.TextSecondary;
                 TextRenderer.DrawText(g, "✕", new Font("Segoe UI", 9f, FontStyle.Bold), _closeRect, closeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
             else
@@ -192,13 +206,25 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        private static (Color bg, Color border, Color icon, string glyph) GetThemeColors(ZeroAlertSeverity severity) => severity switch
+        private static (Color bg, Color border, Color icon, string glyph) GetThemeColors(ZeroAlertSeverity severity)
         {
-            ZeroAlertSeverity.Success => (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(82, 196, 26), "✔"),
-            ZeroAlertSeverity.Warning => (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(250, 173, 20), "⚠"),
-            ZeroAlertSeverity.Error => (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(255, 77, 79), "✖"),
-            _ => (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(22, 119, 255), "ℹ")
-        };
+            bool isDark = ZeroTheme.IsDark;
+            return severity switch
+            {
+                ZeroAlertSeverity.Success => isDark
+                    ? (Color.FromArgb(35, 16, 185, 129), Color.FromArgb(16, 185, 129), Color.FromArgb(52, 211, 153), "✔")
+                    : (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(82, 196, 26), "✔"),
+                ZeroAlertSeverity.Warning => isDark
+                    ? (Color.FromArgb(35, 245, 158, 11), Color.FromArgb(245, 158, 11), Color.FromArgb(251, 191, 36), "⚠")
+                    : (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(250, 173, 20), "⚠"),
+                ZeroAlertSeverity.Error => isDark
+                    ? (Color.FromArgb(35, 239, 68, 68), Color.FromArgb(239, 68, 68), Color.FromArgb(248, 113, 113), "✖")
+                    : (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(255, 77, 79), "✖"),
+                _ => isDark
+                    ? (Color.FromArgb(35, 59, 130, 246), Color.FromArgb(59, 130, 246), Color.FromArgb(96, 165, 250), "ℹ")
+                    : (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(22, 119, 255), "ℹ")
+            };
+        }
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);

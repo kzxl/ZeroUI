@@ -47,6 +47,7 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             Cursor = Cursors.Hand;
 
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -175,44 +176,47 @@ namespace ZeroUI.WinForms.Editors
 
         private (Color bg, Color fg, Color border) GetColors()
         {
+            var palette = ZeroTheme.Colors;
+
             if (!Enabled)
             {
-                return (Color.FromArgb(229, 231, 235), Color.FromArgb(156, 163, 175), Color.Transparent);
+                Color disabledBg = ZeroTheme.IsDark ? Color.FromArgb(40, 44, 60) : Color.FromArgb(229, 231, 235);
+                return (disabledBg, palette.TextSecondary, Color.Transparent);
             }
 
             return _style switch
             {
                 ZeroButtonStyle.Primary => _isPressed
-                    ? (Color.FromArgb(55, 48, 163), Color.White, Color.Transparent)
+                    ? (palette.PrimaryHover, Color.White, Color.Transparent)
                     : _isHovered
-                        ? (Color.FromArgb(67, 56, 202), Color.White, Color.Transparent)
-                        : (Color.FromArgb(79, 70, 229), Color.White, Color.Transparent),
+                        ? (palette.PrimaryHover, Color.White, Color.Transparent)
+                        : (palette.Primary, Color.White, Color.Transparent),
 
                 ZeroButtonStyle.Secondary => _isPressed
-                    ? (Color.FromArgb(209, 213, 219), Color.FromArgb(17, 24, 39), Color.FromArgb(156, 163, 175))
+                    ? (palette.Hover, palette.TextPrimary, palette.Primary)
                     : _isHovered
-                        ? (Color.FromArgb(243, 244, 246), Color.FromArgb(17, 24, 39), Color.FromArgb(209, 213, 219))
-                        : (Color.FromArgb(255, 255, 255), Color.FromArgb(31, 41, 55), Color.FromArgb(209, 213, 219)),
+                        ? (palette.Hover, palette.TextPrimary, palette.Border)
+                        : (palette.Surface, palette.TextPrimary, palette.Border),
 
                 ZeroButtonStyle.Success => _isPressed
-                    ? (Color.FromArgb(21, 128, 61), Color.White, Color.Transparent)
+                    ? (palette.Success, Color.White, Color.Transparent)
                     : _isHovered
-                        ? (Color.FromArgb(22, 163, 74), Color.White, Color.Transparent)
-                        : (Color.FromArgb(34, 197, 94), Color.White, Color.Transparent),
+                        ? (palette.Success, Color.White, Color.Transparent)
+                        : (palette.Success, Color.White, Color.Transparent),
 
                 ZeroButtonStyle.Danger => _isPressed
-                    ? (Color.FromArgb(185, 28, 28), Color.White, Color.Transparent)
+                    ? (palette.Danger, Color.White, Color.Transparent)
                     : _isHovered
-                        ? (Color.FromArgb(220, 38, 38), Color.White, Color.Transparent)
-                        : (Color.FromArgb(239, 68, 68), Color.White, Color.Transparent),
+                        ? (palette.Danger, Color.White, Color.Transparent)
+                        : (palette.Danger, Color.White, Color.Transparent),
 
                 ZeroButtonStyle.Ghost => _isPressed
-                    ? (Color.FromArgb(229, 231, 235), Color.FromArgb(17, 24, 39), Color.Transparent)
+                    ? (palette.Hover, palette.TextPrimary, Color.Transparent)
                     : _isHovered
-                        ? (Color.FromArgb(243, 244, 246), Color.FromArgb(17, 24, 39), Color.Transparent)
-                        : (Color.Transparent, Color.FromArgb(55, 65, 81), Color.Transparent),
+                        ? (palette.Hover, palette.TextPrimary, Color.Transparent)
+                        : (Color.Transparent, palette.TextPrimary, Color.Transparent),
 
-                _ => (Color.FromArgb(79, 70, 229), Color.White, Color.Transparent)
+                _ => (palette.Primary, Color.White, Color.Transparent)
             };
         }
 

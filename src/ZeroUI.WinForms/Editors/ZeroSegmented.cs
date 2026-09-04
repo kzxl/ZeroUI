@@ -39,6 +39,7 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             Cursor = Cursors.Hand;
 
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -121,8 +122,10 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
+            var palette = ZeroTheme.Colors;
+
             // 1. Fill parent background to eliminate black corner clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
             using (var brushParent = new SolidBrush(parentBg))
             {
                 g.FillRectangle(brushParent, ClientRectangle);
@@ -134,8 +137,10 @@ namespace ZeroUI.WinForms.Editors
             // 2. Draw Track Background
             using (var trackPath = CreateRoundedRectangle(trackRect, effRadius))
             {
-                using var trackBrush = new SolidBrush(Color.FromArgb(243, 244, 246)); // Gray 100
+                using var trackBrush = new SolidBrush(palette.HeaderBackground);
                 g.FillPath(trackBrush, trackPath);
+                using var trackBorderPen = new Pen(palette.Border, 1f);
+                g.DrawPath(trackBorderPen, trackPath);
             }
 
             if (_items.Length == 0) return;
@@ -150,10 +155,10 @@ namespace ZeroUI.WinForms.Editors
                 int effPillRadius = ZeroUIConfig.GetEffectiveRadius(5);
                 using (var pillPath = CreateRoundedRectangleF(pillRect, effPillRadius))
                 {
-                    using var pillBrush = new SolidBrush(Color.White);
+                    using var pillBrush = new SolidBrush(palette.Surface);
                     g.FillPath(pillBrush, pillPath);
 
-                    using var shadowPen = new Pen(Color.FromArgb(229, 231, 235), 1f);
+                    using var shadowPen = new Pen(palette.Border, 1f);
                     g.DrawPath(shadowPen, pillPath);
                 }
             }
@@ -163,7 +168,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 Rectangle itemRect = new Rectangle((int)(2 + (i * itemW)), 2, (int)itemW, (int)itemH);
                 bool isSelected = (i == _selectedIndex);
-                Color textColor = isSelected ? Color.FromArgb(17, 24, 39) : Color.FromArgb(107, 114, 128);
+                Color textColor = isSelected ? palette.TextPrimary : palette.TextSecondary;
                 Font itemFont = isSelected ? new Font(Font, FontStyle.Bold) : Font;
 
                 TextRenderer.DrawText(

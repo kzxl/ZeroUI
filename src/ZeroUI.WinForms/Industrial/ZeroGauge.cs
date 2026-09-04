@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -36,6 +37,8 @@ namespace ZeroUI.WinForms.Industrial
             Size = new Size(110, 110);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
+
+            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
         [Category("Data")]
@@ -105,8 +108,9 @@ namespace ZeroUI.WinForms.Industrial
             // 1. Draw Background Track Ring (240 degrees arch or full 360)
             float startAngle = 135f;
             float sweepLength = 270f;
+            Color effTrackColor = _trackColor != Color.FromArgb(229, 231, 235) ? _trackColor : ZeroTheme.Colors.Border;
 
-            using (var trackPen = new Pen(_trackColor, _thickness))
+            using (var trackPen = new Pen(effTrackColor, _thickness))
             {
                 trackPen.StartCap = LineCap.Round;
                 trackPen.EndCap = LineCap.Round;
@@ -128,13 +132,13 @@ namespace ZeroUI.WinForms.Industrial
             using var valFont = new Font("Segoe UI", 12.5f, FontStyle.Bold);
             Size valSize = TextRenderer.MeasureText(g, valText, valFont);
             Rectangle valRect = new Rectangle(0, y + (size / 2) - valSize.Height / 2 - 4, Width, valSize.Height);
-            TextRenderer.DrawText(g, valText, valFont, valRect, Color.FromArgb(17, 24, 39), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(g, valText, valFont, valRect, ZeroTheme.Colors.TextPrimary, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
             if (!string.IsNullOrEmpty(_title))
             {
                 using var titleFont = new Font("Segoe UI", 7.5f, FontStyle.Regular);
                 Rectangle titleRect = new Rectangle(0, valRect.Bottom - 2, Width, 16);
-                TextRenderer.DrawText(g, _title, titleFont, titleRect, Color.FromArgb(107, 114, 128), TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(g, _title, titleFont, titleRect, ZeroTheme.Colors.TextSecondary, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
             }
         }
     }
