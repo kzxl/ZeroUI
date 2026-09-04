@@ -202,7 +202,7 @@ namespace ZeroUI.Wpf.Charts
                         dc.DrawRoundedRectangle(brush, null, new Rect(xPos, yPos, colWidth, barH), 2, 2);
                     }
                 }
-                else if (type == ZeroChartType.Line || type == ZeroChartType.Area)
+                else if (type == ZeroChartType.Line || type == ZeroChartType.Spline || type == ZeroChartType.Area || type == ZeroChartType.SplineArea || type == ZeroChartType.AreaSpline)
                 {
                     var geom = new StreamGeometry();
                     var areaGeom = new StreamGeometry();
@@ -230,7 +230,7 @@ namespace ZeroUI.Wpf.Charts
                     geom.Freeze();
                     areaGeom.Freeze();
 
-                    if (type == ZeroChartType.Area)
+                    if (type == ZeroChartType.Area || type == ZeroChartType.SplineArea || type == ZeroChartType.AreaSpline)
                     {
                         var areaFill = new SolidColorBrush(Color.FromArgb((byte)(s.FillOpacity * 255), s.Color.R, s.Color.G, s.Color.B));
                         areaFill.Freeze();

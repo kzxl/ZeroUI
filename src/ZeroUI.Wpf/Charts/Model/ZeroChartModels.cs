@@ -11,6 +11,8 @@ namespace ZeroUI.Wpf.Charts.Model
         Line,
         Spline,
         Area,
+        SplineArea,
+        AreaSpline,
         Candlestick,
         Pie,
         Donut

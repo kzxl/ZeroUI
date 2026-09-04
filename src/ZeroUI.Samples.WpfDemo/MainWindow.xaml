@@ -282,7 +282,7 @@
 
                         <!-- Chart 2: Spline Area Chart -->
                         <ind:ZeroCard Grid.Row="0" Grid.Column="1" HeaderText="Server CPU &amp; Load Timeline" SubtitleText="24-Hour continuous vector spline with Catmull-Rom smoothing" Margin="0,0,0,10">
-                            <chart:ZeroChart x:Name="AreaChart" ChartType="AreaSpline" Margin="0,4,0,0" />
+                            <chart:ZeroChart x:Name="AreaChart" ChartType="SplineArea" Margin="0,4,0,0" />
                         </ind:ZeroCard>
 
                         <!-- Chart 3: Candlestick OHLC Chart -->
