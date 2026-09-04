@@ -63,6 +63,22 @@ Tested on a standard development machine using headless automated stress-tests (
 * **Live Search Filter:** 1,000,000 rows filtered in **~17 ms** (matching ~14,000 rows).
 * **Streaming CSV Export:** 100,000 rows written in **~83 ms** (**1,190,000+ rows/sec** zero-alloc streaming).
 
+### 🔬 ZeroUI.Core & SCADA Telemetry Benchmarks:
+Automated performance profiling on .NET 8.0 across high-throughput telemetry, time-series downsampling, and industrial alarm dispatching:
+
+| Benchmark Target | Workload Description | Execution Time | Throughput Rate | GC Allocations |
+| :--- | :--- | :---: | :---: | :---: |
+| **LTTB Decimation** | Downsample **10,000 &rarr; 1,000 pts** | **0.39 ms** | **25,644 kpts/s** | **0 B (Zero-Alloc)** |
+| | Downsample **50,000 &rarr; 1,000 pts** | **2.44 ms** | **20,446 kpts/s** | **0 B (Zero-Alloc)** |
+| | Downsample **100,000 &rarr; 1,000 pts** | **3.00 ms** | **33,330 kpts/s** | **0 B (Zero-Alloc)** |
+| | Downsample **500,000 &rarr; 1,000 pts** | **9.54 ms** | **52,383 kpts/s** | **0 B (Zero-Alloc)** |
+| **ZeroTagEngine** | Single-Thread Updates (100k updates) | **27.3 ms** | **3,656,681 ops/s** | Minimal (72 B/op) |
+| | Deadband Noise Filter (100k jitter ops) | **15.1 ms** | **6,607,376 ops/s** | **0 B (Suppressed)** |
+| | Multi-Thread Ingestion (4 Workers x 25k) | **41.9 ms** | **2,386,829 ops/s** | Thread-safe concurrent |
+| **ScadaAlarmEngine** | Alarm Storm (10,000 alarms raised) | **24.3 ms** | **411,928 alarms/s** | ISA-18.2 State Tracked |
+| | Alarm Summary Tally (Over 10,000 alarms) | **0.52 ms** | **1,893,900 ops/s** | Sub-millisecond |
+| | Mass Acknowledge All (10,000 alarms) | **4.4 ms** | **2,272,727 acks/s** | Real-time audit trail |
+
 ---
 
 ## 4. Control Suite Overview
@@ -118,10 +134,43 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 * **`ZeroGauge`**: Anti-aliased circular progress dial for **OEE %**, Yield Rate, and equipment efficiency.
 * **`ZeroTaktTimer`**: Lean manufacturing Takt Time & Cycle Timer with circular countdown progress arc, digital remaining time readout, planned vs. actual cycle time comparison, and automatic color transitions (On-Track Green &rarr; Warning Amber &rarr; Overdue Flashing Red).
 
-#### SCADA & Smart Factory Hub
+#### SCADA Runtime, P&ID Process & Industrial HMI Suite
 ![SCADA Smart Factory Hub](docs/images/04_scada_smart_factory.png)
 
-* **`ZeroTrendChart`**: Real-time 60 FPS oscilloscope and sensor trend chart engineered with fixed-size circular ring buffers (`float[]`), multi-pen channels (e.g. Pressure, Oven Temp, Current), Upper/Lower Specification Limit (USL/LSL) thresholds, and 0 GC allocations on continuous telemetry streaming.
+##### 1. Core Architecture & High-Performance Engines (`ZeroUI.Core`)
+* **`ZeroAnimationClock`**: High-resolution centralized 60 FPS animation ticker. Eliminates scattered individual timers, drastically cutting CPU overhead and preventing UI thread starvation.
+* **`IScadaDrawable`**: Common lightweight vector rendering contract allowing process elements to be drawn within a single-HWND canvas.
+* **`ScadaAlarmEngine`**: Full ISA-18.2 compliant industrial alarm management engine (`ActiveUnack`, `ActiveAck`, `ClearedUnack`, `Normal`, `Shelved`, `Suppressed`) with thread-safe lifecycle tracking and operator audit trail.
+* **`LttbDecimation`**: Zero-allocation implementation of the Largest-Triangle-Three-Buckets (LTTB) downsampling algorithm, compressing 100,000+ points into 1,000 screen pixels in under 3 ms with 0 bytes GC allocated.
+* **`TelemetryThrottleQueue`**: High-frequency coalescing queue batching raw PLC telemetry (>10 kHz) to 30–60 Hz UI message pump intervals.
+
+##### 2. Process Equipment & Smart Field Instruments (`ZeroUI.WinForms.Industrial`)
+* **`ZeroIndustrialMotor`**: 3-phase induction motor drive with cooling fin vector geometry, rotating shaft pulley, RPM telemetry, and FWD/REV direction.
+* **`ZeroIndustrialFan`**: Shrouded industrial ventilation fan with subpixel blade rotation (`Matrix.RotateAt`) and wire cage guard.
+* **`ZeroIndustrialHeater`**: Serpentine heating element with thermal glow gradient rendering, temperature readouts, and over-temperature trip monitoring.
+* **`ZeroConveyorBelt`**: Material conveyor belt with moving tracking markers, end-roller kinematics, speed readout, and material jam blink detection.
+* **`ZeroPneumaticCylinder`**: Double-acting pneumatic cylinder with animated piston extension (0–100%) and magnetic reed switches.
+* **`ZeroIndustrialSensor`**: Multi-type industrial field sensor (Proximity M12, Photoelectric, Level Switch, Pressure Switch) with active detection status LED.
+* **`ZeroIndustrialValve`**: Industrial standard P&ID vector valve supporting 2-Way Solenoid, Diaphragm Control, Ball, Check, and 3-Way Diverter/Mixing valves.
+* **`ZeroDigitalIndicator`**: Beveled digital readout panel with 4-tier alarm threshold colors (LowLow, Low, High, HighHigh) and engineering units.
+* **`ZeroFlowIndicator`**: Directional fluid duct with moving chevron vector animation.
+* **`ZeroTank3D`**: Industrial 3D cylindrical fluid storage tank with animated sinusoidal liquid surface waves, glass sight-gauge tube, graduated level markings, and High/Low limit sensor trips.
+
+##### 3. Operator HMI & Safety Controls (`ZeroUI.WinForms.Industrial`)
+* **`ZeroCommandButton`**: Interlocked operator action button with two-stage confirmation dialog and configurable "Press and Hold" (0.5s – 2.0s progress ring) for touchscreen safety.
+* **`ZeroSetpointInput`**: Engineering setpoint input with Min/Max clamping, validation warnings, and on-screen touch keypad launch.
+* **`ZeroNumericKeypad`**: Industrial touch-screen numeric keypad dialog with large keys (0-9, Backspace, Clear, Enter, +/-) and boundary check.
+* **`ZeroModeSelector`**: 4-position segmented control switch (Auto, Manual, Remote, Local) with physical lockout simulation.
+* **`ZeroInterlockIndicator`**: Safety shield indicator with tooltip diagnostics displaying blocking interlock conditions.
+* **`ZeroAlarmGrid`**: ISA-18.2 compliant virtualized alarm view with filter tabs (`ALL`, `ACTIVE`, `UNACK`, `SHELVED`), color-coded severity badges, and acknowledgment interaction.
+
+##### 4. Overview Dashboard & P&ID Mimic Canvas (`ZeroUI.WinForms.Industrial`)
+* **`ZeroPlantMimicCanvas`**: Single-HWND P&ID canvas supporting viewport pan, zoom (25% – 400%), and spatial culling for large-scale factory layouts without exceeding the 10,000 Windows HWND limit.
+* **`ZeroMachineCard`**: High-density machine faceplate card with operational state, mode, speed, OEE mini donut gauge, and active alarm count.
+* **`ZeroProductionCounter`**: 4-field scoreboard (Plan, Actual, NG, Remaining) with target completion progress bar.
+* **`ZeroShiftStatus`**: Shift assignment card (Shift name, schedule, operator on duty, accumulated machine downtime).
+* **`ZeroSparkline`**: Compact micro-trend polyline control with circular ring buffer and gradient fill for embedding into cards and table cells.
+* **`ZeroTrendChart`**: Real-time 60 FPS oscilloscope and sensor trend chart engineered with fixed-size circular ring buffers (`float[]`), multi-pen channels, Upper/Lower Specification Limit (USL/LSL) thresholds, vertical interactive `TrendCursor` crosshair, and 0 GC allocations on continuous telemetry streaming.
 * **`ZeroDefectMatrix`**: 2D Multi-Unit Panel & Wafer Defect Inspection Matrix for AOI, SMT, and QC workstations with configurable row/column array, defect color codes (Pass, Defect, Warning, Untested), hover glow, and drill-down slot click events.
 * **`ZeroPlcIoMonitor`**: Industrial PLC Digital I/O 16-bit monitor displaying DI 00..15 and DO 00..15 with live LED bit registers, hexadecimal word readout (`0x00A5`), and interactive output coil force simulation.
 * **`ZeroAndonCallPad`**: Touchscreen-optimized shopfloor operator call pad featuring 4 large finger-friendly tiles (*Material*, *Maintenance*, *Quality*, *Supervisor*) with active SLA elapsed response time counters.

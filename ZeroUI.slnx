@@ -6,4 +6,7 @@
     <Project Path="src/ZeroUI.WinForms/ZeroUI.WinForms.csproj" />
     <Project Path="src/ZeroUI.Wpf/ZeroUI.Wpf.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZeroUI.Core.Benchmarks/ZeroUI.Core.Benchmarks.csproj" />
+  </Folder>
 </Solution>
