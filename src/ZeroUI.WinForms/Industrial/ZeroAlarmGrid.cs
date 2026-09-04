@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -22,6 +23,7 @@ namespace ZeroUI.WinForms.Industrial
     /// and operator acknowledgment interaction directly tied to ScadaAlarmEngine.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroAlarmGrid.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("High-performance ISA-18.2 compliant industrial alarm grid")]
     public class ZeroAlarmGrid : Control

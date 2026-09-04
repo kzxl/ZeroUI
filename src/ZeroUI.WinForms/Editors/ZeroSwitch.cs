@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 
 namespace ZeroUI.WinForms.Editors
@@ -11,6 +12,7 @@ namespace ZeroUI.WinForms.Editors
     /// Smooth animated toggle switch control for ZeroUI with keyboard interaction and custom state labels.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSwitch.bmp")]
     [DefaultProperty("Checked")]
     [DefaultEvent("CheckedChanged")]
     [Category("ZeroUI - Editors")]

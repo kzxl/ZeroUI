@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -12,6 +13,7 @@ namespace ZeroUI.WinForms.Editors
     /// quick preset pills, year/month navigation, and native Obsidian Dark / Clean Light theming.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDatePicker.bmp")]
     [Category("ZeroUI - Editors")]
     [DefaultProperty("Value")]
     [DefaultEvent("ValueChanged")]

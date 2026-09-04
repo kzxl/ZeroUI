@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -20,6 +21,7 @@ namespace ZeroUI.WinForms.Industrial
     /// Supports solid illumination, high-visibility 1Hz/2Hz flashing, and vector anti-aliased 3D glass rendering.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroLedTower.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial Andon Signal Tower Light with Red, Amber, Green, and Blue segments")]
     public class ZeroLedTower : Control

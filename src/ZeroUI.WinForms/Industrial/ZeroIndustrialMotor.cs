@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -29,6 +30,7 @@ namespace ZeroUI.WinForms.Industrial
     /// dynamic shaft rotation indicators, RPM telemetry readouts, and SCADA tag engine synchronization.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialMotor.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial electric motor drive with cooling fins and dynamic telemetry status")]
     public class ZeroIndustrialMotor : Control, IScadaBindable, IAnimationFrameListener

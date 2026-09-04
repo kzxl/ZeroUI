@@ -3,12 +3,12 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
     public enum ZeroButtonStyle
-
     {
         Primary,
         Secondary,
@@ -21,6 +21,7 @@ namespace ZeroUI.WinForms.Editors
     /// Modern flat button control with stateful hover effects, smooth rounded corners, and badge counter support.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroButton.bmp")]
     [Category("ZeroUI - Editors")]
     [DefaultEvent("Click")]
     [DefaultProperty("Text")]

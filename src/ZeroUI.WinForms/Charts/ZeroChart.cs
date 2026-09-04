@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Charts.Model;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
@@ -17,6 +18,7 @@ namespace ZeroUI.WinForms.Charts
     /// Spline, Area, Pie, and Donut visualizations with interactive tooltips, crosshairs, and legends.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroChart.bmp")]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("High-performance universal chart control for modern desktop analytics and dashboards")]
     public class ZeroChart : Control

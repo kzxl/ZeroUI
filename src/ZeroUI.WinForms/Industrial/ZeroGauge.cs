@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -12,6 +13,7 @@ namespace ZeroUI.WinForms.Industrial
     /// Modern anti-aliased circular gauge/meter for OEE, Yield rate, and equipment efficiency.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroGauge.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Value")]
     [Description("Circular gauge meter for OEE, Yield, and equipment efficiency")]

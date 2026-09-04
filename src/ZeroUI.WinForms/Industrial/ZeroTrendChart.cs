@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -54,6 +55,7 @@ namespace ZeroUI.WinForms.Industrial
     /// Utilizes fixed-size circular ring buffers with zero GC allocation on continuous signal streaming.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTrendChart.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("High-performance real-time trend and oscilloscope chart for SCADA telemetry")]
     public class ZeroTrendChart : Control

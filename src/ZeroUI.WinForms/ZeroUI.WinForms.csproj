@@ -15,4 +15,8 @@
   <ItemGroup>
     <ProjectReference Include="..\ZeroUI.Core\ZeroUI.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\*.bmp" />
+  </ItemGroup>
 </Project>

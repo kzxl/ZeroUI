@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -30,6 +31,9 @@ namespace ZeroUI.WinForms.Industrial
     /// Industrial standard P&ID vector valve component with actuator indicators,
     /// manual override interaction, and real-time SCADA telemetry binding.
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialValve.bmp")]
+    [Category("ZeroUI - SCADA")]
     public class ZeroIndustrialValve : Control, IScadaBindable
     {
         private ZeroValveType _valveType = ZeroValveType.TwoWaySolenoid;

@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Rendering;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -49,6 +50,7 @@ namespace ZeroUI.WinForms.Industrial
     /// quarantine locks, hover inspection, and click events.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroWarehouseRack.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("RackTitle")]
     [DefaultEvent("BinClicked")]

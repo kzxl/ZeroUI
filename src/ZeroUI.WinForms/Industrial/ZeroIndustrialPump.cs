@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -20,6 +21,9 @@ namespace ZeroUI.WinForms.Industrial
     /// Features smooth vector impeller rotation animation, telemetry readouts,
     /// and IScadaBindable tag engine integration.
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialPump.bmp")]
+    [Category("ZeroUI - SCADA")]
     public class ZeroIndustrialPump : Control, IScadaBindable
     {
         private ZeroPumpState _state = ZeroPumpState.Running;

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -20,6 +21,7 @@ namespace ZeroUI.WinForms.Industrial
     /// graduated level markings, and high/low sensor trips.
     /// </summary>
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTank3D.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("CurrentLevelLiters")]
     [Description("Industrial 3D cylindrical fluid storage tank with animated liquid waves")]

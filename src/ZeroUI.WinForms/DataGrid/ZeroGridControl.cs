@@ -12,6 +12,7 @@ using ZeroUI.Core.Data;
 using ZeroUI.Core.Input;
 using ZeroUI.Core.Layout;
 using ZeroUI.Core.Virtualization;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
@@ -19,6 +20,7 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.DataGrid
 {
     [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroGridControl.bmp")]
     [Category("ZeroUI - DataGrid")]
     [DefaultProperty("DataSource")]
     [Description("High-performance virtual DataGrid with direct Win32 DIBSection rendering")]
