@@ -8,5 +8,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ZeroUI.Core.Benchmarks/ZeroUI.Core.Benchmarks.csproj" />
+    <Project Path="tests/ZeroUI.Core.Tests/ZeroUI.Core.Tests.csproj" />
   </Folder>
 </Solution>
