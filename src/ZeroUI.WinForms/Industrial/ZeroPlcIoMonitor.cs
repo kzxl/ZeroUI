@@ -45,7 +45,8 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(340, 110);
             BackColor = Color.Transparent;

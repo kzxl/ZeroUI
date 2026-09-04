@@ -72,7 +72,8 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(580, 320);
             Font = new Font("Segoe UI", 8.5f);
