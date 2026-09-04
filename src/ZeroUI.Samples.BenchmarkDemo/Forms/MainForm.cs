@@ -48,6 +48,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _clusterAnalytics = null!;
         private ZeroTabPage _clusterComponents = null!;
         private ZeroTabPage _clusterScadaSynoptic = null!;
+        private ZeroTabPage _tabScadaClosedLoop = null!;
         private ZeroTabPage _tabScadaPid = null!;
         private ZeroTabPage _tabScadaAlarms = null!;
         private ZeroTabPage _tabScadaTags = null!;
@@ -86,6 +87,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroListView _showcaseLog = null!;
         private System.Windows.Forms.Timer? _logGenTimer;
         private System.Windows.Forms.Timer? _scadaSimTimer;
+        private System.Windows.Forms.Timer? _closedLoopTimer;
 
 
 
@@ -428,10 +430,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 TabHeight = 36,
                 TabStyle = ZeroTabStyle.Pill
             };
+            _tabScadaClosedLoop = new ZeroTabPage("Closed-Loop Batch Process", "🔄");
             _tabScadaPid = new ZeroTabPage("Phase 1: P&ID Process Flow", "🔄");
             _tabScadaAlarms = new ZeroTabPage("Phase 2: ISA-18.2 Alarms & PID", "🚨");
             _tabScadaTags = new ZeroTabPage("Phase 3: Real-Time Tag Engine", "⚡");
             _tabScadaOverview = new ZeroTabPage("Phase 4: Plant Overview & HMI", "🎛️");
+            subTabsScada.AddTab(_tabScadaClosedLoop);
             subTabsScada.AddTab(_tabScadaPid);
             subTabsScada.AddTab(_tabScadaAlarms);
             subTabsScada.AddTab(_tabScadaTags);
@@ -450,6 +454,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeChartsDashboard();
             InitializeWarehouseWorkstation();
             InitializeLayoutShowcase(_tabLayout);
+            InitializeScadaClosedLoopProcess(_tabScadaClosedLoop);
             InitializeScadaProcessFlow(_tabScadaPid);
             InitializeScadaAlarmsAndPid(_tabScadaAlarms);
             InitializeScadaTagEngineMonitor(_tabScadaTags);
@@ -4832,8 +4837,762 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             parentTab.Controls.Add(mainContainer);
         }
 
+        private void InitializeScadaClosedLoopProcess(ZeroTabPage parentTab)
+        {
+            var colors = ZeroTheme.Colors;
+            parentTab.BackColor = colors.Background;
+
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = colors.Background,
+                Padding = new Padding(16)
+            };
+
+            // 1. Header Alert Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Height = 64,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "🏭 INTEGRATED CLOSED-LOOP INDUSTRIAL SCADA & AUTOMATION WORKCELL",
+                Message = "Continuous automated batch cycle: Chemical Inflow -> Thermal Reaction & Agitation -> Quench & Permissive Check -> Pneumatic Dosing -> Packaging Conveyor -> Shift Scoreboard & 60 FPS Telemetry."
+            };
+            var sp1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 2. Supervisory Command & Control Console Card
+            var cardConsole = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 110,
+                Title = "Supervisory Process Orchestration, Setpoints & Safety Permissives",
+                StepNumber = 1
+            };
+            var pnlConsole = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                WrapContents = false,
+                Padding = new Padding(8, 6, 8, 6)
+            };
+
+            var badgeStatus = new ZeroStatusBadge
+            {
+                Status = ZeroStatusType.Idle,
+                Text = "READY / IDLE",
+                Size = new Size(160, 36)
+            };
+
+            var btnStartBatch = new ZeroCommandButton
+            {
+                Action = CommandButtonAction.Start,
+                CommandText = "START BATCH",
+                PressAndHoldSeconds = 0.5f,
+                RequiresConfirmation = false,
+                Size = new Size(130, 44)
+            };
+
+            var btnHoldBatch = new ZeroCommandButton
+            {
+                Action = CommandButtonAction.Stop,
+                CommandText = "HOLD BATCH",
+                PressAndHoldSeconds = 0f,
+                RequiresConfirmation = false,
+                Size = new Size(120, 44)
+            };
+
+            var btnResetBatch = new ZeroCommandButton
+            {
+                Action = CommandButtonAction.Reset,
+                CommandText = "RESET BATCH",
+                PressAndHoldSeconds = 0f,
+                RequiresConfirmation = false,
+                Size = new Size(120, 44)
+            };
+
+            var btnEStop = new ZeroCommandButton
+            {
+                Action = CommandButtonAction.EmergencyStop,
+                CommandText = "EMERGENCY STOP",
+                PressAndHoldSeconds = 0f,
+                RequiresConfirmation = true,
+                Size = new Size(150, 44)
+            };
+
+            var spTargetTemp = new ZeroSetpointInput
+            {
+                TagLabel = "REACTION SP",
+                SetpointValue = 175.0,
+                MinValue = 50.0,
+                MaxValue = 240.0,
+                Unit = "°C",
+                Size = new Size(130, 44)
+            };
+
+            var spDoseVolume = new ZeroSetpointInput
+            {
+                TagLabel = "DOSE VOL",
+                SetpointValue = 250.0,
+                MinValue = 50.0,
+                MaxValue = 500.0,
+                Unit = "mL",
+                Size = new Size(130, 44)
+            };
+
+            var modeSelector = new ZeroModeSelector
+            {
+                SelectedMode = MachineControlMode.Auto,
+                Size = new Size(175, 44)
+            };
+
+            var safetyInterlock = new ZeroInterlockIndicator
+            {
+                TagLabel = "SAFETY PERMISSIVE",
+                Size = new Size(160, 44)
+            };
+            safetyInterlock.SetInterlockCondition("Emergency Stop Released", false);
+            safetyInterlock.SetInterlockCondition("Vessel Pressure Safe (< 80 PSI)", false);
+            safetyInterlock.SetInterlockCondition("Cooling Permissive Active", false);
+
+            pnlConsole.Controls.Add(badgeStatus);
+            pnlConsole.Controls.Add(btnStartBatch);
+            pnlConsole.Controls.Add(btnHoldBatch);
+            pnlConsole.Controls.Add(btnResetBatch);
+            pnlConsole.Controls.Add(btnEStop);
+            pnlConsole.Controls.Add(spTargetTemp);
+            pnlConsole.Controls.Add(spDoseVolume);
+            pnlConsole.Controls.Add(modeSelector);
+            pnlConsole.Controls.Add(safetyInterlock);
+            cardConsole.ContentPanel.Controls.Add(pnlConsole);
+
+            var sp2 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 3. Station 1 & 2: Chemical Inflow & Thermal Reactor Synoptic Card
+            var cardReactor = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 295,
+                Title = "Station 1 & 2: Chemical Inflow Dosing & Thermal Catalytic Reaction Synoptic",
+                StepNumber = 2
+            };
+            var pnlReactor = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
+
+            var tankSupply = new ZeroTank3D
+            {
+                Location = new Point(16, 14),
+                Size = new Size(135, 225),
+                TankName = "TK-101 SUPPLY",
+                FluidName = "Raw Precursor A",
+                CapacityLiters = 10000f,
+                CurrentLevelLiters = 8200f,
+                FluidColor = Color.FromArgb(6, 182, 212)
+            };
+
+            var pipeInlet1 = new ZeroPipeFlow
+            {
+                Location = new Point(151, 140),
+                Size = new Size(60, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Chemical,
+                IsFlowing = false
+            };
+
+            var pumpFeed = new ZeroIndustrialPump
+            {
+                Location = new Point(211, 110),
+                Size = new Size(84, 88),
+                TagLabel = "P-101 FEED",
+                SpeedRpm = 0,
+                PowerKw = 15.0,
+                State = ZeroPumpState.Stopped
+            };
+
+            var pipeInlet2 = new ZeroPipeFlow
+            {
+                Location = new Point(295, 140),
+                Size = new Size(50, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Chemical,
+                IsFlowing = false
+            };
+
+            var valveInflow = new ZeroIndustrialValve
+            {
+                Location = new Point(345, 120),
+                Size = new Size(56, 64),
+                TagLabel = "FCV-101",
+                State = ZeroValveState.Closed,
+                ValveType = ZeroValveType.ControlValve,
+                PositionPercent = 0.0
+            };
+
+            var pipeInlet3 = new ZeroPipeFlow
+            {
+                Location = new Point(401, 140),
+                Size = new Size(50, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Chemical,
+                IsFlowing = false
+            };
+
+            var tankReactor = new ZeroTank3D
+            {
+                Location = new Point(451, 14),
+                Size = new Size(140, 225),
+                TankName = "RX-201 REACTOR",
+                FluidName = "Polymer Batch",
+                CapacityLiters = 5000f,
+                CurrentLevelLiters = 600f,
+                FluidColor = Color.FromArgb(245, 158, 11)
+            };
+
+            var motorAgitator = new ZeroIndustrialMotor
+            {
+                Location = new Point(601, 14),
+                Size = new Size(115, 72),
+                TagLabel = "M-201 AGITATOR",
+                SpeedRpm = 0,
+                State = ZeroMotorState.Stopped
+            };
+
+            var heater = new ZeroIndustrialHeater
+            {
+                Location = new Point(601, 90),
+                Size = new Size(115, 72),
+                TagLabel = "HT-201 HEATER",
+                TemperatureC = 26.5,
+                SetpointC = 175.0,
+                State = ZeroHeaterState.Off
+            };
+
+            var fanCooling = new ZeroIndustrialFan
+            {
+                Location = new Point(601, 166),
+                Size = new Size(115, 72),
+                TagLabel = "FN-201 COOLING",
+                SpeedRpm = 0,
+                State = ZeroFanState.Stopped
+            };
+
+            var gaugePressure = new ZeroGauge
+            {
+                Location = new Point(726, 16),
+                Size = new Size(115, 115),
+                Title = "VESSEL PRESS",
+                Suffix = " PSI",
+                Value = 14.7f
+            };
+
+            var indicatorTemp = new ZeroDigitalIndicator
+            {
+                Location = new Point(726, 140),
+                Size = new Size(130, 95),
+                TagLabel = "REACTOR CORE",
+                Unit = "°C",
+                Value = 26.5,
+                Format = "0.0"
+            };
+
+            pnlReactor.Controls.Add(tankSupply);
+            pnlReactor.Controls.Add(pipeInlet1);
+            pnlReactor.Controls.Add(pumpFeed);
+            pnlReactor.Controls.Add(pipeInlet2);
+            pnlReactor.Controls.Add(valveInflow);
+            pnlReactor.Controls.Add(pipeInlet3);
+            pnlReactor.Controls.Add(tankReactor);
+            pnlReactor.Controls.Add(motorAgitator);
+            pnlReactor.Controls.Add(heater);
+            pnlReactor.Controls.Add(fanCooling);
+            pnlReactor.Controls.Add(gaugePressure);
+            pnlReactor.Controls.Add(indicatorTemp);
+            cardReactor.ContentPanel.Controls.Add(pnlReactor);
+
+            var sp3 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 4. Station 3 & 4: Pneumatic Dosing & Packaging Conveyor Card
+            var cardPackaging = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 245,
+                Title = "Station 3 & 4: Pneumatic Dosing Cylinder, Optical Sensor & Packaging Line",
+                StepNumber = 3
+            };
+            var pnlPackaging = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
+
+            var pipeDischarge = new ZeroPipeFlow
+            {
+                Location = new Point(16, 75),
+                Size = new Size(80, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Oil,
+                IsFlowing = false
+            };
+
+            var valveDischarge = new ZeroIndustrialValve
+            {
+                Location = new Point(96, 55),
+                Size = new Size(56, 64),
+                TagLabel = "XV-201",
+                State = ZeroValveState.Closed,
+                ValveType = ZeroValveType.TwoWaySolenoid
+            };
+
+            var cylDosing = new ZeroPneumaticCylinder
+            {
+                Location = new Point(160, 40),
+                Size = new Size(180, 80),
+                TagLabel = "CYL-301 DOSING",
+                ExtensionPercent = 0.0,
+                State = CylinderState.Retracted
+            };
+
+            var sensorArrival = new ZeroIndustrialSensor
+            {
+                Location = new Point(350, 42),
+                Size = new Size(75, 75),
+                TagLabel = "PE-401 BOTTLE",
+                SensorType = SensorType.Photoelectric,
+                State = SensorState.Inactive
+            };
+
+            var conveyorBelt = new ZeroConveyorBelt
+            {
+                Location = new Point(435, 38),
+                Size = new Size(220, 85),
+                TagLabel = "CV-401 PACK LINE",
+                SpeedMpm = 0,
+                State = ConveyorState.Stopped
+            };
+
+            var counterProduction = new ZeroProductionCounter
+            {
+                Location = new Point(665, 30),
+                Size = new Size(260, 100),
+                Title = "BATCH TARGET COMPLIANCE",
+                Plan = 500,
+                Actual = 0,
+                NG = 0
+            };
+
+            var machineCard = new ZeroMachineCard
+            {
+                Location = new Point(935, 18),
+                Size = new Size(230, 120),
+                MachineId = "LINE-B02",
+                MachineName = "Automated Filler & Packager",
+                Status = MachineStatus.Idle,
+                Mode = "AUTO",
+                OeePercent = 94.2,
+                SpeedRpm = 0
+            };
+
+            pnlPackaging.Controls.Add(pipeDischarge);
+            pnlPackaging.Controls.Add(valveDischarge);
+            pnlPackaging.Controls.Add(cylDosing);
+            pnlPackaging.Controls.Add(sensorArrival);
+            pnlPackaging.Controls.Add(conveyorBelt);
+            pnlPackaging.Controls.Add(counterProduction);
+            pnlPackaging.Controls.Add(machineCard);
+            cardPackaging.ContentPanel.Controls.Add(pnlPackaging);
+
+            var sp4 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 5. Station 5: Process Dynamics Telemetry Oscilloscope Card
+            var cardTrend = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 265,
+                Title = "Station 5: Closed-Loop Real-Time Telemetry Oscilloscope (60 FPS Multi-Channel RingBuffer)",
+                StepNumber = 4
+            };
+
+            var trendChart = new ZeroTrendChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Batch Dynamics Stream: Temp (°C) | Pressure (PSI) | Reactor Level (%) | Line Output (BPM)",
+                UpperLimit = 220f,
+                LowerLimit = 10f
+            };
+
+            trendChart.Channels.Clear();
+            trendChart.Channels.Add(new TrendChannel("Core Temp", "°C", Color.FromArgb(239, 68, 68), 0, 250));
+            trendChart.Channels.Add(new TrendChannel("Vessel Press", "PSI", Color.FromArgb(56, 189, 248), 0, 100));
+            trendChart.Channels.Add(new TrendChannel("Reactor Level", "%", Color.FromArgb(16, 185, 129), 0, 100));
+            trendChart.Channels.Add(new TrendChannel("Output Rate", "BPM", Color.FromArgb(168, 85, 247), 0, 60));
+            cardTrend.ContentPanel.Controls.Add(trendChart);
+
+            // Add all cards to main container
+            mainContainer.Controls.Add(cardTrend);
+            mainContainer.Controls.Add(sp4);
+            mainContainer.Controls.Add(cardPackaging);
+            mainContainer.Controls.Add(sp3);
+            mainContainer.Controls.Add(cardReactor);
+            mainContainer.Controls.Add(sp2);
+            mainContainer.Controls.Add(cardConsole);
+            mainContainer.Controls.Add(sp1);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            sp1.BringToFront();
+            cardConsole.BringToFront();
+            sp2.BringToFront();
+            cardReactor.BringToFront();
+            sp3.BringToFront();
+            cardPackaging.BringToFront();
+            sp4.BringToFront();
+            cardTrend.BringToFront();
+
+            parentTab.Controls.Add(mainContainer);
+
+            // 6. Closed-Loop State Machine Dynamics
+            int phase = 0; // 0=Idle, 1=Feeding, 2=HeatingMixing, 3=QuenchWait, 4=Dosing, 5=PackagingIndex
+            bool isRunning = false;
+            bool isEmergencyStop = false;
+            double currentTemp = 26.5;
+            double currentPress = 14.7;
+            float supplyLevel = 8200f;
+            float reactorLevel = 600f;
+            const float targetReactorLevel = 3200f;
+            int phaseTicks = 0;
+            double cylinderPos = 0.0;
+            int cylinderDir = 1;
+            int dwellCounter = 0;
+
+            btnStartBatch.CommandExecuted += (s, e) =>
+            {
+                if (isEmergencyStop)
+                {
+                    ZeroToast.Error(this, "Cannot start: EMERGENCY STOP is active! Please reset first.");
+                    return;
+                }
+                isRunning = true;
+                safetyInterlock.SetInterlockCondition("Emergency Stop Released", false);
+                if (phase == 0)
+                {
+                    phase = 1;
+                    phaseTicks = 0;
+                }
+                ZeroToast.Success(this, "Batch execution engaged! Feeding raw material into Reactor RX-201.");
+            };
+
+            btnHoldBatch.CommandExecuted += (s, e) =>
+            {
+                isRunning = false;
+                badgeStatus.Status = ZeroStatusType.Idle;
+                badgeStatus.Text = "BATCH ON HOLD";
+                pumpFeed.SpeedRpm = 0;
+                pumpFeed.State = ZeroPumpState.Stopped;
+                valveInflow.State = ZeroValveState.Closed;
+                pipeInlet1.IsFlowing = false;
+                pipeInlet2.IsFlowing = false;
+                pipeInlet3.IsFlowing = false;
+                pipeDischarge.IsFlowing = false;
+                motorAgitator.SpeedRpm = 0;
+                motorAgitator.State = ZeroMotorState.Stopped;
+                heater.State = ZeroHeaterState.Off;
+                fanCooling.SpeedRpm = 0;
+                fanCooling.State = ZeroFanState.Stopped;
+                conveyorBelt.SpeedMpm = 0;
+                conveyorBelt.State = ConveyorState.Stopped;
+                machineCard.Status = MachineStatus.Idle;
+                ZeroToast.Warning(this, "Batch execution paused by operator.");
+            };
+
+            btnResetBatch.CommandExecuted += (s, e) =>
+            {
+                isRunning = false;
+                isEmergencyStop = false;
+                phase = 0;
+                phaseTicks = 0;
+                currentTemp = 26.5;
+                currentPress = 14.7;
+                supplyLevel = 8200f;
+                reactorLevel = 600f;
+                cylinderPos = 0.0;
+                cylinderDir = 1;
+                dwellCounter = 0;
+
+                tankSupply.CurrentLevelLiters = supplyLevel;
+                tankReactor.CurrentLevelLiters = reactorLevel;
+                tankReactor.FluidColor = Color.FromArgb(245, 158, 11);
+                indicatorTemp.Value = currentTemp;
+                heater.TemperatureC = currentTemp;
+                heater.State = ZeroHeaterState.Off;
+                pumpFeed.State = ZeroPumpState.Stopped;
+                pumpFeed.SpeedRpm = 0;
+                valveInflow.State = ZeroValveState.Closed;
+                pipeInlet1.IsFlowing = false;
+                pipeInlet2.IsFlowing = false;
+                pipeInlet3.IsFlowing = false;
+                pipeDischarge.IsFlowing = false;
+                valveDischarge.State = ZeroValveState.Closed;
+                motorAgitator.State = ZeroMotorState.Stopped;
+                motorAgitator.SpeedRpm = 0;
+                fanCooling.State = ZeroFanState.Stopped;
+                fanCooling.SpeedRpm = 0;
+                gaugePressure.Value = (float)currentPress;
+                cylDosing.ExtensionPercent = 0.0;
+                cylDosing.State = CylinderState.Retracted;
+                sensorArrival.State = SensorState.Inactive;
+                conveyorBelt.SpeedMpm = 0;
+                conveyorBelt.State = ConveyorState.Stopped;
+                badgeStatus.Status = ZeroStatusType.Idle;
+                badgeStatus.Text = "READY / IDLE";
+                safetyInterlock.SetInterlockCondition("Emergency Stop Released", false);
+                machineCard.Status = MachineStatus.Idle;
+                ZeroToast.Info(this, "Batch state reset to initial idle parameters.");
+            };
+
+            btnEStop.CommandExecuted += (s, e) =>
+            {
+                isRunning = false;
+                isEmergencyStop = true;
+                safetyInterlock.SetInterlockCondition("Emergency Stop Released", true);
+                badgeStatus.Status = ZeroStatusType.Alarm;
+                badgeStatus.Text = "EMERGENCY STOPPED";
+                pumpFeed.State = ZeroPumpState.Trip;
+                pumpFeed.SpeedRpm = 0;
+                valveInflow.State = ZeroValveState.Closed;
+                pipeInlet1.IsFlowing = false;
+                pipeInlet2.IsFlowing = false;
+                pipeInlet3.IsFlowing = false;
+                pipeDischarge.IsFlowing = false;
+                valveDischarge.State = ZeroValveState.Closed;
+                motorAgitator.State = ZeroMotorState.Stopped;
+                motorAgitator.SpeedRpm = 0;
+                heater.State = ZeroHeaterState.Off;
+                fanCooling.State = ZeroFanState.Stopped;
+                fanCooling.SpeedRpm = 0;
+                conveyorBelt.State = ConveyorState.Stopped;
+                conveyorBelt.SpeedMpm = 0;
+                cylDosing.State = CylinderState.Fault;
+                machineCard.Status = MachineStatus.Alarm;
+                ZeroToast.Error(this, "EMERGENCY STOP ACTIVATED: All actuators, pumps, heaters, and conveyors shut down!");
+            };
+
+            // 7. 20 Hz (50 ms) Real-Time Simulation Loop
+            _closedLoopTimer = new System.Windows.Forms.Timer { Interval = 50 };
+            _closedLoopTimer.Tick += (s, e) =>
+            {
+                if (isEmergencyStop)
+                {
+                    trendChart.AddPoint(0, (float)currentTemp);
+                    trendChart.AddPoint(1, (float)currentPress);
+                    trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
+                    trendChart.AddPoint(3, 0f);
+                    return;
+                }
+
+                if (!isRunning)
+                {
+                    badgeStatus.Status = ZeroStatusType.Idle;
+                    if (badgeStatus.Text != "BATCH ON HOLD") badgeStatus.Text = "READY / IDLE";
+                    currentPress += (14.7 - currentPress) * 0.05;
+                    currentTemp += (26.5 - currentTemp) * 0.02;
+                    gaugePressure.Value = (float)currentPress;
+                    indicatorTemp.Value = currentTemp;
+                    heater.TemperatureC = currentTemp;
+                    trendChart.AddPoint(0, (float)currentTemp);
+                    trendChart.AddPoint(1, (float)currentPress);
+                    trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
+                    trendChart.AddPoint(3, 0f);
+                    return;
+                }
+
+                machineCard.Status = MachineStatus.Running;
+
+                switch (phase)
+                {
+                    case 1: // Chemical Inflow & Dosing
+                        badgeStatus.Status = ZeroStatusType.Processing;
+                        badgeStatus.Text = "STAGE 1: FEEDING MATERIAL";
+                        pumpFeed.State = ZeroPumpState.Running;
+                        pumpFeed.SpeedRpm = 2950;
+                        valveInflow.State = ZeroValveState.Open;
+                        valveInflow.PositionPercent = 100;
+                        pipeInlet1.IsFlowing = true;
+                        pipeInlet2.IsFlowing = true;
+                        pipeInlet3.IsFlowing = true;
+
+                        supplyLevel = Math.Max(500f, supplyLevel - 35f);
+                        reactorLevel += 45f;
+                        tankSupply.CurrentLevelLiters = supplyLevel;
+                        tankReactor.CurrentLevelLiters = reactorLevel;
+
+                        if (reactorLevel >= targetReactorLevel)
+                        {
+                            pumpFeed.State = ZeroPumpState.Stopped;
+                            pumpFeed.SpeedRpm = 0;
+                            valveInflow.State = ZeroValveState.Closed;
+                            valveInflow.PositionPercent = 0;
+                            pipeInlet1.IsFlowing = false;
+                            pipeInlet2.IsFlowing = false;
+                            pipeInlet3.IsFlowing = false;
+                            phase = 2;
+                            phaseTicks = 0;
+                        }
+                        break;
+
+                    case 2: // Heating & Agitation
+                        badgeStatus.Status = ZeroStatusType.Running;
+                        badgeStatus.Text = "STAGE 2: HEATING & AGITATION";
+                        motorAgitator.State = ZeroMotorState.Running;
+                        motorAgitator.SpeedRpm = 1450;
+                        heater.State = ZeroHeaterState.Heating;
+                        heater.SetpointC = spTargetTemp.SetpointValue;
+
+                        double targetTemp = spTargetTemp.SetpointValue;
+                        currentTemp += 2.5;
+                        currentPress = 14.7 + (currentTemp - 25.0) * 0.32;
+                        heater.TemperatureC = currentTemp;
+                        indicatorTemp.Value = currentTemp;
+                        gaugePressure.Value = (float)currentPress;
+
+                        // Reaction color shift towards emerald
+                        double progress = Math.Max(0.0, Math.Min(1.0, (currentTemp - 26.5) / (targetTemp - 26.5)));
+                        int cr = (int)(245 - (245 - 16) * progress);
+                        int cg = (int)(158 + (185 - 158) * progress);
+                        int cb = (int)(11 + (129 - 11) * progress);
+                        tankReactor.FluidColor = Color.FromArgb(cr, cg, cb);
+
+                        if (currentTemp >= targetTemp)
+                        {
+                            heater.State = ZeroHeaterState.Off;
+                            phase = 3;
+                            phaseTicks = 0;
+                        }
+                        break;
+
+                    case 3: // Reaction Quench & Permissive Check
+                        badgeStatus.Status = ZeroStatusType.Running;
+                        badgeStatus.Text = "STAGE 3: QUENCH & PERMISSIVE CHECK";
+                        fanCooling.State = ZeroFanState.Running;
+                        fanCooling.SpeedRpm = 1600;
+                        phaseTicks++;
+
+                        // Vessel pressure regulation
+                        currentPress += (48.0 - currentPress) * 0.1;
+                        gaugePressure.Value = (float)currentPress;
+
+                        if (phaseTicks >= 30) // ~1.5s quench
+                        {
+                            fanCooling.State = ZeroFanState.Stopped;
+                            fanCooling.SpeedRpm = 0;
+                            motorAgitator.State = ZeroMotorState.Stopped;
+                            motorAgitator.SpeedRpm = 0;
+                            phase = 4;
+                            phaseTicks = 0;
+                            cylinderPos = 0.0;
+                            cylinderDir = 1;
+                            dwellCounter = 0;
+                        }
+                        break;
+
+                    case 4: // Pneumatic Dosing
+                        badgeStatus.Status = ZeroStatusType.Processing;
+                        badgeStatus.Text = "STAGE 4: PNEUMATIC DOSING";
+                        pipeDischarge.IsFlowing = true;
+                        valveDischarge.State = ZeroValveState.Open;
+                        sensorArrival.State = SensorState.Active;
+
+                        cylinderPos += 20.0 * cylinderDir;
+                        if (cylinderPos >= 100.0)
+                        {
+                            cylinderPos = 100.0;
+                            dwellCounter++;
+                            if (dwellCounter > 4) // held for 200ms
+                            {
+                                cylinderDir = -1; // retract
+                            }
+                        }
+
+                        cylDosing.ExtensionPercent = cylinderPos;
+                        cylDosing.State = cylinderPos > 0.0 ? CylinderState.Moving : CylinderState.Retracted;
+
+                        if (cylinderPos <= 0.0 && cylinderDir == -1)
+                        {
+                            cylDosing.ExtensionPercent = 0.0;
+                            cylDosing.State = CylinderState.Retracted;
+                            pipeDischarge.IsFlowing = false;
+                            valveDischarge.State = ZeroValveState.Closed;
+                            sensorArrival.State = SensorState.Inactive;
+
+                            reactorLevel = Math.Max(0f, reactorLevel - 280f);
+                            tankReactor.CurrentLevelLiters = reactorLevel;
+
+                            counterProduction.Actual++;
+                            if (counterProduction.Actual % 12 == 0) counterProduction.NG++;
+                            machineCard.PartCount = counterProduction.Actual;
+
+                            phase = 5;
+                            phaseTicks = 0;
+                        }
+                        break;
+
+                    case 5: // Conveyor Indexing & Packaging
+                        badgeStatus.Status = ZeroStatusType.Running;
+                        badgeStatus.Text = "STAGE 5: BOTTLING & PACKAGING";
+                        conveyorBelt.State = ConveyorState.Running;
+                        conveyorBelt.SpeedMpm = 28.0;
+                        machineCard.SpeedRpm = 28.0 * 60.0;
+                        phaseTicks++;
+
+                        if (phaseTicks >= 20) // 1.0s indexing
+                        {
+                            conveyorBelt.State = ConveyorState.Stopped;
+                            conveyorBelt.SpeedMpm = 0;
+                            machineCard.SpeedRpm = 0;
+
+                            if (reactorLevel > 800f)
+                            {
+                                // Next dose in current batch
+                                phase = 4;
+                                phaseTicks = 0;
+                                cylinderPos = 0.0;
+                                cylinderDir = 1;
+                                dwellCounter = 0;
+                            }
+                            else
+                            {
+                                // Batch finished!
+                                if (modeSelector.SelectedMode == MachineControlMode.Auto)
+                                {
+                                    phase = 1;
+                                    phaseTicks = 0;
+                                    currentTemp = 26.5;
+                                    currentPress = 14.7;
+                                    tankReactor.FluidColor = Color.FromArgb(245, 158, 11);
+                                    if (supplyLevel < 2000f) supplyLevel = 8500f;
+                                    ZeroToast.Success(this, "Batch completed! Auto-mode engaged: Starting next cycle.");
+                                }
+                                else
+                                {
+                                    isRunning = false;
+                                    phase = 0;
+                                    badgeStatus.Status = ZeroStatusType.Idle;
+                                    badgeStatus.Text = "BATCH COMPLETE / IDLE";
+                                    machineCard.Status = MachineStatus.Idle;
+                                    ZeroToast.Info(this, "Batch completed! System returned to Idle awaiting operator command.");
+                                }
+                            }
+                        }
+                        break;
+                }
+
+                // Live Telemetry stream to TrendChart (60 FPS circular buffer)
+                trendChart.AddPoint(0, (float)currentTemp);
+                trendChart.AddPoint(1, (float)currentPress);
+                trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
+                float outRate = conveyorBelt.SpeedMpm > 0 ? 42f : (cylDosing.ExtensionPercent > 0 ? 28f : 0f);
+                trendChart.AddPoint(3, outRate);
+            };
+            _closedLoopTimer.Start();
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            _closedLoopTimer?.Stop();
             SimulatedPlcDriver.Stop();
             base.OnFormClosing(e);
         }
