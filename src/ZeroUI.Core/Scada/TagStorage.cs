@@ -103,6 +103,16 @@ namespace ZeroUI.Core.Scada
         public int DrainDirtyTags(int[] destination)
         {
             if (destination == null || destination.Length == 0) return 0;
+            return DrainDirtyTags(destination.AsSpan());
+        }
+
+        /// <summary>
+        /// Atomically extracts all dirty tag IDs into the destination Span and clears dirty flags.
+        /// Zero heap allocation on hot cycle flushes.
+        /// </summary>
+        public int DrainDirtyTags(Span<int> destination)
+        {
+            if (destination.IsEmpty) return 0;
 
             int count = 0;
             int wordsCount = _dirtyMask.Length;
