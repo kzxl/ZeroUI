@@ -28,6 +28,9 @@ namespace ZeroUI.Core.Communication
         private readonly ConcurrentDictionary<string, AdapterTagDefinition> _tags =
             new ConcurrentDictionary<string, AdapterTagDefinition>(StringComparer.OrdinalIgnoreCase);
 
+        private IReadOnlyList<S7ReadBlock>? _compiledBlocks;
+        private readonly object _plannerLock = new object();
+
         private Socket? _socket;
         private AdapterConnectionState _state = AdapterConnectionState.Disconnected;
         private TimeSpan _latency = TimeSpan.Zero;
@@ -37,6 +40,7 @@ namespace ZeroUI.Core.Communication
         public string Endpoint => $"{_host}:{_port} (Rack {_rack}, Slot {_slot})";
         public AdapterConnectionState State => _state;
         public TimeSpan Latency => _latency;
+        public IReadOnlyList<S7ReadBlock> CompiledBlocks => GetOrCompileBlocks();
 
         public event Action<IProtocolAdapter, AdapterConnectionState>? StateChanged;
 
@@ -60,6 +64,10 @@ namespace ZeroUI.Core.Communication
         {
             if (tagDef == null) throw new ArgumentNullException(nameof(tagDef));
             _tags[tagDef.TagPath] = tagDef;
+            lock (_plannerLock)
+            {
+                _compiledBlocks = null;
+            }
         }
 
         public IReadOnlyCollection<AdapterTagDefinition> GetRegisteredTags()
@@ -124,23 +132,41 @@ namespace ZeroUI.Core.Communication
                 return;
             }
 
+            var blocks = GetOrCompileBlocks();
+            if (blocks.Count == 0) return;
+
             var sw = Stopwatch.StartNew();
 
-            foreach (var kvp in _tags)
+            foreach (var block in blocks)
             {
-                var tag = kvp.Value;
                 try
                 {
-                    await PollTagAsync(tag, cancellationToken).ConfigureAwait(false);
+                    await PollBlockAsync(block, cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
-                    ZeroTagEngine.SetTagValue(tag.TagPath, null, ScadaQuality.Bad);
+                    for (int i = 0; i < block.TagMappings.Count; i++)
+                    {
+                        ZeroTagEngine.SetTagValue(block.TagMappings[i].TagDefinition.TagPath, null, ScadaQuality.Bad);
+                    }
                 }
             }
 
             sw.Stop();
             _latency = sw.Elapsed;
+        }
+
+        private IReadOnlyList<S7ReadBlock> GetOrCompileBlocks()
+        {
+            var blocks = _compiledBlocks;
+            if (blocks != null) return blocks;
+
+            lock (_plannerLock)
+            {
+                if (_compiledBlocks != null) return _compiledBlocks;
+                _compiledBlocks = S7AddressPlanner.PlanReadBlocks(_tags.Values);
+                return _compiledBlocks;
+            }
         }
 
         public async Task<bool> WriteTagAsync(string tagPath, object value, CancellationToken cancellationToken = default)
@@ -169,36 +195,41 @@ namespace ZeroUI.Core.Communication
             return false;
         }
 
-        private async Task PollTagAsync(AdapterTagDefinition tag, CancellationToken ct)
+        private async Task PollBlockAsync(S7ReadBlock block, CancellationToken ct)
         {
-            if (!TryParseS7Address(tag.FieldAddress, out int dbNumber, out int byteOffset, out int bitOffset))
-                return;
-
-            int byteLength = tag.DataType switch
-            {
-                TagDataType.Float32 => 4,
-                TagDataType.Int32 => 4,
-                TagDataType.UInt32 => 4,
-                TagDataType.Double64 => 8,
-                TagDataType.Int16 => 2,
-                TagDataType.UInt16 => 2,
-                _ => 1
-            };
-
-            var readRequest = BuildS7ReadRequest((ushort)dbNumber, byteOffset, byteLength);
+            var readRequest = BuildS7ReadRequest(block.DbNumber, block.StartByteOffset, block.ByteCount);
             var response = await SendReceiveAsync(readRequest, ct).ConfigureAwait(false);
 
             if (response != null && response.Length >= 25)
             {
                 // S7 Read Var Data starts at index 25
                 int dataIndex = 25;
-                if (response.Length >= dataIndex + byteLength)
-                {
-                    var dataSlice = new ReadOnlySpan<byte>(response, dataIndex, byteLength);
-                    double parsedVal = DecodeS7Data(dataSlice, tag.DataType, bitOffset);
-                    double scaledVal = parsedVal * tag.Scale + tag.Offset;
+                int payloadLen = response.Length - dataIndex;
 
-                    ZeroTagEngine.SetTagValue(tag.TagPath, scaledVal, ScadaQuality.Good);
+                for (int i = 0; i < block.TagMappings.Count; i++)
+                {
+                    var mapping = block.TagMappings[i];
+                    var tag = mapping.TagDefinition;
+
+                    if (mapping.RelativeByteOffset + mapping.ByteLength <= payloadLen)
+                    {
+                        var dataSlice = new ReadOnlySpan<byte>(response, dataIndex + mapping.RelativeByteOffset, mapping.ByteLength);
+                        double parsedVal = DecodeS7Data(dataSlice, tag.DataType, mapping.BitOffset);
+                        double scaledVal = (parsedVal * tag.Scale) + tag.Offset;
+
+                        ZeroTagEngine.SetTagValue(tag.TagPath, scaledVal, ScadaQuality.Good);
+                    }
+                    else
+                    {
+                        ZeroTagEngine.SetTagValue(tag.TagPath, null, ScadaQuality.Bad);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < block.TagMappings.Count; i++)
+                {
+                    ZeroTagEngine.SetTagValue(block.TagMappings[i].TagDefinition.TagPath, null, ScadaQuality.Bad);
                 }
             }
         }
@@ -403,25 +434,7 @@ namespace ZeroUI.Core.Communication
 
         private static bool TryParseS7Address(string address, out int dbNumber, out int byteOffset, out int bitOffset)
         {
-            dbNumber = 0;
-            byteOffset = 0;
-            bitOffset = 0;
-
-            if (string.IsNullOrWhiteSpace(address)) return false;
-
-            // Pattern: DB<num>.DB<type><offset>[.<bit>]
-            // Examples: DB1.DBD0, DB5.DBW10, DB2.DBX4.0
-            var match = Regex.Match(address.Trim(), @"^DB(\d+)\.DB[A-Z]+(\d+)(?:\.(\d+))?$", RegexOptions.IgnoreCase);
-            if (!match.Success) return false;
-
-            dbNumber = int.Parse(match.Groups[1].Value);
-            byteOffset = int.Parse(match.Groups[2].Value);
-            if (match.Groups[3].Success)
-            {
-                bitOffset = int.Parse(match.Groups[3].Value);
-            }
-
-            return true;
+            return S7AddressPlanner.TryParseAddress(address, out dbNumber, out byteOffset, out bitOffset);
         }
 
         private async Task<byte[]?> SendReceiveAsync(byte[] request, CancellationToken ct)

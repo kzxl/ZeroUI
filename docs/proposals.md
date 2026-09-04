@@ -156,13 +156,13 @@ gantt
     RenderCommandBuffer & ZeroBufferPool            :done,    p1_4, after p1_3, 4d
     section Phase 2: Communication
     ModbusAddressPlanner Register Coalescing        :done,    p2_1, after p1_4, 3d
-    Siemens S7 DB Block Read Optimizer              :active,  p2_2, after p2_1, 4d
-    Protocol Watchdog & Automatic Backoff Reconnect :         p2_3, after p2_2, 3d
+    Siemens S7 DB Block Read Optimizer              :done,    p2_2, after p2_1, 4d
+    Protocol Watchdog & Automatic Backoff Reconnect :done,    p2_3, after p2_2, 3d
     section Phase 3: Rendering
     ZeroScene & SceneNode Hierarchy (Plant Mimic)   :done,    p3_1, after p2_3, 4d
     GridSpatialIndex Viewport Culling Engine        :done,    p3_2, after p3_1, 3d
     Centralized ZeroAnimationClock (No Timers)      :done,    p3_3, after p3_2, 3d
-    Direct2D 1.1 Hardware Accelerator Fallback      :         p3_4, after p3_3, 5d
+    Direct2D 1.1 Hardware Accelerator Fallback      :active,  p3_4, after p3_3, 5d
     section Phase 4: Benchmark Rigor
     Unified Categories A to F CLI Suite             :done,    p4_1, after p3_4, 3d
     P50/P95/P99 Percentiles & GC Profiling Engine   :done,    p4_2, after p4_1, 2d
