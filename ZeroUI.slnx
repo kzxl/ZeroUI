@@ -2,6 +2,8 @@
   <Folder Name="/src/">
     <Project Path="src/ZeroUI.Core/ZeroUI.Core.csproj" />
     <Project Path="src/ZeroUI.Samples.BenchmarkDemo/ZeroUI.Samples.BenchmarkDemo.csproj" />
+    <Project Path="src/ZeroUI.Samples.WpfDemo/ZeroUI.Samples.WpfDemo.csproj" />
     <Project Path="src/ZeroUI.WinForms/ZeroUI.WinForms.csproj" />
+    <Project Path="src/ZeroUI.Wpf/ZeroUI.Wpf.csproj" />
   </Folder>
 </Solution>

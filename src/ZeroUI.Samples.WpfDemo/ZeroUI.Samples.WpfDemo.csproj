@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ZeroUI.Samples.WpfDemo</RootNamespace>
+    <AssemblyName>ZeroUI.Samples.WpfDemo</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZeroUI.Core\ZeroUI.Core.csproj" />
+    <ProjectReference Include="..\ZeroUI.Wpf\ZeroUI.Wpf.csproj" />
+  </ItemGroup>
+</Project>

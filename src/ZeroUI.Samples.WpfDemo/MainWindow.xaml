@@ -1,0 +1,413 @@
+<Window x:Class="ZeroUI.Samples.WpfDemo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:grid="clr-namespace:ZeroUI.Wpf.DataGrid;assembly=ZeroUI.Wpf"
+        xmlns:chart="clr-namespace:ZeroUI.Wpf.Charts;assembly=ZeroUI.Wpf"
+        xmlns:ind="clr-namespace:ZeroUI.Wpf.Industrial;assembly=ZeroUI.Wpf"
+        xmlns:wh="clr-namespace:ZeroUI.Wpf.Warehouse;assembly=ZeroUI.Wpf"
+        xmlns:edit="clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf"
+        Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="860" Width="1340"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI">
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="54" /> <!-- Master Top Header -->
+            <RowDefinition Height="*" />  <!-- Master 6-Cluster Tab Workspace -->
+        </Grid.RowDefinitions>
+
+        <!-- Top Header Bar -->
+        <Border x:Name="HeaderBar" Grid.Row="0" BorderThickness="0,0,0,1" Padding="20,0,20,0">
+            <DockPanel LastChildFill="True">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" DockPanel.Dock="Left">
+                    <TextBlock Text="⚡ ZeroUI" FontSize="19" FontWeight="Bold" Foreground="#818CF8" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <TextBlock Text="Enterprise High-Performance Zero-Alloc WPF Control Suite" FontSize="12.5" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="🎨 Skin:" VerticalAlignment="Center" Foreground="#94A3B8" Margin="0,0,6,0" FontSize="12.5" FontWeight="SemiBold" />
+                    <ComboBox x:Name="ComboSkinSelector" Width="175" Height="30" Margin="0,0,10,0" SelectionChanged="ComboSkinSelector_SelectionChanged" />
+                    <Button x:Name="BtnAbout" Click="BtnAbout_Click" Content="ℹ️ Architecture" Height="30" Padding="12,0,12,0" Cursor="Hand" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Master Tabs: 6 Functional Clusters matching WinForms Demo -->
+        <TabControl x:Name="MainTabs" Grid.Row="1" BorderThickness="0" Margin="0">
+            
+            <!-- CLUSTER 1: BIG DATA BENCHMARK & VIRTUAL GRID -->
+            <TabItem Header="⚡ 1. Benchmark (10M Rows)">
+                <Grid x:Name="GridWorkspace">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" /> <!-- Telemetry HUD -->
+                        <RowDefinition Height="Auto" /> <!-- Action Toolbar -->
+                        <RowDefinition Height="Auto" /> <!-- Search Bar -->
+                        <RowDefinition Height="*" />    <!-- ZeroGridControl -->
+                        <RowDefinition Height="Auto" /> <!-- Pagination -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Telemetry HUD Banner -->
+                    <Border x:Name="HudBorder" Grid.Row="0" Margin="14,10,14,6" Padding="18,10,18,10" CornerRadius="8" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="VIEWPORT COMPUTE RATE" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtFps" Text="-- FPS" FontSize="19" FontWeight="Bold" Foreground="#818CF8" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="SCROLL LATENCY" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtLatency" Text="0.032 ms" FontSize="19" FontWeight="Bold" Foreground="#A6E3A1" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="GC GEN 0 / 1 / 2 (DELTA)" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtGc" Text="0 / 0 / 0" FontSize="19" FontWeight="Bold" Foreground="#F9E2AF" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Text="WORKING SET RAM" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtRam" Text="-- MB" FontSize="19" FontWeight="Bold" Foreground="#94A3B8" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="ACTIVE DATA CAPACITY" FontSize="10" FontWeight="SemiBold" Foreground="#64748B" />
+                                <TextBlock x:Name="TxtCapacity" Text="0 Rows" FontSize="19" FontWeight="Bold" Foreground="#A78BFA" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Action Toolbar -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="14,4,14,6">
+                        <Button x:Name="BtnLoad100K" Click="BtnLoad100K_Click" Content="⚡ Load 100K Rows" Height="32" Padding="14,0,14,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnLoad1M" Click="BtnLoad1M_Click" Content="🔥 Load 1,000,000 Rows" Height="32" Padding="14,0,14,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnLoad10M" Click="BtnLoad10M_Click" Content="🚀 10,000,000 Rows (Procedural)" Height="32" Padding="14,0,14,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnSortPrice" Click="BtnSortPrice_Click" Content="📊 Sort UnitPrice" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnSortQuantity" Click="BtnSortQuantity_Click" Content="📦 Sort Quantity" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnClearGrid" Click="BtnClearGrid_Click" Content="🗑️ Clear Grid" Height="32" Padding="12,0,12,0" Cursor="Hand" />
+                    </StackPanel>
+
+                    <!-- Search Bar -->
+                    <grid:ZeroGridSearchBar x:Name="GridSearch" Grid.Row="2" Margin="14,0,14,0" />
+
+                    <!-- ZeroGridControl -->
+                    <Border Grid.Row="3" Margin="14,0,14,0" BorderThickness="1" BorderBrush="#2E344E">
+                        <grid:ZeroGridControl x:Name="VirtualGrid" />
+                    </Border>
+
+                    <!-- Pagination -->
+                    <grid:ZeroGridPagination x:Name="GridPager" Grid.Row="4" Margin="14,0,14,10" />
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 2: MES SMART FACTORY -->
+            <TabItem Header="🏭 2. MES Smart Factory">
+                <Grid Margin="18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="MES Workshop Throughput &amp; Quality Execution" FontSize="17" FontWeight="Bold" Foreground="#F1F5F9" />
+                            <TextBlock Text="Real-time multi-line matrix heatmap with thermal load gradients and station monitoring" FontSize="12.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- 2D Matrix Heatmap -->
+                    <Grid Grid.Row="1" Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+
+                        <ind:ZeroHeatmap x:Name="MesHeatmap" Grid.Column="0" Margin="0,0,12,0" />
+
+                        <!-- Factory KPI Summary Cards -->
+                        <StackPanel Grid.Column="1">
+                            <ind:ZeroCard HeaderText="Line Overall Equipment Effectiveness (OEE)" SubtitleText="Daily computed performance ratio" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="92.8%" FontSize="28" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,4,0,8" />
+                                    <TextBlock Text="Availability: 96.2% | Quality: 99.1% | Speed: 97.4%" FontSize="11.5" Foreground="#94A3B8" />
+                                </StackPanel>
+                            </ind:ZeroCard>
+
+                            <ind:ZeroCard HeaderText="Active Production Orders" SubtitleText="Shift 1 Work-In-Progress">
+                                <StackPanel>
+                                    <TextBlock Text="48 Batches / 12 Lines" FontSize="20" FontWeight="Bold" Foreground="#818CF8" Margin="0,4,0,8" />
+                                    <edit:ZeroProgressBar Value="72" Margin="0,0,0,6" />
+                                    <TextBlock Text="Target quota: 15,000 units (Current: 10,800 units)" FontSize="11.5" Foreground="#94A3B8" />
+                                </StackPanel>
+                            </ind:ZeroCard>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Station Badges Row -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Running" StatusText="SMT Line 1: 120 UPH" />
+                        <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Running" StatusText="SMT Line 2: 115 UPH" />
+                        <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Standby" StatusText="SMT Line 3: Feed Refill" />
+                        <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Fault" StatusText="Line 4: Solder Stencil Alert" />
+                        <ind:ZeroStatusBadge Status="Running" StatusText="Final Assembly: 88 UPH" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 3: WAREHOUSE LOGISTICS -->
+            <TabItem Header="📦 3. Warehouse Logistics">
+                <Grid Margin="18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="Material Allocation &amp; Warehouse Inventory Stock" FontSize="17" FontWeight="Bold" Foreground="#F1F5F9" />
+                            <TextBlock Text="Real-time multi-bin allocation breakdown (Available, Waiting, Reserved) with status tags" FontSize="12.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- Uniform Grid of 6 Inventory Cards -->
+                    <UniformGrid Grid.Row="1" Columns="3" Rows="2">
+                        <wh:ZeroInventoryCard Margin="6" ProductCode="RES-0402-10K" ProductName="SMD Resistor 10k 0402 1%" LocationBin="BIN-A1-04" AvailableQuantity="185000" WaitingQuantity="45000" ReservedQuantity="20000" UnitOfMeasure="pcs" />
+                        <wh:ZeroInventoryCard Margin="6" ProductCode="CAP-0603-100N" ProductName="Ceramic Capacitor 100nF 50V" LocationBin="BIN-A1-12" AvailableQuantity="120000" WaitingQuantity="30000" ReservedQuantity="30000" UnitOfMeasure="pcs" />
+                        <wh:ZeroInventoryCard Margin="6" ProductCode="IC-STM32F407" ProductName="MCU ARM Cortex-M4 168MHz" LocationBin="BIN-B2-01" AvailableQuantity="1200" WaitingQuantity="800" ReservedQuantity="2500" UnitOfMeasure="pcs" />
+                        <wh:ZeroInventoryCard Margin="6" ProductCode="CONN-RJ45-LED" ProductName="Ethernet Jack MagJack 1G" LocationBin="BIN-C3-08" AvailableQuantity="9500" WaitingQuantity="1500" ReservedQuantity="1000" UnitOfMeasure="pcs" />
+                        <wh:ZeroInventoryCard Margin="6" ProductCode="DIODE-SS34-SMA" ProductName="Schottky Diode 40V 3A" LocationBin="BIN-D4-15" AvailableQuantity="62000" WaitingQuantity="13000" ReservedQuantity="10000" UnitOfMeasure="pcs" />
+                        <wh:ZeroInventoryCard Margin="6" ProductCode="PWR-LM2596S-5" ProductName="Step-Down Buck Regulator 5V" LocationBin="BIN-E5-02" AvailableQuantity="800" WaitingQuantity="600" ReservedQuantity="5000" UnitOfMeasure="pcs" />
+                    </UniformGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 4: SCADA & AUTOMATION -->
+            <TabItem Header="⚙️ 4. SCADA &amp; Automation">
+                <Grid Margin="18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="Real-Time SCADA Telemetry &amp; Line Automation" FontSize="17" FontWeight="Bold" Foreground="#F1F5F9" />
+                            <TextBlock Text="60 FPS direct-vector instruments: Speedometer gauge, linear tanks, Andon tower, and takt timers." FontSize="12.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="BtnToggleSim" Click="BtnToggleSim_Click" Content="⏸️ Pause Sim" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="0.9*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="0.7*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Instrument 1: Radial Speedometer -->
+                        <ind:ZeroCard Grid.Column="0" HeaderText="Motor RPM Telemetry" SubtitleText="Spindle vector tachometer" Margin="0,0,10,0">
+                            <ind:ZeroGauge x:Name="SpindleGauge" Margin="0,8,0,0" Minimum="0" Maximum="3000" Value="1840" Unit="RPM" WarningThreshold="2200" DangerThreshold="2700" />
+                        </ind:ZeroCard>
+
+                        <!-- Instrument 2: Linear Gauges -->
+                        <ind:ZeroCard Grid.Column="1" HeaderText="Hydraulic Levels" SubtitleText="Tank pressure &amp; coolant" Margin="0,0,10,0">
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ind:ZeroLinearGauge x:Name="PressureGauge" Grid.Column="0" Minimum="0" Maximum="200" Value="145" Unit="Bar" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
+                                <ind:ZeroLinearGauge x:Name="CoolantGauge" Grid.Column="1" Minimum="0" Maximum="100" Value="68" Unit="°C" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
+                            </Grid>
+                        </ind:ZeroCard>
+
+                        <!-- Instrument 3: 7-Segment Displays -->
+                        <ind:ZeroCard Grid.Column="2" HeaderText="Assembly Cycle &amp; Takt" SubtitleText="Active takt timing countdown" Margin="0,0,10,0">
+                            <StackPanel Margin="0,14,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="CURRENT TAKT TIME" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4" />
+                                <ind:ZeroSevenSegment x:Name="TaktTimerDisplay" ValueText="04:25" LedColor="#A6E3A1" Margin="0,0,0,16" />
+                                
+                                <TextBlock Text="COMPLETED UNITS TODAY" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4" />
+                                <ind:ZeroSevenSegment x:Name="CycleCounterDisplay" ValueText="1842" LedColor="#818CF8" />
+                            </StackPanel>
+                        </ind:ZeroCard>
+
+                        <!-- Instrument 4: Andon Stack Tower -->
+                        <ind:ZeroCard Grid.Column="3" HeaderText="Andon Tower" SubtitleText="Factory alarm stack">
+                            <ind:ZeroLedTower x:Name="AndonTower" GreenOn="True" YellowOn="False" RedBlink="False" Margin="0,10,0,0" HorizontalAlignment="Center" Width="70" />
+                        </ind:ZeroCard>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 5: ANALYTICS & CHARTS -->
+            <TabItem Header="📊 5. Analytics &amp; Charts">
+                <Grid Margin="18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,14">
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="Interactive Vector Business Analytics" FontSize="17" FontWeight="Bold" Foreground="#F1F5F9" />
+                            <TextBlock Text="Native WPF vector charting engine: Spline area, bar charts, financial candlestick OHLC, and donut." FontSize="12.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Chart 1: Bar Chart -->
+                        <ind:ZeroCard Grid.Row="0" Grid.Column="0" HeaderText="Monthly Sales vs Target" SubtitleText="FY2026 Monthly throughput (USD x1000)" Margin="0,0,10,10">
+                            <chart:ZeroChart x:Name="BarChart" ChartType="Column" Margin="0,4,0,0" />
+                        </ind:ZeroCard>
+
+                        <!-- Chart 2: Spline Area Chart -->
+                        <ind:ZeroCard Grid.Row="0" Grid.Column="1" HeaderText="Server CPU &amp; Load Timeline" SubtitleText="24-Hour continuous vector spline with Catmull-Rom smoothing" Margin="0,0,0,10">
+                            <chart:ZeroChart x:Name="AreaChart" ChartType="AreaSpline" Margin="0,4,0,0" />
+                        </ind:ZeroCard>
+
+                        <!-- Chart 3: Candlestick OHLC Chart -->
+                        <ind:ZeroCard Grid.Row="1" Grid.Column="0" HeaderText="Component Price Trend (OHLC)" SubtitleText="Daily trading range &amp; volume analysis" Margin="0,0,10,0">
+                            <chart:ZeroChart x:Name="CandleChart" ChartType="Candlestick" Margin="0,4,0,0" />
+                        </ind:ZeroCard>
+
+                        <!-- Chart 4: Donut KPI Chart -->
+                        <ind:ZeroCard Grid.Row="1" Grid.Column="1" HeaderText="Quality Yield Breakdown" SubtitleText="Inspection defect distribution" Margin="0,0,0,0">
+                            <chart:ZeroChart x:Name="DonutChart" ChartType="Donut" Margin="0,4,0,0" />
+                        </ind:ZeroCard>
+                    </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 6: CONTROLS SUITE & TOKENS -->
+            <TabItem Header="🎨 6. Controls Suite &amp; Tokens">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="28" MaxWidth="960" HorizontalAlignment="Left">
+                        <TextBlock Text="AgentOption WPF UI Standards Design System" FontSize="19" FontWeight="Bold" Foreground="#F1F5F9" Margin="0,0,0,6" />
+                        <TextBlock Text="Curated color tokens, DevExpress-style skin manager, and zero-allocation control primitives." FontSize="13" Foreground="#94A3B8" Margin="0,0,0,24" />
+
+                        <!-- 1. Buttons Section -->
+                        <TextBlock Text="1. Button Variants" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <edit:ZeroButton Variant="Primary" Content="Primary CTA" Margin="0,0,10,10" />
+                            <edit:ZeroButton Variant="Secondary" Content="Secondary Action" Margin="0,0,10,10" />
+                            <edit:ZeroButton Variant="Success" Content="✔ Approved" Margin="0,0,10,10" />
+                            <edit:ZeroButton Variant="Danger" Content="✖ Terminate" Margin="0,0,10,10" />
+                            <edit:ZeroButton Variant="Ghost" Content="Ghost Button" Margin="0,0,10,10" />
+                            <Button Content="Standard WPF Button (Themed)" Height="32" Padding="12,0,12,0" Margin="0,0,10,10" />
+                            <Button Content="Disabled State" IsEnabled="False" Height="32" Padding="12,0,12,0" Margin="0,0,10,10" />
+                        </WrapPanel>
+
+                        <!-- 2. Text Inputs Section -->
+                        <TextBlock Text="2. Fluent Text Inputs (TextBox)" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <TextBox Width="220" Height="32" Text="Standard input field" Margin="0,0,12,10" />
+                            <TextBox Width="260" Height="32" Text="Focus to view brand border" Margin="0,0,12,10" />
+                            <TextBox Width="180" Height="32" Text="Disabled field" IsEnabled="False" Margin="0,0,12,10" />
+                        </WrapPanel>
+
+                        <!-- 3. Selection & Checkboxes Section -->
+                        <TextBlock Text="3. Flat Vector CheckBoxes &amp; RadioButtons" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <CheckBox Content="Enable Hardware Acceleration" IsChecked="True" Margin="0,0,20,10" />
+                            <CheckBox Content="Auto-commit on build" IsChecked="False" Margin="0,0,20,10" />
+                            <CheckBox Content="Read-only mode" IsEnabled="False" IsChecked="True" Margin="0,0,20,10" />
+                            <RadioButton Content="Production Line A" GroupName="Lines" IsChecked="True" Margin="0,0,20,10" />
+                            <RadioButton Content="Production Line B" GroupName="Lines" Margin="0,0,20,10" />
+                            <RadioButton Content="Offline Line C" GroupName="Lines" IsEnabled="False" Margin="0,0,20,10" />
+                        </WrapPanel>
+
+                        <!-- 4. Interactive Switches Section -->
+                        <TextBlock Text="4. Interactive Switches" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <StackPanel Margin="0,0,0,24">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <edit:ZeroSwitch x:Name="SwitchTelemetry" IsChecked="True" Margin="0,0,12,0" />
+                                <TextBlock Text="Enable Real-Time Hardware Telemetry" VerticalAlignment="Center" Foreground="#F1F5F9" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <edit:ZeroSwitch x:Name="SwitchClearType" IsChecked="True" Margin="0,0,12,0" />
+                                <TextBlock Text="Enable Subpixel Vector ClearType Rendering" VerticalAlignment="Center" Foreground="#F1F5F9" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <edit:ZeroSwitch x:Name="SwitchCache" IsChecked="False" Margin="0,0,12,0" />
+                                <TextBlock Text="Strict Hotpath Zero-Allocation Verification Mode" VerticalAlignment="Center" Foreground="#F1F5F9" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- 5. ComboBoxes Section -->
+                        <TextBlock Text="5. High-Contrast ComboBox &amp; Dropdowns" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                            <edit:ZeroComboBox Width="200" Height="32" SelectedIndex="0" Margin="0,0,14,0">
+                                <ComboBoxItem Content="50 items per page" />
+                                <ComboBoxItem Content="100 items per page" />
+                                <ComboBoxItem Content="500 items per page" />
+                                <ComboBoxItem Content="1,000 items per page" />
+                                <ComboBoxItem Content="All records" />
+                            </edit:ZeroComboBox>
+                            <ComboBox Width="240" Height="32" SelectedIndex="1" Margin="0,0,14,0">
+                                <ComboBoxItem Content="Profile: Low Latency (Render)" />
+                                <ComboBoxItem Content="Profile: High Throughput (Compute)" />
+                                <ComboBoxItem Content="Profile: Zero-Allocation Strict" />
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- 6. ToolTip & ContextMenu Section -->
+                        <TextBlock Text="6. ToolTips &amp; ContextMenu (Right-Click)" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <Border Background="{DynamicResource ZeroUI.BgInput}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="6" Padding="20" Margin="0,0,0,24" ToolTip="This is a themed ZeroUI ToolTip with drop shadow and border!">
+                            <Border.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="⚡ Run Zero-Alloc Benchmark" InputGestureText="Ctrl+B" />
+                                    <MenuItem Header="📦 Export Current View to CSV" InputGestureText="Ctrl+E" />
+                                    <Separator />
+                                    <MenuItem Header="🎨 Switch to Nordic Frost Skin" />
+                                    <MenuItem Header="🎨 Switch to Cyberpunk Skin" />
+                                    <Separator />
+                                    <MenuItem Header="ℹ️ View Architecture Info" />
+                                </ContextMenu>
+                            </Border.ContextMenu>
+                            <StackPanel>
+                                <TextBlock Text="🖱️ Right-click here to inspect the themed ContextMenu" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                <TextBlock Text="Hover your mouse over this card to preview the sleek floating ToolTip." Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="12" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 7. Progress Bars Section -->
+                        <TextBlock Text="7. Fluent Progress Indicators" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <StackPanel Margin="0,0,0,24">
+                            <TextBlock Text="Storage Quota" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4" />
+                            <edit:ZeroProgressBar Value="38" Margin="0,0,0,12" />
+                            <TextBlock Text="Batch Transfer Speed" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4" />
+                            <edit:ZeroProgressBar Value="76" Margin="0,0,0,12" />
+                            <TextBlock Text="Buffer Saturation" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4" />
+                            <edit:ZeroProgressBar Value="94" Margin="0,0,0,12" />
+                        </StackPanel>
+
+                        <!-- 8. Surface Cards Section -->
+                        <TextBlock Text="8. Fluent Surface Cards" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
+                        <ind:ZeroCard HeaderText="Active System Cluster" SubtitleText="High availability node cluster in Tokyo DC-2" Margin="0,0,0,24">
+                            <TextBlock Text="All 16 worker instances operational. Average CPU load 12.4%, memory utilization 182 MB. Zero GC pauses recorded in the past 24 hours. Slim Fluent ScrollBar active on the right." Foreground="#94A3B8" TextWrapping="Wrap" />
+                        </ind:ZeroCard>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
