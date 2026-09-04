@@ -20,5 +20,31 @@ namespace ZeroUI.Core.Common
         Middle = 28,
         Loose = 36
     }
+
+    public enum ZeroGridSelectionMode : byte
+    {
+        SingleRow = 0,
+        MultiRow = 1,
+        Cell = 2
+    }
+
+    public enum SummaryType : byte
+    {
+        None = 0,
+        Sum = 1,
+        Count = 2,
+        Average = 3,
+        Min = 4,
+        Max = 5
+    }
+
+    public enum GridColumnType : byte
+    {
+        Text = 0,
+        Numeric = 1,
+        DateTime = 2,
+        Boolean = 3,
+        Custom = 4
+    }
 }
 

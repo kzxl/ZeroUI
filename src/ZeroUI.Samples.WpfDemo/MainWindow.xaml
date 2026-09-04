@@ -90,11 +90,18 @@
                         <Button x:Name="BtnLoad10M" Click="BtnLoad10M_Click" Content="🚀 10,000,000 Rows (Procedural)" Height="32" Padding="14,0,14,0" Margin="0,0,8,0" Cursor="Hand" />
                         <Button x:Name="BtnSortPrice" Click="BtnSortPrice_Click" Content="📊 Sort UnitPrice" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
                         <Button x:Name="BtnSortQuantity" Click="BtnSortQuantity_Click" Content="📦 Sort Quantity" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnTogglePinning" Click="BtnTogglePinning_Click" Content="📌 Toggle Pinning" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnToggleFooter" Click="BtnToggleFooter_Click" Content="∑ Toggle Footer" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                        <Button x:Name="BtnLoadGenericList" Click="BtnLoadGenericList_Click" Content="🧬 Generic List (5K)" Height="32" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
                         <Button x:Name="BtnClearGrid" Click="BtnClearGrid_Click" Content="🗑️ Clear Grid" Height="32" Padding="12,0,12,0" Cursor="Hand" />
                     </StackPanel>
 
-                    <!-- Search Bar -->
-                    <grid:ZeroGridSearchBar x:Name="GridSearch" Grid.Row="2" Margin="14,0,14,0" />
+                    <!-- Search Bar & Hint -->
+                    <StackPanel Grid.Row="2" Margin="14,0,14,6">
+                        <grid:ZeroGridSearchBar x:Name="GridSearch" />
+                        <TextBlock Margin="2,4,0,0" FontSize="11.5" Foreground="#94A3B8"
+                                   Text="💡 In-Place Editing: F2 hoặc Double-Click | Multi-Selection: Ctrl/Shift+Click &amp; Ctrl+C để Copy | Pinned Columns: Cố định bên trái khi cuộn ngang | Summary: Chân trang tính tổng tự động" />
+                    </StackPanel>
 
                     <!-- ZeroGridControl -->
                     <Border Grid.Row="3" Margin="14,0,14,0" BorderThickness="1" BorderBrush="#2E344E">

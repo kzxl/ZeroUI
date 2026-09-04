@@ -28,7 +28,7 @@ namespace ZeroUI.Samples.WpfDemo.Data
         }
     }
 
-    public sealed class ZeroWpfInventorySource : IZeroVirtualSource, IZeroSortableSource
+    public sealed class ZeroWpfInventorySource : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource
     {
         private readonly InventoryItem[] _items;
 
@@ -101,6 +101,49 @@ namespace ZeroUI.Samples.WpfDemo.Data
                 7 => string.Compare(a.Status, b.Status, StringComparison.Ordinal),
                 _ => 0
             };
+        }
+
+        public bool IsCellEditable(int rowIndex, int columnIndex)
+        {
+            // Allow editing: 2: ItemName, 3: Quantity, 4: UnitPrice, 6: LotNumber, 7: Status
+            return columnIndex is 2 or 3 or 4 or 6 or 7;
+        }
+
+        public bool SetCellValue(int rowIndex, int columnIndex, string? newValue)
+        {
+            if (rowIndex < 0 || rowIndex >= _items.Length) return false;
+            ref var item = ref _items[rowIndex];
+
+            switch (columnIndex)
+            {
+                case 2:
+                    item.ItemName = newValue ?? string.Empty;
+                    return true;
+                case 3:
+                    if (int.TryParse(newValue, out int qty))
+                    {
+                        item.Quantity = qty;
+                        item.TotalAmount = qty * item.UnitPrice;
+                        return true;
+                    }
+                    return false;
+                case 4:
+                    if (double.TryParse(newValue, out double price))
+                    {
+                        item.UnitPrice = price;
+                        item.TotalAmount = item.Quantity * price;
+                        return true;
+                    }
+                    return false;
+                case 6:
+                    item.LotNumber = newValue ?? string.Empty;
+                    return true;
+                case 7:
+                    item.Status = newValue ?? string.Empty;
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public static InventoryItem[] Generate(int count)

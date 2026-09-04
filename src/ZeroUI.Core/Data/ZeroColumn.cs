@@ -12,10 +12,27 @@ namespace ZeroUI.Core.Data
         public SortDirection SortOrder { get; set; } = SortDirection.None;
         public bool IsVisible { get; set; } = true;
 
+        // Enterprise Metadata
+        public string FieldName { get; set; } = string.Empty;
+        public string? DisplayFormat { get; set; }
+        public bool ReadOnly { get; set; } = false;
+        public bool IsPinned { get; set; } = false;
+        public SummaryType Summary { get; set; } = SummaryType.None;
+        public string? SummaryFormat { get; set; }
+        public GridColumnType ColumnType { get; set; } = GridColumnType.Text;
+
         public ZeroColumn() { }
 
         public ZeroColumn(string headerText, int width = 100, CellAlignment alignment = CellAlignment.Left)
         {
+            HeaderText = headerText;
+            Width = width;
+            Alignment = alignment;
+        }
+
+        public ZeroColumn(string fieldName, string headerText, int width = 100, CellAlignment alignment = CellAlignment.Left)
+        {
+            FieldName = fieldName;
             HeaderText = headerText;
             Width = width;
             Alignment = alignment;

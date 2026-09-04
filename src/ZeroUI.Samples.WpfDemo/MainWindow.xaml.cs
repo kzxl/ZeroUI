@@ -83,14 +83,31 @@ namespace ZeroUI.Samples.WpfDemo
 
         private void SetupColumns()
         {
-            VirtualGrid.Columns.Add(new ZeroColumn("ID", 75, CellAlignment.Right));
-            VirtualGrid.Columns.Add(new ZeroColumn("Mã Vật Tư", 130, CellAlignment.Left));
-            VirtualGrid.Columns.Add(new ZeroColumn("Tên Vật Tư / Linh Kiện", 240, CellAlignment.Left));
-            VirtualGrid.Columns.Add(new ZeroColumn("Số Lượng", 95, CellAlignment.Right));
-            VirtualGrid.Columns.Add(new ZeroColumn("Đơn Giá (VNĐ)", 130, CellAlignment.Right));
-            VirtualGrid.Columns.Add(new ZeroColumn("Thành Tiền (VNĐ)", 150, CellAlignment.Right));
-            VirtualGrid.Columns.Add(new ZeroColumn("Số Lô", 120, CellAlignment.Center));
-            VirtualGrid.Columns.Add(new ZeroColumn("Trạng Thái Kiểm Định", 160, CellAlignment.Center));
+            var colId = new ZeroColumn("ID", 75, CellAlignment.Right) { ReadOnly = true, IsPinned = true, Summary = SummaryType.Count, SummaryFormat = "{0:N0} items" };
+            var colCode = new ZeroColumn("Mã Vật Tư", 130, CellAlignment.Left) { ReadOnly = true, IsPinned = true };
+            var colName = new ZeroColumn("Tên Vật Tư / Linh Kiện", 240, CellAlignment.Left);
+            var colQty = new ZeroColumn("Số Lượng", 95, CellAlignment.Right) { Summary = SummaryType.Sum, SummaryFormat = "{0:N0}" };
+            var colPrice = new ZeroColumn("Đơn Giá (VNĐ)", 130, CellAlignment.Right) { Summary = SummaryType.Average, SummaryFormat = "TB: {0:N0}" };
+            var colTotal = new ZeroColumn("Thành Tiền (VNĐ)", 150, CellAlignment.Right) { ReadOnly = true, Summary = SummaryType.Sum, SummaryFormat = "{0:N0} đ" };
+            var colLot = new ZeroColumn("Số Lô", 120, CellAlignment.Center);
+            var colStatus = new ZeroColumn("Trạng Thái Kiểm Định", 160, CellAlignment.Center);
+
+            VirtualGrid.Columns.Add(colId);
+            VirtualGrid.Columns.Add(colCode);
+            VirtualGrid.Columns.Add(colName);
+            VirtualGrid.Columns.Add(colQty);
+            VirtualGrid.Columns.Add(colPrice);
+            VirtualGrid.Columns.Add(colTotal);
+            VirtualGrid.Columns.Add(colLot);
+            VirtualGrid.Columns.Add(colStatus);
+
+            VirtualGrid.ShowFooter = true;
+            VirtualGrid.SelectionMode = ZeroGridSelectionMode.MultiRow;
+
+            VirtualGrid.CellValueChanged += (s, args) =>
+            {
+                TxtLatency.Text = $"Cell edited: [{args.VisualRowIndex},{args.ColumnIndex}] = \"{args.NewValue}\"";
+            };
 
             // Header sort click
             VirtualGrid.ColumnHeaderClicked += async (s, colIdx) =>
@@ -336,6 +353,15 @@ namespace ZeroUI.Samples.WpfDemo
             BtnSortQuantity.Background = ZeroWpfTheme.BgInput;
             BtnSortQuantity.Foreground = ZeroWpfTheme.TextPrimary;
 
+            BtnTogglePinning.Background = ZeroWpfTheme.BgInput;
+            BtnTogglePinning.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnToggleFooter.Background = ZeroWpfTheme.BgInput;
+            BtnToggleFooter.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnLoadGenericList.Background = ZeroWpfTheme.BgInput;
+            BtnLoadGenericList.Foreground = ZeroWpfTheme.TextPrimary;
+
             BtnClearGrid.Background = ZeroWpfTheme.BgInput;
             BtnClearGrid.Foreground = ZeroWpfTheme.TextPrimary;
 
@@ -397,16 +423,90 @@ namespace ZeroUI.Samples.WpfDemo
             BtnToggleSim.Content = _isSimulating ? "⏸ Pause Simulation" : "▶ Resume Simulation";
         }
 
+        private void BtnTogglePinning_Click(object sender, RoutedEventArgs e)
+        {
+            if (VirtualGrid.Columns.Count > 1)
+            {
+                bool newState = !VirtualGrid.Columns[0].IsPinned;
+                VirtualGrid.Columns[0].IsPinned = newState;
+                VirtualGrid.Columns[1].IsPinned = newState;
+                BtnTogglePinning.Content = newState ? "📌 Unpin Columns" : "📌 Pin Columns";
+                VirtualGrid.InvalidateVisual();
+            }
+        }
+
+        private void BtnToggleFooter_Click(object sender, RoutedEventArgs e)
+        {
+            VirtualGrid.ShowFooter = !VirtualGrid.ShowFooter;
+            BtnToggleFooter.Content = VirtualGrid.ShowFooter ? "∑ Hide Footer" : "∑ Show Footer";
+        }
+
+        private void BtnLoadGenericList_Click(object sender, RoutedEventArgs e)
+        {
+            var sw = Stopwatch.StartNew();
+            var list = new System.Collections.Generic.List<DemoProduct>(5000);
+            for (int i = 1; i <= 5000; i++)
+            {
+                list.Add(new DemoProduct
+                {
+                    Id = i,
+                    Code = $"PRD-{i:00000}",
+                    Name = $"Industrial Sensor Model #{i}",
+                    Quantity = 50 + (i % 200),
+                    Price = 120000 + (i * 150),
+                    Category = (i % 2 == 0) ? "Optics" : "Electronics",
+                    InStock = (i % 5 != 0)
+                });
+            }
+
+            VirtualGrid.SetDataSource(list, autoGenerateColumns: true);
+            if (VirtualGrid.Columns.Count >= 5)
+            {
+                VirtualGrid.Columns[0].IsPinned = true;
+                VirtualGrid.Columns[1].IsPinned = true;
+                VirtualGrid.Columns[3].Summary = SummaryType.Sum;
+                VirtualGrid.Columns[3].SummaryFormat = "{0:N0}";
+                VirtualGrid.Columns[4].Summary = SummaryType.Average;
+                VirtualGrid.Columns[4].SummaryFormat = "Avg: {0:N0}";
+            }
+            VirtualGrid.ShowFooter = true;
+
+            _inventorySource = null;
+            sw.Stop();
+
+            TxtCapacity.Text = $"{list.Count:N0} Objects (ZeroListSource)";
+            GridSearch.SetMatchCount(list.Count, list.Count);
+            GridPager.UpdateTotalRecords(list.Count);
+            TxtLatency.Text = $"{sw.ElapsedMilliseconds} ms (Generic List Adapter)";
+        }
+
         private void BtnAbout_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(
                 "ZeroUI ⚡ High-Performance WPF Desktop Suite\n\n" +
                 "• Powered by ZeroUI.Core engine (VirtualViewport2D, RowIndexMap, PrefixSumArray).\n" +
                 "• Single-Visual Direct DrawingContext rendering (0 Visual Tree overhead).\n" +
+                "• In-Place Editing: Flyweight floating editor overlay with Tab/Enter commit.\n" +
+                "• Fixed / Pinned Columns: Ghim cột bên trái với divider shadow.\n" +
+                "• Multi-Row Selection: Chọn nhiều dòng & Ctrl+C copy định dạng TSV.\n" +
+                "• Summary Footer: Chân trang tính tổng Sum, Count, Avg, Min, Max.\n" +
+                "• Universal Generic Adapter: ZeroListSource<T> cho IList<T>.\n" +
                 "• 100% Zero-Allocation hotpaths on scroll and render.\n" +
                 "• Supports both .NET Framework 4.6.2 and .NET 8.0-windows.\n\n" +
                 "Developed with Deepmind Advanced Agentic Engineering.",
                 "ZeroUI Architecture Overview", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+    }
+
+    public class DemoProduct
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public double Price { get; set; }
+        public double Total => Quantity * Price;
+        public string Category { get; set; } = string.Empty;
+        public bool InStock { get; set; }
     }
 }
