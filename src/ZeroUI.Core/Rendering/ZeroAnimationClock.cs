@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using ZeroUI.Core.Runtime;
 
 namespace ZeroUI.Core.Rendering
 {
@@ -37,6 +38,8 @@ namespace ZeroUI.Core.Rendering
         private static int _targetFps = 60;
         private static SynchronizationContext? _syncContext;
 
+        private static IDisposable? _runtimeSub;
+
         /// <summary>
         /// Total monotonic frames rendered since clock startup.
         /// </summary>
@@ -57,6 +60,7 @@ namespace ZeroUI.Core.Rendering
             {
                 if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), "FPS must be greater than 0.");
                 _targetFps = Math.Min(120, Math.Max(10, value));
+                ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Animation, TimeSpan.FromMilliseconds(Math.Max(8, 1000.0 / _targetFps)));
                 if (_isRunning)
                 {
                     RestartTimer();
@@ -84,7 +88,13 @@ namespace ZeroUI.Core.Rendering
                 _stopwatch.Restart();
                 _lastElapsedSeconds = 0;
                 _isRunning = true;
-                RestartTimer();
+
+                ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Animation, TimeSpan.FromMilliseconds(Math.Max(8, 1000.0 / _targetFps)));
+                _runtimeSub ??= ZeroRuntime.Shared.Register(RuntimeCycle.Animation, (delta, frame) => TriggerFrame(delta.TotalSeconds));
+                if (!ZeroRuntime.Shared.IsRunning)
+                {
+                    ZeroRuntime.Shared.Start();
+                }
             }
         }
 
@@ -96,6 +106,8 @@ namespace ZeroUI.Core.Rendering
             lock (_lock)
             {
                 _isRunning = false;
+                _runtimeSub?.Dispose();
+                _runtimeSub = null;
                 _timer?.Dispose();
                 _timer = null;
                 _stopwatch.Stop();

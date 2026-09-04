@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using ZeroUI.Core.Mes;
+using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada.Analytics;
 using ZeroUI.Core.Scada.Safety;
 
@@ -28,7 +29,7 @@ namespace ZeroUI.Core.Scada.Pipeline
         private readonly List<Action<ScadaPipelineCoordinator>> _mediumCalculations = new List<Action<ScadaPipelineCoordinator>>();
         private readonly object _mediumCalcLock = new object();
 
-        private Timer? _mediumTimer;
+        private IDisposable? _runtimeLogicSub;
         private int _mediumIntervalMs = 10; // 100 Hz default
         private int _isMediumExecuting = 0;
         private bool _isRunning = false;
@@ -64,10 +65,7 @@ namespace ZeroUI.Core.Scada.Pipeline
             frequencyHz = Math.Max(10, Math.Min(1000, frequencyHz));
             _mediumIntervalMs = Math.Max(1, 1000 / frequencyHz);
 
-            if (_isRunning && _mediumTimer != null)
-            {
-                _mediumTimer.Change(0, _mediumIntervalMs);
-            }
+            ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Logic, TimeSpan.FromMilliseconds(_mediumIntervalMs));
         }
 
         /// <summary>
@@ -78,7 +76,13 @@ namespace ZeroUI.Core.Scada.Pipeline
             if (_isRunning || _disposed) return;
             _isRunning = true;
 
-            _mediumTimer = new Timer(OnMediumTimerTick, null, 0, _mediumIntervalMs);
+            ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Logic, TimeSpan.FromMilliseconds(_mediumIntervalMs));
+            _runtimeLogicSub ??= ZeroRuntime.Shared.Register(RuntimeCycle.Logic, (delta, count) => ExecuteMediumTierCycle());
+
+            if (!ZeroRuntime.Shared.IsRunning)
+            {
+                ZeroRuntime.Shared.Start();
+            }
         }
 
         /// <summary>
@@ -87,7 +91,8 @@ namespace ZeroUI.Core.Scada.Pipeline
         public void Stop()
         {
             _isRunning = false;
-            _mediumTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            _runtimeLogicSub?.Dispose();
+            _runtimeLogicSub = null;
         }
 
         /// <summary>
@@ -170,6 +175,15 @@ namespace ZeroUI.Core.Scada.Pipeline
         // ==========================================
 
         private void OnMediumTimerTick(object? state)
+        {
+            ExecuteMediumTierCycle();
+        }
+
+        /// <summary>
+        /// Executes a single Medium Tier cycle (aggregations + custom logic/OEE).
+        /// Can be called directly by ZeroRuntime or dedicated loop.
+        /// </summary>
+        public void ExecuteMediumTierCycle()
         {
             if (!_isRunning || _disposed) return;
             if (Interlocked.CompareExchange(ref _isMediumExecuting, 1, 0) != 0)
@@ -292,7 +306,8 @@ namespace ZeroUI.Core.Scada.Pipeline
             if (_disposed) return;
             _disposed = true;
             _isRunning = false;
-            _mediumTimer?.Dispose();
+            _runtimeLogicSub?.Dispose();
+            _runtimeLogicSub = null;
         }
     }
 }

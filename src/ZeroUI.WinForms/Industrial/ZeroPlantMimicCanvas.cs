@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Scene;
 using ZeroUI.WinForms.Theme;
@@ -23,7 +24,7 @@ namespace ZeroUI.WinForms.Industrial
         private ZeroScene _scene;
         private readonly List<SceneNode> _visibleNodesBuffer = new List<SceneNode>(256);
         private readonly List<IScadaDrawable> _elements = new List<IScadaDrawable>();
-        private readonly System.Windows.Forms.Timer _animTimer;
+        private readonly IDisposable? _animationSub;
         private long _lastTick = Environment.TickCount;
         private float _zoomFactor = 1.0f;
         private float _panOffsetX = 0f;
@@ -99,9 +100,12 @@ namespace ZeroUI.WinForms.Industrial
             _scene = new ZeroScene();
             _scene.SceneDirty += OnSceneDirty;
 
-            _animTimer = new System.Windows.Forms.Timer { Interval = 33 }; // ~30 FPS animation loop
-            _animTimer.Tick += (s, e) => OnAnimationTick();
-            _animTimer.Start();
+            // Centralized deterministic animation scheduling via ZeroRuntime
+            _animationSub = ZeroRuntime.Shared.Register(RuntimeCycle.Animation, (delta, count) => OnAnimationTick());
+            if (!ZeroRuntime.Shared.IsRunning)
+            {
+                ZeroRuntime.Shared.Start();
+            }
         }
 
         private void OnSceneDirty(object? sender, EventArgs e)
@@ -393,8 +397,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                _animTimer.Stop();
-                _animTimer.Dispose();
+                _animationSub?.Dispose();
             }
             base.Dispose(disposing);
         }
