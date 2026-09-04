@@ -84,6 +84,7 @@ namespace ZeroUI.WinForms.Layout
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.SupportsTransparentBackColor |
                 ControlStyles.ResizeRedraw, true);
 
             DoubleBuffered = true;

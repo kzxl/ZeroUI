@@ -107,6 +107,7 @@ namespace ZeroUI.WinForms.Overlays
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor |
                 ControlStyles.Selectable, true);
 
             DoubleBuffered = true;
