@@ -69,6 +69,14 @@ namespace ZeroUI.Samples.WpfDemo
             // Populate Radio Group options
             RadioDispatchMode.Items = new[] { "Standard JIT Dispatch", "High-Priority Hotlot", "Hold for Quality Audit" };
             RadioSamplingTier.Items = new[] { "Level I (10%)", "Level II (Normal 100%)", "Level III (Tightened)" };
+
+            // Populate Segmented options
+            SegPeriod.Items = new[] { "Real-Time 1s", "Shift 8h", "Daily", "Weekly", "Quarterly" };
+            SegFilter.Items = new[] { "All Units", "Running", "Degraded", "Faulted" };
+
+            // Setup DatePickers
+            DatePickerStart.SelectedDate = DateTime.Today;
+            DatePickerEnd.SelectedDate = DateTime.Today.AddDays(14);
         }
 
         private void RefreshSkinSelector()

@@ -518,6 +518,75 @@
                         <StackPanel Margin="0,0,0,24">
                             <edit:ZeroMemoEdit Width="620" Height="100" MaxLength="250" ShowCharacterCount="True" Placeholder="Enter engineering change request notes or handover shift summary..." Text="Line 1 automated batch finished without deviations. Storage tank TK-101 level maintained at 75%. All critical safety interlocks inspected and confirmed normal." />
                         </StackPanel>
+
+                        <!-- 15. Segmented Pill Switchers (ZeroSegmented) -->
+                        <TextBlock Text="15. Segmented Pill Switchers (ZeroSegmented &amp; SelectionModel)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,24,10">
+                                <TextBlock Text="Aggregation Period (Days / Weeks / Quarters)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
+                                <edit:ZeroSegmented x:Name="SegPeriod" Width="360" SelectedIndex="0" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,24,10">
+                                <TextBlock Text="Equipment Status Filter" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
+                                <edit:ZeroSegmented x:Name="SegFilter" Width="320" SelectedIndex="1" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 16. Debounced Search Inputs (ZeroSearchBox) -->
+                        <TextBlock Text="16. Debounced Search Inputs (ZeroSearchBox)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Global SKU / Serial Search (200ms debounce)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
+                                <edit:ZeroSearchBox x:Name="SearchBoxSample" Width="280" Placeholder="Type to search sensor tags or lots..." />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Operator Dispatch Query" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
+                                <edit:ZeroSearchBox Width="240" Placeholder="Filter by technician ID..." Text="OP-492" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 17. Semantic Status Tags & Badges (ZeroTag) -->
+                        <TextBlock Text="17. Semantic Status Badges &amp; Tags (ZeroTag)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <edit:ZeroTag TagType="Default" Text="Standby" Margin="0,0,10,10" />
+                            <edit:ZeroTag TagType="Success" Text="✔ Active / Healthy" Margin="0,0,10,10" />
+                            <edit:ZeroTag TagType="Processing" Text="⚡ Telemetry Syncing" Margin="0,0,10,10" />
+                            <edit:ZeroTag TagType="Warning" Text="⚠ High Temp Trip" Margin="0,0,10,10" />
+                            <edit:ZeroTag TagType="Error" Text="✖ S7 Bus Fault" Margin="0,0,10,10" />
+                            <edit:ZeroTag TagType="Success" Text="Closable Lot: BATCH-891" Closable="True" Margin="0,0,10,10" />
+                            <edit:ZeroTag TagType="Warning" Text="Dismiss Alert" Closable="True" Margin="0,0,10,10" />
+                        </WrapPanel>
+
+                        <!-- 18. Executive KPI Metric Cards (ZeroStatistic) -->
+                        <TextBlock Text="18. Executive KPI Metric Cards (ZeroStatistic)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <edit:ZeroStatistic Title="Overall Equipment Effectiveness" Value="89.4" Suffix="%" Trend="Up" TrendText="+2.6% vs target" Margin="0,0,14,14" />
+                            <edit:ZeroStatistic Title="Telemetry Ingestion Rate" Value="46.9" Suffix="M/s" Prefix="⚡ " Trend="Up" TrendText="Zero-Alloc TripleBuffer" Margin="0,0,14,14" />
+                            <edit:ZeroStatistic Title="Active ISA-18.2 Alarms" Value="3" Trend="Down" TrendText="-4 acknowledged" Margin="0,0,14,14" />
+                            <edit:ZeroStatistic Title="Average Frame Latency" Value="2.8" Suffix=" ms" Trend="None" TrendText="144 Hz Ready" Margin="0,0,14,14" />
+                        </WrapPanel>
+
+                        <!-- 19. Tri-State Flat Vector CheckBoxes (ZeroCheckBox) -->
+                        <TextBlock Text="19. Tri-State Flat Vector CheckBoxes (ZeroCheckBox)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <edit:ZeroCheckBox Text="Modbus TCP Block Coalescing" IsChecked="True" Margin="0,0,20,10" />
+                            <edit:ZeroCheckBox Text="Continuous Historian WAL Rollups" IsChecked="False" Margin="0,0,20,10" />
+                            <edit:ZeroCheckBox Text="ISA-18.2 Alarms (ThreeState Indeterminate)" ThreeState="True" IsChecked="{x:Null}" Margin="0,0,20,10" />
+                            <edit:ZeroCheckBox Text="Offline Node (Disabled State)" IsEnabled="False" IsChecked="True" Margin="0,0,20,10" />
+                        </WrapPanel>
+
+                        <!-- 20. Modern Calendar Date Picker (ZeroDatePicker) -->
+                        <TextBlock Text="20. Modern Calendar Date Picker (ZeroDatePicker &amp; CalendarModel)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Batch Production Start Date" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroDatePicker x:Name="DatePickerStart" Width="200" ShowPresets="True" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Quality Inspection Deadline" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroDatePicker x:Name="DatePickerEnd" Width="200" DateFormat="yyyy-MM-dd" />
+                            </StackPanel>
+                        </WrapPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
