@@ -65,6 +65,8 @@ namespace ZeroUI.WinForms.Industrial
         private int _gridDivisionsX = 6;
         private int _gridDivisionsY = 4;
         private bool _showFill = true;
+        private bool _showCursor = true;
+        private float? _cursorX;
 
         public ZeroTrendChart()
         {
@@ -129,6 +131,14 @@ namespace ZeroUI.WinForms.Industrial
             set { _showFill = value; Invalidate(); }
         }
 
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        public bool ShowCursor
+        {
+            get => _showCursor;
+            set { _showCursor = value; Invalidate(); }
+        }
+
         [Browsable(false)]
         public List<TrendChannel> Channels => _channels;
 
@@ -137,6 +147,26 @@ namespace ZeroUI.WinForms.Industrial
             if (channelIndex >= 0 && channelIndex < _channels.Count)
             {
                 _channels[channelIndex].Add(value);
+                Invalidate();
+            }
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            if (_showCursor)
+            {
+                _cursorX = e.X;
+                Invalidate();
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            if (_cursorX.HasValue)
+            {
+                _cursorX = null;
                 Invalidate();
             }
         }
@@ -313,6 +343,48 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString($"{p.MaxValue:F0}", axisFont, axisBrush, 4, plotY - 2);
                 g.DrawString($"{(p.MaxValue + p.MinValue) / 2:F0}", axisFont, axisBrush, 4, plotY + (plotH / 2) - 6);
                 g.DrawString($"{p.MinValue:F0}", axisFont, axisBrush, 4, plotY + plotH - 10);
+            }
+
+            // 8. TrendCursor & Crosshair Value Readout
+            if (_showCursor && _cursorX.HasValue && _cursorX.Value >= plotX && _cursorX.Value <= plotX + plotW)
+            {
+                float cx = _cursorX.Value;
+                using (var curPen = new Pen(Color.FromArgb(248, 250, 252), 1f) { DashStyle = DashStyle.Dash })
+                {
+                    g.DrawLine(curPen, cx, plotY, cx, plotY + plotH);
+                }
+
+                // Interpolate channel value at cursor position
+                float frac = (cx - plotX) / plotW;
+                var sb = new System.Text.StringBuilder();
+                for (int c = 0; c < _channels.Count; c++)
+                {
+                    var ch = _channels[c];
+                    if (ch.Count == 0) continue;
+                    int ptIdx = (int)Math.Round(frac * (ch.Count - 1));
+                    ptIdx = Math.Max(0, Math.Min(ch.Count - 1, ptIdx));
+                    float val = ch.GetPoint(ptIdx);
+                    if (sb.Length > 0) sb.Append(" | ");
+                    sb.Append($"{ch.Name}: {val:0.#} {ch.Unit}");
+                }
+
+                if (sb.Length > 0)
+                {
+                    string readouts = sb.ToString();
+                    using var tipFont = new Font("Segoe UI", 7.5f, FontStyle.Bold);
+                    var tipSize = g.MeasureString(readouts, tipFont);
+                    float tipX = Math.Max(plotX, Math.Min(plotX + plotW - tipSize.Width - 6f, cx - tipSize.Width * 0.5f));
+                    float tipY = plotY + 4f;
+
+                    var tipRect = new RectangleF(tipX, tipY, tipSize.Width + 6f, tipSize.Height + 2f);
+                    using var tipBg = new SolidBrush(Color.FromArgb(200, 15, 23, 42));
+                    using var tipBorder = new Pen(Color.FromArgb(59, 130, 246), 1f);
+                    using var tipTextBrush = new SolidBrush(Color.White);
+
+                    g.FillRectangle(tipBg, tipRect);
+                    g.DrawRectangle(tipBorder, tipRect.X, tipRect.Y, tipRect.Width, tipRect.Height);
+                    g.DrawString(readouts, tipFont, tipTextBrush, tipX + 3f, tipY + 1f);
+                }
             }
         }
     }

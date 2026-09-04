@@ -51,6 +51,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _tabScadaPid = null!;
         private ZeroTabPage _tabScadaAlarms = null!;
         private ZeroTabPage _tabScadaTags = null!;
+        private ZeroTabPage _tabScadaOverview = null!;
 
         // Sub-tabs
         private ZeroTabControl _subTabsBenchmark = null!;
@@ -430,9 +431,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabScadaPid = new ZeroTabPage("Phase 1: P&ID Process Flow", "🔄");
             _tabScadaAlarms = new ZeroTabPage("Phase 2: ISA-18.2 Alarms & PID", "🚨");
             _tabScadaTags = new ZeroTabPage("Phase 3: Real-Time Tag Engine", "⚡");
+            _tabScadaOverview = new ZeroTabPage("Phase 4: Plant Overview & HMI", "🎛️");
             subTabsScada.AddTab(_tabScadaPid);
             subTabsScada.AddTab(_tabScadaAlarms);
             subTabsScada.AddTab(_tabScadaTags);
+            subTabsScada.AddTab(_tabScadaOverview);
             _clusterScadaSynoptic.Controls.Add(subTabsScada);
 
             // Build individual cluster views
@@ -450,6 +453,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeScadaProcessFlow(_tabScadaPid);
             InitializeScadaAlarmsAndPid(_tabScadaAlarms);
             InitializeScadaTagEngineMonitor(_tabScadaTags);
+            InitializeScadaHmiOverview(_tabScadaOverview);
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -4625,6 +4629,205 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             rowStats.BringToFront();
             spacer2.BringToFront();
             cardGrid.BringToFront();
+
+            parentTab.Controls.Add(mainContainer);
+        }
+
+        private void InitializeScadaHmiOverview(ZeroTabPage parentTab)
+        {
+            var colors = ZeroTheme.Colors;
+            parentTab.BackColor = colors.Background;
+
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = colors.Background,
+                Padding = new Padding(16)
+            };
+
+            // Seed industrial alarms into ScadaAlarmEngine
+            ScadaAlarmEngine.RaiseAlarm("ALM-01", "Line1.Boiler.Pressure", "Main Boiler Header Overpressure", ScadaAlarmSeverity.Critical, 88.5);
+            ScadaAlarmEngine.RaiseAlarm("ALM-02", "Line1.Pump.Trip", "Centrifugal Pump P-101A Motor Overload Trip", ScadaAlarmSeverity.High, 1);
+            ScadaAlarmEngine.RaiseAlarm("ALM-03", "Line1.Heater.Warning", "Oven Zone 3 Element High Temperature Warning", ScadaAlarmSeverity.Medium, 215.2);
+            ScadaAlarmEngine.RaiseAlarm("ALM-04", "Line1.Conveyor.Jam", "Feeder Conveyor CV-401 Material Jam Detected", ScadaAlarmSeverity.High, 1);
+
+            // 1. Header Alert Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Height = 60,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "🎛️ PHASE 1-4: COMPREHENSIVE INDUSTRIAL SCADA & HMI RUNTIME CONTROLS",
+                Message = "Zero GC vector-rendered actuators, two-stage safety command buttons, touch setpoint keypad, and ISA-18.2 virtualized alarm grid."
+            };
+            var sp1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 2. Row 1: Operator HMI & Safety Interlocks
+            var cardHmi = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 110,
+                Title = "Operator HMI & Safety Controls (Two-Stage Confirmation, Interlocks & Keypad)",
+                StepNumber = 1
+            };
+            var pnlHmi = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                WrapContents = false,
+                Padding = new Padding(8)
+            };
+
+            var btnStart = new ZeroCommandButton
+            {
+                Action = CommandButtonAction.Start,
+                CommandText = "START LINE 1",
+                PressAndHoldSeconds = 1.2f,
+                RequiresConfirmation = false
+            };
+            btnStart.CommandExecuted += (s, e) => ZeroToast.Success(this, "Line 1 startup sequence engaged!");
+
+            var btnEStop = new ZeroCommandButton
+            {
+                Action = CommandButtonAction.EmergencyStop,
+                CommandText = "EMERGENCY STOP",
+                RequiresConfirmation = true,
+                PressAndHoldSeconds = 0f
+            };
+            btnEStop.CommandExecuted += (s, e) => ZeroToast.Warning(this, "EMERGENCY STOP EXECUTED!");
+
+            var spInput = new ZeroSetpointInput
+            {
+                TagLabel = "BOILER SP",
+                SetpointValue = 185.0,
+                MinValue = 50.0,
+                MaxValue = 250.0,
+                Unit = "°C"
+            };
+
+            var modeSel = new ZeroModeSelector
+            {
+                SelectedMode = MachineControlMode.Auto
+            };
+
+            var interlock = new ZeroInterlockIndicator
+            {
+                TagLabel = "SAFETY INTERLOCK"
+            };
+            interlock.SetInterlockCondition("Feeder Guard Interlock", false);
+
+            pnlHmi.Controls.Add(btnStart);
+            pnlHmi.Controls.Add(btnEStop);
+            pnlHmi.Controls.Add(spInput);
+            pnlHmi.Controls.Add(modeSel);
+            pnlHmi.Controls.Add(interlock);
+            cardHmi.ContentPanel.Controls.Add(pnlHmi);
+
+            var sp2 = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            // 3. Row 2: Physical Process Actuators & Sensors
+            var cardActuators = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 180,
+                Title = "Physical Process Actuators & Smart Field Instruments (Vector Rendered)",
+                StepNumber = 2
+            };
+            var pnlAct = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                WrapContents = false,
+                Padding = new Padding(8)
+            };
+
+            var motor = new ZeroIndustrialMotor { SpeedRpm = 1450.0, Direction = ZeroMotorDirection.Forward };
+            var fan = new ZeroIndustrialFan { SpeedRpm = 1200.0 };
+            var heater = new ZeroIndustrialHeater { TemperatureC = 185.4, SetpointC = 200.0 };
+            var cyl = new ZeroPneumaticCylinder { ExtensionPercent = 75.0 };
+            var conveyor = new ZeroConveyorBelt { SpeedMpm = 28.0 };
+            var sensor = new ZeroIndustrialSensor { State = SensorState.Active };
+            var digital = new ZeroDigitalIndicator { Value = 48.7, Unit = "bar", TagLabel = "MAIN STEAM" };
+            var flow = new ZeroFlowIndicator { Velocity = 2.0, IsFlowing = true };
+
+            pnlAct.Controls.Add(motor);
+            pnlAct.Controls.Add(fan);
+            pnlAct.Controls.Add(heater);
+            pnlAct.Controls.Add(cyl);
+            pnlAct.Controls.Add(conveyor);
+            pnlAct.Controls.Add(sensor);
+            pnlAct.Controls.Add(digital);
+            pnlAct.Controls.Add(flow);
+            cardActuators.ContentPanel.Controls.Add(pnlAct);
+
+            var sp3 = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            // 4. Row 3: Plant Dashboard Overview (Cards, Production Scoreboard & Shift Status)
+            var cardOverview = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 175,
+                Title = "Plant Shift Overview, Machine OEE & Micro-Trend Sparklines",
+                StepNumber = 3
+            };
+            var pnlOverview = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                WrapContents = false,
+                Padding = new Padding(8)
+            };
+
+            var machineCard = new ZeroMachineCard { MachineId = "CNC-04", OeePercent = 88.5, SpeedRpm = 12000.0 };
+            var prodCounter = new ZeroProductionCounter { Plan = 2500, Actual = 2140, NG = 18 };
+            var shiftStatus = new ZeroShiftStatus { ShiftName = "SHIFT A (DAY)", OperatorName = "David Nguyen" };
+            var sparkline = new ZeroSparkline(40) { LineColor = Color.FromArgb(56, 189, 248), Size = new Size(160, 110) };
+            for (int i = 0; i < 35; i++) sparkline.AddValue(40f + (float)Math.Sin(i * 0.4) * 20f);
+
+            pnlOverview.Controls.Add(machineCard);
+            pnlOverview.Controls.Add(prodCounter);
+            pnlOverview.Controls.Add(shiftStatus);
+            pnlOverview.Controls.Add(sparkline);
+            cardOverview.ContentPanel.Controls.Add(pnlOverview);
+
+            var sp4 = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            // 5. Row 4: ISA-18.2 Alarm Grid Control
+            var cardAlarms = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 260,
+                Title = "ISA-18.2 Standard Alarm Management Grid (Active / Acknowledged / Shelved)",
+                StepNumber = 4
+            };
+            var alarmGrid = new ZeroAlarmGrid
+            {
+                Dock = DockStyle.Fill,
+                OperatorName = "Alex Thorne"
+            };
+            cardAlarms.ContentPanel.Controls.Add(alarmGrid);
+
+            // Add all sections
+            mainContainer.Controls.Add(cardAlarms);
+            mainContainer.Controls.Add(sp4);
+            mainContainer.Controls.Add(cardOverview);
+            mainContainer.Controls.Add(sp3);
+            mainContainer.Controls.Add(cardActuators);
+            mainContainer.Controls.Add(sp2);
+            mainContainer.Controls.Add(cardHmi);
+            mainContainer.Controls.Add(sp1);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            sp1.BringToFront();
+            cardHmi.BringToFront();
+            sp2.BringToFront();
+            cardActuators.BringToFront();
+            sp3.BringToFront();
+            cardOverview.BringToFront();
+            sp4.BringToFront();
+            cardAlarms.BringToFront();
 
             parentTab.Controls.Add(mainContainer);
         }

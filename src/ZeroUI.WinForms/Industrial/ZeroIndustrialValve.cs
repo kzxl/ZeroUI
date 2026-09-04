@@ -13,7 +13,9 @@ namespace ZeroUI.WinForms.Industrial
         TwoWaySolenoid,
         ControlValve,
         BallValve,
-        CheckValve
+        CheckValve,
+        ThreeWayDiverter,
+        ThreeWayMixing
     }
 
     public enum ZeroValveState
@@ -245,6 +247,13 @@ namespace ZeroUI.WinForms.Industrial
             using var path = new GraphicsPath();
             path.AddPolygon(new[] { leftTop, center, leftBottom });
             path.AddPolygon(new[] { rightTop, center, rightBottom });
+
+            if (_valveType == ZeroValveType.ThreeWayDiverter || _valveType == ZeroValveType.ThreeWayMixing)
+            {
+                Point bottomPortLeft = new Point(cx - bodyH / 2, bodyY + bodyH + 10);
+                Point bottomPortRight = new Point(cx + bodyH / 2, bodyY + bodyH + 10);
+                path.AddPolygon(new[] { bottomPortLeft, center, bottomPortRight });
+            }
 
             using (var brushBody = new SolidBrush(stateColor))
             {
