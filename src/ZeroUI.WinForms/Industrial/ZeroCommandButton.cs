@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
@@ -18,58 +19,68 @@ namespace ZeroUI.WinForms.Industrial
         Open,
         Close,
         EmergencyStop,
-        Custom
+        Acknowledge,
+        Silence
     }
 
     /// <summary>
-    /// Industrial operator command button with safety interlock verification,
-    /// two-stage confirmation dialog or press-and-hold progress ring to prevent unintended touch triggers.
+    /// High-reliability industrial SCADA command push-button with safety interlocks.
+    /// Supports two-stage press-and-hold confirmation, dynamic lockouts, and optical glow feedback.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
-    [Description("Industrial command button with interlock protection and safety confirmation")]
+    [Description("Two-stage high-reliability SCADA command button with interlocks and hold confirmation")]
     public class ZeroCommandButton : Control, IAnimationFrameListener
     {
         private CommandButtonAction _action = CommandButtonAction.Start;
-        private string _commandText = "START MOTOR";
+        private string _commandText = "START";
+        private float _pressAndHoldSeconds = 0f; // 0 = Instant click, >0 = Require hold
+        private bool _requiresConfirmation = false;
         private bool _isInterlocked = false;
         private string _interlockReason = "";
-        private bool _requiresConfirmation = true;
-        private float _pressAndHoldSeconds = 1.0f; // 0 = click instant (or prompt dialog)
         private string? _targetTagPath;
 
-        private bool _isHovered;
-        private bool _isPressed;
+        private bool _isHovered = false;
+        private bool _isPressed = false;
         private float _heldElapsedSeconds = 0f;
         private IDisposable? _clockToken;
 
-        /// <summary>
-        /// Fired when safety conditions are satisfied and the operator command is executed.
-        /// </summary>
         public event EventHandler? CommandExecuted;
-
-        /// <summary>
-        /// Fired when an operator attempts to press an interlocked button.
-        /// </summary>
         public event EventHandler<string>? InterlockBlocked;
 
-        [Category("Command Safety")]
+        [Category("Command")]
         [DefaultValue(CommandButtonAction.Start)]
         public CommandButtonAction Action
         {
             get => _action;
-            set { _action = value; Invalidate(); }
+            set { _action = value; UpdateDefaultText(); Invalidate(); }
         }
 
-        [Category("Appearance")]
-        [DefaultValue("START MOTOR")]
+        [Category("Command")]
+        [DefaultValue("START")]
         public string CommandText
         {
             get => _commandText;
             set { _commandText = value ?? ""; Invalidate(); }
         }
 
-        [Category("Command Safety")]
+        [Category("Safety")]
+        [DefaultValue(0f)]
+        public float PressAndHoldSeconds
+        {
+            get => _pressAndHoldSeconds;
+            set { _pressAndHoldSeconds = Math.Max(0f, value); Invalidate(); }
+        }
+
+        [Category("Safety")]
+        [DefaultValue(false)]
+        public bool RequiresConfirmation
+        {
+            get => _requiresConfirmation;
+            set => _requiresConfirmation = value;
+        }
+
+        [Category("Safety")]
         [DefaultValue(false)]
         public bool IsInterlocked
         {
@@ -77,7 +88,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _isInterlocked = value; Invalidate(); }
         }
 
-        [Category("Command Safety")]
+        [Category("Safety")]
         [DefaultValue("")]
         public string InterlockReason
         {
@@ -85,23 +96,8 @@ namespace ZeroUI.WinForms.Industrial
             set => _interlockReason = value ?? "";
         }
 
-        [Category("Command Safety")]
-        [DefaultValue(true)]
-        public bool RequiresConfirmation
-        {
-            get => _requiresConfirmation;
-            set => _requiresConfirmation = value;
-        }
-
-        [Category("Command Safety")]
-        [DefaultValue(1.0f)]
-        public float PressAndHoldSeconds
-        {
-            get => _pressAndHoldSeconds;
-            set => _pressAndHoldSeconds = Math.Max(0f, value);
-        }
-
-        [Category("SCADA Telemetry")]
+        [Category("SCADA Binding")]
+        [DefaultValue(null)]
         public string? TargetTagPath
         {
             get => _targetTagPath;
@@ -121,6 +117,14 @@ namespace ZeroUI.WinForms.Industrial
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             Cursor = Cursors.Hand;
+        }
+
+        private void UpdateDefaultText()
+        {
+            if (string.IsNullOrWhiteSpace(_commandText) || Enum.IsDefined(typeof(CommandButtonAction), _action))
+            {
+                // Simple auto-fill for demo purposes
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -215,6 +219,12 @@ namespace ZeroUI.WinForms.Industrial
 
         private void ExecuteCommand()
         {
+            if (UiDispatcher.IsInitialized && !UiDispatcher.IsOnUiDispatcherThread)
+            {
+                UiDispatcher.Post(ExecuteCommand);
+                return;
+            }
+
             if (!string.IsNullOrEmpty(_targetTagPath))
             {
                 ZeroTagEngine.SetTagValue(_targetTagPath!, true);

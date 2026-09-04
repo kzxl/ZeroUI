@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using ZeroUI.Core.Collections;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Historian;
+using ZeroUI.Core.Runtime;
 
 namespace ZeroUI.Core.Scada
 {
@@ -101,7 +102,14 @@ namespace ZeroUI.Core.Scada
                         {
                             try
                             {
-                                control.OnTagValueChanged(newTag);
+                                if (UiDispatcher.IsInitialized && !UiDispatcher.IsOnUiDispatcherThread)
+                                {
+                                    UiDispatcher.Post(() => control.OnTagValueChanged(newTag));
+                                }
+                                else
+                                {
+                                    control.OnTagValueChanged(newTag);
+                                }
                             }
                             catch
                             {

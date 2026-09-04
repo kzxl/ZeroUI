@@ -39,7 +39,8 @@ namespace ZeroUI.WinForms.Overlays
                 ControlStyles.UserPaint |
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
 
             Dock = DockStyle.Right;
             Width = 0;

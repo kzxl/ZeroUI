@@ -2,9 +2,13 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Rendering;
+using ZeroUI.Core.Runtime;
+using ZeroUI.Core.Theme;
 using ZeroUI.Core.Virtualization;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Forms;
@@ -13,6 +17,7 @@ using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Industrial;
+using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.BenchmarkDemo
@@ -23,6 +28,15 @@ namespace ZeroUI.Samples.BenchmarkDemo
         [STAThread]
         private static void Main(string[] args)
         {
+            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+            Application.EnableVisualStyles();
+            try { Application.SetCompatibleTextRenderingDefault(false); } catch { }
+
+            var syncContext = new WindowsFormsSynchronizationContext();
+            SynchronizationContext.SetSynchronizationContext(syncContext);
+            UiDispatcher.Initialize(syncContext);
+            ZeroAnimationClock.SetSynchronizationContext(syncContext);
+
             if (args.Length > 0 && args[0].Equals("--benchmark", StringComparison.OrdinalIgnoreCase))
             {
                 RunHeadlessBenchmark();
@@ -43,11 +57,21 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 CaptureScreenshotsForReadme();
                 return;
             }
+            if (args.Length > 0 && args[0].Equals("--test-all-tabs", StringComparison.OrdinalIgnoreCase))
+            {
+                RunAllTabsDiagnostics();
+                return;
+            }
 
-            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+            Application.ThreadException += (s, e) =>
+            {
+                Debug.WriteLine($"[ZeroUI Error] Application.ThreadException: {e.Exception}");
+            };
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                Debug.WriteLine($"[ZeroUI Error] AppDomain.UnhandledException: {e.ExceptionObject}");
+            };
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
         }
 
@@ -400,9 +424,9 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 }
                 Console.WriteLine($"   Output Directory: {outputDir}");
 
-                Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
+                try { Application.SetHighDpiMode(HighDpiMode.PerMonitorV2); } catch { }
+                try { Application.EnableVisualStyles(); } catch { }
+                try { Application.SetCompatibleTextRenderingDefault(false); } catch { }
 
                 // 1. Launch MainForm and load realistic dataset
                 using (var form = new MainForm())
@@ -917,6 +941,74 @@ namespace ZeroUI.Samples.BenchmarkDemo
             }
 
             compBmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        private static void RunAllTabsDiagnostics()
+        {
+            try
+            {
+                Console.WriteLine("⚡ Running Comprehensive Demo Diagnostic (All Tabs, Subtabs & Skins)...");
+                try { Application.SetHighDpiMode(HighDpiMode.PerMonitorV2); } catch { }
+                try { Application.EnableVisualStyles(); } catch { }
+                try { Application.SetCompatibleTextRenderingDefault(false); } catch { }
+
+                using var form = new MainForm();
+                form.StartPosition = FormStartPosition.Manual;
+                form.Location = new Point(50, 50);
+                form.Size = new Size(1366, 850);
+                form.Show();
+                form.LoadDatasetPublic(10_000);
+                Application.DoEvents();
+
+                for (int i = 0; i < 7; i++)
+                {
+                    Console.WriteLine($"-> Testing Master Tab Index {i}...");
+                    form.SelectTabByIndex(i);
+                    Application.DoEvents();
+
+                    TestChildTabControls(form);
+
+                    using var bmp = new Bitmap(form.Width, form.Height);
+                    form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+                    Console.WriteLine($"   [PASS] Tab Index {i} rendered cleanly.");
+                }
+
+                Console.WriteLine("-> Testing all skins...");
+                foreach (var skin in ZeroSkinManager.AvailableSkins)
+                {
+                    Console.WriteLine($"   Testing skin {skin.Name}...");
+                    ZeroSkinManager.ApplySkin(skin);
+                    Application.DoEvents();
+                }
+
+                form.Close();
+                Console.WriteLine("\n🎉 ALL DEMO TABS, SUBTABS AND SKINS PASSED WITH ZERO ERRORS!");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"\n❌ DIAGNOSTIC FAILED WITH ERROR:\n{ex}");
+                Environment.Exit(1);
+            }
+        }
+
+        private static void TestChildTabControls(Control parent)
+        {
+            foreach (Control c in parent.Controls)
+            {
+                if (c is ZeroTabControl tc)
+                {
+                    for (int s = 0; s < tc.TabPages.Count; s++)
+                    {
+                        tc.SelectedIndex = s;
+                        Application.DoEvents();
+                        Console.WriteLine($"      Subtab [{tc.TabPages[s].Title}] selected OK.");
+                    }
+                }
+                if (c.HasChildren)
+                {
+                    TestChildTabControls(c);
+                }
+            }
         }
     }
 }

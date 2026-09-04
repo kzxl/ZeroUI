@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Rendering;
+using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Theme;
 using ZeroUI.Samples.BenchmarkDemo.Data;
@@ -119,6 +122,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         public MainForm()
         {
+            // Initialize central UI thread marshaler & animation sync context
+            var syncContext = WindowsFormsSynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
+            SynchronizationContext.SetSynchronizationContext(syncContext);
+            UiDispatcher.Initialize(syncContext);
+            ZeroAnimationClock.SetSynchronizationContext(syncContext);
+
             InitializeComponents();
 
             // Synchronize application shell with central ZeroSkinManager
@@ -623,8 +632,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 {
                     tabPage.BackColor = colors.Background;
                 }
-                else if (c is Panel p)
+                else if (c is ZeroCard card)
                 {
+                    card.BackColor = colors.CardBackground;
+                }
+                else if (c.GetType() == typeof(Panel))
+                {
+                    var p = (Panel)c;
                     if (p.BackColor != Color.Transparent)
                     {
                         p.BackColor = (p.Name == "leftShowcasePanel") ? colors.Surface : colors.Background;
@@ -4888,7 +4902,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Action = CommandButtonAction.Start,
                 CommandText = "START BATCH",
-                PressAndHoldSeconds = 0.5f,
+                PressAndHoldSeconds = 0f,
                 RequiresConfirmation = false,
                 Size = new Size(130, 44)
             };
@@ -5375,217 +5389,225 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _closedLoopTimer = new System.Windows.Forms.Timer { Interval = 50 };
             _closedLoopTimer.Tick += (s, e) =>
             {
-                if (isEmergencyStop)
+                try
                 {
-                    trendChart.AddPoint(0, (float)currentTemp);
-                    trendChart.AddPoint(1, (float)currentPress);
-                    trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
-                    trendChart.AddPoint(3, 0f);
-                    return;
-                }
+                    if (isEmergencyStop)
+                    {
+                        trendChart.AddPoint(0, (float)currentTemp);
+                        trendChart.AddPoint(1, (float)currentPress);
+                        trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
+                        trendChart.AddPoint(3, 0f);
+                        return;
+                    }
 
-                if (!isRunning)
-                {
-                    badgeStatus.Status = ZeroStatusType.Idle;
-                    if (badgeStatus.Text != "BATCH ON HOLD") badgeStatus.Text = "READY / IDLE";
-                    currentPress += (14.7 - currentPress) * 0.05;
-                    currentTemp += (26.5 - currentTemp) * 0.02;
-                    gaugePressure.Value = (float)currentPress;
-                    indicatorTemp.Value = currentTemp;
-                    heater.TemperatureC = currentTemp;
-                    trendChart.AddPoint(0, (float)currentTemp);
-                    trendChart.AddPoint(1, (float)currentPress);
-                    trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
-                    trendChart.AddPoint(3, 0f);
-                    return;
-                }
-
-                machineCard.Status = MachineStatus.Running;
-
-                switch (phase)
-                {
-                    case 1: // Chemical Inflow & Dosing
-                        badgeStatus.Status = ZeroStatusType.Processing;
-                        badgeStatus.Text = "STAGE 1: FEEDING MATERIAL";
-                        pumpFeed.State = ZeroPumpState.Running;
-                        pumpFeed.SpeedRpm = 2950;
-                        valveInflow.State = ZeroValveState.Open;
-                        valveInflow.PositionPercent = 100;
-                        pipeInlet1.IsFlowing = true;
-                        pipeInlet2.IsFlowing = true;
-                        pipeInlet3.IsFlowing = true;
-
-                        supplyLevel = Math.Max(500f, supplyLevel - 35f);
-                        reactorLevel += 45f;
-                        tankSupply.CurrentLevelLiters = supplyLevel;
-                        tankReactor.CurrentLevelLiters = reactorLevel;
-
-                        if (reactorLevel >= targetReactorLevel)
-                        {
-                            pumpFeed.State = ZeroPumpState.Stopped;
-                            pumpFeed.SpeedRpm = 0;
-                            valveInflow.State = ZeroValveState.Closed;
-                            valveInflow.PositionPercent = 0;
-                            pipeInlet1.IsFlowing = false;
-                            pipeInlet2.IsFlowing = false;
-                            pipeInlet3.IsFlowing = false;
-                            phase = 2;
-                            phaseTicks = 0;
-                        }
-                        break;
-
-                    case 2: // Heating & Agitation
-                        badgeStatus.Status = ZeroStatusType.Running;
-                        badgeStatus.Text = "STAGE 2: HEATING & AGITATION";
-                        motorAgitator.State = ZeroMotorState.Running;
-                        motorAgitator.SpeedRpm = 1450;
-                        heater.State = ZeroHeaterState.Heating;
-                        heater.SetpointC = spTargetTemp.SetpointValue;
-
-                        double targetTemp = spTargetTemp.SetpointValue;
-                        currentTemp += 2.5;
-                        currentPress = 14.7 + (currentTemp - 25.0) * 0.32;
-                        heater.TemperatureC = currentTemp;
+                    if (!isRunning)
+                    {
+                        badgeStatus.Status = ZeroStatusType.Idle;
+                        if (badgeStatus.Text != "BATCH ON HOLD") badgeStatus.Text = "READY / IDLE";
+                        currentPress += (14.7 - currentPress) * 0.05;
+                        currentTemp += (26.5 - currentTemp) * 0.02;
+                        gaugePressure.Value = (float)currentPress;
                         indicatorTemp.Value = currentTemp;
-                        gaugePressure.Value = (float)currentPress;
+                        heater.TemperatureC = currentTemp;
+                        trendChart.AddPoint(0, (float)currentTemp);
+                        trendChart.AddPoint(1, (float)currentPress);
+                        trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
+                        trendChart.AddPoint(3, 0f);
+                        return;
+                    }
 
-                        // Reaction color shift towards emerald
-                        double progress = Math.Max(0.0, Math.Min(1.0, (currentTemp - 26.5) / (targetTemp - 26.5)));
-                        int cr = (int)(245 - (245 - 16) * progress);
-                        int cg = (int)(158 + (185 - 158) * progress);
-                        int cb = (int)(11 + (129 - 11) * progress);
-                        tankReactor.FluidColor = Color.FromArgb(cr, cg, cb);
+                    machineCard.Status = MachineStatus.Running;
 
-                        if (currentTemp >= targetTemp)
-                        {
-                            heater.State = ZeroHeaterState.Off;
-                            phase = 3;
-                            phaseTicks = 0;
-                        }
-                        break;
+                    switch (phase)
+                    {
+                        case 1: // Chemical Inflow & Dosing
+                            badgeStatus.Status = ZeroStatusType.Processing;
+                            badgeStatus.Text = "STAGE 1: FEEDING MATERIAL";
+                            pumpFeed.State = ZeroPumpState.Running;
+                            pumpFeed.SpeedRpm = 2950;
+                            valveInflow.State = ZeroValveState.Open;
+                            valveInflow.PositionPercent = 100;
+                            pipeInlet1.IsFlowing = true;
+                            pipeInlet2.IsFlowing = true;
+                            pipeInlet3.IsFlowing = true;
 
-                    case 3: // Reaction Quench & Permissive Check
-                        badgeStatus.Status = ZeroStatusType.Running;
-                        badgeStatus.Text = "STAGE 3: QUENCH & PERMISSIVE CHECK";
-                        fanCooling.State = ZeroFanState.Running;
-                        fanCooling.SpeedRpm = 1600;
-                        phaseTicks++;
-
-                        // Vessel pressure regulation
-                        currentPress += (48.0 - currentPress) * 0.1;
-                        gaugePressure.Value = (float)currentPress;
-
-                        if (phaseTicks >= 30) // ~1.5s quench
-                        {
-                            fanCooling.State = ZeroFanState.Stopped;
-                            fanCooling.SpeedRpm = 0;
-                            motorAgitator.State = ZeroMotorState.Stopped;
-                            motorAgitator.SpeedRpm = 0;
-                            phase = 4;
-                            phaseTicks = 0;
-                            cylinderPos = 0.0;
-                            cylinderDir = 1;
-                            dwellCounter = 0;
-                        }
-                        break;
-
-                    case 4: // Pneumatic Dosing
-                        badgeStatus.Status = ZeroStatusType.Processing;
-                        badgeStatus.Text = "STAGE 4: PNEUMATIC DOSING";
-                        pipeDischarge.IsFlowing = true;
-                        valveDischarge.State = ZeroValveState.Open;
-                        sensorArrival.State = SensorState.Active;
-
-                        cylinderPos += 20.0 * cylinderDir;
-                        if (cylinderPos >= 100.0)
-                        {
-                            cylinderPos = 100.0;
-                            dwellCounter++;
-                            if (dwellCounter > 4) // held for 200ms
-                            {
-                                cylinderDir = -1; // retract
-                            }
-                        }
-
-                        cylDosing.ExtensionPercent = cylinderPos;
-                        cylDosing.State = cylinderPos > 0.0 ? CylinderState.Moving : CylinderState.Retracted;
-
-                        if (cylinderPos <= 0.0 && cylinderDir == -1)
-                        {
-                            cylDosing.ExtensionPercent = 0.0;
-                            cylDosing.State = CylinderState.Retracted;
-                            pipeDischarge.IsFlowing = false;
-                            valveDischarge.State = ZeroValveState.Closed;
-                            sensorArrival.State = SensorState.Inactive;
-
-                            reactorLevel = Math.Max(0f, reactorLevel - 280f);
+                            supplyLevel = Math.Max(500f, supplyLevel - 35f);
+                            reactorLevel += 45f;
+                            tankSupply.CurrentLevelLiters = supplyLevel;
                             tankReactor.CurrentLevelLiters = reactorLevel;
 
-                            counterProduction.Actual++;
-                            if (counterProduction.Actual % 12 == 0) counterProduction.NG++;
-                            machineCard.PartCount = counterProduction.Actual;
-
-                            phase = 5;
-                            phaseTicks = 0;
-                        }
-                        break;
-
-                    case 5: // Conveyor Indexing & Packaging
-                        badgeStatus.Status = ZeroStatusType.Running;
-                        badgeStatus.Text = "STAGE 5: BOTTLING & PACKAGING";
-                        conveyorBelt.State = ConveyorState.Running;
-                        conveyorBelt.SpeedMpm = 28.0;
-                        machineCard.SpeedRpm = 28.0 * 60.0;
-                        phaseTicks++;
-
-                        if (phaseTicks >= 20) // 1.0s indexing
-                        {
-                            conveyorBelt.State = ConveyorState.Stopped;
-                            conveyorBelt.SpeedMpm = 0;
-                            machineCard.SpeedRpm = 0;
-
-                            if (reactorLevel > 800f)
+                            if (reactorLevel >= targetReactorLevel)
                             {
-                                // Next dose in current batch
+                                pumpFeed.State = ZeroPumpState.Stopped;
+                                pumpFeed.SpeedRpm = 0;
+                                valveInflow.State = ZeroValveState.Closed;
+                                valveInflow.PositionPercent = 0;
+                                pipeInlet1.IsFlowing = false;
+                                pipeInlet2.IsFlowing = false;
+                                pipeInlet3.IsFlowing = false;
+                                phase = 2;
+                                phaseTicks = 0;
+                            }
+                            break;
+
+                        case 2: // Heating & Agitation
+                            badgeStatus.Status = ZeroStatusType.Running;
+                            badgeStatus.Text = "STAGE 2: HEATING & AGITATION";
+                            motorAgitator.State = ZeroMotorState.Running;
+                            motorAgitator.SpeedRpm = 1450;
+                            heater.State = ZeroHeaterState.Heating;
+                            heater.SetpointC = spTargetTemp.SetpointValue;
+
+                            double targetTemp = spTargetTemp.SetpointValue;
+                            currentTemp += 2.5;
+                            currentPress = 14.7 + (currentTemp - 25.0) * 0.32;
+                            heater.TemperatureC = currentTemp;
+                            indicatorTemp.Value = currentTemp;
+                            gaugePressure.Value = (float)currentPress;
+
+                            // Reaction color shift towards emerald (safely guarded against zero/negative division)
+                            double tempSpan = Math.Max(1.0, targetTemp - 26.5);
+                            double progress = Math.Max(0.0, Math.Min(1.0, (currentTemp - 26.5) / tempSpan));
+                            int cr = Math.Clamp((int)(245 - (245 - 16) * progress), 0, 255);
+                            int cg = Math.Clamp((int)(158 + (185 - 158) * progress), 0, 255);
+                            int cb = Math.Clamp((int)(11 + (129 - 11) * progress), 0, 255);
+                            tankReactor.FluidColor = Color.FromArgb(cr, cg, cb);
+
+                            if (currentTemp >= targetTemp)
+                            {
+                                heater.State = ZeroHeaterState.Off;
+                                phase = 3;
+                                phaseTicks = 0;
+                            }
+                            break;
+
+                        case 3: // Reaction Quench & Permissive Check
+                            badgeStatus.Status = ZeroStatusType.Running;
+                            badgeStatus.Text = "STAGE 3: QUENCH & PERMISSIVE CHECK";
+                            fanCooling.State = ZeroFanState.Running;
+                            fanCooling.SpeedRpm = 1600;
+                            phaseTicks++;
+
+                            // Vessel pressure regulation
+                            currentPress += (48.0 - currentPress) * 0.1;
+                            gaugePressure.Value = (float)currentPress;
+
+                            if (phaseTicks >= 30) // ~1.5s quench
+                            {
+                                fanCooling.State = ZeroFanState.Stopped;
+                                fanCooling.SpeedRpm = 0;
+                                motorAgitator.State = ZeroMotorState.Stopped;
+                                motorAgitator.SpeedRpm = 0;
                                 phase = 4;
                                 phaseTicks = 0;
                                 cylinderPos = 0.0;
                                 cylinderDir = 1;
                                 dwellCounter = 0;
                             }
-                            else
+                            break;
+
+                        case 4: // Pneumatic Dosing
+                            badgeStatus.Status = ZeroStatusType.Processing;
+                            badgeStatus.Text = "STAGE 4: PNEUMATIC DOSING";
+                            pipeDischarge.IsFlowing = true;
+                            valveDischarge.State = ZeroValveState.Open;
+                            sensorArrival.State = SensorState.Active;
+
+                            cylinderPos += 20.0 * cylinderDir;
+                            if (cylinderPos >= 100.0)
                             {
-                                // Batch finished!
-                                if (modeSelector.SelectedMode == MachineControlMode.Auto)
+                                cylinderPos = 100.0;
+                                dwellCounter++;
+                                if (dwellCounter > 4) // held for 200ms
                                 {
-                                    phase = 1;
+                                    cylinderDir = -1; // retract
+                                }
+                            }
+
+                            cylDosing.ExtensionPercent = cylinderPos;
+                            cylDosing.State = cylinderPos > 0.0 ? CylinderState.Moving : CylinderState.Retracted;
+
+                            if (cylinderPos <= 0.0 && cylinderDir == -1)
+                            {
+                                cylDosing.ExtensionPercent = 0.0;
+                                cylDosing.State = CylinderState.Retracted;
+                                pipeDischarge.IsFlowing = false;
+                                valveDischarge.State = ZeroValveState.Closed;
+                                sensorArrival.State = SensorState.Inactive;
+
+                                reactorLevel = Math.Max(0f, reactorLevel - 280f);
+                                tankReactor.CurrentLevelLiters = reactorLevel;
+
+                                counterProduction.Actual++;
+                                if (counterProduction.Actual % 12 == 0) counterProduction.NG++;
+                                machineCard.PartCount = counterProduction.Actual;
+
+                                phase = 5;
+                                phaseTicks = 0;
+                            }
+                            break;
+
+                        case 5: // Conveyor Indexing & Packaging
+                            badgeStatus.Status = ZeroStatusType.Running;
+                            badgeStatus.Text = "STAGE 5: BOTTLING & PACKAGING";
+                            conveyorBelt.State = ConveyorState.Running;
+                            conveyorBelt.SpeedMpm = 28.0;
+                            machineCard.SpeedRpm = 28.0 * 60.0;
+                            phaseTicks++;
+
+                            if (phaseTicks >= 20) // 1.0s indexing
+                            {
+                                conveyorBelt.State = ConveyorState.Stopped;
+                                conveyorBelt.SpeedMpm = 0;
+                                machineCard.SpeedRpm = 0;
+
+                                if (reactorLevel > 800f)
+                                {
+                                    // Next dose in current batch
+                                    phase = 4;
                                     phaseTicks = 0;
-                                    currentTemp = 26.5;
-                                    currentPress = 14.7;
-                                    tankReactor.FluidColor = Color.FromArgb(245, 158, 11);
-                                    if (supplyLevel < 2000f) supplyLevel = 8500f;
-                                    ZeroToast.Success(this, "Batch completed! Auto-mode engaged: Starting next cycle.");
+                                    cylinderPos = 0.0;
+                                    cylinderDir = 1;
+                                    dwellCounter = 0;
                                 }
                                 else
                                 {
-                                    isRunning = false;
-                                    phase = 0;
-                                    badgeStatus.Status = ZeroStatusType.Idle;
-                                    badgeStatus.Text = "BATCH COMPLETE / IDLE";
-                                    machineCard.Status = MachineStatus.Idle;
-                                    ZeroToast.Info(this, "Batch completed! System returned to Idle awaiting operator command.");
+                                    // Batch finished!
+                                    if (modeSelector.SelectedMode == MachineControlMode.Auto)
+                                    {
+                                        phase = 1;
+                                        phaseTicks = 0;
+                                        currentTemp = 26.5;
+                                        currentPress = 14.7;
+                                        tankReactor.FluidColor = Color.FromArgb(245, 158, 11);
+                                        if (supplyLevel < 2000f) supplyLevel = 8500f;
+                                        ZeroToast.Success(this, "Batch completed! Auto-mode engaged: Starting next cycle.");
+                                    }
+                                    else
+                                    {
+                                        isRunning = false;
+                                        phase = 0;
+                                        badgeStatus.Status = ZeroStatusType.Idle;
+                                        badgeStatus.Text = "BATCH COMPLETE / IDLE";
+                                        machineCard.Status = MachineStatus.Idle;
+                                        ZeroToast.Info(this, "Batch completed! System returned to Idle awaiting operator command.");
+                                    }
                                 }
                             }
-                        }
-                        break;
-                }
+                            break;
+                    }
 
-                // Live Telemetry stream to TrendChart (60 FPS circular buffer)
-                trendChart.AddPoint(0, (float)currentTemp);
-                trendChart.AddPoint(1, (float)currentPress);
-                trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
-                float outRate = conveyorBelt.SpeedMpm > 0 ? 42f : (cylDosing.ExtensionPercent > 0 ? 28f : 0f);
-                trendChart.AddPoint(3, outRate);
+                    // Live Telemetry stream to TrendChart (60 FPS circular buffer)
+                    trendChart.AddPoint(0, (float)currentTemp);
+                    trendChart.AddPoint(1, (float)currentPress);
+                    trendChart.AddPoint(2, (float)(reactorLevel / 5000f * 100f));
+                    float outRate = conveyorBelt.SpeedMpm > 0 ? 42f : (cylDosing.ExtensionPercent > 0 ? 28f : 0f);
+                    trendChart.AddPoint(3, outRate);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[ScadaClosedLoop] Tick exception: {ex}");
+                }
             };
             _closedLoopTimer.Start();
         }
@@ -5593,6 +5615,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             _closedLoopTimer?.Stop();
+            _scadaSimTimer?.Stop();
+            _logGenTimer?.Stop();
+            _hudTimer?.Stop();
+            _autoScrollTimer?.Stop();
             SimulatedPlcDriver.Stop();
             base.OnFormClosing(e);
         }
