@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -13,8 +14,12 @@ namespace ZeroUI.Core.Historian
 {
     /// <summary>
     /// High-performance embedded time-series historian leveraging SQLite with Write-Ahead Logging (WAL).
-    /// Features rolling daily database partitions, asynchronous batch commits, LTTB decimation queries,
-    /// and Store-and-Forward synchronization.
+    /// Features:
+    /// - Persistent active partition connection & prepared command caching (eliminates per-batch connection/DDL overhead).
+    /// - Rolling daily database partitions and asynchronous batch commits.
+    /// - Explicit WAL checkpointing (Passive, Full, Restart, Truncate) and file storage observability metrics.
+    /// - Sub-millisecond LTTB decimation range queries.
+    /// - Store-and-Forward synchronization for edge-to-cloud reliability.
     /// </summary>
     public sealed class SqliteHistorianEngine : IHistorianEngine
     {
@@ -26,6 +31,16 @@ namespace ZeroUI.Core.Historian
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isDisposed;
+
+        // Cached active partition connection & prepared statement
+        private SqliteConnection? _activeConnection;
+        private SqliteCommand? _activeInsertCmd;
+        private SqliteParameter? _pPath;
+        private SqliteParameter? _pVal;
+        private SqliteParameter? _pQuality;
+        private SqliteParameter? _pTs;
+        private DateTime _activePartitionDate = DateTime.MinValue;
+        private TimeSpan _lastCheckpointDuration = TimeSpan.Zero;
 
         /// <summary>
         /// Initializes a new instance of SqliteHistorianEngine.
@@ -39,8 +54,8 @@ namespace ZeroUI.Core.Historian
             int flushIntervalMs = 500)
         {
             _storageDirectory = storageDirectory ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Historian");
-            _batchSize = Math.Max(10, batchSize);
-            _flushIntervalMs = Math.Max(50, flushIntervalMs);
+            _batchSize = Math.Max(1, batchSize);
+            _flushIntervalMs = Math.Max(10, flushIntervalMs);
 
             if (!Directory.Exists(_storageDirectory))
             {
@@ -99,48 +114,143 @@ namespace ZeroUI.Core.Historian
 
         private async Task WriteBatchToPartitionAsync(DateTime date, List<HistorianRecord> records, CancellationToken ct)
         {
-            var dbPath = GetPartitionPath(date);
-            var connStr = $"Data Source={dbPath};";
+            // Reuse open partition connection and prepared command to avoid per-batch DDL checks
+            if (_activeConnection == null || _activePartitionDate != date || _activeInsertCmd == null)
+            {
+                CloseActivePartition();
 
-            using var connection = new SqliteConnection(connStr);
-            await connection.OpenAsync(ct).ConfigureAwait(false);
-            InitializeDatabasePragmas(connection);
+                var dbPath = GetPartitionPath(date);
+                var connStr = $"Data Source={dbPath};";
 
-            using var transaction = connection.BeginTransaction();
-            using var command = connection.CreateCommand();
-            command.Transaction = transaction;
-            command.CommandText = @"
-                INSERT INTO TagHistory (TagPath, Val, Quality, Timestamp, IsSynced)
-                VALUES ($path, $val, $quality, $ts, 0);";
+                var connection = new SqliteConnection(connStr);
+                await connection.OpenAsync(ct).ConfigureAwait(false);
+                InitializeDatabasePragmas(connection);
 
-            var pPath = command.CreateParameter();
-            pPath.ParameterName = "$path";
-            command.Parameters.Add(pPath);
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = @"
+                    INSERT INTO TagHistory (TagPath, Val, Quality, Timestamp, IsSynced)
+                    VALUES ($path, $val, $quality, $ts, 0);";
 
-            var pVal = command.CreateParameter();
-            pVal.ParameterName = "$val";
-            command.Parameters.Add(pVal);
+                var pPath = cmd.CreateParameter();
+                pPath.ParameterName = "$path";
+                cmd.Parameters.Add(pPath);
 
-            var pQuality = command.CreateParameter();
-            pQuality.ParameterName = "$quality";
-            command.Parameters.Add(pQuality);
+                var pVal = cmd.CreateParameter();
+                pVal.ParameterName = "$val";
+                cmd.Parameters.Add(pVal);
 
-            var pTs = command.CreateParameter();
-            pTs.ParameterName = "$ts";
-            command.Parameters.Add(pTs);
+                var pQuality = cmd.CreateParameter();
+                pQuality.ParameterName = "$quality";
+                cmd.Parameters.Add(pQuality);
+
+                var pTs = cmd.CreateParameter();
+                pTs.ParameterName = "$ts";
+                cmd.Parameters.Add(pTs);
+
+                _activeConnection = connection;
+                _activeInsertCmd = cmd;
+                _pPath = pPath;
+                _pVal = pVal;
+                _pQuality = pQuality;
+                _pTs = pTs;
+                _activePartitionDate = date;
+            }
+
+            using var transaction = _activeConnection.BeginTransaction();
+            _activeInsertCmd.Transaction = transaction;
 
             for (int i = 0; i < records.Count; i++)
             {
                 var r = records[i];
-                pPath.Value = r.TagPath;
-                pVal.Value = r.Value;
-                pQuality.Value = (int)r.Quality;
-                pTs.Value = new DateTimeOffset(r.Timestamp).ToUnixTimeMilliseconds();
+                _pPath!.Value = r.TagPath;
+                _pVal!.Value = r.Value;
+                _pQuality!.Value = (int)r.Quality;
+                _pTs!.Value = new DateTimeOffset(r.Timestamp).ToUnixTimeMilliseconds();
 
-                await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                await _activeInsertCmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
             }
 
             transaction.Commit();
+        }
+
+        /// <summary>
+        /// Executes an explicit WAL checkpoint on the target partition, measuring and recording latency.
+        /// </summary>
+        public async Task<TimeSpan> CheckpointAsync(
+            DateTime? partitionDate = null,
+            SqliteCheckpointMode mode = SqliteCheckpointMode.Truncate,
+            CancellationToken ct = default)
+        {
+            var date = partitionDate ?? DateTime.UtcNow.Date;
+            var sw = Stopwatch.StartNew();
+
+            await _writeLock.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                var dbPath = GetPartitionPath(date);
+                if (!File.Exists(dbPath)) return TimeSpan.Zero;
+
+                if (_activeConnection != null && _activePartitionDate == date)
+                {
+                    using var cmd = _activeConnection.CreateCommand();
+                    cmd.CommandText = $"PRAGMA wal_checkpoint({mode.ToString().ToUpperInvariant()});";
+                    await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                }
+                else
+                {
+                    var connStr = $"Data Source={dbPath};";
+                    using var conn = new SqliteConnection(connStr);
+                    await conn.OpenAsync(ct).ConfigureAwait(false);
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = $"PRAGMA wal_checkpoint({mode.ToString().ToUpperInvariant()});";
+                    await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                _writeLock.Release();
+            }
+
+            sw.Stop();
+            _lastCheckpointDuration = sw.Elapsed;
+            return sw.Elapsed;
+        }
+
+        /// <summary>
+        /// Queries disk storage, WAL file size, record count, and checkpoint metrics for observability.
+        /// </summary>
+        public HistorianStorageMetrics GetStorageMetrics(DateTime? partitionDate = null)
+        {
+            var date = partitionDate ?? DateTime.UtcNow.Date;
+            var dbPath = GetPartitionPath(date);
+            var walPath = dbPath + "-wal";
+
+            long dbSize = File.Exists(dbPath) ? new FileInfo(dbPath).Length : 0;
+            long walSize = File.Exists(walPath) ? new FileInfo(walPath).Length : 0;
+            long totalRecords = 0;
+
+            if (File.Exists(dbPath))
+            {
+                try
+                {
+                    var connStr = $"Data Source={dbPath};Mode=ReadOnly;";
+                    using var conn = new SqliteConnection(connStr);
+                    conn.Open();
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = "SELECT COUNT(*) FROM TagHistory;";
+                    var res = cmd.ExecuteScalar();
+                    if (res != null && long.TryParse(res.ToString(), out long count))
+                    {
+                        totalRecords = count;
+                    }
+                }
+                catch
+                {
+                    // Fallback if locked
+                }
+            }
+
+            return new HistorianStorageMetrics(date, dbPath, dbSize, walSize, totalRecords, _lastCheckpointDuration);
         }
 
         /// <inheritdoc />
@@ -158,7 +268,6 @@ namespace ZeroUI.Core.Historian
             long startMs = new DateTimeOffset(startTime).ToUnixTimeMilliseconds();
             long endMs = new DateTimeOffset(endTime).ToUnixTimeMilliseconds();
 
-            // Iterate across partitions spanning the requested date range
             for (var curDate = startTime.Date; curDate <= endTime.Date; curDate = curDate.AddDays(1))
             {
                 var dbPath = GetPartitionPath(curDate);
@@ -191,7 +300,6 @@ namespace ZeroUI.Core.Historian
             if (rawPoints.Count == 0) return Array.Empty<TimePoint>();
             if (rawPoints.Count <= targetPoints) return rawPoints;
 
-            // Decimate using LTTB algorithm for sub-millisecond downsampling
             var decimated = new TimePoint[targetPoints];
             int written = LttbDecimation.Downsample(rawPoints, decimated, targetPoints);
 
@@ -206,7 +314,6 @@ namespace ZeroUI.Core.Historian
             var results = new List<HistorianRecord>();
             var today = DateTime.UtcNow.Date;
 
-            // Search partitions (from oldest to newest) for unsynced records
             for (var d = today.AddDays(-7); d <= today; d = d.AddDays(1))
             {
                 var dbPath = GetPartitionPath(d);
@@ -270,7 +377,6 @@ namespace ZeroUI.Core.Historian
             foreach (var file in files)
             {
                 var fileName = Path.GetFileNameWithoutExtension(file);
-                // Historian_yyyy_MM_dd
                 if (fileName.StartsWith("Historian_", StringComparison.OrdinalIgnoreCase))
                 {
                     var datePart = fileName.Substring("Historian_".Length);
@@ -314,6 +420,7 @@ namespace ZeroUI.Core.Historian
                 PRAGMA temp_store = MEMORY;
                 PRAGMA cache_size = -64000;
                 PRAGMA page_size = 4096;
+                PRAGMA wal_autocheckpoint = 10000;
 
                 CREATE TABLE IF NOT EXISTS TagHistory (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -329,6 +436,30 @@ namespace ZeroUI.Core.Historian
             cmd.ExecuteNonQuery();
         }
 
+        private void CloseActivePartition()
+        {
+            try
+            {
+                _activeInsertCmd?.Dispose();
+                _activeConnection?.Close();
+                _activeConnection?.Dispose();
+            }
+            catch
+            {
+                // Cleanup guard
+            }
+            finally
+            {
+                _activeInsertCmd = null;
+                _activeConnection = null;
+                _pPath = null;
+                _pVal = null;
+                _pQuality = null;
+                _pTs = null;
+                _activePartitionDate = DateTime.MinValue;
+            }
+        }
+
         public void Dispose()
         {
             if (_isDisposed) return;
@@ -337,6 +468,7 @@ namespace ZeroUI.Core.Historian
             _flushTimer.Dispose();
             _cts.Cancel();
             _cts.Dispose();
+            CloseActivePartition();
             _writeLock.Dispose();
         }
     }

@@ -20,6 +20,7 @@ namespace ZeroUI.Core.Benchmarks
             ProfileLttb();
             ProfileTagEngine();
             ProfileAlarmEngine();
+            HistorianMultiDimensionalBenchmark.RunAsync().GetAwaiter().GetResult();
 
             Console.WriteLine();
             Console.WriteLine("==================================================================================");

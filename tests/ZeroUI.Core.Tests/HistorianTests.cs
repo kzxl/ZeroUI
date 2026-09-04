@@ -165,5 +165,34 @@ namespace ZeroUI.Core.Tests
             Assert.Equal(15, receivedByCentral.Count);
             Assert.True(worker.IsOnline);
         }
+
+        [Fact]
+        public async Task SqliteHistorianEngine_CheckpointAndStorageMetrics_ReportsAccurately()
+        {
+            using var engine = new SqliteHistorianEngine(
+                storageDirectory: _testHistorianDir,
+                batchSize: 50);
+
+            var now = DateTime.UtcNow;
+
+            for (int i = 0; i < 100; i++)
+            {
+                engine.LogSample("Plant.Tank.Level", 10.0 + i, ScadaQuality.Good, now.AddSeconds(i));
+            }
+
+            await engine.FlushAsync();
+
+            var metricsBefore = engine.GetStorageMetrics(now.Date);
+            Assert.Equal(100, metricsBefore.TotalRecords);
+            Assert.True(metricsBefore.DatabaseSizeBytes > 0);
+
+            // Execute explicit WAL truncate checkpoint
+            var checkpointDuration = await engine.CheckpointAsync(now.Date, SqliteCheckpointMode.Truncate);
+            Assert.True(checkpointDuration >= TimeSpan.Zero);
+
+            var metricsAfter = engine.GetStorageMetrics(now.Date);
+            Assert.Equal(100, metricsAfter.TotalRecords);
+            Assert.Equal(0, metricsAfter.WalSizeBytes); // WAL truncated to 0
+        }
     }
 }
