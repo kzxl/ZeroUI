@@ -42,5 +42,25 @@ namespace ZeroUI.Core.Common
             Marshal.FreeHGlobal((IntPtr)ptr);
 #endif
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Int32BitsToSingle(int value)
+        {
+#if NET8_0_OR_GREATER
+            return BitConverter.Int32BitsToSingle(value);
+#else
+            return *(float*)&value;
+#endif
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int SingleToInt32Bits(float value)
+        {
+#if NET8_0_OR_GREATER
+            return BitConverter.SingleToInt32Bits(value);
+#else
+            return *(int*)&value;
+#endif
+        }
     }
 }
