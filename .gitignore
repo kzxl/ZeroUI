@@ -45,3 +45,7 @@ TestResults/
 *.tmp
 *.temp
 *.log
+
+# Distribution & release artifacts
+dist/
+artifacts/
