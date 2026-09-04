@@ -120,6 +120,14 @@ namespace ZeroUI.WinForms.Industrial
             set { _fluidName = value ?? ""; Invalidate(); }
         }
 
+        [Category("Appearance")]
+        [DefaultValue(typeof(Color), "6, 182, 212")]
+        public Color FluidColor
+        {
+            get => _fluidColor;
+            set { _fluidColor = value; Invalidate(); }
+        }
+
         [Browsable(false)]
         public float Percentage => (_currentLevelLiters / _capacityLiters) * 100f;
 

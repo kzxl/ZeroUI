@@ -7,6 +7,7 @@ using System.Windows.Forms;
 
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Scada;
 using ZeroUI.Core.Theme;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Diagnostics;
@@ -46,6 +47,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _clusterScada = null!;
         private ZeroTabPage _clusterAnalytics = null!;
         private ZeroTabPage _clusterComponents = null!;
+        private ZeroTabPage _clusterScadaSynoptic = null!;
+        private ZeroTabPage _tabScadaPid = null!;
+        private ZeroTabPage _tabScadaAlarms = null!;
+        private ZeroTabPage _tabScadaTags = null!;
 
         // Sub-tabs
         private ZeroTabControl _subTabsBenchmark = null!;
@@ -413,6 +418,23 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             subTabsComponents.AddTab(_tabLayout);
             _clusterComponents.Controls.Add(subTabsComponents);
 
+            // Cluster 7: SCADA Process & P&ID Synoptic (Phased Real-Time Automation)
+            _clusterScadaSynoptic = new ZeroTabPage("SCADA Process & P&ID", "🏭");
+            var subTabsScada = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabScadaPid = new ZeroTabPage("Phase 1: P&ID Process Flow", "🔄");
+            _tabScadaAlarms = new ZeroTabPage("Phase 2: ISA-18.2 Alarms & PID", "🚨");
+            _tabScadaTags = new ZeroTabPage("Phase 3: Real-Time Tag Engine", "⚡");
+            subTabsScada.AddTab(_tabScadaPid);
+            subTabsScada.AddTab(_tabScadaAlarms);
+            subTabsScada.AddTab(_tabScadaTags);
+            _clusterScadaSynoptic.Controls.Add(subTabsScada);
+
             // Build individual cluster views
             InitializeZeroGrid();
             InitializeDataGridView();
@@ -425,19 +447,26 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeChartsDashboard();
             InitializeWarehouseWorkstation();
             InitializeLayoutShowcase(_tabLayout);
+            InitializeScadaProcessFlow(_tabScadaPid);
+            InitializeScadaAlarmsAndPid(_tabScadaAlarms);
+            InitializeScadaTagEngineMonitor(_tabScadaTags);
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
             _tabZero.Controls.Add(_searchBar);
             _tabDgv.Controls.Add(_dgv);
 
-            // Add all 6 clusters to master vertical navigation
+            // Add all 7 clusters to master vertical navigation
             _mainNav.AddTab(_clusterBenchmark);
             _mainNav.AddTab(_clusterMes);
             _mainNav.AddTab(_clusterWarehouse);
             _mainNav.AddTab(_clusterScada);
+            _mainNav.AddTab(_clusterScadaSynoptic);
             _mainNav.AddTab(_clusterAnalytics);
             _mainNav.AddTab(_clusterComponents);
+
+            // Start autonomous background PLC driver
+            SimulatedPlcDriver.Start();
 
             _subTabsBenchmark.SelectedIndexChanged += (s, e) =>
             {
@@ -545,6 +574,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             if (_clusterScada != null) _clusterScada.BackColor = colors.Background;
             if (_clusterAnalytics != null) _clusterAnalytics.BackColor = colors.Background;
             if (_clusterComponents != null) _clusterComponents.BackColor = colors.Background;
+            if (_clusterScadaSynoptic != null) _clusterScadaSynoptic.BackColor = colors.Background;
 
             if (_btnThemeToggle != null)
             {
@@ -4073,6 +4103,536 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             splitRoot.Panel2.Controls.Add(rightStack);
             parent.Controls.Add(splitRoot);
+        }
+
+        private void InitializeScadaProcessFlow(ZeroTabPage parentTab)
+        {
+            var colors = ZeroTheme.Colors;
+            parentTab.BackColor = colors.Background;
+
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = colors.Background,
+                Padding = new Padding(16)
+            };
+
+            // 1. Top Alert Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Height = 62,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "🏭 GIAI ĐOẠN 1: MÔ PHỎNG QUY TRÌNH P&ID ĐỘNG HỌC (P&ID PROCESS FLOW)",
+                Message = "Mô phỏng đường ống động lực học (ZeroPipeFlow), Bơm ly tâm 60 FPS (ZeroIndustrialPump), Van điều tiết (ZeroIndustrialValve) nối 2 bồn chứa 3D (ZeroTank3D), đồng hồ áp suất (ZeroGauge) và dao động ký sóng (ZeroTrendChart)."
+            };
+            var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 2. Interactive Quick Command Bar
+            var quickBar = new Panel { Dock = DockStyle.Top, Height = 42, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 4) };
+
+            var btnTogglePump = new ZeroButton
+            {
+                Text = "⏯ Chạy / Dừng Bơm (P-101A)",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Location = new Point(0, 4),
+                Size = new Size(200, 32)
+            };
+            btnTogglePump.Click += (s, e) =>
+            {
+                SimulatedPlcDriver.TogglePump();
+                ZeroToast.Info(this, $"Bơm P-101A: {(SimulatedPlcDriver.PumpRunning ? "Đang chạy (2950 RPM)" : "Đã dừng")}");
+            };
+
+            var btnToggleValve = new ZeroButton
+            {
+                Text = "🔄 Đóng / Mở Van (XV-101)",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(210, 4),
+                Size = new Size(185, 32)
+            };
+            btnToggleValve.Click += (s, e) =>
+            {
+                SimulatedPlcDriver.ToggleValve();
+                ZeroToast.Info(this, $"Van XV-101: {(SimulatedPlcDriver.ValveOpen ? "MỞ (100%)" : "ĐÓNG (0%)")}");
+            };
+
+            var btnSpike = new ZeroButton
+            {
+                Text = "⚡ Kích Xung Áp Suất (+50 PSI)",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(405, 4),
+                Size = new Size(210, 32)
+            };
+            btnSpike.Click += (s, e) =>
+            {
+                SimulatedPlcDriver.InjectPressureSpike();
+                ZeroToast.Warning(this, "Đã kích hoạt xung quá áp 98.5 PSI! Cảnh báo ISA-18.2 kích hoạt.");
+            };
+
+            var btnEStop = new ZeroButton
+            {
+                Text = "🚨 Dừng Khẩn Cấp (E-STOP)",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Location = new Point(625, 4),
+                Size = new Size(195, 32)
+            };
+            btnEStop.Click += (s, e) =>
+            {
+                SimulatedPlcDriver.ToggleEmergencyStop();
+                ZeroToast.Error(this, SimulatedPlcDriver.EmergencyStop ? "E-STOP KÍCH HOẠT: Toàn bộ bơm van ngắt nguồn!" : "E-STOP ĐÃ ĐƯỢC RESET.");
+            };
+
+            quickBar.Controls.Add(btnTogglePump);
+            quickBar.Controls.Add(btnToggleValve);
+            quickBar.Controls.Add(btnSpike);
+            quickBar.Controls.Add(btnEStop);
+
+            var spacer2 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 3. P&ID Synoptic Canvas Card
+            var cardPid = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 310,
+                Title = "Sơ Đồ Công Nghệ P&ID Đường Ống Khép Kín (Piping & Instrumentation Diagram)",
+                StepNumber = 1
+            };
+
+            var pidCanvas = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
+
+            // Tank 101 (Supply)
+            var tank1 = new ZeroTank3D
+            {
+                Location = new Point(20, 20),
+                Size = new Size(140, 220),
+                TankName = "TK-101 SUPPLY",
+                CapacityLiters = 10000f,
+                CurrentLevelLiters = 6500f,
+                FluidColor = Color.FromArgb(6, 182, 212)
+            };
+
+            // Pipe 1 (Tank to Pump)
+            var pipe1 = new ZeroPipeFlow
+            {
+                Location = new Point(160, 160),
+                Size = new Size(95, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Water,
+                BoundTagPath = "Line1.Flow.Velocity"
+            };
+
+            // Pump P-101A
+            var pump = new ZeroIndustrialPump
+            {
+                Location = new Point(255, 130),
+                Size = new Size(84, 88),
+                TagLabel = "P-101A",
+                SpeedRpm = 2950,
+                PowerKw = 22.0,
+                BoundTagPath = "Line1.Pump.Running"
+            };
+
+            // Pipe 2 (Pump to Valve)
+            var pipe2 = new ZeroPipeFlow
+            {
+                Location = new Point(339, 160),
+                Size = new Size(70, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Water,
+                BoundTagPath = "Line1.Flow.Velocity"
+            };
+
+            // Valve XV-101
+            var valve = new ZeroIndustrialValve
+            {
+                Location = new Point(410, 140),
+                Size = new Size(56, 64),
+                TagLabel = "XV-101",
+                BoundTagPath = "Line1.Valve.Open"
+            };
+
+            // Pipe 3 (Valve to Gauge)
+            var pipe3 = new ZeroPipeFlow
+            {
+                Location = new Point(467, 160),
+                Size = new Size(60, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Water,
+                BoundTagPath = "Line1.Flow.Velocity"
+            };
+
+            // In-line Pressure Gauge PI-101
+            var gauge = new ZeroGauge
+            {
+                Location = new Point(530, 95),
+                Size = new Size(140, 140),
+                Title = "PI-101",
+                Suffix = " PSI",
+                Value = 42.5f
+            };
+
+            // Pipe 4 (Gauge to Tank 2)
+            var pipe4 = new ZeroPipeFlow
+            {
+                Location = new Point(672, 160),
+                Size = new Size(70, 24),
+                PipeDiameter = 18,
+                FluidType = ZeroFluidType.Water,
+                BoundTagPath = "Line1.Flow.Velocity"
+            };
+
+            // Tank 102 (Discharge)
+            var tank2 = new ZeroTank3D
+            {
+                Location = new Point(744, 20),
+                Size = new Size(140, 220),
+                TankName = "TK-102 RECV",
+                CapacityLiters = 12000f,
+                CurrentLevelLiters = 4500f,
+                FluidColor = Color.FromArgb(16, 185, 129)
+            };
+
+            pidCanvas.Controls.Add(tank1);
+            pidCanvas.Controls.Add(pipe1);
+            pidCanvas.Controls.Add(pump);
+            pidCanvas.Controls.Add(pipe2);
+            pidCanvas.Controls.Add(valve);
+            pidCanvas.Controls.Add(pipe3);
+            pidCanvas.Controls.Add(gauge);
+            pidCanvas.Controls.Add(pipe4);
+            pidCanvas.Controls.Add(tank2);
+
+            cardPid.ContentPanel.Controls.Add(pidCanvas);
+
+            var spacer3 = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            // 4. Real-time Telemetry Oscilloscope Strip Chart (ZeroTrendChart)
+            var cardTrend = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 260,
+                Title = "Biểu Đồ Sóng Đo Lường Áp Suất & Vận Tốc Dòng Chảy Thời Gian Thực (60 FPS Stream)",
+                StepNumber = 2
+            };
+
+            var trendChart = new ZeroTrendChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Ch1: Áp Suất Đường Ống (PSI) | Ch2: Lưu Lượng Dòng Chảy (m/s x 20)",
+                UpperLimit = 85f,
+                LowerLimit = 15f
+            };
+            cardTrend.ContentPanel.Controls.Add(trendChart);
+
+            // Telemetry hook timer to stream from SimulatedPlcDriver to Gauge and TrendChart
+            var flowTimer = new System.Windows.Forms.Timer { Interval = 50 };
+            flowTimer.Tick += (s, e) =>
+            {
+                float press = (float)SimulatedPlcDriver.BoilerPressure;
+                float flow = (float)(SimulatedPlcDriver.FlowVelocity * 20.0);
+                gauge.Value = press;
+                trendChart.AddPoint(0, press);
+                trendChart.AddPoint(1, flow);
+            };
+            flowTimer.Start();
+
+            mainContainer.Controls.Add(cardTrend);
+            mainContainer.Controls.Add(spacer3);
+            mainContainer.Controls.Add(cardPid);
+            mainContainer.Controls.Add(spacer2);
+            mainContainer.Controls.Add(quickBar);
+            mainContainer.Controls.Add(spacer1);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            spacer1.BringToFront();
+            quickBar.BringToFront();
+            spacer2.BringToFront();
+            cardPid.BringToFront();
+            spacer3.BringToFront();
+            cardTrend.BringToFront();
+
+            parentTab.Controls.Add(mainContainer);
+        }
+
+        private void InitializeScadaAlarmsAndPid(ZeroTabPage parentTab)
+        {
+            var colors = ZeroTheme.Colors;
+            parentTab.BackColor = colors.Background;
+
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = colors.Background,
+                Padding = new Padding(16)
+            };
+
+            // 1. Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Height = 62,
+                Severity = ZeroAlertSeverity.Warning,
+                Title = "🚨 GIAI ĐOẠN 2: BẢNG ĐÈN BÁO ĐỘNG ISA-18.2 & MẶT ĐIỀU KHIỂN VÒNG LẶP KÍN PID",
+                Message = "Chu trình quản lý báo động chuẩn quốc tế ISA-18.2 (ZeroAnnunciatorGrid) kết hợp bộ điều khiển đơn vòng lặp PID (ZeroPidFaceplate) theo dõi sai lệch PV - SP thời gian thực."
+            };
+            var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 2. Dual Panel Row (Left: Alarms, Right: PID)
+            var rowDual = new Panel { Dock = DockStyle.Top, Height = 390, BackColor = Color.Transparent };
+
+            // Left Card: ISA-18.2 Annunciator
+            var cardAlarms = new ZeroCard
+            {
+                Dock = DockStyle.Left,
+                Width = 530,
+                Title = "Bảng Đèn Báo Động Nhà Máy Chuẩn ISA-18.2 (12-Tile Matrix Annunciator)",
+                StepNumber = 1
+            };
+
+            var annunciator = new ZeroAnnunciatorGrid
+            {
+                Dock = DockStyle.Fill
+            };
+            cardAlarms.ContentPanel.Controls.Add(annunciator);
+
+            var alarmToolbar = new Panel { Dock = DockStyle.Bottom, Height = 38, BackColor = Color.Transparent, Padding = new Padding(4) };
+            var btnTriggerHighP = new ZeroButton { Text = "+ Quá Áp", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(4, 4), Size = new Size(95, 28) };
+            btnTriggerHighP.Click += (s, e) => annunciator.TriggerAlarm("Line1.Alarm.HighPressure", true);
+
+            var btnTriggerLowL = new ZeroButton { Text = "+ Hụt Mức", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(105, 4), Size = new Size(95, 28) };
+            btnTriggerLowL.Click += (s, e) => annunciator.TriggerAlarm("Line1.Alarm.LowLevel", true);
+
+            var btnTriggerTrip = new ZeroButton { Text = "+ Trip Bơm", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(206, 4), Size = new Size(95, 28) };
+            btnTriggerTrip.Click += (s, e) => annunciator.TriggerAlarm("Line1.Alarm.PumpTrip", true);
+
+            var btnClearAll = new ZeroButton { Text = "✔ Xóa Sự Cố", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(307, 4), Size = new Size(110, 28) };
+            btnClearAll.Click += (s, e) =>
+            {
+                annunciator.TriggerAlarm("Line1.Alarm.HighPressure", false);
+                annunciator.TriggerAlarm("Line1.Alarm.LowLevel", false);
+                annunciator.TriggerAlarm("Line1.Alarm.PumpTrip", false);
+                annunciator.TriggerAlarm("Line1.Alarm.EmergencyStop", false);
+                ZeroToast.Info(this, "Đã xóa toàn bộ sự cố. Bấm RESET trên bảng đèn để xóa hẳn.");
+            };
+
+            alarmToolbar.Controls.Add(btnTriggerHighP);
+            alarmToolbar.Controls.Add(btnTriggerLowL);
+            alarmToolbar.Controls.Add(btnTriggerTrip);
+            alarmToolbar.Controls.Add(btnClearAll);
+            cardAlarms.ContentPanel.Controls.Add(alarmToolbar);
+
+            var splitSpace = new Panel { Dock = DockStyle.Left, Width = 16, BackColor = Color.Transparent };
+
+            // Right Card: PID Faceplate & Tuning
+            var cardPid = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Bộ Điều Khiển Vòng Lặp Kín PIC-101 (Single-Loop Controller Faceplate)",
+                StepNumber = 2
+            };
+
+            var pidFaceplate = new ZeroPidFaceplate
+            {
+                Location = new Point(16, 12),
+                Size = new Size(290, 320),
+                LoopTag = "PIC-101",
+                LoopDescription = "Boiler Main Steam Pressure Loop",
+                EngineeringUnit = "PSI",
+                SetPoint = 50.0,
+                ProcessVariable = 48.2,
+                ManipulatedVariable = 62.0
+            };
+
+            var pidHookTimer = new System.Windows.Forms.Timer { Interval = 100 };
+            pidHookTimer.Tick += (s, e) =>
+            {
+                pidFaceplate.ProcessVariable = Math.Round(SimulatedPlcDriver.PidProcessVariable, 1);
+                pidFaceplate.SetPoint = Math.Round(SimulatedPlcDriver.PidSetPoint, 1);
+                pidFaceplate.ManipulatedVariable = Math.Round(SimulatedPlcDriver.PidOutputMv, 1);
+            };
+            pidHookTimer.Start();
+
+            cardPid.ContentPanel.Controls.Add(pidFaceplate);
+
+            rowDual.Controls.Add(cardPid);
+            rowDual.Controls.Add(splitSpace);
+            rowDual.Controls.Add(cardAlarms);
+
+            mainContainer.Controls.Add(rowDual);
+            mainContainer.Controls.Add(spacer1);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            spacer1.BringToFront();
+            rowDual.BringToFront();
+
+            parentTab.Controls.Add(mainContainer);
+        }
+
+        private void InitializeScadaTagEngineMonitor(ZeroTabPage parentTab)
+        {
+            var colors = ZeroTheme.Colors;
+            parentTab.BackColor = colors.Background;
+
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = colors.Background,
+                Padding = new Padding(16)
+            };
+
+            // 1. Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Height = 62,
+                Severity = ZeroAlertSeverity.Success,
+                Title = "⚡ GIAI ĐOẠN 3: TRUNG TÂM TAG ENGINE & GIÁM SÁT TRUYỀN THÔNG PLC",
+                Message = "Kiến trúc Tag Engine thời gian thực (ZeroTagEngine) hỗ trợ lọc nhiễu Deadband, phân phối dữ liệu đa luồng cho các control trực quan và thu nhận tín hiệu từ Driver PLC."
+            };
+            var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // 2. KPI Summary Cards (4 Cards)
+            var rowStats = new Panel { Dock = DockStyle.Top, Height = 110, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            var statTags = new ZeroStatistic
+            {
+                Location = new Point(0, 0),
+                Size = new Size(220, 100),
+                Title = "ACTIVE SCADA TAGS",
+                Value = "14",
+                Suffix = "tags",
+                Trend = ZeroTrendDirection.Up,
+                TrendText = "100% Live In-Memory"
+            };
+
+            var statScan = new ZeroStatistic
+            {
+                Location = new Point(230, 0),
+                Size = new Size(220, 100),
+                Title = "PLC SCAN FREQUENCY",
+                Value = "20",
+                Suffix = "Hz (50ms)",
+                Trend = ZeroTrendDirection.None,
+                TrendText = "Zero-Jitter Loop"
+            };
+
+            var statDeadband = new ZeroStatistic
+            {
+                Location = new Point(460, 0),
+                Size = new Size(220, 100),
+                Title = "DEADBAND NOISE FILTER",
+                Value = "0.25",
+                Suffix = "delta",
+                Trend = ZeroTrendDirection.None,
+                TrendText = "Jitter Suppression Active"
+            };
+
+            var statComm = new ZeroStatistic
+            {
+                Location = new Point(690, 0),
+                Size = new Size(220, 100),
+                Title = "COMMUNICATION QUALITY",
+                Value = "100.0",
+                Suffix = "%",
+                Trend = ZeroTrendDirection.Up,
+                TrendText = "Quality: GOOD (OPC/Modbus)"
+            };
+
+            rowStats.Controls.Add(statTags);
+            rowStats.Controls.Add(statScan);
+            rowStats.Controls.Add(statDeadband);
+            rowStats.Controls.Add(statComm);
+
+            var spacer2 = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
+
+            // 3. Live Tag Registry Grid
+            var cardGrid = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Danh Sách Thanh Ghi & Tag Truyền Thông Thời Gian Thực (Active Tag Registry)",
+                StepNumber = 1
+            };
+
+            var tagListView = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                BackColor = colors.Surface,
+                ForeColor = colors.TextPrimary,
+                Font = new Font("Segoe UI", 9.5f)
+            };
+            tagListView.Columns.Add("Tag Path", 240);
+            tagListView.Columns.Add("Current Value", 160);
+            tagListView.Columns.Add("Signal Quality", 120);
+            tagListView.Columns.Add("Last Updated (UTC)", 160);
+
+            // Populate initial listview items
+            var tagNames = new[]
+            {
+                "Line1.Tank.Level", "Line1.Boiler.Pressure", "Line1.Pump.SpeedRpm",
+                "Line1.Pump.Running", "Line1.Valve.Open", "Line1.Valve.Position",
+                "Line1.Flow.Velocity", "Line1.PID.SP", "Line1.PID.PV", "Line1.PID.MV",
+                "Line1.Alarm.HighPressure", "Line1.Alarm.LowLevel", "Line1.Alarm.PumpTrip",
+                "Line1.Alarm.EmergencyStop"
+            };
+
+            var lviMap = new Dictionary<string, ListViewItem>(StringComparer.OrdinalIgnoreCase);
+            foreach (var tName in tagNames)
+            {
+                var lvi = new ListViewItem(tName);
+                lvi.SubItems.Add("--");
+                lvi.SubItems.Add("Good");
+                lvi.SubItems.Add(DateTime.UtcNow.ToString("HH:mm:ss.fff"));
+                tagListView.Items.Add(lvi);
+                lviMap[tName] = lvi;
+            }
+
+            cardGrid.ContentPanel.Controls.Add(tagListView);
+
+            // Hook timer to refresh ListView text smoothly
+            var lvTimer = new System.Windows.Forms.Timer { Interval = 200 };
+            lvTimer.Tick += (s, e) =>
+            {
+                foreach (var kvp in lviMap)
+                {
+                    var tag = ZeroTagEngine.GetTag(kvp.Key);
+                    if (tag != null)
+                    {
+                        kvp.Value.SubItems[1].Text = tag.Value?.ToString() ?? "null";
+                        kvp.Value.SubItems[2].Text = tag.Quality.ToString();
+                        kvp.Value.SubItems[3].Text = tag.Timestamp.ToString("HH:mm:ss.fff");
+                    }
+                }
+            };
+            lvTimer.Start();
+
+            mainContainer.Controls.Add(cardGrid);
+            mainContainer.Controls.Add(spacer2);
+            mainContainer.Controls.Add(rowStats);
+            mainContainer.Controls.Add(spacer1);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            spacer1.BringToFront();
+            rowStats.BringToFront();
+            spacer2.BringToFront();
+            cardGrid.BringToFront();
+
+            parentTab.Controls.Add(mainContainer);
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            SimulatedPlcDriver.Stop();
+            base.OnFormClosing(e);
         }
     }
 }
