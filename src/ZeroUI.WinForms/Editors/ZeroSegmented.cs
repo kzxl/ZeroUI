@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Input;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -20,8 +21,7 @@ namespace ZeroUI.WinForms.Editors
     {
 
         private string[] _items = new[] { "All", "Daily", "Weekly", "Monthly" };
-
-        private int _selectedIndex = 0;
+        private readonly SelectionModel<string> _selection = new SelectionModel<string> { WrapAround = false };
         private int _hoveredIndex = -1;
 
         public event EventHandler? SelectedIndexChanged;
@@ -39,6 +39,14 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             Cursor = Cursors.Hand;
 
+            _selection.SetSource(() => _items.Length, idx => _items[idx]);
+            _selection.SelectIndex(0);
+            _selection.SelectionChanged += (s, e) =>
+            {
+                Invalidate();
+                SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
+            };
+
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
@@ -48,6 +56,9 @@ namespace ZeroUI.WinForms.Editors
             };
         }
 
+        [Browsable(false)]
+        public SelectionModel<string> Selection => _selection;
+
         [Category("Data")]
         public string[] Items
         {
@@ -55,7 +66,10 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _items = value ?? Array.Empty<string>();
-                if (_selectedIndex >= _items.Length) _selectedIndex = Math.Max(0, _items.Length - 1);
+                if (_selection.SelectedIndex >= _items.Length)
+                {
+                    _selection.SelectIndex(Math.Max(0, _items.Length - 1));
+                }
                 Invalidate();
             }
         }
@@ -64,20 +78,12 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(0)]
         public int SelectedIndex
         {
-            get => _selectedIndex;
-            set
-            {
-                int clamped = Math.Max(0, Math.Min(_items.Length - 1, value));
-                if (_selectedIndex != clamped)
-                {
-                    _selectedIndex = clamped;
-                    Invalidate();
-                    SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => _selection.SelectedIndex;
+            set => _selection.SelectIndex(value);
         }
 
-        public string? SelectedItem => (_selectedIndex >= 0 && _selectedIndex < _items.Length) ? _items[_selectedIndex] : null;
+        [Browsable(false)]
+        public string? SelectedItem => _selection.SelectedItem;
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -149,9 +155,9 @@ namespace ZeroUI.WinForms.Editors
             float itemH = Height - 4;
 
             // 3. Draw Active Pill
-            if (_selectedIndex >= 0 && _selectedIndex < _items.Length)
+            if (SelectedIndex >= 0 && SelectedIndex < _items.Length)
             {
-                RectangleF pillRect = new RectangleF(2 + (_selectedIndex * itemW), 2, itemW, itemH);
+                RectangleF pillRect = new RectangleF(2 + (SelectedIndex * itemW), 2, itemW, itemH);
                 int effPillRadius = ZeroUIConfig.GetEffectiveRadius(5);
                 using (var pillPath = CreateRoundedRectangleF(pillRect, effPillRadius))
                 {
@@ -167,7 +173,7 @@ namespace ZeroUI.WinForms.Editors
             for (int i = 0; i < _items.Length; i++)
             {
                 Rectangle itemRect = new Rectangle((int)(2 + (i * itemW)), 2, (int)itemW, (int)itemH);
-                bool isSelected = (i == _selectedIndex);
+                bool isSelected = (i == SelectedIndex);
                 Color textColor = isSelected ? palette.TextPrimary : palette.TextSecondary;
                 Font itemFont = isSelected ? new Font(Font, FontStyle.Bold) : Font;
 

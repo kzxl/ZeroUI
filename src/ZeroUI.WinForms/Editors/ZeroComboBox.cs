@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Input;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -28,7 +29,7 @@ namespace ZeroUI.WinForms.Editors
     public class ZeroComboBox : Control
     {
         private readonly List<object> _items = new List<object>();
-        private int _selectedIndex = -1;
+        private readonly SelectionModel<object> _selection = new SelectionModel<object>();
         private string _placeholder = "Select an option...";
         private int _maxDropDownItems = 8;
         private int _itemHeight = 32;
@@ -59,6 +60,13 @@ namespace ZeroUI.WinForms.Editors
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
+
+            _selection.SetSource(_items);
+            _selection.SelectionChanged += (s, e) =>
+            {
+                Invalidate();
+                SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
+            };
 
             _listControl = new ComboListControl(this);
             var host = new ToolStripControlHost(_listControl)
@@ -102,6 +110,9 @@ namespace ZeroUI.WinForms.Editors
                 Invalidate();
             };
         }
+
+        [Browsable(false)]
+        public SelectionModel<object> Selection => _selection;
 
         [Category("Data")]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
@@ -152,33 +163,15 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(-1)]
         public int SelectedIndex
         {
-            get => _selectedIndex;
-            set
-            {
-                if (value < -1 || value >= _items.Count) value = -1;
-                if (_selectedIndex != value)
-                {
-                    _selectedIndex = value;
-                    Invalidate();
-                    SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => _selection.SelectedIndex;
+            set => _selection.SelectIndex(value);
         }
 
         [Browsable(false)]
         public object? SelectedItem
         {
-            get => (_selectedIndex >= 0 && _selectedIndex < _items.Count) ? _items[_selectedIndex] : null;
-            set
-            {
-                if (value == null)
-                {
-                    SelectedIndex = -1;
-                    return;
-                }
-                int idx = _items.IndexOf(value);
-                if (idx >= 0) SelectedIndex = idx;
-            }
+            get => _selection.SelectedItem;
+            set => _selection.SelectItem(value);
         }
 
         [Browsable(false)]
@@ -197,9 +190,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 _items.Add(val);
             }
-            _selectedIndex = _items.Count > 0 ? 0 : -1;
-            Invalidate();
-            SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
+            _selection.SelectIndex(_items.Count > 0 ? 0 : -1);
         }
 
         /// <summary>
@@ -215,9 +206,9 @@ namespace ZeroUI.WinForms.Editors
                     _items.Add(item);
                 }
             }
-            if (_selectedIndex >= _items.Count)
+            if (_selection.SelectedIndex >= _items.Count)
             {
-                SelectedIndex = _items.Count > 0 ? 0 : -1;
+                _selection.SelectIndex(_items.Count > 0 ? 0 : -1);
             }
             else
             {

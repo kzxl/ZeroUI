@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ZeroUI.Core.Input;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -18,12 +19,12 @@ namespace ZeroUI.WinForms.Editors
     public class ZeroRadioGroup : Control
     {
         private string[] _items = Array.Empty<string>();
+        private readonly SelectionModel<string> _selection = new SelectionModel<string>();
         private Orientation _orientation = Orientation.Vertical;
         private int _columns = 1;
         private int _itemSpacing = 8;
         private int _itemHeight = 26;
         private int _itemWidth = 140;
-        private int _selectedIndex = -1;
         private bool _isUpdating = false;
 
         public event EventHandler? SelectedIndexChanged;
@@ -41,6 +42,13 @@ namespace ZeroUI.WinForms.Editors
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
+            _selection.SetSource(() => _items.Length, idx => _items[idx]);
+            _selection.SelectionChanged += (s, e) =>
+            {
+                SyncChildCheckStates();
+                SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
+            };
+
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -48,6 +56,9 @@ namespace ZeroUI.WinForms.Editors
                 UpdateChildFonts();
             };
         }
+
+        [Browsable(false)]
+        public SelectionModel<string> Selection => _selection;
 
         [Category("Data")]
         [Description("Collection of item labels to display as radio buttons")]
@@ -143,39 +154,15 @@ namespace ZeroUI.WinForms.Editors
         [Description("Zero-based index of the currently selected radio option")]
         public int SelectedIndex
         {
-            get => _selectedIndex;
-            set
-            {
-                if (_selectedIndex != value)
-                {
-                    if (value < -1 || value >= _items.Length)
-                        value = -1;
-
-                    _selectedIndex = value;
-                    SyncChildCheckStates();
-                    SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => _selection.SelectedIndex;
+            set => _selection.SelectIndex(value);
         }
 
         [Browsable(false)]
         public string? SelectedItem
         {
-            get => (_selectedIndex >= 0 && _selectedIndex < _items.Length) ? _items[_selectedIndex] : null;
-            set
-            {
-                if (value == null)
-                {
-                    SelectedIndex = -1;
-                    return;
-                }
-
-                int idx = Array.IndexOf(_items, value);
-                if (idx >= 0)
-                {
-                    SelectedIndex = idx;
-                }
-            }
+            get => _selection.SelectedItem;
+            set => _selection.SelectItem(value);
         }
 
         private void RebuildChildButtons()
@@ -194,7 +181,7 @@ namespace ZeroUI.WinForms.Editors
                         Text = _items[i],
                         Font = Font,
                         GroupName = grpName,
-                        Checked = (i == _selectedIndex),
+                        Checked = (i == _selection.SelectedIndex),
                         Tag = index
                     };
 
@@ -226,7 +213,7 @@ namespace ZeroUI.WinForms.Editors
                 {
                     if (Controls[i] is ZeroRadioButton rb)
                     {
-                        rb.Checked = (i == _selectedIndex);
+                        rb.Checked = (i == _selection.SelectedIndex);
                     }
                 }
             }

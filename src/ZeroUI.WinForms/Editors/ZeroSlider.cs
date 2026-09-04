@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Input;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -19,10 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [Description("Modern anti-aliased slider control")]
     public class ZeroSlider : Control
     {
-        private float _minimum = 0f;
-        private float _maximum = 100f;
-        private float _value = 0f;
-        private float _step = 1f;
+        private readonly RangeModel _rangeModel = new RangeModel(0f, 100f, 0f, 1f);
         private Orientation _orientation = Orientation.Horizontal;
         private string _unit = "%";
         private bool _showValueBadge = true;
@@ -52,71 +50,49 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 8.5f, FontStyle.Bold);
             BackColor = Color.Transparent;
 
+            _rangeModel.ValueChanged += (s, e) =>
+            {
+                Invalidate();
+                ValueChanged?.Invoke(this, EventArgs.Empty);
+                Scroll?.Invoke(this, EventArgs.Empty);
+            };
+
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
+
+        [Browsable(false)]
+        public RangeModel Range => _rangeModel;
 
         [Category("Behavior")]
         [DefaultValue(0f)]
         public float Minimum
         {
-            get => _minimum;
-            set
-            {
-                if (_minimum != value)
-                {
-                    _minimum = value;
-                    if (_value < _minimum) Value = _minimum;
-                    Invalidate();
-                }
-            }
+            get => _rangeModel.Minimum;
+            set => _rangeModel.Minimum = value;
         }
 
         [Category("Behavior")]
         [DefaultValue(100f)]
         public float Maximum
         {
-            get => _maximum;
-            set
-            {
-                if (_maximum != value)
-                {
-                    _maximum = Math.Max(_minimum + 0.001f, value);
-                    if (_value > _maximum) Value = _maximum;
-                    Invalidate();
-                }
-            }
+            get => _rangeModel.Maximum;
+            set => _rangeModel.Maximum = value;
         }
 
         [Category("Behavior")]
         [DefaultValue(0f)]
         public float Value
         {
-            get => _value;
-            set
-            {
-                float clamped = Math.Max(_minimum, Math.Min(_maximum, value));
-                if (_step > 0)
-                {
-                    clamped = _minimum + (float)Math.Round((clamped - _minimum) / _step) * _step;
-                    clamped = Math.Max(_minimum, Math.Min(_maximum, clamped));
-                }
-
-                if (Math.Abs(_value - clamped) > 0.0001f)
-                {
-                    _value = clamped;
-                    Invalidate();
-                    ValueChanged?.Invoke(this, EventArgs.Empty);
-                    Scroll?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => _rangeModel.Value;
+            set => _rangeModel.Value = value;
         }
 
         [Category("Behavior")]
         [DefaultValue(1f)]
         public float Step
         {
-            get => _step;
-            set => _step = Math.Max(0.001f, value);
+            get => _rangeModel.Step;
+            set => _rangeModel.Step = value;
         }
 
         [Category("Appearance")]
@@ -182,31 +158,23 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        private float GetFraction()
-        {
-            float range = _maximum - _minimum;
-            return range > 0 ? (_value - _minimum) / range : 0f;
-        }
+        private float GetFraction() => _rangeModel.Fraction;
 
         private void SetValueFromPoint(Point pt)
         {
-            float range = _maximum - _minimum;
-            if (range <= 0) return;
-
+            int trackMargin = _thumbSize / 2 + 4;
             if (_orientation == Orientation.Horizontal)
             {
-                int trackMargin = _thumbSize / 2 + 4;
                 int trackLength = Math.Max(10, Width - (trackMargin * 2));
                 float fraction = Math.Max(0f, Math.Min(1f, (float)(pt.X - trackMargin) / trackLength));
-                Value = _minimum + (fraction * range);
+                _rangeModel.Fraction = fraction;
             }
             else
             {
-                int trackMargin = _thumbSize / 2 + 4;
                 int trackLength = Math.Max(10, Height - (trackMargin * 2));
                 // Vertical slider: bottom is minimum, top is maximum
                 float fraction = Math.Max(0f, Math.Min(1f, (float)(Height - trackMargin - pt.Y) / trackLength));
-                Value = _minimum + (fraction * range);
+                _rangeModel.Fraction = fraction;
             }
         }
 
@@ -292,35 +260,34 @@ namespace ZeroUI.WinForms.Editors
             base.OnKeyDown(e);
             if (!Enabled) return;
 
-            float delta = _step > 0 ? _step : 1f;
             if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Down)
             {
-                Value -= delta;
+                _rangeModel.Decrement();
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Right || e.KeyCode == Keys.Up)
             {
-                Value += delta;
+                _rangeModel.Increment();
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.PageDown)
             {
-                Value -= delta * 5;
+                _rangeModel.Decrement(5f);
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.PageUp)
             {
-                Value += delta * 5;
+                _rangeModel.Increment(5f);
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Home)
             {
-                Value = _minimum;
+                _rangeModel.Value = _rangeModel.Minimum;
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.End)
             {
-                Value = _maximum;
+                _rangeModel.Value = _rangeModel.Maximum;
                 e.Handled = true;
             }
         }
@@ -428,7 +395,7 @@ namespace ZeroUI.WinForms.Editors
             // Value Tooltip / Badge when dragging or hovering
             if (_showValueBadge && (_isDragging || _isThumbHovered || _isFocused || _isHovered))
             {
-                string badgeText = $"{_value:0.##}{_unit}";
+                string badgeText = $"{Value:0.##}{_unit}";
                 using var badgeFont = new Font("Segoe UI", 7.5f, FontStyle.Bold);
                 Size badgeSize = TextRenderer.MeasureText(badgeText, badgeFont);
                 int bw = badgeSize.Width + 10;
