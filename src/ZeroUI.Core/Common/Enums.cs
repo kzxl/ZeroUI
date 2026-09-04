@@ -44,7 +44,8 @@ namespace ZeroUI.Core.Common
         Numeric = 1,
         DateTime = 2,
         Boolean = 3,
-        Custom = 4
+        Custom = 4,
+        Masked = 5
     }
 }
 

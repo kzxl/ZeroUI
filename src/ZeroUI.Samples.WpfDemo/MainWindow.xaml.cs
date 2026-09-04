@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,9 +7,12 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Input.Date;
+using ZeroUI.Core.Scene;
 using ZeroUI.Core.Theme;
 using ZeroUI.Samples.WpfDemo.Data;
 using ZeroUI.Wpf.Charts.Model;
+using ZeroUI.Wpf.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Samples.WpfDemo
@@ -77,6 +81,67 @@ namespace ZeroUI.Samples.WpfDemo
             // Setup DatePickers
             DatePickerStart.SelectedDate = DateTime.Today;
             DatePickerEnd.SelectedDate = DateTime.Today.AddDays(14);
+
+            // Setup DateRangePicker
+            DemoDateRangePicker.SetRange(DateTime.Today.AddDays(-7), DateTime.Today);
+
+            // Populate Lookup with 5,000 industrial items
+            var lookupItems = new List<ZeroLookupItem>(5000);
+            for (int i = 1; i <= 5000; i++)
+            {
+                lookupItems.Add(new ZeroLookupItem(
+                    key: $"AST-{i:D5}",
+                    displayText: $"Transducer Transmitter PT-{i:D4}",
+                    subText: $"Building {((i % 5) + 1)} • Line {((char)('A' + (i % 6)))} • Modbus ID {i % 254 + 1}",
+                    category: i % 10 == 0 ? "Calibrated" : (i % 7 == 0 ? "Inspect" : "Active")
+                ));
+            }
+            DemoAssetLookup.SetItems(lookupItems);
+
+            // Setup SCADA Plant Mimic Scene
+            var plantScene = new ZeroScene();
+            var tk1 = ZeroSceneNode.CreateTank("TK-101", "Raw Chemical TK-101", 60, 50, 95, 140);
+            tk1.Value = 76.5;
+            tk1.State = ScadaNodeState.Running;
+            plantScene.AddNode(tk1);
+
+            var tk2 = ZeroSceneNode.CreateTank("TK-102", "Catalyst Mix TK-102", 320, 50, 95, 140);
+            tk2.Value = 44.0;
+            tk2.State = ScadaNodeState.Running;
+            plantScene.AddNode(tk2);
+
+            var tk3 = ZeroSceneNode.CreateTank("TK-103", "Finished Yield TK-103", 580, 50, 95, 140);
+            tk3.Value = 89.2;
+            tk3.State = ScadaNodeState.Warning;
+            plantScene.AddNode(tk3);
+
+            var p1 = ZeroSceneNode.CreatePump("P-101A", "Primary Feed P-101A", 205, 105, 24);
+            p1.Value = 1450;
+            p1.State = ScadaNodeState.Running;
+            plantScene.AddNode(p1);
+
+            var p2 = ZeroSceneNode.CreatePump("P-102A", "Transfer Pump P-102A", 465, 105, 24);
+            p2.Value = 1780;
+            p2.State = ScadaNodeState.Running;
+            plantScene.AddNode(p2);
+
+            var v1 = ZeroSceneNode.CreateValve("XV-101", "Inlet Valve XV-101", 210, 65);
+            v1.State = ScadaNodeState.Running;
+            plantScene.AddNode(v1);
+
+            var v2 = ZeroSceneNode.CreateValve("XV-102", "Transfer Valve XV-102", 470, 65);
+            v2.State = ScadaNodeState.Running;
+            plantScene.AddNode(v2);
+
+            var tt1 = ZeroSceneNode.CreateSensor("TT-101", "Tank Temp 68.5°C", 72, 210, "°C");
+            tt1.Value = 68.5;
+            plantScene.AddNode(tt1);
+
+            var pt2 = ZeroSceneNode.CreateSensor("PT-102", "Line Press 4.2 Bar", 332, 210, "Bar");
+            pt2.Value = 4.2;
+            plantScene.AddNode(pt2);
+
+            PlantCanvas.Scene = plantScene;
         }
 
         private void RefreshSkinSelector()
@@ -98,10 +163,42 @@ namespace ZeroUI.Samples.WpfDemo
             var colId = new ZeroColumn("ID", 75, CellAlignment.Right) { ReadOnly = true, IsPinned = true, Summary = SummaryType.Count, SummaryFormat = "{0:N0} items" };
             var colCode = new ZeroColumn("Material Code", 130, CellAlignment.Left) { ReadOnly = true, IsPinned = true };
             var colName = new ZeroColumn("Description / Component Name", 240, CellAlignment.Left);
-            var colQty = new ZeroColumn("Quantity", 95, CellAlignment.Right) { Summary = SummaryType.Sum, SummaryFormat = "{0:N0}" };
-            var colPrice = new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right) { Summary = SummaryType.Average, SummaryFormat = "Avg: ${0:N2}" };
+            var colQty = new ZeroColumn("Quantity", 95, CellAlignment.Right)
+            {
+                ColumnType = GridColumnType.Numeric,
+                Summary = SummaryType.Sum,
+                SummaryFormat = "{0:N0}",
+                CustomValidator = val =>
+                {
+                    if (int.TryParse(val.Replace(",", ""), out int q) && q >= 0 && q <= 100000)
+                        return (true, null);
+                    return (false, "Quantity must be an integer between 0 and 100,000");
+                }
+            };
+            var colPrice = new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right)
+            {
+                ColumnType = GridColumnType.Numeric,
+                Summary = SummaryType.Average,
+                SummaryFormat = "Avg: ${0:N2}",
+                CustomValidator = val =>
+                {
+                    if (double.TryParse(val.Replace(",", ""), out double p) && p >= 0)
+                        return (true, null);
+                    return (false, "Unit Price must be non-negative");
+                }
+            };
             var colTotal = new ZeroColumn("Total Amount ($)", 150, CellAlignment.Right) { ReadOnly = true, Summary = SummaryType.Sum, SummaryFormat = "${0:N2}" };
-            var colLot = new ZeroColumn("Lot Number", 120, CellAlignment.Center);
+            var colLot = new ZeroColumn("Lot Number", 130, CellAlignment.Center)
+            {
+                ColumnType = GridColumnType.Masked,
+                Mask = "LOT-000000",
+                CustomValidator = val =>
+                {
+                    if (string.IsNullOrWhiteSpace(val) || val.Contains("_"))
+                        return (false, "Lot number must have 6 digits (e.g. LOT-202601)");
+                    return (true, null);
+                }
+            };
             var colStatus = new ZeroColumn("Inspection Status", 160, CellAlignment.Center);
 
             VirtualGrid.Columns.Add(colId);

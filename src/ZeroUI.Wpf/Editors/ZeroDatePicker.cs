@@ -72,6 +72,8 @@ namespace ZeroUI.Wpf.Editors
 
         public event EventHandler<DateTime>? SelectedDateChanged;
 
+        public bool IsDropDownOpen => _calendarPopup?.IsOpen == true;
+
         #endregion
 
         public ZeroDatePicker()

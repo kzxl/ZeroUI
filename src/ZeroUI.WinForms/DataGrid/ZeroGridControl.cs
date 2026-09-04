@@ -72,6 +72,7 @@ namespace ZeroUI.WinForms.DataGrid
         private readonly TextBox _inPlaceEditor;
         private readonly ZeroNumericBox _numericEditor;
         private readonly ZeroDatePicker _dateEditor;
+        private readonly ZeroMaskedTextBox _maskedEditor;
         private Control? _activeInPlaceEditor;
         private bool _isEditing = false;
         private int _editingVisualRow = -1;
@@ -175,6 +176,19 @@ namespace ZeroUI.WinForms.DataGrid
             };
             _dateEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_dateEditor);
+
+            _maskedEditor = new ZeroMaskedTextBox
+            {
+                Visible = false,
+                Font = Font
+            };
+            _maskedEditor.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter) CommitEdit();
+                else if (e.KeyCode == Keys.Escape) CancelEdit();
+            };
+            _maskedEditor.LostFocus += (s, e) => CommitEdit();
+            Controls.Add(_maskedEditor);
 
             ZeroTheme.ThemeChanged += OnThemeChanged;
             UpdateTheme();
@@ -2481,6 +2495,12 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 editor = showingArgs.CustomEditor;
             }
+            else if (col.ColumnType == GridColumnType.Masked || !string.IsNullOrEmpty(col.Mask))
+            {
+                _maskedEditor.Mask = col.Mask ?? "";
+                _maskedEditor.Text = val;
+                editor = _maskedEditor;
+            }
             else if (col.ColumnType == GridColumnType.Numeric)
             {
                 if (decimal.TryParse(val.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var numVal))
@@ -2534,7 +2554,11 @@ namespace ZeroUI.WinForms.DataGrid
             int colIndex = _editingColIndex;
             string newText = string.Empty;
 
-            if (_activeInPlaceEditor is TextBox tb)
+            if (_activeInPlaceEditor is ZeroMaskedTextBox mtb)
+            {
+                newText = mtb.Text;
+            }
+            else if (_activeInPlaceEditor is TextBox tb)
             {
                 newText = tb.Text;
             }
@@ -2553,6 +2577,22 @@ namespace ZeroUI.WinForms.DataGrid
 
             if (visualRow >= 0 && visualRow < _rowIndexMap.ActiveCount && colIndex >= 0 && colIndex < _columns.Count)
             {
+                var col = _columns[colIndex];
+                if (col.CustomValidator != null)
+                {
+                    var (isValid, errMsg) = col.CustomValidator(newText);
+                    if (!isValid)
+                    {
+                        var form = FindForm();
+                        if (form != null)
+                        {
+                            ZeroToast.Warning(form, errMsg ?? "Validation failed");
+                        }
+                        _activeInPlaceEditor.Focus();
+                        return;
+                    }
+                }
+
                 int modelRow = _rowIndexMap[visualRow];
                 CellValueBuffer buf = new CellValueBuffer();
                 _dataSource.GetCellValue(modelRow, colIndex, ref buf);
@@ -2737,6 +2777,7 @@ namespace ZeroUI.WinForms.DataGrid
                 _inPlaceEditor.Dispose();
                 _numericEditor.Dispose();
                 _dateEditor.Dispose();
+                _maskedEditor.Dispose();
                 _dibSection.Dispose();
                 if (_hFont != IntPtr.Zero)
                 {

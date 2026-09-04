@@ -10,6 +10,7 @@ using System.Windows.Media;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Virtualization;
+using ZeroUI.Wpf.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.DataGrid
@@ -40,9 +41,13 @@ namespace ZeroUI.Wpf.DataGrid
         private double _resizeStartX = 0;
         private int _resizeStartWidth = 0;
 
-        // In-Place Floating Editor
+        // In-Place Floating Editors (Pluggable)
         private readonly VisualCollection _visualChildren;
         private readonly TextBox _inPlaceEditor;
+        private readonly ZeroNumericBox _numericEditor;
+        private readonly ZeroDatePicker _dateEditor;
+        private readonly ZeroMaskedTextBox _maskedEditor;
+        private FrameworkElement? _activeEditor;
         private bool _isEditing = false;
         private int _editingVisualRow = -1;
         private int _editingColIndex = -1;
@@ -201,6 +206,43 @@ namespace ZeroUI.Wpf.DataGrid
             _inPlaceEditor.LostFocus += (s, e) => CommitEdit();
             _visualChildren.Add(_inPlaceEditor);
 
+            _numericEditor = new ZeroNumericBox
+            {
+                Visibility = Visibility.Collapsed,
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(4, 2, 4, 2),
+                FontSize = 12.0
+            };
+            _numericEditor.KeyDown += InPlaceEditor_KeyDown;
+            _numericEditor.LostFocus += (s, e) => CommitEdit();
+            _visualChildren.Add(_numericEditor);
+
+            _dateEditor = new ZeroDatePicker
+            {
+                Visibility = Visibility.Collapsed,
+                BorderThickness = new Thickness(1),
+                FontSize = 12.0,
+                ShowPresets = false
+            };
+            _dateEditor.KeyDown += InPlaceEditor_KeyDown;
+            _dateEditor.LostFocus += (s, e) =>
+            {
+                if (_dateEditor.IsDropDownOpen) return;
+                CommitEdit();
+            };
+            _visualChildren.Add(_dateEditor);
+
+            _maskedEditor = new ZeroMaskedTextBox
+            {
+                Visibility = Visibility.Collapsed,
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(4, 2, 4, 2),
+                FontSize = 12.0
+            };
+            _maskedEditor.KeyDown += InPlaceEditor_KeyDown;
+            _maskedEditor.LostFocus += (s, e) => CommitEdit();
+            _visualChildren.Add(_maskedEditor);
+
             _columns.CollectionChanged += (s, e) => InvalidateVisual();
             ZeroWpfTheme.ThemeChanged += () =>
             {
@@ -215,6 +257,11 @@ namespace ZeroUI.Wpf.DataGrid
             _inPlaceEditor.Foreground = ZeroWpfTheme.TextPrimary;
             _inPlaceEditor.BorderBrush = ZeroWpfTheme.PrimaryAccent;
             _inPlaceEditor.CaretBrush = ZeroWpfTheme.PrimaryAccent;
+
+            _maskedEditor.Background = ZeroWpfTheme.BgInput;
+            _maskedEditor.Foreground = ZeroWpfTheme.TextPrimary;
+            _maskedEditor.BorderBrush = ZeroWpfTheme.PrimaryAccent;
+            _maskedEditor.CaretBrush = ZeroWpfTheme.PrimaryAccent;
         }
 
         protected override int VisualChildrenCount => _visualChildren.Count;
@@ -222,7 +269,7 @@ namespace ZeroUI.Wpf.DataGrid
 
         protected override Size ArrangeOverride(Size finalSize)
         {
-            if (_isEditing && _inPlaceEditor.Visibility == Visibility.Visible)
+            if (_isEditing && _activeEditor != null && _activeEditor.Visibility == Visibility.Visible)
             {
                 var rect = GetCellRectangle(_editingVisualRow, _editingColIndex);
                 int footerH = ShowFooter ? _footerHeight : 0;
@@ -232,7 +279,7 @@ namespace ZeroUI.Wpf.DataGrid
                 }
                 else
                 {
-                    _inPlaceEditor.Arrange(rect);
+                    _activeEditor.Arrange(rect);
                 }
             }
             return base.ArrangeOverride(finalSize);
@@ -1196,45 +1243,120 @@ namespace ZeroUI.Wpf.DataGrid
             _editingVisualRow = visualRow;
             _editingColIndex = colIndex;
 
+            FrameworkElement editor;
+            if (col.ColumnType == GridColumnType.Masked || !string.IsNullOrEmpty(col.Mask))
+            {
+                _maskedEditor.Mask = col.Mask ?? "";
+                _maskedEditor.Text = val;
+                editor = _maskedEditor;
+            }
+            else if (col.ColumnType == GridColumnType.Numeric)
+            {
+                if (decimal.TryParse(val.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var numVal))
+                {
+                    _numericEditor.Value = numVal;
+                }
+                else
+                {
+                    _numericEditor.Value = 0;
+                }
+                editor = _numericEditor;
+            }
+            else if (col.ColumnType == GridColumnType.DateTime)
+            {
+                if (DateTime.TryParse(val, out var dtVal))
+                {
+                    _dateEditor.SelectedDate = dtVal;
+                }
+                else
+                {
+                    _dateEditor.SelectedDate = DateTime.Today;
+                }
+                editor = _dateEditor;
+            }
+            else
+            {
+                _inPlaceEditor.Text = val;
+                editor = _inPlaceEditor;
+            }
+
+            _activeEditor = editor;
             UpdateEditorTheme();
-            _inPlaceEditor.Text = val;
-            _inPlaceEditor.Visibility = Visibility.Visible;
-            _inPlaceEditor.Arrange(rect);
-            _inPlaceEditor.Focus();
-            _inPlaceEditor.SelectAll();
+            editor.ToolTip = null;
+            if (editor is Control ctrl) ctrl.BorderBrush = ZeroWpfTheme.PrimaryAccent;
+            editor.Visibility = Visibility.Visible;
+            editor.Arrange(rect);
+            editor.Focus();
+            if (editor is TextBox tb) tb.SelectAll();
 
             CellBeginEdit?.Invoke(this, EventArgs.Empty);
         }
 
         public void CommitEdit()
         {
-            if (!_isEditing || _dataSource == null) return;
+            if (!_isEditing || _dataSource == null || _activeEditor == null) return;
 
             int visualRow = _editingVisualRow;
             int colIndex = _editingColIndex;
-            string newText = _inPlaceEditor.Text;
+            if (visualRow < 0 || visualRow >= _rowIndexMap.ActiveCount || colIndex < 0 || colIndex >= _columns.Count)
+            {
+                CancelEdit();
+                return;
+            }
 
-            _inPlaceEditor.Visibility = Visibility.Collapsed;
+            var col = _columns[colIndex];
+            string newText = string.Empty;
+            if (_activeEditor is ZeroMaskedTextBox mtb)
+            {
+                newText = mtb.Text;
+            }
+            else if (_activeEditor is TextBox tb)
+            {
+                newText = tb.Text;
+            }
+            else if (_activeEditor is ZeroNumericBox nb)
+            {
+                newText = nb.Value.ToString(CultureInfo.InvariantCulture);
+            }
+            else if (_activeEditor is ZeroDatePicker dp)
+            {
+                newText = dp.SelectedDate.ToString(dp.DateFormat);
+            }
+
+            if (col.CustomValidator != null)
+            {
+                var (isValid, errMsg) = col.CustomValidator(newText);
+                if (!isValid)
+                {
+                    if (_activeEditor is Control c)
+                    {
+                        c.ToolTip = errMsg ?? "Validation failed";
+                        c.BorderBrush = ZeroWpfTheme.DangerAccent;
+                    }
+                    _activeEditor.Focus();
+                    return;
+                }
+            }
+
+            _activeEditor.Visibility = Visibility.Collapsed;
+            _activeEditor = null;
             _isEditing = false;
             _editingVisualRow = -1;
             _editingColIndex = -1;
 
-            if (visualRow >= 0 && visualRow < _rowIndexMap.ActiveCount && colIndex >= 0 && colIndex < _columns.Count)
-            {
-                int modelRow = _rowIndexMap[visualRow];
-                CellValueBuffer buf = new CellValueBuffer();
-                _dataSource.GetCellValue(modelRow, colIndex, ref buf);
-                string oldText = buf.Text.ToString();
+            int modelRow = _rowIndexMap[visualRow];
+            CellValueBuffer buf = new CellValueBuffer();
+            _dataSource.GetCellValue(modelRow, colIndex, ref buf);
+            string oldText = buf.Text.ToString();
 
-                if (oldText != newText)
+            if (oldText != newText)
+            {
+                if (_dataSource is IZeroEditableSource editable)
                 {
-                    if (_dataSource is IZeroEditableSource editable)
-                    {
-                        editable.SetCellValue(modelRow, colIndex, newText);
-                    }
-                    CellValueChanged?.Invoke(this, new CellValueChangedEventArgs(visualRow, modelRow, colIndex, oldText, newText));
-                    InvalidateVisual();
+                    editable.SetCellValue(modelRow, colIndex, newText);
                 }
+                CellValueChanged?.Invoke(this, new CellValueChangedEventArgs(visualRow, modelRow, colIndex, oldText, newText));
+                InvalidateVisual();
             }
 
             CellEndEdit?.Invoke(this, EventArgs.Empty);
@@ -1244,7 +1366,11 @@ namespace ZeroUI.Wpf.DataGrid
         {
             if (!_isEditing) return;
 
-            _inPlaceEditor.Visibility = Visibility.Collapsed;
+            if (_activeEditor != null)
+            {
+                _activeEditor.Visibility = Visibility.Collapsed;
+                _activeEditor = null;
+            }
             _isEditing = false;
             _editingVisualRow = -1;
             _editingColIndex = -1;

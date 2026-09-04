@@ -1,3 +1,4 @@
+using System;
 using ZeroUI.Core.Common;
 
 namespace ZeroUI.Core.Data
@@ -20,6 +21,8 @@ namespace ZeroUI.Core.Data
         public SummaryType Summary { get; set; } = SummaryType.None;
         public string? SummaryFormat { get; set; }
         public GridColumnType ColumnType { get; set; } = GridColumnType.Text;
+        public string? Mask { get; set; }
+        public Func<string, (bool IsValid, string? ErrorMessage)>? CustomValidator { get; set; }
 
         public ZeroColumn() { }
 

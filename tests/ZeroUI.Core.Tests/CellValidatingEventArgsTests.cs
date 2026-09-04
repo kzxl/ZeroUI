@@ -50,6 +50,36 @@ namespace ZeroUI.Core.Tests
 
             col.ColumnType = GridColumnType.DateTime;
             Assert.Equal(GridColumnType.DateTime, col.ColumnType);
+
+            col.ColumnType = GridColumnType.Masked;
+            Assert.Equal(GridColumnType.Masked, col.ColumnType);
+        }
+
+        [Fact]
+        public void ZeroColumn_MaskAndCustomValidatorSupport()
+        {
+            var col = new ZeroColumn("Serial", 120)
+            {
+                ColumnType = GridColumnType.Masked,
+                Mask = "SN-0000-AAAA",
+                CustomValidator = val =>
+                {
+                    if (string.IsNullOrWhiteSpace(val) || val.Contains("_"))
+                        return (false, "Serial must not contain blanks");
+                    return (true, null);
+                }
+            };
+
+            Assert.Equal("SN-0000-AAAA", col.Mask);
+            Assert.NotNull(col.CustomValidator);
+
+            var (invalid, err) = col.CustomValidator("SN-12__-____");
+            Assert.False(invalid);
+            Assert.Equal("Serial must not contain blanks", err);
+
+            var (valid, okMsg) = col.CustomValidator("SN-1234-ABCD");
+            Assert.True(valid);
+            Assert.Null(okMsg);
         }
     }
 }

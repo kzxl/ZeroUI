@@ -214,44 +214,56 @@
                     </DockPanel>
 
                     <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.2*" />
-                            <ColumnDefinition Width="0.9*" />
-                            <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="0.7*" />
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="300" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                        <!-- Instrument 1: Radial Speedometer -->
-                        <ind:ZeroCard Grid.Column="0" HeaderText="Motor RPM Telemetry" SubtitleText="Spindle vector tachometer" Margin="0,0,10,0">
-                            <ind:ZeroGauge x:Name="SpindleGauge" Margin="0,8,0,0" Minimum="0" Maximum="3000" Value="1840" Unit="RPM" WarningThreshold="2200" DangerThreshold="2700" />
-                        </ind:ZeroCard>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.2*" />
+                                <ColumnDefinition Width="0.9*" />
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="0.7*" />
+                            </Grid.ColumnDefinitions>
 
-                        <!-- Instrument 2: Linear Gauges -->
-                        <ind:ZeroCard Grid.Column="1" HeaderText="Hydraulic Levels" SubtitleText="Tank pressure &amp; coolant" Margin="0,0,10,0">
-                            <Grid Margin="0,10,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <ind:ZeroLinearGauge x:Name="PressureGauge" Grid.Column="0" Minimum="0" Maximum="200" Value="145" Unit="Bar" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
-                                <ind:ZeroLinearGauge x:Name="CoolantGauge" Grid.Column="1" Minimum="0" Maximum="100" Value="68" Unit="°C" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
-                            </Grid>
-                        </ind:ZeroCard>
+                            <!-- Instrument 1: Radial Speedometer -->
+                            <ind:ZeroCard Grid.Column="0" HeaderText="Motor RPM Telemetry" SubtitleText="Spindle vector tachometer" Margin="0,0,10,0">
+                                <ind:ZeroGauge x:Name="SpindleGauge" Margin="0,8,0,0" Minimum="0" Maximum="3000" Value="1840" Unit="RPM" WarningThreshold="2200" DangerThreshold="2700" />
+                            </ind:ZeroCard>
 
-                        <!-- Instrument 3: 7-Segment Displays -->
-                        <ind:ZeroCard Grid.Column="2" HeaderText="Assembly Cycle &amp; Takt" SubtitleText="Active takt timing countdown" Margin="0,0,10,0">
-                            <StackPanel Margin="0,14,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="CURRENT TAKT TIME" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4" />
-                                <ind:ZeroSevenSegment x:Name="TaktTimerDisplay" ValueText="04:25" LedColor="#A6E3A1" Margin="0,0,0,16" />
-                                
-                                <TextBlock Text="COMPLETED UNITS TODAY" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4" />
-                                <ind:ZeroSevenSegment x:Name="CycleCounterDisplay" ValueText="1842" LedColor="#818CF8" />
-                            </StackPanel>
-                        </ind:ZeroCard>
+                            <!-- Instrument 2: Linear Gauges -->
+                            <ind:ZeroCard Grid.Column="1" HeaderText="Hydraulic Levels" SubtitleText="Tank pressure &amp; coolant" Margin="0,0,10,0">
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ind:ZeroLinearGauge x:Name="PressureGauge" Grid.Column="0" Minimum="0" Maximum="200" Value="145" Unit="Bar" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
+                                    <ind:ZeroLinearGauge x:Name="CoolantGauge" Grid.Column="1" Minimum="0" Maximum="100" Value="68" Unit="°C" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
+                                </Grid>
+                            </ind:ZeroCard>
 
-                        <!-- Instrument 4: Andon Stack Tower -->
-                        <ind:ZeroCard Grid.Column="3" HeaderText="Andon Tower" SubtitleText="Factory alarm stack">
-                            <ind:ZeroLedTower x:Name="AndonTower" GreenOn="True" YellowOn="False" RedBlink="False" Margin="0,10,0,0" HorizontalAlignment="Center" Width="70" />
+                            <!-- Instrument 3: 7-Segment Displays -->
+                            <ind:ZeroCard Grid.Column="2" HeaderText="Assembly Cycle &amp; Takt" SubtitleText="Active takt timing countdown" Margin="0,0,10,0">
+                                <StackPanel Margin="0,14,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="CURRENT TAKT TIME" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4" />
+                                    <ind:ZeroSevenSegment x:Name="TaktTimerDisplay" ValueText="04:25" LedColor="#A6E3A1" Margin="0,0,0,16" />
+                                    
+                                    <TextBlock Text="COMPLETED UNITS TODAY" FontSize="10.5" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4" />
+                                    <ind:ZeroSevenSegment x:Name="CycleCounterDisplay" ValueText="1842" LedColor="#818CF8" />
+                                </StackPanel>
+                            </ind:ZeroCard>
+
+                            <!-- Instrument 4: Andon Stack Tower -->
+                            <ind:ZeroCard Grid.Column="3" HeaderText="Andon Tower" SubtitleText="Factory alarm stack">
+                                <ind:ZeroLedTower x:Name="AndonTower" GreenOn="True" YellowOn="False" RedBlink="False" Margin="0,10,0,0" HorizontalAlignment="Center" Width="70" />
+                            </ind:ZeroCard>
+                        </Grid>
+
+                        <!-- Instrument 5: Interactive Plant Mimic Vector Diagram -->
+                        <ind:ZeroCard Grid.Row="1" HeaderText="Interactive Plant Mimic Canvas (ZeroPlantMimicCanvas)" SubtitleText="Single-Visual DrawingContext vector diagram (Pan: Right-Drag / Space+Drag, Zoom: Wheel, Click: Select Node)" Margin="0,10,0,0">
+                            <ind:ZeroPlantMimicCanvas x:Name="PlantCanvas" Margin="0,6,0,0" />
                         </ind:ZeroCard>
                     </Grid>
                 </Grid>
@@ -585,6 +597,24 @@
                             <StackPanel Margin="0,0,20,10">
                                 <TextBlock Text="Quality Inspection Deadline" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
                                 <edit:ZeroDatePicker x:Name="DatePickerEnd" Width="200" DateFormat="yyyy-MM-dd" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 21. Enterprise Dual-Date Range Selector (ZeroDateRangePicker) -->
+                        <TextBlock Text="21. Enterprise Dual-Date Range Selector (ZeroDateRangePicker &amp; DateRangePreset)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Telemetry Rollup Window (With 1-Click Quick Presets)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroDateRangePicker x:Name="DemoDateRangePicker" Width="330" ShowPresets="True" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 22. High-Performance Autocomplete Dropdown & Lookup Box (ZeroLookup) -->
+                        <TextBlock Text="22. High-Performance Autocomplete Dropdown &amp; Lookup Box (ZeroLookup)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Asset &amp; Sensor Hierarchy Lookup (5,000 items search)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroLookup x:Name="DemoAssetLookup" Width="380" Placeholder="Search asset code, tag, or description..." />
                             </StackPanel>
                         </WrapPanel>
                     </StackPanel>
