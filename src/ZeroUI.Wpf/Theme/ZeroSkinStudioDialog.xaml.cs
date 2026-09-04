@@ -17,7 +17,7 @@ namespace ZeroUI.Wpf.Theme
     public partial class ZeroSkinStudioDialog : Window
     {
         private ZeroSkin _generatedSkin = null!;
-        private bool _isUpdating = false;
+        private bool _isUpdating = true;
 
         private readonly struct PresetSeed
         {
@@ -49,9 +49,12 @@ namespace ZeroUI.Wpf.Theme
 
         public ZeroSkinStudioDialog()
         {
+            _isUpdating = true;
             InitializeComponent();
             PopulatePresetButtons();
             LoadFromCurrentSkin();
+            _isUpdating = false;
+            RegeneratePalette();
         }
 
         private void PopulatePresetButtons()
@@ -132,6 +135,15 @@ namespace ZeroUI.Wpf.Theme
 
         private void RegeneratePalette()
         {
+            if (TxtSkinName == null || TxtDisplayName == null || TxtPrimaryHex == null || TxtSecondaryHex == null ||
+                RbDarkMode == null || BoxPrimaryColor == null || BoxSecondaryColor == null ||
+                TxtContrastRatio == null || PreviewContainer == null || PrevCard == null ||
+                PrevTitle == null || PrevSubtitle == null || PrevSelection == null || PrevSelText == null ||
+                PrevInput == null || PrevBtnPrimary == null || PrevBtnOutline == null || SwatchGrid == null)
+            {
+                return;
+            }
+
             string name = string.IsNullOrWhiteSpace(TxtSkinName.Text) ? "custom_skin" : TxtSkinName.Text.Trim();
             string displayName = string.IsNullOrWhiteSpace(TxtDisplayName.Text) ? "Custom Skin" : TxtDisplayName.Text.Trim();
             bool isDark = RbDarkMode.IsChecked == true;
