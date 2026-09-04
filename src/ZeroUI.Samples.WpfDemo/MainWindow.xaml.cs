@@ -65,6 +65,10 @@ namespace ZeroUI.Samples.WpfDemo
             // Load initial 100k records for instant wow factor
             LoadData(100000);
             ApplySkin(ZeroSkinManager.CurrentSkin);
+
+            // Populate Radio Group options
+            RadioDispatchMode.Items = new[] { "Standard JIT Dispatch", "High-Priority Hotlot", "Hold for Quality Audit" };
+            RadioSamplingTier.Items = new[] { "Level I (10%)", "Level II (Normal 100%)", "Level III (Tightened)" };
         }
 
         private void RefreshSkinSelector()

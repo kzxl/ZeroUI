@@ -448,6 +448,76 @@
                         <ind:ZeroCard HeaderText="Active System Cluster" SubtitleText="High availability node cluster in Tokyo DC-2" Margin="0,0,0,24">
                             <TextBlock Text="All 16 worker instances operational. Average CPU load 12.4%, memory utilization 182 MB. Zero GC pauses recorded in the past 24 hours. Slim Fluent ScrollBar active on the right." Foreground="{DynamicResource ZeroUI.TextSecondary}" TextWrapping="Wrap" />
                         </ind:ZeroCard>
+
+                        <!-- 10. Range Sliders & Setpoints (ZeroSlider) -->
+                        <TextBlock Text="10. Anti-Aliased Range Sliders (ZeroSlider &amp; RangeModel)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Booster Pump Speed (RPM)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroSlider Width="220" Minimum="0" Maximum="3000" Value="1450" Step="50" Unit=" RPM" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Thermal Setpoint (°C)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroSlider Width="220" Minimum="50" Maximum="350" Value="185" Step="5" Unit=" °C" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Storage Quota (%)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroSlider Width="180" Minimum="0" Maximum="100" Value="75" Step="1" Unit="%" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 11. Radio Buttons & Radio Groups (SelectionModel) -->
+                        <TextBlock Text="11. Radio Groups &amp; Headless Selection (ZeroRadioGroup)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,24,10">
+                                <TextBlock Text="Production Dispatch Mode (Vertical)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
+                                <edit:ZeroRadioGroup x:Name="RadioDispatchMode" SelectedIndex="0" Orientation="Vertical" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,24,10">
+                                <TextBlock Text="Inspection Sampling Tier (Horizontal)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
+                                <edit:ZeroRadioGroup x:Name="RadioSamplingTier" SelectedIndex="1" Orientation="Horizontal" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 12. Segmented Time Pickers (ZeroTimePicker) -->
+                        <TextBlock Text="12. Segmented Time Pickers (ZeroTimePicker &amp; TimeSegmentModel)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Shift Start Time (HH:mm)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroTimePicker ShowSeconds="False" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,20,10">
+                                <TextBlock Text="Batch Cycle Duration (HH:mm:ss)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroTimePicker ShowSeconds="True" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 13. Formatted Masked Inputs (ZeroMaskedTextBox & ZeroMaskEngine) -->
+                        <TextBlock Text="13. Formatted Masked Inputs (ZeroMaskedTextBox &amp; ZeroMaskEngine)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <WrapPanel Margin="0,0,0,24">
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="PLC IPv4 Address" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroMaskedTextBox Width="180" Mask="000.000.000.000" RawText="192168001050" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Ethernet MAC Address" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroMaskedTextBox Width="190" Mask="HH:HH:HH:HH:HH:HH" RawText="001A2B3C4D5E" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Production Lot Code" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroMaskedTextBox Width="180" Mask="LOT-0000-AAAA" RawText="9081MESX" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,14,10">
+                                <TextBlock Text="Hotline / Support Phone" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroMaskedTextBox Width="170" Mask="(000) 000-0000" RawText="8005550199" />
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <!-- 14. Multi-line Text Editor (ZeroMemoEdit) -->
+                        <TextBlock Text="14. Multi-line Text Editor with Character Counter (ZeroMemoEdit)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <StackPanel Margin="0,0,0,24">
+                            <edit:ZeroMemoEdit Width="620" Height="100" MaxLength="250" ShowCharacterCount="True" Placeholder="Enter engineering change request notes or handover shift summary..." Text="Line 1 automated batch finished without deviations. Storage tank TK-101 level maintained at 75%. All critical safety interlocks inspected and confirmed normal." />
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
