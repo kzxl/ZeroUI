@@ -41,11 +41,11 @@ namespace ZeroUI.Core.Runtime
         private static readonly Lazy<EventBus> _defaultInstance = new Lazy<EventBus>(() => new EventBus());
         public static EventBus Default => _defaultInstance.Value;
 
-        private readonly ConcurrentDictionary<Type, List<Delegate>> _syncHandlers =
-            new ConcurrentDictionary<Type, List<Delegate>>();
+        private readonly ConcurrentDictionary<Type, Delegate[]> _syncHandlers =
+            new ConcurrentDictionary<Type, Delegate[]>();
 
-        private readonly ConcurrentDictionary<Type, List<Delegate>> _asyncHandlers =
-            new ConcurrentDictionary<Type, List<Delegate>>();
+        private readonly ConcurrentDictionary<Type, Delegate[]> _asyncHandlers =
+            new ConcurrentDictionary<Type, Delegate[]>();
 
         private readonly object _lock = new object();
 
@@ -57,17 +57,40 @@ namespace ZeroUI.Core.Runtime
 
             lock (_lock)
             {
-                var list = _syncHandlers.GetOrAdd(type, _ => new List<Delegate>());
-                list.Add(handler);
+                if (_syncHandlers.TryGetValue(type, out var current))
+                {
+                    var updated = new Delegate[current.Length + 1];
+                    Array.Copy(current, updated, current.Length);
+                    updated[current.Length] = handler;
+                    _syncHandlers[type] = updated;
+                }
+                else
+                {
+                    _syncHandlers[type] = new Delegate[] { handler };
+                }
             }
 
             return new SubscriptionToken(() =>
             {
                 lock (_lock)
                 {
-                    if (_syncHandlers.TryGetValue(type, out var list))
+                    if (_syncHandlers.TryGetValue(type, out var current))
                     {
-                        list.Remove(handler);
+                        int index = Array.IndexOf(current, handler);
+                        if (index >= 0)
+                        {
+                            if (current.Length == 1)
+                            {
+                                _syncHandlers.TryRemove(type, out _);
+                            }
+                            else
+                            {
+                                var updated = new Delegate[current.Length - 1];
+                                Array.Copy(current, 0, updated, 0, index);
+                                Array.Copy(current, index + 1, updated, index, current.Length - index - 1);
+                                _syncHandlers[type] = updated;
+                            }
+                        }
                     }
                 }
             });
@@ -81,17 +104,40 @@ namespace ZeroUI.Core.Runtime
 
             lock (_lock)
             {
-                var list = _asyncHandlers.GetOrAdd(type, _ => new List<Delegate>());
-                list.Add(handler);
+                if (_asyncHandlers.TryGetValue(type, out var current))
+                {
+                    var updated = new Delegate[current.Length + 1];
+                    Array.Copy(current, updated, current.Length);
+                    updated[current.Length] = handler;
+                    _asyncHandlers[type] = updated;
+                }
+                else
+                {
+                    _asyncHandlers[type] = new Delegate[] { handler };
+                }
             }
 
             return new SubscriptionToken(() =>
             {
                 lock (_lock)
                 {
-                    if (_asyncHandlers.TryGetValue(type, out var list))
+                    if (_asyncHandlers.TryGetValue(type, out var current))
                     {
-                        list.Remove(handler);
+                        int index = Array.IndexOf(current, handler);
+                        if (index >= 0)
+                        {
+                            if (current.Length == 1)
+                            {
+                                _asyncHandlers.TryRemove(type, out _);
+                            }
+                            else
+                            {
+                                var updated = new Delegate[current.Length - 1];
+                                Array.Copy(current, 0, updated, 0, index);
+                                Array.Copy(current, index + 1, updated, index, current.Length - index - 1);
+                                _asyncHandlers[type] = updated;
+                            }
+                        }
                     }
                 }
             });
@@ -101,23 +147,14 @@ namespace ZeroUI.Core.Runtime
         public void Publish<TEvent>(TEvent eventData)
         {
             var type = typeof(TEvent);
-            List<Delegate>? syncList = null;
 
-            lock (_lock)
+            if (_syncHandlers.TryGetValue(type, out var handlers))
             {
-                if (_syncHandlers.TryGetValue(type, out var list) && list.Count > 0)
-                {
-                    syncList = new List<Delegate>(list);
-                }
-            }
-
-            if (syncList != null)
-            {
-                for (int i = 0; i < syncList.Count; i++)
+                for (int i = 0; i < handlers.Length; i++)
                 {
                     try
                     {
-                        ((Action<TEvent>)syncList[i])(eventData);
+                        ((Action<TEvent>)handlers[i])(eventData);
                     }
                     catch
                     {
@@ -133,23 +170,14 @@ namespace ZeroUI.Core.Runtime
             Publish(eventData); // Run synchronous handlers first
 
             var type = typeof(TEvent);
-            List<Delegate>? asyncList = null;
 
-            lock (_lock)
+            if (_asyncHandlers.TryGetValue(type, out var handlers))
             {
-                if (_asyncHandlers.TryGetValue(type, out var list) && list.Count > 0)
-                {
-                    asyncList = new List<Delegate>(list);
-                }
-            }
-
-            if (asyncList != null)
-            {
-                for (int i = 0; i < asyncList.Count; i++)
+                for (int i = 0; i < handlers.Length; i++)
                 {
                     try
                     {
-                        await ((Func<TEvent, Task>)asyncList[i])(eventData).ConfigureAwait(false);
+                        await ((Func<TEvent, Task>)handlers[i])(eventData).ConfigureAwait(false);
                     }
                     catch
                     {

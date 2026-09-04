@@ -153,10 +153,10 @@ gantt
     TagId & Struct ScadaValue Store                 :done,    p1_1, 2026-09-01, 3d
     Subscriber Dictionary Inverted Index            :done,    p1_2, after p1_1, 2d
     ZeroTripleBuffer & UI Latest-Value Swapper      :done,    p1_3, after p1_2, 3d
-    RenderCommandBuffer & ZeroBufferPool            :active,  p1_4, after p1_3, 4d
+    RenderCommandBuffer & ZeroBufferPool            :done,    p1_4, after p1_3, 4d
     section Phase 2: Communication
     ModbusAddressPlanner Register Coalescing        :done,    p2_1, after p1_4, 3d
-    Siemens S7 DB Block Read Optimizer              :         p2_2, after p2_1, 4d
+    Siemens S7 DB Block Read Optimizer              :active,  p2_2, after p2_1, 4d
     Protocol Watchdog & Automatic Backoff Reconnect :         p2_3, after p2_2, 3d
     section Phase 3: Rendering
     ZeroScene & SceneNode Hierarchy (Plant Mimic)   :done,    p3_1, after p2_3, 4d
@@ -165,10 +165,10 @@ gantt
     Direct2D 1.1 Hardware Accelerator Fallback      :         p3_4, after p3_3, 5d
     section Phase 4: Benchmark Rigor
     Unified Categories A to F CLI Suite             :done,    p4_1, after p3_4, 3d
-    P50/P95/P99 Percentiles & GC Profiling Engine   :active,  p4_2, after p4_1, 2d
+    P50/P95/P99 Percentiles & GC Profiling Engine   :done,    p4_2, after p4_1, 2d
     Automated Headless CI/CD Benchmark Profiler     :         p4_3, after p4_2, 3d
     section Phase 5: Documentation
-    README Honest Engineering Claims                :active,  p5_1, after p4_3, 2d
+    README Honest Engineering Claims                :done,    p5_1, after p4_3, 2d
     Subsystem Architecture & Standards Alignment    :done,    p5_2, after p5_1, 2d
 ```
 
