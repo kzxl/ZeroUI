@@ -16,7 +16,7 @@ namespace ZeroUI.WinForms.Validation
     }
 
     /// <summary>
-    /// Modern, anti-aliased error and validation provider for WinForms applications (DevExpress DXErrorProvider parity).
+    /// Modern, anti-aliased error and validation provider for WinForms applications.
     /// Displays crisp vector badges with hover tooltips next to target controls without screen flickering.
     /// </summary>
     [ToolboxItem(true)]
@@ -24,7 +24,7 @@ namespace ZeroUI.WinForms.Validation
     [ProvideProperty("Error", typeof(Control))]
     [ProvideProperty("IconAlignment", typeof(Control))]
     [ProvideProperty("IconPadding", typeof(Control))]
-    [Description("Modern vector error provider with smooth hover tooltips (DXErrorProvider parity)")]
+    [Description("Modern vector error provider with smooth hover tooltips")]
     public class ZeroErrorProvider : Component, IExtenderProvider
     {
         private readonly Dictionary<Control, ErrorEntry> _entries = new Dictionary<Control, ErrorEntry>();

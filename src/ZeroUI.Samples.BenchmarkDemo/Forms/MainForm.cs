@@ -1271,7 +1271,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(btnToastWarn);
             leftPanel.Controls.Add(btnToastError);
 
-            // Section 8: ZeroTextBox (Modern DevExpress-Style Text Input)
+            // Section 8: ZeroTextBox (Modern Enterprise Text Input)
             int txtY = toastY + 44;
             var lblTxtTitle = new Label
             {
@@ -1371,11 +1371,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(datePicker);
             leftPanel.Controls.Add(numBox);
 
-            // Section 11: ZeroErrorProvider (DXErrorProvider Vector Badges & Validation)
+            // Section 11: ZeroErrorProvider (Vector Badges & Validation)
             int errY = dtY + 44;
             var lblErrTitle = new Label
             {
-                Text = "11. ZeroErrorProvider (DXErrorProvider Parity)",
+                Text = "11. ZeroErrorProvider (Vector Validation)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = colors.TextPrimary,
                 AutoSize = true,

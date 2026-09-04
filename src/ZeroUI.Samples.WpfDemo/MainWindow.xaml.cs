@@ -44,7 +44,7 @@ namespace ZeroUI.Samples.WpfDemo
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
-            // Setup DevExpress-Style Skin Selector & Studio
+            // Setup Skin Selector & Studio
             RefreshSkinSelector();
             ZeroSkinManager.SkinChanged += skin =>
             {

@@ -35,8 +35,7 @@ namespace ZeroUI.WinForms.Layout
 
     /// <summary>
     /// Modern anti-aliased SplitContainer for ZeroUI.
-    /// Replaces DevExpress SplitContainerControl with sleek single-pass layout, 
-    /// hover grip feedback, and one-click collapsible panel support.
+    /// Provides sleek single-pass layout, hover grip feedback, and one-click collapsible panel support.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]

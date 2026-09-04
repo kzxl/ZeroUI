@@ -4,7 +4,7 @@ namespace ZeroUI.Core.Theme
 {
     /// <summary>
     /// Represents a complete visual skin for ZeroUI containing name, mode, and palette tokens.
-    /// Modeled after enterprise skinning architectures (e.g. DevExpress Skin Manager).
+    /// Provides cross-platform styling across WinForms, WPF, and Web engines.
     /// </summary>
     public class ZeroSkin
     {

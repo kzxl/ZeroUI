@@ -1,7 +1,7 @@
 <Window x:Class="ZeroUI.Wpf.Theme.ZeroSkinStudioDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ZeroUI Skin Studio - DevExpress-Style Palette Generator"
+        Title="ZeroUI Skin Studio - Dynamic Palette Generator"
         Width="820" Height="620"
         MinWidth="720" MinHeight="520"
         WindowStartupLocation="CenterScreen"
@@ -26,7 +26,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="🎨 ZeroUI Skin Studio" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
-                    <TextBlock Text="DevExpress-Style Seed Palette Generator, Dynamic Contrast Engine &amp; JSON Skin Persistence"
+                    <TextBlock Text="Seed Palette Generator, Dynamic Contrast Engine &amp; JSON Skin Persistence"
                                FontSize="12" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,4,0,0" />
                 </StackPanel>
                 <Border Grid.Column="1" Background="{DynamicResource ZeroUI.BgCard}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}"

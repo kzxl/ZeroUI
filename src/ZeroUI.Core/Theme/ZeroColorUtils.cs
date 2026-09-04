@@ -5,7 +5,7 @@ namespace ZeroUI.Core.Theme
 {
     /// <summary>
     /// High-performance color calculation, HSL conversion, and WCAG contrast validation.
-    /// Provides mathematical color generation for dynamic DevExpress-style skins and palettes.
+    /// Provides mathematical color generation for dynamic enterprise skins and palettes.
     /// </summary>
     public static class ZeroColorUtils
     {

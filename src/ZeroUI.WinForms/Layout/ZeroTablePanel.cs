@@ -62,7 +62,7 @@ namespace ZeroUI.WinForms.Layout
 
     /// <summary>
     /// High-performance responsive TablePanel for ZeroUI.
-    /// Emulates modern WPF Grid and DevExpress TablePanel with single-pass layout and zero flickering.
+    /// Provides flexible grid layout with single-pass layout and zero flickering.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]

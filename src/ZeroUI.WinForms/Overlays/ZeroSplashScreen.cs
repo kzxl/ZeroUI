@@ -9,7 +9,7 @@ namespace ZeroUI.WinForms.Overlays
 {
     /// <summary>
     /// Thread-safe, non-blocking enterprise Splash Screen Manager for ZeroUI.
-    /// Replaces DevExpress SplashScreenManager by running on an independent background STA thread,
+    /// Runs on an independent background STA thread,
     /// guaranteeing smooth 60 FPS animation and responsive status updates while the main application initializes.
     /// </summary>
     public static class ZeroSplashScreen

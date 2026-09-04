@@ -10,7 +10,7 @@ using ZeroUI.Core.Theme;
 namespace ZeroUI.Wpf.Theme
 {
     /// <summary>
-    /// Interactive DevExpress-style Skin Studio Dialog.
+    /// Interactive Skin Studio Dialog.
     /// Provides live seed color adjustments, WCAG AAA contrast verification,
     /// dynamic palette generation, and JSON skin file persistence.
     /// </summary>

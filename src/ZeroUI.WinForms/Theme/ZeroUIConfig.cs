@@ -14,7 +14,7 @@ namespace ZeroUI.WinForms.Theme
     }
 
     /// <summary>
-    /// Global application-wide configuration for ZeroUI (similar to DevExpress WindowsFormsSettings).
+    /// Global application-wide configuration for ZeroUI.
     /// Provides centralized management for global font, corner rounding style, border radius, and theme tokens.
     /// </summary>
     public static class ZeroUIConfig
@@ -49,7 +49,7 @@ namespace ZeroUI.WinForms.Theme
         }
 
         /// <summary>
-        /// Global default font used across all ZeroUI controls (like DevExpress WindowsFormsSettings.DefaultFont).
+        /// Global default font used across all ZeroUI controls.
         /// </summary>
         public static Font DefaultFont
         {

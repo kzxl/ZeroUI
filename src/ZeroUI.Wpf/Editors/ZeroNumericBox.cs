@@ -13,7 +13,7 @@ namespace ZeroUI.Wpf.Editors
 {
     /// <summary>
     /// High-precision numeric stepper and spin box editor for industrial tolerances, setpoints,
-    /// currencies, percentages, and quantities. Modeled after DevExpress SpinEdit.
+    /// currencies, percentages, and quantities.
     /// Features unit prefixes/suffixes, acceleration on hold, decimal places, and mouse wheel support.
     /// </summary>
     [TemplatePart(Name = PartTextBox, Type = typeof(TextBox))]

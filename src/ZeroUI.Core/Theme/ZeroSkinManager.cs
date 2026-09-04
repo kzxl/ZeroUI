@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ZeroUI.Core.Theme
 {
     /// <summary>
-    /// DevExpress-style Central Skin & Palette Manager for ZeroUI.
+    /// Central Skin & Palette Manager for ZeroUI.
     /// Manages the catalog of skins, runtime skin registration, JSON persistence,
     /// and cross-platform notification dispatch (WPF, WinForms, Blazor).
     /// </summary>

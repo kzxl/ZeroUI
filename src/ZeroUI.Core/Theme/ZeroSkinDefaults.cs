@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace ZeroUI.Core.Theme
 {
     /// <summary>
-    /// Built-in skins catalog modeled after DevExpress Skin Gallery.
+    /// Built-in enterprise skins and palette catalog.
     /// Provides 9 curated enterprise palettes: Obsidian, Clean Light, Nordic, Cyberpunk,
     /// Emerald, Solar Amber, Amethyst Violet, Crimson Ruby, and OLED Midnight.
     /// </summary>

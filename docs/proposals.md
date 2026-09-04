@@ -13,13 +13,13 @@ ZeroUI has completed **Directives 1 through 27**, establishing a rock-solid, zer
 - **Deterministic Scheduling & Central Animation**: 7-cycle `ZeroRuntime` scheduler and 60 Hz `ZeroAnimationClock` core primitive eliminating 100+ distributed timers.
 - **Unified Architecture Benchmarks**: `ZeroUI.Benchmarks` suite covering Categories A through F.
 
-The next evolutionary horizon addresses **Enterprise Usability (DevExpress Parity)**, **Hardware Acceleration (Direct2D)**, **Advanced Industrial Protocols (OPC UA / MQTT)**, and **Interactive SCADA Design Systems**.
+The next evolutionary horizon addresses **Enterprise Usability & Advanced Grid Ergonomics**, **Hardware Acceleration (Direct2D)**, **Advanced Industrial Protocols (OPC UA / MQTT)**, and **Interactive SCADA Design Systems**.
 
 ---
 
 ## 2. Initiative Catalog (Detailed Breakdown)
 
-### Initiative 1: Enterprise DataGrid & UX Parity (DevExpress Benchmark)
+### Initiative 1: Enterprise DataGrid & Advanced UX Ergonomics
 
 | ID | Feature / Component | Description | Impact | Target Component |
 | :---: | :--- | :--- | :---: | :--- |
@@ -38,7 +38,7 @@ The next evolutionary horizon addresses **Enterprise Usability (DevExpress Parit
 | :---: | :--- | :--- | :---: | :--- |
 | **2.1** | **Standard Compact CheckBox (`ZeroCheckBox`)** | Compact tri-state checkbox (Checked, Unchecked, Indeterminate) with standard beside-label typography, replacing wide toggle switches in dense forms. | Critical | `ZeroCheckBox` |
 | **2.2** | **Universal Input Masking Engine (`ZeroMaskEngine`)** | Format mask processor supporting Numeric (`#,##0.00`), DateTime (`dd/MM/yyyy HH:mm:ss`), RegEx, and Simple Templates (Phone, Tax ID, MAC). | High | `ZeroMaskEngine`, `ZeroTextBox` |
-| **2.3** | **Generic Binding & Multi-Column `ZeroLookup`** | Accepting `IEnumerable<T>` with `ValueMember`, `DisplayMember`, and multi-column dropdown search popup (`LookUpEdit` parity). | High | `ZeroLookup`, `ZeroLookupPopup` |
+| **2.3** | **Generic Binding & Multi-Column `ZeroLookup`** | Accepting `IEnumerable<T>` with `ValueMember`, `DisplayMember`, and multi-column dropdown search popup with virtualized filtering. | High | `ZeroLookup`, `ZeroLookupPopup` |
 | **2.4** | **Keyboard Masked Date Entry in `ZeroDatePicker`** | Combining masked keyboard numeric input with popup calendar; auto-advances through day/month/year segments without mouse clicks. | High | `ZeroDatePicker` |
 | **2.5** | **Validation Framework & Error Provider** | `ZeroErrorProvider` displaying unobtrusive warning/error glyphs and tooltips beside controls failing validation predicates. | High | `ZeroErrorProvider`, `IZeroValidatable` |
 
@@ -115,7 +115,7 @@ gantt
 | :---: | :--- | :---: | :---: | :---: | :--- |
 | **P0** | **Initiative 1.4: Grid Layout Persistence** | Essential for ERP/SCADA apps | Low | Low | Execute first; immediately stops user frustration from lost grid layouts. |
 | **P0** | **Initiative 2.1: Compact `ZeroCheckBox`** | Critical for dense business forms | Low | Low | Straightforward; replaces oversized toggle switches in forms. |
-| **P0** | **Initiative 1.1: Excel Column Popup Filter** | Core usability parity with DevExpress | Medium | Low | Point-and-click column filtering is standard in all modern grids. |
+| **P0** | **Initiative 1.1: Excel Column Popup Filter** | Standard enterprise data filtering | Medium | Low | Point-and-click column filtering is standard in all modern grids. |
 | **P1** | **Initiative 2.2: Universal Masking Engine** | Essential for phone, tax ID, money | Medium | Low | Centralizes formatting across Grid and Form editors. |
 | **P1** | **Initiative 1.6: Multi-Column `ZeroTreeList`** | Unlocks manufacturing BOM views | Medium | Medium | Extends existing `ZeroTreeList` with `ZeroColumn` capabilities. |
 | **P1** | **Initiative 4.1: OPC UA Binary Adapter** | Critical for modern smart factories | High | Medium | Standard industrial protocol alongside Modbus TCP. |

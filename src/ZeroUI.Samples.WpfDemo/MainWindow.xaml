@@ -310,7 +310,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="28" MaxWidth="960" HorizontalAlignment="Left">
                         <TextBlock Text="AgentOption WPF UI Standards Design System" FontSize="19" FontWeight="Bold" Foreground="#F1F5F9" Margin="0,0,0,6" />
-                        <TextBlock Text="Curated color tokens, DevExpress-style skin manager, and zero-allocation control primitives." FontSize="13" Foreground="#94A3B8" Margin="0,0,0,24" />
+                        <TextBlock Text="Curated color tokens, dynamic skin manager, and zero-allocation control primitives." FontSize="13" Foreground="#94A3B8" Margin="0,0,0,24" />
 
                         <!-- 1. Buttons Section -->
                         <TextBlock Text="1. Button Variants" FontSize="14.5" FontWeight="SemiBold" Foreground="#F1F5F9" Margin="0,0,0,10" />
@@ -333,8 +333,8 @@
                             <TextBox Width="180" Height="32" Text="Disabled field" IsEnabled="False" Margin="0,0,12,10" />
                         </WrapPanel>
 
-                        <!-- 3. High-Precision Number Steppers (ZeroNumericBox - DevExpress Parity) -->
-                        <TextBlock Text="3. High-Precision Number Steppers (ZeroNumericBox - DevExpress Parity)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                        <!-- 3. High-Precision Number Steppers (ZeroNumericBox) -->
+                        <TextBlock Text="3. High-Precision Number Steppers (ZeroNumericBox)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                         <WrapPanel Margin="0,0,0,24">
                             <!-- Integer Quantity Stepper -->
                             <StackPanel Margin="0,0,14,10">

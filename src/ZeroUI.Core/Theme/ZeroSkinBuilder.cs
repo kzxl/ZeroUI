@@ -4,7 +4,7 @@ namespace ZeroUI.Core.Theme
 {
     /// <summary>
     /// Fluent builder and mathematical palette generator for creating custom ZeroUI skins.
-    /// Modeled after DevExpress Skin & Palette generator architecture.
+    /// Provides algorithmic color generation and contrast balancing.
     /// </summary>
     public sealed class ZeroSkinBuilder
     {

@@ -6,7 +6,7 @@ namespace ZeroUI.Wpf.Theme
 {
     /// <summary>
     /// Master Entry Point for ZeroUI Theme & Skin Engine.
-    /// Provides 1-line app-wide styling and real-time DevExpress-style skin switching.
+    /// Provides 1-line app-wide styling and real-time palette-based skin switching.
     /// </summary>
     public static class ZeroThemeEngine
     {

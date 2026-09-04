@@ -72,8 +72,7 @@ namespace ZeroUI.WinForms.Overlays
 
     /// <summary>
     /// High-performance 100% Single-HWND Accordion & Hierarchy Navigation Control for ZeroUI.
-    /// Eliminates DevExpress AccordionControl overhead by rendering the entire tree, chevron animations, 
-    /// search filter, and badges on a single GDI+ surface with 0 child Win32 window handles.
+    /// Renders the entire tree, chevron animations, search filter, and badges on a single GDI+ surface with 0 child Win32 window handles.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
