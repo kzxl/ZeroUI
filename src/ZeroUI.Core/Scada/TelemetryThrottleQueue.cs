@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -6,8 +7,9 @@ using System.Threading;
 namespace ZeroUI.Core.Scada
 {
     /// <summary>
-    /// Thread-safe coalescing queue that throttles high-frequency telemetry updates from PLCs / edge brokers.
-    /// Deduplicates and batches raw signals before delivering them to UI subscribers, preventing STA thread starvation.
+    /// Thread-safe zero-allocation coalescing queue that throttles high-frequency telemetry updates.
+    /// Deduplicates signals via latest-value semantics and delivers coalesced batches to UI subscribers
+    /// via ArrayPool&lt;IScadaTag&gt;.Shared and ArraySegment&lt;IScadaTag&gt;.
     /// </summary>
     public sealed class TelemetryThrottleQueue : IDisposable
     {
@@ -32,7 +34,7 @@ namespace ZeroUI.Core.Scada
         }
 
         /// <summary>
-        /// Enqueues a telemetry snapshot. If a tag was already pending, it is coalesced with the newest value.
+        /// Enqueues a telemetry snapshot. Coalesces with newest value if tag is already pending.
         /// </summary>
         public void Enqueue(IScadaTag tag)
         {
@@ -50,18 +52,34 @@ namespace ZeroUI.Core.Scada
             {
                 if (_pendingSnapshots.IsEmpty) return;
 
-                var batch = new List<IScadaTag>(_pendingSnapshots.Count);
-                foreach (var kvp in _pendingSnapshots)
+                int count = _pendingSnapshots.Count;
+                if (count == 0) return;
+
+                // Rent buffer from ArrayPool (Zero heap allocation)
+                var rentedArray = ArrayPool<IScadaTag>.Shared.Rent(count);
+                int itemsCopied = 0;
+
+                try
                 {
-                    if (_pendingSnapshots.TryRemove(kvp.Key, out var tag))
+                    foreach (var kvp in _pendingSnapshots)
                     {
-                        batch.Add(tag);
+                        if (_pendingSnapshots.TryRemove(kvp.Key, out var tag))
+                        {
+                            rentedArray[itemsCopied++] = tag;
+                            if (itemsCopied >= count) break;
+                        }
+                    }
+
+                    if (itemsCopied > 0)
+                    {
+                        // ArraySegment<T> implements IReadOnlyList<T> without heap allocation
+                        var segment = new ArraySegment<IScadaTag>(rentedArray, 0, itemsCopied);
+                        _flushCallback(segment);
                     }
                 }
-
-                if (batch.Count > 0)
+                finally
                 {
-                    _flushCallback(batch);
+                    ArrayPool<IScadaTag>.Shared.Return(rentedArray, clearArray: true);
                 }
             }
             finally

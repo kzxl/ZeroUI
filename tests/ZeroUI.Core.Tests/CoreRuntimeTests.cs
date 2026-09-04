@@ -47,6 +47,7 @@ namespace ZeroUI.Core.Tests
 
             Assert.True(executed);
             Assert.True(UiDispatcher.IsOnUiDispatcherThread);
+            UiDispatcher.Reset();
         }
     }
 
