@@ -11,6 +11,9 @@ using ZeroUI.Core.Data;
 using ZeroUI.Core.Input.Date;
 using ZeroUI.Core.Scene;
 using ZeroUI.Core.Theme;
+using ZeroUI.Core.Signal;
+using ZeroUI.Core.Memory;
+using ZeroUI.Core.Automation;
 using ZeroUI.Samples.WpfDemo.Data;
 using ZeroUI.Wpf.Charts.Model;
 using ZeroUI.Wpf.Editors;
@@ -41,6 +44,8 @@ namespace ZeroUI.Samples.WpfDemo
         private double _simPressure = 145;
         private int _simTaktSeconds = 265;
         private int _simCycles = 1842;
+        private bool _isScopePaused = false;
+        private double _scopeAngle = 0.0;
 
         public MainWindow()
         {
@@ -53,6 +58,9 @@ namespace ZeroUI.Samples.WpfDemo
             SetupPivotGrid();
             SetupGanttChart();
             SetupDockAndDiagram();
+            SetupSignalScope();
+            SetupHexInspector();
+            SetupStateExecutor();
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
@@ -417,6 +425,22 @@ namespace ZeroUI.Samples.WpfDemo
                     AndonTower.YellowOn = false;
                     AndonTower.RedBlink = false;
                 }
+
+                // Stream real-time oscilloscope samples
+                if (DemoSignalScope != null && DemoSignalScope.Channels.Count >= 4 && !_isScopePaused)
+                {
+                    _scopeAngle += 0.25;
+                    float ch1 = (float)(Math.Sin(_scopeAngle) * 3.3 + (rand.NextDouble() - 0.5) * 0.15);
+                    float ch2 = (float)(Math.Sin(_scopeAngle * 2.8) * 1.8 + Math.Cos(_scopeAngle * 6.5) * 0.6);
+                    float ch3 = (_simCycles % 16 < 8) ? 1.0f : 0.0f;
+                    float ch4 = (_simCycles % 6 < 3) ? 1.0f : 0.0f;
+
+                    DemoSignalScope.Channels[0].Buffer.Write(ch1);
+                    DemoSignalScope.Channels[1].Buffer.Write(ch2);
+                    DemoSignalScope.Channels[2].Buffer.Write(ch3);
+                    DemoSignalScope.Channels[3].Buffer.Write(ch4);
+                    DemoSignalScope.InvalidateVisual();
+                }
             };
             _scadaSimTimer.Start();
         }
@@ -549,6 +573,24 @@ namespace ZeroUI.Samples.WpfDemo
 
             BtnResetDiagram.Background = ZeroWpfTheme.BgInput;
             BtnResetDiagram.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnToggleScopeCursors.Background = ZeroWpfTheme.BgInput;
+            BtnToggleScopeCursors.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnScopeHold.Background = ZeroWpfTheme.PrimaryAccent;
+            BtnScopeHold.Foreground = ZeroWpfTheme.SelectionForeground;
+
+            BtnRandomizePacket.Background = ZeroWpfTheme.PrimaryAccent;
+            BtnRandomizePacket.Foreground = ZeroWpfTheme.SelectionForeground;
+
+            BtnStateStep.Background = ZeroWpfTheme.PrimaryAccent;
+            BtnStateStep.Foreground = ZeroWpfTheme.SelectionForeground;
+
+            BtnStatePause.Background = ZeroWpfTheme.BgInput;
+            BtnStatePause.Foreground = ZeroWpfTheme.TextPrimary;
+
+            BtnStateReset.Background = ZeroWpfTheme.BgInput;
+            BtnStateReset.Foreground = ZeroWpfTheme.TextPrimary;
 
             BtnToggleSim.Background = ZeroWpfTheme.BgInput;
             BtnToggleSim.Foreground = ZeroWpfTheme.TextPrimary;
@@ -1126,6 +1168,256 @@ namespace ZeroUI.Samples.WpfDemo
         private void BtnResetDiagram_Click(object sender, RoutedEventArgs e)
         {
             ResetDiagramContent();
+        }
+
+        #endregion
+
+        #region Real-Time Oscilloscope & Logic Analyzer Setup
+
+        private void SetupSignalScope()
+        {
+            ComboScopeTimebase.ItemsSource = new[] { "1 ms/Div", "5 ms/Div", "10 ms/Div", "20 ms/Div", "50 ms/Div" };
+            ComboScopeTimebase.SelectedIndex = 2; // 10 ms/Div
+
+            DemoSignalScope.Channels.Clear();
+
+            // Ch1: 50Hz Inverter Output Sine Wave (Yellow)
+            var ch1 = new ScopeChannel(1, "CH1 (Inverter Phase A)", ScopeChannelType.Analog, 0xFFFACC15, 65536)
+            {
+                VoltsPerDiv = 1.0f,
+                VerticalOffsetDiv = 1.2f,
+                Unit = "V"
+            };
+
+            // Ch2: Spindle Bearing Piezo Vibration Sensor (Sky Blue)
+            var ch2 = new ScopeChannel(2, "CH2 (Spindle Vibration)", ScopeChannelType.Analog, 0xFF38BDF8, 65536)
+            {
+                VoltsPerDiv = 1.0f,
+                VerticalOffsetDiv = -1.0f,
+                Unit = "g"
+            };
+
+            // Ch3: Optical Part Detection Sensor (Green logic)
+            var ch3 = new ScopeChannel(3, "D0 (Optical Sensor)", ScopeChannelType.DigitalLogic, 0xFF4ADE80, 65536)
+            {
+                VerticalOffsetDiv = -2.6f
+            };
+
+            // Ch4: Rotary Encoder Phase A (Purple logic)
+            var ch4 = new ScopeChannel(4, "D1 (Encoder Pulse)", ScopeChannelType.DigitalLogic, 0xFFA855F7, 65536)
+            {
+                VerticalOffsetDiv = -3.4f
+            };
+
+            // Pre-seed buffer data for immediate visual impact
+            var rand = new Random(42);
+            for (int i = 0; i < 2000; i++)
+            {
+                double a = i * 0.08;
+                ch1.Buffer.Write((float)(Math.Sin(a) * 3.3 + (rand.NextDouble() - 0.5) * 0.15));
+                ch2.Buffer.Write((float)(Math.Sin(a * 2.8) * 1.8 + Math.Cos(a * 6.5) * 0.6));
+                ch3.Buffer.Write((i % 200 < 100) ? 1.0f : 0.0f);
+                ch4.Buffer.Write((i % 40 < 20) ? 1.0f : 0.0f);
+            }
+
+            DemoSignalScope.Channels.Add(ch1);
+            DemoSignalScope.Channels.Add(ch2);
+            DemoSignalScope.Channels.Add(ch3);
+            DemoSignalScope.Channels.Add(ch4);
+
+            DemoSignalScope.Trigger.Mode = TriggerMode.Auto;
+            DemoSignalScope.Trigger.ChannelId = 1;
+            DemoSignalScope.Trigger.Threshold = 0.0f;
+            DemoSignalScope.Trigger.Slope = TriggerSlope.RisingEdge;
+        }
+
+        private void ComboScopeTimebase_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DemoSignalScope == null || ComboScopeTimebase == null) return;
+            double timeSec = ComboScopeTimebase.SelectedIndex switch
+            {
+                0 => 0.001,
+                1 => 0.005,
+                2 => 0.010,
+                3 => 0.020,
+                4 => 0.050,
+                _ => 0.010
+            };
+            DemoSignalScope.TimePerDiv = timeSec;
+        }
+
+        private void BtnToggleScopeCursors_Click(object sender, RoutedEventArgs e)
+        {
+            DemoSignalScope.ShowCursors = !DemoSignalScope.ShowCursors;
+        }
+
+        private void BtnScopeHold_Click(object sender, RoutedEventArgs e)
+        {
+            _isScopePaused = !_isScopePaused;
+            BtnScopeHold.Content = _isScopePaused ? "▶️ Resume" : "⏸️ Freeze";
+        }
+
+        #endregion
+
+        #region OT Protocol & Hex Inspector Setup
+
+        private void SetupHexInspector()
+        {
+            ComboHexPackets.ItemsSource = new[]
+            {
+                "Modbus TCP: Read Holding Regs (FC 03)",
+                "Modbus TCP: Write Multiple Regs (FC 16)",
+                "Siemens S7: Read Data Block DB1",
+                "Industrial Binary Telemetry Log (512B)"
+            };
+            ComboHexPackets.SelectedIndex = 0;
+            LoadHexPacket(0);
+        }
+
+        private void LoadHexPacket(int index)
+        {
+            byte[] packet;
+            switch (index)
+            {
+                case 1: // Modbus TCP Write Multiple Registers
+                    packet = new byte[]
+                    {
+                        0x00, 0x02,             // Transaction ID: 2
+                        0x00, 0x00,             // Protocol ID: 0 (Modbus)
+                        0x00, 0x0B,             // Length: 11 bytes following
+                        0x01,                   // Unit ID: 1
+                        0x10,                   // Function Code: 16 (0x10)
+                        0x00, 0x01,             // Starting Address: 1
+                        0x00, 0x02,             // Quantity of Registers: 2
+                        0x04,                   // Byte Count: 4
+                        0x01, 0x56, 0x02, 0x34  // Register Values: 0x0156, 0x0234
+                    };
+                    DemoHexInspector.SetBuffer(packet);
+                    DemoHexInspector.Engine.Dissector.DissectModbusTcp(packet);
+                    break;
+
+                case 2: // Siemens S7 Protocol Header & COTP
+                    packet = new byte[]
+                    {
+                        0x03, 0x00, 0x00, 0x1F, // TPKT Header (Version 3, Length 31)
+                        0x02, 0xF0, 0x80,       // COTP Header
+                        0x32, 0x01, 0x00, 0x00, // S7 Protocol ID 0x32, ROSCTR (Job 1)
+                        0x00, 0x01, 0x00, 0x0E, // Redundancy ID, Parameter Length 14
+                        0x00, 0x00,             // Data Length 0
+                        0x04, 0x01, 0x12, 0x0A, // Function: Read Var (0x04), Item Count: 1
+                        0x10, 0x02, 0x00, 0x04, // Transport size: BYTE, Length: 4
+                        0x00, 0x01, 0x84, 0x00, // DB Number: 1, Area: DB (0x84)
+                        0x00, 0x00              // Start Address: 0
+                    };
+                    DemoHexInspector.SetBuffer(packet);
+                    DemoHexInspector.Engine.Dissector.Segments.Clear();
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(0, 4, "TPKT Header", 0xFF3B82F6));
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(4, 3, "COTP Layer", 0xFF6366F1));
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(7, 10, "S7 Header", 0xFFF59E0B));
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(17, packet.Length - 17, "S7 Request Item", 0xFF10B981));
+                    break;
+
+                case 3: // 512B Industrial Telemetry Buffer
+                    packet = new byte[512];
+                    var rand = new Random(101);
+                    rand.NextBytes(packet);
+                    DemoHexInspector.SetBuffer(packet);
+                    DemoHexInspector.Engine.Dissector.Segments.Clear();
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(0, 16, "Sync Header", 0xFF3B82F6));
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(16, 64, "Calibration Table", 0xFFF59E0B));
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(80, 416, "Sensor Ring Buffer", 0xFF10B981));
+                    DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(496, 16, "CRC / Checksum Block", 0xFFEF4444));
+                    break;
+
+                default: // Modbus TCP Read Holding Registers (FC 03)
+                    packet = new byte[]
+                    {
+                        0x00, 0x01,             // Transaction ID: 1
+                        0x00, 0x00,             // Protocol ID: 0
+                        0x00, 0x06,             // Length: 6
+                        0x01,                   // Unit ID: 1
+                        0x03,                   // Function Code: 3
+                        0x00, 0x6B,             // Start Register: 107
+                        0x00, 0x03              // Register Count: 3
+                    };
+                    DemoHexInspector.SetBuffer(packet);
+                    DemoHexInspector.Engine.Dissector.DissectModbusTcp(packet);
+                    break;
+            }
+        }
+
+        private void ComboHexPackets_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DemoHexInspector == null || ComboHexPackets == null) return;
+            LoadHexPacket(ComboHexPackets.SelectedIndex);
+        }
+
+        private void BtnRandomizePacket_Click(object sender, RoutedEventArgs e)
+        {
+            byte[] randBuf = new byte[128];
+            new Random().NextBytes(randBuf);
+            DemoHexInspector.SetBuffer(randBuf);
+            DemoHexInspector.Engine.Dissector.Segments.Clear();
+            DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(0, 8, "Frame Header", 0xFF3B82F6));
+            DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(8, 116, "Payload", 0xFF10B981));
+            DemoHexInspector.Engine.Dissector.Segments.Add(new HexByteSegment(124, 4, "CRC32", 0xFFEF4444));
+        }
+
+        #endregion
+
+        #region State Machine & Pulse Executor Setup
+
+        private void SetupStateExecutor()
+        {
+            var sm = DemoStateExecutor.Engine;
+            sm.Nodes.Clear();
+            sm.Transitions.Clear();
+
+            // Packaging Line Sequence States:
+            // IDLE -> INFEED -> HEAT_SEAL -> VACUUM_PUMP -> INSPECT -> DISPATCH -> IDLE
+            var sIdle = new MachineStateNode("idle", "1. IDLE", 80, 160, 0xFF64748B, duration: 2.0);
+            var sInfeed = new MachineStateNode("infeed", "2. INFEED", 240, 70, 0xFF3B82F6, duration: 3.0);
+            var sSeal = new MachineStateNode("seal", "3. HEAT SEAL", 440, 70, 0xFFF59E0B, duration: 2.5);
+            var sVacuum = new MachineStateNode("vacuum", "4. VACUUM", 640, 70, 0xFFA855F7, duration: 3.5);
+            var sInspect = new MachineStateNode("inspect", "5. QC INSPECT", 640, 250, 0xFF06B6D4, duration: 2.0);
+            var sPass = new MachineStateNode("pass", "6. DISPATCH", 380, 250, 0xFF10B981, duration: 2.5);
+
+            sm.Nodes.Add(sIdle);
+            sm.Nodes.Add(sInfeed);
+            sm.Nodes.Add(sSeal);
+            sm.Nodes.Add(sVacuum);
+            sm.Nodes.Add(sInspect);
+            sm.Nodes.Add(sPass);
+
+            sm.Transitions.Add(new StateTransitionEdge("t1", "idle", "infeed", "Sensor: Tray Ready"));
+            sm.Transitions.Add(new StateTransitionEdge("t2", "infeed", "seal", "Pusher Limit Sw"));
+            sm.Transitions.Add(new StateTransitionEdge("t3", "seal", "vacuum", "Temp > 185°C"));
+            sm.Transitions.Add(new StateTransitionEdge("t4", "vacuum", "inspect", "Press < -0.8 Bar"));
+            sm.Transitions.Add(new StateTransitionEdge("t5", "inspect", "pass", "Camera: OK 99.8%"));
+            sm.Transitions.Add(new StateTransitionEdge("t6", "pass", "idle", "Belt Clear"));
+
+            sm.SetInitialState("idle");
+        }
+
+        private void BtnStateStep_Click(object sender, RoutedEventArgs e)
+        {
+            var sm = DemoStateExecutor.Engine;
+            var edge = sm.Transitions.Find(t => t.SourceId == sm.ActiveStateId);
+            if (edge != null)
+            {
+                sm.TriggerTransition(edge.TargetId);
+            }
+        }
+
+        private void BtnStatePause_Click(object sender, RoutedEventArgs e)
+        {
+            DemoStateExecutor.IsAnimating = !DemoStateExecutor.IsAnimating;
+            BtnStatePause.Content = DemoStateExecutor.IsAnimating ? "⏸️ Pause" : "▶️ Resume";
+        }
+
+        private void BtnStateReset_Click(object sender, RoutedEventArgs e)
+        {
+            DemoStateExecutor.Engine.SetInitialState("idle");
         }
 
         #endregion

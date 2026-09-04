@@ -774,6 +774,91 @@
                     </Border>
                 </Grid>
             </TabItem>
+
+            <!-- CLUSTER 11: OSCILLOSCOPE & LOGIC ANALYZER -->
+            <TabItem Header="⚡ 11. Oscilloscope &amp; Logic Analyzer">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Margin="0,0,0,12" Background="#181B26" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="⚡ Multi-Channel Real-Time Oscilloscope &amp; Logic Analyzer (ZeroSignalScope)" FontSize="15" FontWeight="Bold" Foreground="#818CF8" />
+                                <TextBlock Text="Streaming 100,000 pts/s zero-alloc: Analog sine/vibration waveforms + 4 digital encoder tracks, edge trigger &amp; dual measurement cursors (Δt, ΔV)" FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <TextBlock Text="Timebase:" VerticalAlignment="Center" Foreground="#94A3B8" Margin="0,0,6,0" FontSize="12" />
+                                <ComboBox x:Name="ComboScopeTimebase" Width="100" Height="28" SelectionChanged="ComboScopeTimebase_SelectionChanged" Margin="0,0,10,0" />
+                                <Button x:Name="BtnToggleScopeCursors" Click="BtnToggleScopeCursors_Click" Content="📏 Toggle Cursors" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                <Button x:Name="BtnScopeHold" Click="BtnScopeHold_Click" Content="⏸️ Freeze / Run" Height="28" Padding="10,0,10,0" Cursor="Hand" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <ind:ZeroSignalScope x:Name="DemoSignalScope" />
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 12: OT PROTOCOL & HEX INSPECTOR -->
+            <TabItem Header="🔍 12. OT Protocol &amp; Hex Inspector">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Margin="0,0,0,12" Background="#181B26" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="🔍 Industrial OT Protocol &amp; Memory Packet Inspector (ZeroHexInspector)" FontSize="15" FontWeight="Bold" Foreground="#818CF8" />
+                                <TextBlock Text="Zero-copy memory dump with colored protocol dissector: MBAP Header, Function Code, Data Payload, and live primitive value inspector" FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <TextBlock Text="Sample Packet:" VerticalAlignment="Center" Foreground="#94A3B8" Margin="0,0,6,0" FontSize="12" />
+                                <ComboBox x:Name="ComboHexPackets" Width="200" Height="28" SelectionChanged="ComboHexPackets_SelectionChanged" Margin="0,0,10,0" />
+                                <Button x:Name="BtnRandomizePacket" Click="BtnRandomizePacket_Click" Content="🎲 Generate Noise Payload" Height="28" Padding="10,0,10,0" Cursor="Hand" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <ind:ZeroHexInspector x:Name="DemoHexInspector" />
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 13: STATE MACHINE & PULSE EXECUTOR -->
+            <TabItem Header="🔀 13. State Machine &amp; Pulse Executor">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Margin="0,0,0,12" Background="#181B26" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <DockPanel LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="🔀 Live State Machine &amp; Animated Pulse Flow Canvas (ZeroStateExecutor)" FontSize="15" FontWeight="Bold" Foreground="#818CF8" />
+                                <TextBlock Text="Active sequence timers with animated glowing photon pulses travelling along transition wires on state change" FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <Button x:Name="BtnStateStep" Click="BtnStateStep_Click" Content="⏭️ Step Next State" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                <Button x:Name="BtnStatePause" Click="BtnStatePause_Click" Content="⏸️ Pause / Run" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                <Button x:Name="BtnStateReset" Click="BtnStateReset_Click" Content="🔄 Reset Cycle" Height="28" Padding="10,0,10,0" Cursor="Hand" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                        <ind:ZeroStateExecutor x:Name="DemoStateExecutor" />
+                    </Border>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>
