@@ -91,6 +91,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private System.Windows.Forms.Timer? _logGenTimer;
         private System.Windows.Forms.Timer? _scadaSimTimer;
         private System.Windows.Forms.Timer? _closedLoopTimer;
+        private string? _savedGridLayout;
 
 
 
@@ -289,6 +290,39 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ZeroToast.Warning(this, "Active Alert: SMT Feeder BOA472 low stock warning.");
             });
             btnAlerts.BadgeCount = 3;
+
+            _mainToolbar.AddSeparator();
+
+            _mainToolbar.AddButton("Best Fit", "↔️", (s, e) =>
+            {
+                _zeroGrid.BestFitColumns();
+                ZeroToast.Info(this, "Auto-sized all columns to fit content (Best Fit).");
+            });
+
+            _mainToolbar.AddButton("Checkboxes", "☑️", (s, e) =>
+            {
+                _zeroGrid.ShowCheckBoxSelectorColumn = !_zeroGrid.ShowCheckBoxSelectorColumn;
+                ZeroToast.Info(this, $"Selection Checkbox Column: {(_zeroGrid.ShowCheckBoxSelectorColumn ? "Visible" : "Hidden")}");
+            });
+
+            _mainToolbar.AddButton("Save Layout", "💾", (s, e) =>
+            {
+                _savedGridLayout = _zeroGrid.SaveLayoutToJson();
+                ZeroToast.Success(this, "Saved column layout (order & widths) to JSON.");
+            });
+
+            _mainToolbar.AddButton("Restore Layout", "📂", (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(_savedGridLayout))
+                {
+                    _zeroGrid.RestoreLayoutFromJson(_savedGridLayout);
+                    ZeroToast.Success(this, "Restored column layout from JSON.");
+                }
+                else
+                {
+                    ZeroToast.Warning(this, "No saved layout found. Click 'Save Layout' first.");
+                }
+            });
 
             _mainToolbar.AddSpacer(); // Elastic right spacer
 
@@ -1217,6 +1251,73 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(btnToastSuccess);
             leftPanel.Controls.Add(btnToastWarn);
             leftPanel.Controls.Add(btnToastError);
+
+            // Section 8: ZeroTextBox (Modern DevExpress-Style Text Input)
+            int txtY = toastY + 44;
+            var lblTxtTitle = new Label
+            {
+                Text = "8. ZeroTextBox (Placeholder, Clear ✕, Password)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, txtY)
+            };
+            leftPanel.Controls.Add(lblTxtTitle);
+
+            txtY += 30;
+            var txtRegular = new ZeroTextBox
+            {
+                Location = new Point(16, txtY),
+                Size = new Size(390, 32),
+                PlaceholderText = "Enter full name or code...",
+                ShowClearButton = true
+            };
+            leftPanel.Controls.Add(txtRegular);
+
+            txtY += 40;
+            var txtPassword = new ZeroTextBox
+            {
+                Location = new Point(16, txtY),
+                Size = new Size(390, 32),
+                PlaceholderText = "Enter secure password...",
+                UseSystemPasswordChar = true,
+                ShowClearButton = true
+            };
+            leftPanel.Controls.Add(txtPassword);
+
+            // Section 9: ZeroCheckBox (Vector Flat & Tri-State)
+            int chkY = txtY + 44;
+            var lblChkTitle = new Label
+            {
+                Text = "9. ZeroCheckBox (Vector Flat, Tri-State, Spacebar)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, chkY)
+            };
+            leftPanel.Controls.Add(lblChkTitle);
+
+            chkY += 30;
+            var chk1 = new ZeroCheckBox
+            {
+                Location = new Point(16, chkY),
+                Size = new Size(180, 24),
+                Text = "Enable Notifications",
+                Checked = true
+            };
+            var chk2 = new ZeroCheckBox
+            {
+                Location = new Point(210, chkY),
+                Size = new Size(180, 24),
+                Text = "Tri-State Filter",
+                ThreeState = true,
+                CheckState = CheckState.Indeterminate
+            };
+            chk1.CheckedChanged += (s, e) => ZeroToast.Info(this, $"Notifications: {chk1.Checked}");
+            chk2.CheckStateChanged += (s, e) => ZeroToast.Info(this, $"Filter state: {chk2.CheckState}");
+
+            leftPanel.Controls.Add(chk1);
+            leftPanel.Controls.Add(chk2);
 
             // Right Panel: ZeroListView Log Streamer
             var rightPanel = new Panel

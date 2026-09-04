@@ -50,6 +50,15 @@ namespace ZeroUI.WinForms.DataGrid
         private int _resizeStartX = 0;
         private int _resizeStartWidth = 0;
 
+        // CheckBox Selector Column & Drag-and-Drop Reordering
+        private bool _showCheckBoxSelectorColumn = false;
+        private const int CheckBoxColWidth = 34;
+        private bool _allowColumnReordering = true;
+        private bool _isDraggingColumn = false;
+        private int _potentialDragColIndex = -1;
+        private int _dragTargetColIndex = -1;
+        private Point _dragStartPoint;
+
         // In-Place Floating Editor
         private readonly TextBox _inPlaceEditor;
         private bool _isEditing = false;
@@ -273,6 +282,215 @@ namespace ZeroUI.WinForms.DataGrid
         [Browsable(false)]
         public IReadOnlyCollection<int> SelectedVisualRows => _selectedVisualRows;
 
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        [Description("Enables a dedicated pinned checkbox column for fast multi-row selection.")]
+        public bool ShowCheckBoxSelectorColumn
+        {
+            get => _showCheckBoxSelectorColumn;
+            set
+            {
+                if (_showCheckBoxSelectorColumn != value)
+                {
+                    _showCheckBoxSelectorColumn = value;
+                    UpdateScrollBars();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Allows users to reorder columns by dragging column headers.")]
+        public bool AllowColumnReordering
+        {
+            get => _allowColumnReordering;
+            set => _allowColumnReordering = value;
+        }
+
+        public void SelectAllRows()
+        {
+            _selectedVisualRows.Clear();
+            int count = _rowIndexMap.ActiveCount;
+            for (int i = 0; i < count; i++)
+            {
+                _selectedVisualRows.Add(i);
+            }
+            if (count > 0) _selectedVisualRow = 0;
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            Invalidate();
+        }
+
+        public void ClearRowSelection()
+        {
+            _selectedVisualRows.Clear();
+            _selectedVisualRow = -1;
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            Invalidate();
+        }
+
+        public void BestFitColumn(int columnIndex)
+        {
+            if (_dataSource == null || columnIndex < 0 || columnIndex >= _columns.Count) return;
+
+            var col = _columns[columnIndex];
+            if (!col.IsVisible) return;
+
+            int maxW = TextRenderer.MeasureText(col.HeaderText, Font).Width + 28;
+            int totalRows = _rowIndexMap.ActiveCount;
+            int sampleCount = Math.Min(300, totalRows);
+            CellValueBuffer buf = new CellValueBuffer();
+
+            for (int r = 0; r < sampleCount; r++)
+            {
+                int modelRow = _rowIndexMap[r];
+                buf.Reset();
+                _dataSource.GetCellValue(modelRow, columnIndex, ref buf);
+                string txt = buf.Text.ToString();
+                if (!string.IsNullOrEmpty(txt))
+                {
+                    int w = TextRenderer.MeasureText(txt, Font).Width + 18;
+                    if (w > maxW) maxW = w;
+                }
+            }
+
+            col.Width = Math.Max(col.MinWidth, Math.Min(col.MaxWidth, maxW));
+            UpdateScrollBars();
+            Invalidate();
+        }
+
+        public void BestFitColumns()
+        {
+            if (_dataSource == null || _columns.Count == 0) return;
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (_columns[i].IsVisible)
+                {
+                    BestFitColumn(i);
+                }
+            }
+        }
+
+        public string SaveLayoutToJson()
+        {
+            var sb = new System.Text.StringBuilder(1024);
+            sb.Append("{\"Columns\":[");
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (i > 0) sb.Append(",");
+                var col = _columns[i];
+                sb.Append("{");
+                sb.AppendFormat("\"FieldName\":\"{0}\",", EscapeJson(col.FieldName));
+                sb.AppendFormat("\"HeaderText\":\"{0}\",", EscapeJson(col.HeaderText));
+                sb.AppendFormat("\"Width\":{0},", col.Width);
+                sb.AppendFormat("\"IsVisible\":{0},", col.IsVisible ? "true" : "false");
+                sb.AppendFormat("\"IsPinned\":{0},", col.IsPinned ? "true" : "false");
+                sb.AppendFormat("\"SortOrder\":{0}", (int)col.SortOrder);
+                sb.Append("}");
+            }
+            sb.Append("]}");
+            return sb.ToString();
+        }
+
+        public void RestoreLayoutFromJson(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return;
+
+            try
+            {
+                var entries = ExtractJsonObjects(json);
+                if (entries.Count == 0) return;
+
+                var reordered = new List<ZeroColumn>();
+                var remaining = new List<ZeroColumn>(_columns);
+
+                foreach (var dict in entries)
+                {
+                    dict.TryGetValue("FieldName", out string? fieldName);
+                    dict.TryGetValue("HeaderText", out string? headerText);
+
+                    ZeroColumn? matched = null;
+                    if (!string.IsNullOrEmpty(fieldName))
+                    {
+                        matched = remaining.Find(c => string.Equals(c.FieldName, fieldName, StringComparison.OrdinalIgnoreCase));
+                    }
+                    if (matched == null && !string.IsNullOrEmpty(headerText))
+                    {
+                        matched = remaining.Find(c => string.Equals(c.HeaderText, headerText, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (matched != null)
+                    {
+                        if (dict.TryGetValue("Width", out string? wStr) && int.TryParse(wStr, out int w))
+                        {
+                            matched.Width = Math.Max(matched.MinWidth, Math.Min(matched.MaxWidth, w));
+                        }
+                        if (dict.TryGetValue("IsVisible", out string? visStr) && bool.TryParse(visStr, out bool vis))
+                        {
+                            matched.IsVisible = vis;
+                        }
+                        if (dict.TryGetValue("IsPinned", out string? pinStr) && bool.TryParse(pinStr, out bool pin))
+                        {
+                            matched.IsPinned = pin;
+                        }
+                        if (dict.TryGetValue("SortOrder", out string? sortStr) && int.TryParse(sortStr, out int sortVal))
+                        {
+                            matched.SortOrder = (SortDirection)sortVal;
+                        }
+
+                        remaining.Remove(matched);
+                        reordered.Add(matched);
+                    }
+                }
+
+                reordered.AddRange(remaining);
+                _columns.Clear();
+                _columns.AddRange(reordered);
+                UpdateScrollBars();
+                Invalidate();
+            }
+            catch
+            {
+                // Fallback gracefully on parsing errors
+            }
+        }
+
+        private static List<Dictionary<string, string>> ExtractJsonObjects(string json)
+        {
+            var list = new List<Dictionary<string, string>>();
+            int idx = 0;
+            while ((idx = json.IndexOf('{', idx)) >= 0)
+            {
+                int end = json.IndexOf('}', idx);
+                if (end < 0) break;
+                string block = json.Substring(idx + 1, end - idx - 1);
+                var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                var pairs = block.Split(',');
+                foreach (var p in pairs)
+                {
+                    var kv = p.Split(new[] { ':' }, 2);
+                    if (kv.Length == 2)
+                    {
+                        string key = kv[0].Trim().Trim('"', ' ');
+                        string val = kv[1].Trim().Trim('"', ' ');
+                        dict[key] = val;
+                    }
+                }
+                if (dict.Count > 0 && (dict.ContainsKey("FieldName") || dict.ContainsKey("HeaderText")))
+                {
+                    list.Add(dict);
+                }
+                idx = end + 1;
+            }
+            return list;
+        }
+
+        private static string EscapeJson(string str)
+        {
+            if (string.IsNullOrEmpty(str)) return "";
+            return str.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", "\\n");
+        }
+
         [Category("Appearance")]
         [DefaultValue(false)]
         public bool ShowFooter
@@ -376,7 +594,7 @@ namespace ZeroUI.WinForms.DataGrid
 
         public int GetTotalColumnsWidth()
         {
-            int total = 0;
+            int total = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
             for (int i = 0; i < _columns.Count; i++)
             {
                 if (_columns[i].IsVisible)
@@ -389,7 +607,7 @@ namespace ZeroUI.WinForms.DataGrid
 
         public int GetPinnedColumnsWidth()
         {
-            int total = 0;
+            int total = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
             for (int i = 0; i < _columns.Count; i++)
             {
                 if (_columns[i].IsVisible && _columns[i].IsPinned)
@@ -398,6 +616,90 @@ namespace ZeroUI.WinForms.DataGrid
                 }
             }
             return total;
+        }
+
+        private void DrawCheckBoxGlyph(int x, int y, int size, CheckState state)
+        {
+            uint borderColor = state != CheckState.Unchecked ? _pinnedBorderColor : 0x00B0B0B0;
+            uint bgColor = state != CheckState.Unchecked ? _pinnedBorderColor : _rowBgColor;
+
+            _dibSection.FillRectangle(x, y, size, size, borderColor);
+            _dibSection.FillRectangle(x + 1, y + 1, size - 2, size - 2, bgColor);
+
+            if (state == CheckState.Checked)
+            {
+                uint white = 0x00FFFFFF;
+                _dibSection.FillRectangle(x + 3, y + 7, 2, 3, white);
+                _dibSection.FillRectangle(x + 4, y + 8, 2, 3, white);
+                _dibSection.FillRectangle(x + 5, y + 9, 2, 3, white);
+                _dibSection.FillRectangle(x + 6, y + 10, 2, 3, white);
+                _dibSection.FillRectangle(x + 7, y + 9, 2, 3, white);
+                _dibSection.FillRectangle(x + 8, y + 8, 2, 3, white);
+                _dibSection.FillRectangle(x + 9, y + 7, 2, 3, white);
+                _dibSection.FillRectangle(x + 10, y + 6, 2, 3, white);
+                _dibSection.FillRectangle(x + 11, y + 5, 2, 3, white);
+            }
+            else if (state == CheckState.Indeterminate)
+            {
+                uint white = 0x00FFFFFF;
+                _dibSection.FillRectangle(x + 3, y + (size / 2) - 1, size - 6, 2, white);
+            }
+        }
+
+        private int GetColumnHeaderScreenX(int colIndex)
+        {
+            int pinnedW = GetPinnedColumnsWidth();
+            if (colIndex < 0 || colIndex >= _columns.Count) return pinnedW;
+
+            if (_columns[colIndex].IsPinned)
+            {
+                int x = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                for (int i = 0; i < colIndex; i++)
+                {
+                    if (_columns[i].IsVisible && _columns[i].IsPinned)
+                    {
+                        x += _columns[i].Width;
+                    }
+                }
+                return x;
+            }
+            else
+            {
+                int x = pinnedW - _scrollX;
+                for (int i = 0; i < colIndex; i++)
+                {
+                    if (_columns[i].IsVisible && !_columns[i].IsPinned)
+                    {
+                        x += _columns[i].Width;
+                    }
+                }
+                return x;
+            }
+        }
+
+        private int HitTestColumnDropTarget(int clientX)
+        {
+            int pinnedW = GetPinnedColumnsWidth();
+            int currentX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (!_columns[i].IsVisible || !_columns[i].IsPinned) continue;
+                int colW = _columns[i].Width;
+                if (clientX < currentX + colW / 2) return i;
+                currentX += colW;
+            }
+
+            currentX = pinnedW - _scrollX;
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (!_columns[i].IsVisible || _columns[i].IsPinned) continue;
+                int colW = _columns[i].Width;
+                if (clientX < currentX + colW / 2) return i;
+                currentX += colW;
+            }
+
+            return Math.Max(0, _columns.Count - 1);
         }
 
         public int GetUnpinnedColumnsWidth()
@@ -556,6 +858,16 @@ namespace ZeroUI.WinForms.DataGrid
 
                         // (B) Draw Pinned Cells on top (fixed at 0..pinnedW)
                         int pinnedX = 0;
+                        if (_showCheckBoxSelectorColumn)
+                        {
+                            int cbSize = 16;
+                            int cbX = (CheckBoxColWidth - cbSize) / 2;
+                            int cbY = currentY + (_rowHeight - cbSize) / 2;
+                            DrawCheckBoxGlyph(cbX, cbY, cbSize, isSelected ? CheckState.Checked : CheckState.Unchecked);
+                            _dibSection.FillRectangle(CheckBoxColWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            pinnedX += CheckBoxColWidth;
+                        }
+
                         for (int c = 0; c < totalCols; c++)
                         {
                             if (!_columns[c].IsVisible || !_columns[c].IsPinned) continue;
@@ -640,6 +952,22 @@ namespace ZeroUI.WinForms.DataGrid
 
                 // (B) Draw Pinned Headers
                 int pinnedHdrX = 0;
+                if (_showCheckBoxSelectorColumn)
+                {
+                    int cbSize = 16;
+                    int cbX = (CheckBoxColWidth - cbSize) / 2;
+                    int cbY = (_headerHeight - cbSize) / 2;
+                    CheckState allState = CheckState.Unchecked;
+                    if (totalRows > 0)
+                    {
+                        if (_selectedVisualRows.Count == totalRows) allState = CheckState.Checked;
+                        else if (_selectedVisualRows.Count > 0) allState = CheckState.Indeterminate;
+                    }
+                    DrawCheckBoxGlyph(cbX, cbY, cbSize, allState);
+                    _dibSection.FillRectangle(CheckBoxColWidth - 1, 4, 1, _headerHeight - 8, 0x00CCCCCC);
+                    pinnedHdrX += CheckBoxColWidth;
+                }
+
                 for (int c = 0; c < totalCols; c++)
                 {
                     if (!_columns[c].IsVisible || !_columns[c].IsPinned) continue;
@@ -663,6 +991,17 @@ namespace ZeroUI.WinForms.DataGrid
                 if (pinnedW > 0)
                 {
                     _dibSection.FillRectangle(pinnedW - 2, 0, 2, _headerHeight, _pinnedBorderColor);
+                }
+
+                // Drag-and-Drop Column Reordering Guide Indicator
+                if (_isDraggingColumn && _dragTargetColIndex >= 0)
+                {
+                    int indicatorX = GetColumnHeaderScreenX(_dragTargetColIndex);
+                    _dibSection.FillRectangle(indicatorX - 1, 0, 3, _headerHeight, _pinnedBorderColor);
+                    _dibSection.FillRectangle(indicatorX - 3, 0, 7, 2, _pinnedBorderColor);
+                    _dibSection.FillRectangle(indicatorX - 2, 2, 5, 2, _pinnedBorderColor);
+                    _dibSection.FillRectangle(indicatorX - 2, _headerHeight - 4, 5, 2, _pinnedBorderColor);
+                    _dibSection.FillRectangle(indicatorX - 3, _headerHeight - 2, 7, 2, _pinnedBorderColor);
                 }
 
                 // 3. Render Footer Summary Bar (if enabled)
@@ -695,7 +1034,12 @@ namespace ZeroUI.WinForms.DataGrid
                     }
 
                     // (B) Pinned Footer summaries
-                    int pinnedFootX = 0;
+                    int pinnedFootX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                    if (_showCheckBoxSelectorColumn)
+                    {
+                        _dibSection.FillRectangle(CheckBoxColWidth - 1, footerY + 3, 1, footerH - 6, 0x00D4D4D8);
+                    }
+
                     for (int c = 0; c < totalCols; c++)
                     {
                         if (!_columns[c].IsVisible || !_columns[c].IsPinned) continue;
@@ -873,6 +1217,8 @@ namespace ZeroUI.WinForms.DataGrid
             Focus();
 
             int footerH = ShowFooter ? _footerHeight : 0;
+            int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+
             if (e.Button == MouseButtons.Left)
             {
                 var hit = SpatialHitTester.HitTest(
@@ -887,7 +1233,43 @@ namespace ZeroUI.WinForms.DataGrid
                     _columns.Count,
                     _dataSource?.TotalRowCount ?? 0,
                     footerH,
-                    ClientSize.Height);
+                    ClientSize.Height,
+                    pinnedOffset);
+
+                if (hit.Region == HitRegion.RowIndicator)
+                {
+                    if (_isEditing) CommitEdit();
+                    if (hit.RowIndex == -1)
+                    {
+                        // Header checkbox clicked: toggle all
+                        int totalRows = _rowIndexMap.ActiveCount;
+                        if (_selectedVisualRows.Count == totalRows && totalRows > 0)
+                        {
+                            ClearRowSelection();
+                        }
+                        else
+                        {
+                            SelectAllRows();
+                        }
+                    }
+                    else
+                    {
+                        // Row checkbox clicked: toggle row
+                        int r = hit.RowIndex;
+                        if (_selectedVisualRows.Contains(r))
+                        {
+                            _selectedVisualRows.Remove(r);
+                        }
+                        else
+                        {
+                            _selectedVisualRows.Add(r);
+                            _selectedVisualRow = r;
+                        }
+                        SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        Invalidate();
+                    }
+                    return;
+                }
 
                 if (hit.Region == HitRegion.ColumnResizeGrip)
                 {
@@ -901,7 +1283,15 @@ namespace ZeroUI.WinForms.DataGrid
                 else if (hit.Region == HitRegion.Header)
                 {
                     if (_isEditing) CommitEdit();
-                    OnHeaderClicked(hit.ColumnIndex);
+                    if (_allowColumnReordering)
+                    {
+                        _potentialDragColIndex = hit.ColumnIndex;
+                        _dragStartPoint = e.Location;
+                    }
+                    else
+                    {
+                        OnHeaderClicked(hit.ColumnIndex);
+                    }
                 }
                 else if (hit.Region == HitRegion.Cell)
                 {
@@ -958,7 +1348,8 @@ namespace ZeroUI.WinForms.DataGrid
                     _columns.Count,
                     _dataSource?.TotalRowCount ?? 0,
                     footerH,
-                    ClientSize.Height);
+                    ClientSize.Height,
+                    pinnedOffset);
 
                 if (hit.Region == HitRegion.Header)
                 {
@@ -973,6 +1364,7 @@ namespace ZeroUI.WinForms.DataGrid
             if (e.Button == MouseButtons.Left)
             {
                 int footerH = ShowFooter ? _footerHeight : 0;
+                int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
                 var hit = SpatialHitTester.HitTest(
                     e.X,
                     e.Y,
@@ -985,7 +1377,14 @@ namespace ZeroUI.WinForms.DataGrid
                     _columns.Count,
                     _dataSource?.TotalRowCount ?? 0,
                     footerH,
-                    ClientSize.Height);
+                    ClientSize.Height,
+                    pinnedOffset);
+
+                if (hit.Region == HitRegion.ColumnResizeGrip && hit.ResizeColumnIndex >= 0 && hit.ResizeColumnIndex < _columns.Count)
+                {
+                    BestFitColumn(hit.ResizeColumnIndex);
+                    return;
+                }
 
                 if (hit.Region == HitRegion.Cell)
                 {
@@ -997,6 +1396,23 @@ namespace ZeroUI.WinForms.DataGrid
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+
+            if (_allowColumnReordering && e.Button == MouseButtons.Left && _potentialDragColIndex >= 0 && !_isResizingColumn)
+            {
+                if (!_isDraggingColumn && (Math.Abs(e.X - _dragStartPoint.X) > 6 || Math.Abs(e.Y - _dragStartPoint.Y) > 6))
+                {
+                    _isDraggingColumn = true;
+                    Capture = true;
+                }
+
+                if (_isDraggingColumn)
+                {
+                    _dragTargetColIndex = HitTestColumnDropTarget(e.X);
+                    Cursor = Cursors.SizeWE;
+                    Invalidate();
+                    return;
+                }
+            }
 
             if (_isResizingColumn && _resizingColIndex >= 0 && _resizingColIndex < _columns.Count)
             {
@@ -1010,6 +1426,7 @@ namespace ZeroUI.WinForms.DataGrid
             }
 
             int footerH = ShowFooter ? _footerHeight : 0;
+            int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
             var hit = SpatialHitTester.HitTest(
                 e.X,
                 e.Y,
@@ -1022,11 +1439,16 @@ namespace ZeroUI.WinForms.DataGrid
                 _columns.Count,
                 _dataSource?.TotalRowCount ?? 0,
                 footerH,
-                ClientSize.Height);
+                ClientSize.Height,
+                pinnedOffset);
 
             if (hit.Region == HitRegion.ColumnResizeGrip)
             {
                 Cursor = Cursors.VSplit;
+            }
+            else if (hit.Region == HitRegion.RowIndicator)
+            {
+                Cursor = Cursors.Hand;
             }
             else
             {
@@ -1043,6 +1465,29 @@ namespace ZeroUI.WinForms.DataGrid
                 _resizingColIndex = -1;
                 Capture = false;
                 Cursor = Cursors.Default;
+            }
+
+            if (_isDraggingColumn)
+            {
+                if (_potentialDragColIndex >= 0 && _dragTargetColIndex >= 0 && _potentialDragColIndex != _dragTargetColIndex && _potentialDragColIndex < _columns.Count)
+                {
+                    var col = _columns[_potentialDragColIndex];
+                    _columns.RemoveAt(_potentialDragColIndex);
+                    int targetIdx = Math.Min(_columns.Count, _dragTargetColIndex);
+                    _columns.Insert(targetIdx, col);
+                    UpdateScrollBars();
+                    Invalidate();
+                }
+                _isDraggingColumn = false;
+                _potentialDragColIndex = -1;
+                _dragTargetColIndex = -1;
+                Capture = false;
+                Cursor = Cursors.Default;
+            }
+            else if (_potentialDragColIndex >= 0)
+            {
+                OnHeaderClicked(_potentialDragColIndex);
+                _potentialDragColIndex = -1;
             }
         }
 
@@ -1378,6 +1823,25 @@ namespace ZeroUI.WinForms.DataGrid
             if (e.Control && e.KeyCode == Keys.C)
             {
                 CopySelectionToClipboard();
+                e.Handled = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.A)
+            {
+                SelectAllRows();
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Space && _showCheckBoxSelectorColumn && _selectedVisualRow >= 0 && _selectedVisualRow < _rowIndexMap.ActiveCount)
+            {
+                if (_selectedVisualRows.Contains(_selectedVisualRow))
+                {
+                    _selectedVisualRows.Remove(_selectedVisualRow);
+                }
+                else
+                {
+                    _selectedVisualRows.Add(_selectedVisualRow);
+                }
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+                Invalidate();
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.F2 || (e.KeyCode == Keys.Enter && !_isEditing))

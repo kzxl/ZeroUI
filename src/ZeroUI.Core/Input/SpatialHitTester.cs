@@ -131,7 +131,8 @@ namespace ZeroUI.Core.Input
             int totalCols,
             int totalRows,
             int footerHeight = 0,
-            int clientHeight = 0)
+            int clientHeight = 0,
+            int pinnedOffset = 0)
         {
             if (isPinned == null)
             {
@@ -149,7 +150,7 @@ namespace ZeroUI.Core.Input
                 return new HitTestResult(HitRegion.Footer, -1, -1, -1, new CellBounds(0, clientHeight - footerHeight, clientX, footerHeight));
             }
 
-            int pinnedWidth = 0;
+            int pinnedWidth = pinnedOffset;
             for (int c = 0; c < totalCols; c++)
             {
                 if (isPinned[c]) pinnedWidth += columnWidths[c];
@@ -160,9 +161,14 @@ namespace ZeroUI.Core.Input
             // 1. Check Header
             if (clientY < headerHeight)
             {
+                if (pinnedOffset > 0 && clientX < pinnedOffset)
+                {
+                    return new HitTestResult(HitRegion.RowIndicator, -1, -1, -1, new CellBounds(0, 0, pinnedOffset, headerHeight));
+                }
+
                 if (inPinnedZone)
                 {
-                    int curX = 0;
+                    int curX = pinnedOffset;
                     for (int c = 0; c < totalCols; c++)
                     {
                         if (!isPinned[c]) continue;
@@ -214,9 +220,14 @@ namespace ZeroUI.Core.Input
 
             int cellY = headerHeight + (visualRow * defaultRowHeight) - scrollY;
 
+            if (pinnedOffset > 0 && clientX < pinnedOffset)
+            {
+                return new HitTestResult(HitRegion.RowIndicator, visualRow, -1, -1, new CellBounds(0, cellY, pinnedOffset, defaultRowHeight));
+            }
+
             if (inPinnedZone)
             {
-                int curX = 0;
+                int curX = pinnedOffset;
                 for (int c = 0; c < totalCols; c++)
                 {
                     if (!isPinned[c]) continue;
