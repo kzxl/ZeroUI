@@ -14,6 +14,9 @@
 ### ⚡ ZeroGrid 1,000,000 Rows Big Data Virtual Engine & Telemetry HUD
 ![ZeroGrid Performance Benchmark](docs/images/01_zerogrid_benchmark.png)
 
+### 🏭 Integrated Closed-Loop SCADA Process & P&ID Synoptic Workcell
+![SCADA Closed-Loop Batch Process Simulation](docs/images/12_scada_closed_loop_simulation.png)
+
 ---
 
 ## 2. Core Vision & Architectural Principles
@@ -124,15 +127,20 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 
 ### 🏭 Industrial, SCADA & MES Subsystem (`ZeroUI.WinForms.Industrial`)
 
-#### Hardware SCADA & Industrial Indicators
-![Industrial Hero Showcase](docs/images/09_industrial_hero_showcase.png)
+#### 🔄 Integrated Closed-Loop SCADA Batch Process & Packaging Line
+![SCADA Closed-Loop Batch Process Simulation](docs/images/12_scada_closed_loop_simulation.png)
 
-* **`ZeroLedTower`**: Industrial Andon Signal Tower Light control with Red, Amber, Green, and Blue lamp segments. Features 3D cylindrical glass reflection, mounting pole/base, and configurable Solid, Blinking (1Hz/2Hz flash), or Off states for real-time SCADA machine status.
-* **`ZeroTank3D`**: Industrial 3D cylindrical fluid storage tank with animated sinusoidal liquid surface waves, glass sight-gauge tube, graduated level markings, and High/Low limit sensor trips.
-* **`ZeroSevenSegment`**: Industrial 7-Segment Digital LED Display for Takt time and production counters with polygon beveled segment geometry, authentic segment ghosting, custom slant angles (0° to 15°), smart blinking colon, unit badges, and customizable colors (Neon Cyan, Emerald, Amber).
-* **`ZeroLinearGauge`**: Industrial linear level, temperature, and pressure gauge with multi-zone threshold indicators (Normal, Warning, Critical), tick marks, and real-time floating value readout.
-* **`ZeroGauge`**: Anti-aliased circular progress dial for **OEE %**, Yield Rate, and equipment efficiency.
-* **`ZeroTaktTimer`**: Lean manufacturing Takt Time & Cycle Timer with circular countdown progress arc, digital remaining time readout, planned vs. actual cycle time comparison, and automatic color transitions (On-Track Green &rarr; Warning Amber &rarr; Overdue Flashing Red).
+A fully automated, 5-stage closed-loop industrial process demonstrating synchronous hardware orchestration, safety permissives, and real-time telemetry:
+1. **Chemical Inflow & Feeding:** Raw precursor delivery via `ZeroIndustrialPump` (P-101 at 2950 RPM) and proportional control valve `ZeroIndustrialValve` (FCV-101) transferring solvent from supply tank `ZeroTank3D` (TK-101) to reactor `ZeroTank3D` (RX-201) with active `ZeroPipeFlow` subpixel pulse animation.
+2. **Thermal Reaction & Catalytic Mixing:** High-torque mixing with `ZeroIndustrialMotor` (M-201 at 1450 RPM), thermal regulation via `ZeroIndustrialHeater` (HT-201) with dynamic liquid color shifting (amber &rarr; emerald), Boyle's law pressure rise on `ZeroGauge` (PI-201), and core temperature monitoring on `ZeroDigitalIndicator` (TI-201).
+3. **Quench & Safety Permissive Verification:** Forced ventilation cooling with `ZeroIndustrialFan` (FN-201), interlock verification via `ZeroInterlockIndicator` before permitting product discharge.
+4. **Pneumatic Dosing & Dispensing:** Precision stroke extension and retraction (0–100%) with double-acting `ZeroPneumaticCylinder` (CYL-301) triggered by `ZeroIndustrialSensor` (PE-401 photoelectric container detection).
+5. **High-Speed Packaging Line & Scoreboard:** Container transport on `ZeroConveyorBelt` (CV-401 at 28 MPM), real-time tally tracking on `ZeroProductionCounter` (Plan, Actual, NG) and line efficiency on `ZeroMachineCard`.
+6. **Multi-Channel Telemetry Oscilloscope:** 60 FPS streaming on `ZeroTrendChart` plotting core temperature, vessel pressure, reactor level, and throughput velocity without garbage collection.
+
+#### Hardware SCADA & Industrial Field Actuators
+![Industrial Hero Showcase](docs/images/09_industrial_hero_showcase.png)
+![SCADA Field Actuators & Smart Sensors](docs/images/13_scada_actuators_composite.png)
 
 #### SCADA Runtime, P&ID Process & Industrial HMI Suite
 ![SCADA Smart Factory Hub](docs/images/04_scada_smart_factory.png)

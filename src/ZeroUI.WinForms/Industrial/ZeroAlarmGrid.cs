@@ -63,6 +63,7 @@ namespace ZeroUI.WinForms.Industrial
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor |
                 ControlStyles.Selectable, true);
 
             Size = new Size(600, 260);

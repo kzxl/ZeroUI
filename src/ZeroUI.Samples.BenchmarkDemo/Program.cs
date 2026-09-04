@@ -423,53 +423,53 @@ namespace ZeroUI.Samples.BenchmarkDemo
                     SaveFormBitmap(form, Path.Combine(outputDir, "01_zerogrid_benchmark.png"));
                     Console.WriteLine("   [OK] Captured 01_zerogrid_benchmark.png");
 
-                    // Tab 2: Components Showcase
-                    form.SelectTabByIndex(2);
-                    Application.DoEvents();
-                    System.Threading.Thread.Sleep(200);
-                    SaveFormBitmap(form, Path.Combine(outputDir, "02_components_showcase.png"));
-                    Console.WriteLine("   [OK] Captured 02_components_showcase.png");
-
-                    // Tab 3: MES Production Dashboard
-                    form.SelectTabByIndex(3);
+                    // Tab 1: MES Production Dashboard
+                    form.SelectTabByIndex(1);
                     Application.DoEvents();
                     System.Threading.Thread.Sleep(200);
                     SaveFormBitmap(form, Path.Combine(outputDir, "03_mes_production_dashboard.png"));
                     Console.WriteLine("   [OK] Captured 03_mes_production_dashboard.png");
 
-                    // Tab 4: SCADA & Smart Factory Hub
-                    form.SelectTabByIndex(4);
-                    Application.DoEvents();
-                    System.Threading.Thread.Sleep(200);
-                    SaveFormBitmap(form, Path.Combine(outputDir, "04_scada_smart_factory.png"));
-                    Console.WriteLine("   [OK] Captured 04_scada_smart_factory.png");
-
-                    // Tab 5: WMS Center
-                    form.SelectTabByIndex(5);
+                    // Tab 2: WMS Center & Warehouse Racks
+                    form.SelectTabByIndex(2);
                     Application.DoEvents();
                     System.Threading.Thread.Sleep(200);
                     SaveFormBitmap(form, Path.Combine(outputDir, "05_wms_warehouse_rack.png"));
                     Console.WriteLine("   [OK] Captured 05_wms_warehouse_rack.png");
 
-                    // Tab 6: Advanced Enterprise Suite (TreeList & Heatmap)
-                    form.SelectTabByIndex(6);
+                    // Tab 3: SCADA & Smart Factory Hub
+                    form.SelectTabByIndex(3);
                     Application.DoEvents();
                     System.Threading.Thread.Sleep(200);
-                    SaveFormBitmap(form, Path.Combine(outputDir, "06_advanced_treelist_heatmap.png"));
-                    Console.WriteLine("   [OK] Captured 06_advanced_treelist_heatmap.png");
+                    SaveFormBitmap(form, Path.Combine(outputDir, "04_scada_smart_factory.png"));
+                    Console.WriteLine("   [OK] Captured 04_scada_smart_factory.png");
 
-                    // Tab 7: Analytics & Business Charts
-                    form.SelectTabByIndex(7);
+                    // Tab 4: SCADA Process Synoptic & Closed-Loop Simulation
+                    form.SelectTabByIndex(4);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(400);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "12_scada_closed_loop_simulation.png"));
+                    Console.WriteLine("   [OK] Captured 12_scada_closed_loop_simulation.png");
+
+                    // Tab 5: Analytics & Business Charts
+                    form.SelectTabByIndex(5);
                     Application.DoEvents();
                     System.Threading.Thread.Sleep(200);
                     SaveFormBitmap(form, Path.Combine(outputDir, "10_business_charts_dashboard.png"));
                     Console.WriteLine("   [OK] Captured 10_business_charts_dashboard.png");
 
-                    // Obsidian Dark Theme SCADA
+                    // Tab 6: UI Component Catalog
+                    form.SelectTabByIndex(6);
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(200);
+                    SaveFormBitmap(form, Path.Combine(outputDir, "02_components_showcase.png"));
+                    Console.WriteLine("   [OK] Captured 02_components_showcase.png");
+
+                    // Obsidian Dark Theme SCADA Closed Loop
                     form.ToggleThemePublic();
                     form.SelectTabByIndex(4); // SCADA looks striking in Dark Mode
                     Application.DoEvents();
-                    System.Threading.Thread.Sleep(300);
+                    System.Threading.Thread.Sleep(400);
                     SaveFormBitmap(form, Path.Combine(outputDir, "08_dark_theme_scada.png"));
                     Console.WriteLine("   [OK] Captured 08_dark_theme_scada.png");
 
@@ -488,6 +488,10 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 // 4. Capture Business Analytics & Chart Suite Composite
                 CaptureChartsHeroShowcase(Path.Combine(outputDir, "11_charts_hero_showcase.png"));
                 Console.WriteLine("   [OK] Captured 11_charts_hero_showcase.png");
+
+                // 5. Capture SCADA Field Actuators, Sensors & HMI Safety Controls Composite
+                CaptureScadaIndustrialActuatorsComposite(Path.Combine(outputDir, "13_scada_actuators_composite.png"));
+                Console.WriteLine("   [OK] Captured 13_scada_actuators_composite.png");
 
                 Console.WriteLine("\n🎉 ALL README SCREENSHOTS CAPTURED SUCCESSFULLY!");
             }
@@ -745,6 +749,171 @@ namespace ZeroUI.Samples.BenchmarkDemo
                     g.DrawImage(bmp, 760, 72);
                 }
                 splineChart.Dispose();
+            }
+
+            compBmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        private static void CaptureScadaIndustrialActuatorsComposite(string path)
+        {
+            int compW = 1100;
+            int compH = 430;
+
+            using var compBmp = new Bitmap(compW, compH);
+            using (var g = Graphics.FromImage(compBmp))
+            {
+                g.Clear(Color.FromArgb(15, 23, 42)); // Industrial Slate 900
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                using var titleFont = new Font("Segoe UI", 12f, FontStyle.Bold);
+                using var capFont = new Font("Segoe UI", 9f, FontStyle.Bold);
+                using var titleBrush = new SolidBrush(Color.White);
+                using var capBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+
+                g.DrawString("⚡ ZeroUI — Industrial SCADA Field Actuators, Smart Sensors & HMI Safety Controls", titleFont, titleBrush, 20, 14);
+
+                // Row 1: Pneumatic Cylinder, Conveyor Belt, Sensor, Scoreboard, Interlock, Command Button
+                // 1. ZeroPneumaticCylinder
+                var cyl = new ZeroPneumaticCylinder { Size = new Size(190, 80), ExtensionPercent = 70.0, TagLabel = "CYL-301 DOSING", State = CylinderState.Moving };
+                cyl.CreateControl();
+                using (var bmp = new Bitmap(190, 80))
+                {
+                    cyl.DrawToBitmap(bmp, new Rectangle(0, 0, 190, 80));
+                    g.DrawString("Pneumatic Cylinder", capFont, capBrush, 20, 48);
+                    g.DrawImage(bmp, 20, 72);
+                }
+                cyl.Dispose();
+
+                // 2. ZeroConveyorBelt
+                var cv = new ZeroConveyorBelt { Size = new Size(220, 85), SpeedMpm = 28.0, TagLabel = "CV-401 PACK LINE", State = ConveyorState.Running };
+                cv.CreateControl();
+                using (var bmp = new Bitmap(220, 85))
+                {
+                    cv.DrawToBitmap(bmp, new Rectangle(0, 0, 220, 85));
+                    g.DrawString("Conveyor Belt", capFont, capBrush, 230, 48);
+                    g.DrawImage(bmp, 230, 70);
+                }
+                cv.Dispose();
+
+                // 3. ZeroIndustrialSensor
+                var sensor = new ZeroIndustrialSensor { Size = new Size(75, 75), TagLabel = "PE-401", SensorType = SensorType.Photoelectric, State = SensorState.Active };
+                sensor.CreateControl();
+                using (var bmp = new Bitmap(75, 75))
+                {
+                    sensor.DrawToBitmap(bmp, new Rectangle(0, 0, 75, 75));
+                    g.DrawString("Optical Sensor", capFont, capBrush, 470, 48);
+                    g.DrawImage(bmp, 470, 72);
+                }
+                sensor.Dispose();
+
+                // 4. ZeroProductionCounter
+                var counter = new ZeroProductionCounter { Size = new Size(260, 95), Title = "SHIFT PRODUCTION TARGET", Plan = 5000, Actual = 4320, NG = 14 };
+                counter.CreateControl();
+                using (var bmp = new Bitmap(260, 95))
+                {
+                    counter.DrawToBitmap(bmp, new Rectangle(0, 0, 260, 95));
+                    g.DrawString("Production Counter", capFont, capBrush, 565, 48);
+                    g.DrawImage(bmp, 565, 68);
+                }
+                counter.Dispose();
+
+                // 5. ZeroInterlockIndicator & ZeroCommandButton
+                var interlock = new ZeroInterlockIndicator { Size = new Size(185, 42), TagLabel = "SAFETY PERMISSIVE" };
+                interlock.CreateControl();
+                using (var bmp = new Bitmap(185, 42))
+                {
+                    interlock.DrawToBitmap(bmp, new Rectangle(0, 0, 185, 42));
+                    g.DrawString("Safety Permissive", capFont, capBrush, 850, 48);
+                    g.DrawImage(bmp, 850, 68);
+                }
+                interlock.Dispose();
+
+                var cmdBtn = new ZeroCommandButton { Size = new Size(185, 42), Action = CommandButtonAction.Start, CommandText = "START BATCH", PressAndHoldSeconds = 0.5f };
+                cmdBtn.CreateControl();
+                using (var bmp = new Bitmap(185, 42))
+                {
+                    cmdBtn.DrawToBitmap(bmp, new Rectangle(0, 0, 185, 42));
+                    g.DrawImage(bmp, 850, 116);
+                }
+                cmdBtn.Dispose();
+
+                // Row 2: Motor, Pump, Valve, Heater, Fan, Digital Indicator, Gauge
+                // 6. ZeroIndustrialMotor
+                var motor = new ZeroIndustrialMotor { Size = new Size(125, 76), TagLabel = "M-201 AGITATOR", SpeedRpm = 1450.0, State = ZeroMotorState.Running };
+                motor.CreateControl();
+                using (var bmp = new Bitmap(125, 76))
+                {
+                    motor.DrawToBitmap(bmp, new Rectangle(0, 0, 125, 76));
+                    g.DrawString("Induction Motor", capFont, capBrush, 20, 180);
+                    g.DrawImage(bmp, 20, 204);
+                }
+                motor.Dispose();
+
+                // 7. ZeroIndustrialPump
+                var pump = new ZeroIndustrialPump { Size = new Size(95, 95), TagLabel = "P-101 FEED", SpeedRpm = 2950.0, State = ZeroPumpState.Running };
+                pump.CreateControl();
+                using (var bmp = new Bitmap(95, 95))
+                {
+                    pump.DrawToBitmap(bmp, new Rectangle(0, 0, 95, 95));
+                    g.DrawString("Centrifugal Pump", capFont, capBrush, 165, 180);
+                    g.DrawImage(bmp, 165, 204);
+                }
+                pump.Dispose();
+
+                // 8. ZeroIndustrialValve
+                var valve = new ZeroIndustrialValve { Size = new Size(80, 85), TagLabel = "FCV-101", ValveType = ZeroValveType.ControlValve, State = ZeroValveState.Open, PositionPercent = 85.0 };
+                valve.CreateControl();
+                using (var bmp = new Bitmap(80, 85))
+                {
+                    valve.DrawToBitmap(bmp, new Rectangle(0, 0, 80, 85));
+                    g.DrawString("Control Valve", capFont, capBrush, 280, 180);
+                    g.DrawImage(bmp, 280, 204);
+                }
+                valve.Dispose();
+
+                // 9. ZeroIndustrialHeater
+                var heater = new ZeroIndustrialHeater { Size = new Size(130, 80), TagLabel = "HT-201 HEATER", TemperatureC = 178.5, SetpointC = 185.0, State = ZeroHeaterState.Heating };
+                heater.CreateControl();
+                using (var bmp = new Bitmap(130, 80))
+                {
+                    heater.DrawToBitmap(bmp, new Rectangle(0, 0, 130, 80));
+                    g.DrawString("Process Heater", capFont, capBrush, 380, 180);
+                    g.DrawImage(bmp, 380, 204);
+                }
+                heater.Dispose();
+
+                // 10. ZeroIndustrialFan
+                var fan = new ZeroIndustrialFan { Size = new Size(130, 80), TagLabel = "FN-201 COOLING", SpeedRpm = 1600.0, State = ZeroFanState.Running };
+                fan.CreateControl();
+                using (var bmp = new Bitmap(130, 80))
+                {
+                    fan.DrawToBitmap(bmp, new Rectangle(0, 0, 130, 80));
+                    g.DrawString("Ventilation Fan", capFont, capBrush, 530, 180);
+                    g.DrawImage(bmp, 530, 204);
+                }
+                fan.Dispose();
+
+                // 11. ZeroDigitalIndicator
+                var digital = new ZeroDigitalIndicator { Size = new Size(155, 95), TagLabel = "REACTOR CORE", Unit = "°C", Value = 178.5, Format = "0.0" };
+                digital.CreateControl();
+                using (var bmp = new Bitmap(155, 95))
+                {
+                    digital.DrawToBitmap(bmp, new Rectangle(0, 0, 155, 95));
+                    g.DrawString("Digital Readout", capFont, capBrush, 680, 180);
+                    g.DrawImage(bmp, 680, 204);
+                }
+                digital.Dispose();
+
+                // 12. ZeroGauge
+                var dial = new ZeroGauge { Size = new Size(150, 130), Title = "VESSEL PRESS", Suffix = " PSI", Value = 64.2f };
+                dial.CreateControl();
+                using (var bmp = new Bitmap(150, 130))
+                {
+                    dial.DrawToBitmap(bmp, new Rectangle(0, 0, 150, 130));
+                    g.DrawString("Pressure Gauge", capFont, capBrush, 855, 180);
+                    g.DrawImage(bmp, 855, 204);
+                }
+                dial.Dispose();
             }
 
             compBmp.Save(path, System.Drawing.Imaging.ImageFormat.Png);
