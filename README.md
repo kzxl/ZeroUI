@@ -169,6 +169,7 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 ![ZeroGrid Subsystem](docs/images/01_zerogrid_benchmark.png)
 
 * **`ZeroGridControl`**: High-performance virtual grid with Win32 Memory DC DIBSection rendering, custom column definitions, alignments, sorting, and row density switching (`Compact = 24px`, `Normal = 28px`, `Comfortable = 36px`).
+* **`ZeroFilterControl` & `FilterCriteria`** *(WinForms & WPF)*: Enterprise Visual Query Builder UI rendering condition trees with boolean operator badges (`AND`, `OR`, `NOT AND`, `NOT OR`), comparison selectors (`Equals`, `GreaterThan`, `Contains`, `Between`, `IsNull`), and automated SQL `WHERE` clause generation.
 * **`ZeroGridSearchBar`**: Integrated live search bar with debounced input (150ms), live match counter, density switcher, and CSV export trigger.
 * **`ZeroGridPagination`**: Enterprise pagination toolbar with page size selector (`50`, `100`, `500`, `1000`, `All`), row statistics, and navigation buttons.
 * **`ZeroGridExporter`**: High-throughput streaming CSV exporter capable of outputting >1,100,000 rows/sec directly to disk.
@@ -188,6 +189,7 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 * **`ZeroLineChart`**: Specialized Line and Area trend chart featuring smooth Catmull-Rom spline curves (`IsCurved = true`), vertical translucent area gradient fills with bottom fade, point markers, and interactive hover tooltips.
 * **`ZeroPieChart`**: Categorical distribution chart supporting full Pie and Donut rings (`IsDonut = true`, `DonutHoleRatio = 0.58f`), center KPI summary metrics (`CenterTitle`, `CenterValue`), radial hover slice explosion (8px pop-out effect), and percentage calculations.
 * **`ZeroCandlestickChart`**: High-performance OHLC candlestick chart with volume histogram, moving average (MA) curve, interactive crosshair HUD inspection, and bullish/bearish color theming.
+* **`ZeroBoxPlotChart`** *(WinForms & WPF)*: Statistical Box-and-Whisker chart for industrial Six Sigma / SPC tolerance inspection. Renders five-number statistical summaries (Min, Q1, Median, Q3, Max), outlier points, and configurable Upper/Lower Specification Limit (USL/LSL) threshold lines.
 * **`ZeroRadarChart`**: Multi-dimensional radar and spider chart with customizable concentric web rings, radial spokes, polygonal series fills, vertex markers, and tooltips.
 * **`ZeroFunnelChart`**: Conversion funnel chart with sleek trapezoid stages, percentage drops, stage descriptions, and automated inward yield rate computation.
 * **`ZeroWaterfallChart`**: Financial and variance waterfall chart visualizing cumulative effects of sequential positive and negative values with bridge connectors and total columns.
@@ -307,6 +309,10 @@ A fully automated, 5-stage closed-loop industrial process demonstrating synchron
 * **`ZeroSearchBox`**: Standalone input box with search magnifying glass, clear button, and debounced text change event.
 * **`ZeroImage`**: High-performance anti-aliased image and avatar control with rounded corners, circular avatars (`IsCircle = true`), auto initials fallback ("VP"), operator status badges (Online, Busy, Away, Offline), and interactive Lightbox modal zoom preview with pan, drag, wheel zoom, clipboard copy, and file save.
 * **`ZeroLookup`**: Virtualized searchable autocomplete dropdown & lookup box with non-activating flyweight popup, instant debounced filtering across 10,000+ items, multi-property display (Code, Name, Category), clear button (`✕`), and keyboard navigation.
+* **`ZeroGridLookup`** *(WinForms & WPF)*: Multi-column enterprise dropdown editor hosting an embedded virtual DataGrid, instant debounced cross-column search, keyboard navigation, and configurable `DisplayMember`/`ValueMember`.
+* **`ZeroCheckedComboBox`** *(WinForms & WPF)*: Multi-select dropdown with checkbox items, "(Select All)" toggle, search filter, and dynamic summary labels.
+* **`ZeroTokenEdit`** *(WinForms & WPF)*: Tag & badge editor with dismissible chips, inline keyboard typing, enter/comma completion, and backspace deletion.
+* **`ZeroColorPicker`** *(WinForms & WPF)*: Swatch palette color selector with enterprise color matrix and HEX code input.
 * **`ZeroDateRangePicker`**: Enterprise dual-date range selector (From Date &rarr; To Date) with 1-click presets (*Today*, *Yesterday*, *Last 7 Days*, *Last 30 Days*, *This Month*, *Last Month*, *All Time*) and visual calendar range highlight.
 
 #### ZeroDatePicker Multi-Tier Zoom Navigation
@@ -316,7 +322,9 @@ A fully automated, 5-stage closed-loop industrial process demonstrating synchron
 
 ---
 
-### 📐 High-Performance Layout Subsystem (`ZeroUI.WinForms.Layout`)
+### 📐 High-Performance Layout & Windowing Subsystem (`ZeroUI.WinForms.Layout`, `Docking`, `Core.Layout`)
+* **`ZeroDockManager`** *(WinForms & WPF)*: Multi-region enterprise docking system hosting Left, Right, Top, Bottom, and Document zones with interactive splitters, auto-hide tabs, and `ZeroFloatingWindow` for detached multi-monitor workspaces.
+* **`ZeroWorkspaceSerializer`** *(Core)*: Pure zero-dependency JSON layout persistence engine capturing and restoring DockPanel states and DataGrid column configurations (width, visibility, order, pinning, grouping, sort order). Compatible across .NET Standard 2.0, .NET 4.6.2, and .NET 8.0+.
 * **`ZeroStackPanel`**: Modern zero-flicker stack panel arranging child controls vertically or horizontally with spacing, padding, and alignments (`Start`, `Center`, `End`, `Stretch`) with 0 GC allocations.
 * **`ZeroTablePanel`**: Responsive grid layout container supporting WPF-style columns and rows (`Absolute`, `Percent`, `AutoSize`) with instant layout math and zero Win32 handle cascade thrashing.
 * **`ZeroSplitContainer`**: Sleek anti-aliased split container supporting horizontal and vertical orientations, hover drag feedback, grip indicators, and one-click collapsible panel toggling.
@@ -324,16 +332,19 @@ A fully automated, 5-stage closed-loop industrial process demonstrating synchron
 
 ---
 
-### 🪟 Overlays & Navigation Subsystem (`ZeroUI.WinForms.Overlays`)
-* **`ZeroAccordion`**: High-performance 100% Single-HWND multi-tier collapsible navigation tree with group headers, vector glyphs, live search filter, status badges, and zero child window handles.
+### 🪟 Overlays, Navigation & Workflows Subsystem (`ZeroUI.WinForms.Overlays`, `Reporting`, `Wpf.Navigation`)
+* **`ZeroWizard`** *(WinForms & WPF)*: Multi-step guided process wizard with top progress step indicators, step title/subtitle, page-level validation, and Back / Next / Finish navigation.
+* **`ZeroSideNav`** *(WinForms & WPF)*: Enterprise collapsible vertical navigation bar with category headers, icon glyphs, notification badges, active state indicators, and bottom rail utility footer.
+* **`ZeroAccordion`** *(WinForms & WPF)*: High-performance multi-tier collapsible navigation tree with group headers, vector glyphs, live search filter, status badges, and zero child window handles.
+* **`ZeroSkeleton`** *(WinForms & WPF)*: 60 FPS animated shimmer placeholder for loading states across cards, avatars, and data grids.
+* **`ZeroPrintPreview`** *(WinForms & WPF)*: Vector document and report print previewer featuring high-DPI paper canvas, drop shadow, zoom (25%–500%), multi-page navigation, and direct printer dispatch.
 * **`ZeroSplashScreen`**: Thread-safe, non-blocking enterprise splash screen manager running on an independent background STA thread for 60 FPS smooth shimmer animation and responsive status updates.
-* **`ZeroSideNav`**: Enterprise collapsible vertical navigation bar with category headers, icon glyphs, notification badges, active state indicators, and bottom rail utility footer.
 * **`ZeroTabControl`**: Modern anti-aliased flat TabControl supporting both **Horizontal** and **Vertical** tab layout orientation (`Orientation = TabOrientation.Vertical`), `Underline`, `Pill`, and `Card` styles, notification badges, icons, and 100% native Obsidian Dark / Clean Light theming.
 * **`ZeroContextMenu`**: Modern anti-aliased context menu strip with rounded pill highlights, danger actions (soft red hover for delete/cancel), shortcut key alignments, badge tags, checkable items, submenus, and 100% theme reactivity.
-* **`ZeroModal`**: Enterprise modal dialog suite replacing legacy `MessageBox.Show`; features 52px halo semantic badges (`Success`, `Warning`, `Error`, `Info`, `Confirm`, `Prompt`), rounded container, backdrop dimming overlay (`rgba(15,23,42,0.98)`), ESC key, and action buttons.
+* **`ZeroModal`** *(WinForms & WPF)*: Enterprise modal dialog suite replacing legacy `MessageBox.Show`; features 52px halo semantic badges (`Success`, `Warning`, `Error`, `Info`, `Confirm`, `Prompt`), rounded container, backdrop dimming overlay, ESC key, and action buttons.
 * **`ZeroToolbar`**: Flat, single-HWND enterprise action and menu bar with primary buttons, glyphs, dividers, badge counters, and elastic right spacers.
 * **`ZeroDrawer`**: Smooth 60 FPS right-docked slide-out panel for deep Master-Detail inspection without leaving the active grid.
-* **`ZeroToast`**: Non-blocking floating toast notifications with smooth fade-in/fade-out that do not steal keyboard focus (`WS_EX_NOACTIVATE`).
+* **`ZeroToast`** *(WinForms & WPF)*: Non-blocking floating toast notification stack with smooth fade-in/fade-out that does not steal keyboard focus (`WS_EX_NOACTIVATE`).
 * **`ZeroListView`**: High-throughput log viewer rendering 50,000+ log lines at 60 FPS.
 
 ---

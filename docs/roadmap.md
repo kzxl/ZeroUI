@@ -8,9 +8,9 @@
 | **Phase 2** | **WinForms MVP (`ZeroGrid`)** | `ZeroUI.WinForms` (net462, net8.0) | **Completed** | Single-HWND Control, Unmanaged Fast GDI blit, 32-bit `SetScrollInfo`, 1M/10M-row benchmark. |
 | **Phase 3** | **WPF Port (`ZeroGrid`)** | `ZeroUI.Wpf` (net462, net8.0) | **Completed** | `DrawingVisual` host, XAML attached properties, `D3DImage` DirectX 11 pipeline. |
 | **Phase 4** | **Enterprise Grid Features** | Interactivity & Production Readiness | **Completed** | Floating In-place Editor, Frozen Columns/Rows, Multi-column sorting, Fast filtering. |
-| **Phase 5** | **Expanded Control Suite** | Additional High-Perf Controls | **Completed** | `ZeroTreeList`, `ZeroHeatmap`, `ZeroLookup`, `ZeroDateRangePicker`, `ZeroKanbanBoard`... |
 | **Phase 6** | **Theming & Packaging** | Distribution & Design System | **Active** | Obsidian Dark / Clean Light Themes, Headless CLI benchmarks, Automated screenshots. |
 | **Phase 7** | **SCADA & Deterministic Runtime** | Industrial Edge & Telemetry Engine | **Completed** | `ZeroRuntime`, 3-Tier Pipeline, `ZeroTripleBuffer`, `TagStorage`, `ZeroAnimationClock`, `ZeroScene`. |
+| **Phase 8** | **Enterprise Commercial Parity** | 8 Major Control Clusters | **Completed** | Full WinForms & WPF parity: `ZeroGridLookup`, `ZeroFilterControl`, `ZeroDockManager`, `ZeroWorkspaceSerializer`, `ZeroWizard`, `ZeroBoxPlotChart`, `ZeroGanttChart`, `ZeroPropertyGrid`, `ZeroPrintPreview`, `ZeroSkeleton`, `ZeroToast`, `ZeroModal`. |
 
 ---
 
@@ -75,6 +75,16 @@
 * [x] **Industrial Scene Graph (`ZeroScene`):** Single-HWND plant canvas with `GridSpatialIndex` spatial culling and `SceneNode` hierarchy (`TankNode`, `PumpNode`, `PipeNode`, `ValveNode`, `SensorNode`, `AlarmNode`).
 * [x] **Modbus Address Optimization:** `ModbusAddressPlanner` coalescing disjoint register tags into contiguous MBAP block reads (up to 98.3% network packet reduction).
 * [x] **Unified Benchmark Suite:** `ZeroUI.Benchmarks` CLI covering Categories A to F (Rendering, Virtual Grid, Telemetry, TagEngine, Modbus, Historian).
+
+### Phase 8: Enterprise Commercial Parity (8 Major Clusters)
+* [x] **Cluster 1 (Grid & Query):** `FilterCriteria` boolean expression tree with SQL `WHERE` generation; `ZeroFilterControl` visual query builder UI (WinForms & WPF).
+* [x] **Cluster 2 (Enterprise Editors):** `ZeroGridLookup` multi-column DataGrid popup dropdown (WinForms & WPF); `ZeroCheckedComboBox` multi-select checkboxes; `ZeroTokenEdit` tag editor; `ZeroColorPicker` swatch matrix.
+* [x] **Cluster 3 (Navigation & Workflows):** `ZeroSideNav` & `ZeroAccordion` (WPF parity); `ZeroWizard` multi-step guided process wizard with validation (WinForms & WPF).
+* [x] **Cluster 4 (Windowing & Docking):** `ZeroDockManager` multi-zone docking layout with splitters, auto-hide, and `ZeroFloatingWindow` (WinForms & WPF); `ZeroWorkspaceSerializer` zero-dependency JSON persistence for layout and grid columns.
+* [x] **Cluster 5 (Analytics & SPC):** `ZeroBoxPlotChart` statistical Box-and-Whisker quality inspection chart with USL/LSL limits (WinForms & WPF).
+* [x] **Cluster 6 (Industrial & Scheduling):** `ZeroGanttChart` production scheduling timeline (WinForms & WPF); `ZeroPropertyGrid` categorized reflection property inspector (WinForms & WPF).
+* [x] **Cluster 7 (Feedback & Overlays):** `ZeroSkeleton` 60 FPS shimmer loading placeholder (WinForms & WPF); `ZeroToast` & `ZeroModal` (WPF parity).
+* [x] **Cluster 8 (Reporting & Print):** `ZeroPrintPreview` vector document and report print previewer with zoom and direct printer dispatch (WinForms & WPF).
 
 ---
 

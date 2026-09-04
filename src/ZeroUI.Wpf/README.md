@@ -9,15 +9,28 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 
 ## 🌟 Key Features
 
-* **WPF Virtual Data Grid (`ZeroGridControl`):**
-  * Hardware-accelerated virtual row virtualization handling millions of items with smooth 60 FPS scrolling.
+* **WPF Virtual Data Grid & Query (`ZeroUI.Wpf.DataGrid`):**
+  * Hardware-accelerated virtual row virtualization handling millions of items with smooth 60 FPS scrolling (`ZeroGridControl`).
+  * **`ZeroFilterControl`**: Visual Query Builder rendering hierarchical boolean condition trees with SQL WHERE clause generation.
   * Standardized pagination bar (`ZeroGridPagination`) and debounced live search bar (`ZeroGridSearchBar`).
-* **SCADA & Industrial Gauges (`ZeroUI.Wpf.Industrial`):**
-  * **`ZeroGauge`:** Circular dial gauge with high-contrast indicator needle and threshold warning zones.
-  * **`ZeroLinearGauge`:** Vertical/Horizontal bar gauge for level and pressure monitoring.
-  * **`ZeroSevenSegment` & `ZeroLedTower`:** Industrial 7-segment digital display and Andon signal tower.
-  * **`ZeroHeatmap`:** 2D industrial matrix heatmap for load balancing and thermal mapping.
-  * **`ZeroStatusBadge`:** Animated machine state badge.
+* **Enterprise Editors (`ZeroUI.Wpf.Editors`):**
+  * **`ZeroGridLookup`**: Multi-column dropdown editor with embedded virtual DataGrid and cross-column search.
+  * **`ZeroCheckedComboBox`**: Multi-select dropdown with checkboxes, "(Select All)", and search filter.
+  * **`ZeroTokenEdit`**: Tag & badge input with dismissible chips and keyboard navigation.
+  * **`ZeroColorPicker`**: Enterprise swatch matrix and HEX editor.
+* **Navigation & Workflows (`ZeroUI.Wpf.Navigation`):**
+  * **`ZeroWizard`**: Multi-step process workflow wizard with validation and step progress indicator.
+  * **`ZeroSideNav`**: Collapsible vertical sidebar navigation with category groups and badges.
+  * **`ZeroAccordion`**: Collapsible navigation accordion with animated groups.
+* **Industrial, Charts & Analytics (`ZeroUI.Wpf.Charts`, `Industrial`):**
+  * **`ZeroBoxPlotChart`**: Statistical SPC Box-and-Whisker quality inspection chart with USL/LSL limits.
+  * **`ZeroGanttChart`**: Production scheduling timeline with task hierarchies and progress bars.
+  * **`ZeroPropertyGrid`**: High-speed categorized reflection property inspector.
+  * **`ZeroChart` & Gauges**: Circular `ZeroGauge`, `ZeroLinearGauge`, `ZeroHeatmap`, `ZeroLedTower`, `ZeroSignalScope`.
+* **Overlays, Feedback & Reporting (`ZeroUI.Wpf.Overlays`, `Feedback`, `Reporting`):**
+  * **`ZeroPrintPreview`**: Vector document print previewer with high-DPI paper canvas and zoom.
+  * **`ZeroSkeleton`**: Hardware-accelerated 60 FPS shimmer loading placeholder.
+  * **`ZeroToast` & `ZeroModal`**: Non-intrusive floating toast notifications and backdrop-dimmed dialogs.
 * **Modern Design System & Theme Engine:**
   * Obsidian Dark and Clean Light styling with dynamic resource dictionary swapping.
   * Fluent typography and high-DPI scaling support.
