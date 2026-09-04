@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Input.Masking;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -88,6 +89,47 @@ namespace ZeroUI.WinForms.Editors
             Invalidate();
         }
 
+        private MaskDefinition? _maskDefinition;
+
+        [Browsable(false)]
+        public MaskDefinition? Definition
+        {
+            get => _maskDefinition;
+            set
+            {
+                _maskDefinition = value;
+                if (value != null)
+                {
+                    _innerBox.Mask = value.Pattern;
+                }
+            }
+        }
+
+        public void ApplyMask(MaskDefinition maskDefinition)
+        {
+            Definition = maskDefinition;
+        }
+
+        [Browsable(false)]
+        public string RawText
+        {
+            get
+            {
+                if (_maskDefinition != null)
+                {
+                    Span<char> raw = stackalloc char[_maskDefinition.EditableCount];
+                    if (_maskDefinition.TryExtractRaw(_innerBox.Text, raw, out int written, _innerBox.PromptChar))
+                    {
+                        return new string(raw.Slice(0, written).ToArray());
+                    }
+                }
+                return _innerBox.Text;
+            }
+        }
+
+        [Browsable(false)]
+        public bool IsComplete => _innerBox.MaskCompleted;
+
         [Category("Behavior")]
         [DefaultValue("")]
         public string Mask
@@ -96,6 +138,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _innerBox.Mask = value ?? "";
+                _maskDefinition = !string.IsNullOrEmpty(value) ? new MaskDefinition(value!) : null;
                 Invalidate();
             }
         }
