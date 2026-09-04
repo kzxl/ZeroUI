@@ -116,3 +116,58 @@ internal static unsafe class ZeroMemory
 }
 ```
 
+---
+
+## 6. Industrial UI Timer Elimination & Animation Clock Standardization
+
+Scattered timers (`System.Windows.Forms.Timer`, `System.Threading.Timer`, `System.Timers.Timer`) in individual controls cause thread pool thrashing, OS message pump congestion, and out-of-phase visual jitter when dozens of animated components run simultaneously.
+
+### Mandatory Rules:
+1. ❌ **Strictly Forbidden:** Instantiating `Timer` inside controls (`ZeroIndustrialPump`, `ZeroIndustrialValve`, `ZeroDrawer`, `ZeroPipeFlow`, `ZeroStatusBadge`, etc.).
+2. ✔️ **Centralized Clock Primitive:** All animated or blinking controls must implement `IAnimatable` and register with `ZeroAnimationClock`:
+   ```csharp
+   // Inside control initialization
+   ZeroAnimationClock.Subscribe(this);
+   
+   // Inside Dispose(bool disposing)
+   ZeroAnimationClock.Unsubscribe(this);
+   ```
+3. ✔️ **Lock-Free Copy-On-Write Dispatch:** `ZeroAnimationClock` distributes ticks via an immutable snapshot array, ensuring that unsubscriptions or subscriptions during an animation tick never lock or allocate.
+4. ✔️ **Standardized ISA-18.2 Phase Alignment:** All alarms and status lights must synchronize their blinking frequencies with the global clock phases:
+   - `BlinkFast`: 2.0 Hz (50% duty cycle) for unacknowledged alarms.
+   - `BlinkSlow`: 1.0 Hz (50% duty cycle) for warning / advisory indicators.
+   - `PulsePhase`: 0.0 to 1.0 continuous saw/sine wave for radar/status glows.
+   - `FluidPhase`: 0.0 to 1.0 continuous phase for fluid/pipe flow vectors.
+
+---
+
+## 7. High-Frequency Telemetry Ingestion & Triple Buffering
+
+High-speed field buses (Modbus, Siemens S7, EtherNet/IP, OPC UA) produce tag updates at frequencies between 1 kHz and 10 kHz. Directly updating UI controls or calling `Invalidate()` from the ingestion loop causes immediate UI freeze and thread starvation.
+
+### Mandatory Rules:
+1. ❌ **Strictly Forbidden:** Calling `Control.Invalidate()` or `Control.Refresh()` from PLC polling callbacks or worker threads.
+2. ❌ **Strictly Forbidden:** Direct data binding of high-frequency telemetry channels directly to UI properties.
+3. ✔️ **Decoupled 3-Tier Pipeline:** Ingest into Tier 1 (Fast 10kHz), process in Tier 2 (Medium 100–1000Hz), and decouple to Tier 3 (Slow 30–60Hz) using `ZeroTripleBuffer<T>` or `ScadaPipelineCoordinator`.
+4. ✔️ **Zero-Lock Pointer Swapping:** Read from the triple buffer's display snapshot on the UI thread without blocking the ingestion or calculation threads:
+   ```csharp
+   // On UI render pass (30-60 Hz)
+   if (_tripleBuffer.TryAcquireLatest(out var snapshot))
+   {
+       RenderTelemetry(snapshot);
+   }
+   ```
+
+---
+
+## 8. Single-HWND Scene Graph vs Control Sprawl
+
+Standard industrial mimic screens composed of hundreds of individual `Control` instances (e.g., 50 pumps, 100 valves, 30 tanks) quickly exhaust the Windows OS 10,000 `HWND` ceiling and suffer from severe z-ordering paint artifacts and flicker.
+
+### Mandatory Rules:
+1. ❌ **Strictly Forbidden:** Instantiating separate WinForms controls for static or semi-static plant layout elements.
+2. ✔️ **Lightweight Scene Graph (`ZeroScene`):** Factory mimic and P&ID screens must be constructed as a single `ZeroPlantMimicCanvas` (Single-HWND) hosting a `ZeroScene` containing `SceneNode` primitives:
+   - `TankNode`, `PumpNode`, `PipeNode`, `ValveNode`, `SensorNode`, `AlarmNode`.
+3. ✔️ **Spatial Indexing & Viewport Culling:** The scene graph must leverage spatial partitioning (`GridSpatialIndex` / `ISpatialIndex`) to query only the nodes intersecting the current viewport prior to issuing draw commands.
+
+

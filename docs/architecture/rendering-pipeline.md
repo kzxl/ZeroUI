@@ -146,3 +146,57 @@ In enterprise environments, GPU hardware devices can reset or be removed dynamic
    * If hardware device re-creation fails, seamlessly fallback to the **Fast GDI Pipeline** to guarantee zero application downtime.
    * When the GPU becomes available again, reinitialize the Direct2D factory and swapchain on the next layout pass.
 
+---
+
+## 7. Centralized Animation Clock & Phase Synchronization
+
+To guarantee fluid 60 FPS animations across industrial mimic elements without the jitter and thread thrashing of distributed timers, ZeroUI integrates `ZeroAnimationClock` directly into the rendering loop:
+
+```mermaid
+graph TD
+    Timer["High-Resolution 60Hz Multimedia Clock (16.6ms)"]
+    PhaseCalc["Compute Phase Timings (BlinkFast, BlinkSlow, Pulse, Fluid)"]
+    COW["Read-Only Copy-On-Write Snapshot (IAnimatable[])"]
+    Dispatch["Iterate Subscribers (Direct Interface Dispatch)"]
+    Invalidate["Dirty Region Mark / UiDispatcher.FlushPending()"]
+
+    Timer --> PhaseCalc
+    PhaseCalc --> COW
+    COW --> Dispatch
+    Dispatch --> Invalidate
+```
+
+### Global Phase Contracts:
+* **`BlinkFast` (2.0 Hz, 50% duty):** Synchronizes unacknowledged industrial alarms (ISA-18.2 compliance).
+* **`BlinkSlow` (1.0 Hz, 50% duty):** Synchronizes maintenance warnings and non-critical process alerts.
+* **`PulsePhase` ($0.0 \dots 1.0$):** Continuous sinusoidal wave driving radial sensor waves, radar beacons, and status glows.
+* **`FluidPhase` ($0.0 \dots 1.0$):** Continuous phase driving pipe chevron movement and fluid displacement animations.
+
+---
+
+## 8. Industrial Scene Graph & Spatial Culling Pass (`ZeroScene`)
+
+For large factory layouts (thousands of visual components), standard control hierarchies fail due to Windows OS `HWND` limits. ZeroUI renders the entire factory layout inside a single `HWND` using `ZeroScene`:
+
+```text
+Visible Viewport (Camera X, Y, Zoom 25% - 400%)
+       │
+       ▼
+GridSpatialIndex.Query(viewportBounds)
+       │
+       ▼
+Visible Node Array (Filtered & Culled)
+       │
+       ▼
+Sort by ZIndex (0..N)
+       │
+       ▼
+Node.Render(Graphics g, in ScadaNodeState state)
+```
+
+### Rendering Pipeline Mechanics:
+1. **Spatial Culling (`GridSpatialIndex`):** The world layout is divided into coarse spatial buckets. Only nodes whose bounding boxes intersect the active camera viewport are selected ($O(K)$ query where $K \ll N$).
+2. **Transform Hierarchy:** Scale, rotation, and translation matrices are computed on the fly using `System.Drawing.Drawing2D.Matrix` without mutating node source coordinates.
+3. **Zero-Allocation Node Draw:** Nodes render vector primitives directly to the GDI/GDI+ device context using pre-allocated pens, brushes, and `ReadOnlySpan<PointF>`.
+
+

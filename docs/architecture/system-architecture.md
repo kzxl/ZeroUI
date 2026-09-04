@@ -12,33 +12,41 @@ graph TD
     end
 
     subgraph ControlsLayer["ZeroUI Controls Suite"]
-        ZG_WF["ZeroGrid (WinForms)"]
-        ZT_WF["ZeroTree (WinForms)"]
-        ZG_WPF["ZeroGrid (WPF)"]
-        ZT_WPF["ZeroTree (WPF)"]
+        ZG_WF["ZeroGrid & TreeList (WinForms)"]
+        SCADA_WF["Plant Mimic Canvas & Industrial Suite"]
+        ZG_WPF["ZeroGrid & TreeList (WPF)"]
+        SCADA_WPF["Industrial Gauges & Charts (WPF)"]
     end
 
     subgraph AdapterLayer["ZeroUI Platform Adapters"]
-        WF_Adapter["ZeroUI.WinForms Adapter<br/>- Single HWND Control Host<br/>- Unmanaged GDI Blitter<br/>- Direct2D HwndRenderTarget"]
+        WF_Adapter["ZeroUI.WinForms Adapter<br/>- Single HWND Control Host<br/>- ZeroAnimationClock (60Hz COW Ticker)<br/>- MemoryDIBSection & Direct2D"]
         WPF_Adapter["ZeroUI.Wpf Adapter<br/>- DrawingVisual Host<br/>- D3D11 Shared Texture Interop<br/>- Input Marshaling"]
     end
 
+    subgraph RuntimeLayer["ZeroUI Industrial Runtime & Pipeline"]
+        Runtime["ZeroRuntime (7-Cycle Master Scheduler)"]
+        Pipeline["ScadaPipelineCoordinator (3-Tier Pipeline)"]
+        TripleBuf["ZeroTripleBuffer<T> (Lock-Free State Swapper)"]
+    end
+
     subgraph CoreLayer["ZeroUI.Core (.NET Standard 2.0)"]
-        VEngine["Virtualization & Culling Engine"]
-        Spatial["Spatial Indexing & Hit-Testing"]
-        MemPool["Buffer Pools & Memory Management"]
-        DataPipeline["Channel-Based Ingestion & Throttling"]
-        EditState["In-Place Editing State Machine"]
+        VEngine["Virtualization & Culling Engine (VirtualViewport2D, PrefixSumArray)"]
+        SceneGraph["Scene Graph & Spatial Index (ZeroScene, GridSpatialIndex)"]
+        DataEngine["Tag Storage & Engine (TagStorage, ZeroTagEngine)"]
+        HistorianEngine["Historian & Rollup Pyramid (SqliteHistorian, TimeSeriesPyramid)"]
+        Comms["Industrial Connectors (ModbusAddressPlanner, S7)"]
+        MemPool["Buffer Pools & Memory Management (ZeroMemory, ZeroBufferPool)"]
     end
 
     AppWinForms --> ControlsLayer
     AppWPF --> ControlsLayer
     ZG_WF --> WF_Adapter
-    ZT_WF --> WF_Adapter
+    SCADA_WF --> WF_Adapter
     ZG_WPF --> WPF_Adapter
-    ZT_WPF --> WPF_Adapter
-    WF_Adapter --> CoreLayer
-    WPF_Adapter --> CoreLayer
+    SCADA_WPF --> WPF_Adapter
+    WF_Adapter --> RuntimeLayer
+    WPF_Adapter --> RuntimeLayer
+    RuntimeLayer --> CoreLayer
 ```
 
 ---
@@ -46,44 +54,47 @@ graph TD
 ## 2. Layer Breakdown
 
 ### Layer 1: ZeroUI.Core (.NET Standard 2.0)
-The Core layer contains **zero references** to `System.Windows.Forms` or `PresentationFramework`. It is 100% portable across .NET Framework 4.6.2 and .NET 8+.
+The Core layer contains **zero references** to `System.Windows.Forms` or `PresentationFramework`. It is 100% portable across .NET Framework 4.6.2, modern .NET 8/9, Linux edge containers, and headless console daemons.
 
-Key Components:
-* **`VirtualViewport2D`**: Calculates the visible row and column range based on scroll offsets, total content dimensions, and container viewport size.
-* **`PrefixSumArray`**: Stores dynamic row heights / column widths in a contiguous array of prefix sums, enabling $O(\log N)$ binary search for row lookup by pixel Y coordinate.
-* **`ZeroBufferPool`**: Wrapper around `System.Buffers.ArrayPool<T>` and unmanaged memory (`NativeMemory` / `Marshal.AllocHGlobal`) to eliminate GC allocations during rendering passes.
-* **`InPlaceEditCoordinator`**: Manages focus, commit, cancel, and coordinate synchronization for a single shared floating editor.
-* **`BatchDataQueue<T>`**: High-throughput producer-consumer queue backed by `System.Threading.Channels.Channel<T>` for background stream processing.
+Key Subsystems & Components:
+* **`VirtualViewport2D` & `PrefixSumArray`**: Computes visible row and column ranges with $O(\log N)$ binary search lookup without generating heap allocations.
+* **`ZeroMemory` & `ZeroBufferPool`**: Portable unmanaged memory abstractions (`NativeMemory` vs `Marshal.AllocHGlobal`) and rented `ArrayPool<T>` wrappers.
+* **`ZeroRuntime`**: Deterministic master scheduler coordinating PLC (10ms), Logic (10ms), Telemetry (16ms), UI (16ms), Historian (100ms), Cleanup (1s), and Health (5s) cycles.
+* **`ScadaPipelineCoordinator` & `ZeroTripleBuffer<T>`**: 3-Tier decoupled pipeline isolating high-frequency (10kHz) field ingestion and calculations from UI frame rendering.
+* **`TagStorage` & `ZeroTagEngine`**: Contiguous unboxed array tag registry with atomic dirty bitmasking and inverted index listeners (>48M writes/s, >244M reads/s).
+* **`TimeSeriesPyramid` & `LttbDecimation`**: Continuous multi-resolution rollups (L0: raw, L1: 100ms, L2: 1s, L3: 10s, L4: 1min, L5: 10min) powering instant $O(\text{screen pixels})$ chart zoom.
+* **`ZeroScene` & `GridSpatialIndex`**: Platform-agnostic 2D scene graph enabling hierarchical mimic topologies and viewport culling.
+* **`WorkerQueue<T>`**: Lock-free channel and ring-buffer worker queue featuring `QueueBackpressureMode.LatestPerKey` for telemetry conflation.
+* **`ModbusAddressPlanner`**: Industrial address optimizer coalescing disjoint register tags into contiguous MBAP block reads (up to 98.3% network packet reduction).
 
 ---
 
 ### Layer 2: Platform Adapters
 
 #### A. WinForms Adapter (`ZeroUI.WinForms`)
-* **Single-HWND Policy:** The entire composite control (grid header, rows, status bar, scroll indicators) is rendered inside **exactly one `HWND`**. Child controls are strictly prohibited except for the temporary floating editor.
-* **Direct Render Dispatch:** Implements a custom `OnPaint` override using either:
-  1. `SetDIBitsToDevice` / `BitBlt` directly to the device context (`HDC`).
-  2. Direct2D `HwndRenderTarget` for GPU acceleration.
-* **Flicker-Free Window Styles:** Configures `WS_CLIPCHILDREN`, `WS_CLIPSIBLINGS`, and intercepts `WM_ERASEBKGND` to return non-zero without calling default GDI background clearing.
+* **Single-HWND Policy:** Composite controls (`ZeroGridControl`, `ZeroPlantMimicCanvas`, `ZeroToolbar`, `ZeroAccordion`) render within **exactly one `HWND`**, eliminating child control handle leaks.
+* **`ZeroAnimationClock`:** Centralized 60 FPS ticker driving all visual animations, pulses, and ISA-18.2 compliant alarm blinks via lock-free Copy-On-Write snapshot arrays, completely eliminating distributed timers.
+* **Direct Render Dispatch:** Employs Win32 `MemoryDIBSection` double-buffered GDI rasterization with `ExtTextOutW` subpixel ClearType rendering and sub-millisecond `BitBlt` (or Direct2D GPU acceleration).
+* **Flicker-Free Window Styles:** Intercepts `WM_ERASEBKGND` and enforces `WS_CLIPCHILDREN | WS_CLIPSIBLINGS`.
 
 #### B. WPF Adapter (`ZeroUI.Wpf`)
-* **Visual Tree Bypass:** Avoids standard XAML layout panels (`Grid`, `StackPanel`, `ItemsControl`) and `DataTemplate` element generation.
-* **`DrawingVisual` Presentation:** Utilizes a lightweight `FrameworkElement` hosting a single `DrawingVisual` or low-level `VisualCollection`.
-* **Hardware Interop via `D3DImage`:** For GPU mode, hooks DirectX 11 textures directly into WPF's composition pipeline via shared texture handles, eliminating CPU-to-GPU copies.
+* **Visual Tree Bypass:** Avoids WPF layout panel instantiation and object trees.
+* **`DrawingVisual` Presentation:** Hosts low-level visual collections with frozen drawing brushes and pens.
+* **Hardware Interop via `D3DImage`:** Bridges DirectX 11 textures into WPF's `milcore` composition pipeline via shared texture handles without CPU copying.
 
 ---
 
 ### Layer 3: Controls Suite
 
-1. **`ZeroGrid` (High-Performance DataGrid):**
-   * Handles 1,000,000+ rows with sorting, multi-column freezing, row selection, and variable column widths.
-   * Renders only visible cells ($M \times N$ cells, typically $< 100$ cells rendered per frame).
-2. **`ZeroTree` (Virtualized TreeList):**
-   * Fast hierarchical tree representation using a flattened visible-node index array. Expanding/collapsing nodes updates index offsets in $O(K)$ time without reconstructing the tree.
-3. **`ZeroPlot` (Real-Time TimeSeries Plotter):**
-   * High-frequency telemetry and signal plotter (100k–1M points/sec) with automated downsampling (LTTB - Largest-Triangle-Three-Buckets algorithm).
-4. **`ZeroLog` (Infinite Log & Text Viewer):**
-   * Memory-mapped file viewer capable of browsing multi-gigabyte logs with instantaneous keyword search.
+1. **`ZeroGrid` & `ZeroTreeList`:**
+   * Virtualized data grids handling 100M+ rows with $O(1)$ cell lookups, multi-column sorting (`RowIndexMap`), filtering, and floating flyweight editing.
+2. **`ZeroPlantMimicCanvas` & `ZeroScene`:**
+   * Single-HWND P&ID synoptic mimic canvas supporting infinite pan/zoom (25%–400%) and spatial culling for thousands of industrial vector nodes (`TankNode`, `PumpNode`, `PipeNode`, `ValveNode`, etc.).
+3. **`ZeroTrendChart` & `ZeroPlot`:**
+   * Real-time 60 FPS multi-channel oscilloscope streaming millions of telemetry data points using `TimeSeriesPyramid` and zero-alloc `LttbDecimation`.
+4. **`ZeroAlarmGrid`:**
+   * ISA-18.2 compliant industrial alarm monitor with state-synchronized visual blinking driven by `ZeroAnimationClock`.
+
 
 ---
 
