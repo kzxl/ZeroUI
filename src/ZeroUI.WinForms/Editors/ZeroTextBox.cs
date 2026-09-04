@@ -44,7 +44,6 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.ResizeRedraw |
                 ControlStyles.SupportsTransparentBackColor, true);
 
-            Size = new Size(220, 36);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
@@ -76,6 +75,8 @@ namespace ZeroUI.WinForms.Editors
             _innerBox.KeyUp += (s, e) => OnKeyUp(e);
 
             Controls.Add(_innerBox);
+
+            Size = new Size(220, 36);
 
             ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
@@ -245,6 +246,8 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateInnerBounds()
         {
+            if (_innerBox == null) return;
+
             int leftPad = 12;
             if (!string.IsNullOrEmpty(_leadingIcon))
             {
