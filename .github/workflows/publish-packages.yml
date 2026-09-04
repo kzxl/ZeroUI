@@ -33,5 +33,9 @@ jobs:
         run: dotnet pack src/ZeroUI.Wpf/ZeroUI.Wpf.csproj -c Release -o nupkgs
 
       - name: Push to GitHub Packages
+        shell: pwsh
         run: |
-          dotnet nuget push "nupkgs/*.nupkg" --source "https://nuget.pkg.github.com/kzxl/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+          Get-ChildItem -Path nupkgs -Filter *.nupkg | ForEach-Object {
+            Write-Host "Pushing $($_.Name) to GitHub Packages..."
+            dotnet nuget push $_.FullName --source "https://nuget.pkg.github.com/kzxl/index.json" --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+          }
