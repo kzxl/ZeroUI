@@ -7,6 +7,11 @@
     <Nullable>enable</Nullable>
     <RootNamespace>ZeroUI.Wpf</RootNamespace>
     <AssemblyName>ZeroUI.Wpf</AssemblyName>
+    <Description>Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big data grid and modern reactive theme engine.</Description>
+    <PackageTags>wpf;datagrid;grid;scada;hmi;industrial-automation;virtualization;zero-allocation;dark-theme</PackageTags>
+    <Authors>Phong Võ</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kzxl/ZeroUI</PackageProjectUrl>
     <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
 

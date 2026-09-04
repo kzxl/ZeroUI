@@ -1,11 +1,13 @@
 # ZeroUI ⚡
 
-> **High-Performance, Zero-Allocation UI Engine & Enterprise Control Suite for .NET WinForms & Desktop**
+> **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
 
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 [![Performance](https://img.shields.io/badge/compute%20rate-25%2C000%2B%20FPS-orange.svg)](#verified-benchmark-results)
 [![GC Gen0 Collections](https://img.shields.io/badge/GC%20Allocations-0%20(Zero--Alloc)-brightgreen.svg)](#verified-benchmark-results)
+[![SCADA & Historian](https://img.shields.io/badge/SCADA-SQLite%20WAL%20Historian-purple.svg)](#industrial-data--sqlite-wal-historian)
+[![Protocols](https://img.shields.io/badge/Protocols-Modbus%20%7C%20Siemens%20S7-red.svg)](#industrial-communication--edge-connectors)
 
 ---
 
@@ -264,6 +266,53 @@ A fully automated, 5-stage closed-loop industrial process demonstrating synchron
 
 ---
 
+### ⚙️ Industrial Edge Runtime & Core Infrastructure (`ZeroUI.Core.Runtime`, `Collections`)
+* **`UiDispatcher`**: High-performance single-thread UI marshaler with frame rate throttling (30–120 FPS) and batch coalescing, preventing message pump starvation from high-frequency PLC streams.
+* **`WorkerQueue<T>`**: Lock-free channel and ring-buffer worker queue for offloading heavy telemetry ingestion, calculations, or I/O operations from UI threads.
+* **`EventBus`**: Low-latency, zero-boxing decoupled publish/subscribe bus for inter-module communication with strongly typed payload subscriptions.
+* **`CommandBus`**: CQRS-style command dispatcher supporting extensible pipeline behaviors (validation, execution logging, performance telemetry).
+* **`StateStore<T>`**: Single-source-of-truth deterministic state store supporting selective state slice subscriptions and atomic updates.
+* **`RingBuffer<T>`**: High-performance circular buffer with unmanaged-like contiguous memory sliding and zero-allocation span views.
+
+---
+
+### 💾 Industrial Data & SQLite WAL Historian (`ZeroUI.Core.Historian`, `Scada`)
+* **`ZeroTagEngine`**: Thread-safe in-memory industrial tag registry supporting deadband jitter suppression, timestamping, OPC DA/UA quality codes (`Good`, `Bad`, `Uncertain`), and multi-threaded ingestion (>3.6M ops/sec).
+* **`SqliteHistorianEngine`**: Ultra-fast embedded time-series telemetry historian leveraging SQLite in WAL (`PRAGMA journal_mode=WAL`) mode, daily partition database rolling, microsecond timestamp precision, and background batch commits (>100,000 records/sec).
+* **`StoreAndForwardWorker`**: Resilient edge-to-cloud/central-server forwarder with local disk caching during network outages and automatic chunked draining upon link recovery without packet loss.
+* **`LttbDecimation`**: Zero-allocation Largest-Triangle-Three-Buckets downsampling algorithm, compressing 100,000+ raw data points into 1,000 visual pixels in <3 ms with 0 bytes GC allocated.
+* **`ScadaAlarmEngine`**: Full ISA-18.2 compliant alarm lifecycle engine (`ActiveUnack`, `ActiveAck`, `ClearedUnack`, `Normal`, `Shelved`, `Suppressed`) with thread-safe audit logging.
+
+---
+
+### 🔌 Industrial Field Communication & Protocols (`ZeroUI.Core.Communication`)
+* **`ModbusTcpAdapter`**: Native zero-allocation Modbus TCP master client supporting standard industrial function codes:
+  * FC 01 (Read Coils), FC 02 (Read Discrete Inputs)
+  * FC 03 (Read Holding Registers), FC 04 (Read Input Registers)
+  * FC 05 (Write Single Coil), FC 06 (Write Single Register)
+  * FC 15 (Write Multiple Coils), FC 16 (Write Multiple Registers)
+* **`SiemensS7Adapter`**: Native high-speed ISO-on-TCP (RFC 1006 / COTP) and S7 PDU communication client for Siemens SIMATIC S7-300, S7-400, S7-1200, and S7-1500 PLCs with DB block byte/word/dword/float read and write operations.
+* **`GenericSocketClient`**: Asynchronous high-throughput TCP/IP socket client with exponential reconnection backoff, keep-alive heartbeats, and custom packet framing.
+* **`ConnectionManager`**: Centralized gateway supervisor managing watchdog timeouts, link latency telemetry, and automated multi-channel failover.
+
+---
+
+### 🏭 MES & Smart Warehouse State Engines (`ZeroUI.Core.Mes`, `Warehouse`)
+* **`PackMlStateMachine`**: Full ISA-TR88.00.02 (PackML) machine state machine implementation modeling all 17 standard states (*Clearing, Stopped, Starting, Idle, Suspended, Execute, Stopping, Aborting, Holding*, etc.) with state-duration telemetry and transition guard triggers.
+* **`OeeEngine`**: Real-time Overall Equipment Effectiveness calculation engine computing Availability, Performance, and Quality metrics with micro-stoppage logging, ideal cycle time evaluation, and scrap defect tallying.
+* **`GuidedPickingEngine`**: Warehouse picking route optimization calculating shortest Manhattan distance across warehouse coordinates, enforcing FIFO/FEFO lot priorities, and validating bin pick scans.
+* **`WarehouseLocation`**: Standardized 5-tier spatial coordinate representation (`Zone-Aisle-Bay-Level-Bin`) with string parsing, barcode encoding, and neighbor bin traversal.
+
+---
+
+### 🖼️ WPF Control Suite & Theme Engine (`ZeroUI.Wpf`)
+* **`ZeroGridControl` (WPF)**: Hardware-accelerated WPF virtual data grid with zero-allocation row virtualization, column sorting, search filtering, and smooth scrolling.
+* **`ZeroGridPagination` & `ZeroGridSearchBar`**: Standardized WPF pagination toolbar and debounced search toolkits.
+* **`ZeroThemeEngine` & `ZeroSkinManager`**: Unified Obsidian Dark and Clean Light XAML styling with reactive theme switching.
+* **WPF SCADA & Industrial Gauges**: `ZeroGauge`, `ZeroHeatmap`, `ZeroLedTower`, `ZeroLinearGauge`, `ZeroSevenSegment`, `ZeroStatusBadge`, and `ZeroCard`.
+
+---
+
 ## 5. Repository Structure
 
 ```text
@@ -273,22 +322,35 @@ ZeroUI/
 ├── docs/
 │   └── images/                                   # High-resolution documentation screenshots
 ├── src/
-│   ├── ZeroUI.Core/                              # Platform-agnostic data virtualization engine
+│   ├── ZeroUI.Core/                              # Platform-agnostic data virtualization & runtime engine
+│   │   ├── Collections/                          # Zero-alloc RingBuffer<T>, MemoryPools
 │   │   ├── Common/                               # Memory pooling, Enums, Math utilities
+│   │   ├── Communication/                        # ModbusTcpAdapter, SiemensS7Adapter, GenericSocketClient
 │   │   ├── Data/                                 # IZeroVirtualSource, RowIndexMap, Filter & Sort engines
-│   │   └── Layout/                               # Cell bounds, Viewport culling algorithms
+│   │   ├── Historian/                            # SqliteHistorianEngine (WAL mode), StoreAndForwardWorker
+│   │   ├── Layout/                               # Cell bounds, Viewport culling algorithms
+│   │   ├── Mes/                                  # PackMlStateMachine (ISA-TR88), OeeEngine
+│   │   ├── Runtime/                              # UiDispatcher, WorkerQueue<T>, EventBus, CommandBus, StateStore<T>
+│   │   ├── Scada/                                # ZeroTagEngine, ScadaAlarmEngine, LttbDecimation, ThrottleQueue
+│   │   ├── Virtualization/                       # Virtual scroll math, windowing & sliding buffer
+│   │   └── Warehouse/                            # GuidedPickingEngine, WarehouseLocation
 │   ├── ZeroUI.WinForms/                          # Standardized WinForms control suite
 │   │   ├── DataGrid/                             # [Subsystem] ZeroGridControl, SearchBar, Pagination, Exporter
 │   │   ├── Charts/                               # [Subsystem] ZeroChart, Candlestick, Radar, Funnel, Waterfall...
 │   │   ├── Warehouse/                            # [Subsystem] BarcodeScanControl, InventoryCard, LotSelector, Timeline...
-│   │   ├── Industrial/                           # [Subsystem] ZeroSteps, ZeroCard, ZeroGridCard, ZeroWorkflowCard...
+│   │   ├── Industrial/                           # [Subsystem] ZeroSteps, ZeroCard, Actuators, P&ID Mimic, Alarms...
 │   │   ├── Editors/                              # [Subsystem] ZeroButton, ZeroDatePicker, ZeroSwitch, ZeroImage...
+│   │   ├── Layout/                               # [Subsystem] ZeroStackPanel, ZeroTablePanel, ZeroSplitContainer...
 │   │   ├── Overlays/                             # [Subsystem] ZeroSideNav, ZeroTabControl, ZeroToolbar, ZeroModal...
 │   │   ├── Theme/                                # [Foundation] ZeroTheme, Token Engine (Light / Dark)
 │   │   ├── Rendering/                            # [Foundation] ZeroFontCache, ZeroStringFormats, Win32 Memory DC
 │   │   └── Native/                               # Win32 GDI32/User32 P/Invoke interop layer
+│   ├── ZeroUI.Wpf/                               # High-performance WPF UI controls & themes
+│   │   ├── DataGrid/                             # ZeroGridControl, Pagination, SearchBar (WPF)
+│   │   ├── Industrial/                           # ZeroGauge, ZeroHeatmap, ZeroLedTower, SevenSegment (WPF)
+│   │   └── Theme/                                # WPF Skin Manager & Resource Dictionaries
 │   └── ZeroUI.Samples.BenchmarkDemo/             # Comprehensive benchmark & showcase application
-│       ├── Forms/                                # MainForm testbed with telemetry HUD & tabs
+│       ├── Forms/                                # MainForm testbed with telemetry HUD & closed-loop SCADA
 │       ├── Data/                                 # 100K, 1M, 10M rows mock & procedural data sources
 │       └── Diagnostics/                          # Real-time FPS, Latency, and Memory telemetry
 ```

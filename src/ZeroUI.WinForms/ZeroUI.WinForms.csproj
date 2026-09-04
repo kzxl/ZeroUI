@@ -5,6 +5,11 @@
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
+    <Description>Ultra-high-performance WinForms industrial UI suite with 10M+ rows virtual grid, ISA-18.2 alarms, P&amp;ID actuators, 60 FPS oscilloscope, and modern Obsidian Dark/Clean Light theme.</Description>
+    <PackageTags>winforms;datagridview;grid;scada;hmi;industrial-automation;mes;plc;dark-theme;virtualization;zero-allocation</PackageTags>
+    <Authors>Phong Võ</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kzxl/ZeroUI</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

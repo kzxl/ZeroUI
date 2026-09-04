@@ -4,6 +4,11 @@
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
+    <Description>High-performance, zero-allocation core runtime and industrial automation infrastructure for .NET (SQLite Historian, Modbus TCP, Siemens S7, PackML, OEE, UiDispatcher, WorkerQueue).</Description>
+    <PackageTags>dotnet;csharp;industrial-automation;scada;mes;plc;modbus;siemens-s7;historian;packml;oee;zero-allocation;high-performance</PackageTags>
+    <Authors>Phong Võ</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/kzxl/ZeroUI</PackageProjectUrl>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
