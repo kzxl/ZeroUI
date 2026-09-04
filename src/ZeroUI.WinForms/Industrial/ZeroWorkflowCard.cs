@@ -58,12 +58,12 @@ namespace ZeroUI.WinForms.Industrial
         private int? _stepNumber = 3;
         private string? _stepText;
         private Color _badgeColor = Color.FromArgb(22, 119, 255); // Indigo/Blue
-        private string _title = "Thông tin trên chuyền sản xuất (Production Line Workflow)";
-        private string? _subtitle = "Chuyền SMT Line 01 • Lệnh sản xuất MO-20260901";
-        private string? _statusTag = "Đang vận hành";
+        private string _title = "Production Line Workflow Pipeline";
+        private string? _subtitle = "SMT Line 01 • Manufacturing Order MO-20260901";
+        private string? _statusTag = "Operating";
         private Color _statusTagColor = Color.FromArgb(16, 185, 129);
 
-        private string? _footerText = "Bấm vào từng công đoạn để xem chi tiết hoặc chuyển bước sản xuất";
+        private string? _footerText = "Click any stage to view details or transition production step";
         private Color _footerTextColor = Color.FromArgb(100, 116, 139);
 
         private int _hoveredIndex = -1;
@@ -110,7 +110,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Thông tin trên chuyền sản xuất (Production Line Workflow)")]
+        [DefaultValue("Production Line Workflow Pipeline")]
         public string Title
         {
             get => _title;
@@ -118,7 +118,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Chuyền SMT Line 01 • Lệnh sản xuất MO-20260901")]
+        [DefaultValue("SMT Line 01 • Manufacturing Order MO-20260901")]
         public string? Subtitle
         {
             get => _subtitle;
@@ -126,7 +126,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Đang vận hành")]
+        [DefaultValue("Operating")]
         public string? StatusTag
         {
             get => _statusTag;
@@ -141,7 +141,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Bấm vào từng công đoạn để xem chi tiết hoặc chuyển bước sản xuất")]
+        [DefaultValue("Click any stage to view details or transition production step")]
         public string? FooterText
         {
             get => _footerText;

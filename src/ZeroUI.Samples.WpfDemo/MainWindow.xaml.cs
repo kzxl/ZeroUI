@@ -84,13 +84,13 @@ namespace ZeroUI.Samples.WpfDemo
         private void SetupColumns()
         {
             var colId = new ZeroColumn("ID", 75, CellAlignment.Right) { ReadOnly = true, IsPinned = true, Summary = SummaryType.Count, SummaryFormat = "{0:N0} items" };
-            var colCode = new ZeroColumn("Mã Vật Tư", 130, CellAlignment.Left) { ReadOnly = true, IsPinned = true };
-            var colName = new ZeroColumn("Tên Vật Tư / Linh Kiện", 240, CellAlignment.Left);
-            var colQty = new ZeroColumn("Số Lượng", 95, CellAlignment.Right) { Summary = SummaryType.Sum, SummaryFormat = "{0:N0}" };
-            var colPrice = new ZeroColumn("Đơn Giá (VNĐ)", 130, CellAlignment.Right) { Summary = SummaryType.Average, SummaryFormat = "TB: {0:N0}" };
-            var colTotal = new ZeroColumn("Thành Tiền (VNĐ)", 150, CellAlignment.Right) { ReadOnly = true, Summary = SummaryType.Sum, SummaryFormat = "{0:N0} đ" };
-            var colLot = new ZeroColumn("Số Lô", 120, CellAlignment.Center);
-            var colStatus = new ZeroColumn("Trạng Thái Kiểm Định", 160, CellAlignment.Center);
+            var colCode = new ZeroColumn("Material Code", 130, CellAlignment.Left) { ReadOnly = true, IsPinned = true };
+            var colName = new ZeroColumn("Description / Component Name", 240, CellAlignment.Left);
+            var colQty = new ZeroColumn("Quantity", 95, CellAlignment.Right) { Summary = SummaryType.Sum, SummaryFormat = "{0:N0}" };
+            var colPrice = new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right) { Summary = SummaryType.Average, SummaryFormat = "Avg: ${0:N2}" };
+            var colTotal = new ZeroColumn("Total Amount ($)", 150, CellAlignment.Right) { ReadOnly = true, Summary = SummaryType.Sum, SummaryFormat = "${0:N2}" };
+            var colLot = new ZeroColumn("Lot Number", 120, CellAlignment.Center);
+            var colStatus = new ZeroColumn("Inspection Status", 160, CellAlignment.Center);
 
             VirtualGrid.Columns.Add(colId);
             VirtualGrid.Columns.Add(colCode);
@@ -487,10 +487,10 @@ namespace ZeroUI.Samples.WpfDemo
                 "• Powered by ZeroUI.Core engine (VirtualViewport2D, RowIndexMap, PrefixSumArray).\n" +
                 "• Single-Visual Direct DrawingContext rendering (0 Visual Tree overhead).\n" +
                 "• In-Place Editing: Flyweight floating editor overlay with Tab/Enter commit.\n" +
-                "• Fixed / Pinned Columns: Ghim cột bên trái với divider shadow.\n" +
-                "• Multi-Row Selection: Chọn nhiều dòng & Ctrl+C copy định dạng TSV.\n" +
-                "• Summary Footer: Chân trang tính tổng Sum, Count, Avg, Min, Max.\n" +
-                "• Universal Generic Adapter: ZeroListSource<T> cho IList<T>.\n" +
+                "• Fixed / Pinned Columns: Freeze columns to the left with elevation shadow.\n" +
+                "• Multi-Row Selection: Multi-row select & Ctrl+C clipboard TSV copy.\n" +
+                "• Summary Footer: Real-time footer aggregation (Sum, Count, Avg, Min, Max).\n" +
+                "• Universal Generic Adapter: ZeroListSource<T> for IList<T>.\n" +
                 "• 100% Zero-Allocation hotpaths on scroll and render.\n" +
                 "• Supports both .NET Framework 4.6.2 and .NET 8.0-windows.\n\n" +
                 "Developed with Deepmind Advanced Agentic Engineering.",

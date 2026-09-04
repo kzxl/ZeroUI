@@ -56,14 +56,14 @@ namespace ZeroUI.WinForms.Industrial
         private int? _stepNumber = 1;
         private string? _stepText;
         private Color _badgeColor = Color.FromArgb(22, 119, 255); // Indigo/Blue
-        private string _title = "Thông tin board (Board Information)";
-        private string? _subtitle = "Board sử dụng theo partlist: 026MC02RP2.0";
+        private string _title = "Board Information";
+        private string? _subtitle = "Partlist Usage: 026MC02RP2.0";
         private string? _statusTag = "4 Items";
         private Color _statusTagColor = Color.FromArgb(16, 185, 129);
 
-        private string? _footerText = "Thông tin xuất kho: Theo trạng thái";
+        private string? _footerText = "Dispatch Info: By Status";
         private Color _footerTextColor = Color.FromArgb(22, 119, 255);
-        private string? _summaryText = "Tổng tồn: 1,368 pcs";
+        private string? _summaryText = "Total Stock: 1,368 pcs";
 
         private int _scrollY = 0;
         private int _hoverRow = -1;
@@ -113,7 +113,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Thông tin board (Board Information)")]
+        [DefaultValue("Board Information")]
         public string Title
         {
             get => _title;
@@ -121,7 +121,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Board sử dụng theo partlist: 026MC02RP2.0")]
+        [DefaultValue("Partlist Usage: 026MC02RP2.0")]
         public string? Subtitle
         {
             get => _subtitle;
@@ -144,7 +144,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Thông tin xuất kho: Theo trạng thái")]
+        [DefaultValue("Dispatch Info: By Status")]
         public string? FooterText
         {
             get => _footerText;
@@ -159,7 +159,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue("Tổng tồn: 1,368 pcs")]
+        [DefaultValue("Total Stock: 1,368 pcs")]
         public string? SummaryText
         {
             get => _summaryText;

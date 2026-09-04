@@ -100,7 +100,7 @@
                     <StackPanel Grid.Row="2" Margin="14,0,14,6">
                         <grid:ZeroGridSearchBar x:Name="GridSearch" />
                         <TextBlock Margin="2,4,0,0" FontSize="11.5" Foreground="#94A3B8"
-                                   Text="💡 In-Place Editing: F2 hoặc Double-Click | Multi-Selection: Ctrl/Shift+Click &amp; Ctrl+C để Copy | Pinned Columns: Cố định bên trái khi cuộn ngang | Summary: Chân trang tính tổng tự động" />
+                                   Text="💡 In-Place Editing: F2 or Double-Click | Multi-Selection: Ctrl/Shift+Click &amp; Ctrl+C to Copy | Pinned Columns: Freeze left during horizontal scroll | Summary: Automatic footer aggregations" />
                     </StackPanel>
 
                     <!-- ZeroGridControl -->
@@ -350,8 +350,8 @@
 
                             <!-- Currency Stepper -->
                             <StackPanel Margin="0,0,14,10">
-                                <TextBlock Text="Unit Price (VNĐ)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                <edit:ZeroNumericBox Width="200" Value="24500000" MinValue="0" MaxValue="500000000" Step="500000" DecimalPlaces="0" Prefix="₫ " ThousandsSeparator="True" />
+                                <TextBlock Text="Unit Price (USD)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                <edit:ZeroNumericBox Width="200" Value="24500" MinValue="0" MaxValue="500000" Step="500" DecimalPlaces="2" Prefix="$ " ThousandsSeparator="True" />
                             </StackPanel>
 
                             <!-- Percentage Stepper -->

@@ -838,7 +838,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 _autoScrollTimer.Stop();
                 _isStressTesting = false;
-                _btnAutoScroll.Text = "🚀 Chạy Auto-Scroll Stress Test (10s)";
+                _btnAutoScroll.Text = "🚀 Run Auto-Scroll Stress Test (10s)";
                 _btnAutoScroll.BackColor = Color.FromArgb(79, 70, 229);
             }
             else
@@ -850,7 +850,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _scrollStopwatch.Restart();
 
                 _isStressTesting = true;
-                _btnAutoScroll.Text = "⏹️ Đang Stress Test... Bấm để dừng";
+                _btnAutoScroll.Text = "⏹️ Stress Testing... Click to Stop";
                 _btnAutoScroll.BackColor = Color.FromArgb(220, 38, 38);
                 _autoScrollTimer.Start();
             }
@@ -1330,7 +1330,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var btnSimulateScan = new ZeroButton
             {
-                Text = "⚡ Giả lập PLC (+5 Lắp ráp, +4 QC, +3 Nhập kho)",
+                Text = "⚡ Simulate PLC (+5 Assy, +4 QC, +3 Inward)",
                 ButtonStyle = ZeroButtonStyle.Primary,
                 Size = new Size(360, 34),
                 Location = new Point(620, 4),
@@ -1347,12 +1347,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 StepNumber = 1,
                 BadgeColor = Color.FromArgb(22, 119, 255),
-                Title = "Thông tin board (Board Information)",
-                Subtitle = "Board sử dụng theo partlist: 026MC02RP2.0",
-                ActionText = "Thông tin xuất kho: Theo trạng thái",
+                Title = "PCBA / Board Information",
+                Subtitle = "Partlist Specification: 026MC02RP2.0",
+                ActionText = "Dispatch Info: By Status",
                 Dock = DockStyle.Fill
             };
-            cardBoard.ActionClicked += (s, e) => ZeroToast.Info(this, "Đang mở chi tiết xuất kho theo trạng thái...");
+            cardBoard.ActionClicked += (s, e) => ZeroToast.Info(this, "Opening dispatch breakdown by status...");
 
             var gridBoard = new ZeroGridControl
             {
@@ -1361,10 +1361,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 HeaderHeight = 26,
                 Font = new Font("Segoe UI", 9f)
             };
-            gridBoard.Columns.Add(new ZeroColumn("Mã NVL", 140, CellAlignment.Left));
-            gridBoard.Columns.Add(new ZeroColumn("SL Partlist", 100, CellAlignment.Right));
-            gridBoard.Columns.Add(new ZeroColumn("Tồn kho NVL", 120, CellAlignment.Right));
-            gridBoard.Columns.Add(new ZeroColumn("Tồn kho BTP", 120, CellAlignment.Right));
+            gridBoard.Columns.Add(new ZeroColumn("Part Code", 140, CellAlignment.Left));
+            gridBoard.Columns.Add(new ZeroColumn("Partlist Qty", 100, CellAlignment.Right));
+            gridBoard.Columns.Add(new ZeroColumn("Raw Stock", 120, CellAlignment.Right));
+            gridBoard.Columns.Add(new ZeroColumn("WIP Stock", 120, CellAlignment.Right));
             gridBoard.DataSource = new ZeroUI.Samples.BenchmarkDemo.Data.MesBoardSource();
             cardBoard.ContentPanel.Controls.Add(gridBoard);
 
@@ -1376,14 +1376,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 StepNumber = 2,
                 BadgeColor = Color.FromArgb(124, 58, 237),
-                Title = "Thông tin vỏ (Shell Info)",
+                Title = "Enclosure / Shell Info",
                 Dock = DockStyle.Right,
                 Width = 230
             };
             var descShell = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 26 };
-            descShell.Add("Phiếu YCVT", "Lịch sản xuất", Color.FromArgb(107, 114, 128));
-            descShell.Add("Mã phiếu", "(Chưa tạo)", Color.FromArgb(156, 163, 175));
-            descShell.Add("Trạng thái", "--", Color.FromArgb(156, 163, 175));
+            descShell.Add("Material Request", "Production Schedule", Color.FromArgb(107, 114, 128));
+            descShell.Add("Ticket ID", "(Not Created)", Color.FromArgb(156, 163, 175));
+            descShell.Add("Status", "--", Color.FromArgb(156, 163, 175));
             cardShell.ContentPanel.Controls.Add(descShell);
 
             // Splitter 2
@@ -1393,7 +1393,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardGauge = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Chỉ số OEE Chuyền",
+                Title = "Line OEE Index",
                 Dock = DockStyle.Right,
                 Width = 145
             };
@@ -1401,7 +1401,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Value = 88.5f,
-                Title = "Hiệu suất OEE",
+                Title = "OEE Efficiency",
                 GaugeColor = Color.FromArgb(16, 185, 129)
             };
             cardGauge.ContentPanel.Controls.Add(gaugeOee);
@@ -1420,21 +1420,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 StepNumber = 3,
                 BadgeColor = Color.FromArgb(22, 119, 255),
-                Title = "Thông tin trên chuyền sản xuất (Production Line Workflow)",
+                Title = "Production Line Workflow Steps",
                 Dock = DockStyle.Fill
             };
 
             _mesSteps = new ZeroSteps { Dock = DockStyle.Fill };
             _mesSteps.SetSteps(new[]
             {
-                new ZeroStepItem { Key = "ASSY", Title = "Thông tin lắp ráp", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.InProgress, Glyph = ZeroStepGlyph.Gear },
-                new ZeroStepItem { Key = "QC", Title = "Thông tin QC", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.Completed, Glyph = ZeroStepGlyph.Checkmark },
-                new ZeroStepItem { Key = "WH", Title = "Số lượng nhập kho", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.Waiting, Glyph = ZeroStepGlyph.Warehouse }
+                new ZeroStepItem { Key = "ASSY", Title = "Assembly Line", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.InProgress, Glyph = ZeroStepGlyph.Gear },
+                new ZeroStepItem { Key = "QC", Title = "QC Inspection", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.Completed, Glyph = ZeroStepGlyph.Checkmark },
+                new ZeroStepItem { Key = "WH", Title = "Finished Goods Inward", Quantity = 0, Timestamp = "--", Status = ZeroStepStatus.Waiting, Glyph = ZeroStepGlyph.Warehouse }
             });
 
             _mesSteps.StepClicked += (s, e) =>
             {
-                ZeroToast.Info(this, $"Đã chọn công đoạn: {e.Step.Title} | Sản lượng hiện tại: {e.Step.Quantity:N0}");
+                ZeroToast.Info(this, $"Selected Stage: {e.Step.Title} | Current Qty: {e.Step.Quantity:N0}");
             };
 
             cardSteps.ContentPanel.Controls.Add(_mesSteps);
@@ -1448,14 +1448,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 StepNumber = 4,
                 BadgeColor = Color.FromArgb(22, 119, 255),
-                Title = "Thông tin tổng hợp (Summary)",
+                Title = "Production Summary",
                 Dock = DockStyle.Left,
                 Width = 340
             };
             var descSummary = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 28 };
-            descSummary.Add("Số lượng KH / thực nhập", "100 / 0", Color.FromArgb(17, 24, 39));
-            descSummary.Add("Trễ hạn", "Không", Color.FromArgb(22, 163, 74), isHighlighted: true);
-            descSummary.Add("Nguyên nhân", "--", Color.FromArgb(107, 114, 128));
+            descSummary.Add("Target / Actual Inward", "100 / 0", Color.FromArgb(17, 24, 39));
+            descSummary.Add("Delayed", "No", Color.FromArgb(22, 163, 74), isHighlighted: true);
+            descSummary.Add("Root Cause", "--", Color.FromArgb(107, 114, 128));
             cardSummary.ContentPanel.Controls.Add(descSummary);
 
             var splitR3A = new Panel { Dock = DockStyle.Left, Width = 10, BackColor = Color.Transparent };
@@ -1464,13 +1464,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardProduct = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Thông tin sản phẩm (Specs)",
+                Title = "Product Specifications",
                 Dock = DockStyle.Left,
                 Width = 320
             };
             var descProduct = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 28 };
-            descProduct.Add("Mã sản phẩm", "1030MAX001", Color.FromArgb(17, 24, 39));
-            descProduct.Add("Tên sản phẩm", "B1030 MAX", Color.FromArgb(17, 24, 39));
+            descProduct.Add("Part Number", "1030MAX001", Color.FromArgb(17, 24, 39));
+            descProduct.Add("Model Name", "B1030 MAX", Color.FromArgb(17, 24, 39));
             descProduct.Add("BOM / Partlist", "026MC02RP2.0", Color.FromArgb(79, 70, 229));
             cardProduct.ContentPanel.Controls.Add(descProduct);
 
@@ -1480,13 +1480,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardTimeline = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Nhật ký phả hệ lô hàng (Lot Traceability)",
+                Title = "Lot Genealogy & Traceability",
                 Dock = DockStyle.Fill
             };
             var timeline = new ZeroTimeline { Dock = DockStyle.Fill, ItemSpacing = 40 };
-            timeline.Add("Nhập kho NVL", "07:30", "Lô BOA437 & BOA541 kiểm duyệt OQC", ZeroTimelineStatus.Completed);
-            timeline.Add("Cấp phát SMT", "08:15", "Gắp 420 chip lên bo mạch", ZeroTimelineStatus.Completed);
-            timeline.Add("Hàn sóng & Lắp ráp", "09:40", "Đang lắp ráp chuyền 01", ZeroTimelineStatus.InProgress);
+            timeline.Add("Raw Material Inward", "07:30", "Lot BOA437 & BOA541 OQC Verified", ZeroTimelineStatus.Completed);
+            timeline.Add("SMT Feeder Load", "08:15", "420 chips picked and placed", ZeroTimelineStatus.Completed);
+            timeline.Add("Wave Solder & Assy", "09:40", "Assembly Line 01 in progress", ZeroTimelineStatus.InProgress);
             cardTimeline.ContentPanel.Controls.Add(timeline);
 
             row3.Controls.Add(cardTimeline);
@@ -1514,11 +1514,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _mesSteps.UpdateStep("QC", simQc, now, ZeroStepStatus.InProgress);
                 _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? ZeroStepStatus.InProgress : ZeroStepStatus.Waiting);
 
-                descSummary.SetValue("Số lượng KH / thực nhập", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
-                timeline.Add($"Barcode {barcode}", now, "Quét mã trạm thành công", ZeroTimelineStatus.Completed);
+                descSummary.SetValue("Target / Actual Inward", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
+                timeline.Add($"Barcode {barcode}", now, "Station scan verified", ZeroTimelineStatus.Completed);
                 if (segOutput != null) segOutput.Value = (1420 + simWh).ToString("D6");
                 if (gaugePressure != null) gaugePressure.Value = 72.5f + (simWh % 12);
-                ZeroToast.Success(this, $"Scanned: {barcode} | Lắp ráp: {simAssy}, Nhập kho: {simWh}");
+                ZeroToast.Success(this, $"Scanned: {barcode} | Assembly: {simAssy}, Inward: {simWh}");
             }
 
             barcodeBox.BarcodeScanned += (s, e) => ProcessScan(e.Barcode);
@@ -1534,11 +1534,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _mesSteps.UpdateStep("QC", simQc, now, ZeroStepStatus.InProgress);
                 _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? ZeroStepStatus.InProgress : ZeroStepStatus.Waiting);
 
-                descSummary.SetValue("Số lượng KH / thực nhập", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
-                timeline.Add("PLC Signal Batch", now, $"Đồng bộ lô sản xuất (+{simWh} sp)", ZeroTimelineStatus.Completed);
+                descSummary.SetValue("Target / Actual Inward", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
+                timeline.Add("PLC Signal Batch", now, $"Batch sync completed (+{simWh} units)", ZeroTimelineStatus.Completed);
                 if (segOutput != null) segOutput.Value = (1420 + simWh).ToString("D6");
                 if (gaugePressure != null) gaugePressure.Value = 72.5f + (simWh % 12);
-                ZeroToast.Success(this, $"PLC Signal: Lắp ráp: {simAssy}, QC: {simQc}, Nhập kho: {simWh}");
+                ZeroToast.Success(this, $"PLC Signal: Assembly: {simAssy}, QC: {simQc}, Inward: {simWh}");
             };
 
 
@@ -1549,7 +1549,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardAndon = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Đèn Tháp Andon (SCADA Signal)",
+                Title = "Andon Tower Light (SCADA Signal)",
                 Dock = DockStyle.Left,
                 Width = 280
             };
@@ -1577,7 +1577,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 andonTower.SetStatus(running: true, warning: false, alarm: false);
                 statusBadge.Status = ZeroStatusType.Running;
                 statusBadge.Text = "Line 01: Running";
-                ZeroToast.Success(this, "SCADA: Chuyền chuyển RUNNING (Đèn xanh sáng)");
+                ZeroToast.Success(this, "SCADA: Production line switched to RUNNING (Green light on)");
             };
             cardAndon.ContentPanel.Controls.Add(btnAndonRun);
 
@@ -1593,7 +1593,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 andonTower.SetStatus(running: false, warning: true, alarm: false);
                 statusBadge.Status = ZeroStatusType.Idle;
                 statusBadge.Text = "Line 01: Low Feeder Alert";
-                ZeroToast.Warning(this, "SCADA: Cảnh báo Feeder SMT (Đèn vàng sáng)");
+                ZeroToast.Warning(this, "SCADA: SMT Feeder low stock alert (Amber light on)");
             };
             cardAndon.ContentPanel.Controls.Add(btnAndonWarn);
 
@@ -1609,7 +1609,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 andonTower.SetStatus(running: false, warning: false, alarm: true);
                 statusBadge.Status = ZeroStatusType.Alarm;
                 statusBadge.Text = "Line 01: EMERGENCY STOP";
-                ZeroToast.Error(this, "SCADA: Dừng khẩn cấp E-STOP! Đèn đỏ Andon nhấp nháy 2Hz!");
+                ZeroToast.Error(this, "SCADA: Emergency Stop E-STOP triggered! Red light blinking 2Hz!");
             };
             cardAndon.ContentPanel.Controls.Add(btnAndonAlarm);
 
@@ -1619,12 +1619,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardLed = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Bảng Số LED 7 Đoạn (Takt & Output)",
+                Title = "7-Segment Industrial LED (Takt & Output)",
                 Dock = DockStyle.Left,
                 Width = 365
             };
 
-            var lblTakt = new Label { Text = "Takt Time Mục Tiêu (giây):", Location = new Point(10, 4), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            var lblTakt = new Label { Text = "Target Takt Time (sec):", Location = new Point(10, 4), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
             var segTakt = new ZeroSevenSegment
             {
                 Location = new Point(10, 20),
@@ -1637,7 +1637,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Unit = "s"
             };
 
-            var lblActual = new Label { Text = "Sản Lượng Thực Tế Lô (sp):", Location = new Point(10, 56), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            var lblActual = new Label { Text = "Actual Batch Output (pcs):", Location = new Point(10, 56), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
             segOutput = new ZeroSevenSegment
             {
                 Location = new Point(10, 72),
@@ -1653,7 +1653,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             // Interactive options toolbar to demo advanced LED options
             var btnCycleColor = new ZeroButton
             {
-                Text = "🎨 Màu LED",
+                Text = "🎨 LED Color",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Location = new Point(10, 110),
                 Size = new Size(95, 24)
@@ -1672,12 +1672,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 colorIndex = (colorIndex + 1) % presets.Length;
                 segOutput.ColorPreset = presets[colorIndex];
-                ZeroToast.Info(this, $"Bảng LED: Đổi theme {presets[colorIndex]}");
+                ZeroToast.Info(this, $"LED Display: Switched theme {presets[colorIndex]}");
             };
 
             var btnToggleSlant = new ZeroButton
             {
-                Text = "📐 Nghiêng 7°",
+                Text = "📐 Slanted 7°",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Location = new Point(110, 110),
                 Size = new Size(105, 24)
@@ -1688,21 +1688,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 {
                     segTakt.SlantAngle = 0f;
                     segOutput.SlantAngle = 0f;
-                    btnToggleSlant.Text = "📐 Đứng 0°";
-                    ZeroToast.Info(this, "Bảng LED: Chuyển sang chế độ thẳng đứng 0°");
+                    btnToggleSlant.Text = "📐 Vertical 0°";
+                    ZeroToast.Info(this, "LED Display: Switched to 0° vertical mode");
                 }
                 else
                 {
                     segTakt.SlantAngle = 7f;
                     segOutput.SlantAngle = 7f;
-                    btnToggleSlant.Text = "📐 Nghiêng 7°";
-                    ZeroToast.Info(this, "Bảng LED: Chuyển sang góc nghiêng Italic 7°");
+                    btnToggleSlant.Text = "📐 Slanted 7°";
+                    ZeroToast.Info(this, "LED Display: Switched to 7° italic mode");
                 }
             };
 
             var btnCycleMsg = new ZeroButton
             {
-                Text = "⚡ Ký Tự SCADA",
+                Text = "⚡ SCADA Text",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Location = new Point(220, 110),
                 Size = new Size(130, 24)
@@ -1724,7 +1724,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 segOutput.Value = sample.Item1;
                 segOutput.ColorPreset = sample.Item2;
                 segOutput.Blink = sample.Item3;
-                ZeroToast.Success(this, $"Bảng LED hiển thị: {sample.Item1}");
+                ZeroToast.Success(this, $"LED Display: {sample.Item1}");
             };
 
             cardLed.ContentPanel.Controls.Add(lblTakt);
@@ -1741,7 +1741,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardSensors = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Giám Sát Áp Suất & Nhiệt Độ (SCADA Telemetry)",
+                Title = "Hydraulic Pressure & Temperature (SCADA Telemetry)",
                 Dock = DockStyle.Fill
             };
 
@@ -1749,7 +1749,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(12, 4),
                 Size = new Size(260, 50),
-                Title = "Áp Suất Thủy Lực Ép",
+                Title = "Hydraulic Clamp Pressure",
 
                 Unit = "Bar",
                 Minimum = 0,
@@ -1763,7 +1763,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(285, 4),
                 Size = new Size(260, 50),
-                Title = "Nhiệt Độ Lò Hàn SMT (Zone 3)",
+                Title = "SMT Reflow Oven Temp (Zone 3)",
                 Unit = "°C",
                 Minimum = 50,
                 Maximum = 300,
@@ -1827,17 +1827,17 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Dock = DockStyle.Top,
                 Height = 250,
                 StepNumber = 1,
-                Title = "Thông tin board (Board Information)",
-                Subtitle = "Board sử dụng theo partlist: 026MC02RP2.0",
-                StatusTag = "5 Items • Đủ Tồn Kho",
-                FooterText = "Thông tin xuất kho: Theo trạng thái",
-                SummaryText = "Tổng tồn NVL: 1,386 pcs"
+                Title = "PCBA / Board Information",
+                Subtitle = "Partlist Specification: 026MC02RP2.0",
+                StatusTag = "5 Items • In Stock",
+                FooterText = "Dispatch Breakdown: By Status",
+                SummaryText = "Total Raw Stock: 1,386 pcs"
             };
 
-            cardGrid.AddColumn("Mã NVL", 140, HorizontalAlignment.Left);
-            cardGrid.AddColumn("SL Partlist", 100, HorizontalAlignment.Right);
-            cardGrid.AddColumn("Tồn kho NVL", 130, HorizontalAlignment.Right, isAlertZero: true);
-            cardGrid.AddColumn("Tồn kho BTP", 120, HorizontalAlignment.Right);
+            cardGrid.AddColumn("Part Code", 140, HorizontalAlignment.Left);
+            cardGrid.AddColumn("Partlist Qty", 100, HorizontalAlignment.Right);
+            cardGrid.AddColumn("Raw Stock", 130, HorizontalAlignment.Right, isAlertZero: true);
+            cardGrid.AddColumn("WIP Stock", 120, HorizontalAlignment.Right);
 
             cardGrid.AddRow("BOA437", 1, 347, 0);
             cardGrid.AddRow("BOA472", 0, 18, 0);
@@ -1847,7 +1847,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             cardGrid.FooterClicked += (s, e) =>
             {
-                ZeroToast.Info(this, "Mở chi tiết phiếu xuất kho NVL theo trạng thái lệnh!");
+                ZeroToast.Info(this, "Opening material dispatch details by work order status!");
             };
 
             var spacerCards = new Panel { Dock = DockStyle.Top, Height = 14, BackColor = Color.Transparent };
@@ -1858,20 +1858,20 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Dock = DockStyle.Top,
                 Height = 160,
                 StepNumber = 3,
-                Title = "Thông tin trên chuyền sản xuất (Production Line Workflow)",
-                Subtitle = "Chuyền SMT Line 01 • Lệnh sản xuất MO-20260901",
-                StatusTag = "Đang vận hành (2/3 Hoàn tất)",
+                Title = "Production Line Workflow Pipeline",
+                Subtitle = "SMT Line 01 • Work Order MO-20260901",
+                StatusTag = "In Operation (2/3 Completed)",
                 StatusTagColor = Color.FromArgb(16, 185, 129),
-                FooterText = "Bấm vào từng công đoạn để xem chi tiết hoặc chuyển bước sản xuất"
+                FooterText = "Click stage node to inspect details or advance workflow step"
             };
 
-            cardWorkflow.AddStage("assembly", "Thông tin lắp ráp", 1250, "17:10", ZeroStepStatus.Completed, ZeroStepGlyph.Gear);
-            cardWorkflow.AddStage("qc", "Thông tin QC", 1242, "17:15", ZeroStepStatus.InProgress, ZeroStepGlyph.Checkmark);
-            cardWorkflow.AddStage("inward", "Số lượng nhập kho", 0, "--", ZeroStepStatus.Waiting, ZeroStepGlyph.Warehouse);
+            cardWorkflow.AddStage("assembly", "Assembly Line", 1250, "17:10", ZeroStepStatus.Completed, ZeroStepGlyph.Gear);
+            cardWorkflow.AddStage("qc", "QC Inspection", 1242, "17:15", ZeroStepStatus.InProgress, ZeroStepGlyph.Checkmark);
+            cardWorkflow.AddStage("inward", "Finished Goods Inward", 0, "--", ZeroStepStatus.Waiting, ZeroStepGlyph.Warehouse);
 
             cardWorkflow.StageClicked += (s, ev) =>
             {
-                ZeroToast.Success(this, $"Đã chọn công đoạn: {ev.Stage.Title} (Qty: {ev.Stage.Quantity:N0})");
+                ZeroToast.Success(this, $"Selected Stage: {ev.Stage.Title} (Qty: {ev.Stage.Quantity:N0})");
             };
 
             mainContainer.Controls.Add(cardWorkflow);
@@ -1904,8 +1904,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Info,
-                Title = "🔬 SCADA & Smart Factory Hub — Trạm Giám Sát & Điều Hành Thời Gian Thực",
-                Message = "Tích hợp biểu đồ xung sóng 60 FPS (ZeroTrendChart), nhịp chuyền Lean (ZeroTaktTimer), ma trận lỗi quang học AOI (ZeroDefectMatrix), thanh ghi I/O PLC (ZeroPlcIoMonitor) và bàn phím Andon SLA (ZeroAndonCallPad).",
+                Title = "🔬 SCADA & Smart Factory Hub — Real-Time Control & Telemetry Station",
+                Message = "Integrated 60 FPS oscilloscope (ZeroTrendChart), Lean cycle pacing (ZeroTaktTimer), AOI defect matrix (ZeroDefectMatrix), PLC I/O monitor (ZeroPlcIoMonitor), and SLA touch Andon pad (ZeroAndonCallPad).",
                 Height = 62
             };
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
@@ -1917,7 +1917,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardTrend = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Biểu Đồ Sóng Cảm Biến Thời Gian Thực (60 FPS Zero-Alloc)",
+                Title = "Real-Time Sensor Oscilloscope (60 FPS Zero-Alloc)",
                 Dock = DockStyle.Left,
                 Width = 560
             };
@@ -1925,7 +1925,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var trendChart = new ZeroTrendChart
             {
                 Dock = DockStyle.Fill,
-                Title = "Ch1: Áp Suất Buồng Ép (Bar) | Ch2: Nhiệt Độ Lò Nung (°C)",
+                Title = "Ch1: Hydraulic Pressure (Bar) | Ch2: Oven Temperature (°C)",
                 UpperLimit = 85f,
                 LowerLimit = 15f
             };
@@ -1934,14 +1934,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var trendToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
             var btnSpike = new ZeroButton
             {
-                Text = "⚡ Tạo Xung Quá Áp (Inject Spike)",
+                Text = "⚡ Inject Pressure Spike",
                 ButtonStyle = ZeroButtonStyle.Danger,
                 Dock = DockStyle.Left,
                 Width = 200
             };
             var btnPauseTrend = new ZeroButton
             {
-                Text = "⏸ Dừng/Chạy Stream",
+                Text = "⏸ Pause/Resume Stream",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Dock = DockStyle.Left,
                 Width = 140
@@ -1956,7 +1956,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardTakt = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Chu Kỳ Nhịp Chuyền Takt Time (Assembly Line)",
+                Title = "Lean Takt Cycle Pacing (Assembly Line)",
                 Dock = DockStyle.Fill
             };
 
@@ -1973,7 +1973,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var taktControls = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10, 20, 10, 10) };
             var btnCompleteUnit = new ZeroButton
             {
-                Text = "✅ Hoàn Tất 1 Sản Phẩm (+1 Output)",
+                Text = "✅ Complete Unit (+1 Output)",
                 ButtonStyle = ZeroButtonStyle.Success,
                 Dock = DockStyle.Top,
                 Height = 36
@@ -1981,7 +1981,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var taktSpacer1 = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
             var btnResetTakt = new ZeroButton
             {
-                Text = "🔄 Đặt Lại Chu Kỳ (Reset Takt)",
+                Text = "🔄 Reset Takt Cycle",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Dock = DockStyle.Top,
                 Height = 34
@@ -2002,7 +2002,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardDefect = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Bản Đồ Kiểm Tra Ngoại Quan AOI SMT (Array 3x6)",
+                Title = "AOI Optical Inspection Matrix (Array 3x6)",
                 Dock = DockStyle.Left,
                 Width = 520
             };
@@ -2010,21 +2010,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var defectMatrix = new ZeroDefectMatrix
             {
                 Dock = DockStyle.Fill,
-                Title = "SMT Carrier Panel #SN-94812 — AOI Camera Trạm 03"
+                Title = "SMT Carrier Panel #SN-94812 — AOI Station 03 Camera"
             };
             cardDefect.ContentPanel.Controls.Add(defectMatrix);
 
             var defectToolbar = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
             var btnSimDefect = new ZeroButton
             {
-                Text = "🔍 Giả Lập Lỗi Hàn (Simulate Defect)",
+                Text = "🔍 Simulate SMT Defect",
                 ButtonStyle = ZeroButtonStyle.Danger,
                 Dock = DockStyle.Left,
                 Width = 200
             };
             var btnClearPass = new ZeroButton
             {
-                Text = "✅ Tất Cả Đạt (All Pass)",
+                Text = "✅ All Pass",
                 ButtonStyle = ZeroButtonStyle.Success,
                 Dock = DockStyle.Left,
                 Width = 140
@@ -2039,7 +2039,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardPlc = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Bảng Giám Sát Bit I/O PLC (Click DO để Force)",
+                Title = "PLC I/O Bit Monitor (Click DO to Force)",
                 Dock = DockStyle.Fill
             };
 
@@ -2063,7 +2063,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardAndon = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Bàn Phím Cảm Ứng Gọi Hỗ Trợ Andon Trạm (Touch SLA Pad)",
+                Title = "Shopfloor SLA Andon Touch Pad",
                 Dock = DockStyle.Left,
                 Width = 480
             };
@@ -2080,7 +2080,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardLog = new ZeroCard
             {
                 StepNumber = null,
-                Title = "Nhật Ký Sự Kiện Trạm SCADA (Real-Time Audit Log)",
+                Title = "SCADA Station Audit Journal (Real-Time)",
                 Dock = DockStyle.Fill
             };
 
@@ -2096,51 +2096,51 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             row3.Controls.Add(cardAndon);
 
             // Seed initial log entries
-            scadaLog.AddLog(DateTime.Now.AddMinutes(-12), LogSeverity.Info, "Trạm SCADA khởi động: Kết nối PLC Siemens S7-1500 (IP 192.168.1.10) thành công.");
-            scadaLog.AddLog(DateTime.Now.AddMinutes(-8), LogSeverity.Success, "AOI Inspection: Nạp mẫu kiểm tra Panel SMT 3x6 (Thư viện chuẩn IPC-A-610G).");
-            scadaLog.AddLog(DateTime.Now.AddMinutes(-5), LogSeverity.Info, "Lean Takt: Chu kỳ nhịp chuyền thiết lập chuẩn 25.0s.");
+            scadaLog.AddLog(DateTime.Now.AddMinutes(-12), LogSeverity.Info, "SCADA station started: Connected to Siemens S7-1500 (IP 192.168.1.10) successfully.");
+            scadaLog.AddLog(DateTime.Now.AddMinutes(-8), LogSeverity.Success, "AOI Inspection: Loaded SMT 3x6 panel template (IPC-A-610G standard library).");
+            scadaLog.AddLog(DateTime.Now.AddMinutes(-5), LogSeverity.Info, "Lean Takt: Pacing cycle configured to standard 25.0s.");
 
             // Wire events
             taktTimer.TaktCompleted += (s, e) =>
             {
-                scadaLog.AddLog(DateTime.Now, LogSeverity.Success, $"Takt Timer: Hoàn tất 1 sản phẩm. Tổng sản lượng ca: {taktTimer.CompletedUnits} PCS.");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Success, $"Takt Timer: Unit completed. Shift total output: {taktTimer.CompletedUnits} PCS.");
             };
 
             taktTimer.TaktOverdue += (s, e) =>
             {
-                scadaLog.AddLog(DateTime.Now, LogSeverity.Warning, "Takt Timer: CẢNH BÁO TRỄ NHỊP CHUYỀN (>25s)!");
-                ZeroToast.Warning(this, "⚠ Cảnh báo: Chuyền sản xuất đang vượt Takt Time quy định!");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Warning, "Takt Timer: TAKT OVERDUE WARNING (>25s)!");
+                ZeroToast.Warning(this, "⚠ Warning: Assembly line exceeding target Takt Time!");
             };
 
             btnCompleteUnit.Click += (s, e) =>
             {
                 taktTimer.CompleteUnit();
-                ZeroToast.Success(this, $"Đã xác nhận hoàn thành SP #{taktTimer.CompletedUnits}!");
+                ZeroToast.Success(this, $"Confirmed completion of Unit #{taktTimer.CompletedUnits}!");
             };
 
             btnResetTakt.Click += (s, e) =>
             {
                 taktTimer.Reset();
-                scadaLog.AddLog(DateTime.Now, LogSeverity.Info, "Takt Timer: Đã reset chu kỳ về 0.0s.");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Info, "Takt Timer: Cycle reset to 0.0s.");
             };
 
             defectMatrix.SlotClicked += (s, e) =>
             {
                 var slot = e.Slot;
-                string msg = $"[AOI Drill-Down] Vị trí: {slot.Code} | Trạng thái: {slot.Status} | Chi tiết: {slot.DefectDetail}";
+                string msg = $"[AOI Drill-Down] Position: {slot.Code} | Status: {slot.Status} | Detail: {slot.DefectDetail}";
                 var sev = slot.Status == DefectStatus.Fail ? LogSeverity.Error : (slot.Status == DefectStatus.Warning ? LogSeverity.Warning : LogSeverity.Success);
                 scadaLog.AddLog(DateTime.Now, sev, msg);
                 if (slot.Status == DefectStatus.Fail)
-                    ZeroToast.Error(this, $"Phát hiện lỗi tại {slot.Code}: {slot.DefectDetail}");
+                    ZeroToast.Error(this, $"Defect detected at {slot.Code}: {slot.DefectDetail}");
                 else
-                    ZeroToast.Info(this, $"Chi tiết {slot.Code}: {slot.DefectDetail}");
+                    ZeroToast.Info(this, $"Detail {slot.Code}: {slot.DefectDetail}");
             };
 
             btnSimDefect.Click += (s, e) =>
             {
-                defectMatrix.SetSlotStatus(2, 1, DefectStatus.Fail, "Lệch chân tụ IC (Tombstone C18)");
-                scadaLog.AddLog(DateTime.Now, LogSeverity.Error, "AOI Inspection: Phát hiện lỗi ngoại quan tại vị trí U14 (Tombstone C18)!");
-                ZeroToast.Error(this, "AOI: Phát hiện linh kiện lệch chân tại U14!");
+                defectMatrix.SetSlotStatus(2, 1, DefectStatus.Fail, "Tombstone Capacitor C18");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Error, "AOI Inspection: Visual defect detected at position U14 (Tombstone C18)!");
+                ZeroToast.Error(this, "AOI: Tombstone component defect detected at U14!");
             };
 
             btnClearPass.Click += (s, e) =>
@@ -2148,14 +2148,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 for (int r = 0; r < defectMatrix.Rows; r++)
                     for (int c = 0; c < defectMatrix.Columns; c++)
                         defectMatrix.SetSlotStatus(r, c, DefectStatus.Pass, "OK");
-                scadaLog.AddLog(DateTime.Now, LogSeverity.Success, "AOI Inspection: Toàn bộ panel đã đạt chuẩn Pass 100%.");
-                ZeroToast.Success(this, "Panel AOI: Đạt chuẩn 100%!");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Success, "AOI Inspection: All panel positions passed 100%.");
+                ZeroToast.Success(this, "AOI Panel: 100% Passed!");
             };
 
             plcMonitor.OutputCoilChanged += (s, e) =>
             {
-                string state = e.NewState ? "BẬT (HIGH - 1)" : "TẮT (LOW - 0)";
-                scadaLog.AddLog(DateTime.Now, LogSeverity.Info, $"PLC Coil: Ép trạng thái ngõ ra DO_{e.BitIndex:D2} sang {state}.");
+                string state = e.NewState ? "HIGH (1)" : "LOW (0)";
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Info, $"PLC Coil: Force output DO_{e.BitIndex:D2} to {state}.");
                 ZeroToast.Info(this, $"PLC DO_{e.BitIndex:D2} = {(e.NewState ? 1 : 0)}");
             };
 
@@ -2163,13 +2163,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 if (e.IsActive)
                 {
-                    scadaLog.AddLog(DateTime.Now, LogSeverity.Warning, $"ANDON CALL: Yêu cầu khẩn cấp [{e.CallType}] được kích hoạt tại trạm!");
-                    ZeroToast.Warning(this, $"🚨 ANDON: Đã phát tín hiệu gọi [{e.CallType}]!");
+                    scadaLog.AddLog(DateTime.Now, LogSeverity.Warning, $"ANDON CALL: Urgent request [{e.CallType}] dispatched at station!");
+                    ZeroToast.Warning(this, $"🚨 ANDON: Call signal dispatched for [{e.CallType}]!");
                 }
                 else
                 {
-                    scadaLog.AddLog(DateTime.Now, LogSeverity.Success, $"ANDON CALL: Yêu cầu [{e.CallType}] đã được xử lý và giải tỏa.");
-                    ZeroToast.Success(this, $"Andon: Đã đóng yêu cầu [{e.CallType}].");
+                    scadaLog.AddLog(DateTime.Now, LogSeverity.Success, $"ANDON CALL: Request [{e.CallType}] cleared and acknowledged.");
+                    ZeroToast.Success(this, $"Andon: Cleared request [{e.CallType}].");
                 }
             };
 
@@ -2177,14 +2177,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             btnPauseTrend.Click += (s, e) =>
             {
                 isStreaming = !isStreaming;
-                btnPauseTrend.Text = isStreaming ? "⏸ Dừng Stream" : "▶ Tiếp tục Stream";
+                btnPauseTrend.Text = isStreaming ? "⏸ Pause Stream" : "▶ Resume Stream";
             };
 
             btnSpike.Click += (s, e) =>
             {
                 trendChart.AddPoint(0, 94.2f);
-                scadaLog.AddLog(DateTime.Now, LogSeverity.Error, "SCADA Sensor: Cảnh báo áp suất vượt ngưỡng an toàn USL (94.2 Bar > 85.0 Bar)!");
-                ZeroToast.Error(this, "⚠ Quá áp buồng ép: 94.2 Bar!");
+                scadaLog.AddLog(DateTime.Now, LogSeverity.Error, "SCADA Sensor: Pressure exceeded USL safety threshold (94.2 Bar > 85.0 Bar)!");
+                ZeroToast.Error(this, "⚠ Hydraulic clamp overpressure: 94.2 Bar!");
             };
 
 
@@ -2652,8 +2652,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Info,
-                Title = "🚀 BỘ SUITE COMPONENT NÂNG CAO MỚI (ADVANCED ENTERPRISE SUITE)",
-                Message = "ZeroUI đã tích hợp đầy đủ 6 Component nâng cao: ZeroTreeList (Cây BOM đa cấp ảo hóa), ZeroHeatmap (Ma trận nhiệt 24h x 7 ngày), ZeroLookup (Tìm kiếm Catalog 5,000 vật tư), ZeroDateRangePicker (Khoảng ngày 1-click), ZeroNumericBox (Nhập số chính xác cao), và ZeroTabControl (Bộ chuyển tab phẳng không giật)."
+                Title = "🚀 ADVANCED ENTERPRISE COMPONENT SUITE",
+                Message = "ZeroUI features 6 specialized enterprise components: ZeroTreeList (Virtualized multi-level BOM tree), ZeroHeatmap (24h x 7-day density matrix), ZeroLookup (Fast search across 5,000 catalog items), ZeroDateRangePicker (1-click date intervals), ZeroNumericBox (High-precision numeric entry), and ZeroTabControl (Flat zero-flicker tab host)."
             };
 
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
@@ -2675,34 +2675,34 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             dtRange.DateRangeChanged += (s, e) =>
             {
-                ZeroToast.Info(this, $"Khoảng ngày đã chọn: {dtRange.StartDate:yyyy-MM-dd} → {dtRange.EndDate:yyyy-MM-dd}");
+                ZeroToast.Info(this, $"Selected date range: {dtRange.StartDate:yyyy-MM-dd} → {dtRange.EndDate:yyyy-MM-dd}");
             };
 
             var lookupCatalog = new ZeroLookup
             {
                 Location = new Point(272, 4),
                 Width = 320,
-                Placeholder = "Tìm trong 5,000 vật tư linh kiện..."
+                Placeholder = "Search 5,000 catalog components..."
             };
 
             // Populate 5,000 realistic electronic/industrial items
             var catalogItems = new List<ZeroLookupItem>(5000);
-            catalogItems.Add(new ZeroLookupItem("IC-MCU-STM32", "STM32F407VGT6 Cortex-M4 168MHz", "Foxconn Precision • Tồn: 12,450 PCS • $8.50", "Active IC"));
-            catalogItems.Add(new ZeroLookupItem("IC-RAM-ISSI", "IS42S16400J 64Mb SDRAM 166MHz", "ISSI Micro • Tồn: 8,200 PCS • $2.40", "Memory"));
-            catalogItems.Add(new ZeroLookupItem("IC-ETH-LAN8720", "LAN8720A 10/100 Ethernet Transceiver", "Microchip • Tồn: 5,600 PCS • $1.15", "Interface"));
-            catalogItems.Add(new ZeroLookupItem("SEN-KEY-OPTO", "Keyence PR-M51N3 Cảm Biến Quang", "Keyence Japan • Tồn: 320 PCS • $68.00", "Sensors"));
-            catalogItems.Add(new ZeroLookupItem("PLC-FX5U-32M", "Mitsubishi FX5U-32MR/ES PLC Main", "Mitsubishi Electric • Tồn: 45 PCS • $285.00", "PLC"));
-            catalogItems.Add(new ZeroLookupItem("DRV-STEP-TMC", "TMC2209 Ultra-Silent Stepper Driver", "Trinamic GmbH • Tồn: 2,100 PCS • $4.20", "Motion"));
+            catalogItems.Add(new ZeroLookupItem("IC-MCU-STM32", "STM32F407VGT6 Cortex-M4 168MHz", "Foxconn Precision • Stock: 12,450 PCS • $8.50", "Active IC"));
+            catalogItems.Add(new ZeroLookupItem("IC-RAM-ISSI", "IS42S16400J 64Mb SDRAM 166MHz", "ISSI Micro • Stock: 8,200 PCS • $2.40", "Memory"));
+            catalogItems.Add(new ZeroLookupItem("IC-ETH-LAN8720", "LAN8720A 10/100 Ethernet Transceiver", "Microchip • Stock: 5,600 PCS • $1.15", "Interface"));
+            catalogItems.Add(new ZeroLookupItem("SEN-KEY-OPTO", "Keyence PR-M51N3 Optical Sensor", "Keyence Japan • Stock: 320 PCS • $68.00", "Sensors"));
+            catalogItems.Add(new ZeroLookupItem("PLC-FX5U-32M", "Mitsubishi FX5U-32MR/ES PLC Main", "Mitsubishi Electric • Stock: 45 PCS • $285.00", "PLC"));
+            catalogItems.Add(new ZeroLookupItem("DRV-STEP-TMC", "TMC2209 Ultra-Silent Stepper Driver", "Trinamic GmbH • Stock: 2,100 PCS • $4.20", "Motion"));
 
             string[] catPrefixes = new[] { "RES", "CAP", "IND", "DIO", "MOS", "CONN", "RELAY", "FUSE", "OPTO", "SW" };
-            string[] catNames = new[] { "Điện trở dán", "Tụ gốm nhiều lớp", "Cuộn cảm cuộn dây", "Diode Schottky", "Mosfet kênh N", "Đầu nối Header", "Rơ le trung gian", "Cầu chì tự phục hồi", "Optocoupler cách ly", "Công tắc gạt" };
+            string[] catNames = new[] { "Chip Resistor", "Ceramic Capacitor", "Wirewound Inductor", "Schottky Diode", "N-Channel MOSFET", "Header Connector", "Intermediate Relay", "PTC Resettable Fuse", "Optocoupler Isolator", "Toggle Switch" };
 
             for (int i = 7; i <= 5000; i++)
             {
                 int catIdx = i % catPrefixes.Length;
                 string pCode = $"{catPrefixes[catIdx]}-{i:D5}";
                 string pName = $"{catNames[catIdx]} SMD #{i}";
-                string pSub = $"Tiêu chuẩn AEC-Q200 • Tồn: {(i * 17) % 5000 + 100:N0} PCS • ${(i % 99 + 1) * 0.05f:F2}";
+                string pSub = $"Standard AEC-Q200 • Stock: {(i * 17) % 5000 + 100:N0} PCS • ${(i % 99 + 1) * 0.05f:F2}";
                 catalogItems.Add(new ZeroLookupItem(pCode, $"{pCode} • {pName}", pSub, catPrefixes[catIdx]));
             }
             lookupCatalog.SetItems(catalogItems);
@@ -2711,7 +2711,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 if (lookupCatalog.SelectedItem != null)
                 {
-                    ZeroToast.Success(this, $"Đã chọn vật tư: [{lookupCatalog.SelectedItem.Key}] {lookupCatalog.SelectedItem.DisplayText}");
+                    ZeroToast.Success(this, $"Selected Item: [{lookupCatalog.SelectedItem.Key}] {lookupCatalog.SelectedItem.DisplayText}");
                 }
             };
 
@@ -2719,7 +2719,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(604, 4),
                 Width = 200,
-                Prefix = "Lô SX:",
+                Prefix = "Batch Size:",
                 Suffix = "PCS",
                 Step = 500,
                 Value = 5000,
@@ -2728,19 +2728,19 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             numBatchSize.ValueChanged += (s, e) =>
             {
-                ZeroToast.Info(this, $"Sản lượng kế hoạch điều chỉnh: {numBatchSize.Value:N0} PCS");
+                ZeroToast.Info(this, $"Adjusted planned batch size: {numBatchSize.Value:N0} PCS");
             };
 
             var btnFilter = new ZeroButton
             {
                 Location = new Point(816, 4),
                 Size = new Size(130, 36),
-                Text = "⚡ Áp Dụng Lọc",
+                Text = "⚡ Apply Filter",
                 ButtonStyle = ZeroButtonStyle.Primary
             };
             btnFilter.Click += (s, e) =>
             {
-                ZeroToast.Success(this, $"Đã nạp dữ liệu kỳ {dtRange.StartDate:dd/MM} - {dtRange.EndDate:dd/MM} với quy mô {numBatchSize.Value:N0} PCS!");
+                ZeroToast.Success(this, $"Loaded interval {dtRange.StartDate:dd/MM} - {dtRange.EndDate:dd/MM} for batch size {numBatchSize.Value:N0} PCS!");
             };
 
             topBar.Controls.Add(btnFilter);
@@ -2769,8 +2769,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardBom = new ZeroCard
             {
                 Dock = DockStyle.Fill,
-                Title = "Cấu Trúc Cây BOM Đa Cấp (Multi-Level BOM ZeroTreeList)",
-                Subtitle = "Ảo hóa phân cấp linh kiện, Chevron mở/đóng, Checkbox 3 trạng thái"
+                Title = "Multi-Level BOM Tree Structure (ZeroTreeList)",
+                Subtitle = "Component hierarchy virtualization, expandable chevrons, tri-state checkboxes"
             };
 
             var bomTools = new Panel
@@ -2785,14 +2785,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(4, 4),
                 Width = 200,
-                PlaceholderText = "Lọc linh kiện BOM..."
+                PlaceholderText = "Filter BOM components..."
             };
 
             var btnExpandAll = new ZeroButton
             {
                 Location = new Point(210, 4),
                 Size = new Size(92, 34),
-                Text = "➕ Mở Rộng",
+                Text = "➕ Expand",
                 ButtonStyle = ZeroButtonStyle.Secondary
             };
 
@@ -2800,7 +2800,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(308, 4),
                 Size = new Size(92, 34),
-                Text = "➖ Thu Gọn",
+                Text = "➖ Collapse",
                 ButtonStyle = ZeroButtonStyle.Secondary
             };
 
@@ -2808,7 +2808,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Location = new Point(406, 4),
                 Size = new Size(98, 34),
-                Text = "✔ Thống Kê",
+                Text = "✔ Stats",
                 ButtonStyle = ZeroButtonStyle.Success
             };
 
@@ -2826,59 +2826,59 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             // Setup modern Context Menu for BOM Tree
             var bomMenu = new ZeroContextMenu();
-            bomMenu.AddAction("Sao chép mã linh kiện", () => ZeroToast.Info(this, "Đã sao chép mã linh kiện vào Clipboard!"), "Ctrl+C", "📋");
-            bomMenu.AddAction("Tra cứu tồn kho ERP", () => ZeroToast.Info(this, "Tồn kho khả dụng: 1,420 PCS tại Kho SMT Alpha"), "F3", "🔍");
-            bomMenu.AddAction("Thêm linh kiện con", () => ZeroModal.Prompt(this, "Thêm Linh Kiện Con", "Nhập mã định mức linh kiện:", "RES-0402-10K", val => ZeroToast.Success(this, $"Đã bổ sung mã {val} vào cụm!")), "Ins", "➕");
+            bomMenu.AddAction("Copy Component Code", () => ZeroToast.Info(this, "Component code copied to Clipboard!"), "Ctrl+C", "📋");
+            bomMenu.AddAction("Lookup ERP Inventory", () => ZeroToast.Info(this, "Available stock: 1,420 PCS at SMT Alpha Warehouse"), "F3", "🔍");
+            bomMenu.AddAction("Add Child Component", () => ZeroModal.Prompt(this, "Add Child Component", "Enter component part code:", "RES-0402-10K", val => ZeroToast.Success(this, $"Added {val} to assembly!")), "Ins", "➕");
             bomMenu.AddSeparator();
-            var subCat = bomMenu.AddSubMenu("Phân loại danh mục", "🏷️");
-            subCat.AddSubAction("Linh kiện tích cực (IC / Vi xử lý)", () => ZeroToast.Info(this, "Đã gán nhóm IC"));
-            subCat.AddSubAction("Linh kiện thụ động (Điện trở / Tụ điện)", () => ZeroToast.Info(this, "Đã gán nhóm R/L/C"));
-            subCat.AddSubAction("Cơ khí / Vỏ hộp kim loại", () => ZeroToast.Info(this, "Đã gán nhóm Cơ khí"));
+            var subCat = bomMenu.AddSubMenu("Assign Category", "🏷️");
+            subCat.AddSubAction("Active Components (IC / MCU)", () => ZeroToast.Info(this, "Assigned IC category"));
+            subCat.AddSubAction("Passive Components (R / L / C)", () => ZeroToast.Info(this, "Assigned R/L/C category"));
+            subCat.AddSubAction("Mechanical & Metal Enclosures", () => ZeroToast.Info(this, "Assigned Mechanical category"));
             bomMenu.AddSeparator();
-            bomMenu.AddCheckable("Ghim linh kiện ưu tiên KCS", false, chk => ZeroToast.Info(this, $"Đã {(chk ? "ghim" : "bỏ ghim")} linh kiện ưu tiên!"), "⭐");
-            bomMenu.AddDangerAction("Xóa khỏi định mức BOM", () => ZeroModal.Confirm(this, "Xác Nhận Xóa", "Bạn có chắc muốn gỡ linh kiện này khỏi định mức sản xuất?", () => ZeroToast.Success(this, "Đã gỡ linh kiện khỏi BOM!")), "Del", "🗑️");
+            bomMenu.AddCheckable("Pin Priority for Quality Inspection", false, chk => ZeroToast.Info(this, $"Priority inspection {(chk ? "pinned" : "unpinned")}!"), "⭐");
+            bomMenu.AddDangerAction("Remove from BOM", () => ZeroModal.Confirm(this, "Confirm Deletion", "Are you sure you want to remove this item from the production BOM?", () => ZeroToast.Success(this, "Removed component from BOM!")), "Del", "🗑️");
 
             treeBom.ContextMenuStrip = bomMenu;
 
             // Build realistic BOM hierarchy for Industrial Smart Gateway
-            var rootBom = new ZeroTreeNode("ASM-9000: Gateway Điều Khiển IoT Công Nghiệp", "⚙️", "Tổng định mức: U$ 24.80 • 28 LK")
+            var rootBom = new ZeroTreeNode("ASM-9000: Industrial IoT Gateway Controller", "⚙️", "Total BOM Cost: $24.80 • 28 Parts")
             {
-                Badge = "Cụm Chính",
+                Badge = "Main Assy",
                 BadgeColor = ZeroTheme.Colors.Info
             };
 
-            var pcbAssy = rootBom.AddChild("PCB-001: Bo Mạch Chủ SMT (4-Layer FR4)", "🟩", "Công đoạn: Máy dán SMT Line #1");
+            var pcbAssy = rootBom.AddChild("PCB-001: Mainboard SMT Assembly (4-Layer FR4)", "🟩", "Process: SMT Pick & Place Line #1");
             pcbAssy.Badge = "SMT Assy";
             pcbAssy.BadgeColor = ZeroTheme.Colors.Success;
-            pcbAssy.AddChild("MCU-STM32: STM32F407VGT6 ARM Cortex-M4 168MHz", "📦", "1 PCS • U$ 8.50").Badge = "Linh Kiện Chính";
-            pcbAssy.AddChild("RAM-ISSI: 32MB SDRAM IC 133MHz High-Speed", "📦", "1 PCS • U$ 2.40");
-            pcbAssy.AddChild("ETH-PHY: LAN8720A 10/100 Ethernet Controller", "📦", "1 PCS • U$ 1.15");
-            pcbAssy.AddChild("FLASH-SPI: W25Q128JV 16MB SPI NOR Flash", "📦", "1 PCS • U$ 0.95");
-            pcbAssy.AddChild("PWR-LDO: AMS1117-3.3V Step-down Converter", "⚡", "2 PCS • U$ 0.35");
-            pcbAssy.AddChild("XTAL-8M: Thạch anh dao động 8.000MHz ±10ppm", "💎", "1 PCS • U$ 0.20");
+            pcbAssy.AddChild("MCU-STM32: STM32F407VGT6 ARM Cortex-M4 168MHz", "📦", "1 PCS • $8.50").Badge = "Core MCU";
+            pcbAssy.AddChild("RAM-ISSI: 32MB SDRAM IC 133MHz High-Speed", "📦", "1 PCS • $2.40");
+            pcbAssy.AddChild("ETH-PHY: LAN8720A 10/100 Ethernet Controller", "📦", "1 PCS • $1.15");
+            pcbAssy.AddChild("FLASH-SPI: W25Q128JV 16MB SPI NOR Flash", "📦", "1 PCS • $0.95");
+            pcbAssy.AddChild("PWR-LDO: AMS1117-3.3V Step-down Converter", "⚡", "2 PCS • $0.35");
+            pcbAssy.AddChild("XTAL-8M: Crystal Oscillator 8.000MHz ±10ppm", "💎", "1 PCS • $0.20");
 
-            var pwrAssy = rootBom.AddChild("ASM-002: Cụm Cấp Nguồn Cách Ly & Chống Sét 24V", "⚡", "Công đoạn: Ghép hàn THT Line #2");
+            var pwrAssy = rootBom.AddChild("ASM-002: 24V Isolated Power & Surge Sub-Assy", "⚡", "Process: THT Wave Solder Line #2");
             pwrAssy.Badge = "Power Sub";
             pwrAssy.BadgeColor = ZeroTheme.Colors.Warning;
-            pwrAssy.AddChild("TRF-24V: Biến Áp Xung Flyback 24V/2A Shielded", "🔋", "1 PCS • U$ 3.80");
-            pwrAssy.AddChild("MOV-471: Varistor 470V Chống Sét Lan Truyền", "🛡️", "2 PCS • U$ 0.45");
-            pwrAssy.AddChild("CAP-450V: Tụ Lọc Cao Áp Nichicon 100uF/450V", "📦", "2 PCS • U$ 1.20");
-            pwrAssy.AddChild("FUSE-T2A: Cầu Chì Chậm 250V 2A Chống Cháy", "🔥", "1 PCS • U$ 0.25");
+            pwrAssy.AddChild("TRF-24V: Flyback Pulse Transformer 24V/2A Shielded", "🔋", "1 PCS • $3.80");
+            pwrAssy.AddChild("MOV-471: Varistor 470V Surge Suppressor", "🛡️", "2 PCS • $0.45");
+            pwrAssy.AddChild("CAP-450V: Nichicon High-Voltage Capacitor 100uF/450V", "📦", "2 PCS • $1.20");
+            pwrAssy.AddChild("FUSE-T2A: Slow-Blow Fuse 250V 2A Anti-Surge", "🔥", "1 PCS • $0.25");
 
-            var mecAssy = rootBom.AddChild("MEC-003: Khung Vỏ Nhôm Anodized IP67", "🛡️", "Công đoạn: Lắp ráp cơ khí CNC");
-            mecAssy.Badge = "Cơ Khí";
+            var mecAssy = rootBom.AddChild("MEC-003: IP67 Anodized Aluminum Enclosure", "🛡️", "Process: CNC Precision Machining");
+            mecAssy.Badge = "Mechanical";
             mecAssy.BadgeColor = ZeroTheme.Colors.Info;
-            mecAssy.AddChild("CNC-TOP: Nắp Nhôm Phay CNC Phủ Anode Đen", "🔩", "1 PCS • U$ 6.20");
-            mecAssy.AddChild("CNC-BTM: Đáy Nhôm Phay CNC Định Vị Ray DIN", "🔩", "1 PCS • U$ 4.50");
-            mecAssy.AddChild("SCR-M3: Vít Inox 304 M3x8 Chống Gỉ Chịu Rung", "🔩", "8 PCS • U$ 0.08");
-            mecAssy.AddChild("GSK-SIL: Gioăng Silicone Đúc Khuôn Chống Nước", "🛞", "1 PCS • U$ 0.90");
+            mecAssy.AddChild("CNC-TOP: Top Aluminum Cover Milled Black Anodized", "🔩", "1 PCS • $6.20");
+            mecAssy.AddChild("CNC-BTM: Bottom Aluminum Chassis DIN-Rail Mount", "🔩", "1 PCS • $4.50");
+            mecAssy.AddChild("SCR-M3: Stainless 304 M3x8 Anti-Vibration Screws", "🔩", "8 PCS • $0.08");
+            mecAssy.AddChild("GSK-SIL: Molded Waterproof Silicone Gasket", "🛞", "1 PCS • $0.90");
 
-            var pkgAssy = rootBom.AddChild("PKG-004: Hộp Đóng Gói & Serial Lot Tracking", "📦", "Công đoạn: KCS & Đóng Thùng");
-            pkgAssy.Badge = "Đóng Gói";
+            var pkgAssy = rootBom.AddChild("PKG-004: Packaging & Serial Lot Tracking", "📦", "Process: QC Inspection & Packing");
+            pkgAssy.Badge = "Packaging";
             pkgAssy.BadgeColor = ZeroTheme.Colors.Success;
-            pkgAssy.AddChild("BOX-CTN: Thùng Carton 3 Lớp Chống Va Đập", "📦", "1 PCS • U$ 0.65");
-            pkgAssy.AddChild("FOAM-EVA: Mút Xốp EVA Chống Tĩnh Điện ESD", "🛡️", "2 PCS • U$ 0.40");
-            pkgAssy.AddChild("LBL-QR: Tem Nhãn Barcode Serial & QR Lot", "🏷️", "2 PCS • U$ 0.05");
+            pkgAssy.AddChild("BOX-CTN: 3-Ply Shockproof Corrugated Carton", "📦", "1 PCS • $0.65");
+            pkgAssy.AddChild("FOAM-EVA: Anti-Static ESD Protective Foam", "🛡️", "2 PCS • $0.40");
+            pkgAssy.AddChild("LBL-QR: Serial Barcode & QR Lot Label", "🏷️", "2 PCS • $0.05");
 
             treeBom.AddNode(rootBom);
 
@@ -2894,7 +2894,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 int totalChecked = 0;
                 CountCheckedNodes(rootBom, ref totalChecked);
-                ZeroToast.Success(this, $"Đã chọn {totalChecked} hạng mục trong cây BOM sẵn sàng xuất lệnh lắp ráp!");
+                ZeroToast.Success(this, $"Selected {totalChecked} BOM items ready for assembly work order dispatch!");
             };
 
             treeBom.NodeSelected += (s, node) =>
@@ -2919,9 +2919,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Top,
                 Height = 310,
-                Title = "Ma Trận Nhiệt Sản Lượng Chuyền SMT 24 Giờ x 7 Ngày (ZeroHeatmap)",
-                Subtitle = "Phân bố công suất theo từng khung giờ, tooltip chi tiết và chuyển đổi dải màu",
-                ActionText = "🎨 Đổi Bảng Màu"
+                Title = "SMT Production Heatmap (24 Hours x 7 Days)",
+                Subtitle = "Hourly output capacity distribution with rich tooltips and palette switching",
+                ActionText = "🎨 Change Palette"
             };
 
             var heatmap = new ZeroHeatmap
@@ -2942,12 +2942,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                     _ => HeatmapPaletteMode.Industrial
                 };
                 heatmap.PaletteMode = nextMode;
-                ZeroToast.Info(this, $"Đã đổi bảng màu Heatmap sang: {nextMode}");
+                ZeroToast.Info(this, $"Heatmap color palette changed to: {nextMode}");
             };
 
             heatmap.CellClicked += (s, e) =>
             {
-                ZeroToast.Success(this, $"[SẢN LƯỢNG] {e.RowLabel} lúc {e.ColumnLabel}: {e.Value:0} PCS/giờ");
+                ZeroToast.Success(this, $"[OUTPUT] {e.RowLabel} at {e.ColumnLabel}: {e.Value:0} PCS/hr");
             };
 
             cardHeatmap.ContentPanel.Controls.Add(heatmap);
@@ -2958,8 +2958,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardTabs = new ZeroCard
             {
                 Dock = DockStyle.Fill,
-                Title = "Bộ Chuyển Tab Phẳng Hiện Đại Không Giật (ZeroTabControl)",
-                Subtitle = "Hỗ trợ phong cách Underline / Pill / Card, Notification Badges, và Dark Mode"
+                Title = "Modern Zero-Flicker Tab Host (ZeroTabControl)",
+                Subtitle = "Supports Underline / Pill / Card styles, Notification Badges, and Dark Mode"
             };
 
             var tabTools = new Panel
@@ -2992,7 +2992,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             tabTools.Controls.Add(segStyle);
 
             // Page 1: SMT Oven Reflow Profile
-            var pageOven = tabSuite.AddTab("Thiết Lập Lò Hàn SMT", "🔥");
+            var pageOven = tabSuite.AddTab("SMT Oven Profile", "🔥");
             pageOven.Padding = new Padding(12);
 
             var pnlOven = new FlowLayoutPanel
@@ -3002,11 +3002,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 BackColor = Color.Transparent
             };
 
-            var numZ1 = CreateParamBox("Vùng 1 (Preheat):", 160.0m, "°C", 0.5m, 100m, 200m);
-            var numZ2 = CreateParamBox("Vùng 2 (Soak):", 195.0m, "°C", 0.5m, 150m, 230m);
-            var numZ3 = CreateParamBox("Vùng 3 (Peak Reflow):", 248.5m, "°C", 0.5m, 200m, 280m);
-            var numSpeed = CreateParamBox("Tốc Độ Băng Tải:", 1.15m, "m/min", 0.05m, 0.5m, 3.0m, 2);
-            var numN2 = CreateParamBox("Độ Tinh Khiết N2:", 99.98m, "%", 0.01m, 95m, 100m, 2);
+            var numZ1 = CreateParamBox("Zone 1 (Preheat):", 160.0m, "°C", 0.5m, 100m, 200m);
+            var numZ2 = CreateParamBox("Zone 2 (Soak):", 195.0m, "°C", 0.5m, 150m, 230m);
+            var numZ3 = CreateParamBox("Zone 3 (Peak Reflow):", 248.5m, "°C", 0.5m, 200m, 280m);
+            var numSpeed = CreateParamBox("Conveyor Speed:", 1.15m, "m/min", 0.05m, 0.5m, 3.0m, 2);
+            var numN2 = CreateParamBox("N2 Purity Level:", 99.98m, "%", 0.01m, 95m, 100m, 2);
 
             pnlOven.Controls.Add(numZ1);
             pnlOven.Controls.Add(numZ2);
@@ -3016,7 +3016,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             pageOven.Controls.Add(pnlOven);
 
             // Page 2: Work Order Specifications
-            var pageOrder = tabSuite.AddTab("Thông Số Lệnh SX", "📋");
+            var pageOrder = tabSuite.AddTab("Work Order Specs", "📋");
             pageOrder.Padding = new Padding(12);
 
             var descOrder = new ZeroDescriptions
@@ -3025,29 +3025,29 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Columns = 2,
                 RowHeight = 32
             };
-            descOrder.Add("Mã Lệnh SX", "WO-2026-GATEWAY-88");
-            descOrder.Add("Sản Phẩm Đích", "B1030 IoT Smart Gateway Rev 2.0");
-            descOrder.Add("Chuyền Gia Công", "Line SMT Alpha #01");
-            descOrder.Add("Mục Tiêu FPY", "99.45% Yield Rate", Color.FromArgb(16, 185, 129));
-            descOrder.Add("Lead Engineer", "Võ Tuấn Phong (Kỹ Sư Trưởng)");
-            descOrder.Add("Tiêu Chuẩn Hàn", "IPC-A-610 Class 3 Industrial");
+            descOrder.Add("Work Order ID", "WO-2026-GATEWAY-88");
+            descOrder.Add("Target Product", "B1030 IoT Smart Gateway Rev 2.0");
+            descOrder.Add("Assembly Line", "Line SMT Alpha #01");
+            descOrder.Add("Target FPY", "99.45% Yield Rate", Color.FromArgb(16, 185, 129));
+            descOrder.Add("Lead Engineer", "Phong Tuan Vo (Principal Engineer)");
+            descOrder.Add("Soldering Spec", "IPC-A-610 Class 3 Industrial");
             pageOrder.Controls.Add(descOrder);
 
             // Page 3: Line Alarms
-            var pageAlerts = tabSuite.AddTab("Cảnh Báo Chuyền", "🔔", 3);
+            var pageAlerts = tabSuite.AddTab("Line Alarms", "🔔", 3);
             pageAlerts.Padding = new Padding(12);
 
             var alertBox = new ZeroAlertBanner
             {
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Warning,
-                Title = "CẢNH BÁO TIỄN LIỆU KHAY SMT FEEDER BOA472",
-                Message = "Cuộn tụ gốm 10uF tại slot #18 sắp hết linh kiện (còn < 150 PCS). Đề nghị kỹ thuật viên nạp cuộn mới trong vòng 12 phút để tránh dừng chuyền!"
+                Title = "SMT FEEDER BOA472 REEL DEPLETION ALERT",
+                Message = "10uF ceramic capacitor reel at slot #18 is nearly empty (< 150 PCS remaining). Technician must reload feeder within 12 minutes to prevent line stoppage!"
             };
             pageAlerts.Controls.Add(alertBox);
 
             // Page 4: ZeroImage & ZeroModal Dialogs
-            var pageImageModal = tabSuite.AddTab("Ảnh & Modal Dialogs", "🖼️");
+            var pageImageModal = tabSuite.AddTab("Images & Modals", "🖼️");
             pageImageModal.Padding = new Padding(10);
 
             var pnlImgModal = new FlowLayoutPanel
@@ -3061,7 +3061,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var pnlAvatars = new Panel { Size = new Size(520, 68), BackColor = Color.Transparent };
             var lblAvatars = new Label
             {
-                Text = "ZeroImage (Avatar & Trạng Thái):",
+                Text = "ZeroImage (Avatars & Status):",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = ZeroTheme.Colors.TextSecondary,
                 Location = new Point(4, 2),
@@ -3073,7 +3073,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Location = new Point(4, 20),
                 Size = new Size(42, 42),
                 IsCircle = true,
-                FallbackText = "Võ Tuấn Phong",
+                FallbackText = "Phong Vo",
                 Status = AvatarStatus.Online
             };
 
@@ -3082,7 +3082,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Location = new Point(56, 20),
                 Size = new Size(42, 42),
                 IsCircle = true,
-                FallbackText = "Nguyễn Văn An",
+                FallbackText = "Alex Nguyen",
                 Status = AvatarStatus.Busy
             };
 
@@ -3091,7 +3091,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Location = new Point(108, 20),
                 Size = new Size(42, 42),
                 IsCircle = true,
-                FallbackText = "Trần Thị Bích",
+                FallbackText = "Sarah Tran",
                 Status = AvatarStatus.Away
             };
 
@@ -3128,7 +3128,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var lblZoomHint = new Label
             {
-                Text = "🔍 Click ảnh để phóng to Lightbox",
+                Text = "🔍 Click image to open Lightbox preview",
                 Font = new Font("Segoe UI", 7.5f, FontStyle.Italic),
                 ForeColor = ZeroTheme.Colors.TextSecondary,
                 Location = new Point(255, 30),
@@ -3147,7 +3147,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var pnlModalBtns = new Panel { Size = new Size(520, 80), BackColor = Color.Transparent };
             var lblModals = new Label
             {
-                Text = "ZeroModal (Popup Thông Báo & Xác Nhận):",
+                Text = "ZeroModal (Alert & Confirmation Popups):",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = ZeroTheme.Colors.TextSecondary,
                 Location = new Point(4, 4),
@@ -3164,7 +3164,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             btnSuccess.Click += (s, e) =>
             {
-                ZeroModal.Success(this, "Kiểm Định Hoàn Tất", "Đã ghi nhận 2,500 sản phẩm IoT Gateway đạt tiêu chuẩn KCS!");
+                ZeroModal.Success(this, "Inspection Completed", "Recorded 2,500 IoT Gateway units passing QA inspection standards!");
             };
 
             var btnWarning = new ZeroButton
@@ -3177,7 +3177,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             btnWarning.Click += (s, e) =>
             {
-                ZeroModal.Warning(this, "Cảnh Báo Giới Hạn", "Nhiệt độ vùng Reflow vượt ngưỡng 248.5 °C. Kiểm tra quạt đối lưu!");
+                ZeroModal.Warning(this, "Threshold Warning", "Reflow zone peak temperature exceeded 248.5 °C. Check convection fans!");
             };
 
             var btnError = new ZeroButton
@@ -3190,7 +3190,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             btnError.Click += (s, e) =>
             {
-                ZeroModal.Error(this, "Mất Kết Nối PLC", "Không nhận được phản hồi Modbus TCP từ trạm dán SMT sau 3 lần thử!");
+                ZeroModal.Error(this, "PLC Communication Failure", "No Modbus TCP response from SMT pick-and-place station after 3 retries!");
             };
 
             var btnConfirm = new ZeroButton
@@ -3205,11 +3205,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 ZeroModal.Confirm(
                     this,
-                    "Xác Nhận Xuất Xưởng",
-                    "Bạn có chắc muốn cấp phát mã Serial cho 500 thùng hàng?",
-                    onConfirm: () => ZeroToast.Success(this, "Đã cấp phát 500 tem mã vạch thành công!"),
-                    confirmText: "Đồng ý",
-                    cancelText: "Hủy");
+                    "Dispatch Confirmation",
+                    "Are you sure you want to allocate serial numbers for 500 carton boxes?",
+                    onConfirm: () => ZeroToast.Success(this, "Successfully generated and assigned 500 barcode labels!"),
+                    confirmText: "Confirm",
+                    cancelText: "Cancel");
             };
 
             var btnPrompt = new ZeroButton
@@ -3224,10 +3224,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 ZeroModal.Prompt(
                     this,
-                    "Quét Barcode / Nhập Mã",
-                    "Vui lòng quét Serial Number linh kiện cần tra cứu:",
+                    "Scan Barcode / Enter Serial",
+                    "Please scan or input component Serial Number for lookup:",
                     "SN-GW-2026-8801",
-                    val => ZeroToast.Success(this, $"Đã nhận Serial: {val}"));
+                    val => ZeroToast.Success(this, $"Received Serial Number: {val}"));
             };
 
             pnlModalBtns.Controls.Add(btnPrompt);
@@ -4124,8 +4124,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Dock = DockStyle.Top,
                 Height = 62,
                 Severity = ZeroAlertSeverity.Info,
-                Title = "🏭 GIAI ĐOẠN 1: MÔ PHỎNG QUY TRÌNH P&ID ĐỘNG HỌC (P&ID PROCESS FLOW)",
-                Message = "Mô phỏng đường ống động lực học (ZeroPipeFlow), Bơm ly tâm 60 FPS (ZeroIndustrialPump), Van điều tiết (ZeroIndustrialValve) nối 2 bồn chứa 3D (ZeroTank3D), đồng hồ áp suất (ZeroGauge) và dao động ký sóng (ZeroTrendChart)."
+                Title = "🏭 PHASE 1: DYNAMIC P&ID PROCESS FLOW SIMULATION",
+                Message = "Simulates dynamic fluid piping (ZeroPipeFlow), 60 FPS centrifugal pump (ZeroIndustrialPump), control valve (ZeroIndustrialValve) connecting dual 3D tanks (ZeroTank3D), pressure gauge (ZeroGauge), and telemetry oscilloscope (ZeroTrendChart)."
             };
             var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
@@ -4134,7 +4134,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var btnTogglePump = new ZeroButton
             {
-                Text = "⏯ Chạy / Dừng Bơm (P-101A)",
+                Text = "⏯ Start / Stop Pump (P-101A)",
                 ButtonStyle = ZeroButtonStyle.Primary,
                 Location = new Point(0, 4),
                 Size = new Size(200, 32)
@@ -4142,12 +4142,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             btnTogglePump.Click += (s, e) =>
             {
                 SimulatedPlcDriver.TogglePump();
-                ZeroToast.Info(this, $"Bơm P-101A: {(SimulatedPlcDriver.PumpRunning ? "Đang chạy (2950 RPM)" : "Đã dừng")}");
+                ZeroToast.Info(this, $"Pump P-101A: {(SimulatedPlcDriver.PumpRunning ? "Running (2950 RPM)" : "Stopped")}");
             };
 
             var btnToggleValve = new ZeroButton
             {
-                Text = "🔄 Đóng / Mở Van (XV-101)",
+                Text = "🔄 Open / Close Valve (XV-101)",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Location = new Point(210, 4),
                 Size = new Size(185, 32)
@@ -4155,25 +4155,25 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             btnToggleValve.Click += (s, e) =>
             {
                 SimulatedPlcDriver.ToggleValve();
-                ZeroToast.Info(this, $"Van XV-101: {(SimulatedPlcDriver.ValveOpen ? "MỞ (100%)" : "ĐÓNG (0%)")}");
+                ZeroToast.Info(this, $"Valve XV-101: {(SimulatedPlcDriver.ValveOpen ? "OPEN (100%)" : "CLOSED (0%)")}");
             };
 
             var btnSpike = new ZeroButton
             {
-                Text = "⚡ Kích Xung Áp Suất (+50 PSI)",
+                Text = "⚡ Inject Pressure Surge (+50 PSI)",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Location = new Point(405, 4),
-                Size = new Size(210, 32)
+                Size = new Size(220, 32)
             };
             btnSpike.Click += (s, e) =>
             {
                 SimulatedPlcDriver.InjectPressureSpike();
-                ZeroToast.Warning(this, "Đã kích hoạt xung quá áp 98.5 PSI! Cảnh báo ISA-18.2 kích hoạt.");
+                ZeroToast.Warning(this, "Triggered 98.5 PSI overpressure surge! ISA-18.2 alarm activated.");
             };
 
             var btnEStop = new ZeroButton
             {
-                Text = "🚨 Dừng Khẩn Cấp (E-STOP)",
+                Text = "🚨 Emergency Stop (E-STOP)",
                 ButtonStyle = ZeroButtonStyle.Danger,
                 Location = new Point(625, 4),
                 Size = new Size(195, 32)
@@ -4181,7 +4181,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             btnEStop.Click += (s, e) =>
             {
                 SimulatedPlcDriver.ToggleEmergencyStop();
-                ZeroToast.Error(this, SimulatedPlcDriver.EmergencyStop ? "E-STOP KÍCH HOẠT: Toàn bộ bơm van ngắt nguồn!" : "E-STOP ĐÃ ĐƯỢC RESET.");
+                ZeroToast.Error(this, SimulatedPlcDriver.EmergencyStop ? "E-STOP ACTIVATED: All pumps and valves tripped offline!" : "E-STOP RESET.");
             };
 
             quickBar.Controls.Add(btnTogglePump);
@@ -4196,7 +4196,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Top,
                 Height = 310,
-                Title = "Sơ Đồ Công Nghệ P&ID Đường Ống Khép Kín (Piping & Instrumentation Diagram)",
+                Title = "Piping & Instrumentation Diagram (P&ID Closed Loop Flow)",
                 StepNumber = 1
             };
 
@@ -4313,14 +4313,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Top,
                 Height = 260,
-                Title = "Biểu Đồ Sóng Đo Lường Áp Suất & Vận Tốc Dòng Chảy Thời Gian Thực (60 FPS Stream)",
+                Title = "Real-Time Pressure & Flow Velocity Oscilloscope (60 FPS Stream)",
                 StepNumber = 2
             };
 
             var trendChart = new ZeroTrendChart
             {
                 Dock = DockStyle.Fill,
-                Title = "Ch1: Áp Suất Đường Ống (PSI) | Ch2: Lưu Lượng Dòng Chảy (m/s x 20)",
+                Title = "Ch1: Pipe Pressure (PSI) | Ch2: Fluid Flow Velocity (m/s x 20)",
                 UpperLimit = 85f,
                 LowerLimit = 15f
             };
@@ -4376,8 +4376,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Dock = DockStyle.Top,
                 Height = 62,
                 Severity = ZeroAlertSeverity.Warning,
-                Title = "🚨 GIAI ĐOẠN 2: BẢNG ĐÈN BÁO ĐỘNG ISA-18.2 & MẶT ĐIỀU KHIỂN VÒNG LẶP KÍN PID",
-                Message = "Chu trình quản lý báo động chuẩn quốc tế ISA-18.2 (ZeroAnnunciatorGrid) kết hợp bộ điều khiển đơn vòng lặp PID (ZeroPidFaceplate) theo dõi sai lệch PV - SP thời gian thực."
+                Title = "🚨 PHASE 2: ISA-18.2 ALARM ANNUNCIATOR & CLOSED-LOOP PID CONTROLLER",
+                Message = "Standardized ISA-18.2 industrial alarm sequence state machine (ZeroAnnunciatorGrid) combined with single-loop PID controller faceplate (ZeroPidFaceplate) tracking live PV vs SP deviation."
             };
             var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
@@ -4389,7 +4389,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Left,
                 Width = 530,
-                Title = "Bảng Đèn Báo Động Nhà Máy Chuẩn ISA-18.2 (12-Tile Matrix Annunciator)",
+                Title = "Plant Alarm Annunciator Panel — ISA-18.2 Standard (12-Tile Matrix)",
                 StepNumber = 1
             };
 
@@ -4400,23 +4400,23 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             cardAlarms.ContentPanel.Controls.Add(annunciator);
 
             var alarmToolbar = new Panel { Dock = DockStyle.Bottom, Height = 38, BackColor = Color.Transparent, Padding = new Padding(4) };
-            var btnTriggerHighP = new ZeroButton { Text = "+ Quá Áp", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(4, 4), Size = new Size(95, 28) };
+            var btnTriggerHighP = new ZeroButton { Text = "+ High Press", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(4, 4), Size = new Size(95, 28) };
             btnTriggerHighP.Click += (s, e) => annunciator.TriggerAlarm("Line1.Alarm.HighPressure", true);
 
-            var btnTriggerLowL = new ZeroButton { Text = "+ Hụt Mức", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(105, 4), Size = new Size(95, 28) };
+            var btnTriggerLowL = new ZeroButton { Text = "+ Low Level", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(105, 4), Size = new Size(95, 28) };
             btnTriggerLowL.Click += (s, e) => annunciator.TriggerAlarm("Line1.Alarm.LowLevel", true);
 
-            var btnTriggerTrip = new ZeroButton { Text = "+ Trip Bơm", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(206, 4), Size = new Size(95, 28) };
+            var btnTriggerTrip = new ZeroButton { Text = "+ Pump Trip", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(206, 4), Size = new Size(95, 28) };
             btnTriggerTrip.Click += (s, e) => annunciator.TriggerAlarm("Line1.Alarm.PumpTrip", true);
 
-            var btnClearAll = new ZeroButton { Text = "✔ Xóa Sự Cố", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(307, 4), Size = new Size(110, 28) };
+            var btnClearAll = new ZeroButton { Text = "✔ Clear Faults", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(307, 4), Size = new Size(110, 28) };
             btnClearAll.Click += (s, e) =>
             {
                 annunciator.TriggerAlarm("Line1.Alarm.HighPressure", false);
                 annunciator.TriggerAlarm("Line1.Alarm.LowLevel", false);
                 annunciator.TriggerAlarm("Line1.Alarm.PumpTrip", false);
                 annunciator.TriggerAlarm("Line1.Alarm.EmergencyStop", false);
-                ZeroToast.Info(this, "Đã xóa toàn bộ sự cố. Bấm RESET trên bảng đèn để xóa hẳn.");
+                ZeroToast.Info(this, "Cleared all active fault triggers. Press RESET on panel to silence and clear annunciator.");
             };
 
             alarmToolbar.Controls.Add(btnTriggerHighP);
@@ -4431,7 +4431,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardPid = new ZeroCard
             {
                 Dock = DockStyle.Fill,
-                Title = "Bộ Điều Khiển Vòng Lặp Kín PIC-101 (Single-Loop Controller Faceplate)",
+                Title = "PIC-101 Closed-Loop Controller Faceplate (Steam Pressure)",
                 StepNumber = 2
             };
 
@@ -4492,8 +4492,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Dock = DockStyle.Top,
                 Height = 62,
                 Severity = ZeroAlertSeverity.Success,
-                Title = "⚡ GIAI ĐOẠN 3: TRUNG TÂM TAG ENGINE & GIÁM SÁT TRUYỀN THÔNG PLC",
-                Message = "Kiến trúc Tag Engine thời gian thực (ZeroTagEngine) hỗ trợ lọc nhiễu Deadband, phân phối dữ liệu đa luồng cho các control trực quan và thu nhận tín hiệu từ Driver PLC."
+                Title = "⚡ PHASE 3: REAL-TIME TAG ENGINE & PLC TELEMETRY MONITOR",
+                Message = "Real-time in-memory Tag Engine architecture (ZeroTagEngine) featuring deadband noise filtering, multithreaded subscriber dispatching to visual controls, and simulated PLC communications driver."
             };
             var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
@@ -4555,7 +4555,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var cardGrid = new ZeroCard
             {
                 Dock = DockStyle.Fill,
-                Title = "Danh Sách Thanh Ghi & Tag Truyền Thông Thời Gian Thực (Active Tag Registry)",
+                Title = "Active In-Memory SCADA Tag Registry (Real-Time Telemetry)",
                 StepNumber = 1
             };
 

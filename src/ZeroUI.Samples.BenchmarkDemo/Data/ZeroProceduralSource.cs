@@ -17,26 +17,26 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
 
         private static readonly string[] Categories = new[]
         {
-            "Vi điều khiển STM32F407VGT6 LQFP100",
-            "IC Nguồn Buck TI TPS54302DDCR 28V 3A",
-            "Chip nhớ Flash Winbond W25Q128JVS 128Mb",
-            "Module Wi-Fi/BLE ESP32-WROOM-32E",
-            "Tụ gốm nhiều lớp SMD 0805 10uF 25V X7R",
-            "Điện trở màng mỏng chính xác 0603 10kΩ 1%",
-            "Cuộn cảm công suất SMD 10uH 3.5A Shielded",
-            "Thạch anh dao động SMD 3225 16.000MHz 10ppm",
-            "Diode Schottky chỉnh lưu SS34 40V 3A SMC",
-            "Cổng kết nối USB Type-C 16-Pin SMT IPX7",
-            "Cầu đấu Terminal Block Phoenix 5.08mm 4P",
-            "Rơ-le bán dẫn thể rắn Omron G3MB-202P 5V",
-            "Van điện từ khí nén Airtac 4V210-08 24VDC",
-            "Xy lanh khí nén compact SMC MGPM25-50Z",
-            "Cảm biến quang học Keyence PZ-G41N",
-            "Động cơ bước Hybrid Nema 23 2.8Nm",
-            "Thanh trượt vuông tuyến tính HIWIN HGH20CA",
-            "Trục vít me bi TBI Motion SFU1605-600mm",
-            "Vòng bi đũa cầu SKF 6205-2RSH/C3",
-            "Kem hàn không chì SMT Senju M705 SAC305"
+            "STM32F407VGT6 LQFP100 Microcontroller",
+            "TI TPS54302DDCR Buck Converter 28V 3A",
+            "Winbond W25Q128JVS 128Mb SPI Flash",
+            "ESP32-WROOM-32E Wi-Fi/BLE Module",
+            "SMD 0805 10uF 25V X7R Ceramic Capacitor",
+            "Precision Thin Film Resistor 0603 10kΩ 1%",
+            "SMD Power Inductor 10uH 3.5A Shielded",
+            "SMD 3225 16.000MHz Crystal Oscillator",
+            "Schottky Rectifier Diode SS34 40V 3A SMC",
+            "USB Type-C 16-Pin SMT IPX7 Connector",
+            "Phoenix 5.08mm 4P Terminal Block",
+            "Omron G3MB-202P 5V Solid State Relay",
+            "Airtac 4V210-08 24VDC Solenoid Valve",
+            "SMC MGPM25-50Z Compact Pneumatic Cylinder",
+            "Keyence PZ-G41N Optical Sensor",
+            "Hybrid Stepper Motor Nema 23 2.8Nm",
+            "HIWIN HGH20CA Linear Guide Block",
+            "TBI Motion SFU1605-600mm Ball Screw",
+            "SKF 6205-2RSH/C3 Deep Groove Ball Bearing",
+            "Senju M705 SAC305 Lead-Free Solder Paste"
         };
 
         private static readonly string[] CodePrefixes = new[]
@@ -48,11 +48,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
 
         private static readonly string[] Statuses = new[]
         {
-            "Đạt tiêu chuẩn",
-            "Chờ nghiệm thu",
-            "Tồn kho an toàn",
-            "Hàng kiểm định",
-            "Cần bổ sung"
+            "Passed OQC",
+            "Pending Inspection",
+            "Safety Stock",
+            "In Quarantine",
+            "Restock Required"
         };
 
         private static readonly uint[] StatusBgColors = new uint[]
@@ -93,38 +93,37 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
                     buffer.Alignment = CellAlignment.Right;
                     break;
 
-                case 1: // Mã Vật Tư
+                case 1: // Item Code
                     buffer.Text = (CodePrefixes[catIdx] + "-" + (rowIndex + 1).ToString("D7")).AsSpan();
                     buffer.Alignment = CellAlignment.Left;
                     break;
 
-
-                case 2: // Tên Vật Tư
+                case 2: // Item Name
                     buffer.Text = Categories[catIdx].AsSpan();
                     buffer.Alignment = CellAlignment.Left;
                     break;
 
-                case 3: // Số Lượng
+                case 3: // Quantity
                     buffer.Text = qty.ToString().AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
 
-                case 4: // Đơn Giá (VNĐ)
+                case 4: // Unit Price ($)
                     buffer.Text = unitPrice.ToString("N0").AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
 
-                case 5: // Thành Tiền (VNĐ)
+                case 5: // Total Amount ($)
                     buffer.Text = totalAmount.ToString("N0").AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
 
-                case 6: // Số Lô
+                case 6: // Lot Number
                     buffer.Text = ("LOT-2026-" + ((rowIndex % 9999) + 1).ToString("D4")).AsSpan();
                     buffer.Alignment = CellAlignment.Center;
                     break;
 
-                case 7: // Trạng Thái
+                case 7: // Status
                     buffer.Text = Statuses[statusIdx].AsSpan();
                     buffer.Alignment = CellAlignment.Center;
                     buffer.BackColor = StatusBgColors[statusIdx];

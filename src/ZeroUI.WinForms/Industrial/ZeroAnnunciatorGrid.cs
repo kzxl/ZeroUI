@@ -313,9 +313,9 @@ namespace ZeroUI.WinForms.Industrial
             _btnResetRect = new Rectangle(192, btnY, btnW, btnH);
             _btnTestRect = new Rectangle(Width - btnW - 8, btnY, btnW, btnH);
 
-            DrawButton(g, _btnAckRect, "ACK (Xác nhận)", palette.Primary, Color.White);
-            DrawButton(g, _btnSilenceRect, "SILENCE (Còi)", palette.Surface, palette.TextPrimary);
-            DrawButton(g, _btnResetRect, "RESET (Xóa)", palette.Surface, palette.TextPrimary);
+            DrawButton(g, _btnAckRect, "ACK", palette.Primary, Color.White);
+            DrawButton(g, _btnSilenceRect, "SILENCE", palette.Surface, palette.TextPrimary);
+            DrawButton(g, _btnResetRect, "RESET", palette.Surface, palette.TextPrimary);
             DrawButton(g, _btnTestRect, _isTestMode ? "STOP TEST" : "LAMP TEST", _isTestMode ? palette.Warning : palette.Surface, _isTestMode ? Color.Black : palette.TextPrimary);
 
             // 3. Render Matrix Tiles
