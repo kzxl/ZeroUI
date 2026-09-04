@@ -24,6 +24,7 @@ using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 using ZeroUI.WinForms.Warehouse;
 using ZeroUI.WinForms.Warehouse.Models;
+using ZeroUI.WinForms.Validation;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
@@ -303,6 +304,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 _zeroGrid.ShowCheckBoxSelectorColumn = !_zeroGrid.ShowCheckBoxSelectorColumn;
                 ZeroToast.Info(this, $"Selection Checkbox Column: {(_zeroGrid.ShowCheckBoxSelectorColumn ? "Visible" : "Hidden")}");
+            });
+
+            _mainToolbar.AddButton("Auto Filter", "🔍", (s, e) =>
+            {
+                _zeroGrid.ShowAutoFilterRow = !_zeroGrid.ShowAutoFilterRow;
+                ZeroToast.Info(this, $"Auto Filter Row: {(_zeroGrid.ShowAutoFilterRow ? "Enabled (In-Place Filter Row)" : "Disabled")}");
             });
 
             _mainToolbar.AddButton("Save Layout", "💾", (s, e) =>
@@ -735,14 +742,26 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 RowHeight = 28
             };
 
-            _zeroGrid.Columns.Add(new ZeroColumn("ID", 70, CellAlignment.Right));
+            _zeroGrid.Columns.Add(new ZeroColumn("ID", 70, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
             _zeroGrid.Columns.Add(new ZeroColumn("Item Code", 120, CellAlignment.Left));
             _zeroGrid.Columns.Add(new ZeroColumn("Item Name / Description", 280, CellAlignment.Left));
-            _zeroGrid.Columns.Add(new ZeroColumn("Quantity", 90, CellAlignment.Right));
-            _zeroGrid.Columns.Add(new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right));
-            _zeroGrid.Columns.Add(new ZeroColumn("Total Amount ($)", 150, CellAlignment.Right));
+            _zeroGrid.Columns.Add(new ZeroColumn("Quantity", 90, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
+            _zeroGrid.Columns.Add(new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
+            _zeroGrid.Columns.Add(new ZeroColumn("Total Amount ($)", 150, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
             _zeroGrid.Columns.Add(new ZeroColumn("Batch No", 120, CellAlignment.Center));
             _zeroGrid.Columns.Add(new ZeroColumn("Status", 130, CellAlignment.Center));
+
+            _zeroGrid.CellValidating += (s, e) =>
+            {
+                if (e.ColumnIndex == 3) // Quantity
+                {
+                    if (int.TryParse(e.NewValue, out int q) && q < 0)
+                    {
+                        e.Cancel = true;
+                        e.ErrorMessage = "Quantity cannot be negative!";
+                    }
+                }
+            };
 
             _zeroGrid.SortingStarted += (s, e) =>
             {
@@ -1318,6 +1337,103 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             leftPanel.Controls.Add(chk1);
             leftPanel.Controls.Add(chk2);
+
+            // Section 10: ZeroDatePicker & ZeroNumericBox (Smart Data Entry)
+            int dtY = chkY + 44;
+            var lblDtTitle = new Label
+            {
+                Text = "10. ZeroDatePicker & ZeroNumericBox (Smart Data Entry)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, dtY)
+            };
+            leftPanel.Controls.Add(lblDtTitle);
+
+            dtY += 30;
+            var lblDate = new Label { Text = "Direct Keyboard Date Entry (yyyy-MM-dd):", AutoSize = true, Location = new Point(16, dtY), Font = new Font("Segoe UI", 9f), ForeColor = colors.TextSecondary };
+            leftPanel.Controls.Add(lblDate);
+            dtY += 22;
+            var datePicker = new ZeroDatePicker
+            {
+                Location = new Point(16, dtY),
+                Size = new Size(185, 32),
+                Value = DateTime.Today
+            };
+            var numBox = new ZeroNumericBox
+            {
+                Location = new Point(210, dtY),
+                Size = new Size(185, 32),
+                Value = 12500,
+                DecimalPlaces = 0,
+                ThousandsSeparator = true
+            };
+            leftPanel.Controls.Add(datePicker);
+            leftPanel.Controls.Add(numBox);
+
+            // Section 11: ZeroErrorProvider (DXErrorProvider Vector Badges & Validation)
+            int errY = dtY + 44;
+            var lblErrTitle = new Label
+            {
+                Text = "11. ZeroErrorProvider (DXErrorProvider Parity)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, errY)
+            };
+            leftPanel.Controls.Add(lblErrTitle);
+
+            errY += 30;
+            var lblInputPrompt = new Label { Text = "Type 'ORD-' prefix to satisfy validation rule:", AutoSize = true, Location = new Point(16, errY), Font = new Font("Segoe UI", 9f), ForeColor = colors.TextSecondary };
+            leftPanel.Controls.Add(lblInputPrompt);
+            errY += 22;
+
+            var txtValidate = new ZeroTextBox
+            {
+                Location = new Point(16, errY),
+                Size = new Size(260, 32),
+                Text = "TEST-9999",
+                PlaceholderText = "Must start with ORD-..."
+            };
+            var errorProvider = new ZeroErrorProvider();
+            errorProvider.SetError(txtValidate, "Order code must start with 'ORD-'!");
+
+            txtValidate.TextChanged += (s, e) =>
+            {
+                if (string.IsNullOrEmpty(txtValidate.Text))
+                {
+                    errorProvider.SetError(txtValidate, "Order Code is required!", ErrorIconType.Error);
+                }
+                else if (!txtValidate.Text.StartsWith("ORD-", StringComparison.OrdinalIgnoreCase))
+                {
+                    errorProvider.SetError(txtValidate, "Order code must start with 'ORD-'!", ErrorIconType.Warning);
+                }
+                else
+                {
+                    errorProvider.SetError(txtValidate, null);
+                }
+            };
+
+            var btnCheckValid = new ZeroButton
+            {
+                Text = "Validate",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(290, errY),
+                Size = new Size(100, 32)
+            };
+            btnCheckValid.Click += (s, e) =>
+            {
+                if (errorProvider.HasErrors)
+                {
+                    ZeroToast.Warning(this, errorProvider.GetError(txtValidate) ?? "Validation failed");
+                }
+                else
+                {
+                    ZeroToast.Success(this, "All input validation passed successfully!");
+                }
+            };
+            leftPanel.Controls.Add(txtValidate);
+            leftPanel.Controls.Add(btnCheckValid);
 
             // Right Panel: ZeroListView Log Streamer
             var rightPanel = new Panel

@@ -29,6 +29,7 @@ namespace ZeroUI.WinForms.Editors
         private ToolStripDropDown? _popup;
         private ZeroCalendarPopupControl? _calendarControl;
         private Rectangle _chevronRect;
+        private readonly TextBox _innerBox;
 
         public event EventHandler? ValueChanged;
 
@@ -44,15 +45,79 @@ namespace ZeroUI.WinForms.Editors
             Size = new Size(160, 36);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.25f, FontStyle.Regular);
-            Cursor = Cursors.Hand;
+            Cursor = Cursors.Default;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            _innerBox = new TextBox
+            {
+                BorderStyle = BorderStyle.None,
+                Font = new Font(Font.FontFamily, 9.25f, FontStyle.Bold),
+                BackColor = ZeroTheme.Colors.Surface,
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                TextAlign = HorizontalAlignment.Left
+            };
+            _innerBox.Text = _selectedDate.ToString(_dateFormat);
+            _innerBox.KeyDown += OnInnerBoxKeyDown;
+            _innerBox.LostFocus += (s, e) =>
+            {
+                _isFocused = false;
+                ParseAndApplyText();
+                Invalidate();
+            };
+            _innerBox.GotFocus += (s, e) =>
+            {
+                _isFocused = true;
+                Invalidate();
+            };
+            Controls.Add(_innerBox);
+
+            ZeroTheme.ThemeChanged += (s, e) =>
+            {
+                _innerBox.BackColor = ZeroTheme.Colors.Surface;
+                _innerBox.ForeColor = ZeroTheme.Colors.TextPrimary;
+                Invalidate();
+            };
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
+                _innerBox.Font = new Font(Font.FontFamily, 9.25f, FontStyle.Bold);
                 Invalidate();
             };
+        }
+
+        private void ParseAndApplyText()
+        {
+            string txt = _innerBox.Text.Trim();
+            if (DateTime.TryParseExact(txt, _dateFormat, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed) ||
+                DateTime.TryParse(txt, out parsed))
+            {
+                Value = parsed.Date;
+            }
+            else
+            {
+                _innerBox.Text = _selectedDate.ToString(_dateFormat);
+            }
+        }
+
+        private void OnInnerBoxKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                ParseAndApplyText();
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+            else if (e.KeyCode == Keys.Down && (e.Alt || e.Modifiers == Keys.None))
+            {
+                ShowCalendarPopup();
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                _innerBox.Text = _selectedDate.ToString(_dateFormat);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
         }
 
         [Category("Data")]
@@ -65,6 +130,10 @@ namespace ZeroUI.WinForms.Editors
                 if (_selectedDate != val)
                 {
                     _selectedDate = val;
+                    if (_innerBox != null && _innerBox.Text != val.ToString(_dateFormat))
+                    {
+                        _innerBox.Text = val.ToString(_dateFormat);
+                    }
                     Invalidate();
                     ValueChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -79,6 +148,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _dateFormat = value ?? "yyyy-MM-dd";
+                if (_innerBox != null) _innerBox.Text = _selectedDate.ToString(_dateFormat);
                 Invalidate();
             }
         }
@@ -99,6 +169,13 @@ namespace ZeroUI.WinForms.Editors
         {
             base.OnResize(e);
             _chevronRect = new Rectangle(Width - 24, (Height - 14) / 2, 14, 14);
+
+            if (_innerBox != null)
+            {
+                int boxW = Math.Max(20, Width - 56);
+                int boxH = _innerBox.PreferredHeight;
+                _innerBox.SetBounds(28, (Height - boxH) / 2, boxW, boxH);
+            }
         }
 
         protected override void OnMouseEnter(EventArgs e)
@@ -115,10 +192,17 @@ namespace ZeroUI.WinForms.Editors
             Invalidate();
         }
 
-        protected override void OnClick(EventArgs e)
+        protected override void OnMouseDown(MouseEventArgs e)
         {
-            base.OnClick(e);
-            ShowCalendarPopup();
+            base.OnMouseDown(e);
+            if (e.X < 28 || e.X >= Width - 26)
+            {
+                ShowCalendarPopup();
+            }
+            else
+            {
+                _innerBox.Focus();
+            }
         }
 
         private void ShowCalendarPopup()
@@ -193,19 +277,11 @@ namespace ZeroUI.WinForms.Editors
                 g.DrawPath(pen, path);
             }
 
-            // 2. Calendar Glyph Icon (📅)
+            // 3. Calendar Glyph Icon (📅)
             using (var iconFont = new Font("Segoe UI Emoji", 9.5f))
             using (var brushIcon = new SolidBrush(palette.Primary))
             {
-                g.DrawString("📅", iconFont, brushIcon, 8, (Height - 18) / 2);
-            }
-
-            // 3. Formatted Date Text
-            string dateStr = _selectedDate.ToString(_dateFormat);
-            using (var fontText = new Font(Font.FontFamily, 9.25f, FontStyle.Bold))
-            using (var brushText = new SolidBrush(palette.TextPrimary))
-            {
-                g.DrawString(dateStr, fontText, brushText, 32, (Height - 16) / 2);
+                g.DrawString("📅", iconFont, brushIcon, 7, (Height - 18) / 2);
             }
 
             // 4. Dropdown Chevron (▼)

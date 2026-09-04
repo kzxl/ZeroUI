@@ -1,0 +1,412 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+using ZeroUI.WinForms.Theme;
+
+namespace ZeroUI.WinForms.Validation
+{
+    public enum ErrorIconType : byte
+    {
+        Error = 0,
+        Warning = 1,
+        Information = 2
+    }
+
+    /// <summary>
+    /// Modern, anti-aliased error and validation provider for WinForms applications (DevExpress DXErrorProvider parity).
+    /// Displays crisp vector badges with hover tooltips next to target controls without screen flickering.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Validation")]
+    [ProvideProperty("Error", typeof(Control))]
+    [ProvideProperty("IconAlignment", typeof(Control))]
+    [ProvideProperty("IconPadding", typeof(Control))]
+    [Description("Modern vector error provider with smooth hover tooltips (DXErrorProvider parity)")]
+    public class ZeroErrorProvider : Component, IExtenderProvider
+    {
+        private readonly Dictionary<Control, ErrorEntry> _entries = new Dictionary<Control, ErrorEntry>();
+        private readonly ToolTip _toolTip = new ToolTip();
+
+        private int _defaultPadding = 4;
+        private ErrorIconAlignment _defaultAlignment = ErrorIconAlignment.MiddleRight;
+
+        public ZeroErrorProvider()
+        {
+            _toolTip.AutoPopDelay = 5000;
+            _toolTip.InitialDelay = 200;
+            _toolTip.ReshowDelay = 100;
+        }
+
+        public ZeroErrorProvider(IContainer container) : this()
+        {
+            container.Add(this);
+        }
+
+        public bool CanExtend(object extendee) => extendee is Control;
+
+        [Category("Appearance")]
+        [DefaultValue(4)]
+        [Description("Default spacing in pixels between the target control and the error badge.")]
+        public int IconPadding
+        {
+            get => _defaultPadding;
+            set => _defaultPadding = Math.Max(0, value);
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(ErrorIconAlignment.MiddleRight)]
+        [Description("Default positioning alignment of the error badge relative to the target control.")]
+        public ErrorIconAlignment IconAlignment
+        {
+            get => _defaultAlignment;
+            set => _defaultAlignment = value;
+        }
+
+        [Browsable(false)]
+        public bool HasErrors
+        {
+            get
+            {
+                foreach (var kvp in _entries)
+                {
+                    if (!string.IsNullOrEmpty(kvp.Value.Message)) return true;
+                }
+                return false;
+            }
+        }
+
+        [DefaultValue("")]
+        [DisplayName("Error")]
+        [Category("Validation")]
+        public string GetError(Control control)
+        {
+            if (control != null && _entries.TryGetValue(control, out var entry))
+            {
+                return entry.Message;
+            }
+            return string.Empty;
+        }
+
+        public void SetError(Control control, string? value)
+        {
+            SetError(control, value, ErrorIconType.Error);
+        }
+
+        public void SetError(Control control, string? value, ErrorIconType iconType)
+        {
+            if (control == null) return;
+
+            string msg = value ?? string.Empty;
+
+            if (string.IsNullOrEmpty(msg))
+            {
+                if (_entries.TryGetValue(control, out var existing))
+                {
+                    existing.Dispose();
+                    _entries.Remove(control);
+                }
+                return;
+            }
+
+            if (_entries.TryGetValue(control, out var entry))
+            {
+                entry.Update(msg, iconType);
+            }
+            else
+            {
+                var newEntry = new ErrorEntry(control, msg, iconType, _defaultAlignment, _defaultPadding, _toolTip);
+                _entries[control] = newEntry;
+            }
+        }
+
+        [DefaultValue(ErrorIconAlignment.MiddleRight)]
+        [DisplayName("IconAlignment")]
+        [Category("Validation")]
+        public ErrorIconAlignment GetIconAlignment(Control control)
+        {
+            if (control != null && _entries.TryGetValue(control, out var entry))
+            {
+                return entry.Alignment;
+            }
+            return _defaultAlignment;
+        }
+
+        public void SetIconAlignment(Control control, ErrorIconAlignment value)
+        {
+            if (control != null && _entries.TryGetValue(control, out var entry))
+            {
+                entry.Alignment = value;
+                entry.Reposition();
+            }
+        }
+
+        [DefaultValue(4)]
+        [DisplayName("IconPadding")]
+        [Category("Validation")]
+        public int GetIconPadding(Control control)
+        {
+            if (control != null && _entries.TryGetValue(control, out var entry))
+            {
+                return entry.Padding;
+            }
+            return _defaultPadding;
+        }
+
+        public void SetIconPadding(Control control, int value)
+        {
+            if (control != null && _entries.TryGetValue(control, out var entry))
+            {
+                entry.Padding = value;
+                entry.Reposition();
+            }
+        }
+
+        public void Clear()
+        {
+            foreach (var kvp in _entries)
+            {
+                kvp.Value.Dispose();
+            }
+            _entries.Clear();
+        }
+
+        public void ClearErrors() => Clear();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Clear();
+                _toolTip.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        private sealed class ErrorEntry : IDisposable
+        {
+            private readonly Control _target;
+            private readonly ToolTip _toolTip;
+            private ErrorBadgeControl? _badge;
+
+            public string Message { get; private set; }
+            public ErrorIconType IconType { get; private set; }
+            public ErrorIconAlignment Alignment { get; set; }
+            public int Padding { get; set; }
+
+            public ErrorEntry(Control target, string message, ErrorIconType iconType, ErrorIconAlignment alignment, int padding, ToolTip toolTip)
+            {
+                _target = target;
+                _toolTip = toolTip;
+                Message = message;
+                IconType = iconType;
+                Alignment = alignment;
+                Padding = padding;
+
+                HookTarget();
+                CreateBadge();
+            }
+
+            public void Update(string message, ErrorIconType iconType)
+            {
+                Message = message;
+                IconType = iconType;
+                if (_badge != null)
+                {
+                    _badge.IconType = iconType;
+                    _toolTip.SetToolTip(_badge, message);
+                    _badge.Invalidate();
+                }
+            }
+
+            private void HookTarget()
+            {
+                _target.LocationChanged += OnTargetLayoutChanged;
+                _target.SizeChanged += OnTargetLayoutChanged;
+                _target.VisibleChanged += OnTargetVisibleChanged;
+                _target.ParentChanged += OnTargetParentChanged;
+                _target.Disposed += OnTargetDisposed;
+            }
+
+            private void UnhookTarget()
+            {
+                _target.LocationChanged -= OnTargetLayoutChanged;
+                _target.SizeChanged -= OnTargetLayoutChanged;
+                _target.VisibleChanged -= OnTargetVisibleChanged;
+                _target.ParentChanged -= OnTargetParentChanged;
+                _target.Disposed -= OnTargetDisposed;
+            }
+
+            private void OnTargetLayoutChanged(object? sender, EventArgs e) => Reposition();
+            private void OnTargetVisibleChanged(object? sender, EventArgs e)
+            {
+                if (_badge != null) _badge.Visible = _target.Visible && !string.IsNullOrEmpty(Message);
+            }
+            private void OnTargetParentChanged(object? sender, EventArgs e)
+            {
+                _badge?.Parent?.Controls.Remove(_badge);
+                CreateBadge();
+            }
+            private void OnTargetDisposed(object? sender, EventArgs e) => Dispose();
+
+            private void CreateBadge()
+            {
+                if (_target.Parent == null || string.IsNullOrEmpty(Message)) return;
+
+                if (_badge == null)
+                {
+                    _badge = new ErrorBadgeControl(IconType)
+                    {
+                        Size = new Size(18, 18),
+                        Cursor = Cursors.Hand
+                    };
+                    _toolTip.SetToolTip(_badge, Message);
+                }
+
+                if (_badge.Parent != _target.Parent)
+                {
+                    _target.Parent.Controls.Add(_badge);
+                    _badge.BringToFront();
+                }
+
+                Reposition();
+            }
+
+            public void Reposition()
+            {
+                if (_badge == null || _target.Parent == null) return;
+
+                int bw = _badge.Width;
+                int bh = _badge.Height;
+                int x = 0;
+                int y = 0;
+
+                switch (Alignment)
+                {
+                    case ErrorIconAlignment.MiddleRight:
+                        x = _target.Right + Padding;
+                        y = _target.Top + (_target.Height - bh) / 2;
+                        break;
+                    case ErrorIconAlignment.TopRight:
+                        x = _target.Right + Padding;
+                        y = _target.Top;
+                        break;
+                    case ErrorIconAlignment.BottomRight:
+                        x = _target.Right + Padding;
+                        y = _target.Bottom - bh;
+                        break;
+                    case ErrorIconAlignment.MiddleLeft:
+                        x = _target.Left - bw - Padding;
+                        y = _target.Top + (_target.Height - bh) / 2;
+                        break;
+                    case ErrorIconAlignment.TopLeft:
+                        x = _target.Left - bw - Padding;
+                        y = _target.Top;
+                        break;
+                    case ErrorIconAlignment.BottomLeft:
+                        x = _target.Left - bw - Padding;
+                        y = _target.Bottom - bh;
+                        break;
+                    default:
+                        x = _target.Right + Padding;
+                        y = _target.Top + (_target.Height - bh) / 2;
+                        break;
+                }
+
+                _badge.Location = new Point(x, y);
+                _badge.Visible = _target.Visible && !string.IsNullOrEmpty(Message);
+            }
+
+            public void Dispose()
+            {
+                UnhookTarget();
+                if (_badge != null)
+                {
+                    _toolTip.SetToolTip(_badge, null);
+                    _badge.Parent?.Controls.Remove(_badge);
+                    _badge.Dispose();
+                    _badge = null;
+                }
+            }
+        }
+
+        private sealed class ErrorBadgeControl : Control
+        {
+            public ErrorIconType IconType { get; set; }
+
+            public ErrorBadgeControl(ErrorIconType iconType)
+            {
+                IconType = iconType;
+                SetStyle(
+                    ControlStyles.UserPaint |
+                    ControlStyles.AllPaintingInWmPaint |
+                    ControlStyles.OptimizedDoubleBuffer |
+                    ControlStyles.ResizeRedraw |
+                    ControlStyles.SupportsTransparentBackColor, true);
+
+                BackColor = Color.Transparent;
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                var g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                Color badgeColor = IconType switch
+                {
+                    ErrorIconType.Warning => Color.FromArgb(245, 158, 11),   // Amber 500
+                    ErrorIconType.Information => Color.FromArgb(59, 130, 246), // Blue 500
+                    _ => Color.FromArgb(239, 68, 68)                         // Red 500
+                };
+
+                int sz = Math.Min(Width, Height) - 2;
+                var circleRect = new Rectangle(1, 1, sz, sz);
+
+                using (var brush = new SolidBrush(badgeColor))
+                {
+                    g.FillEllipse(brush, circleRect);
+                }
+
+                using (var pen = new Pen(Color.White, 1.6f))
+                {
+                    if (IconType == ErrorIconType.Error)
+                    {
+                        // Exclamation mark: vertical line + dot
+                        int cx = circleRect.Left + circleRect.Width / 2;
+                        int topY = circleRect.Top + 4;
+                        int bottomY = circleRect.Top + circleRect.Height - 7;
+                        g.DrawLine(pen, cx, topY, cx, bottomY);
+
+                        using var dotBrush = new SolidBrush(Color.White);
+                        g.FillEllipse(dotBrush, cx - 1.1f, circleRect.Bottom - 5, 2.2f, 2.2f);
+                    }
+                    else if (IconType == ErrorIconType.Warning)
+                    {
+                        // Exclamation mark for warning
+                        int cx = circleRect.Left + circleRect.Width / 2;
+                        int topY = circleRect.Top + 4;
+                        int bottomY = circleRect.Top + circleRect.Height - 7;
+                        g.DrawLine(pen, cx, topY, cx, bottomY);
+
+                        using var dotBrush = new SolidBrush(Color.White);
+                        g.FillEllipse(dotBrush, cx - 1.1f, circleRect.Bottom - 5, 2.2f, 2.2f);
+                    }
+                    else
+                    {
+                        // 'i' glyph: dot on top + line below
+                        int cx = circleRect.Left + circleRect.Width / 2;
+                        using var dotBrush = new SolidBrush(Color.White);
+                        g.FillEllipse(dotBrush, cx - 1.1f, circleRect.Top + 4, 2.2f, 2.2f);
+
+                        int lineTop = circleRect.Top + 8;
+                        int lineBottom = circleRect.Bottom - 4;
+                        g.DrawLine(pen, cx, lineTop, cx, lineBottom);
+                    }
+                }
+            }
+        }
+    }
+}

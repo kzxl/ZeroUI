@@ -12,8 +12,10 @@ using ZeroUI.Core.Data;
 using ZeroUI.Core.Input;
 using ZeroUI.Core.Layout;
 using ZeroUI.Core.Virtualization;
+using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
@@ -59,8 +61,18 @@ namespace ZeroUI.WinForms.DataGrid
         private int _dragTargetColIndex = -1;
         private Point _dragStartPoint;
 
-        // In-Place Floating Editor
+        // Auto Filter Row
+        private bool _showAutoFilterRow = false;
+        private int _autoFilterRowHeight = 26;
+        private readonly Dictionary<int, string> _columnFilters = new Dictionary<int, string>();
+        private readonly TextBox _autoFilterEditor;
+        private int _editingAutoFilterCol = -1;
+
+        // In-Place Floating Editors (Pluggable)
         private readonly TextBox _inPlaceEditor;
+        private readonly ZeroNumericBox _numericEditor;
+        private readonly ZeroDatePicker _dateEditor;
+        private Control? _activeInPlaceEditor;
         private bool _isEditing = false;
         private int _editingVisualRow = -1;
         private int _editingColIndex = -1;
@@ -80,6 +92,8 @@ namespace ZeroUI.WinForms.DataGrid
         public event EventHandler? SortingStarted;
         public event EventHandler<TimeSpan>? SortingCompleted;
         public event EventHandler<CellValueChangedEventArgs>? CellValueChanged;
+        public event EventHandler<CellValidatingEventArgs>? CellValidating;
+        public event EventHandler<CellEditorShowingEventArgs>? CellEditorShowing;
         public event EventHandler? CellBeginEdit;
         public event EventHandler? CellEndEdit;
         public event EventHandler? SelectionChanged;
@@ -108,6 +122,23 @@ namespace ZeroUI.WinForms.DataGrid
             TabStop = true;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
+            // Auto filter floating editor setup
+            _autoFilterEditor = new TextBox
+            {
+                Visible = false,
+                BorderStyle = BorderStyle.None,
+                Font = Font
+            };
+            _autoFilterEditor.TextChanged += AutoFilterEditor_TextChanged;
+            _autoFilterEditor.KeyDown += AutoFilterEditor_KeyDown;
+            _autoFilterEditor.LostFocus += (s, e) =>
+            {
+                _autoFilterEditor.Visible = false;
+                _editingAutoFilterCol = -1;
+                Invalidate();
+            };
+            Controls.Add(_autoFilterEditor);
+
             // In-place floating editor setup
             _inPlaceEditor = new TextBox
             {
@@ -118,6 +149,32 @@ namespace ZeroUI.WinForms.DataGrid
             _inPlaceEditor.KeyDown += InPlaceEditor_KeyDown;
             _inPlaceEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_inPlaceEditor);
+
+            _numericEditor = new ZeroNumericBox
+            {
+                Visible = false,
+                Font = Font
+            };
+            _numericEditor.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter) CommitEdit();
+                else if (e.KeyCode == Keys.Escape) CancelEdit();
+            };
+            _numericEditor.LostFocus += (s, e) => CommitEdit();
+            Controls.Add(_numericEditor);
+
+            _dateEditor = new ZeroDatePicker
+            {
+                Visible = false,
+                Font = Font
+            };
+            _dateEditor.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter) CommitEdit();
+                else if (e.KeyCode == Keys.Escape) CancelEdit();
+            };
+            _dateEditor.LostFocus += (s, e) => CommitEdit();
+            Controls.Add(_dateEditor);
 
             ZeroTheme.ThemeChanged += OnThemeChanged;
             UpdateTheme();
@@ -236,8 +293,9 @@ namespace ZeroUI.WinForms.DataGrid
             get => _scrollY;
             set
             {
+                int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
                 int footerH = ShowFooter ? _footerHeight : 0;
-                int maxScroll = Math.Max(0, (_dataSource?.TotalRowCount ?? 0) * _rowHeight - (ClientSize.Height - _headerHeight - footerH));
+                int maxScroll = Math.Max(0, (_dataSource?.TotalRowCount ?? 0) * _rowHeight - (ClientSize.Height - topOffset - footerH));
                 int clamped = Math.Max(0, Math.Min(maxScroll, value));
                 if (_scrollY != clamped)
                 {
@@ -306,6 +364,293 @@ namespace ZeroUI.WinForms.DataGrid
         {
             get => _allowColumnReordering;
             set => _allowColumnReordering = value;
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        [Description("Shows an interactive filter row beneath column headers for rapid multi-column filtering.")]
+        public bool ShowAutoFilterRow
+        {
+            get => _showAutoFilterRow;
+            set
+            {
+                if (_showAutoFilterRow != value)
+                {
+                    _showAutoFilterRow = value;
+                    if (!value && _autoFilterEditor != null)
+                    {
+                        _autoFilterEditor.Visible = false;
+                        _editingAutoFilterCol = -1;
+                    }
+                    UpdateScrollBars();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(26)]
+        public int AutoFilterRowHeight
+        {
+            get => _autoFilterRowHeight;
+            set
+            {
+                _autoFilterRowHeight = Math.Max(20, value);
+                UpdateScrollBars();
+                Invalidate();
+            }
+        }
+
+        [Browsable(false)]
+        public IReadOnlyDictionary<int, string> ColumnFilters => _columnFilters;
+
+        public void SetColumnFilter(int columnIndex, string? filterText)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count) return;
+            if (string.IsNullOrWhiteSpace(filterText))
+            {
+                _columnFilters.Remove(columnIndex);
+            }
+            else
+            {
+                _columnFilters[columnIndex] = filterText!.Trim();
+            }
+            ApplyColumnFilters();
+        }
+
+        public void ClearColumnFilter(int columnIndex)
+        {
+            if (_columnFilters.Remove(columnIndex))
+            {
+                ApplyColumnFilters();
+            }
+        }
+
+        public void ClearAllColumnFilters()
+        {
+            if (_columnFilters.Count > 0)
+            {
+                _columnFilters.Clear();
+                ApplyColumnFilters();
+            }
+        }
+
+        public void ApplyColumnFilters()
+        {
+            if (_dataSource == null) return;
+
+            int total = _dataSource.TotalRowCount;
+            var active = new List<KeyValuePair<int, string>>();
+            foreach (var kvp in _columnFilters)
+            {
+                if (!string.IsNullOrWhiteSpace(kvp.Value))
+                {
+                    active.Add(kvp);
+                }
+            }
+
+            if (active.Count == 0)
+            {
+                _rowIndexMap.ResetIdentity(total);
+            }
+            else
+            {
+                _rowIndexMap.EnsureCapacity(total);
+                int count = 0;
+                CellValueBuffer buf = new CellValueBuffer();
+                for (int mRow = 0; mRow < total; mRow++)
+                {
+                    bool match = true;
+                    for (int i = 0; i < active.Count; i++)
+                    {
+                        int c = active[i].Key;
+                        string filter = active[i].Value;
+                        buf.Reset();
+                        _dataSource.GetCellValue(mRow, c, ref buf);
+                        string cellText = buf.Text.ToString();
+                        if (!MatchesFilter(cellText, filter))
+                        {
+                            match = false;
+                            break;
+                        }
+                    }
+
+                    if (match)
+                    {
+                        _rowIndexMap[count++] = mRow;
+                    }
+                }
+                _rowIndexMap.ActiveCount = count;
+            }
+
+            if (_selectedVisualRow >= _rowIndexMap.ActiveCount)
+            {
+                _selectedVisualRow = _rowIndexMap.ActiveCount - 1;
+            }
+            _selectedVisualRows.RemoveWhere(r => r >= _rowIndexMap.ActiveCount);
+
+            UpdateScrollBars();
+            Invalidate();
+        }
+
+        private static bool MatchesFilter(string cellText, string query)
+        {
+            if (string.IsNullOrEmpty(query)) return true;
+            if (string.IsNullOrEmpty(cellText)) return false;
+
+            query = query.Trim();
+
+            // Check numeric comparison prefixes: >, <, >=, <=, =
+            if (query.Length > 1 && (query[0] == '>' || query[0] == '<' || query[0] == '='))
+            {
+                bool hasEqual = query.Length > 1 && query[1] == '=';
+                char op = query[0];
+                string numStr = query.Substring(hasEqual ? 2 : 1).Trim();
+
+                if (double.TryParse(numStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double targetNum))
+                {
+                    string cleanCell = cellText.Replace(",", "").Trim('$', ' ', 'p', 'c', 's');
+                    if (double.TryParse(cleanCell, NumberStyles.Any, CultureInfo.InvariantCulture, out double cellNum))
+                    {
+                        if (op == '>' && hasEqual) return cellNum >= targetNum;
+                        if (op == '>') return cellNum > targetNum;
+                        if (op == '<' && hasEqual) return cellNum <= targetNum;
+                        if (op == '<') return cellNum < targetNum;
+                        if (op == '=') return Math.Abs(cellNum - targetNum) < 0.00001;
+                    }
+                }
+            }
+
+            // Substring case-insensitive match
+            return cellText.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void AutoFilterEditor_TextChanged(object? sender, EventArgs e)
+        {
+            if (_editingAutoFilterCol >= 0 && _editingAutoFilterCol < _columns.Count)
+            {
+                string txt = _autoFilterEditor.Text.Trim();
+                if (string.IsNullOrEmpty(txt))
+                {
+                    _columnFilters.Remove(_editingAutoFilterCol);
+                }
+                else
+                {
+                    _columnFilters[_editingAutoFilterCol] = txt;
+                }
+                ApplyColumnFilters();
+            }
+        }
+
+        private void AutoFilterEditor_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                if (_editingAutoFilterCol >= 0)
+                {
+                    _columnFilters.Remove(_editingAutoFilterCol);
+                    ApplyColumnFilters();
+                }
+                _autoFilterEditor.Visible = false;
+                _editingAutoFilterCol = -1;
+                Invalidate();
+                Focus();
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Enter)
+            {
+                _autoFilterEditor.Visible = false;
+                _editingAutoFilterCol = -1;
+                Invalidate();
+                Focus();
+                e.Handled = true;
+            }
+        }
+
+        private void StartAutoFilterEdit(int colIndex)
+        {
+            if (colIndex < 0 || colIndex >= _columns.Count || !_showAutoFilterRow) return;
+
+            var rect = GetAutoFilterCellRectangle(colIndex);
+            if (rect.Width <= 0 || rect.Height <= 0) return;
+
+            _editingAutoFilterCol = colIndex;
+            _autoFilterEditor.Font = Font;
+            _autoFilterEditor.BackColor = ZeroTheme.Colors.Surface;
+            _autoFilterEditor.ForeColor = ZeroTheme.Colors.TextPrimary;
+            _autoFilterEditor.SetBounds(rect.X + 2, rect.Y + 2, rect.Width - 4, rect.Height - 4);
+            _autoFilterEditor.Text = _columnFilters.TryGetValue(colIndex, out var f) ? f : string.Empty;
+            _autoFilterEditor.Visible = true;
+            _autoFilterEditor.BringToFront();
+            _autoFilterEditor.Focus();
+            _autoFilterEditor.SelectAll();
+        }
+
+        public Rectangle GetAutoFilterCellRectangle(int colIndex)
+        {
+            if (!_showAutoFilterRow || colIndex < 0 || colIndex >= _columns.Count) return Rectangle.Empty;
+
+            int filterY = _headerHeight;
+            int filterH = _autoFilterRowHeight;
+            int pinnedW = GetPinnedColumnsWidth();
+
+            int cellX;
+            if (_columns[colIndex].IsPinned)
+            {
+                cellX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                for (int c = 0; c < colIndex; c++)
+                {
+                    if (_columns[c].IsVisible && _columns[c].IsPinned) cellX += _columns[c].Width;
+                }
+            }
+            else
+            {
+                cellX = pinnedW - _scrollX;
+                for (int c = 0; c < colIndex; c++)
+                {
+                    if (_columns[c].IsVisible && !_columns[c].IsPinned) cellX += _columns[c].Width;
+                }
+            }
+
+            return new Rectangle(cellX, filterY, _columns[colIndex].Width, filterH);
+        }
+
+        private void ToggleBooleanCell(int visualRow, int colIndex)
+        {
+            if (_dataSource == null || visualRow < 0 || visualRow >= _rowIndexMap.ActiveCount || colIndex < 0 || colIndex >= _columns.Count) return;
+            var col = _columns[colIndex];
+            if (col.ReadOnly || !col.IsVisible) return;
+
+            int modelRow = _rowIndexMap[visualRow];
+            if (_dataSource is IZeroEditableSource editable && !editable.IsCellEditable(modelRow, colIndex)) return;
+
+            CellValueBuffer buf = new CellValueBuffer();
+            _dataSource.GetCellValue(modelRow, colIndex, ref buf);
+            string curVal = buf.Text.ToString();
+            bool isTrue = string.Equals(curVal, "true", StringComparison.OrdinalIgnoreCase) ||
+                          string.Equals(curVal, "1", StringComparison.OrdinalIgnoreCase) ||
+                          string.Equals(curVal, "yes", StringComparison.OrdinalIgnoreCase);
+            string newVal = isTrue ? "false" : "true";
+
+            var validatingArgs = new CellValidatingEventArgs(visualRow, modelRow, colIndex, curVal, newVal);
+            CellValidating?.Invoke(this, validatingArgs);
+            if (!validatingArgs.Cancel)
+            {
+                if (_dataSource is IZeroEditableSource editableSrc)
+                {
+                    editableSrc.SetCellValue(modelRow, colIndex, newVal);
+                }
+                CellValueChanged?.Invoke(this, new CellValueChangedEventArgs(visualRow, modelRow, colIndex, curVal, newVal));
+                Invalidate();
+            }
+            else if (!string.IsNullOrEmpty(validatingArgs.ErrorMessage))
+            {
+                var form = FindForm();
+                if (form != null)
+                {
+                    ZeroToast.Warning(form, validatingArgs.ErrorMessage!);
+                }
+            }
         }
 
         public void SelectAllRows()
@@ -739,8 +1084,9 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (!IsHandleCreated) return;
 
+            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
-            int clientH = ClientSize.Height - _headerHeight - footerH;
+            int clientH = ClientSize.Height - topOffset - footerH;
             int clientW = ClientSize.Width;
             int totalRows = _rowIndexMap.ActiveCount;
             int totalH = totalRows * _rowHeight;
@@ -792,8 +1138,9 @@ namespace ZeroUI.WinForms.DataGrid
                 int totalRows = _rowIndexMap.ActiveCount;
                 int[] colWidths = GetVisibleColumnWidths();
                 int pinnedW = GetPinnedColumnsWidth();
+                int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
                 int footerH = ShowFooter ? _footerHeight : 0;
-                int clientDataHeight = Math.Max(0, height - _headerHeight - footerH);
+                int clientDataHeight = Math.Max(0, height - topOffset - footerH);
 
                 // 1. Render Cells
                 if (_dataSource != null && totalRows > 0 && totalCols > 0)
@@ -806,11 +1153,11 @@ namespace ZeroUI.WinForms.DataGrid
 
                     CellValueBuffer cellBuffer = new CellValueBuffer();
                     int firstRowY = (startRow * _rowHeight) - _scrollY;
-                    int currentY = _headerHeight + firstRowY;
+                    int currentY = topOffset + firstRowY;
 
                     for (int r = startRow; r <= endRow && r < totalRows; r++)
                     {
-                        if (currentY >= _headerHeight + clientDataHeight) break;
+                        if (currentY >= topOffset + clientDataHeight) break;
 
                         int modelRow = _rowIndexMap[r];
                         bool isSelected = (_selectionMode == ZeroGridSelectionMode.MultiRow)
@@ -846,8 +1193,22 @@ namespace ZeroUI.WinForms.DataGrid
                                     _dibSection.FillRectangle(cellRect.Left, cellRect.Top, cellRect.Right - cellRect.Left, _rowHeight, cellBuffer.BackColor);
                                 }
 
-                                RECT textRect = new RECT(unpinnedX + 4, currentY, unpinnedX + colW - 4, currentY + _rowHeight);
-                                _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                                if (_columns[c].ColumnType == GridColumnType.Boolean)
+                                {
+                                    string boolText = cellBuffer.Text.ToString();
+                                    bool isChecked = string.Equals(boolText, "true", StringComparison.OrdinalIgnoreCase) ||
+                                                     string.Equals(boolText, "1", StringComparison.OrdinalIgnoreCase) ||
+                                                     string.Equals(boolText, "yes", StringComparison.OrdinalIgnoreCase);
+                                    int cbSize = 15;
+                                    int cbX = unpinnedX + (colW - cbSize) / 2;
+                                    int cbY = currentY + (_rowHeight - cbSize) / 2;
+                                    DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
+                                }
+                                else
+                                {
+                                    RECT textRect = new RECT(unpinnedX + 4, currentY, unpinnedX + colW - 4, currentY + _rowHeight);
+                                    _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                                }
 
                                 // Vertical Gridline
                                 _dibSection.FillRectangle(unpinnedX + colW - 1, currentY, 1, _rowHeight, _gridLineColor);
@@ -888,8 +1249,22 @@ namespace ZeroUI.WinForms.DataGrid
                                 _dibSection.FillRectangle(cellRect.Left, cellRect.Top, colW, _rowHeight, cellBuffer.BackColor);
                             }
 
-                            RECT textRect = new RECT(pinnedX + 4, currentY, pinnedX + colW - 4, currentY + _rowHeight);
-                            _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                            if (_columns[c].ColumnType == GridColumnType.Boolean)
+                            {
+                                string boolText = cellBuffer.Text.ToString();
+                                bool isChecked = string.Equals(boolText, "true", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(boolText, "1", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(boolText, "yes", StringComparison.OrdinalIgnoreCase);
+                                int cbSize = 15;
+                                int cbX = pinnedX + (colW - cbSize) / 2;
+                                int cbY = currentY + (_rowHeight - cbSize) / 2;
+                                DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
+                            }
+                            else
+                            {
+                                RECT textRect = new RECT(pinnedX + 4, currentY, pinnedX + colW - 4, currentY + _rowHeight);
+                                _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
+                            }
 
                             // Vertical Gridline
                             _dibSection.FillRectangle(cellRect.Right - 1, currentY, 1, _rowHeight, _gridLineColor);
@@ -912,7 +1287,7 @@ namespace ZeroUI.WinForms.DataGrid
                 else
                 {
                     // Empty State
-                    int emptyCenterY = (_headerHeight + height - footerH) / 2 - 20;
+                    int emptyCenterY = (topOffset + height - footerH) / 2 - 20;
 
                     _dibSection.SelectFont(_hHeaderFont);
                     RECT emptyTitleRect = new RECT(20, emptyCenterY, width - 20, emptyCenterY + 24);
@@ -991,6 +1366,74 @@ namespace ZeroUI.WinForms.DataGrid
                 if (pinnedW > 0)
                 {
                     _dibSection.FillRectangle(pinnedW - 2, 0, 2, _headerHeight, _pinnedBorderColor);
+                }
+
+                // 2.5. Render Auto Filter Row (if enabled)
+                if (_showAutoFilterRow)
+                {
+                    int filterY = _headerHeight;
+                    int filterH = _autoFilterRowHeight;
+                    uint filterBg = _rowBgColor;
+                    _dibSection.FillRectangle(0, filterY, width, filterH, filterBg);
+                    _dibSection.SelectFont(_hFont);
+
+                    // (A) Unpinned Filter Cells
+                    int unpinnedFilterX = pinnedW - _scrollX;
+                    for (int c = 0; c < totalCols; c++)
+                    {
+                        if (!_columns[c].IsVisible || _columns[c].IsPinned) continue;
+                        int colW = colWidths[c];
+                        if (colW <= 0) continue;
+
+                        if (unpinnedFilterX + colW > pinnedW && unpinnedFilterX < width)
+                        {
+                            RECT textRect = new RECT(unpinnedFilterX + 6, filterY, unpinnedFilterX + colW - 6, filterY + filterH);
+                            if (_columnFilters.TryGetValue(c, out var fText) && !string.IsNullOrEmpty(fText))
+                            {
+                                _dibSection.DrawText(fText.AsSpan(), ref textRect, _cellTextColor, CellAlignment.Left, textHeight);
+                            }
+                            else
+                            {
+                                _dibSection.DrawText("🔍 Filter...".AsSpan(), ref textRect, ToBgr(ZeroTheme.Colors.TextSecondary), CellAlignment.Left, textHeight);
+                            }
+                            _dibSection.FillRectangle(unpinnedFilterX + colW - 1, filterY, 1, filterH, _gridLineColor);
+                        }
+                        unpinnedFilterX += colW;
+                    }
+
+                    // (B) Pinned Filter Cells
+                    int pinnedFilterX = 0;
+                    if (_showCheckBoxSelectorColumn)
+                    {
+                        _dibSection.FillRectangle(CheckBoxColWidth - 1, filterY, 1, filterH, _gridLineColor);
+                        pinnedFilterX += CheckBoxColWidth;
+                    }
+
+                    for (int c = 0; c < totalCols; c++)
+                    {
+                        if (!_columns[c].IsVisible || !_columns[c].IsPinned) continue;
+                        int colW = colWidths[c];
+                        if (colW <= 0) continue;
+
+                        RECT textRect = new RECT(pinnedFilterX + 6, filterY, pinnedFilterX + colW - 6, filterY + filterH);
+                        if (_columnFilters.TryGetValue(c, out var fText) && !string.IsNullOrEmpty(fText))
+                        {
+                            _dibSection.DrawText(fText.AsSpan(), ref textRect, _cellTextColor, CellAlignment.Left, textHeight);
+                        }
+                        else
+                        {
+                            _dibSection.DrawText("🔍 Filter...".AsSpan(), ref textRect, ToBgr(ZeroTheme.Colors.TextSecondary), CellAlignment.Left, textHeight);
+                        }
+                        _dibSection.FillRectangle(pinnedFilterX + colW - 1, filterY, 1, filterH, _gridLineColor);
+                        pinnedFilterX += colW;
+                    }
+
+                    // Filter Row Bottom Border
+                    _dibSection.FillRectangle(0, filterY + filterH - 1, width, 1, _gridLineColor);
+                    if (pinnedW > 0)
+                    {
+                        _dibSection.FillRectangle(pinnedW - 2, filterY, 2, filterH, _pinnedBorderColor);
+                    }
                 }
 
                 // Drag-and-Drop Column Reordering Guide Indicator
@@ -1218,6 +1661,7 @@ namespace ZeroUI.WinForms.DataGrid
 
             int footerH = ShowFooter ? _footerHeight : 0;
             int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+            int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
 
             if (e.Button == MouseButtons.Left)
             {
@@ -1231,10 +1675,18 @@ namespace ZeroUI.WinForms.DataGrid
                     GetVisibleColumnWidths(),
                     GetColumnPinnedFlags(),
                     _columns.Count,
-                    _dataSource?.TotalRowCount ?? 0,
+                    _rowIndexMap.ActiveCount,
                     footerH,
                     ClientSize.Height,
-                    pinnedOffset);
+                    pinnedOffset,
+                    autoFilterH);
+
+                if (hit.Region == HitRegion.AutoFilterRow && hit.ColumnIndex >= 0 && hit.ColumnIndex < _columns.Count)
+                {
+                    if (_isEditing) CommitEdit();
+                    StartAutoFilterEdit(hit.ColumnIndex);
+                    return;
+                }
 
                 if (hit.Region == HitRegion.RowIndicator)
                 {
@@ -1300,6 +1752,11 @@ namespace ZeroUI.WinForms.DataGrid
                         CommitEdit();
                     }
 
+                    if (_columns[hit.ColumnIndex].ColumnType == GridColumnType.Boolean && !_columns[hit.ColumnIndex].ReadOnly)
+                    {
+                        ToggleBooleanCell(hit.RowIndex, hit.ColumnIndex);
+                    }
+
                     if (_selectionMode == ZeroGridSelectionMode.MultiRow)
                     {
                         if ((ModifierKeys & Keys.Control) != 0)
@@ -1346,10 +1803,11 @@ namespace ZeroUI.WinForms.DataGrid
                     GetVisibleColumnWidths(),
                     GetColumnPinnedFlags(),
                     _columns.Count,
-                    _dataSource?.TotalRowCount ?? 0,
+                    _rowIndexMap.ActiveCount,
                     footerH,
                     ClientSize.Height,
-                    pinnedOffset);
+                    pinnedOffset,
+                    autoFilterH);
 
                 if (hit.Region == HitRegion.Header)
                 {
@@ -1365,6 +1823,7 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 int footerH = ShowFooter ? _footerHeight : 0;
                 int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
                 var hit = SpatialHitTester.HitTest(
                     e.X,
                     e.Y,
@@ -1375,10 +1834,11 @@ namespace ZeroUI.WinForms.DataGrid
                     GetVisibleColumnWidths(),
                     GetColumnPinnedFlags(),
                     _columns.Count,
-                    _dataSource?.TotalRowCount ?? 0,
+                    _rowIndexMap.ActiveCount,
                     footerH,
                     ClientSize.Height,
-                    pinnedOffset);
+                    pinnedOffset,
+                    autoFilterH);
 
                 if (hit.Region == HitRegion.ColumnResizeGrip && hit.ResizeColumnIndex >= 0 && hit.ResizeColumnIndex < _columns.Count)
                 {
@@ -1427,6 +1887,7 @@ namespace ZeroUI.WinForms.DataGrid
 
             int footerH = ShowFooter ? _footerHeight : 0;
             int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+            int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
             var hit = SpatialHitTester.HitTest(
                 e.X,
                 e.Y,
@@ -1437,10 +1898,11 @@ namespace ZeroUI.WinForms.DataGrid
                 GetVisibleColumnWidths(),
                 GetColumnPinnedFlags(),
                 _columns.Count,
-                _dataSource?.TotalRowCount ?? 0,
+                _rowIndexMap.ActiveCount,
                 footerH,
                 ClientSize.Height,
-                pinnedOffset);
+                pinnedOffset,
+                autoFilterH);
 
             if (hit.Region == HitRegion.ColumnResizeGrip)
             {
@@ -1880,8 +2342,9 @@ namespace ZeroUI.WinForms.DataGrid
             if (visualRowIndex < 0 || visualRowIndex >= _rowIndexMap.ActiveCount) return;
             int rowTop = visualRowIndex * _rowHeight;
             int rowBottom = rowTop + _rowHeight;
+            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
-            int viewH = ClientSize.Height - _headerHeight - footerH;
+            int viewH = ClientSize.Height - topOffset - footerH;
 
             if (rowTop < _scrollY)
             {
@@ -1949,13 +2412,14 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (visualRow < 0 || colIndex < 0 || colIndex >= _columns.Count) return Rectangle.Empty;
 
-            int cellY = _headerHeight + (visualRow * _rowHeight) - _scrollY;
+            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int cellY = topOffset + (visualRow * _rowHeight) - _scrollY;
             int pinnedW = GetPinnedColumnsWidth();
 
             int cellX;
             if (_columns[colIndex].IsPinned)
             {
-                cellX = 0;
+                cellX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
                 for (int c = 0; c < colIndex; c++)
                 {
                     if (_columns[c].IsVisible && _columns[c].IsPinned) cellX += _columns[c].Width;
@@ -1987,6 +2451,13 @@ namespace ZeroUI.WinForms.DataGrid
                 return;
             }
 
+            // Boolean columns toggle directly without opening floating controls
+            if (col.ColumnType == GridColumnType.Boolean)
+            {
+                ToggleBooleanCell(visualRow, colIndex);
+                return;
+            }
+
             if (_isEditing)
             {
                 CommitEdit();
@@ -2001,33 +2472,84 @@ namespace ZeroUI.WinForms.DataGrid
             _dataSource.GetCellValue(modelRow, colIndex, ref buf);
             string val = buf.Text.ToString();
 
+            var showingArgs = new CellEditorShowingEventArgs(visualRow, modelRow, colIndex);
+            CellEditorShowing?.Invoke(this, showingArgs);
+            if (showingArgs.Cancel) return;
+
+            Control editor;
+            if (showingArgs.CustomEditor != null)
+            {
+                editor = showingArgs.CustomEditor;
+            }
+            else if (col.ColumnType == GridColumnType.Numeric)
+            {
+                if (decimal.TryParse(val.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var numVal))
+                {
+                    _numericEditor.Value = numVal;
+                }
+                else
+                {
+                    _numericEditor.Value = 0;
+                }
+                editor = _numericEditor;
+            }
+            else if (col.ColumnType == GridColumnType.DateTime)
+            {
+                if (DateTime.TryParse(val, out var dtVal))
+                {
+                    _dateEditor.Value = dtVal;
+                }
+                else
+                {
+                    _dateEditor.Value = DateTime.Today;
+                }
+                editor = _dateEditor;
+            }
+            else
+            {
+                _inPlaceEditor.Text = val;
+                editor = _inPlaceEditor;
+            }
+
+            _activeInPlaceEditor = editor;
             _isEditing = true;
             _editingVisualRow = visualRow;
             _editingColIndex = colIndex;
 
-            _inPlaceEditor.Font = Font;
-            _inPlaceEditor.SetBounds(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2);
-            _inPlaceEditor.Text = val;
-            _inPlaceEditor.Visible = true;
-            _inPlaceEditor.BringToFront();
-            _inPlaceEditor.Focus();
-            _inPlaceEditor.SelectAll();
+            editor.Font = Font;
+            editor.SetBounds(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2);
+            editor.Visible = true;
+            editor.BringToFront();
+            editor.Focus();
+            if (editor is TextBox tb) tb.SelectAll();
 
             CellBeginEdit?.Invoke(this, EventArgs.Empty);
         }
 
         public void CommitEdit()
         {
-            if (!_isEditing || _dataSource == null) return;
+            if (!_isEditing || _dataSource == null || _activeInPlaceEditor == null) return;
 
             int visualRow = _editingVisualRow;
             int colIndex = _editingColIndex;
-            string newText = _inPlaceEditor.Text;
+            string newText = string.Empty;
 
-            _inPlaceEditor.Visible = false;
-            _isEditing = false;
-            _editingVisualRow = -1;
-            _editingColIndex = -1;
+            if (_activeInPlaceEditor is TextBox tb)
+            {
+                newText = tb.Text;
+            }
+            else if (_activeInPlaceEditor is ZeroNumericBox nb)
+            {
+                newText = nb.Value.ToString(CultureInfo.InvariantCulture);
+            }
+            else if (_activeInPlaceEditor is ZeroDatePicker dp)
+            {
+                newText = dp.Value.ToString(dp.DateFormat);
+            }
+            else
+            {
+                newText = _activeInPlaceEditor.Text;
+            }
 
             if (visualRow >= 0 && visualRow < _rowIndexMap.ActiveCount && colIndex >= 0 && colIndex < _columns.Count)
             {
@@ -2038,6 +2560,22 @@ namespace ZeroUI.WinForms.DataGrid
 
                 if (oldText != newText)
                 {
+                    var validatingArgs = new CellValidatingEventArgs(visualRow, modelRow, colIndex, oldText, newText);
+                    CellValidating?.Invoke(this, validatingArgs);
+                    if (validatingArgs.Cancel)
+                    {
+                        if (!string.IsNullOrEmpty(validatingArgs.ErrorMessage))
+                        {
+                            var form = FindForm();
+                            if (form != null)
+                            {
+                                ZeroToast.Warning(form, validatingArgs.ErrorMessage!);
+                            }
+                        }
+                        _activeInPlaceEditor.Focus();
+                        return;
+                    }
+
                     if (_dataSource is IZeroEditableSource editable)
                     {
                         editable.SetCellValue(modelRow, colIndex, newText);
@@ -2047,6 +2585,12 @@ namespace ZeroUI.WinForms.DataGrid
                 }
             }
 
+            _activeInPlaceEditor.Visible = false;
+            _activeInPlaceEditor = null;
+            _isEditing = false;
+            _editingVisualRow = -1;
+            _editingColIndex = -1;
+
             CellEndEdit?.Invoke(this, EventArgs.Empty);
         }
 
@@ -2054,7 +2598,11 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (!_isEditing) return;
 
-            _inPlaceEditor.Visible = false;
+            if (_activeInPlaceEditor != null)
+            {
+                _activeInPlaceEditor.Visible = false;
+                _activeInPlaceEditor = null;
+            }
             _isEditing = false;
             _editingVisualRow = -1;
             _editingColIndex = -1;
@@ -2103,16 +2651,17 @@ namespace ZeroUI.WinForms.DataGrid
 
         private void UpdateInPlaceEditorBounds()
         {
-            if (!_isEditing || _editingVisualRow < 0 || _editingColIndex < 0) return;
+            if (!_isEditing || _editingVisualRow < 0 || _editingColIndex < 0 || _activeInPlaceEditor == null) return;
             var rect = GetCellRectangle(_editingVisualRow, _editingColIndex);
+            int topOffset = _headerHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
-            if (rect.Y < _headerHeight || rect.Bottom > ClientSize.Height - footerH)
+            if (rect.Y < topOffset || rect.Bottom > ClientSize.Height - footerH)
             {
                 CommitEdit();
             }
             else
             {
-                _inPlaceEditor.SetBounds(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2);
+                _activeInPlaceEditor.SetBounds(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2);
             }
         }
 
@@ -2184,7 +2733,10 @@ namespace ZeroUI.WinForms.DataGrid
             if (disposing)
             {
                 ZeroTheme.ThemeChanged -= OnThemeChanged;
+                _autoFilterEditor.Dispose();
                 _inPlaceEditor.Dispose();
+                _numericEditor.Dispose();
+                _dateEditor.Dispose();
                 _dibSection.Dispose();
                 if (_hFont != IntPtr.Zero)
                 {
