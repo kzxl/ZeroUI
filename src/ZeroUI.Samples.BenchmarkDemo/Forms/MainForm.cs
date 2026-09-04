@@ -555,7 +555,55 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 _btnSkinsDropdown.Text = $"🎨 {skin.DisplayName}";
             }
 
+            if (_dgv != null)
+            {
+                _dgv.BackgroundColor = colors.Background;
+                _dgv.DefaultCellStyle.BackColor = colors.Surface;
+                _dgv.DefaultCellStyle.ForeColor = colors.TextPrimary;
+                _dgv.DefaultCellStyle.SelectionBackColor = colors.Hover;
+                _dgv.DefaultCellStyle.SelectionForeColor = colors.TextPrimary;
+                _dgv.ColumnHeadersDefaultCellStyle.BackColor = colors.HeaderBackground;
+                _dgv.ColumnHeadersDefaultCellStyle.ForeColor = colors.TextPrimary;
+                _dgv.GridColor = colors.Border;
+            }
+
+            ApplyRecursiveTheme(this, colors);
+
             Invalidate(true);
+        }
+
+        private void ApplyRecursiveTheme(Control parent, ZeroThemePalette colors)
+        {
+            if (parent == null) return;
+
+            foreach (Control c in parent.Controls)
+            {
+                if (c == _topPanel || c == _hudPanel || c == _mainToolbar) continue;
+
+                if (c is ZeroTabPage tabPage)
+                {
+                    tabPage.BackColor = colors.Background;
+                }
+                else if (c is Panel p)
+                {
+                    if (p.BackColor != Color.Transparent)
+                    {
+                        p.BackColor = (p.Name == "leftShowcasePanel") ? colors.Surface : colors.Background;
+                    }
+                }
+                else if (c is Label lbl)
+                {
+                    if (lbl != _lblFps && lbl != _lblLatency && lbl != _lblRam && lbl != _lblGc && lbl != _lblStatus && lbl != _lblTitle)
+                    {
+                        lbl.ForeColor = colors.TextPrimary;
+                    }
+                }
+
+                if (c.HasChildren && !(c is ZeroGridControl) && !(c is ZeroToolbar) && !(c is ZeroTreeList))
+                {
+                    ApplyRecursiveTheme(c, colors);
+                }
+            }
         }
 
         private Button CreateActionButton(string text, int x, Action onClick)
@@ -921,16 +969,18 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private void InitializeComponentsShowcase()
         {
-            _tabControls.BackColor = Color.FromArgb(243, 244, 246);
+            var colors = ZeroTheme.Colors;
+            _tabControls.BackColor = colors.Background;
 
             // Left Panel: Controls showcase
             var leftPanel = new Panel
             {
+                Name = "leftShowcasePanel",
                 Dock = DockStyle.Left,
                 Width = 460,
                 Padding = new Padding(20),
                 AutoScroll = true,
-                BackColor = Color.White
+                BackColor = colors.Surface
             };
 
             // Section 1: Buttons
@@ -938,11 +988,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "1. ZeroButton (Stateful Flat Buttons & Badges)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(16, 16)
             };
-                       int btnY = 48;
+            int btnY = 48;
             var btnPrimary = new ZeroButton { Text = "Primary Action", ButtonStyle = ZeroButtonStyle.Primary, Location = new Point(16, btnY), Size = new Size(130, 36) };
             var btnSuccess = new ZeroButton { Text = "Success", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(156, btnY), Size = new Size(120, 36) };
             var btnDanger = new ZeroButton { Text = "Delete / Danger", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(286, btnY), Size = new Size(130, 36) };
@@ -962,21 +1012,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "2. ZeroProgressBar (Smooth Subpixel Antialiased)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(16, progY)
             };
             leftPanel.Controls.Add(lblProgTitle);
 
             progY += 32;
-            var lblDeterminate = new Label { Text = "Determinate Progress (78%):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f) };
+            var lblDeterminate = new Label { Text = "Determinate Progress (78%):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f), ForeColor = colors.TextSecondary };
             leftPanel.Controls.Add(lblDeterminate);
             progY += 22;
             var prog1 = new ZeroProgressBar { Location = new Point(16, progY), Size = new Size(390, 24), Value = 78, ProgressColor = Color.FromArgb(16, 185, 129) };
             leftPanel.Controls.Add(prog1);
 
             progY += 34;
-            var lblIndeterminate = new Label { Text = "Indeterminate Progress (Marquee 60 FPS):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f) };
+            var lblIndeterminate = new Label { Text = "Indeterminate Progress (Marquee 60 FPS):", AutoSize = true, Location = new Point(16, progY), Font = new Font("Segoe UI", 9f), ForeColor = colors.TextSecondary };
             leftPanel.Controls.Add(lblIndeterminate);
             progY += 22;
             var prog2 = new ZeroProgressBar { Location = new Point(16, progY), Size = new Size(390, 24), IsIndeterminate = true, ProgressColor = Color.FromArgb(79, 70, 229) };
@@ -988,7 +1038,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "3. ZeroSearchBox (Placeholder & Fast Clear)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(16, searchY)
             };
@@ -1004,7 +1054,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "4. ZeroSwitch & ZeroTag (State & Toggle Controls)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(16, tagY)
             };
@@ -1033,7 +1083,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "5. ZeroSegmented (Pill Switcher)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(16, segY)
             };
@@ -1058,7 +1108,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "6. ZeroStatistic (KPI Dashboard Cards)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(16, statY)
             };
@@ -1095,7 +1145,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "7. ZeroToast (Non-blocking Floating Toasts)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(16, toastY)
             };
@@ -1120,7 +1170,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(16),
-                BackColor = Color.FromArgb(249, 250, 251)
+                BackColor = colors.Background
             };
 
             var topLogBar = new Panel { Dock = DockStyle.Top, Height = 46, BackColor = Color.Transparent };
@@ -1128,7 +1178,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Text = "8. ZeroListView (High-Throughput Log Viewer 100K+ Rows)",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(31, 41, 55),
+                ForeColor = colors.TextPrimary,
                 AutoSize = true,
                 Location = new Point(0, 12)
             };
@@ -1196,7 +1246,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private void InitializeMesDashboard()
         {
-            _tabMes.BackColor = Color.FromArgb(243, 244, 246);
+            _tabMes.BackColor = ZeroTheme.Colors.Background;
             _tabMes.Padding = new Padding(16);
             _tabMes.AutoScroll = true;
 
@@ -1727,7 +1777,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
@@ -1815,7 +1865,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
@@ -2157,7 +2207,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
@@ -2406,7 +2456,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
@@ -2489,7 +2539,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
@@ -3417,7 +3467,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
@@ -3626,7 +3676,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
@@ -3716,7 +3766,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = Color.FromArgb(248, 250, 252),
+                BackColor = ZeroTheme.Colors.Background,
                 Padding = new Padding(16)
             };
 
