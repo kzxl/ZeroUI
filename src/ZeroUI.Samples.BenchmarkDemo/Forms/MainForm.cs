@@ -25,6 +25,7 @@ using ZeroUI.WinForms.Theme;
 using ZeroUI.WinForms.Warehouse;
 using ZeroUI.WinForms.Warehouse.Models;
 using ZeroUI.WinForms.Validation;
+using ZeroUI.Core.Validation;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
@@ -1395,23 +1396,18 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Text = "TEST-9999",
                 PlaceholderText = "Must start with ORD-..."
             };
+            var orderCodeValidator = new Validator<string?>()
+                .NotEmpty("Order Code is required!")
+                .Must(text => text != null && text.StartsWith("ORD-", StringComparison.OrdinalIgnoreCase), "Order code must start with 'ORD-'!", ValidationSeverity.Warning)
+                .Length(7, 12, "Order code must be 7 to 12 characters");
+
             var errorProvider = new ZeroErrorProvider();
-            errorProvider.SetError(txtValidate, "Order code must start with 'ORD-'!");
+            errorProvider.SetResult(txtValidate, orderCodeValidator.Validate(txtValidate.Text));
 
             txtValidate.TextChanged += (s, e) =>
             {
-                if (string.IsNullOrEmpty(txtValidate.Text))
-                {
-                    errorProvider.SetError(txtValidate, "Order Code is required!", ErrorIconType.Error);
-                }
-                else if (!txtValidate.Text.StartsWith("ORD-", StringComparison.OrdinalIgnoreCase))
-                {
-                    errorProvider.SetError(txtValidate, "Order code must start with 'ORD-'!", ErrorIconType.Warning);
-                }
-                else
-                {
-                    errorProvider.SetError(txtValidate, null);
-                }
+                var res = orderCodeValidator.Validate(txtValidate.Text);
+                errorProvider.SetResult(txtValidate, res);
             };
 
             var btnCheckValid = new ZeroButton

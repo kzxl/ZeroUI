@@ -1,24 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Input.Time;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-    public enum TimeSegment
-    {
-        Hour,
-        Minute,
-        Second,
-        AmPm
-    }
-
     /// <summary>
     /// Modern anti-aliased time picker control for ZeroUI.
     /// Supports segmented keyboard/wheel editing (HH:mm:ss), 12h/24h formats,
-    /// flyweight preset popup, and theme synchronization.
+    /// flyweight preset popup, and headless TimeSegmentModel coordination.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
@@ -27,12 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [Description("Modern anti-aliased time picker control")]
     public class ZeroTimePicker : Control
     {
-        private TimeSpan _value = DateTime.Now.TimeOfDay;
-        private bool _showSeconds = false;
-        private bool _is24Hour = true;
-        private int _stepMinutes = 1;
-
-        private TimeSegment _focusedSegment = TimeSegment.Hour;
+        private readonly TimeSegmentModel _model = new TimeSegmentModel();
         private bool _isHovered = false;
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
@@ -61,6 +50,13 @@ namespace ZeroUI.WinForms.Editors
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 10f, FontStyle.Regular);
             BackColor = Color.Transparent;
+
+            _model.TimeChanged += (s, e) =>
+            {
+                Invalidate();
+                ValueChanged?.Invoke(this, EventArgs.Empty);
+            };
+            _model.SegmentChanged += (s, e) => Invalidate();
 
             _presetControl = new TimePresetListControl(this);
             var host = new ToolStripControlHost(_presetControl)
@@ -92,96 +88,57 @@ namespace ZeroUI.WinForms.Editors
                 Font = ZeroUIConfig.DefaultFont;
                 Invalidate();
             };
-
-            // Truncate milliseconds
-            _value = new TimeSpan(_value.Hours, _value.Minutes, _value.Seconds);
         }
+
+        /// <summary>
+        /// Gets the underlying headless time segment model.
+        /// </summary>
+        [Browsable(false)]
+        public TimeSegmentModel Model => _model;
 
         [Category("Behavior")]
         public TimeSpan Value
         {
-            get => _value;
-            set
-            {
-                var clean = new TimeSpan(value.Hours, value.Minutes, _showSeconds ? value.Seconds : 0);
-                if (_value != clean)
-                {
-                    _value = clean;
-                    Invalidate();
-                    ValueChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => _model.Time;
+            set => _model.Time = value;
         }
 
         [Category("Appearance")]
         [DefaultValue(false)]
         public bool ShowSeconds
         {
-            get => _showSeconds;
-            set
-            {
-                if (_showSeconds != value)
-                {
-                    _showSeconds = value;
-                    Invalidate();
-                }
-            }
+            get => _model.ShowSeconds;
+            set => _model.ShowSeconds = value;
         }
 
         [Category("Appearance")]
         [DefaultValue(true)]
         public bool Is24Hour
         {
-            get => _is24Hour;
-            set
-            {
-                if (_is24Hour != value)
-                {
-                    _is24Hour = value;
-                    Invalidate();
-                }
-            }
+            get => _model.Is24Hour;
+            set => _model.Is24Hour = value;
         }
 
         [Category("Behavior")]
         [DefaultValue(1)]
         public int StepMinutes
         {
-            get => _stepMinutes;
-            set => _stepMinutes = Math.Max(1, Math.Min(60, value));
+            get => _model.StepMinutes;
+            set => _model.StepMinutes = value;
         }
 
-        private void AdjustFocusedSegment(int delta)
+        [Browsable(false)]
+        public TimeSegment FocusedSegment
         {
-            int h = _value.Hours;
-            int m = _value.Minutes;
-            int s = _value.Seconds;
-
-            switch (_focusedSegment)
-            {
-                case TimeSegment.Hour:
-                    h = (h + delta) % 24;
-                    if (h < 0) h += 24;
-                    break;
-                case TimeSegment.Minute:
-                    int stepM = _stepMinutes * delta;
-                    m = (m + stepM) % 60;
-                    if (m < 0) m += 60;
-                    break;
-                case TimeSegment.Second:
-                    s = (s + delta) % 60;
-                    if (s < 0) s += 60;
-                    break;
-            }
-
-            Value = new TimeSpan(h, m, s);
+            get => _model.FocusedSegment;
+            set => _model.FocusedSegment = value;
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
             int delta = e.Delta > 0 ? 1 : -1;
-            AdjustFocusedSegment(delta);
+            _model.AdjustCurrentSegment(delta);
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -190,26 +147,32 @@ namespace ZeroUI.WinForms.Editors
 
             if (e.KeyCode == Keys.Up)
             {
-                AdjustFocusedSegment(1);
+                _model.AdjustCurrentSegment(1);
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Down)
             {
-                AdjustFocusedSegment(-1);
+                _model.AdjustCurrentSegment(-1);
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Right)
             {
-                if (_focusedSegment == TimeSegment.Hour) _focusedSegment = TimeSegment.Minute;
-                else if (_focusedSegment == TimeSegment.Minute && _showSeconds) _focusedSegment = TimeSegment.Second;
-                Invalidate();
+                _model.MoveNextSegment();
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Left)
             {
-                if (_focusedSegment == TimeSegment.Second) _focusedSegment = TimeSegment.Minute;
-                else if (_focusedSegment == TimeSegment.Minute) _focusedSegment = TimeSegment.Hour;
-                Invalidate();
+                _model.MovePreviousSegment();
+                e.Handled = true;
+            }
+            else if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
+            {
+                _model.TryApplyDigit(e.KeyCode - Keys.D0);
+                e.Handled = true;
+            }
+            else if (e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9)
+            {
+                _model.TryApplyDigit(e.KeyCode - Keys.NumPad0);
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Space)
@@ -233,18 +196,15 @@ namespace ZeroUI.WinForms.Editors
 
             if (_hourRect.Contains(e.Location))
             {
-                _focusedSegment = TimeSegment.Hour;
-                Invalidate();
+                _model.FocusedSegment = TimeSegment.Hour;
             }
             else if (_minuteRect.Contains(e.Location))
             {
-                _focusedSegment = TimeSegment.Minute;
-                Invalidate();
+                _model.FocusedSegment = TimeSegment.Minute;
             }
-            else if (_showSeconds && _secondRect.Contains(e.Location))
+            else if (_model.ShowSeconds && _secondRect.Contains(e.Location))
             {
-                _focusedSegment = TimeSegment.Second;
-                Invalidate();
+                _model.FocusedSegment = TimeSegment.Second;
             }
         }
 
@@ -292,6 +252,7 @@ namespace ZeroUI.WinForms.Editors
         {
             base.OnLostFocus(e);
             _isFocused = false;
+            _model.ResetDigitInput();
             Invalidate();
         }
 
@@ -376,10 +337,9 @@ namespace ZeroUI.WinForms.Editors
             }
 
             // Draw Segments
-            int h = _is24Hour ? _value.Hours : ((_value.Hours % 12 == 0) ? 12 : _value.Hours % 12);
-            string hStr = h.ToString("D2");
-            string mStr = _value.Minutes.ToString("D2");
-            string sStr = _value.Seconds.ToString("D2");
+            string hStr = _model.DisplayHour.ToString("D2");
+            string mStr = _model.DisplayMinute.ToString("D2");
+            string sStr = _model.DisplaySecond.ToString("D2");
 
             UpdateSegments();
 
@@ -387,12 +347,12 @@ namespace ZeroUI.WinForms.Editors
             var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix;
 
             // Hour segment
-            if (_isFocused && _focusedSegment == TimeSegment.Hour)
+            if (_isFocused && _model.FocusedSegment == TimeSegment.Hour)
             {
                 using var segPath = ZeroUIConfig.CreateRoundedRectangle(_hourRect, 4);
                 g.FillPath(focusSegBrush, segPath);
             }
-            TextRenderer.DrawText(g, hStr, Font, _hourRect, (_isFocused && _focusedSegment == TimeSegment.Hour) ? palette.Primary : palette.TextPrimary, flags);
+            TextRenderer.DrawText(g, hStr, Font, _hourRect, (_isFocused && _model.FocusedSegment == TimeSegment.Hour) ? palette.Primary : palette.TextPrimary, flags);
 
             // Separator 1 (:)
             int sep1X = _hourRect.Right;
@@ -400,14 +360,14 @@ namespace ZeroUI.WinForms.Editors
             TextRenderer.DrawText(g, ":", Font, sep1Rect, palette.TextSecondary, flags);
 
             // Minute segment
-            if (_isFocused && _focusedSegment == TimeSegment.Minute)
+            if (_isFocused && _model.FocusedSegment == TimeSegment.Minute)
             {
                 using var segPath = ZeroUIConfig.CreateRoundedRectangle(_minuteRect, 4);
                 g.FillPath(focusSegBrush, segPath);
             }
-            TextRenderer.DrawText(g, mStr, Font, _minuteRect, (_isFocused && _focusedSegment == TimeSegment.Minute) ? palette.Primary : palette.TextPrimary, flags);
+            TextRenderer.DrawText(g, mStr, Font, _minuteRect, (_isFocused && _model.FocusedSegment == TimeSegment.Minute) ? palette.Primary : palette.TextPrimary, flags);
 
-            if (_showSeconds)
+            if (_model.ShowSeconds)
             {
                 // Separator 2 (:)
                 int sep2X = _minuteRect.Right;
@@ -415,12 +375,12 @@ namespace ZeroUI.WinForms.Editors
                 TextRenderer.DrawText(g, ":", Font, sep2Rect, palette.TextSecondary, flags);
 
                 // Second segment
-                if (_isFocused && _focusedSegment == TimeSegment.Second)
+                if (_isFocused && _model.FocusedSegment == TimeSegment.Second)
                 {
                     using var segPath = ZeroUIConfig.CreateRoundedRectangle(_secondRect, 4);
                     g.FillPath(focusSegBrush, segPath);
                 }
-                TextRenderer.DrawText(g, sStr, Font, _secondRect, (_isFocused && _focusedSegment == TimeSegment.Second) ? palette.Primary : palette.TextPrimary, flags);
+                TextRenderer.DrawText(g, sStr, Font, _secondRect, (_isFocused && _model.FocusedSegment == TimeSegment.Second) ? palette.Primary : palette.TextPrimary, flags);
             }
 
             // Right Chevron (▼)
@@ -443,18 +403,7 @@ namespace ZeroUI.WinForms.Editors
         {
             private readonly ZeroTimePicker _owner;
             private int _hoveredIndex = -1;
-
-            private readonly (string label, TimeSpan time)[] _presets = new[]
-            {
-                ("Current Time (Now)", DateTime.Now.TimeOfDay),
-                ("00:00 - Midnight Shift", new TimeSpan(0, 0, 0)),
-                ("06:00 - Early Morning Shift", new TimeSpan(6, 0, 0)),
-                ("08:00 - Day Shift Start", new TimeSpan(8, 0, 0)),
-                ("12:00 - Noon Break", new TimeSpan(12, 0, 0)),
-                ("14:00 - Afternoon Shift", new TimeSpan(14, 0, 0)),
-                ("18:00 - Day Shift End", new TimeSpan(18, 0, 0)),
-                ("22:00 - Night Shift Start", new TimeSpan(22, 0, 0))
-            };
+            private readonly List<TimePreset> _presetItems;
 
             public TimePresetListControl(ZeroTimePicker owner)
             {
@@ -466,6 +415,13 @@ namespace ZeroUI.WinForms.Editors
                     ControlStyles.ResizeRedraw, true);
 
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+
+                _presetItems = new List<TimePreset>
+                {
+                    new TimePreset("Current Time (Now)", DateTime.Now.TimeOfDay)
+                };
+                _presetItems.AddRange(TimeSegmentModel.DefaultShiftPresets);
+
                 UpdateTheme();
             }
 
@@ -478,10 +434,10 @@ namespace ZeroUI.WinForms.Editors
             protected override void OnMouseMove(MouseEventArgs e)
             {
                 base.OnMouseMove(e);
-                int itemH = Height / _presets.Length;
+                int itemH = Height / _presetItems.Count;
                 if (itemH <= 0) itemH = 22;
                 int idx = e.Y / itemH;
-                if (idx >= 0 && idx < _presets.Length && idx != _hoveredIndex)
+                if (idx >= 0 && idx < _presetItems.Count && idx != _hoveredIndex)
                 {
                     _hoveredIndex = idx;
                     Invalidate();
@@ -491,12 +447,12 @@ namespace ZeroUI.WinForms.Editors
             protected override void OnMouseClick(MouseEventArgs e)
             {
                 base.OnMouseClick(e);
-                int itemH = Height / _presets.Length;
+                int itemH = Height / _presetItems.Count;
                 if (itemH <= 0) itemH = 22;
                 int idx = e.Y / itemH;
-                if (idx >= 0 && idx < _presets.Length)
+                if (idx >= 0 && idx < _presetItems.Count)
                 {
-                    TimeSpan selected = idx == 0 ? DateTime.Now.TimeOfDay : _presets[idx].time;
+                    TimeSpan selected = idx == 0 ? DateTime.Now.TimeOfDay : _presetItems[idx].Time;
                     _owner.Value = selected;
                     _owner._dropdown.Close();
                 }
@@ -509,14 +465,14 @@ namespace ZeroUI.WinForms.Editors
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
                 var palette = ZeroTheme.Colors;
-                int itemH = Height / _presets.Length;
+                int itemH = Height / _presetItems.Count;
 
                 using var borderPen = new Pen(palette.Border, 1f);
                 g.DrawRectangle(borderPen, 0, 0, Width - 1, Height - 1);
 
                 using var hoverBrush = new SolidBrush(Color.FromArgb(25, palette.Primary));
 
-                for (int i = 0; i < _presets.Length; i++)
+                for (int i = 0; i < _presetItems.Count; i++)
                 {
                     int y = i * itemH;
                     var itemRect = new Rectangle(2, y, Width - 4, itemH);
@@ -529,7 +485,7 @@ namespace ZeroUI.WinForms.Editors
                     var textRect = new Rectangle(10, y, Width - 20, itemH);
                     var flags = TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPrefix;
                     Color txtColor = i == _hoveredIndex ? palette.Primary : palette.TextPrimary;
-                    TextRenderer.DrawText(g, _presets[i].label, Font, textRect, txtColor, flags);
+                    TextRenderer.DrawText(g, _presetItems[i].Label, Font, textRect, txtColor, flags);
                 }
             }
         }

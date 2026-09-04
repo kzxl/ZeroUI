@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Validation;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Validation
@@ -120,6 +121,47 @@ namespace ZeroUI.WinForms.Validation
                 var newEntry = new ErrorEntry(control, msg, iconType, _defaultAlignment, _defaultPadding, _toolTip);
                 _entries[control] = newEntry;
             }
+        }
+
+        /// <summary>
+        /// Applies the outcome of a Core ValidationResult to the specified control.
+        /// Automatically picks the highest severity notification and maps to vector badges.
+        /// </summary>
+        public void SetResult(Control control, ValidationResult? result)
+        {
+            if (control == null) return;
+
+            if (result == null || (result.IsValid && result.Messages.Count == 0))
+            {
+                SetError(control, null);
+                return;
+            }
+
+            var messages = result.Messages;
+            if (messages.Count == 0)
+            {
+                SetError(control, null);
+                return;
+            }
+
+            // Find highest severity (Error < Warning < Information)
+            var highest = messages[0];
+            for (int i = 1; i < messages.Count; i++)
+            {
+                if ((byte)messages[i].Severity < (byte)highest.Severity)
+                {
+                    highest = messages[i];
+                }
+            }
+
+            ErrorIconType iconType = highest.Severity switch
+            {
+                ValidationSeverity.Warning => ErrorIconType.Warning,
+                ValidationSeverity.Information => ErrorIconType.Information,
+                _ => ErrorIconType.Error
+            };
+
+            SetError(control, highest.Text, iconType);
         }
 
         [DefaultValue(ErrorIconAlignment.MiddleRight)]
