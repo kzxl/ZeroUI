@@ -12,4 +12,12 @@
     <RepositoryUrl>https://github.com/kzxl/ZeroUI.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <PropertyGroup Condition="Exists('README.md')">
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('README.md')">
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>
