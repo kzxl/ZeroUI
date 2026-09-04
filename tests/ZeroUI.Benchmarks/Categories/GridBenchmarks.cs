@@ -91,53 +91,34 @@ namespace ZeroUI.Benchmarks.Categories
                 long sourceBytes = Math.Max(0, memAfter - memBefore);
 
                 // 2. Viewport Slice Extraction (500 cells at 3 scroll positions: Top, Mid, Bottom)
-                var buffer = new CellValueBuffer();
                 int[] scrollOffsets = { 0, rowCount / 2, Math.Max(0, rowCount - viewportRows) };
+                int[] offsetRef = new int[1];
 
-                // Warmup
-                foreach (var offset in scrollOffsets)
-                {
-                    for (int r = 0; r < viewportRows; r++)
-                    {
-                        for (int c = 0; c < viewportCols; c++)
-                        {
-                            source.GetCellValue(offset + r, c, ref buffer);
-                        }
-                    }
-                }
+                Action sliceAction = () => MeasureSlice(source, scrollOffsets, offsetRef, viewportRows, viewportCols);
 
-                GC.Collect();
-                long allocBefore = GC.GetAllocatedBytesForCurrentThread();
-                int gen0Before = GC.CollectionCount(0);
-                var sw = Stopwatch.StartNew();
+                var res = StatisticalRunner.Run(sliceAction, warmupCount: 10, iterationCount: 100, scaleOpsPerIter: 1.0);
+                double p50Us = res.P50Ms * 1000.0;
+                double p95Us = res.P95Ms * 1000.0;
+                double p99Us = res.P99Ms * 1000.0;
+                double nsPerCell = (res.MeanMs * 1_000_000.0) / totalViewportCells;
 
-                const int iterations = 1_000;
-                for (int iter = 0; iter < iterations; iter++)
-                {
-                    int offset = scrollOffsets[iter % scrollOffsets.Length];
-                    for (int r = 0; r < viewportRows; r++)
-                    {
-                        for (int c = 0; c < viewportCols; c++)
-                        {
-                            source.GetCellValue(offset + r, c, ref buffer);
-                        }
-                    }
-                }
-
-                sw.Stop();
-                long allocAfter = GC.GetAllocatedBytesForCurrentThread();
-                int gen0After = GC.CollectionCount(0);
-
-                double avgSliceMs = sw.Elapsed.TotalMilliseconds / iterations;
-                double avgSliceUs = avgSliceMs * 1000.0;
-                double nsPerCell = (avgSliceUs * 1000.0) / totalViewportCells;
-                double fpsPotential = 1000.0 / avgSliceMs;
-                long bytesPerSlice = (allocAfter - allocBefore) / iterations;
-
-                Console.WriteLine($"  • Rows: {rowCount,11:N0} | Viewport: {totalViewportCells} cells | Slice Latency: {avgSliceUs,6:F2} μs ({nsPerCell,5:F1} ns/cell) | Max FPS: {fpsPotential,8:N0} | RAM: {sourceBytes,3} B | Alloc: {bytesPerSlice} B");
+                Console.WriteLine($"  • Rows: {rowCount,11:N0} | Viewport: {totalViewportCells} cells | P50: {p50Us,6:F2} μs | P95: {p95Us,6:F2} μs | P99: {p99Us,6:F2} μs ({nsPerCell,5:F1} ns/cell) | RAM: {sourceBytes,3} B | Alloc: {res.AllocatedBytesPerOp} B");
             }
 
             Console.WriteLine();
+        }
+
+        private static void MeasureSlice(SyntheticVirtualSource source, int[] scrollOffsets, int[] offsetRef, int viewportRows, int viewportCols)
+        {
+            var buffer = new CellValueBuffer();
+            int offset = scrollOffsets[(offsetRef[0]++) % scrollOffsets.Length];
+            for (int r = 0; r < viewportRows; r++)
+            {
+                for (int c = 0; c < viewportCols; c++)
+                {
+                    source.GetCellValue(offset + r, c, ref buffer);
+                }
+            }
         }
     }
 }

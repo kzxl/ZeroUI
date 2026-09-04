@@ -106,60 +106,15 @@ namespace ZeroUI.Benchmarks.Categories
             int[] cellCounts = { 100, 1_000, 10_000 };
             foreach (var count in cellCounts)
             {
-                // Warmup
-                bench.ExecuteDrawCells(count);
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-
-                long allocBefore = GC.GetAllocatedBytesForCurrentThread();
-                int gen0Before = GC.CollectionCount(0);
-                var sw = Stopwatch.StartNew();
-
-                int iterations = count <= 100 ? 500 : count <= 1_000 ? 100 : 20;
-                for (int iter = 0; iter < iterations; iter++)
-                {
-                    bench.ExecuteDrawCells(count);
-                }
-
-                sw.Stop();
-                long allocAfter = GC.GetAllocatedBytesForCurrentThread();
-                int gen0After = GC.CollectionCount(0);
-
-                double avgMs = sw.Elapsed.TotalMilliseconds / iterations;
-                double cellsPerSec = (count / avgMs) * 1000.0;
-                long allocPerOp = (allocAfter - allocBefore) / iterations;
-
-                Console.WriteLine($"  • Draw {count,6:N0} cells:        {avgMs,7:F3} ms ({cellsPerSec,11:N0} cells/s) | Alloc: {allocPerOp,3} B | Gen0: {gen0After - gen0Before}");
+                int iters = count <= 100 ? 100 : count <= 1_000 ? 50 : 20;
+                var res = StatisticalRunner.Run(() => bench.ExecuteDrawCells(count), warmupCount: 10, iterationCount: iters, scaleOpsPerIter: count);
+                Console.WriteLine($"  • Draw {count,6:N0} cells:        P50: {res.P50Ms,6:F3} ms | P95: {res.P95Ms,6:F3} ms | P99: {res.P99Ms,6:F3} ms ({res.OpsPerSec,10:N0} cells/s) | Alloc: {res.AllocatedBytesPerOp,2} B | Gen0: {res.Gen0Collections}");
             }
 
             // Draw 100K Primitives
             {
-                bench.Draw100KPrimitives();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-
-                long allocBefore = GC.GetAllocatedBytesForCurrentThread();
-                int gen0Before = GC.CollectionCount(0);
-                var sw = Stopwatch.StartNew();
-
-                const int primIterations = 10;
-                for (int iter = 0; iter < primIterations; iter++)
-                {
-                    bench.Draw100KPrimitives();
-                }
-
-                sw.Stop();
-                long allocAfter = GC.GetAllocatedBytesForCurrentThread();
-                int gen0After = GC.CollectionCount(0);
-
-                double avgMs = sw.Elapsed.TotalMilliseconds / primIterations;
-                double primsPerSec = (100_000.0 / avgMs) * 1000.0;
-                long allocPerOp = (allocAfter - allocBefore) / primIterations;
-
-                Console.WriteLine($"  • Draw 100,000 primitives:   {avgMs,7:F3} ms ({primsPerSec,11:N0} prim/s)  | Alloc: {allocPerOp,3} B | Gen0: {gen0After - gen0Before}");
+                var res = StatisticalRunner.Run(() => bench.Draw100KPrimitives(), warmupCount: 5, iterationCount: 20, scaleOpsPerIter: 100_000);
+                Console.WriteLine($"  • Draw 100,000 primitives:   P50: {res.P50Ms,6:F3} ms | P95: {res.P95Ms,6:F3} ms | P99: {res.P99Ms,6:F3} ms ({res.OpsPerSec,10:N0} prim/s)  | Alloc: {res.AllocatedBytesPerOp,2} B | Gen0: {res.Gen0Collections}");
             }
 
             bench.Cleanup();

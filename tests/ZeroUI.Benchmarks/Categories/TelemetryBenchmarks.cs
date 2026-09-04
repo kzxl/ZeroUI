@@ -52,26 +52,9 @@ namespace ZeroUI.Benchmarks.Categories
                 long baseTs = 1700000000000;
                 var testVal = new ScadaValue(50.0, ScadaQuality.Good);
 
-                // Warmup
-                for (int i = 0; i < Math.Min(count, 10_000); i++)
-                {
-                    var wb = tripleBuffer.GetWriteBuffer();
-                    wb.Set(i % 1000, testVal, baseTs + i);
-                    tripleBuffer.PublishWrite();
-                }
+                int iterations = count >= 1_000_000 ? 10 : count >= 100_000 ? 25 : 50;
 
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-
-                long allocBefore = GC.GetAllocatedBytesForCurrentThread();
-                int gen0Before = GC.CollectionCount(0);
-                var sw = Stopwatch.StartNew();
-
-                int iterations = count >= 1_000_000 ? 1 : count >= 100_000 ? 5 : 20;
-                long totalPushed = 0;
-
-                for (int iter = 0; iter < iterations; iter++)
+                Action ingestAction = () =>
                 {
                     for (int i = 0; i < count; i++)
                     {
@@ -79,23 +62,12 @@ namespace ZeroUI.Benchmarks.Categories
                         writeBuf.Set(i % 1000, testVal, baseTs + i);
                         tripleBuffer.PublishWrite();
                     }
-                    totalPushed += count;
-                }
+                };
 
-                sw.Stop();
-                long allocAfter = GC.GetAllocatedBytesForCurrentThread();
-                int gen0After = GC.CollectionCount(0);
+                var res = StatisticalRunner.Run(ingestAction, warmupCount: 5, iterationCount: iterations, scaleOpsPerIter: count);
+                double nsPerUpdate = (res.MeanMs / count) * 1_000_000.0;
 
-                double elapsedMs = sw.Elapsed.TotalMilliseconds;
-                double updatesPerSec = (totalPushed / elapsedMs) * 1000.0;
-                double nsPerUpdate = (elapsedMs / totalPushed) * 1_000_000.0;
-                long allocPerOp = (allocAfter - allocBefore) / iterations;
-
-                // Consumer read test
-                var readBuf = tripleBuffer.AcquireRenderBuffer(out bool hasUpdate);
-                var readVal = readBuf.GetValue(0);
-
-                Console.WriteLine($"  • Ingest {count,9:N0} updates:  {elapsedMs / iterations,7:F2} ms | Throughput: {updatesPerSec,11:N0} up/s | Latency: {nsPerUpdate,5:F1} ns | Alloc: {allocPerOp,2} B | Gen0: {gen0After - gen0Before}");
+                Console.WriteLine($"  • Ingest {count,9:N0} updates:  P50: {res.P50Ms,6:F2} ms | P95: {res.P95Ms,6:F2} ms | P99: {res.P99Ms,6:F2} ms ({res.OpsPerSec,11:N0} up/s) | {nsPerUpdate,5:F1} ns/op | Alloc: {res.AllocatedBytesPerOp,2} B | Gen0: {res.Gen0Collections}");
             }
 
             Console.WriteLine();

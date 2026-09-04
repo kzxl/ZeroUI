@@ -67,7 +67,7 @@ namespace ZeroUI.Benchmarks.Categories
         public static void RunProfiler()
         {
             Console.WriteLine("----------------------------------------------------------------------------------");
-            Console.WriteLine("F. Historian Benchmarks (1K/s, 10K/s, 100K/s, 1M/s - Ingestion & Continuous Rollups)");
+            Console.WriteLine("F. Historian Benchmarks (1K/s, 10K/s, 100K/s, 1M/s - Statistical P50/P95/P99 & GC Profiling)");
             Console.WriteLine("----------------------------------------------------------------------------------");
 
             const string tagPath = "Plant.Turbine1.Speed";
@@ -76,32 +76,10 @@ namespace ZeroUI.Benchmarks.Categories
             foreach (var count in IngestScales)
             {
                 var buckets = new Dictionary<RollupKey, RollupBucket>(count / 10);
+                int warm = count >= 1_000_000 ? 2 : count >= 100_000 ? 5 : 10;
+                int iters = count >= 1_000_000 ? 5 : count >= 100_000 ? 20 : 50;
 
-                // Warmup
-                for (int i = 0; i < Math.Min(count, 10_000); i++)
-                {
-                    long ts = baseTime + (i * 10);
-                    double val = 3000.0 + (i % 50);
-                    long b100 = ts - (ts % 100);
-                    var k = new RollupKey(tagPath, TelemetryResolution.L1_100ms, b100);
-                    if (buckets.TryGetValue(k, out var b)) b.AddSample(val, ScadaQuality.Good);
-                    else buckets[k] = new RollupBucket(tagPath, TelemetryResolution.L1_100ms, b100, val, ScadaQuality.Good);
-                }
-
-                buckets.Clear();
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-
-                long allocBefore = GC.GetAllocatedBytesForCurrentThread();
-                int gen0Before = GC.CollectionCount(0);
-                var sw = Stopwatch.StartNew();
-
-                int iterations = count >= 1_000_000 ? 1 : count >= 100_000 ? 5 : 20;
-                long totalIngested = 0;
-
-                for (int iter = 0; iter < iterations; iter++)
+                var res = StatisticalRunner.Run(() =>
                 {
                     buckets.Clear();
                     for (int i = 0; i < count; i++)
@@ -131,19 +109,12 @@ namespace ZeroUI.Benchmarks.Categories
                             buckets[k1s] = new RollupBucket(tagPath, TelemetryResolution.L2_1s, b1s, val, ScadaQuality.Good);
                         }
                     }
-                    totalIngested += count;
-                }
+                }, warmupCount: warm, iterationCount: iters, scaleOpsPerIter: count);
 
-                sw.Stop();
-                long allocAfter = GC.GetAllocatedBytesForCurrentThread();
-                int gen0After = GC.CollectionCount(0);
+                double usPerRecP50 = (res.P50Ms / count) * 1000.0;
+                double usPerRecP95 = (res.P95Ms / count) * 1000.0;
 
-                double elapsedMs = sw.Elapsed.TotalMilliseconds;
-                double recPerSec = (totalIngested / elapsedMs) * 1000.0;
-                double usPerRec = (elapsedMs / totalIngested) * 1000.0;
-                long allocPerOp = (allocAfter - allocBefore) / iterations;
-
-                Console.WriteLine($"  • Ingest {count,9:N0} records:  {elapsedMs / iterations,7:F2} ms | Throughput: {recPerSec,11:N0} rec/s | Latency: {usPerRec,6:F3} μs | Buckets: {buckets.Count,6:N0} | Alloc: {allocPerOp,9:N0} B | Gen0: {gen0After - gen0Before}");
+                Console.WriteLine($"  • Ingest {count,9:N0} records: P50: {res.P50Ms,6:F2} ms, P95: {res.P95Ms,6:F2} ms | Throughput: {res.OpsPerSec,11:N0} rec/s | Latency P50: {usPerRecP50,6:F3} μs, P95: {usPerRecP95,6:F3} μs | Alloc: {res.AllocatedBytesPerOp,4} B/rec | Gen0: {res.Gen0Collections}");
             }
 
             Console.WriteLine();

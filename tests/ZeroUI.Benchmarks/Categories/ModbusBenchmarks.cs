@@ -72,42 +72,26 @@ namespace ZeroUI.Benchmarks.Categories
         public static void RunProfiler()
         {
             Console.WriteLine("----------------------------------------------------------------------------------");
-            Console.WriteLine("E. Modbus Benchmarks (10, 100, 1K Tags - Address Planning & Buffer Pooling)");
+            Console.WriteLine("E. Modbus Benchmarks (10, 100, 1K Tags - Statistical P50/P95/P99 & GC Profiling)");
             Console.WriteLine("----------------------------------------------------------------------------------");
 
             foreach (var count in TagScales)
             {
                 var tags = GenerateTags(count);
+                var plannedForStats = ModbusAddressPlanner.PlanBlocks(tags);
+                double reduction = (1.0 - ((double)plannedForStats.Count / count)) * 100.0;
 
-                // Warmup
-                var blocks = ModbusAddressPlanner.PlanBlocks(tags);
-                EncodeBlocks(blocks);
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-
-                long allocBefore = GC.GetAllocatedBytesForCurrentThread();
-                int gen0Before = GC.CollectionCount(0);
-                var sw = Stopwatch.StartNew();
-
-                const int iterations = 500;
-                for (int iter = 0; iter < iterations; iter++)
+                var result = StatisticalRunner.Run(() =>
                 {
                     var planned = ModbusAddressPlanner.PlanBlocks(tags);
                     EncodeBlocks(planned);
-                }
+                }, warmupCount: 10, iterationCount: 100, scaleOpsPerIter: 1.0);
 
-                sw.Stop();
-                long allocAfter = GC.GetAllocatedBytesForCurrentThread();
-                int gen0After = GC.CollectionCount(0);
+                double p50Us = result.P50Ms * 1000.0;
+                double p95Us = result.P95Ms * 1000.0;
+                double p99Us = result.P99Ms * 1000.0;
 
-                double avgMs = sw.Elapsed.TotalMilliseconds / iterations;
-                double avgUs = avgMs * 1000.0;
-                double reduction = (1.0 - ((double)blocks.Count / count)) * 100.0;
-                long allocPerOp = (allocAfter - allocBefore) / iterations;
-
-                Console.WriteLine($"  • Tags: {count,5:N0} -> Coalesced to {blocks.Count,3} blocks ({reduction,5:F1}% request reduction) | Plan + Encode: {avgUs,6:F2} μs | Alloc: {allocPerOp,4} B | Gen0: {gen0After - gen0Before}");
+                Console.WriteLine($"  • Tags: {count,5:N0} -> {plannedForStats.Count,3} blocks ({reduction,5:F1}% req reduction) | P50: {p50Us,6:F2} μs | P95: {p95Us,6:F2} μs | P99: {p99Us,6:F2} μs | Alloc: {result.AllocatedBytesPerOp,4} B | Gen0: {result.Gen0Collections}");
             }
 
             Console.WriteLine();
