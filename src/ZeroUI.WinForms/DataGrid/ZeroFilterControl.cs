@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Localization;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Theme;
 
@@ -59,6 +60,11 @@ namespace ZeroUI.WinForms.DataGrid
                 RebuildTreeUI();
             };
 
+            ZeroLocalizer.CultureChanged += (s, e) =>
+            {
+                RebuildTreeUI();
+            };
+
             // Add default starter condition
             _rootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
             RebuildTreeUI();
@@ -100,19 +106,19 @@ namespace ZeroUI.WinForms.DataGrid
             // [AND/OR] Toggle Button
             var btnOp = new Button
             {
-                Text = group.Operator.ToString().ToUpperInvariant(),
+                Text = group.Operator.GetLocalizedName(),
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold),
                 ForeColor = Color.White,
                 BackColor = group.Operator == FilterGroupOperator.Or ? colors.Warning : colors.Primary,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(58, 26),
+                Size = new Size(72, 26),
                 Location = new Point(0, 3)
             };
             btnOp.FlatAppearance.BorderSize = 0;
             btnOp.Click += (s, e) =>
             {
                 group.Operator = (group.Operator == FilterGroupOperator.And) ? FilterGroupOperator.Or : FilterGroupOperator.And;
-                btnOp.Text = group.Operator.ToString().ToUpperInvariant();
+                btnOp.Text = group.Operator.GetLocalizedName();
                 btnOp.BackColor = group.Operator == FilterGroupOperator.Or ? colors.Warning : colors.Primary;
                 FilterChanged?.Invoke(this, EventArgs.Empty);
             };
@@ -121,13 +127,13 @@ namespace ZeroUI.WinForms.DataGrid
             // [+] Add Condition Button
             var btnAddCond = new Button
             {
-                Text = "+ Condition",
+                Text = ZeroLocalizer.GetString(ZeroStringId.FilterAddCondition),
                 Font = new Font("Segoe UI", 8.5f),
                 ForeColor = colors.TextPrimary,
                 BackColor = colors.HeaderBackground,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(84, 26),
-                Location = new Point(66, 3)
+                Size = new Size(100, 26),
+                Location = new Point(80, 3)
             };
             btnAddCond.FlatAppearance.BorderColor = colors.Border;
             btnAddCond.Click += (s, e) =>
@@ -142,13 +148,13 @@ namespace ZeroUI.WinForms.DataGrid
             // [+] Add Group Button
             var btnAddGroup = new Button
             {
-                Text = "+ Group",
+                Text = ZeroLocalizer.GetString(ZeroStringId.FilterAddGroup),
                 Font = new Font("Segoe UI", 8.5f),
                 ForeColor = colors.TextPrimary,
                 BackColor = colors.HeaderBackground,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(70, 26),
-                Location = new Point(156, 3)
+                Size = new Size(84, 26),
+                Location = new Point(188, 3)
             };
             btnAddGroup.FlatAppearance.BorderColor = colors.Border;
             btnAddGroup.Click += (s, e) =>
@@ -243,16 +249,19 @@ namespace ZeroUI.WinForms.DataGrid
                 Size = new Size(130, 26),
                 Location = new Point(168, 3)
             };
-            foreach (var op in Enum.GetValues(typeof(FilterComparisonOperator)))
+            FilterOperatorDisplayItem? selectedOpItem = null;
+            foreach (FilterComparisonOperator op in Enum.GetValues(typeof(FilterComparisonOperator)))
             {
-                cboOp.Items.Add(op);
+                var item = new FilterOperatorDisplayItem(op);
+                cboOp.Items.Add(item);
+                if (op == cond.Operator) selectedOpItem = item;
             }
-            cboOp.SelectedItem = cond.Operator;
+            cboOp.SelectedItem = selectedOpItem;
             cboOp.SelectedIndexChanged += (s, e) =>
             {
-                if (cboOp.SelectedItem is FilterComparisonOperator op)
+                if (cboOp.SelectedItem is FilterOperatorDisplayItem item)
                 {
-                    cond.Operator = op;
+                    cond.Operator = item.Operator;
                     FilterChanged?.Invoke(this, EventArgs.Empty);
                 }
             };
@@ -291,5 +300,12 @@ namespace ZeroUI.WinForms.DataGrid
     [Description("Legacy alias for FilterControl")]
     public class ZeroFilterControl : FilterControl
     {
+    }
+
+    internal sealed class FilterOperatorDisplayItem
+    {
+        public FilterComparisonOperator Operator { get; }
+        public FilterOperatorDisplayItem(FilterComparisonOperator op) => Operator = op;
+        public override string ToString() => Operator.GetLocalizedName();
     }
 }

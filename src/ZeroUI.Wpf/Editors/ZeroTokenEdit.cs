@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Localization;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -35,14 +36,14 @@ namespace ZeroUI.Wpf.Editors
         private TextBox? _inputBox;
 
         public static readonly DependencyProperty PlaceholderProperty =
-            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(TokenEdit), new PropertyMetadata("Type and press Enter..."));
+            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(TokenEdit), new PropertyMetadata(null));
 
         public static readonly DependencyProperty ReadOnlyProperty =
             DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(TokenEdit), new PropertyMetadata(false));
 
         public string Placeholder
         {
-            get => (string)GetValue(PlaceholderProperty);
+            get => (string?)GetValue(PlaceholderProperty) ?? ZeroLocalizer.GetString(ZeroStringId.TokenEditPlaceholder);
             set => SetValue(PlaceholderProperty, value);
         }
 

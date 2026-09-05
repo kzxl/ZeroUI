@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Localization;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -51,8 +52,8 @@ namespace ZeroUI.WinForms.Editors
         }
 
         private readonly List<CheckedItem> _items = new List<CheckedItem>();
-        private string _placeholder = "Select items...";
-        private string _summaryFormat = "{0} items selected";
+        private string? _placeholder;
+        private string? _summaryFormat;
         private int _itemHeight = 30;
 
         private bool _isHovered = false;
@@ -120,18 +121,16 @@ namespace ZeroUI.WinForms.Editors
         public void Clear() => Reset();
 
         [Category("Appearance")]
-        [DefaultValue("Select items...")]
         public string Placeholder
         {
-            get => _placeholder;
+            get => _placeholder ?? ZeroLocalizer.GetString(ZeroStringId.CheckedComboPlaceholder);
             set { _placeholder = value; Invalidate(); }
         }
 
         [Category("Appearance")]
-        [DefaultValue("{0} items selected")]
         public string SummaryFormat
         {
-            get => _summaryFormat;
+            get => _summaryFormat ?? ZeroLocalizer.GetString(ZeroStringId.CheckedComboSummaryFormat);
             set { _summaryFormat = value; Invalidate(); }
         }
 
@@ -176,8 +175,10 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.Selectable |
                 ControlStyles.SupportsTransparentBackColor, true);
 
-            Size = new Size(240, 36);
+            DoubleBuffered = true;
+            Height = 32;
             Cursor = Cursors.Hand;
+            ZeroLocalizer.CultureChanged += (s, e) => Invalidate();
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
 
@@ -253,9 +254,9 @@ namespace ZeroUI.WinForms.Editors
                 if (_items[i].IsChecked) checkedList.Add(_items[i].DisplayText);
             }
 
-            if (checkedList.Count == 0) return _placeholder;
+            if (checkedList.Count == 0) return Placeholder;
             if (checkedList.Count <= 2) return string.Join(", ", checkedList);
-            return string.Format(_summaryFormat, checkedList.Count);
+            return string.Format(SummaryFormat, checkedList.Count);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -448,7 +449,7 @@ namespace ZeroUI.WinForms.Editors
                     if (!_owner._items[i].IsChecked) { allChecked = false; break; }
                 }
 
-                DrawCheckboxItem(g, 0, selectAllY, Width, itemH, "(Select All)", allChecked, _hoveredIndex == -2);
+                DrawCheckboxItem(g, 0, selectAllY, Width, itemH, ZeroLocalizer.GetString(ZeroStringId.CheckedComboSelectAll), allChecked, _hoveredIndex == -2);
 
                 // Separator line
                 using (var pen = new Pen(colors.Border))

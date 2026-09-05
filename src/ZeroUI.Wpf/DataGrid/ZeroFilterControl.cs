@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Localization;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.DataGrid
@@ -36,6 +37,8 @@ namespace ZeroUI.Wpf.DataGrid
             BorderThickness = new Thickness(1);
             Width = 560;
             Height = 280;
+
+            ZeroLocalizer.CultureChanged += (s, e) => RebuildTreeUI();
 
             _rootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
             BuildVisualTemplate();
@@ -95,9 +98,9 @@ namespace ZeroUI.Wpf.DataGrid
             // [AND/OR] Toggle Button
             var btnOp = new Button
             {
-                Content = group.Operator.ToString().ToUpperInvariant(),
+                Content = group.Operator.GetLocalizedName(),
                 FontWeight = FontWeights.Bold,
-                Width = 60,
+                Width = 72,
                 Height = 26,
                 Background = group.Operator == FilterGroupOperator.Or ? ZeroWpfTheme.WarningAccent : ZeroWpfTheme.PrimaryAccent,
                 Foreground = Brushes.White,
@@ -106,7 +109,7 @@ namespace ZeroUI.Wpf.DataGrid
             btnOp.Click += (s, e) =>
             {
                 group.Operator = (group.Operator == FilterGroupOperator.And) ? FilterGroupOperator.Or : FilterGroupOperator.And;
-                btnOp.Content = group.Operator.ToString().ToUpperInvariant();
+                btnOp.Content = group.Operator.GetLocalizedName();
                 btnOp.Background = group.Operator == FilterGroupOperator.Or ? ZeroWpfTheme.WarningAccent : ZeroWpfTheme.PrimaryAccent;
                 FilterChanged?.Invoke(this, EventArgs.Empty);
             };
@@ -115,7 +118,7 @@ namespace ZeroUI.Wpf.DataGrid
             // [+] Add Condition
             var btnAddCond = new Button
             {
-                Content = "+ Condition",
+                Content = ZeroLocalizer.GetString(ZeroStringId.FilterAddCondition),
                 Height = 26,
                 Padding = new Thickness(8, 0, 8, 0),
                 Margin = new Thickness(0, 0, 6, 0)
@@ -132,7 +135,7 @@ namespace ZeroUI.Wpf.DataGrid
             // [+] Add Group
             var btnAddGrp = new Button
             {
-                Content = "+ Group",
+                Content = ZeroLocalizer.GetString(ZeroStringId.FilterAddGroup),
                 Height = 26,
                 Padding = new Thickness(8, 0, 8, 0)
             };
@@ -219,16 +222,19 @@ namespace ZeroUI.Wpf.DataGrid
                 Height = 26,
                 Margin = new Thickness(0, 0, 6, 0)
             };
-            foreach (var op in Enum.GetValues(typeof(FilterComparisonOperator)))
+            FilterOperatorDisplayItem? selectedOpItem = null;
+            foreach (FilterComparisonOperator op in Enum.GetValues(typeof(FilterComparisonOperator)))
             {
-                cboOp.Items.Add(op);
+                var item = new FilterOperatorDisplayItem(op);
+                cboOp.Items.Add(item);
+                if (op == cond.Operator) selectedOpItem = item;
             }
-            cboOp.SelectedItem = cond.Operator;
+            cboOp.SelectedItem = selectedOpItem;
             cboOp.SelectionChanged += (s, e) =>
             {
-                if (cboOp.SelectedItem is FilterComparisonOperator op)
+                if (cboOp.SelectedItem is FilterOperatorDisplayItem item)
                 {
-                    cond.Operator = op;
+                    cond.Operator = item.Operator;
                     FilterChanged?.Invoke(this, EventArgs.Empty);
                 }
             };
@@ -262,5 +268,12 @@ namespace ZeroUI.Wpf.DataGrid
     /// </summary>
     public class ZeroFilterControl : FilterControl
     {
+    }
+
+    internal sealed class FilterOperatorDisplayItem
+    {
+        public FilterComparisonOperator Operator { get; }
+        public FilterOperatorDisplayItem(FilterComparisonOperator op) => Operator = op;
+        public override string ToString() => Operator.GetLocalizedName();
     }
 }

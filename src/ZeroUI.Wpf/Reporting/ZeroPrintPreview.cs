@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Localization;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Reporting
@@ -28,6 +29,9 @@ namespace ZeroUI.Wpf.Reporting
         // Standard A4 Paper in DIP at 96 DPI: 210mm x 297mm ≈ 794 x 1123 DIP
         private double _paperWidth = 794;
         private double _paperHeight = 1123;
+
+        private readonly Button _btnPrint;
+        private readonly Button _btnFit;
 
         public event EventHandler? PrintRequested;
 
@@ -89,18 +93,18 @@ namespace ZeroUI.Wpf.Reporting
 
             var barPanel = new StackPanel { Orientation = Orientation.Horizontal };
 
-            var btnPrint = CreateToolbarButton("🖨️ Print", (s, e) => ExecutePrint());
-            barPanel.ControlsAdd(btnPrint);
+            _btnPrint = CreateToolbarButton(ZeroLocalizer.GetString(ZeroStringId.PrintButton), (s, e) => ExecutePrint());
+            barPanel.ControlsAdd(_btnPrint);
 
             var separator1 = CreateSeparator();
             barPanel.Children.Add(separator1);
 
             var btnZoomOut = CreateToolbarButton("➖", (s, e) => ZoomFactor -= 0.15);
             var btnZoomIn = CreateToolbarButton("➕", (s, e) => ZoomFactor += 0.15);
-            var btnFit = CreateToolbarButton("100%", (s, e) => ZoomFactor = 1.0);
+            _btnFit = CreateToolbarButton(ZeroLocalizer.GetString(ZeroStringId.ZoomFit), (s, e) => ZoomFactor = 1.0);
             barPanel.Children.Add(btnZoomOut);
             barPanel.Children.Add(btnZoomIn);
-            barPanel.Children.Add(btnFit);
+            barPanel.Children.Add(_btnFit);
 
             _zoomCombo = new ComboBox
             {
@@ -192,6 +196,12 @@ namespace ZeroUI.Wpf.Reporting
             rootGrid.Children.Add(_scrollViewer);
 
             AddVisualChild(rootGrid);
+            ZeroLocalizer.CultureChanged += (s, e) =>
+            {
+                UpdateLocalizedStrings();
+                UpdatePageDisplay();
+            };
+            UpdateLocalizedStrings();
             UpdatePageDisplay();
         }
 
@@ -229,9 +239,15 @@ namespace ZeroUI.Wpf.Reporting
             _paperCanvas.LayoutTransform = new ScaleTransform(_zoomFactor, _zoomFactor);
         }
 
+        private void UpdateLocalizedStrings()
+        {
+            _btnPrint.Content = ZeroLocalizer.GetString(ZeroStringId.PrintButton);
+            _btnFit.Content = ZeroLocalizer.GetString(ZeroStringId.ZoomFit);
+        }
+
         private void UpdatePageDisplay()
         {
-            _pageStatusLabel.Text = $"Page {_currentPageIndex + 1} of {PageCount}";
+            _pageStatusLabel.Text = ZeroLocalizer.GetFormattedString(ZeroStringId.PrintStatusFormat, _currentPageIndex + 1, PageCount);
             _paperCanvas.Width = _paperWidth;
             _paperCanvas.Height = _paperHeight;
 

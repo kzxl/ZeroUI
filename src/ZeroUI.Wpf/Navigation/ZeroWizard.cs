@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ZeroUI.Core.Localization;
 using ZeroUI.Wpf.Editors;
 using ZeroUI.Wpf.Theme;
 
@@ -145,6 +146,8 @@ namespace ZeroUI.Wpf.Navigation
                 if (_pages.Count == 1) UpdateWizardView();
                 else RebuildStepIndicators();
             };
+
+            ZeroLocalizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
 
             BuildVisualTemplate();
         }
@@ -312,7 +315,7 @@ namespace ZeroUI.Wpf.Navigation
                 {
                     if (!string.IsNullOrEmpty(err))
                     {
-                        MessageBox.Show(err, "Step Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(err, ZeroLocalizer.GetString(ZeroStringId.WizardValidationTitle), MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                     return;
                 }
@@ -335,7 +338,7 @@ namespace ZeroUI.Wpf.Navigation
                 {
                     if (!string.IsNullOrEmpty(err))
                     {
-                        MessageBox.Show(err, "Step Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show(err, ZeroLocalizer.GetString(ZeroStringId.WizardValidationTitle), MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                     return;
                 }
@@ -343,12 +346,21 @@ namespace ZeroUI.Wpf.Navigation
             Finished?.Invoke(this, EventArgs.Empty);
         }
 
+        private void UpdateLocalizedStrings()
+        {
+            if (_btnBack != null) _btnBack.Content = ZeroLocalizer.GetString(ZeroStringId.WizardBack);
+            if (_btnNext != null) _btnNext.Content = ZeroLocalizer.GetString(ZeroStringId.WizardNext);
+            if (_btnFinish != null) _btnFinish.Content = ZeroLocalizer.GetString(ZeroStringId.WizardFinish);
+            if (_btnCancel != null) _btnCancel.Content = ZeroLocalizer.GetString(ZeroStringId.WizardCancel);
+        }
+
         private void UpdateWizardView()
         {
+            UpdateLocalizedStrings();
             if (_pages.Count == 0)
             {
-                if (_titleBlock != null) _titleBlock.Text = "No Pages";
-                if (_subBlock != null) _subBlock.Text = "Add pages to this wizard.";
+                if (_titleBlock != null) _titleBlock.Text = ZeroLocalizer.GetString(ZeroStringId.WizardNoPages);
+                if (_subBlock != null) _subBlock.Text = ZeroLocalizer.GetString(ZeroStringId.WizardNoPagesDesc);
                 if (_pageContentHost != null) _pageContentHost.Content = null;
                 if (_btnBack != null) _btnBack.IsEnabled = false;
                 if (_btnNext != null) _btnNext.IsEnabled = false;

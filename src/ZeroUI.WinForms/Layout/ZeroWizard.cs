@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Localization;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Theme;
 
@@ -140,6 +141,9 @@ namespace ZeroUI.WinForms.Layout
             _footerPanel.Resize += (s, e) => PositionFooterButtons();
             PositionFooterButtons();
 
+            UpdateLocalizedStrings();
+            ZeroLocalizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
+
             ZeroTheme.ThemeChanged += (s, e) =>
             {
                 BackColor = ZeroTheme.Colors.Background;
@@ -209,8 +213,18 @@ namespace ZeroUI.WinForms.Layout
             }
             else if (!string.IsNullOrEmpty(error))
             {
-                MessageBox.Show(error, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(error, ZeroLocalizer.GetString(ZeroStringId.WizardValidationTitle), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+        }
+
+        private void UpdateLocalizedStrings()
+        {
+            _btnBack.Text = ZeroLocalizer.GetString(ZeroStringId.WizardBack);
+            _btnNext.Text = ZeroLocalizer.GetString(ZeroStringId.WizardNext);
+            _btnFinish.Text = ZeroLocalizer.GetString(ZeroStringId.WizardFinish);
+            _btnCancel.Text = ZeroLocalizer.GetString(ZeroStringId.WizardCancel);
+            PositionFooterButtons();
+            Invalidate(true);
         }
 
         private void UpdateWizardView()

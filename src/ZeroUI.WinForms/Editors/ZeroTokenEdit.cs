@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Localization;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -37,7 +38,7 @@ namespace ZeroUI.WinForms.Editors
         private readonly List<Rectangle> _closeBounds = new List<Rectangle>();
 
         private readonly TextBox _inputBox;
-        private string _placeholder = "Type and press Enter...";
+        private string? _placeholder;
         private int _tokenHeight = 24;
         private int _tokenSpacing = 6;
         private int _hoveredCloseIndex = -1;
@@ -111,10 +112,10 @@ namespace ZeroUI.WinForms.Editors
         public void Clear() => Reset();
 
         [Category("Appearance")]
-        [DefaultValue("Type and press Enter...")]
+        [DefaultValue(null)]
         public string Placeholder
         {
-            get => _placeholder;
+            get => _placeholder ?? ZeroLocalizer.GetString(ZeroStringId.TokenEditPlaceholder);
             set { _placeholder = value; Invalidate(); }
         }
 
@@ -130,6 +131,8 @@ namespace ZeroUI.WinForms.Editors
                 ControlStyles.ResizeRedraw |
                 ControlStyles.Selectable |
                 ControlStyles.SupportsTransparentBackColor, true);
+
+            ZeroLocalizer.CultureChanged += (s, e) => Invalidate();
 
             Size = new Size(300, 40);
             Cursor = Cursors.IBeam;
@@ -325,7 +328,7 @@ namespace ZeroUI.WinForms.Editors
                 using (var brush = new SolidBrush(colors.TextSecondary))
                 {
                     var sf = new StringFormat { LineAlignment = StringAlignment.Center };
-                    g.DrawString(_placeholder, Font, brush, new Rectangle(12, 0, Width - 24, Height), sf);
+                    g.DrawString(Placeholder, Font, brush, new Rectangle(12, 0, Width - 24, Height), sf);
                 }
             }
         }

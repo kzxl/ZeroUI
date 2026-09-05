@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ZeroUI.Core.Localization;
 
 namespace ZeroUI.Core.Data
 {
@@ -125,6 +126,38 @@ namespace ZeroUI.Core.Data
             }
             sb.Append(")");
             return sb.ToString();
+        }
+    }
+
+    public static class FilterCriteriaExtensions
+    {
+        public static string GetLocalizedName(this FilterGroupOperator op)
+        {
+            return op switch
+            {
+                FilterGroupOperator.And => ZeroLocalizer.GetString(ZeroStringId.FilterOpAnd),
+                FilterGroupOperator.Or => ZeroLocalizer.GetString(ZeroStringId.FilterOpOr),
+                FilterGroupOperator.NotAnd => ZeroLocalizer.GetString(ZeroStringId.FilterOpNotAnd),
+                FilterGroupOperator.NotOr => ZeroLocalizer.GetString(ZeroStringId.FilterOpNotOr),
+                _ => op.ToString().ToUpperInvariant()
+            };
+        }
+
+        public static string GetLocalizedName(this FilterComparisonOperator op)
+        {
+            return op switch
+            {
+                FilterComparisonOperator.Equals => ZeroLocalizer.GetString(ZeroStringId.FilterEquals),
+                FilterComparisonOperator.NotEquals => ZeroLocalizer.GetString(ZeroStringId.FilterNotEquals),
+                FilterComparisonOperator.Contains => ZeroLocalizer.GetString(ZeroStringId.FilterContains),
+                FilterComparisonOperator.StartsWith => ZeroLocalizer.GetString(ZeroStringId.FilterStartsWith),
+                FilterComparisonOperator.EndsWith => ZeroLocalizer.GetString(ZeroStringId.FilterEndsWith),
+                FilterComparisonOperator.GreaterThan => ZeroLocalizer.GetString(ZeroStringId.FilterGreaterThan),
+                FilterComparisonOperator.LessThan => ZeroLocalizer.GetString(ZeroStringId.FilterLessThan),
+                FilterComparisonOperator.IsNull => ZeroLocalizer.GetString(ZeroStringId.FilterIsNull),
+                FilterComparisonOperator.IsNotNull => ZeroLocalizer.GetString(ZeroStringId.FilterIsNotNull),
+                _ => op.ToString()
+            };
         }
     }
 }

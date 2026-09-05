@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
 using System.Windows.Forms;
+using ZeroUI.Core.Localization;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
@@ -102,7 +103,7 @@ namespace ZeroUI.WinForms.Reporting
             };
 
             // Buttons
-            _btnPrint = new SimpleButton { Text = "🖨 Print", Width = 80, Height = 30, Location = new Point(10, 7) };
+            _btnPrint = new SimpleButton { Text = ZeroLocalizer.GetString(ZeroStringId.PrintButton), Width = 90, Height = 30, Location = new Point(10, 7) };
             _btnPrint.Click += (s, e) => Print();
 
             _btnPrevPage = new SimpleButton { Text = "◀", Width = 34, Height = 30, Location = new Point(100, 7) };
@@ -129,7 +130,7 @@ namespace ZeroUI.WinForms.Reporting
             _btnZoomIn = new SimpleButton { Text = "+", Width = 34, Height = 30, Location = new Point(298, 7) };
             _btnZoomIn.Click += (s, e) => Zoom = _previewControl.Zoom * 1.25;
 
-            _btnFitPage = new SimpleButton { Text = "Fit Page", Width = 70, Height = 30, Location = new Point(336, 7) };
+            _btnFitPage = new SimpleButton { Text = ZeroLocalizer.GetString(ZeroStringId.ZoomFit), Width = 70, Height = 30, Location = new Point(336, 7) };
             _btnFitPage.Click += (s, e) => _previewControl.AutoZoom = true;
 
             _toolbarPanel.Controls.Add(_btnPrint);
@@ -141,6 +142,9 @@ namespace ZeroUI.WinForms.Reporting
             _toolbarPanel.Controls.Add(_btnFitPage);
 
             Controls.Add(_toolbarPanel);
+
+            ZeroLocalizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
+            UpdateLocalizedStrings();
 
             // Theme Sync
             ZeroTheme.ThemeChanged += (s, e) =>
@@ -167,7 +171,14 @@ namespace ZeroUI.WinForms.Reporting
 
         private void UpdatePageInfo()
         {
-            _lblPageInfo.Text = $"Page {_previewControl.StartPage + 1}";
+            _lblPageInfo.Text = ZeroLocalizer.GetFormattedString(ZeroStringId.PrintStatusFormat, _previewControl.StartPage + 1, Math.Max(1, _previewControl.StartPage + 1));
+        }
+
+        private void UpdateLocalizedStrings()
+        {
+            _btnPrint.Text = ZeroLocalizer.GetString(ZeroStringId.PrintButton);
+            _btnFitPage.Text = ZeroLocalizer.GetString(ZeroStringId.ZoomFit);
+            UpdatePageInfo();
         }
 
         public void InvalidatePreview()

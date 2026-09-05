@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Text.RegularExpressions;
+using ZeroUI.Core.Localization;
 
 namespace ZeroUI.Core.Validation
 {
@@ -23,9 +24,9 @@ namespace ZeroUI.Core.Validation
         public string ErrorMessage { get; set; }
         public ValidationSeverity Severity { get; set; }
 
-        public RequiredControlRule(string errorMessage = "This field is required.", ValidationSeverity severity = ValidationSeverity.Error)
+        public RequiredControlRule(string? errorMessage = null, ValidationSeverity severity = ValidationSeverity.Error)
         {
-            ErrorMessage = errorMessage;
+            ErrorMessage = errorMessage ?? ZeroLocalizer.GetString(ZeroStringId.ValRequired);
             Severity = severity;
         }
 
@@ -65,7 +66,7 @@ namespace ZeroUI.Core.Validation
             Min = min;
             Max = max;
             Severity = severity;
-            ErrorMessage = errorMessage ?? $"Value must be between {min} and {max}.";
+            ErrorMessage = errorMessage ?? ZeroLocalizer.GetFormattedString(ZeroStringId.ValRangeFormat, min?.ToString() ?? "", max?.ToString() ?? "");
         }
 
         public ValidationResult Validate(object? value)
@@ -112,10 +113,10 @@ namespace ZeroUI.Core.Validation
         public string ErrorMessage { get; set; }
         public ValidationSeverity Severity { get; set; }
 
-        public RegexControlRule(string pattern, string errorMessage = "Input format is invalid.", ValidationSeverity severity = ValidationSeverity.Error)
+        public RegexControlRule(string pattern, string? errorMessage = null, ValidationSeverity severity = ValidationSeverity.Error)
         {
             _regex = new Regex(pattern, RegexOptions.Compiled);
-            ErrorMessage = errorMessage;
+            ErrorMessage = errorMessage ?? ZeroLocalizer.GetString(ZeroStringId.ValInvalidFormat);
             Severity = severity;
         }
 
@@ -144,7 +145,7 @@ namespace ZeroUI.Core.Validation
             MinLength = Math.Max(0, minLength);
             MaxLength = Math.Max(MinLength, maxLength);
             Severity = severity;
-            ErrorMessage = errorMessage ?? $"Text length must be between {MinLength} and {MaxLength} characters.";
+            ErrorMessage = errorMessage ?? ZeroLocalizer.GetFormattedString(ZeroStringId.ValStringLengthFormat, MinLength, MaxLength);
         }
 
         public ValidationResult Validate(object? value)
@@ -187,17 +188,17 @@ namespace ZeroUI.Core.Validation
     /// </summary>
     public static class ControlValidationRules
     {
-        public static IControlValidationRule Required(string message = "This field is required.", ValidationSeverity severity = ValidationSeverity.Error) =>
+        public static IControlValidationRule Required(string? message = null, ValidationSeverity severity = ValidationSeverity.Error) =>
             new RequiredControlRule(message, severity);
 
         public static IControlValidationRule Range<T>(T min, T max, string? message = null, ValidationSeverity severity = ValidationSeverity.Error) where T : IComparable<T> =>
             new RangeControlRule<T>(min, max, message, severity);
 
-        public static IControlValidationRule Email(string message = "Invalid email address format.", ValidationSeverity severity = ValidationSeverity.Error) =>
-            new RegexControlRule(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", message, severity);
+        public static IControlValidationRule Email(string? message = null, ValidationSeverity severity = ValidationSeverity.Error) =>
+            new RegexControlRule(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", message ?? ZeroLocalizer.GetString(ZeroStringId.ValEmail), severity);
 
-        public static IControlValidationRule Phone(string message = "Invalid phone number format.", ValidationSeverity severity = ValidationSeverity.Error) =>
-            new RegexControlRule(@"^[+0-9\s\-()]{7,20}$", message, severity);
+        public static IControlValidationRule Phone(string? message = null, ValidationSeverity severity = ValidationSeverity.Error) =>
+            new RegexControlRule(@"^[+0-9\s\-()]{7,20}$", message ?? ZeroLocalizer.GetString(ZeroStringId.ValPhone), severity);
 
         public static IControlValidationRule StringLength(int min, int max, string? message = null, ValidationSeverity severity = ValidationSeverity.Error) =>
             new StringLengthControlRule(min, max, message, severity);

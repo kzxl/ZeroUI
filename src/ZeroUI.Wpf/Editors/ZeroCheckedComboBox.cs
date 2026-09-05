@@ -10,6 +10,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Localization;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -89,10 +90,10 @@ namespace ZeroUI.Wpf.Editors
         private bool _isUpdatingSelectAll = false;
 
         public static readonly DependencyProperty PlaceholderProperty =
-            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(CheckedComboBoxEdit), new PropertyMetadata("Select items..."));
+            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(CheckedComboBoxEdit), new PropertyMetadata(null));
 
         public static readonly DependencyProperty SummaryFormatProperty =
-            DependencyProperty.Register(nameof(SummaryFormat), typeof(string), typeof(CheckedComboBoxEdit), new PropertyMetadata("{0} items selected"));
+            DependencyProperty.Register(nameof(SummaryFormat), typeof(string), typeof(CheckedComboBoxEdit), new PropertyMetadata(null));
 
         public static readonly DependencyProperty IsDropDownOpenProperty =
             DependencyProperty.Register(nameof(IsDropDownOpen), typeof(bool), typeof(CheckedComboBoxEdit), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsDropDownOpenChanged));
@@ -102,13 +103,13 @@ namespace ZeroUI.Wpf.Editors
 
         public string Placeholder
         {
-            get => (string)GetValue(PlaceholderProperty);
+            get => (string?)GetValue(PlaceholderProperty) ?? ZeroLocalizer.GetString(ZeroStringId.CheckedComboPlaceholder);
             set => SetValue(PlaceholderProperty, value);
         }
 
         public string SummaryFormat
         {
-            get => (string)GetValue(SummaryFormatProperty);
+            get => (string?)GetValue(SummaryFormatProperty) ?? ZeroLocalizer.GetString(ZeroStringId.CheckedComboSummaryFormat);
             set => SetValue(SummaryFormatProperty, value);
         }
 
@@ -201,6 +202,12 @@ namespace ZeroUI.Wpf.Editors
                 UpdateDisplayText();
             };
 
+            ZeroLocalizer.CultureChanged += (s, e) =>
+            {
+                UpdateDisplayText();
+                if (_selectAllBox != null) _selectAllBox.Content = ZeroLocalizer.GetString(ZeroStringId.CheckedComboSelectAll);
+            };
+
             BuildVisualTemplate();
         }
 
@@ -281,7 +288,7 @@ namespace ZeroUI.Wpf.Editors
 
             _selectAllBox = new CheckBox
             {
-                Content = "(Select All)",
+                Content = ZeroLocalizer.GetString(ZeroStringId.CheckedComboSelectAll),
                 FontWeight = FontWeights.Bold,
                 Foreground = ZeroWpfTheme.TextPrimary,
                 Margin = new Thickness(6, 2, 6, 6)
