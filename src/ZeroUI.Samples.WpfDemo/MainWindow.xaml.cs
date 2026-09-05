@@ -14,6 +14,7 @@ using ZeroUI.Core.Theme;
 using ZeroUI.Core.Signal;
 using ZeroUI.Core.Memory;
 using ZeroUI.Core.Automation;
+using ZeroUI.Core.Pivot;
 using ZeroUI.Samples.WpfDemo.Data;
 using ZeroUI.Wpf.Charts.Model;
 using ZeroUI.Wpf.Editors;
@@ -1564,6 +1565,26 @@ namespace ZeroUI.Samples.WpfDemo
             docCanvas.Children.Add(contentBox);
 
             DemoPrintPreview.SetPages(new[] { docCanvas });
+
+            // 9. Setup PivotGridControl (Multidimensional Cross-Tab OLAP)
+            var samplePivotData = new List<DemoProduct>
+            {
+                new DemoProduct { Category = "Semiconductors", Code = "MCU-STM32F4", Name = "North Plant", Quantity = 4500, Price = 4.25 },
+                new DemoProduct { Category = "Semiconductors", Code = "MCU-STM32F4", Name = "South Plant", Quantity = 3200, Price = 4.25 },
+                new DemoProduct { Category = "Passive Components", Code = "RES-10K-0402", Name = "North Plant", Quantity = 150000, Price = 0.005 },
+                new DemoProduct { Category = "Passive Components", Code = "RES-10K-0402", Name = "South Plant", Quantity = 100000, Price = 0.005 },
+                new DemoProduct { Category = "Passive Components", Code = "CAP-100N-0603", Name = "North Plant", Quantity = 90000, Price = 0.012 },
+                new DemoProduct { Category = "Passive Components", Code = "CAP-100N-0603", Name = "South Plant", Quantity = 90000, Price = 0.012 },
+                new DemoProduct { Category = "Connectors", Code = "CONN-RJ45-1G", Name = "North Plant", Quantity = 6000, Price = 1.85 },
+                new DemoProduct { Category = "Connectors", Code = "CONN-RJ45-1G", Name = "South Plant", Quantity = 6000, Price = 1.85 },
+                new DemoProduct { Category = "Power Electronics", Code = "REG-LM2596-5", Name = "North Plant", Quantity = 4100, Price = 0.95 },
+                new DemoProduct { Category = "Power Electronics", Code = "REG-LM2596-5", Name = "South Plant", Quantity = 4100, Price = 0.95 }
+            };
+            DemoPivotGrid.AddField("Category", PivotArea.RowArea, "Category");
+            DemoPivotGrid.AddField("Name", PivotArea.ColumnArea, "Factory Facility");
+            DemoPivotGrid.AddField("Quantity", PivotArea.DataArea, "Total Qty", PivotSummaryType.Sum);
+            DemoPivotGrid.AddField("Total", PivotArea.DataArea, "Total Value ($)", PivotSummaryType.Sum);
+            DemoPivotGrid.DataSource = samplePivotData;
         }
 
         private void BtnApplyFilter_Click(object sender, RoutedEventArgs e)

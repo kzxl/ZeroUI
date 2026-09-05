@@ -67,7 +67,14 @@ namespace ZeroUI.Core.Localization
             [ZeroStringId.ValEmail] = "Invalid email address format.",
             [ZeroStringId.ValPhone] = "Invalid phone number format.",
             [ZeroStringId.ValStringLengthFormat] = "Text length must be between {0} and {1} characters.",
-            [ZeroStringId.ValInvalidFormat] = "Input format is invalid."
+            [ZeroStringId.ValInvalidFormat] = "Input format is invalid.",
+
+            [ZeroStringId.PivotGrandTotal] = "Grand Total",
+            [ZeroStringId.PivotTotal] = "Total",
+            [ZeroStringId.PivotDropFilterFields] = "Drop Filter Fields Here",
+            [ZeroStringId.PivotDropRowFields] = "Drop Row Fields Here",
+            [ZeroStringId.PivotDropColumnFields] = "Drop Column Fields Here",
+            [ZeroStringId.PivotDropDataFields] = "Drop Data Fields Here"
         };
 
         private static readonly Dictionary<ZeroStringId, string> Vietnamese = new Dictionary<ZeroStringId, string>
@@ -126,7 +133,14 @@ namespace ZeroUI.Core.Localization
             [ZeroStringId.ValEmail] = "Định dạng địa chỉ email không hợp lệ.",
             [ZeroStringId.ValPhone] = "Định dạng số điện thoại không hợp lệ.",
             [ZeroStringId.ValStringLengthFormat] = "Độ dài văn bản phải từ {0} đến {1} ký tự.",
-            [ZeroStringId.ValInvalidFormat] = "Định dạng nhập liệu không hợp lệ."
+            [ZeroStringId.ValInvalidFormat] = "Định dạng nhập liệu không hợp lệ.",
+
+            [ZeroStringId.PivotGrandTotal] = "Tổng cộng",
+            [ZeroStringId.PivotTotal] = "Tổng",
+            [ZeroStringId.PivotDropFilterFields] = "Kéo thả trường bộ lọc vào đây",
+            [ZeroStringId.PivotDropRowFields] = "Kéo thả trường hàng vào đây",
+            [ZeroStringId.PivotDropColumnFields] = "Kéo thả trường cột vào đây",
+            [ZeroStringId.PivotDropDataFields] = "Kéo thả trường dữ liệu vào đây"
         };
 
         private static readonly Dictionary<string, Dictionary<ZeroStringId, string>> CustomLanguages =

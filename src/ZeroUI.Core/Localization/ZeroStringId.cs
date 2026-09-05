@@ -65,6 +65,14 @@ namespace ZeroUI.Core.Localization
         ValEmail = 502,
         ValPhone = 503,
         ValStringLengthFormat = 504,
-        ValInvalidFormat = 505
+        ValInvalidFormat = 505,
+
+        // Pivot Grid / OLAP Reporting
+        PivotGrandTotal = 600,
+        PivotTotal = 601,
+        PivotDropFilterFields = 602,
+        PivotDropRowFields = 603,
+        PivotDropColumnFields = 604,
+        PivotDropDataFields = 605
     }
 }

@@ -14,6 +14,7 @@
         xmlns:feed="clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf"
         xmlns:overlay="clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf"
         xmlns:report="clr-namespace:ZeroUI.Wpf.Reporting;assembly=ZeroUI.Wpf"
+        xmlns:pivot="clr-namespace:ZeroUI.Wpf.PivotGrid;assembly=ZeroUI.Wpf"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="860" Width="1340"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -872,6 +873,7 @@
                             <RowDefinition Height="Auto" /> <!-- Section 1: Query Builder & Editors -->
                             <RowDefinition Height="Auto" /> <!-- Section 2: Wizard, BoxPlot & Print -->
                             <RowDefinition Height="Auto" /> <!-- Section 3: Shimmer & Overlays -->
+                            <RowDefinition Height="Auto" /> <!-- Section 4: OLAP Pivot Grid -->
                         </Grid.RowDefinitions>
 
                         <!-- Header Bar -->
@@ -1001,6 +1003,15 @@
                                         <Button x:Name="BtnShowModalConfirm" Click="BtnShowModalConfirm_Click" Content="💬 Show Production Order Modal" Height="32" Padding="16,0,16,0" Cursor="Hand" FontWeight="SemiBold" />
                                     </WrapPanel>
                                 </StackPanel>
+                            </ind:ZeroCard>
+                        </Grid>
+
+                        <!-- Section 4: Multidimensional Cross-Tab OLAP Reporting (PivotGridControl) -->
+                        <Grid Grid.Row="4" Margin="0,16,0,0">
+                            <ind:ZeroCard HeaderText="Multidimensional Cross-Tab OLAP Reporting (PivotGridControl)" SubtitleText="Dynamic row/column hierarchical slicing, measure aggregations, sub-totals, and grand totals">
+                                <Border Height="360" BorderThickness="1" BorderBrush="#2E344E" CornerRadius="6" Background="#12151F">
+                                    <pivot:PivotGridControl x:Name="DemoPivotGrid" />
+                                </Border>
                             </ind:ZeroCard>
                         </Grid>
                     </Grid>
