@@ -11,6 +11,7 @@
 | **Phase 6** | **Theming & Packaging** | Distribution & Design System | **Active** | Obsidian Dark / Clean Light Themes, Headless CLI benchmarks, Automated screenshots. |
 | **Phase 7** | **SCADA & Deterministic Runtime** | Industrial Edge & Telemetry Engine | **Completed** | `ZeroRuntime`, 3-Tier Pipeline, `ZeroTripleBuffer`, `TagStorage`, `ZeroAnimationClock`, `ZeroScene`. |
 | **Phase 8** | **Enterprise Commercial Parity** | 8 Major Control Clusters | **Completed** | Full WinForms & WPF parity: `ZeroGridLookup`, `ZeroFilterControl`, `ZeroDockManager`, `ZeroWorkspaceSerializer`, `ZeroWizard`, `ZeroBoxPlotChart`, `ZeroGanttChart`, `ZeroPropertyGrid`, `ZeroPrintPreview`, `ZeroSkeleton`, `ZeroToast`, `ZeroModal`. |
+| **Phase 9** | **Enterprise DX & Designer** | Unified `EditValue`, Smart Tags, Naming | **Planned** | `IZeroEditor` Contract, `ZeroDataBinder`, Visual Studio Smart Tags, Semantic Aliases. |
 
 ---
 
@@ -85,6 +86,13 @@
 * [x] **Cluster 6 (Industrial & Scheduling):** `ZeroGanttChart` production scheduling timeline (WinForms & WPF); `ZeroPropertyGrid` categorized reflection property inspector (WinForms & WPF).
 * [x] **Cluster 7 (Feedback & Overlays):** `ZeroSkeleton` 60 FPS shimmer loading placeholder (WinForms & WPF); `ZeroToast` & `ZeroModal` (WPF parity).
 * [x] **Cluster 8 (Reporting & Print):** `ZeroPrintPreview` vector document and report print previewer with zoom and direct printer dispatch (WinForms & WPF).
+
+### Phase 9: Enterprise DX & Design-Time Ecosystem (Directives 39–42)
+* [ ] **Unified `IZeroEditor` Contract & `EditValue` Pipeline:** Standardize `EditValue`, `EditValueChanged`, `IsModified`, `ReadOnly`, `Reset()`, and `Clear()` across all 24+ form editor controls.
+* [ ] **Generic Form Data-Binding Engine (`ZeroDataBinder`):** 1-line bi-directional binding and DTO extraction (`Bind(container, dto)` / `Collect<T>(container)`).
+* [ ] **Visual Studio Smart Tags & Designers:** Interactive Action Lists for `GridControl`, `Wizard`, `FilterControl`, and `BoxPlotChart`; proper collection serialization.
+* [ ] **Universal XAML XML Namespace (WPF):** Register `[XmlnsDefinition]` and `[XmlnsPrefix]` for `http://schemas.zeroui.net/winfx/xaml`.
+* [ ] **Semantic Naming Normalization:** Introduce clean enterprise class names (`GridControl`, `TreeList`, `FilterControl`, `GridLookupEdit`, `TokenEdit`) while maintaining 100% backward compatibility via `ZeroXXX` aliases.
 
 ---
 

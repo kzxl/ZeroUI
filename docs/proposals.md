@@ -108,69 +108,85 @@ Single-run benchmarks are invalid due to JIT compilation artifacts and OS thread
 
 ---
 
-## 5. Prioritized Implementation Workstreams (P0, P1, P2)
+---
 
-### P0 — Immediate Critical Bottlenecks (Directive 31)
-1. **ZeroTagEngine Architecture Refactoring:**
-   - Eliminate `object` and `string` lookups.
-   - Map string tag names to compact 32-bit `TagId` during startup.
-   - Store tag state as contiguous 16-byte unboxed value structs (`ScadaValue`).
-2. **Bound Control Lookup Optimization:**
-   - Replace linear list iteration with inverted index `Dictionary<TagId, List<IScadaSubscriber>>`.
-   - Dispatch dirty tag notifications directly to subscribed controls in $O(1)$ time.
-3. **Modbus Protocol Block Coalescing:**
-   - Transition from per-tag polling to `ModbusAddressPlanner` contiguous register block reads.
-   - Eliminate redundant network round-trips (reducing packet count by up to 98%).
-4. **UI Telemetry Decoupling:**
-   - Eliminate per-update `Control.Invoke()` or `Post()`.
-   - Ingest into Tier 1 (10 kHz), swap state via `ZeroTripleBuffer<T>`, and flush batches to UI at 30–60 Hz.
-5. **Benchmark Engine Upgrade:**
-   - Refactor `ZeroUI.Benchmarks` to record P50, P95, P99, and thread-allocated bytes across all categories.
+## 5. Completed Core Initiatives (Phases 1–8: Delivered)
 
-### P1 — High-Impact Infrastructure Refinements (Directive 32)
-1. **`RenderCommandBuffer`:** Pre-record vector draw commands to eliminate GDI lock contention.
-2. **Cell Formatting Cache:** Flyweight string format memoization for timestamps, floats, and currencies.
-3. **Buffer Pooling (`ArrayPool<byte>` & `ArrayPool<TagUpdate>`):** Eliminate transient memory arrays.
-4. **`QueueBackpressureMode.LatestPerKey`:** Automatically drop stale sensor samples during bursts.
-5. **Historian WAL Batching:** Coalesce continuous rollup insertions into bulk transaction commits.
+The following architectural milestones have been fully implemented, benchmarked, and merged into `main`:
 
-### P2 — Industrial Runtime Ecosystem Upgrade (Directive 33)
-1. **`ZeroRuntime` Master Scheduler:** Central 7-cycle engine (PLC 10ms, Logic 10ms, Telemetry 16ms, UI 16ms, Historian 100ms, Cleanup 1s, Health 5s).
-2. **`ZeroScene` & `SceneNode`:** Single-HWND plant mimic canvas with spatial culling (`GridSpatialIndex`).
-3. **`ZeroTelemetryBus`:** High-throughput lock-free event bus for decoupled inter-module messaging.
-4. **`ZeroAlarmRuntime`:** Full ISA-18.2 alarm lifecycle manager with thread-safe audit logging.
-5. **`ZeroHistorianPipeline`:** Multi-resolution pyramid storage with automated daily WAL compaction.
+* [x] **Unboxed Fast Tag Engine (Directive 31):** `TagStorage` struct array mapped by 32-bit `TagId` (>48M writes/s, >244M reads/s, 0 B/op).
+* [x] **Subscriber Inverted Index (Directive 31):** Direct $O(1)$ dirty notification dispatch to registered controls.
+* [x] **Modbus Address Coalescing (Directive 31):** `ModbusAddressPlanner` merging disjoint registers into block requests (up to 98% network packet reduction).
+* [x] **UI Telemetry Decoupler (Directive 31):** `ZeroTripleBuffer<T>` atomic pointer swap without queue allocations.
+* [x] **Centralized Animation Clock (Directive 32):** `ZeroAnimationClock` 60 Hz ticker replacing individual control timers.
+* [x] **Plant Mimic Scene Graph (Directive 33):** Single-HWND `ZeroScene` canvas with `GridSpatialIndex` spatial culling.
+* [x] **Deterministic Master Scheduler (Directive 33):** 7-cycle `ZeroRuntime` coordinating PLC, Logic, Telemetry, UI, and Historian.
+* [x] **Enterprise Commercial Parity (8 Clusters):** Query Builder (`ZeroFilterControl`), Multi-column Lookup (`ZeroGridLookup`), Token Editor (`ZeroTokenEdit`), Workflow Wizard (`ZeroWizard`), Six Sigma Box Plot (`ZeroBoxPlotChart`), Vector Print Preview (`ZeroPrintPreview`), Docking Layout (`ZeroDockManager`), and Shimmer Skeleton (`ZeroSkeleton`).
 
 ---
 
-## 6. Strategic 5-Phase Realization Roadmap (Directive 37)
+## 6. Active Strategic Proposals (Directives 39–42)
 
-```mermaid
-gantt
-    title ZeroUI Strategic 5-Phase Realization Roadmap
-    dateFormat  YYYY-MM-DD
-    section Phase 1: Performance Core
-    TagId & Struct ScadaValue Store                 :done,    p1_1, 2026-09-01, 3d
-    Subscriber Dictionary Inverted Index            :done,    p1_2, after p1_1, 2d
-    ZeroTripleBuffer & UI Latest-Value Swapper      :done,    p1_3, after p1_2, 3d
-    RenderCommandBuffer & ZeroBufferPool            :done,    p1_4, after p1_3, 4d
-    section Phase 2: Communication
-    ModbusAddressPlanner Register Coalescing        :done,    p2_1, after p1_4, 3d
-    Siemens S7 DB Block Read Optimizer              :done,    p2_2, after p2_1, 4d
-    Protocol Watchdog & Automatic Backoff Reconnect :done,    p2_3, after p2_2, 3d
-    section Phase 3: Rendering
-    ZeroScene & SceneNode Hierarchy (Plant Mimic)   :done,    p3_1, after p2_3, 4d
-    GridSpatialIndex Viewport Culling Engine        :done,    p3_2, after p3_1, 3d
-    Centralized ZeroAnimationClock (No Timers)      :done,    p3_3, after p3_2, 3d
-    Direct2D 1.1 Hardware Accelerator Fallback      :active,  p3_4, after p3_3, 5d
-    section Phase 4: Benchmark Rigor
-    Unified Categories A to F CLI Suite             :done,    p4_1, after p3_4, 3d
-    P50/P95/P99 Percentiles & GC Profiling Engine   :done,    p4_2, after p4_1, 2d
-    Automated Headless CI/CD Benchmark Profiler     :         p4_3, after p4_2, 3d
-    section Phase 5: Documentation
-    README Honest Engineering Claims                :done,    p5_1, after p4_3, 2d
-    Subsystem Architecture & Standards Alignment    :done,    p5_2, after p5_1, 2d
-```
+### Proposal 1: Unified Base Editor Contract (`IZeroEditor` & `EditValue` Pipeline) — Directive 39
+Currently, input and editor controls expose disparate value properties (`.Text`, `.Value`, `.Checked`, `.SelectedValue`, `.Tokens`, `.SelectedColor`), complicating generic form data-binding, dirty tracking, and serialization.
+
+* **Unified Contract (`IZeroEditor`):**
+  ```csharp
+  public interface IZeroEditor
+  {
+      object? EditValue { get; set; }
+      event EventHandler? EditValueChanged;
+      bool IsModified { get; set; }
+      bool ReadOnly { get; set; }
+      void Reset();
+      void Clear();
+  }
+  ```
+* **Editor Mapping Matrix:**
+  * `ZeroTextBox` / `ZeroSearchBox`: `EditValue` &harr; `string`
+  * `ZeroNumericBox`: `EditValue` &harr; `decimal` / `double`
+  * `ZeroCheckBox` / `ZeroSwitch`: `EditValue` &harr; `bool`
+  * `ZeroDatePicker`: `EditValue` &harr; `DateTime`
+  * `ZeroDateRangePicker`: `EditValue` &harr; `(DateTime Start, DateTime End)`
+  * `ZeroColorPicker`: `EditValue` &harr; `Color` (or Hex string `#RRGGBB`)
+  * `ZeroTokenEdit`: `EditValue` &harr; `IReadOnlyList<string>` (or comma-delimited string)
+  * `ZeroGridLookup` / `ZeroLookup`: `EditValue` &harr; Selected key / ID
+  * `ZeroCheckedComboBox`: `EditValue` &harr; `List<object>` (or delimited keys)
+* **Value Conversion Pipeline:** Built-in automatic type converter resolving string/number/date parsing without throwing unhandled cast exceptions.
+
+### Proposal 2: Visual Studio Design-Time Ecosystem & Smart Tags — Directive 40
+Enhance out-of-the-box Visual Studio Designer integration for seamless drag-and-drop enterprise workflows.
+
+* **Smart Tag Action Lists (Designer Verbs):**
+  * `ZeroGridControl`: "Configure Columns", "Enable Auto Filter Row", "Best Fit Columns", "Dock in Parent".
+  * `ZeroWizard`: "Add Step", "Remove Step", "Next Step Preview".
+  * `ZeroFilterControl`: "Edit Available Fields", "Clear Rules".
+  * `ZeroBoxPlotChart`: "Configure Spec Limits (USL/LSL)", "Clear Series".
+* **Design-Time Attribute Standardization:**
+  * Ensure all WinForms controls decorate properties with `[Category]`, `[Description]`, `[DefaultValue]`, `[DefaultProperty]`, and `[DefaultEvent]`.
+  * Ensure collection properties decorate `[DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]` for automatic code generation in `InitializeComponent()`.
+* **Universal XAML XML Namespace (WPF):**
+  * Register `[XmlnsDefinition("http://schemas.zeroui.net/winfx/xaml", "ZeroUI.Wpf...")]` and `[XmlnsPrefix]` in `AssemblyInfo.cs`.
+  * Allows clean, standard XAML authoring (`xmlns:zero="http://schemas.zeroui.net/winfx/xaml"`) without verbose CLR paths.
+
+### Proposal 3: Semantic Naming Normalization with Non-Breaking Compatibility Aliases — Directive 41
+Eliminate branded prefix stuttering in XAML (`<zero:ZeroButton>`) and align with international enterprise UI standards.
+
+* **Class Renaming Strategy:**
+  * Advanced Data/Process Controls: `ZeroGridControl` &rarr; `GridControl`, `ZeroTreeList` &rarr; `TreeList`, `ZeroFilterControl` &rarr; `FilterControl`, `ZeroWizard` &rarr; `WizardControl`.
+  * Editors: `ZeroGridLookup` &rarr; `GridLookupEdit`, `ZeroTokenEdit` &rarr; `TokenEdit`, `ZeroColorPicker` &rarr; `ColorPickEdit`.
+  * Basic Controls: `ZeroButton` &rarr; `SimpleButton`, `ZeroTextBox` &rarr; `TextEdit`, `ZeroCheckBox` &rarr; `CheckEdit`.
+* **100% Backward Compatibility:**
+  * Preserve all `ZeroXXX` classes as subclasses/aliases inheriting from the new semantic classes.
+  * Existing projects and test suites continue running with zero compilation breakages.
+
+### Proposal 4: Generic Form Data-Binding Coordinator (`ZeroDataBinder`) — Directive 42
+Leverage the unified `IZeroEditor.EditValue` contract to automate bidirectional DTO binding on WinForms and WPF forms.
+
+* **Features:**
+  * `ZeroDataBinder.Bind(Control container, object dtoModel)`: Maps controls by name or `DataField` attribute to DTO properties.
+  * `ZeroDataBinder.Collect<T>(Control container)`: Extracts all edited values into a clean strongly-typed DTO.
+  * Automatic change tracking via `IsModified` to support "Save Changes" enablement and discard prompts.
 
 ---
 
