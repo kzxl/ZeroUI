@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Validation;
 using ZeroUI.WinForms.Theme;
 
@@ -19,6 +20,7 @@ namespace ZeroUI.WinForms.Validation
     /// <summary>
     /// Modern, anti-aliased error and validation provider for WinForms applications.
     /// Displays crisp vector badges with hover tooltips next to target controls without screen flickering.
+    /// Integrates seamlessly with IZeroEditor, IControlValidationRule, and standard forms.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Validation")]
@@ -26,22 +28,29 @@ namespace ZeroUI.WinForms.Validation
     [ProvideProperty("IconAlignment", typeof(Control))]
     [ProvideProperty("IconPadding", typeof(Control))]
     [Description("Modern vector error provider with smooth hover tooltips")]
-    public class ZeroErrorProvider : Component, IExtenderProvider
+    public class ValidationProvider : Component, IExtenderProvider
     {
+        private class ControlRuleBinding
+        {
+            public List<IControlValidationRule> Rules { get; } = new List<IControlValidationRule>();
+            public ValidationTrigger Trigger { get; set; } = ValidationTrigger.ValueChanged;
+        }
+
         private readonly Dictionary<Control, ErrorEntry> _entries = new Dictionary<Control, ErrorEntry>();
+        private readonly Dictionary<Control, ControlRuleBinding> _rules = new Dictionary<Control, ControlRuleBinding>();
         private readonly ToolTip _toolTip = new ToolTip();
 
         private int _defaultPadding = 4;
         private ErrorIconAlignment _defaultAlignment = ErrorIconAlignment.MiddleRight;
 
-        public ZeroErrorProvider()
+        public ValidationProvider()
         {
             _toolTip.AutoPopDelay = 5000;
             _toolTip.InitialDelay = 200;
             _toolTip.ReshowDelay = 100;
         }
 
-        public ZeroErrorProvider(IContainer container) : this()
+        public ValidationProvider(IContainer container) : this()
         {
             container.Add(this);
         }
@@ -164,6 +173,140 @@ namespace ZeroUI.WinForms.Validation
             SetError(control, highest.Text, iconType);
         }
 
+        /// <summary>
+        /// Registers a validation rule for a specific control or editor.
+        /// </summary>
+        public void SetRule(Control control, IControlValidationRule rule, ValidationTrigger trigger = ValidationTrigger.ValueChanged)
+        {
+            if (control == null || rule == null) return;
+
+            if (!_rules.TryGetValue(control, out var binding))
+            {
+                binding = new ControlRuleBinding { Trigger = trigger };
+                _rules[control] = binding;
+
+                if (control is IZeroEditor editor)
+                {
+                    editor.EditValueChanged += (s, e) =>
+                    {
+                        if (binding.Trigger == ValidationTrigger.ValueChanged)
+                        {
+                            Validate(control);
+                        }
+                    };
+                }
+                else
+                {
+                    control.TextChanged += (s, e) =>
+                    {
+                        if (binding.Trigger == ValidationTrigger.ValueChanged)
+                        {
+                            Validate(control);
+                        }
+                    };
+                }
+
+                control.Leave += (s, e) =>
+                {
+                    if (binding.Trigger == ValidationTrigger.FocusLost)
+                    {
+                        Validate(control);
+                    }
+                };
+            }
+
+            binding.Trigger = trigger;
+            if (!binding.Rules.Contains(rule))
+            {
+                binding.Rules.Add(rule);
+            }
+        }
+
+        /// <summary>
+        /// Validates a specific control against its registered rules.
+        /// </summary>
+        public bool Validate(Control control)
+        {
+            if (control == null) return true;
+
+            if (!_rules.TryGetValue(control, out var binding) || binding.Rules.Count == 0)
+            {
+                SetError(control, null);
+                return true;
+            }
+
+            object? val = control is IZeroEditor editor ? editor.EditValue : control.Text;
+            foreach (var rule in binding.Rules)
+            {
+                var res = rule.Validate(val);
+                if (!res.IsValid)
+                {
+                    SetResult(control, res);
+                    return false;
+                }
+            }
+
+            SetError(control, null);
+            return true;
+        }
+
+        /// <summary>
+        /// Evaluates validation rules for all registered controls across the form.
+        /// Returns true if all controls are valid; false if any validation failed.
+        /// </summary>
+        public bool Validate()
+        {
+            bool allValid = true;
+            foreach (var control in _rules.Keys)
+            {
+                if (!Validate(control))
+                {
+                    allValid = false;
+                }
+            }
+            return allValid;
+        }
+
+        /// <summary>
+        /// Retrieves the first control currently displaying an error.
+        /// </summary>
+        public Control? GetFirstInvalidControl()
+        {
+            foreach (var kvp in _entries)
+            {
+                if (!string.IsNullOrEmpty(kvp.Value.Message) && kvp.Key.CanFocus)
+                {
+                    return kvp.Key;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Automatically shifts keyboard input focus to the first invalid control.
+        /// </summary>
+        public bool FocusFirstInvalidControl()
+        {
+            var ctl = GetFirstInvalidControl();
+            if (ctl != null)
+            {
+                return ctl.Focus();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Clears all error states and hides all badges.
+        /// </summary>
+        public void ClearErrors()
+        {
+            var controls = new List<Control>(_entries.Keys);
+            foreach (var ctl in controls)
+            {
+                SetError(ctl, null);
+            }
+        }
+
         [DefaultValue(ErrorIconAlignment.MiddleRight)]
         [DisplayName("IconAlignment")]
         [Category("Validation")]
@@ -201,21 +344,19 @@ namespace ZeroUI.WinForms.Validation
         {
             if (control != null && _entries.TryGetValue(control, out var entry))
             {
-                entry.Padding = value;
+                entry.Padding = Math.Max(0, value);
                 entry.Reposition();
             }
         }
 
         public void Clear()
         {
-            foreach (var kvp in _entries)
+            foreach (var entry in _entries.Values)
             {
-                kvp.Value.Dispose();
+                entry.Dispose();
             }
             _entries.Clear();
         }
-
-        public void ClearErrors() => Clear();
 
         protected override void Dispose(bool disposing)
         {
@@ -226,6 +367,8 @@ namespace ZeroUI.WinForms.Validation
             }
             base.Dispose(disposing);
         }
+
+        // --- INTERNAL HELPER CLASSES ---
 
         private sealed class ErrorEntry : IDisposable
         {
@@ -247,19 +390,40 @@ namespace ZeroUI.WinForms.Validation
                 Alignment = alignment;
                 Padding = padding;
 
-                HookTarget();
                 CreateBadge();
+                HookTarget();
+                Reposition();
             }
 
             public void Update(string message, ErrorIconType iconType)
             {
                 Message = message;
                 IconType = iconType;
+
                 if (_badge != null)
                 {
                     _badge.IconType = iconType;
-                    _toolTip.SetToolTip(_badge, message);
                     _badge.Invalidate();
+                    _toolTip.SetToolTip(_badge, Message);
+                    _badge.Visible = _target.Visible && !string.IsNullOrEmpty(Message);
+                }
+                Reposition();
+            }
+
+            private void CreateBadge()
+            {
+                _badge = new ErrorBadgeControl(IconType)
+                {
+                    Size = new Size(16, 16),
+                    Cursor = Cursors.Help
+                };
+
+                _toolTip.SetToolTip(_badge, Message);
+
+                if (_target.Parent != null)
+                {
+                    _target.Parent.Controls.Add(_badge);
+                    _badge.BringToFront();
                 }
             }
 
@@ -269,7 +433,6 @@ namespace ZeroUI.WinForms.Validation
                 _target.SizeChanged += OnTargetLayoutChanged;
                 _target.VisibleChanged += OnTargetVisibleChanged;
                 _target.ParentChanged += OnTargetParentChanged;
-                _target.Disposed += OnTargetDisposed;
             }
 
             private void UnhookTarget()
@@ -278,42 +441,26 @@ namespace ZeroUI.WinForms.Validation
                 _target.SizeChanged -= OnTargetLayoutChanged;
                 _target.VisibleChanged -= OnTargetVisibleChanged;
                 _target.ParentChanged -= OnTargetParentChanged;
-                _target.Disposed -= OnTargetDisposed;
             }
 
             private void OnTargetLayoutChanged(object? sender, EventArgs e) => Reposition();
+
             private void OnTargetVisibleChanged(object? sender, EventArgs e)
             {
-                if (_badge != null) _badge.Visible = _target.Visible && !string.IsNullOrEmpty(Message);
+                if (_badge != null)
+                {
+                    _badge.Visible = _target.Visible && !string.IsNullOrEmpty(Message);
+                }
             }
+
             private void OnTargetParentChanged(object? sender, EventArgs e)
             {
-                _badge?.Parent?.Controls.Remove(_badge);
-                CreateBadge();
-            }
-            private void OnTargetDisposed(object? sender, EventArgs e) => Dispose();
-
-            private void CreateBadge()
-            {
-                if (_target.Parent == null || string.IsNullOrEmpty(Message)) return;
-
-                if (_badge == null)
-                {
-                    _badge = new ErrorBadgeControl(IconType)
-                    {
-                        Size = new Size(18, 18),
-                        Cursor = Cursors.Hand
-                    };
-                    _toolTip.SetToolTip(_badge, Message);
-                }
-
-                if (_badge.Parent != _target.Parent)
+                if (_badge != null && _target.Parent != null)
                 {
                     _target.Parent.Controls.Add(_badge);
                     _badge.BringToFront();
+                    Reposition();
                 }
-
-                Reposition();
             }
 
             public void Reposition()
@@ -322,30 +469,19 @@ namespace ZeroUI.WinForms.Validation
 
                 int bw = _badge.Width;
                 int bh = _badge.Height;
-                int x = 0;
-                int y = 0;
+
+                int x = _target.Right + Padding;
+                int y = _target.Top + (_target.Height - bh) / 2;
 
                 switch (Alignment)
                 {
-                    case ErrorIconAlignment.MiddleRight:
-                        x = _target.Right + Padding;
-                        y = _target.Top + (_target.Height - bh) / 2;
-                        break;
-                    case ErrorIconAlignment.TopRight:
-                        x = _target.Right + Padding;
+                    case ErrorIconAlignment.TopLeft:
+                        x = _target.Left - bw - Padding;
                         y = _target.Top;
-                        break;
-                    case ErrorIconAlignment.BottomRight:
-                        x = _target.Right + Padding;
-                        y = _target.Bottom - bh;
                         break;
                     case ErrorIconAlignment.MiddleLeft:
                         x = _target.Left - bw - Padding;
                         y = _target.Top + (_target.Height - bh) / 2;
-                        break;
-                    case ErrorIconAlignment.TopLeft:
-                        x = _target.Left - bw - Padding;
-                        y = _target.Top;
                         break;
                     case ErrorIconAlignment.BottomLeft:
                         x = _target.Left - bw - Padding;
@@ -450,5 +586,23 @@ namespace ZeroUI.WinForms.Validation
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ValidationProvider"/>.
+    /// </summary>
+    public class ZeroErrorProvider : ValidationProvider
+    {
+        public ZeroErrorProvider() { }
+        public ZeroErrorProvider(IContainer container) : base(container) { }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ValidationProvider"/>.
+    /// </summary>
+    public class ZeroValidationProvider : ValidationProvider
+    {
+        public ZeroValidationProvider() { }
+        public ZeroValidationProvider(IContainer container) : base(container) { }
     }
 }
