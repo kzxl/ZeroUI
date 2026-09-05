@@ -2,6 +2,9 @@
 
 Ultra-high-performance, zero-allocation core runtime, analytical engines, and industrial automation infrastructure for .NET (`netstandard2.0`, `net462`, `net8.0`).
 
+> [!NOTE]
+> **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
+
 [![NuGet Version](https://img.shields.io/badge/nuget-v1.2.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)

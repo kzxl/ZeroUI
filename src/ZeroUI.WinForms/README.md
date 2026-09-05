@@ -2,6 +2,9 @@
 
 Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows virtual grid, cross-tab OLAP pivot matrices, visual timeline range selectors, form validation engines, and 60 FPS SCADA mimics (`net462`, `net8.0-windows`).
 
+> [!NOTE]
+> **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
+
 [![NuGet Version](https://img.shields.io/badge/nuget-v1.2.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)

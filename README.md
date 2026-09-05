@@ -2,6 +2,10 @@
 
 > **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
 
+> [!NOTE]
+> **Active Development Notice:**  
+> This project is currently in active development. We warmly welcome feedback, suggestions, feature ideas, and contributions from the community! If you encounter any issues or have recommendations, please feel free to open an [Issue](https://github.com/kzxl/ZeroUI/issues) or start a [Discussion](https://github.com/kzxl/ZeroUI/discussions).
+
 [![NuGet Version](https://img.shields.io/badge/nuget-v1.2.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![Unit Tests](https://img.shields.io/badge/tests-208%20passed%20(100%25)-brightgreen.svg)](#testing--verification)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#architecture)
