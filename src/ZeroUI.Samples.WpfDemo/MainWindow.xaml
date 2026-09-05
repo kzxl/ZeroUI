@@ -11,6 +11,9 @@
         xmlns:nav="clr-namespace:ZeroUI.Wpf.Navigation;assembly=ZeroUI.Wpf"
         xmlns:dock="clr-namespace:ZeroUI.Wpf.Docking;assembly=ZeroUI.Wpf"
         xmlns:diag="clr-namespace:ZeroUI.Wpf.Diagram;assembly=ZeroUI.Wpf"
+        xmlns:feed="clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf"
+        xmlns:overlay="clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf"
+        xmlns:report="clr-namespace:ZeroUI.Wpf.Reporting;assembly=ZeroUI.Wpf"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="860" Width="1340"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -858,6 +861,150 @@
                         <ind:ZeroStateExecutor x:Name="DemoStateExecutor" />
                     </Border>
                 </Grid>
+            </TabItem>
+
+            <!-- CLUSTER 14: ENTERPRISE COMMERCIAL SUITE -->
+            <TabItem Header="🏢 14. Enterprise Suite">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="18">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /> <!-- Header -->
+                            <RowDefinition Height="Auto" /> <!-- Section 1: Query Builder & Editors -->
+                            <RowDefinition Height="Auto" /> <!-- Section 2: Wizard, BoxPlot & Print -->
+                            <RowDefinition Height="Auto" /> <!-- Section 3: Shimmer & Overlays -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Header Bar -->
+                        <Border Grid.Row="0" Margin="0,0,0,14" Background="#181B26" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="#2E344E">
+                            <DockPanel LastChildFill="False">
+                                <StackPanel DockPanel.Dock="Left">
+                                    <TextBlock Text="🏢 Enterprise Commercial Suite (ZeroFilterControl, GridLookup, Wizard, BoxPlot &amp; PrintPreview)" FontSize="15" FontWeight="Bold" Foreground="#818CF8" />
+                                    <TextBlock Text="High-productivity tier-1 business suite: Visual boolean query building, multi-column virtual lookup, guided process wizards, SPC tolerance charts, and vector print engine." FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Section 1: Visual Filter & Enterprise Editors (2 Columns) -->
+                        <Grid Grid.Row="1" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.2*" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Column 1: Visual Query Builder (ZeroFilterControl) -->
+                            <ind:ZeroCard Grid.Column="0" HeaderText="Visual Query Builder (ZeroFilterControl &amp; FilterCriteria)" SubtitleText="Hierarchical Boolean Criteria Tree (And / Or) with instant SQL WHERE compilation" Margin="0,0,12,0">
+                                <StackPanel Margin="0,8,0,0">
+                                    <Border BorderThickness="1" BorderBrush="#2E344E" CornerRadius="6" Padding="4" MinHeight="180" Background="#12151F">
+                                        <grid:ZeroFilterControl x:Name="DemoFilterControl" />
+                                    </Border>
+                                    <Border Margin="0,8,0,0" Background="#181B26" Padding="10,6,10,6" CornerRadius="4" BorderThickness="1" BorderBrush="#2E344E">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="SQL WHERE:" FontSize="11" FontWeight="Bold" Foreground="#818CF8" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                            <TextBlock x:Name="TxtGeneratedSql" Text="([Status] = 'Active' AND [Stock] &gt; '50')" FontSize="11" FontFamily="Consolas" Foreground="#A6E3A1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Border>
+                                    <WrapPanel Margin="0,8,0,0">
+                                        <Button x:Name="BtnApplyFilter" Click="BtnApplyFilter_Click" Content="⚡ Compile &amp; Refresh SQL" Height="28" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                                        <Button x:Name="BtnResetFilter" Click="BtnResetFilter_Click" Content="🔄 Reset Filter Criteria" Height="28" Padding="12,0,12,0" Cursor="Hand" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </ind:ZeroCard>
+
+                            <!-- Column 2: Advanced Enterprise Form Editors -->
+                            <ind:ZeroCard Grid.Column="1" HeaderText="Advanced Enterprise Form Editors" SubtitleText="ZeroGridLookup, ZeroCheckedComboBox, ZeroTokenEdit &amp; ZeroColorPicker">
+                                <StackPanel Margin="0,8,0,0">
+                                    <!-- 1. ZeroGridLookup -->
+                                    <TextBlock Text="Material &amp; Asset Lookup (Embedded Virtual DataGrid + Live Search)" FontSize="11" Foreground="#94A3B8" Margin="0,0,0,4" />
+                                    <edit:ZeroGridLookup x:Name="DemoGridLookup" Height="34" Margin="0,0,0,12" Placeholder="Select material or component..." />
+
+                                    <!-- 2. ZeroCheckedComboBox -->
+                                    <TextBlock Text="Assigned Access Roles &amp; Factory Zones (Multi-Select Checkboxes)" FontSize="11" Foreground="#94A3B8" Margin="0,0,0,4" />
+                                    <edit:ZeroCheckedComboBox x:Name="DemoCheckedCombo" Height="34" Margin="0,0,0,12" Placeholder="Select authorized zones..." />
+
+                                    <!-- 3. ZeroTokenEdit -->
+                                    <TextBlock Text="Defect Classification Tags (Type tag and press Enter / Comma)" FontSize="11" Foreground="#94A3B8" Margin="0,0,0,4" />
+                                    <edit:ZeroTokenEdit x:Name="DemoTokenEdit" Height="34" Margin="0,0,0,12" Placeholder="Add tag (e.g. Solder, Thermal, AOI)..." />
+
+                                    <!-- 4. ZeroColorPicker -->
+                                    <TextBlock Text="Status Marker &amp; Palette Swatch Selector" FontSize="11" Foreground="#94A3B8" Margin="0,0,0,4" />
+                                    <edit:ZeroColorPicker x:Name="DemoColorPicker" Height="34" Margin="0,0,0,4" />
+                                </StackPanel>
+                            </ind:ZeroCard>
+                        </Grid>
+
+                        <!-- Section 2: Process Wizard, SPC BoxPlot & Print Preview (3 Columns) -->
+                        <Grid Grid.Row="2" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1.1*" />
+                                <ColumnDefinition Width="1.1*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 1. Guided Process Wizard (ZeroWizard) -->
+                            <ind:ZeroCard Grid.Column="0" HeaderText="Process Workflow Sequence (ZeroWizard)" SubtitleText="Multi-step guided manufacturing order wizard with page validation" Margin="0,0,10,0">
+                                <Border Height="340" BorderThickness="1" BorderBrush="#2E344E" CornerRadius="6" Background="#12151F">
+                                    <nav:ZeroWizard x:Name="DemoInlineWizard" />
+                                </Border>
+                            </ind:ZeroCard>
+
+                            <!-- 2. Statistical BoxPlot SPC Chart (ZeroBoxPlotChart) -->
+                            <ind:ZeroCard Grid.Column="1" HeaderText="Six Sigma SPC Quality Inspection (ZeroBoxPlotChart)" SubtitleText="Five-number summaries (Min, Q1, Median, Q3, Max), Outliers &amp; USL/LSL lines" Margin="0,0,10,0">
+                                <Border Height="340" BorderThickness="1" BorderBrush="#2E344E" CornerRadius="6" Background="#12151F">
+                                    <chart:ZeroBoxPlotChart x:Name="DemoBoxPlot" />
+                                </Border>
+                            </ind:ZeroCard>
+
+                            <!-- 3. Document Print Previewer (ZeroPrintPreview) -->
+                            <ind:ZeroCard Grid.Column="2" HeaderText="Vector Document Print Preview (ZeroPrintPreview)" SubtitleText="Integrated paper canvas with drop shadow, zoom (25%–500%) &amp; print dispatch">
+                                <Border Height="340" BorderThickness="1" BorderBrush="#2E344E" CornerRadius="6">
+                                    <report:ZeroPrintPreview x:Name="DemoPrintPreview" />
+                                </Border>
+                            </ind:ZeroCard>
+                        </Grid>
+
+                        <!-- Section 3: Shimmer Skeleton & Overlays (Toast & Modal) -->
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Shimmer Skeleton -->
+                            <ind:ZeroCard Grid.Column="0" HeaderText="60 FPS Shimmer Loading Placeholder (ZeroSkeleton)" SubtitleText="Hardware-accelerated linear gradient shimmer during async data fetching" Margin="0,0,10,0">
+                                <StackPanel Margin="0,10,0,0">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <feed:ZeroSkeleton Shape="Circle" Width="48" Height="48" Margin="0,0,14,0" />
+                                        <StackPanel VerticalAlignment="Center">
+                                            <feed:ZeroSkeleton Shape="Rectangle" Width="200" Height="16" CornerRadius="4" Margin="0,0,0,6" />
+                                            <feed:ZeroSkeleton Shape="Rectangle" Width="130" Height="12" CornerRadius="4" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <feed:ZeroSkeleton Shape="Rectangle" Width="420" Height="20" CornerRadius="4" Margin="0,0,0,8" />
+                                    <feed:ZeroSkeleton Shape="Rectangle" Width="380" Height="20" CornerRadius="4" Margin="0,0,0,8" />
+                                    <feed:ZeroSkeleton Shape="Rectangle" Width="320" Height="20" CornerRadius="4" />
+                                </StackPanel>
+                            </ind:ZeroCard>
+
+                            <!-- Toast Notifications & Modal Dialog Trigger -->
+                            <ind:ZeroCard Grid.Column="1" HeaderText="Non-Intrusive Overlays (ZeroToast &amp; ZeroModal)" SubtitleText="Floating auto-dismiss toast notification stack and backdrop-dimming modal dialog">
+                                <StackPanel Margin="0,10,0,0">
+                                    <TextBlock Text="Trigger Instant Toast Notifications (Stacked at Bottom-Right):" FontSize="11" Foreground="#94A3B8" Margin="0,0,0,8" />
+                                    <WrapPanel Margin="0,0,0,14">
+                                        <Button x:Name="BtnToastSuccess" Click="BtnToastSuccess_Click" Content="✔ Success Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                                        <Button x:Name="BtnToastInfo" Click="BtnToastInfo_Click" Content="ℹ️ Info Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                                        <Button x:Name="BtnToastWarning" Click="BtnToastWarning_Click" Content="⚠ Warning Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                                        <Button x:Name="BtnToastError" Click="BtnToastError_Click" Content="✖ Error Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                                    </WrapPanel>
+
+                                    <TextBlock Text="Backdrop-Dimmed Dialog Suite:" FontSize="11" Foreground="#94A3B8" Margin="0,0,0,8" />
+                                    <WrapPanel>
+                                        <Button x:Name="BtnShowModalConfirm" Click="BtnShowModalConfirm_Click" Content="💬 Show Production Order Modal" Height="32" Padding="16,0,16,0" Cursor="Hand" FontWeight="SemiBold" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </ind:ZeroCard>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </Grid>

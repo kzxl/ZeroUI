@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -18,11 +19,14 @@ using ZeroUI.WinForms.Charts;
 using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Editors;
+using ZeroUI.WinForms.Feedback;
 using ZeroUI.WinForms.Industrial;
 using ZeroTreeNode = ZeroUI.WinForms.Industrial.ZeroTreeNode;
 using ZeroUI.WinForms.Layout;
 using ZeroUI.WinForms.Overlays;
+using ZeroUI.WinForms.Reporting;
 using ZeroUI.WinForms.Theme;
+using System.Drawing.Printing;
 using ZeroUI.WinForms.Warehouse;
 using ZeroUI.WinForms.Warehouse.Models;
 using ZeroUI.WinForms.Validation;
@@ -80,6 +84,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _tabScada = null!;
         private ZeroTabPage _tabWms = null!;
         private ZeroTabPage _tabAdvanced = null!;
+        private ZeroTabPage _tabCommercial = null!;
         private ZeroTabPage _tabCharts = null!;
         private ZeroTabPage _tabLayout = null!;
 
@@ -471,9 +476,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 TabStyle = ZeroTabStyle.Pill
             };
             _tabControls = new ZeroTabPage("Core Input Controls", "🎛️");
-            _tabAdvanced = new ZeroTabPage("Enterprise Suite", "🚀");
+            _tabCommercial = new ZeroTabPage("Enterprise Commercial Suite", "🏢");
+            _tabAdvanced = new ZeroTabPage("Data Hierarchy & BOM", "🌳");
             _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐");
             subTabsComponents.AddTab(_tabControls);
+            subTabsComponents.AddTab(_tabCommercial);
             subTabsComponents.AddTab(_tabAdvanced);
             subTabsComponents.AddTab(_tabLayout);
             _clusterComponents.Controls.Add(subTabsComponents);
@@ -509,6 +516,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeProcessCards(_tabProcessCards);
             InitializeScadaHub();
             InitializeWmsCenter();
+            InitializeCommercialSuite();
             InitializeAdvancedSuite();
             InitializeChartsDashboard();
             InitializeWarehouseWorkstation();
@@ -3070,6 +3078,457 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             lotActions.BringToFront();
 
             _tabWhLot.Controls.Add(panelLot);
+        }
+
+        private void InitializeCommercialSuite()
+        {
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                Padding = new Padding(12),
+                BackColor = Color.Transparent
+            };
+
+            // 1. Top Banner
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Success,
+                Title = "🏢 ENTERPRISE COMMERCIAL CONTROL SUITE (100% HARDWARE ACCELERATED)",
+                Message = "ZeroUI features 8 commercial-grade controls with Zero external dependencies: Visual Query Builder (ZeroFilterControl), Embedded GridLookup (ZeroGridLookup), Multi-Select CheckedComboBox (ZeroCheckedComboBox), Tag/Chip Editor (ZeroTokenEdit), Color Swatch Picker (ZeroColorPicker), Sequential Workflow Wizard (ZeroWizard), Six Sigma Outlier SPC Chart (ZeroBoxPlotChart), Vector Print Preview (ZeroPrintPreview), 60 FPS Shimmer Loading (ZeroSkeleton), and Non-Intrusive Overlays (ZeroToast & ZeroModal)."
+            };
+
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            // SECTION 1: Visual Query Builder & Enterprise Form Editors (Height = 330)
+            var sec1 = new Panel { Dock = DockStyle.Top, Height = 330, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Left Card: ZeroFilterControl
+            var cardFilter = new ZeroCard
+            {
+                Dock = DockStyle.Left,
+                Width = 560,
+                Title = "Visual Query Builder (ZeroFilterControl)",
+                Subtitle = "Hierarchical AND/OR expression tree generator"
+            };
+
+            var filterControl = new ZeroFilterControl
+            {
+                Dock = DockStyle.Fill
+            };
+            filterControl.AvailableFields.AddRange(new[] { "PartNumber", "Category", "UnitCost", "StockQty", "Status", "Supplier" });
+            filterControl.RootGroup.Operator = FilterGroupOperator.And;
+            filterControl.RootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
+            var subGroup = filterControl.RootGroup.AddGroup(FilterGroupOperator.Or);
+            subGroup.AddCondition("UnitCost", FilterComparisonOperator.GreaterThanOrEqual, "15.00");
+            subGroup.AddCondition("StockQty", FilterComparisonOperator.LessThanOrEqual, "100");
+            filterControl.RebuildTreeUI();
+
+            var filterBottom = new Panel { Dock = DockStyle.Bottom, Height = 42, BackColor = Color.Transparent, Padding = new Padding(6, 4, 6, 4) };
+            var lblSqlResult = new Label
+            {
+                Dock = DockStyle.Fill,
+                ForeColor = ZeroTheme.Colors.TextSecondary,
+                Font = new Font("Consolas", 8.5f, FontStyle.Regular),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Text = "SQL WHERE: " + filterControl.RootGroup.ToSqlWhere()
+            };
+            var btnApplyFilter = new ZeroButton
+            {
+                Dock = DockStyle.Right,
+                Width = 130,
+                Text = "⚡ Apply Filter",
+                ButtonStyle = ZeroButtonStyle.Primary
+            };
+            btnApplyFilter.Click += (s, e) =>
+            {
+                string sql = filterControl.RootGroup.ToSqlWhere();
+                lblSqlResult.Text = "SQL WHERE: " + sql;
+                ZeroToast.Info(this, "Compiled SQL: " + sql);
+            };
+            var btnResetFilter = new ZeroButton
+            {
+                Dock = DockStyle.Right,
+                Width = 90,
+                Text = "🔄 Reset",
+                ButtonStyle = ZeroButtonStyle.Secondary
+            };
+            btnResetFilter.Click += (s, e) =>
+            {
+                filterControl.RootGroup.Children.Clear();
+                filterControl.RootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
+                filterControl.RebuildTreeUI();
+                lblSqlResult.Text = "SQL WHERE: " + filterControl.RootGroup.ToSqlWhere();
+                ZeroToast.Info(this, "Filter criteria reset to default.");
+            };
+            var filterSpacer = new Panel { Dock = DockStyle.Right, Width = 8, BackColor = Color.Transparent };
+
+            filterBottom.Controls.Add(lblSqlResult);
+            filterBottom.Controls.Add(btnResetFilter);
+            filterBottom.Controls.Add(filterSpacer);
+            filterBottom.Controls.Add(btnApplyFilter);
+
+            cardFilter.ContentPanel.Controls.Add(filterControl);
+            cardFilter.ContentPanel.Controls.Add(filterBottom);
+
+            var splitSec1 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Right Card: Enterprise Form Editors
+            var cardEditors = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Enterprise Form Editors",
+                Subtitle = "GridLookup, CheckedComboBox, TokenEdit, and ColorPicker"
+            };
+
+            var pnlEditors = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12, 8, 12, 8), AutoScroll = true };
+
+            // Editor 1: ZeroGridLookup
+            var lblGridLookup = new Label { Text = "Multi-Column GridLookup (ZeroGridLookup):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 8) };
+            var gridLookup = new ZeroGridLookup
+            {
+                Location = new Point(8, 28),
+                Width = 480,
+                Height = 34,
+                Placeholder = "Search & select industrial component (50 items)...",
+                DisplayMember = "ItemName"
+            };
+            var lookupSampleItems = new List<InventoryItem>(50);
+            string[] lookupCats = new[] { "Microcontroller", "Memory IC", "Transceiver", "Power MOSFET", "Optocoupler" };
+            for (int i = 1; i <= 50; i++)
+            {
+                lookupSampleItems.Add(new InventoryItem(
+                    i,
+                    $"PART-{i:D4}",
+                    $"{lookupCats[i % lookupCats.Length]} Model #{i}",
+                    100 + i * 25,
+                    2.50 + (i * 0.75),
+                    $"LOT-2026-B{i:D2}",
+                    i % 5 == 0 ? "Under QC" : "Approved"
+                ));
+            }
+            gridLookup.SetDataSource(lookupSampleItems);
+            gridLookup.SelectionChanged += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(gridLookup.SelectedText))
+                {
+                    ZeroToast.Success(this, $"GridLookup selected: {gridLookup.SelectedText}");
+                }
+            };
+
+            // Editor 2: ZeroCheckedComboBox
+            var lblCheckedCombo = new Label { Text = "Multi-Select CheckedComboBox (ZeroCheckedComboBox):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 70) };
+            var checkedCombo = new ZeroCheckedComboBox
+            {
+                Location = new Point(8, 90),
+                Width = 480,
+                Height = 34,
+                Placeholder = "Select manufacturing processes..."
+            };
+            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("SMT", "SMT Surface Mount Line 01", true));
+            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("THT", "Through-Hole Soldering Wave", false));
+            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("AOI", "AOI Automated Optical Inspection", true));
+            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("XRAY", "3D X-Ray Inspection (BGA)", false));
+            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("ICT", "In-Circuit Testing (ICT Fluke)", false));
+            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("BURN", "48h Thermal Burn-In Chamber", false));
+            checkedCombo.ItemCheck += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Process {(e.NewValue ? "enabled" : "disabled")}: {e.Item}");
+            };
+
+            // Editor 3: ZeroTokenEdit
+            var lblTokenEdit = new Label { Text = "Tag & Chip Editor (ZeroTokenEdit):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 132) };
+            var tokenEdit = new ZeroTokenEdit
+            {
+                Location = new Point(8, 152),
+                Width = 480,
+                Height = 34,
+                Placeholder = "Type tag name and press Enter..."
+            };
+            tokenEdit.AddToken("ISO-9001:2015");
+            tokenEdit.AddToken("RoHS-3");
+            tokenEdit.AddToken("AEC-Q200");
+            tokenEdit.AddToken("Class-3 Medical");
+            tokenEdit.TokenAdded += (s, e) => ZeroToast.Success(this, $"Added tag: {e.Token}");
+            tokenEdit.TokenRemoved += (s, e) => ZeroToast.Warning(this, $"Removed tag: {e.Token}");
+
+            // Editor 4: ZeroColorPicker
+            var lblColorPicker = new Label { Text = "Color Swatch & Palette Picker (ZeroColorPicker):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 194) };
+            var colorPicker = new ZeroColorPicker
+            {
+                Location = new Point(8, 214),
+                Width = 220,
+                Height = 34,
+                SelectedColor = Color.FromArgb(79, 70, 229)
+            };
+            colorPicker.ColorChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Theme accent selected: #{colorPicker.SelectedColor.R:X2}{colorPicker.SelectedColor.G:X2}{colorPicker.SelectedColor.B:X2}");
+            };
+
+            pnlEditors.Controls.Add(lblGridLookup);
+            pnlEditors.Controls.Add(gridLookup);
+            pnlEditors.Controls.Add(lblCheckedCombo);
+            pnlEditors.Controls.Add(checkedCombo);
+            pnlEditors.Controls.Add(lblTokenEdit);
+            pnlEditors.Controls.Add(tokenEdit);
+            pnlEditors.Controls.Add(lblColorPicker);
+            pnlEditors.Controls.Add(colorPicker);
+            cardEditors.ContentPanel.Controls.Add(pnlEditors);
+
+            sec1.Controls.Add(cardEditors);
+            sec1.Controls.Add(splitSec1);
+            sec1.Controls.Add(cardFilter);
+
+            // SECTION 2: Process Workflow Sequence & Six Sigma SPC Chart (Height = 340)
+            var sec2 = new Panel { Dock = DockStyle.Top, Height = 340, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Left Card: ZeroWizard
+            var cardWizard = new ZeroCard
+            {
+                Dock = DockStyle.Left,
+                Width = 560,
+                Title = "Process Workflow Sequence (ZeroWizard)",
+                Subtitle = "Multi-step guided dispatch sequence with validation"
+            };
+
+            var wizard = new ZeroWizard { Dock = DockStyle.Fill };
+            
+            // Wizard Step 1
+            var wPage1 = new ZeroWizardPage("1. Work Order Setup", "Configure order parameters and production cell.", "📋");
+            var pnlW1 = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16, 12, 16, 12) };
+            var lblW1A = new Label { Text = "Work Order Identifier:", ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(10, 10) };
+            var txtW1Order = new ZeroTextBox { Text = "WO-2026-904", Location = new Point(10, 30), Width = 300, Height = 32 };
+            var lblW1B = new Label { Text = "Designated Robotic Workcell:", ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(10, 70) };
+            var cmbW1Cell = new ZeroComboBox { Location = new Point(10, 90), Width = 300, Height = 32 };
+            cmbW1Cell.Items.Add("Robotic Cell A (Kuka KR-16)");
+            cmbW1Cell.Items.Add("Robotic Cell B (Fanuc M-20iA)");
+            cmbW1Cell.Items.Add("AOI Cell #04 (Keyence 3D)");
+            cmbW1Cell.Items.Add("SMT Line #02 High-Speed");
+            cmbW1Cell.SelectedIndex = 0;
+            pnlW1.Controls.Add(lblW1A);
+            pnlW1.Controls.Add(txtW1Order);
+            pnlW1.Controls.Add(lblW1B);
+            pnlW1.Controls.Add(cmbW1Cell);
+            wPage1.Controls.Add(pnlW1);
+
+            // Wizard Step 2
+            var wPage2 = new ZeroWizardPage("2. Statistical Limits", "Define SPC tolerance limits for real-time AOI.", "🔬");
+            var pnlW2 = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16, 12, 16, 12) };
+            var descW2 = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 2, RowHeight = 28 };
+            descW2.Add("Upper Spec Limit (USL)", "12.080 mm");
+            descW2.Add("Target Dimension", "12.000 mm");
+            descW2.Add("Lower Spec Limit (LSL)", "11.920 mm");
+            descW2.Add("Tolerance Band", "± 0.080 mm");
+            descW2.Add("Cpk Capability Index", "1.67 (Capable)");
+            descW2.Add("Inspection Policy", "100% 3D Automated");
+            pnlW2.Controls.Add(descW2);
+            wPage2.Controls.Add(pnlW2);
+
+            // Wizard Step 3
+            var wPage3 = new ZeroWizardPage("3. Authorization & Launch", "Review order dispatch and confirm safety locks.", "🚀");
+            var pnlW3 = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16, 12, 16, 12) };
+            var bannerW3 = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Fill,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "READY FOR DISPATCH CONFIRMATION",
+                Message = "All safety light curtains, feeder magazines, and vision calibrations have been verified. Click 'Finish' below to initiate the robotic workcell cycle."
+            };
+            pnlW3.Controls.Add(bannerW3);
+            wPage3.Controls.Add(pnlW3);
+
+            wizard.AddPage(wPage1);
+            wizard.AddPage(wPage2);
+            wizard.AddPage(wPage3);
+            wizard.Finished += (s, e) =>
+            {
+                ZeroToast.Success(this, "Production Order WO-2026-904 successfully launched via Wizard!");
+            };
+
+            cardWizard.ContentPanel.Controls.Add(wizard);
+
+            var splitSec2 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Right Card: ZeroBoxPlotChart
+            var cardBoxPlot = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Six Sigma SPC Tolerance Distribution (ZeroBoxPlotChart)",
+                Subtitle = "Outlier detection, quartiles (Q1, Med, Q3), and specification limits"
+            };
+
+            var boxPlot = new ZeroBoxPlotChart
+            {
+                Dock = DockStyle.Fill,
+                ChartTitle = "SPC Tolerance Distribution (Six Sigma)",
+                UpperSpecLimit = 12.08,
+                LowerSpecLimit = 11.92
+            };
+            boxPlot.AddPoint(new BoxPlotDataPoint("Batch A", 11.94, 11.98, 12.01, 12.03, 12.06, Color.FromArgb(129, 140, 248)));
+            boxPlot.AddPoint(new BoxPlotDataPoint("Batch B", 11.95, 11.99, 12.00, 12.02, 12.05, Color.FromArgb(56, 189, 248)));
+            var ptC = new BoxPlotDataPoint("Batch C", 11.91, 11.97, 12.02, 12.04, 12.09, Color.FromArgb(248, 113, 113));
+            ptC.Outliers.Add(12.11);
+            boxPlot.AddPoint(ptC);
+            boxPlot.AddPoint(new BoxPlotDataPoint("Batch D", 11.96, 11.99, 12.01, 12.03, 12.06, Color.FromArgb(52, 211, 153)));
+            boxPlot.AddPoint(new BoxPlotDataPoint("Batch E", 11.93, 11.98, 12.00, 12.02, 12.07, Color.FromArgb(251, 191, 36)));
+
+            cardBoxPlot.ContentPanel.Controls.Add(boxPlot);
+
+            sec2.Controls.Add(cardBoxPlot);
+            sec2.Controls.Add(splitSec2);
+            sec2.Controls.Add(cardWizard);
+
+            // SECTION 3: Vector Print Preview & Overlays / Shimmer Skeleton (Height = 350)
+            var sec3 = new Panel { Dock = DockStyle.Top, Height = 350, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+
+            // Left Card: ZeroPrintPreview
+            var cardPrint = new ZeroCard
+            {
+                Dock = DockStyle.Left,
+                Width = 560,
+                Title = "Vector Document Print Preview (ZeroPrintPreview)",
+                Subtitle = "Interactive zoom, page navigation, and printer spool dispatch"
+            };
+
+            var printPreview = new ZeroPrintPreview { Dock = DockStyle.Fill };
+            var printDoc = new PrintDocument();
+            printDoc.DocumentName = "Certificate_Of_Analysis_ISO9001";
+            printDoc.PrintPage += (s, e) =>
+            {
+                var g = e.Graphics;
+                if (g == null) return;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+                // Border & Header
+                using (var penDark = new Pen(Color.FromArgb(30, 41, 59), 2f))
+                {
+                    g.DrawRectangle(penDark, 40, 40, 740, 1040);
+                    g.DrawLine(penDark, 40, 120, 780, 120);
+                }
+
+                using (var fontTitle = new Font("Segoe UI", 16f, FontStyle.Bold))
+                using (var brushTitle = new SolidBrush(Color.FromArgb(15, 23, 42)))
+                {
+                    g.DrawString("CERTIFICATE OF CONFORMANCE & ANALYSIS", fontTitle, brushTitle, 50, 50);
+                }
+
+                using (var fontSub = new Font("Segoe UI", 9.5f, FontStyle.Regular))
+                using (var brushSub = new SolidBrush(Color.FromArgb(100, 116, 139)))
+                {
+                    g.DrawString("Standard Industrial Quality Control Report  |  ISO 9001:2015 Compliant", fontSub, brushSub, 52, 85);
+                }
+
+                // Inner Details Box
+                using (var brushBox = new SolidBrush(Color.FromArgb(248, 250, 252)))
+                using (var penBox = new Pen(Color.FromArgb(226, 232, 240), 1f))
+                {
+                    g.FillRectangle(brushBox, 60, 140, 700, 800);
+                    g.DrawRectangle(penBox, 60, 140, 700, 800);
+                }
+
+                using (var fontBody = new Font("Segoe UI", 10.5f, FontStyle.Regular))
+                using (var fontBodyBold = new Font("Segoe UI", 11f, FontStyle.Bold))
+                using (var brushBody = new SolidBrush(Color.FromArgb(51, 65, 85)))
+                using (var brushPass = new SolidBrush(Color.FromArgb(22, 101, 52)))
+                {
+                    g.DrawString("Batch Lot Number: LOT-2026-0904-MESX", fontBodyBold, brushBody, 80, 170);
+                    g.DrawString("Inspection Station: AOI Workcell #04 (Robotic Cell A)", fontBody, brushBody, 80, 210);
+                    g.DrawString("Total Units Inspected: 5,000 units  |  Defect Rate: 0.02% (Pass: 4,999, NG: 1)", fontBody, brushBody, 80, 245);
+                    g.DrawString("Statistical Six Sigma Process Capability: Cpk = 1.67 (Capable)", fontBodyBold, brushPass, 80, 285);
+                    g.DrawString("Authorized QA Lead Signature:  [ELECTRONICALLY SIGNED BY SYSTEM AUDIT]", fontBody, brushBody, 80, 340);
+                }
+            };
+            printPreview.Document = printDoc;
+            cardPrint.ContentPanel.Controls.Add(printPreview);
+
+            var splitSec3 = new Panel { Dock = DockStyle.Left, Width = 12, BackColor = Color.Transparent };
+
+            // Right Card: ZeroSkeleton & Overlays
+            var cardOverlays = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Shimmer Skeleton & Non-Intrusive Overlays",
+                Subtitle = "60 FPS animated loading states, floating toasts, and modal dialogs"
+            };
+
+            var pnlOverlays = new Panel { Dock = DockStyle.Fill, Padding = new Padding(14), AutoScroll = true };
+
+            // Shimmer Skeleton Showcase
+            var lblSkelTitle = new Label { Text = "Animated Shimmer Loading Placeholders (ZeroSkeleton):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(10, 8) };
+            var skelCircle = new ZeroSkeleton { Shape = SkeletonShape.Circle, Size = new Size(48, 48), Location = new Point(10, 32) };
+            var skelLine1 = new ZeroSkeleton { Shape = SkeletonShape.RoundedRectangle, CornerRadius = 4, Size = new Size(200, 16), Location = new Point(68, 36) };
+            var skelLine2 = new ZeroSkeleton { Shape = SkeletonShape.RoundedRectangle, CornerRadius = 4, Size = new Size(130, 12), Location = new Point(68, 58) };
+            var skelBlock1 = new ZeroSkeleton { Shape = SkeletonShape.RoundedRectangle, CornerRadius = 4, Size = new Size(420, 18), Location = new Point(10, 92) };
+            var skelBlock2 = new ZeroSkeleton { Shape = SkeletonShape.RoundedRectangle, CornerRadius = 4, Size = new Size(360, 18), Location = new Point(10, 118) };
+
+            pnlOverlays.Controls.Add(lblSkelTitle);
+            pnlOverlays.Controls.Add(skelCircle);
+            pnlOverlays.Controls.Add(skelLine1);
+            pnlOverlays.Controls.Add(skelLine2);
+            pnlOverlays.Controls.Add(skelBlock1);
+            pnlOverlays.Controls.Add(skelBlock2);
+
+            // Overlay Action Buttons
+            var lblToastTitle = new Label { Text = "Toast Notifications & Modal Dialog (ZeroToast, ZeroModal):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(10, 150) };
+            pnlOverlays.Controls.Add(lblToastTitle);
+
+            var toastFlow = new FlowLayoutPanel { Location = new Point(10, 174), Size = new Size(480, 90), BackColor = Color.Transparent };
+            
+            var btnToastSuccess = new ZeroButton { Text = "✔ Success Toast", ButtonStyle = ZeroButtonStyle.Success, Width = 140, Height = 34 };
+            btnToastSuccess.Click += (s, e) => ZeroToast.Success(this, "Production batch #8091 successfully released to shopfloor.");
+
+            var btnToastInfo = new ZeroButton { Text = "ℹ Info Toast", ButtonStyle = ZeroButtonStyle.Primary, Width = 120, Height = 34 };
+            btnToastInfo.Click += (s, e) => ZeroToast.Info(this, "PLC connection synchronized at 10 ms cycle (Modbus TCP).");
+
+            var btnToastWarning = new ZeroButton { Text = "⚠ Warning Toast", ButtonStyle = ZeroButtonStyle.Secondary, Width = 140, Height = 34 };
+            btnToastWarning.Click += (s, e) => ZeroToast.Warning(this, "Thermal threshold approaching USL warning limit (82.5°C).");
+
+            var btnToastError = new ZeroButton { Text = "✕ Error Toast", ButtonStyle = ZeroButtonStyle.Danger, Width = 120, Height = 34 };
+            btnToastError.Click += (s, e) => ZeroToast.Error(this, "Emergency Stop circuit tripped on Conveyor CV-401!");
+
+            var btnModalConfirm = new ZeroButton { Text = "💬 Confirm Modal Dialog", ButtonStyle = ZeroButtonStyle.Primary, Width = 190, Height = 34 };
+            btnModalConfirm.Click += (s, e) =>
+            {
+                ZeroModal.Confirm(
+                    this,
+                    "Confirm Batch Release",
+                    "Are you sure you want to dispatch Batch WO-2026-904 to Robotic Workcell A? All feeder allocations and safety interlocks have been verified.",
+                    () => ZeroToast.Success(this, "Batch dispatched successfully to manufacturing line!"),
+                    () => ZeroToast.Warning(this, "Dispatch cancelled by operator."),
+                    "Release Batch",
+                    "Cancel");
+            };
+
+            toastFlow.Controls.Add(btnToastSuccess);
+            toastFlow.Controls.Add(btnToastInfo);
+            toastFlow.Controls.Add(btnToastWarning);
+            toastFlow.Controls.Add(btnToastError);
+            toastFlow.Controls.Add(btnModalConfirm);
+            pnlOverlays.Controls.Add(toastFlow);
+
+            cardOverlays.ContentPanel.Controls.Add(pnlOverlays);
+
+            sec3.Controls.Add(cardOverlays);
+            sec3.Controls.Add(splitSec3);
+            sec3.Controls.Add(cardPrint);
+
+            // Assemble main container
+            mainContainer.Controls.Add(sec3);
+            mainContainer.Controls.Add(sec2);
+            mainContainer.Controls.Add(sec1);
+            mainContainer.Controls.Add(bannerSpacer);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            bannerSpacer.BringToFront();
+            sec1.BringToFront();
+            sec2.BringToFront();
+            sec3.BringToFront();
+
+            _tabCommercial.Controls.Add(mainContainer);
         }
 
         private void InitializeAdvancedSuite()

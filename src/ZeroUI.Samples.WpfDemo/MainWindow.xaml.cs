@@ -20,6 +20,12 @@ using ZeroUI.Wpf.Editors;
 using ZeroUI.Wpf.Industrial;
 using ZeroUI.Wpf.Docking;
 using ZeroUI.Wpf.Diagram;
+using ZeroUI.Wpf.DataGrid;
+using ZeroUI.Wpf.Charts;
+using ZeroUI.Wpf.Navigation;
+using ZeroUI.Wpf.Overlays;
+using ZeroUI.Wpf.Reporting;
+using ZeroUI.Wpf.Feedback;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Samples.WpfDemo
@@ -61,6 +67,7 @@ namespace ZeroUI.Samples.WpfDemo
             SetupSignalScope();
             SetupHexInspector();
             SetupStateExecutor();
+            SetupEnterpriseCommercialSuite();
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
@@ -1418,6 +1425,199 @@ namespace ZeroUI.Samples.WpfDemo
         private void BtnStateReset_Click(object sender, RoutedEventArgs e)
         {
             DemoStateExecutor.Engine.SetInitialState("idle");
+        }
+
+        #endregion
+
+        #region Cluster 14: Enterprise Commercial Suite Setup & Handlers
+
+        private void SetupEnterpriseCommercialSuite()
+        {
+            // 1. Setup ZeroGridLookup
+            var sampleMaterials = new List<DemoProduct>
+            {
+                new DemoProduct { Id = 101, Code = "RES-10K-0402", Name = "SMD Thick Film Resistor 10k", Category = "Passive Components", Price = 0.005, Quantity = 250000, InStock = true },
+                new DemoProduct { Id = 102, Code = "CAP-100N-0603", Name = "Ceramic Capacitor 100nF 50V", Category = "Passive Components", Price = 0.012, Quantity = 180000, InStock = true },
+                new DemoProduct { Id = 103, Code = "MCU-STM32F4", Name = "ARM Cortex-M4 168MHz MCU", Category = "Semiconductors", Price = 4.25, Quantity = 4500, InStock = true },
+                new DemoProduct { Id = 104, Code = "CONN-RJ45-1G", Name = "Ethernet MagJack 1000Base-T", Category = "Connectors", Price = 1.85, Quantity = 12000, InStock = true },
+                new DemoProduct { Id = 105, Code = "REG-LM2596-5", Name = "DC-DC Step Down Converter 5V", Category = "Power Electronics", Price = 0.95, Quantity = 8200, InStock = true },
+                new DemoProduct { Id = 106, Code = "DIO-SS34-SMA", Name = "Schottky Barrier Diode 40V 3A", Category = "Discrete Semis", Price = 0.08, Quantity = 95000, InStock = true },
+                new DemoProduct { Id = 107, Code = "RLY-12V-10A", Name = "Miniature Power Relay 12VDC", Category = "Electromechanical", Price = 1.20, Quantity = 3500, InStock = false }
+            };
+            DemoGridLookup.DisplayMember = "Name";
+            DemoGridLookup.ValueMember = "Code";
+            DemoGridLookup.SetDataSource(sampleMaterials);
+
+            // 2. Setup ZeroCheckedComboBox
+            DemoCheckedCombo.Items.Add(new CheckedComboItem("ZoneA", "Zone A: SMT Cleanroom (Class 10k)", true));
+            DemoCheckedCombo.Items.Add(new CheckedComboItem("ZoneB", "Zone B: Automated PCB Assembly", true));
+            DemoCheckedCombo.Items.Add(new CheckedComboItem("ZoneC", "Zone C: CNC Precision Machining", false));
+            DemoCheckedCombo.Items.Add(new CheckedComboItem("ZoneD", "Zone D: Automated Storage & Retrieval", true));
+            DemoCheckedCombo.Items.Add(new CheckedComboItem("ZoneE", "Zone E: Chemical Batching & Solvent Dispensing", false));
+            DemoCheckedCombo.Items.Add(new CheckedComboItem("ZoneF", "Zone F: Packaging & Palletizing Hub", true));
+
+            // 3. Setup ZeroTokenEdit
+            DemoTokenEdit.Tokens.Add("Solder-Bridge");
+            DemoTokenEdit.Tokens.Add("Cold-Joint");
+            DemoTokenEdit.Tokens.Add("Tombstone");
+            DemoTokenEdit.Tokens.Add("AOI-Flagged");
+
+            // 4. Setup ZeroColorPicker
+            DemoColorPicker.SelectedColor = Color.FromRgb(129, 140, 248);
+
+            // 5. Setup ZeroFilterControl
+            DemoFilterControl.AvailableFields.AddRange(new[] { "Status", "Category", "Quantity", "UnitPrice", "WarehouseZone", "LotNumber" });
+            DemoFilterControl.RebuildTreeUI();
+            TxtGeneratedSql.Text = DemoFilterControl.RootGroup.ToSqlWhere();
+            DemoFilterControl.FilterChanged += (s, e) =>
+            {
+                TxtGeneratedSql.Text = DemoFilterControl.RootGroup.ToSqlWhere();
+            };
+
+            // 6. Setup ZeroWizard
+            var p1 = new ZeroWizardPage
+            {
+                Title = "1. Work Order Parameters",
+                Subtitle = "Specify manufacturing lot code, scheduled unit quota, and line assignment.",
+                Icon = "📋"
+            };
+            var p1Stack = new StackPanel { Margin = new Thickness(16) };
+            p1Stack.Children.Add(new TextBlock { Text = "Target Production Work Order: WO-2026-904", FontSize = 13, FontWeight = FontWeights.SemiBold, Foreground = ZeroWpfTheme.TextPrimary, Margin = new Thickness(0, 0, 0, 8) });
+            p1Stack.Children.Add(new TextBlock { Text = "Line: SMT Robotic Cell A  |  Operator: OP-492  |  Target: 2,500 Units", FontSize = 12, Foreground = ZeroWpfTheme.TextSecondary });
+            p1.Content = p1Stack;
+
+            var p2 = new ZeroWizardPage
+            {
+                Title = "2. Material Feeder Verification",
+                Subtitle = "Verify electronic reel lot barcodes and feeder reel alignment.",
+                Icon = "🔍"
+            };
+            var p2Stack = new StackPanel { Margin = new Thickness(16) };
+            p2Stack.Children.Add(new TextBlock { Text = "Feeder 01: RES-10K-0402 (Reel #88192) - OK", FontSize = 12, Foreground = ZeroWpfTheme.SuccessAccent, Margin = new Thickness(0, 0, 0, 4) });
+            p2Stack.Children.Add(new TextBlock { Text = "Feeder 02: CAP-100N-0603 (Reel #91024) - OK", FontSize = 12, Foreground = ZeroWpfTheme.SuccessAccent, Margin = new Thickness(0, 0, 0, 4) });
+            p2Stack.Children.Add(new TextBlock { Text = "Feeder 03: MCU-STM32F4 (Tray #12) - OK", FontSize = 12, Foreground = ZeroWpfTheme.SuccessAccent });
+            p2.Content = p2Stack;
+
+            var p3 = new ZeroWizardPage
+            {
+                Title = "3. Quality & Safety Sign-Off",
+                Subtitle = "Inspect optical safety interlocks and electronic authorization signature.",
+                Icon = "✔"
+            };
+            var p3Stack = new StackPanel { Margin = new Thickness(16) };
+            p3Stack.Children.Add(new TextBlock { Text = "All safety curtains and guard interlocks verified active.", FontSize = 12, Foreground = ZeroWpfTheme.TextSecondary, Margin = new Thickness(0, 0, 0, 6) });
+            p3Stack.Children.Add(new TextBlock { Text = "Click 'Finish' to arm robotic cell and begin high-speed execution.", FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = ZeroWpfTheme.PrimaryAccent });
+            p3.Content = p3Stack;
+
+            DemoInlineWizard.Pages.Add(p1);
+            DemoInlineWizard.Pages.Add(p2);
+            DemoInlineWizard.Pages.Add(p3);
+            DemoInlineWizard.Finished += (s, e) =>
+            {
+                ZeroToast.Success(this, "Production Order WO-2026-904 successfully launched!");
+            };
+
+            // 7. Setup ZeroBoxPlotChart
+            DemoBoxPlot.ChartTitle = "SPC Tolerance Distribution (Six Sigma)";
+            DemoBoxPlot.UpperSpecLimit = 12.08;
+            DemoBoxPlot.LowerSpecLimit = 11.92;
+            DemoBoxPlot.AddPoint(new BoxPlotDataPoint("Batch A", 11.94, 11.98, 12.01, 12.03, 12.06, Color.FromRgb(129, 140, 248)));
+            DemoBoxPlot.AddPoint(new BoxPlotDataPoint("Batch B", 11.95, 11.99, 12.00, 12.02, 12.05, Color.FromRgb(56, 189, 248)));
+            DemoBoxPlot.AddPoint(new BoxPlotDataPoint("Batch C", 11.91, 11.97, 12.02, 12.04, 12.09, Color.FromRgb(248, 113, 113)) { Outliers = { 12.11 } });
+            DemoBoxPlot.AddPoint(new BoxPlotDataPoint("Batch D", 11.96, 11.99, 12.01, 12.03, 12.06, Color.FromRgb(52, 211, 153)));
+            DemoBoxPlot.AddPoint(new BoxPlotDataPoint("Batch E", 11.93, 11.98, 12.00, 12.02, 12.07, Color.FromRgb(251, 191, 36)));
+
+            // 8. Setup ZeroPrintPreview
+            var docCanvas = new Canvas { Width = 794, Height = 1123, Background = Brushes.White };
+            
+            var headerBorder = new Border
+            {
+                Width = 714,
+                Height = 80,
+                Margin = new Thickness(40, 40, 0, 0),
+                BorderThickness = new Thickness(0, 0, 0, 2),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(30, 41, 59))
+            };
+            var titleStack = new StackPanel();
+            titleStack.Children.Add(new TextBlock { Text = "CERTIFICATE OF CONFORMANCE & ANALYSIS", FontSize = 18, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42)), FontFamily = new FontFamily("Segoe UI") });
+            titleStack.Children.Add(new TextBlock { Text = "Standard Industrial Quality Control Report  |  ISO 9001:2015 Compliant", FontSize = 11, Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)), Margin = new Thickness(0, 4, 0, 0) });
+            headerBorder.Child = titleStack;
+            docCanvas.Children.Add(headerBorder);
+
+            var contentBox = new Border
+            {
+                Width = 714,
+                Height = 850,
+                Margin = new Thickness(40, 140, 0, 0),
+                Background = new SolidColorBrush(Color.FromRgb(248, 250, 252)),
+                BorderBrush = new SolidColorBrush(Color.FromRgb(226, 232, 240)),
+                BorderThickness = new Thickness(1),
+                Padding = new Thickness(24)
+            };
+            var bodyStack = new StackPanel();
+            bodyStack.Children.Add(new TextBlock { Text = "Batch Lot Number: LOT-2026-0904-MESX", FontWeight = FontWeights.Bold, FontSize = 13, Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42)), Margin = new Thickness(0, 0, 0, 8) });
+            bodyStack.Children.Add(new TextBlock { Text = "Inspection Station: AOI Workcell #04 (Robotic Cell A)", FontSize = 12, Foreground = new SolidColorBrush(Color.FromRgb(71, 85, 105)), Margin = new Thickness(0, 0, 0, 4) });
+            bodyStack.Children.Add(new TextBlock { Text = "Total Units Inspected: 5,000 units  |  Defect Rate: 0.02% (Pass: 4,999, NG: 1)", FontSize = 12, Foreground = new SolidColorBrush(Color.FromRgb(71, 85, 105)), Margin = new Thickness(0, 0, 0, 16) });
+            bodyStack.Children.Add(new TextBlock { Text = "Statistical Six Sigma Process Capability: Cpk = 1.67 (Capable)", FontSize = 13, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(22, 101, 52)), Margin = new Thickness(0, 0, 0, 24) });
+            bodyStack.Children.Add(new TextBlock { Text = "Authorized QA Lead Signature:  [ELECTRONICALLY SIGNED BY SYSTEM AUDIT]", FontSize = 12, FontStyle = FontStyles.Italic, Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)) });
+            contentBox.Child = bodyStack;
+            docCanvas.Children.Add(contentBox);
+
+            DemoPrintPreview.SetPages(new[] { docCanvas });
+        }
+
+        private void BtnApplyFilter_Click(object sender, RoutedEventArgs e)
+        {
+            string sql = DemoFilterControl.RootGroup.ToSqlWhere();
+            TxtGeneratedSql.Text = sql;
+            ZeroToast.Info(this, "Filter Criteria Compiled: " + sql);
+        }
+
+        private void BtnResetFilter_Click(object sender, RoutedEventArgs e)
+        {
+            DemoFilterControl.RootGroup.Children.Clear();
+            DemoFilterControl.RootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
+            DemoFilterControl.RebuildTreeUI();
+            TxtGeneratedSql.Text = DemoFilterControl.RootGroup.ToSqlWhere();
+            ZeroToast.Info(this, "Filter criteria reset to default.");
+        }
+
+        private void BtnToastSuccess_Click(object sender, RoutedEventArgs e)
+        {
+            ZeroToast.Success(this, "Production batch #8091 successfully released to shopfloor.");
+        }
+
+        private void BtnToastInfo_Click(object sender, RoutedEventArgs e)
+        {
+            ZeroToast.Info(this, "PLC connection synchronized at 10 ms cycle (Modbus TCP).");
+        }
+
+        private void BtnToastWarning_Click(object sender, RoutedEventArgs e)
+        {
+            ZeroToast.Warning(this, "Thermal threshold approaching USL warning limit (82.5°C).");
+        }
+
+        private void BtnToastError_Click(object sender, RoutedEventArgs e)
+        {
+            ZeroToast.Error(this, "Emergency Stop circuit tripped on Conveyor CV-401!");
+        }
+
+        private void BtnShowModalConfirm_Click(object sender, RoutedEventArgs e)
+        {
+            bool confirmed = ZeroModal.Confirm(this,
+                "Confirm Batch Release",
+                "Are you sure you want to dispatch Batch WO-2026-904 to Robotic Workcell A? All feeder allocations and safety interlocks have been verified.",
+                "Release Batch",
+                "Cancel");
+
+            if (confirmed)
+            {
+                ZeroToast.Success(this, "Batch dispatched successfully to manufacturing line!");
+            }
+            else
+            {
+                ZeroToast.Warning(this, "Dispatch cancelled by operator.");
+            }
         }
 
         #endregion
