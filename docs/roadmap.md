@@ -87,17 +87,40 @@
 * [x] **Cluster 7 (Feedback & Overlays):** `ZeroSkeleton` 60 FPS shimmer loading placeholder (WinForms & WPF); `ZeroToast` & `ZeroModal` (WPF parity).
 * [x] **Cluster 8 (Reporting & Print):** `ZeroPrintPreview` vector document and report print previewer with zoom and direct printer dispatch (WinForms & WPF).
 
-### Phase 9: Enterprise DX & Design-Time Ecosystem (Directives 39–42)
-* [ ] **Unified `IZeroEditor` Contract & `EditValue` Pipeline:** Standardize `EditValue`, `EditValueChanged`, `IsModified`, `ReadOnly`, `Reset()`, and `Clear()` across all 24+ form editor controls.
-* [ ] **Generic Form Data-Binding Engine (`ZeroDataBinder`):** 1-line bi-directional binding and DTO extraction (`Bind(container, dto)` / `Collect<T>(container)`).
-* [ ] **Visual Studio Smart Tags & Designers:** Interactive Action Lists for `GridControl`, `Wizard`, `FilterControl`, and `BoxPlotChart`; proper collection serialization.
-* [ ] **Universal XAML XML Namespace (WPF):** Register `[XmlnsDefinition]` and `[XmlnsPrefix]` for `http://schemas.zeroui.net/winfx/xaml`.
-* [ ] **Semantic Naming Normalization:** Introduce clean enterprise class names (`GridControl`, `TreeList`, `FilterControl`, `GridLookupEdit`, `TokenEdit`) while maintaining 100% backward compatibility via `ZeroXXX` aliases.
+### Phase 9: Enterprise DX & Advanced Analytical Engines
+* [x] **Unified `IZeroEditor` Contract & `EditValue` Pipeline:** Standardized `EditValue`, `EditValueChanged`, `IsModified`, `ReadOnly`, `Reset()`, and `Clear()` across all form editor controls.
+* [x] **Generic Form Data-Binding Engine (`ZeroDataBinder`):** 1-line bidirectional binding and DTO extraction (`Populate` / `Collect<T>`).
+* [x] **Universal XAML XML Namespace (WPF):** Registered `[XmlnsDefinition("http://schemas.zeroui.net/winfx/xaml", ...)]` and `[XmlnsPrefix]` in `AssemblyInfo.cs`.
+* [x] **Semantic Naming Normalization:** Introduced clean enterprise class names (`GridControl`, `TreeList`, `FilterControl`, `GridLookupEdit`, `TokenEdit`, `SimpleButton`, `TextEdit`, `CheckEdit`, `SpinEdit`, `DateEdit`, `WizardControl`, `DocumentPreviewControl`) with 100% backward-compatible `ZeroXXX` aliases.
+* [x] **Form Validation & Visual Error Notification Engine:** `ValidationProvider`, `ZeroErrorProvider`, rules (`Required`, `Range`, `Email`, `Phone`), vector badge adorners, and hover tooltips.
+* [x] **Enterprise Localization & I18N Engine:** `ZeroLocalizer` supporting hot language switching between English and Vietnamese, runtime overrides, and multi-control string catalogs.
+* [x] **OLAP Multidimensional Cross-Tab Matrix:** `PivotGridControl` and `ZeroPivotGrid` with hierarchical dimension slicing and measure aggregation (Sum, Count, Average, Min, Max, Grand Totals).
+* [x] **Visual Timeline & Range Selector:** `RangeControl` and `DateTimeRangeSlider` with interactive grips, span panning, focal zoom, interval snapping, and distribution histogram/area graph.
 
 ---
 
 ## 3. Future Enhancements & Proposals Catalog
 
-For detailed architectural evaluations, design trade-offs, and implementation specifications of upcoming proposals, refer to [ZeroUI Proposals Catalog](file:///e:/15.%20Other/dotnet/libs/ZeroUI/docs/proposals.md).
+For detailed architectural evaluations, design trade-offs, and implementation specifications, refer to [ZeroUI Proposals Catalog — Section 8](file:///e:/15.%20Other/dotnet/libs/ZeroUI/docs/proposals.md#8-feasible-enterprise-control-expansion-proposals-multi-subsystem-blueprint).
+
+### Upcoming Phases Overview
+
+#### Phase 10: High-Impact Enterprise Presentation & Productivity (Near-Term)
+- **`CardView` & `TileView` Mode for `GridControl` (Proposal 8.1):** Responsive multi-column virtualized card/tile grid view.
+- **`GridDataExporter` (Proposal 8.2):** Zero-dependency streaming Excel (`.xlsx`) and `.csv` exporter.
+- **`SearchLookUpEdit` (Proposal 8.3):** Paginated high-capacity dropdown with persistent top search bar.
+- **`BarcodeBox` & `BarcodeEdit` (Proposal 8.4):** Vector 1D/2D barcode & QR Code generator/renderer.
+- **`RatingControl` (Proposal 8.5):** Inspection severity & QA score half-star selector.
+- **`BreadcrumbControl` (Proposal 8.6):** Hierarchical asset path navigator with sibling dropdowns.
+- **`ZeroVisualDebugger` (Proposal 8.12):** In-app runtime UI tree inspector and performance HUD.
+
+#### Phase 11: Industrial SCADA & Advanced Operations (Mid-Term)
+- **`RadialGauge` & `LinearGauge` (Proposal 8.8):** Industrial dials & thermometer gauges bound directly to `TagEngine`.
+- **`FunnelChart` / `PyramidChart` (Proposal 8.9):** Production line conversion and scrap loss visualizer.
+- **`FlowLayoutControl` (Proposal 8.7):** Responsive card layout container with drag-and-drop tile reordering.
+
+#### Phase 12: Specialized Document & Office Viewers (Long-Term)
+- **`SpreadsheetControl` MVP (Proposal 8.10):** Lightweight vector calculation sheet with core formulas (`SUM`, `AVERAGE`, `IF`).
+- **`PdfViewerControl` (Proposal 8.11):** Embedded CAD schematic and SOP technical document reader.
 
 

@@ -205,3 +205,176 @@ To maintain rigorous technical integrity, ZeroUI establishes concrete engineerin
 | **PLC &rarr; Tag Latency (Local)** | **< 1.0 ms** | **~0.33 ms** (1,000 tags) | **Achieved** | `ModbusAddressPlanner` 17 block requests |
 | **UI Telemetry Latency** | **< 16.6 ms (60 Hz)** | **~16.0 ms** | **Achieved** | `UiDispatcher` frame coalescing batch flush |
 | **Historian Ingestion Rate** | **> 100,000 rec/s** | **6,900,000 rec/s (In-Mem)**<br/>**~202,000 rec/s (WAL)** | **Achieved** | Continuous rollups (L0–L5) + daily WAL commit |
+
+---
+
+## 8. Feasible Enterprise Control Expansion Proposals (Multi-Subsystem Blueprint)
+
+To guide the long-term technical evolution of **ZeroUI** without compromising its core principle of **Zero External Dependencies**, this section details pragmatic, high-impact component proposals organized across the six primary control subsystems. Each proposal provides the technical architecture, operational use case, feasibility score, and complexity assessment.
+
+```text
+                               ZeroUI Enterprise Control Ecosystem
+                                                │
+         ┌───────────────┬───────────────┬──────┴────────┬───────────────┬───────────────┐
+         │               │               │               │               │               │
+    Data & Matrix   Form Editors   Navigation/Layout  Industrial   Document/Report  Diagnostics
+         │               │               │               │               │               │
+    • CardView      • SearchLookup • Breadcrumb     • Gauges        • Spreadsheet   • Visual Debugger
+    • Streaming     • Barcode/QR   • FlowLayout     • Funnel/       • PDF Viewer    • Memory/Perf HUD
+      Exporter      • RatingEdit     (Drag-Reorder)   Pyramid       (SOP Viewer)
+```
+
+---
+
+### Subsystem 1: Advanced Data & Matrix Controls (Data & Large Grids)
+
+#### Proposal 8.1: `CardView` & `TileView` Virtualized Presentation for `GridControl`
+* **Objective:** Enable `GridControl` to seamlessly switch its rendering engine between conventional rows (`GridViewType.Table`) and multi-column card/tile layouts (`GridViewType.CardView` / `TileView`) without changing data sources, filter criteria, or sorting logic.
+* **Target Scenarios:** Product catalog browsing, equipment visual status boards, operator photo directories, and QA inspection lots with thumbnail previews.
+* **Technical Architecture:**
+  - **Core:** Introduce `GridCardLayoutManager` in `ZeroUI.Core.Data` computing card grid coordinates $(Col, Row)$, card widths/heights, and binary-searched viewport culling via `VirtualViewport2D`.
+  - **WinForms:** Direct single-HWND vector GDI+ card cell rendering with badge overlays, customizable card field slots, and hover drop-shadow effects.
+  - **WPF:** Hardware-accelerated `DrawingContext` virtual card tiles with data-bound card templates.
+* **Feasibility Score:** **9.5 / 10** (Extremely High — directly reuses existing virtual scrolling, data pipeline, and hit-testing infrastructure).
+* **Implementation Effort:** ~2–3 engineering days.
+
+#### Proposal 8.2: Native Zero-Allocation Streaming Data Exporter (`GridDataExporter`)
+* **Objective:** Direct high-speed export of active `GridControl` views (including banded columns, group summaries, and formatted values) into modern `.xlsx` (OpenXML package) and `.csv` files with zero reliance on Microsoft Office or heavy third-party spreadsheet SDKs.
+* **Target Scenarios:** Production report generation, audit trail archiving, and financial export in industrial workstations lacking desktop productivity suites.
+* **Technical Architecture:**
+  - **Core:** Implement a lightweight OpenXML zip packaging writer streaming raw XML parts (`xl/worksheets/sheet1.xml`, `xl/styles.xml`, `xl/workbook.xml`) using `System.IO.Compression`.
+  - Zero-string-duplication via shared string table streaming.
+  - Supports column formatting (Currency, Percent, Date) directly mapped from `ZeroColumn.DisplayFormat`.
+* **Feasibility Score:** **10.0 / 10** (Immediate — standard pure C# XML streaming).
+* **Implementation Effort:** ~1–2 engineering days.
+
+---
+
+### Subsystem 2: Enterprise Form Editors & Input Controls
+
+#### Proposal 8.3: `SearchLookUpEdit` (High-Capacity Paginated Dropdown with Header Search)
+* **Objective:** A specialized enterprise lookup editor optimized for massive datasets (50,000+ records) featuring a persistent top search bar, Find/Clear command buttons, count status footer (`"Found 120 matching items out of 85,000"`), and debounced asynchronous background querying.
+* **Target Scenarios:** Bill of Materials (BOM) item lookups, customer account selection, and global warehouse pallet search.
+* **Technical Architecture:**
+  - Extends `IZeroEditor` and `PopupBaseEdit`.
+  - Popup hosts a dedicated search header strip, an embedded virtual list canvas, and an item count status bar.
+  - Asynchronous background filtering prevents UI thread stutter during rapid keystrokes.
+* **Feasibility Score:** **9.0 / 10** (High — pattern established in `GridLookupEdit`).
+* **Implementation Effort:** ~2 engineering days.
+
+#### Proposal 8.4: Vector Barcode & QR Code Engine (`BarcodeBox` & `BarcodeEdit`)
+* **Objective:** Direct vector generation and in-form rendering of 1D and 2D industrial machine-readable codes (`Code 128`, `Code 39`, `EAN-13`, `QR Code`) with crisp vector anti-aliasing on high-DPI screens and thermal printers.
+* **Target Scenarios:** Warehouse bin labels, lot serial number badges, product work orders, and mobile scanner scanning screens.
+* **Technical Architecture:**
+  - **Core (`ZeroUI.Core.Barcode`):** Pure mathematical encoding algorithms generating bitmask arrays for 1D bars and 2D QR matrix cells with Reed-Solomon error correction.
+  - **WinForms & WPF:** Renders sharp vector rectangles directly onto canvas; exports crisp SVG and high-resolution PNG/BMP for printing.
+* **Feasibility Score:** **9.2 / 10** (High — self-contained algorithmic encoder without external C++ libraries).
+* **Implementation Effort:** ~2–3 engineering days.
+
+#### Proposal 8.5: `RatingControl` / `RatingEdit` (Precision Inspection Severity & Score Selector)
+* **Objective:** Compact interactive rating editor supporting whole and half-star precision, custom vector glyphs (Stars, Diamonds, Shields, Hearts), and smooth hover fill preview.
+* **Target Scenarios:** QA defect severity scoring, supplier performance audit grades, and visual inspection checklists.
+* **Technical Architecture:**
+  - Implements `IZeroEditor` exposing `decimal EditValue` (e.g. 3.5, 4.0).
+  - High-performance vector glyph math with fractional fill clipping.
+* **Feasibility Score:** **10.0 / 10** (Immediate — compact, clean design).
+* **Implementation Effort:** ~0.5 engineering day.
+
+---
+
+### Subsystem 3: Layout, Windowing & Workflow Navigation
+
+#### Proposal 8.6: `BreadcrumbControl` / `BreadcrumbEdit` (Hierarchical Domain Path Navigator)
+* **Objective:** Windows Explorer-style interactive breadcrumb navigation bar showing tree hierarchy (`Enterprise > Facility North > Workshop B > Extruder Line 02 > Screw Barrel Zone`), where each segment provides a dropdown of sibling nodes, back/forward history buttons, and 1-click transition to an editable path text box.
+* **Target Scenarios:** Deep factory asset navigation, multi-level folder exploration, and warehouse rack path tracking.
+* **Technical Architecture:**
+  - **Core:** `BreadcrumbNode` model holding title, path, children, and navigation metadata.
+  - **WinForms & WPF:** Dynamic breadcrumb segment pill layout with automatic truncation (`...`), sibling popup menus, and inline autocomplete path editing.
+* **Feasibility Score:** **9.5 / 10** (High — proven UI ergonomics).
+* **Implementation Effort:** ~2 engineering days.
+
+#### Proposal 8.7: `FlowLayoutControl` with Interactive Drag Reordering
+* **Objective:** Responsive container automatically wrapping child cards according to available viewport width, featuring animated drag-and-drop tile reordering and layout serialization.
+* **Target Scenarios:** Modular plant supervisor KPI dashboards, customizable machine health cards, and alert widget boards.
+* **Technical Architecture:**
+  - Coordinate re-flow engine with spring-damper smooth position interpolation.
+  - Integrated with `ZeroWorkspaceSerializer` for saving customized tile order to JSON.
+* **Feasibility Score:** **8.8 / 10** (High).
+* **Implementation Effort:** ~2–3 engineering days.
+
+---
+
+### Subsystem 4: Industrial SCADA, Analytics & Special Charts
+
+#### Proposal 8.8: Industrial Gauges Suite (`RadialGauge` & `LinearGauge`)
+* **Objective:** High-precision instrumentation dials (Circular 180° / 270° and Vertical/Horizontal Linear thermometers) with customizable threshold color bands (Normal Green, Warning Amber, Danger Red), magnetic needle damping, and direct binding to `TagEngine`.
+* **Target Scenarios:** Machine hydraulic pressure, boiler temperature, motor RPM, and live furnace thermal feedback.
+* **Technical Architecture:**
+  - **Direct TagEngine Binding:** Directly inspects unboxed `ScadaValue` in `TagStorage` to update needle angle with zero allocation on paint passes.
+  - Vector GDI+ / WPF rendering with anti-aliased arcs, tick marks, numeric scale, and glossy glass reflections.
+* **Feasibility Score:** **9.2 / 10** (High — standard industrial instrumentation).
+* **Implementation Effort:** ~2–3 engineering days.
+
+#### Proposal 8.9: `FunnelChart` / `PyramidChart` (Yield & Scrap Rate Visualizer)
+* **Objective:** Multi-tier tapered geometric funnel and pyramid charts visualizing multi-stage conversion rates, material yields, and cumulative scrap losses across sequential manufacturing processes.
+* **Target Scenarios:** Production line yield tracking (Raw Extrusion &rarr; Slicing &rarr; Coating &rarr; Packaging &rarr; Warehouse), QA defect drop-off, and order fulfillment pipelines.
+* **Technical Architecture:**
+  - Trapezoidal polygon rendering with automatic segment spacing, percentage badges, and interactive segment selection.
+* **Feasibility Score:** **9.5 / 10** (High — straightforward geometry math).
+* **Implementation Effort:** ~1–2 engineering days.
+
+---
+
+### Subsystem 5: Document & Specialist Data Viewers
+
+#### Proposal 8.10: `SpreadsheetControl` (Phase 1: Tabular Formula Sheet MVP)
+* **Objective:** A lightweight vector spreadsheet grid (A1..Z100) supporting freeform cell data entry, cell formatting (font style, fill color, text alignment, number formatting), freeze panes, and core mathematical formula calculation (`SUM`, `AVERAGE`, `MIN`, `MAX`, `IF`, arithmetic operators).
+* **Target Scenarios:** In-app formula calculation templates, laboratory test record entry, and custom costing workbooks without launching external office software.
+* **Technical Architecture:**
+  - **Core (`ZeroUI.Core.Spreadsheet`):** Sparse 2D cell matrix index, formula token parser and recursive dependency graph evaluator with cycle detection.
+  - **WinForms & WPF:** Virtualized spreadsheet canvas reusing `VirtualViewport2D` with row/column header coordinate bars (A, B, C... / 1, 2, 3...) and inline cell editing.
+* **Feasibility Score:** **7.8 / 10** (Medium-High for Phase 1 MVP — formula engine scope is strictly bounded to core mathematical functions).
+* **Implementation Effort:** ~4–5 engineering days for Phase 1 MVP.
+
+#### Proposal 8.11: `PdfViewerControl` (Lightweight Vector Technical Document Reader)
+* **Objective:** Embedded document viewer rendering standard multi-page technical documents, CAD PDF schematics, and Standard Operating Procedures (SOP) inside desktop forms with continuous vertical scrolling, zoom (25%–400%), and page navigation.
+* **Target Scenarios:** Viewing machine electrical schematics, work instructions at assembly stations, and inspection certs on factory floor PCs without third-party PDF reader installations.
+* **Technical Architecture:**
+  - Native Windows vector document rendering bridge (via Windows Imaging Component and Windows.Data.Pdf API on Windows 10/11) with fallback vector rendering engine.
+  - Virtualized page layout canvas rendering visible pages on demand.
+* **Feasibility Score:** **8.0 / 10** (Medium-High — leverages native platform rasterizer on modern Windows).
+* **Implementation Effort:** ~3–4 engineering days.
+
+---
+
+### Subsystem 6: Developer Experience & Live Diagnostics
+
+#### Proposal 8.12: `ZeroVisualDebugger` (Embedded In-App UI & Runtime Inspector)
+* **Objective:** An embedded diagnostic HUD toggled via hotkey (`F12` or `Ctrl+Shift+D`) enabling developers and QA engineers to inspect the active visual tree, live control boundaries, dirty editor states, paint FPS, GC allocations, and real-time SCADA tag values directly inside running desktop applications.
+* **Target Scenarios:** Rapid debugging of complex form layouts, validating zero-allocation constraints, verifying live telemetry updates, and diagnosing customer environment issues without attaching Visual Studio debugger.
+* **Technical Architecture:**
+  - Lightweight semi-transparent floating overlay window querying active `Form` or `Window`.
+  - Visual tree explorer with property grid inspector.
+  - Live performance HUD displaying P95/P99 frame time, memory footprint, and tag subscription counters.
+* **Feasibility Score:** **9.8 / 10** (Extremely High — pure diagnostic layer, zero impact on production runtime).
+* **Implementation Effort:** ~1.5 engineering days.
+
+---
+
+### Summary Feasibility & Priority Matrix
+
+| Proposal ID | Proposed Component | Target Subsystem | Feasibility Score | Implementation Complexity | Recommended Phase |
+| :---: | :--- | :--- | :---: | :---: | :---: |
+| **8.1** | **`CardView` / `TileView`** | Data & Matrix | **9.5 / 10** | Low-Medium | **Phase 10 (Next)** |
+| **8.2** | **`GridDataExporter` (XLSX/CSV)** | Data & Matrix | **10.0 / 10** | Low | **Phase 10 (Next)** |
+| **8.3** | **`SearchLookUpEdit`** | Form Editors | **9.0 / 10** | Low-Medium | **Phase 10 (Next)** |
+| **8.4** | **`BarcodeBox` / `BarcodeEdit`** | Form Editors | **9.2 / 10** | Medium | **Phase 10 (Next)** |
+| **8.5** | **`RatingControl`** | Form Editors | **10.0 / 10** | Low | **Phase 10 (Next)** |
+| **8.6** | **`BreadcrumbControl`** | Navigation/Layout | **9.5 / 10** | Low-Medium | **Phase 10 (Next)** |
+| **8.7** | **`FlowLayoutControl` (Drag-Reorder)**| Navigation/Layout | **8.8 / 10** | Medium | **Phase 11** |
+| **8.8** | **`RadialGauge` & `LinearGauge`** | Industrial SCADA | **9.2 / 10** | Medium | **Phase 11** |
+| **8.9** | **`FunnelChart` / `PyramidChart`** | Charts & Analytics | **9.5 / 10** | Low-Medium | **Phase 11** |
+| **8.10**| **`SpreadsheetControl` (Phase 1)** | Document & Office | **7.8 / 10** | High | **Phase 12** |
+| **8.11**| **`PdfViewerControl`** | Document & Office | **8.0 / 10** | High | **Phase 12** |
+| **8.12**| **`ZeroVisualDebugger`** | DX & Diagnostics | **9.8 / 10** | Low | **Phase 10 (Next)** |
+
