@@ -15,6 +15,7 @@
         xmlns:overlay="clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf"
         xmlns:report="clr-namespace:ZeroUI.Wpf.Reporting;assembly=ZeroUI.Wpf"
         xmlns:pivot="clr-namespace:ZeroUI.Wpf.PivotGrid;assembly=ZeroUI.Wpf"
+        xmlns:range="clr-namespace:ZeroUI.Wpf.Range;assembly=ZeroUI.Wpf"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="860" Width="1340"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -874,6 +875,7 @@
                             <RowDefinition Height="Auto" /> <!-- Section 2: Wizard, BoxPlot & Print -->
                             <RowDefinition Height="Auto" /> <!-- Section 3: Shimmer & Overlays -->
                             <RowDefinition Height="Auto" /> <!-- Section 4: OLAP Pivot Grid -->
+                            <RowDefinition Height="Auto" /> <!-- Section 5: RangeControl / Timeline -->
                         </Grid.RowDefinitions>
 
                         <!-- Header Bar -->
@@ -1010,8 +1012,51 @@
                         <Grid Grid.Row="4" Margin="0,16,0,0">
                             <ind:ZeroCard HeaderText="Multidimensional Cross-Tab OLAP Reporting (PivotGridControl)" SubtitleText="Dynamic row/column hierarchical slicing, measure aggregations, sub-totals, and grand totals">
                                 <Border Height="360" BorderThickness="1" BorderBrush="#2E344E" CornerRadius="6" Background="#12151F">
-                                    <pivot:PivotGridControl x:Name="DemoPivotGrid" />
+                                    <pivot:PivotGridControl x:Name="EnterprisePivotGrid" />
                                 </Border>
+                            </ind:ZeroCard>
+                        </Grid>
+
+                        <!-- Section 5: Visual Timeline & Range Selector (RangeControl / DateTimeRangeSlider) -->
+                        <Grid Grid.Row="5" Margin="0,16,0,16">
+                            <ind:ZeroCard HeaderText="Visual Timeline &amp; Range Selector (RangeControl / DateTimeRangeSlider)" SubtitleText="Interactive thumb sliding, span panning, mouse wheel zoom, ruler scale, and distribution histogram/area graph with full toggle options">
+                                <StackPanel Margin="0,8,0,0">
+                                    <!-- Interactive RangeControl Component -->
+                                    <Border BorderThickness="1" BorderBrush="#2E344E" CornerRadius="6" Background="#12151F" Padding="6">
+                                        <range:RangeControl x:Name="DemoRangeControl" Height="80" />
+                                    </Border>
+
+                                    <!-- Range Readout Bar -->
+                                    <Border Margin="0,8,0,0" Background="#181B26" Padding="12,8,12,8" CornerRadius="4" BorderThickness="1" BorderBrush="#2E344E">
+                                        <DockPanel LastChildFill="True">
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                                <TextBlock Text="🎯 Active Range:" FontWeight="Bold" FontSize="11.5" Foreground="#818CF8" Margin="0,0,8,0" />
+                                                <TextBlock x:Name="TxtRangeReadout" Text="2026-02-01 to 2026-09-01 (Span: 212 days)" FontFamily="Consolas" FontSize="11.5" Foreground="#A6E3A1" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                                <Button x:Name="BtnResetRangeView" Click="BtnResetRangeView_Click" Content="🔄 Reset Zoom &amp; Range" Height="26" Padding="10,0,10,0" Cursor="Hand" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+
+                                    <!-- Configurable Toggle Options Toolbar -->
+                                    <WrapPanel Margin="0,10,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="⚙️ Options:" FontWeight="Bold" FontSize="11.5" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                        <CheckBox x:Name="ChkRangeThumbs" Content="Show Thumbs" IsChecked="True" Checked="RangeOption_Changed" Unchecked="RangeOption_Changed" Margin="0,0,14,0" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                        <CheckBox x:Name="ChkRangeGraph" Content="Show Background Graph" IsChecked="True" Checked="RangeOption_Changed" Unchecked="RangeOption_Changed" Margin="0,0,14,0" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                        <CheckBox x:Name="ChkRangeRuler" Content="Show Ruler" IsChecked="True" Checked="RangeOption_Changed" Unchecked="RangeOption_Changed" Margin="0,0,14,0" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                        <CheckBox x:Name="ChkRangeZoom" Content="Enable Zoom" IsChecked="True" Checked="RangeOption_Changed" Unchecked="RangeOption_Changed" Margin="0,0,14,0" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                        <CheckBox x:Name="ChkRangePan" Content="Enable Pan" IsChecked="True" Checked="RangeOption_Changed" Unchecked="RangeOption_Changed" Margin="0,0,14,0" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                        <CheckBox x:Name="ChkRangeSnap" Content="Snap to Interval" IsChecked="False" Checked="RangeOption_Changed" Unchecked="RangeOption_Changed" Margin="0,0,16,0" Foreground="#E2E8F0" VerticalAlignment="Center" />
+
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="Graph Style:" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                            <RadioButton x:Name="RadGraphArea" Content="Area" IsChecked="True" Checked="GraphType_Changed" Foreground="#E2E8F0" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <RadioButton x:Name="RadGraphHist" Content="Histogram" Checked="GraphType_Changed" Foreground="#E2E8F0" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                            <RadioButton x:Name="RadGraphLine" Content="Line" Checked="GraphType_Changed" Foreground="#E2E8F0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </WrapPanel>
+                                </StackPanel>
                             </ind:ZeroCard>
                         </Grid>
                     </Grid>

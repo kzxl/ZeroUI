@@ -15,7 +15,9 @@ using ZeroUI.Core.Signal;
 using ZeroUI.Core.Memory;
 using ZeroUI.Core.Automation;
 using ZeroUI.Core.Pivot;
+using ZeroUI.Core.Range;
 using ZeroUI.Samples.WpfDemo.Data;
+using ZeroUI.Wpf.Range;
 using ZeroUI.Wpf.Charts.Model;
 using ZeroUI.Wpf.Editors;
 using ZeroUI.Wpf.Industrial;
@@ -1580,11 +1582,79 @@ namespace ZeroUI.Samples.WpfDemo
                 new DemoProduct { Category = "Power Electronics", Code = "REG-LM2596-5", Name = "North Plant", Quantity = 4100, Price = 0.95 },
                 new DemoProduct { Category = "Power Electronics", Code = "REG-LM2596-5", Name = "South Plant", Quantity = 4100, Price = 0.95 }
             };
-            DemoPivotGrid.AddField("Category", PivotArea.RowArea, "Category");
-            DemoPivotGrid.AddField("Name", PivotArea.ColumnArea, "Factory Facility");
-            DemoPivotGrid.AddField("Quantity", PivotArea.DataArea, "Total Qty", PivotSummaryType.Sum);
-            DemoPivotGrid.AddField("Total", PivotArea.DataArea, "Total Value ($)", PivotSummaryType.Sum);
-            DemoPivotGrid.DataSource = samplePivotData;
+            EnterprisePivotGrid.AddField("Category", PivotArea.RowArea, "Category");
+            EnterprisePivotGrid.AddField("Name", PivotArea.ColumnArea, "Factory Facility");
+            EnterprisePivotGrid.AddField("Quantity", PivotArea.DataArea, "Total Qty", PivotSummaryType.Sum);
+            EnterprisePivotGrid.AddField("Total", PivotArea.DataArea, "Total Value ($)", PivotSummaryType.Sum);
+            EnterprisePivotGrid.DataSource = samplePivotData;
+
+            // 10. Setup RangeControl (Visual Timeline & Range Selector)
+            DemoRangeControl.DataType = RangeDataType.DateTime;
+            DemoRangeControl.Interval = RangeInterval.Day;
+            DemoRangeControl.TotalStartDate = new DateTime(2026, 1, 1);
+            DemoRangeControl.TotalEndDate = new DateTime(2026, 12, 31);
+            DemoRangeControl.SelectedStartDate = new DateTime(2026, 2, 15);
+            DemoRangeControl.SelectedEndDate = new DateTime(2026, 8, 30);
+
+            // Populate sample time-series data points (weekly production volumes)
+            var rangePoints = new List<RangeDataPoint>();
+            var rnd = new Random(42);
+            for (var d = new DateTime(2026, 1, 1); d <= new DateTime(2026, 12, 31); d = d.AddDays(7))
+            {
+                double val = 40 + rnd.Next(10, 80) + Math.Sin(d.DayOfYear / 40.0) * 25;
+                rangePoints.Add(new RangeDataPoint(d, Math.Max(5, val)));
+            }
+            DemoRangeControl.SetDataPoints(rangePoints);
+            DemoRangeControl.RangeSelectionChanged += (s, e) => UpdateRangeReadout();
+            UpdateRangeReadout();
+        }
+
+        private void UpdateRangeReadout()
+        {
+            if (TxtRangeReadout == null || DemoRangeControl == null) return;
+            var start = DemoRangeControl.SelectedStartDate;
+            var end = DemoRangeControl.SelectedEndDate;
+            int days = (int)(end - start).TotalDays;
+            TxtRangeReadout.Text = $"{start:yyyy-MM-dd} to {end:yyyy-MM-dd} (Span: {days} days)";
+        }
+
+        private void RangeOption_Changed(object sender, RoutedEventArgs e)
+        {
+            if (DemoRangeControl == null) return;
+            DemoRangeControl.ShowRangeThumbs = ChkRangeThumbs?.IsChecked == true;
+            DemoRangeControl.ShowBackgroundGraph = ChkRangeGraph?.IsChecked == true;
+            DemoRangeControl.ShowRuler = ChkRangeRuler?.IsChecked == true;
+            DemoRangeControl.EnableZoom = ChkRangeZoom?.IsChecked == true;
+            DemoRangeControl.EnablePan = ChkRangePan?.IsChecked == true;
+            DemoRangeControl.SnapToInterval = ChkRangeSnap?.IsChecked == true;
+        }
+
+        private void GraphType_Changed(object sender, RoutedEventArgs e)
+        {
+            if (DemoRangeControl == null) return;
+            if (RadGraphHist?.IsChecked == true)
+            {
+                DemoRangeControl.BackgroundGraphType = RangeGraphType.Histogram;
+            }
+            else if (RadGraphLine?.IsChecked == true)
+            {
+                DemoRangeControl.BackgroundGraphType = RangeGraphType.Line;
+            }
+            else
+            {
+                DemoRangeControl.BackgroundGraphType = RangeGraphType.Area;
+            }
+        }
+
+        private void BtnResetRangeView_Click(object sender, RoutedEventArgs e)
+        {
+            if (DemoRangeControl == null) return;
+            DemoRangeControl.TotalStartDate = new DateTime(2026, 1, 1);
+            DemoRangeControl.TotalEndDate = new DateTime(2026, 12, 31);
+            DemoRangeControl.SelectedStartDate = new DateTime(2026, 1, 1);
+            DemoRangeControl.SelectedEndDate = new DateTime(2026, 12, 31);
+            UpdateRangeReadout();
+            ZeroToast.Info(this, "RangeControl reset to full 2026 timeline.");
         }
 
         private void BtnApplyFilter_Click(object sender, RoutedEventArgs e)

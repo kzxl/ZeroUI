@@ -73,6 +73,14 @@ namespace ZeroUI.Core.Localization
         PivotDropFilterFields = 602,
         PivotDropRowFields = 603,
         PivotDropColumnFields = 604,
-        PivotDropDataFields = 605
+        PivotDropDataFields = 605,
+
+        // Range Control & Timeline
+        RangeFrom = 700,
+        RangeTo = 701,
+        RangeSpan = 702,
+        RangeAll = 703,
+        RangeZoomIn = 704,
+        RangeZoomOut = 705
     }
 }

@@ -74,7 +74,14 @@ namespace ZeroUI.Core.Localization
             [ZeroStringId.PivotDropFilterFields] = "Drop Filter Fields Here",
             [ZeroStringId.PivotDropRowFields] = "Drop Row Fields Here",
             [ZeroStringId.PivotDropColumnFields] = "Drop Column Fields Here",
-            [ZeroStringId.PivotDropDataFields] = "Drop Data Fields Here"
+            [ZeroStringId.PivotDropDataFields] = "Drop Data Fields Here",
+
+            [ZeroStringId.RangeFrom] = "From",
+            [ZeroStringId.RangeTo] = "To",
+            [ZeroStringId.RangeSpan] = "Span",
+            [ZeroStringId.RangeAll] = "All",
+            [ZeroStringId.RangeZoomIn] = "Zoom In",
+            [ZeroStringId.RangeZoomOut] = "Zoom Out"
         };
 
         private static readonly Dictionary<ZeroStringId, string> Vietnamese = new Dictionary<ZeroStringId, string>
@@ -140,7 +147,14 @@ namespace ZeroUI.Core.Localization
             [ZeroStringId.PivotDropFilterFields] = "Kéo thả trường bộ lọc vào đây",
             [ZeroStringId.PivotDropRowFields] = "Kéo thả trường hàng vào đây",
             [ZeroStringId.PivotDropColumnFields] = "Kéo thả trường cột vào đây",
-            [ZeroStringId.PivotDropDataFields] = "Kéo thả trường dữ liệu vào đây"
+            [ZeroStringId.PivotDropDataFields] = "Kéo thả trường dữ liệu vào đây",
+
+            [ZeroStringId.RangeFrom] = "Từ",
+            [ZeroStringId.RangeTo] = "Đến",
+            [ZeroStringId.RangeSpan] = "Khoảng",
+            [ZeroStringId.RangeAll] = "Tất cả",
+            [ZeroStringId.RangeZoomIn] = "Phóng to",
+            [ZeroStringId.RangeZoomOut] = "Thu nhỏ"
         };
 
         private static readonly Dictionary<string, Dictionary<ZeroStringId, string>> CustomLanguages =
