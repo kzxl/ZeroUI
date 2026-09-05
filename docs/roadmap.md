@@ -8,10 +8,10 @@
 | **Phase 2** | **WinForms MVP (`ZeroGrid`)** | `ZeroUI.WinForms` (net462, net8.0) | **Completed** | Single-HWND Control, Unmanaged Fast GDI blit, 32-bit `SetScrollInfo`, 1M/10M-row benchmark. |
 | **Phase 3** | **WPF Port (`ZeroGrid`)** | `ZeroUI.Wpf` (net462, net8.0) | **Completed** | `DrawingVisual` host, XAML attached properties, `D3DImage` DirectX 11 pipeline. |
 | **Phase 4** | **Enterprise Grid Features** | Interactivity & Production Readiness | **Completed** | Floating In-place Editor, Frozen Columns/Rows, Multi-column sorting, Fast filtering. |
-| **Phase 6** | **Theming & Packaging** | Distribution & Design System | **Active** | Obsidian Dark / Clean Light Themes, Headless CLI benchmarks, Automated screenshots. |
+| **Phase 6** | **Theming & Packaging** | Distribution & Design System | **Completed** | Obsidian Dark / Clean Light Themes, Headless CLI benchmarks, Automated screenshots, NuGet packaging (v1.2.0). |
 | **Phase 7** | **SCADA & Deterministic Runtime** | Industrial Edge & Telemetry Engine | **Completed** | `ZeroRuntime`, 3-Tier Pipeline, `ZeroTripleBuffer`, `TagStorage`, `ZeroAnimationClock`, `ZeroScene`. |
 | **Phase 8** | **Enterprise Commercial Parity** | 8 Major Control Clusters | **Completed** | Full WinForms & WPF parity: `ZeroGridLookup`, `ZeroFilterControl`, `ZeroDockManager`, `ZeroWorkspaceSerializer`, `ZeroWizard`, `ZeroBoxPlotChart`, `ZeroGanttChart`, `ZeroPropertyGrid`, `ZeroPrintPreview`, `ZeroSkeleton`, `ZeroToast`, `ZeroModal`. |
-| **Phase 9** | **Enterprise DX & Designer** | Unified `EditValue`, Smart Tags, Naming | **Planned** | `IZeroEditor` Contract, `ZeroDataBinder`, Visual Studio Smart Tags, Semantic Aliases. |
+| **Phase 9** | **Enterprise DX & Advanced Analytics** | Unified `EditValue`, Validation, OLAP, Range | **Completed** | `IZeroEditor`, `ZeroDataBinder`, `ValidationProvider`, `ZeroLocalizer`, `PivotGridControl`, `RangeControl`. |
 
 ---
 
@@ -65,7 +65,7 @@
 * [x] Build Obsidian Dark Theme (Charcoal `#121824`) and Clean Light Theme with reactive switching.
 * [x] Build headless automated benchmark suite (`--benchmark`) and screenshot generation tool (`--capture-screenshots`).
 * [x] Add automated UI stress testing across .NET 4.6.2 and .NET 8.0.
-* [ ] Author XML documentation and publish NuGet packages (`ZeroUI.Core`, `ZeroUI.WinForms`, `ZeroUI.Wpf`).
+* [x] Author XML documentation and package NuGet distributions (`ZeroUI.Core`, `ZeroUI.WinForms`, `ZeroUI.Wpf` v1.2.0).
 
 ### Phase 7: SCADA & Deterministic Runtime (Directives 1–27)
 * [x] **`ZeroRuntime`:** Deterministic 7-cycle master scheduler coordinating PLC (10ms), Logic (10ms), Telemetry (16ms), UI (16ms), Historian (100ms), Cleanup (1s), and Health (5s) cycles with drift compensation.
