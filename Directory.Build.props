@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <InformationalVersion>1.2.0</InformationalVersion>
     <Authors>Phong Võ</Authors>
     <Company>ZeroUI</Company>
     <Copyright>Copyright © 2026 Phong Võ</Copyright>
@@ -11,13 +11,16 @@
     <PackageProjectUrl>https://github.com/kzxl/ZeroUI</PackageProjectUrl>
     <RepositoryUrl>https://github.com/kzxl/ZeroUI.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="Exists('README.md')">
+    <PackageOutputPath>$(MSBuildThisFileDirectory)dist\packages</PackageOutputPath>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <ItemGroup Condition="Exists('README.md')">
-    <None Include="README.md" Pack="true" PackagePath="\" />
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests')) Or $(MSBuildProjectName.Contains('Benchmarks')) Or $(MSBuildProjectName.Contains('Samples'))">
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)README.md') And '$(IsPackable)' != 'false'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
+

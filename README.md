@@ -2,6 +2,8 @@
 
 > **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
 
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.2.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![Unit Tests](https://img.shields.io/badge/tests-208%20passed%20(100%25)-brightgreen.svg)](#testing--verification)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 [![UI Frame Latency](https://img.shields.io/badge/Frame%20Latency-%3C%204ms%20P95-brightgreen.svg)](#verified-benchmark-results)
@@ -18,6 +20,9 @@
 
 ### 🏭 Integrated Closed-Loop SCADA Process & P&ID Synoptic Workcell
 ![SCADA Closed-Loop Batch Process Simulation](docs/images/12_scada_closed_loop_simulation.png)
+
+### 🌑 Obsidian Dark Industrial SCADA & Control Center
+![Obsidian Dark Theme SCADA Workcell](docs/images/08_dark_theme_scada.png)
 
 ---
 
@@ -169,6 +174,7 @@ ZeroUI provides an end-to-end suite of modern enterprise and industrial controls
 ![ZeroGrid Subsystem](docs/images/01_zerogrid_benchmark.png)
 
 * **`ZeroGridControl`**: High-performance virtual grid with Win32 Memory DC DIBSection rendering, custom column definitions, alignments, sorting, and row density switching (`Compact = 24px`, `Normal = 28px`, `Comfortable = 36px`).
+* **`PivotGridControl` / `ZeroPivotGrid`** *(WinForms & WPF)*: High-performance OLAP multidimensional aggregation matrix. Dynamically groups arbitrary tabular data across Row and Column dimensions, computing configurable summary aggregations (`Sum`, `Count`, `Average`, `Min`, `Max`), interactive collapsible drill-down tree nodes (`▶`/`▼`), automated sub-totals, and grand totals with zero-alloc matrix virtualization.
 * **`ZeroFilterControl` & `FilterCriteria`** *(WinForms & WPF)*: Enterprise Visual Query Builder UI rendering condition trees with boolean operator badges (`AND`, `OR`, `NOT AND`, `NOT OR`), comparison selectors (`Equals`, `GreaterThan`, `Contains`, `Between`, `IsNull`), and automated SQL `WHERE` clause generation.
 * **`ZeroGridSearchBar`**: Integrated live search bar with debounced input (150ms), live match counter, density switcher, and CSV export trigger.
 * **`ZeroGridPagination`**: Enterprise pagination toolbar with page size selector (`50`, `100`, `500`, `1000`, `All`), row statistics, and navigation buttons.
@@ -314,6 +320,10 @@ A fully automated, 5-stage closed-loop industrial process demonstrating synchron
 * **`ZeroTokenEdit`** *(WinForms & WPF)*: Tag & badge editor with dismissible chips, inline keyboard typing, enter/comma completion, and backspace deletion.
 * **`ZeroColorPicker`** *(WinForms & WPF)*: Swatch palette color selector with enterprise color matrix and HEX code input.
 * **`ZeroDateRangePicker`**: Enterprise dual-date range selector (From Date &rarr; To Date) with 1-click presets (*Today*, *Yesterday*, *Last 7 Days*, *Last 30 Days*, *This Month*, *Last Month*, *All Time*) and visual calendar range highlight.
+* **`RangeControl` / `DateTimeRangeSlider`** *(WinForms & WPF)*: Interactive dual-thumb range selector with background sparkline / distribution histogram track, continuous and discrete range selection (numeric and DateTime intervals), auto interval tick formatting, draggable selection window, and snap-to-intervals.
+* **`ZeroValidationProvider` & `ZeroErrorProvider`** *(WinForms & WPF)*: Declarative and fluent form validation framework. Supports comprehensive rule matrices (`NotEmpty`, `Range`, `Regex`, `Email`, `Length`, `Custom`), animated pulsing vector error badges, warning glyphs, focus outlines, and automatic scroll-to-first-error.
+* **`ZeroLocalizer`** *(Core, WinForms, WPF)*: Zero-allocation runtime internationalization and dynamic string localization engine. Provides instant culture hot-switching (`en-US`, `vi-VN`) without application restarts, cascading fallback resolution, and built-in translations for grid operators, pagination, date pickers, dialogs, and validation messages.
+* **`IZeroEditor` & `ZeroDataBinder`** *(WinForms & WPF)*: Standardized data-binding and editor protocol (`EditValue`, `IsModified`, `ReadOnly`, `ResetModified()`), enabling automated two-way property binding, dirty state tracking, and validation integration.
 
 #### ZeroDatePicker Multi-Tier Zoom Navigation
 ![ZeroDatePicker Multi-Tier Zoom Navigation](docs/images/07_datepicker_multitier_zoom.png)
@@ -399,9 +409,12 @@ A fully automated, 5-stage closed-loop industrial process demonstrating synchron
 
 ### 🖼️ WPF Control Suite & Theme Engine (`ZeroUI.Wpf`)
 * **`ZeroGridControl` (WPF)**: Hardware-accelerated WPF virtual data grid with zero-allocation row virtualization, column sorting, search filtering, and smooth scrolling.
-* **`ZeroGridPagination` & `ZeroGridSearchBar`**: Standardized WPF pagination toolbar and debounced search toolkits.
-* **`ZeroThemeEngine` & `ZeroSkinManager`**: Unified Obsidian Dark and Clean Light XAML styling with reactive theme switching.
+* **`ZeroPivotGrid` / `PivotGridControl` (WPF)**: OLAP multidimensional matrix with collapsible hierarchical headers, dynamic dimensions, and multi-tier summary rollups.
+* **`RangeControl` / `DateTimeRangeSlider` (WPF)**: Dual-thumb interactive visual range selector with sparkline track, numeric and DateTime support.
+* **`ZeroValidationProvider` & `ZeroErrorProvider` (WPF)**: Fluent XAML & code-behind form validation engine with error glyphs and automated binding.
+* **Enterprise WPF Editors & Filters**: `ZeroGridLookup`, `ZeroCheckedComboBox`, `ZeroTokenEdit`, `ZeroColorPicker`, `ZeroFilterControl`, and `ZeroDateRangePicker`.
 * **WPF SCADA & Industrial Gauges**: `ZeroGauge`, `ZeroHeatmap`, `ZeroLedTower`, `ZeroLinearGauge`, `ZeroSevenSegment`, `ZeroStatusBadge`, and `ZeroCard`.
+* **`ZeroThemeEngine` & `ZeroSkinManager`**: Unified Obsidian Dark and Clean Light XAML styling with reactive runtime theme switching.
 
 ---
 
@@ -500,5 +513,40 @@ dotnet run --project src/ZeroUI.Samples.BenchmarkDemo/ZeroUI.Samples.BenchmarkDe
 
 ---
 
-## 7. License
+## 7. Testing & Quality Assurance
+
+ZeroUI enforces strict zero-regression quality gates with deterministic unit, stress, and integration tests:
+
+```powershell
+dotnet test --nologo
+```
+
+```text
+Passed!  - Failed: 0, Passed: 208, Skipped: 0, Total: 208, Duration: 3.4 s
+```
+
+- **ZeroUI.Core.Tests:** 208 comprehensive test fixtures covering Virtualization, LTTB Decimation, TimeSeriesPyramid, Historian WAL engine, Modbus/S7 protocols, ISA-18.2 Alarms, PackML, ValidationProvider, Localizer, RangeControl math, and OLAP Pivot matrix rollups.
+
+---
+
+## 8. NuGet Packages
+
+ZeroUI is published as modular, multi-targeted NuGet packages supporting both modern **.NET 8.0 / 9.0** and legacy **.NET Framework 4.6.2**:
+
+| Package | Version | Target Frameworks | Description |
+| :--- | :---: | :--- | :--- |
+| **`ZeroUI.Core`** | `1.2.0` | `netstandard2.0`, `net462`, `net8.0` | Zero-allocation core runtime, Historian WAL, Modbus/S7 protocols, ISA-18.2 alarms, validation & localization engines. |
+| **`ZeroUI.WinForms`** | `1.2.0` | `net462`, `net8.0-windows` | Complete WinForms enterprise & industrial control suite, ZeroGrid, SCADA mimics, charts, editors, and theme engine. |
+| **`ZeroUI.Wpf`** | `1.2.0` | `net462`, `net8.0-windows` | Hardware-accelerated WPF virtual data grid, OLAP pivot grid, range sliders, validation, and industrial gauges. |
+
+```powershell
+# Install via .NET CLI
+dotnet add package ZeroUI.WinForms --version 1.2.0
+dotnet add package ZeroUI.Wpf --version 1.2.0
+dotnet add package ZeroUI.Core --version 1.2.0
+```
+
+---
+
+## 9. License
 MIT License. Free for commercial, industrial, enterprise, and open-source use.
