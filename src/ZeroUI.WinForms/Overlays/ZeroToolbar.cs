@@ -319,6 +319,12 @@ namespace ZeroUI.WinForms.Overlays
                     if (!item.IsVisible) continue;
 
                     int itemW = MeasureItemWidth(g, item);
+                    if (rightX - itemW < leftX + 8)
+                    {
+                        // Prevent overlap with left toolbar items on narrow screens
+                        item.Bounds = Rectangle.Empty;
+                        continue;
+                    }
                     rightX -= itemW;
                     item.Bounds = new Rectangle(rightX, top, itemW, _itemHeight);
                     rightX -= 4;

@@ -306,41 +306,44 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             _mainToolbar.AddSeparator();
 
-            _mainToolbar.AddButton("Best Fit", "↔️", (s, e) =>
+            _mainToolbar.AddDropdown("Grid Options", "⚙", (s, e) =>
             {
-                _zeroGrid.BestFitColumns();
-                ZeroToast.Info(this, "Auto-sized all columns to fit content (Best Fit).");
-            });
-
-            _mainToolbar.AddButton("Checkboxes", "☑️", (s, e) =>
-            {
-                _zeroGrid.ShowCheckBoxSelectorColumn = !_zeroGrid.ShowCheckBoxSelectorColumn;
-                ZeroToast.Info(this, $"Selection Checkbox Column: {(_zeroGrid.ShowCheckBoxSelectorColumn ? "Visible" : "Hidden")}");
-            });
-
-            _mainToolbar.AddButton("Auto Filter", "🔍", (s, e) =>
-            {
-                _zeroGrid.ShowAutoFilterRow = !_zeroGrid.ShowAutoFilterRow;
-                ZeroToast.Info(this, $"Auto Filter Row: {(_zeroGrid.ShowAutoFilterRow ? "Enabled (In-Place Filter Row)" : "Disabled")}");
-            });
-
-            _mainToolbar.AddButton("Save Layout", "💾", (s, e) =>
-            {
-                _savedGridLayout = _zeroGrid.SaveLayoutToJson();
-                ZeroToast.Success(this, "Saved column layout (order & widths) to JSON.");
-            });
-
-            _mainToolbar.AddButton("Restore Layout", "📂", (s, e) =>
-            {
-                if (!string.IsNullOrEmpty(_savedGridLayout))
+                var menu = new ZeroContextMenu();
+                menu.AddAction("↔️ Best Fit Columns", () =>
                 {
-                    _zeroGrid.RestoreLayoutFromJson(_savedGridLayout);
-                    ZeroToast.Success(this, "Restored column layout from JSON.");
-                }
-                else
+                    _zeroGrid.BestFitColumns();
+                    ZeroToast.Info(this, "Auto-sized all columns to fit content (Best Fit).");
+                });
+                menu.AddAction(_zeroGrid.ShowCheckBoxSelectorColumn ? "☑️ Hide Checkbox Column" : "☑️ Show Checkbox Column", () =>
                 {
-                    ZeroToast.Warning(this, "No saved layout found. Click 'Save Layout' first.");
-                }
+                    _zeroGrid.ShowCheckBoxSelectorColumn = !_zeroGrid.ShowCheckBoxSelectorColumn;
+                    ZeroToast.Info(this, $"Selection Checkbox Column: {(_zeroGrid.ShowCheckBoxSelectorColumn ? "Visible" : "Hidden")}");
+                });
+                menu.AddAction(_zeroGrid.ShowAutoFilterRow ? "🔍 Disable Auto Filter Row" : "🔍 Enable Auto Filter Row", () =>
+                {
+                    _zeroGrid.ShowAutoFilterRow = !_zeroGrid.ShowAutoFilterRow;
+                    ZeroToast.Info(this, $"Auto Filter Row: {(_zeroGrid.ShowAutoFilterRow ? "Enabled" : "Disabled")}");
+                });
+                menu.AddSeparator();
+                menu.AddAction("💾 Save Column Layout (JSON)", () =>
+                {
+                    _savedGridLayout = _zeroGrid.SaveLayoutToJson();
+                    ZeroToast.Success(this, "Saved column layout to JSON.");
+                });
+                menu.AddAction("📂 Restore Column Layout (JSON)", () =>
+                {
+                    if (!string.IsNullOrEmpty(_savedGridLayout))
+                    {
+                        _zeroGrid.RestoreLayoutFromJson(_savedGridLayout);
+                        ZeroToast.Success(this, "Restored column layout from JSON.");
+                    }
+                    else
+                    {
+                        ZeroToast.Warning(this, "No saved layout found. Save layout first.");
+                    }
+                });
+                var pos = _mainToolbar.PointToScreen(new Point(Math.Max(100, _mainToolbar.Width / 3), _mainToolbar.Height));
+                menu.Show(pos);
             });
 
             _mainToolbar.AddSpacer(); // Elastic right spacer

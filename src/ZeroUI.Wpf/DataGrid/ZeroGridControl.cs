@@ -1178,9 +1178,22 @@ namespace ZeroUI.Wpf.DataGrid
                                 bool isChecked = IsTruthy(cellBuffer.Text);
                                 DrawVectorCheckBox(dc, unpinnedX, currentY, colW, _rowHeight, isChecked, isSelected);
                             }
-                            else if (cellBuffer.DataBarPercent >= 0)
+                            else if (cellBuffer.DataBarPercent >= 0.0f)
                             {
                                 DrawDataBar(dc, unpinnedX, currentY, colW, _rowHeight, cellBuffer.DataBarPercent);
+                                var textSpan = cellBuffer.Text;
+                                if (!textSpan.IsEmpty)
+                                {
+                                    string text = cellBuffer.Text.ToString();
+                                    Brush textBrush = (isSelected || isBlockSelected) ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
+                                    Typeface tf = (isSelected || isBlockSelected) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
+                                    var ft = CreateFormattedText(text, tf, 12.0, textBrush, dpi);
+                                    double textX = unpinnedX + 8;
+                                    if (cellBuffer.Alignment == CellAlignment.Right) textX = unpinnedX + colW - ft.Width - 8;
+                                    else if (cellBuffer.Alignment == CellAlignment.Center) textX = unpinnedX + (colW - ft.Width) / 2.0;
+                                    double textY = currentY + (_rowHeight - ft.Height) / 2.0;
+                                    dc.DrawText(ft, new Point(textX, textY));
+                                }
                             }
                             else if (!cellBuffer.SparklineValues.IsEmpty || _columns[c].Sparkline != SparklineType.None)
                             {
@@ -1284,9 +1297,22 @@ namespace ZeroUI.Wpf.DataGrid
                             bool isChecked = IsTruthy(cellBuffer.Text);
                             DrawVectorCheckBox(dc, pinnedX, currentY, colW, _rowHeight, isChecked, isSelected);
                         }
-                        else if (cellBuffer.DataBarPercent >= 0)
+                        else if (cellBuffer.DataBarPercent >= 0.0f)
                         {
                             DrawDataBar(dc, pinnedX, currentY, colW, _rowHeight, cellBuffer.DataBarPercent);
+                            var textSpan = cellBuffer.Text;
+                            if (!textSpan.IsEmpty)
+                            {
+                                string text = cellBuffer.Text.ToString();
+                                Brush textBrush = (isSelected || isBlockSelected) ? ZeroWpfTheme.SelectionForeground : ZeroWpfTheme.TextPrimary;
+                                Typeface tf = (isSelected || isBlockSelected) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface;
+                                var ft = CreateFormattedText(text, tf, 12.0, textBrush, dpi);
+                                double textX = pinnedX + 8;
+                                if (cellBuffer.Alignment == CellAlignment.Right) textX = pinnedX + colW - ft.Width - 8;
+                                else if (cellBuffer.Alignment == CellAlignment.Center) textX = pinnedX + (colW - ft.Width) / 2.0;
+                                double textY = currentY + (_rowHeight - ft.Height) / 2.0;
+                                dc.DrawText(ft, new Point(textX, textY));
+                            }
                         }
                         else if (!cellBuffer.SparklineValues.IsEmpty || _columns[c].Sparkline != SparklineType.None)
                         {

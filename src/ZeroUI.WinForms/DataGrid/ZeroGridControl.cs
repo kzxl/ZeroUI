@@ -1529,7 +1529,7 @@ namespace ZeroUI.WinForms.DataGrid
                                         int cbY = currentY + (_rowHeight - cbSize) / 2;
                                         DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
                                     }
-                                    else if (cellBuffer.DataBarPercent >= 0)
+                                    else if (cellBuffer.DataBarPercent >= 0.0f)
                                     {
                                         float clamped = Math.Max(0.0f, Math.Min(1.0f, cellBuffer.DataBarPercent));
                                         int barH = Math.Max(6, _rowHeight - 8);
@@ -1541,6 +1541,11 @@ namespace ZeroUI.WinForms.DataGrid
                                         if (barFillW > 0)
                                         {
                                             _dibSection.FillRectangle(barX, barY, barFillW, barH, _pinnedBorderColor);
+                                        }
+                                        if (!cellBuffer.Text.IsEmpty)
+                                        {
+                                            RECT textRect = new RECT(unpinnedX + 4, currentY, unpinnedX + colW - 4, currentY + _rowHeight);
+                                            _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
                                         }
                                     }
                                     else
@@ -1625,7 +1630,7 @@ namespace ZeroUI.WinForms.DataGrid
                                     int cbY = currentY + (_rowHeight - cbSize) / 2;
                                     DrawCheckBoxGlyph(cbX, cbY, cbSize, isChecked ? CheckState.Checked : CheckState.Unchecked);
                                 }
-                                else if (cellBuffer.DataBarPercent >= 0)
+                                else if (cellBuffer.DataBarPercent >= 0.0f)
                                 {
                                     float clamped = Math.Max(0.0f, Math.Min(1.0f, cellBuffer.DataBarPercent));
                                     int barH = Math.Max(6, _rowHeight - 8);
@@ -1637,6 +1642,11 @@ namespace ZeroUI.WinForms.DataGrid
                                     if (barFillW > 0)
                                     {
                                         _dibSection.FillRectangle(barX, barY, barFillW, barH, _pinnedBorderColor);
+                                    }
+                                    if (!cellBuffer.Text.IsEmpty)
+                                    {
+                                        RECT textRect = new RECT(pinnedX + 4, currentY, pinnedX + colW - 4, currentY + _rowHeight);
+                                        _dibSection.DrawText(cellBuffer.Text, ref textRect, cellBuffer.TextColor, cellBuffer.Alignment, textHeight);
                                     }
                                 }
                                 else
