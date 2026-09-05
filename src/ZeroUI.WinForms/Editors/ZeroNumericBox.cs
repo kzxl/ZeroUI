@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -17,7 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [DefaultProperty("Value")]
     [Description("Precision numeric stepper and spin box editor with unit formatting")]
-    public class ZeroNumericBox : Control
+    public class SpinEdit : Control, IZeroEditor
     {
         private decimal _value = 0m;
         private decimal _minValue = 0m;
@@ -41,8 +42,59 @@ namespace ZeroUI.WinForms.Editors
         private int _direction = 0; // 1 = up, -1 = down
 
         public event EventHandler? ValueChanged;
+        public event EventHandler? EditValueChanged;
 
-        public ZeroNumericBox()
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => Value;
+            set
+            {
+                if (value == null || value == DBNull.Value)
+                {
+                    Value = MinValue;
+                }
+                else if (value is decimal d)
+                {
+                    Value = d;
+                }
+                else if (decimal.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsed))
+                {
+                    Value = parsed;
+                }
+                else if (decimal.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.CurrentCulture, out decimal parsedLocal))
+                {
+                    Value = parsedLocal;
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly
+        {
+            get => _innerBox.ReadOnly;
+            set
+            {
+                _innerBox.ReadOnly = value;
+                Invalidate();
+            }
+        }
+
+        public void Reset()
+        {
+            Value = MinValue;
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
+
+        public SpinEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -95,8 +147,10 @@ namespace ZeroUI.WinForms.Editors
                 if (_value != clamped)
                 {
                     _value = clamped;
+                    IsModified = true;
                     FormatText();
                     ValueChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
                     Invalidate();
                 }
             }
@@ -241,11 +295,13 @@ namespace ZeroUI.WinForms.Editors
 
         public void StepUp()
         {
+            if (ReadOnly || !Enabled) return;
             Value = Math.Min(_maxValue, _value + _step);
         }
 
         public void StepDown()
         {
+            if (ReadOnly || !Enabled) return;
             Value = Math.Max(_minValue, _value - _step);
         }
 
@@ -428,5 +484,18 @@ namespace ZeroUI.WinForms.Editors
 
         private static GraphicsPath CreateRoundedRect(Rectangle r, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(r, radius);
+    }
+
+    /// <summary>
+    /// Legacy alias for SpinEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("ValueChanged")]
+    [DefaultProperty("Value")]
+    [Description("Legacy alias for SpinEdit")]
+    public class ZeroNumericBox : SpinEdit
+    {
     }
 }

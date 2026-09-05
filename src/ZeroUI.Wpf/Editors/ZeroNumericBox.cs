@@ -7,6 +7,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -19,7 +20,7 @@ namespace ZeroUI.Wpf.Editors
     [TemplatePart(Name = PartTextBox, Type = typeof(TextBox))]
     [TemplatePart(Name = PartUpButton, Type = typeof(RepeatButton))]
     [TemplatePart(Name = PartDownButton, Type = typeof(RepeatButton))]
-    public class ZeroNumericBox : Control
+    public class SpinEdit : Control, IZeroEditor
     {
         private const string PartTextBox = "PART_TextBox";
         private const string PartUpButton = "PART_UpButton";
@@ -30,54 +31,107 @@ namespace ZeroUI.Wpf.Editors
         private RepeatButton? _downButton;
         private bool _isInternalTextChange;
 
+        public static readonly DependencyProperty EditValueProperty =
+            DependencyProperty.Register(nameof(EditValue), typeof(object), typeof(SpinEdit),
+                new FrameworkPropertyMetadata(0m, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
+
         public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register(nameof(Value), typeof(decimal), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(Value), typeof(decimal), typeof(SpinEdit),
                 new FrameworkPropertyMetadata(0m, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnValueChanged, CoerceValue));
 
         public static readonly DependencyProperty MinValueProperty =
-            DependencyProperty.Register(nameof(MinValue), typeof(decimal), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(MinValue), typeof(decimal), typeof(SpinEdit),
                 new PropertyMetadata(-1000000000m, OnMinMaxChanged));
 
         public static readonly DependencyProperty MaxValueProperty =
-            DependencyProperty.Register(nameof(MaxValue), typeof(decimal), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(MaxValue), typeof(decimal), typeof(SpinEdit),
                 new PropertyMetadata(1000000000m, OnMinMaxChanged));
 
         public static readonly DependencyProperty StepProperty =
-            DependencyProperty.Register(nameof(Step), typeof(decimal), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(Step), typeof(decimal), typeof(SpinEdit),
                 new PropertyMetadata(1m));
 
         public static readonly DependencyProperty DecimalPlacesProperty =
-            DependencyProperty.Register(nameof(DecimalPlaces), typeof(int), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(DecimalPlaces), typeof(int), typeof(SpinEdit),
                 new PropertyMetadata(0, OnFormattingChanged));
 
         public static readonly DependencyProperty PrefixProperty =
-            DependencyProperty.Register(nameof(Prefix), typeof(string), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(Prefix), typeof(string), typeof(SpinEdit),
                 new PropertyMetadata(string.Empty, OnFormattingChanged));
 
         public static readonly DependencyProperty SuffixProperty =
-            DependencyProperty.Register(nameof(Suffix), typeof(string), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(Suffix), typeof(string), typeof(SpinEdit),
                 new PropertyMetadata(string.Empty, OnFormattingChanged));
 
         public static readonly DependencyProperty ThousandsSeparatorProperty =
-            DependencyProperty.Register(nameof(ThousandsSeparator), typeof(bool), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(ThousandsSeparator), typeof(bool), typeof(SpinEdit),
                 new PropertyMetadata(true, OnFormattingChanged));
 
         public static readonly DependencyProperty TextAlignmentProperty =
-            DependencyProperty.Register(nameof(TextAlignment), typeof(TextAlignment), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(TextAlignment), typeof(TextAlignment), typeof(SpinEdit),
                 new PropertyMetadata(TextAlignment.Right));
 
         public static readonly DependencyProperty IsReadOnlyProperty =
-            DependencyProperty.Register(nameof(IsReadOnly), typeof(bool), typeof(ZeroNumericBox),
+            DependencyProperty.Register(nameof(IsReadOnly), typeof(bool), typeof(SpinEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty IsModifiedProperty =
+            DependencyProperty.Register(nameof(IsModified), typeof(bool), typeof(SpinEdit),
                 new PropertyMetadata(false));
 
         public static readonly RoutedEvent ValueChangedEvent =
             EventManager.RegisterRoutedEvent(nameof(ValueChanged), RoutingStrategy.Bubble,
-                typeof(RoutedPropertyChangedEventHandler<decimal>), typeof(ZeroNumericBox));
+                typeof(RoutedPropertyChangedEventHandler<decimal>), typeof(SpinEdit));
+
+        public event EventHandler? EditValueChanged;
 
         public event RoutedPropertyChangedEventHandler<decimal> ValueChanged
         {
             add => AddHandler(ValueChangedEvent, value);
             remove => RemoveHandler(ValueChangedEvent, value);
+        }
+
+        public object? EditValue
+        {
+            get => GetValue(EditValueProperty);
+            set => SetValue(EditValueProperty, value);
+        }
+
+        public bool IsModified
+        {
+            get => (bool)GetValue(IsModifiedProperty);
+            set => SetValue(IsModifiedProperty, value);
+        }
+
+        public bool ReadOnly
+        {
+            get => IsReadOnly;
+            set => IsReadOnly = value;
+        }
+
+        public void Reset()
+        {
+            Value = MinValue;
+            EditValue = MinValue;
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
+
+        private static void OnEditValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SpinEdit edit)
+            {
+                if (e.NewValue is decimal dec)
+                {
+                    if (edit.Value != dec) edit.Value = dec;
+                }
+                else if (e.NewValue != null && decimal.TryParse(e.NewValue.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsed))
+                {
+                    if (edit.Value != parsed) edit.Value = parsed;
+                }
+                edit.EditValueChanged?.Invoke(edit, EventArgs.Empty);
+            }
         }
 
         public decimal Value
@@ -140,13 +194,13 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(IsReadOnlyProperty, value);
         }
 
-        static ZeroNumericBox()
+        static SpinEdit()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroNumericBox),
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(SpinEdit),
                 new FrameworkPropertyMetadata(typeof(ZeroNumericBox)));
         }
 
-        public ZeroNumericBox()
+        public SpinEdit()
         {
             Height = 32;
             MinWidth = 120;
@@ -251,14 +305,20 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var box = (ZeroNumericBox)d;
+            var box = (SpinEdit)d;
+            if (!Equals(box.EditValue, e.NewValue))
+            {
+                box.EditValue = e.NewValue;
+            }
+            box.IsModified = true;
             box.UpdateFormattedText();
             box.RaiseEvent(new RoutedPropertyChangedEventArgs<decimal>((decimal)e.OldValue, (decimal)e.NewValue, ValueChangedEvent));
+            box.EditValueChanged?.Invoke(box, EventArgs.Empty);
         }
 
         private static object CoerceValue(DependencyObject d, object baseValue)
         {
-            var box = (ZeroNumericBox)d;
+            var box = (SpinEdit)d;
             if (baseValue is decimal val)
             {
                 return Math.Max(box.MinValue, Math.Min(box.MaxValue, val));
@@ -268,13 +328,13 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnMinMaxChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var box = (ZeroNumericBox)d;
+            var box = (SpinEdit)d;
             box.CoerceValue(ValueProperty);
         }
 
         private static void OnFormattingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var box = (ZeroNumericBox)d;
+            var box = (SpinEdit)d;
             box.UpdateFormattedText();
         }
 
@@ -412,5 +472,13 @@ namespace ZeroUI.Wpf.Editors
                 _isInternalTextChange = false;
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for SpinEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    public class ZeroNumericBox : SpinEdit
+    {
     }
 }

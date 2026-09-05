@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
@@ -18,7 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [DefaultEvent("ValueChanged")]
     [Description("Modern date picker with custom-drawn popup calendar and quick-select presets")]
-    public class ZeroDatePicker : Control
+    public class DateEdit : Control, IZeroEditor
     {
         private DateTime _selectedDate = DateTime.Today;
         private string _dateFormat = "yyyy-MM-dd";
@@ -32,8 +33,55 @@ namespace ZeroUI.WinForms.Editors
         private readonly TextBox _innerBox;
 
         public event EventHandler? ValueChanged;
+        public event EventHandler? EditValueChanged;
 
-        public ZeroDatePicker()
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => Value;
+            set
+            {
+                if (value == null || value == DBNull.Value)
+                {
+                    Value = DateTime.Today;
+                }
+                else if (value is DateTime dt)
+                {
+                    Value = dt;
+                }
+                else if (DateTime.TryParse(value.ToString(), out DateTime parsed))
+                {
+                    Value = parsed;
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly
+        {
+            get => _innerBox.ReadOnly;
+            set
+            {
+                _innerBox.ReadOnly = value;
+                Invalidate();
+            }
+        }
+
+        public void Reset()
+        {
+            Value = DateTime.Today;
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
+
+        public DateEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -130,12 +178,14 @@ namespace ZeroUI.WinForms.Editors
                 if (_selectedDate != val)
                 {
                     _selectedDate = val;
+                    IsModified = true;
                     if (_innerBox != null && _innerBox.Text != val.ToString(_dateFormat))
                     {
                         _innerBox.Text = val.ToString(_dateFormat);
                     }
                     Invalidate();
                     ValueChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -207,6 +257,8 @@ namespace ZeroUI.WinForms.Editors
 
         private void ShowCalendarPopup()
         {
+            if (ReadOnly || !Enabled) return;
+
             if (_popup != null && _popup.Visible)
             {
                 _popup.Close();
@@ -330,7 +382,7 @@ namespace ZeroUI.WinForms.Editors
         /// </summary>
         private sealed class ZeroCalendarPopupControl : Control
         {
-            private readonly ZeroDatePicker _owner;
+            private readonly DateEdit _owner;
             private DateTime _viewMonth;
             private DateTime _selectedDate;
             private readonly bool _showPresets;
@@ -362,7 +414,7 @@ namespace ZeroUI.WinForms.Editors
                 "Sep", "Oct", "Nov", "Dec"
             };
 
-            public ZeroCalendarPopupControl(ZeroDatePicker owner, DateTime initialDate, bool showPresets)
+            public ZeroCalendarPopupControl(DateEdit owner, DateTime initialDate, bool showPresets)
             {
                 _owner = owner;
                 _selectedDate = initialDate.Date;
@@ -938,5 +990,18 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for DateEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Value")]
+    [DefaultEvent("ValueChanged")]
+    [Description("Legacy alias for DateEdit")]
+    public class ZeroDatePicker : DateEdit
+    {
     }
 }

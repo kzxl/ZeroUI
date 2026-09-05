@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -16,7 +17,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Text")]
     [DefaultEvent("TextChanged")]
     [Description("Modern text input control with clear button, placeholder, and action icons")]
-    public class ZeroTextBox : Control
+    public class TextEdit : Control, IZeroEditor
     {
         private readonly TextBox _innerBox;
         private string _placeholder = "";
@@ -34,8 +35,34 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? TrailingIconClick;
         public event EventHandler? ClearClicked;
+        public event EventHandler? EditValueChanged;
 
-        public ZeroTextBox()
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => Text;
+            set
+            {
+                string str = value?.ToString() ?? string.Empty;
+                if (Text != str)
+                {
+                    Text = str;
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        public void Reset()
+        {
+            Text = string.Empty;
+            IsModified = false;
+        }
+
+        public TextEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -57,7 +84,9 @@ namespace ZeroUI.WinForms.Editors
 
             _innerBox.TextChanged += (s, e) =>
             {
+                IsModified = true;
                 OnTextChanged(e);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             };
             _innerBox.GotFocus += (s, e) =>
@@ -432,5 +461,18 @@ namespace ZeroUI.WinForms.Editors
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for TextEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Text")]
+    [DefaultEvent("TextChanged")]
+    [Description("Legacy alias for TextEdit")]
+    public class ZeroTextBox : TextEdit
+    {
     }
 }

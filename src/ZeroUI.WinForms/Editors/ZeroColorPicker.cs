@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -16,7 +17,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("ColorChanged")]
     [Description("Modern color picker editor with swatch preview, palette, and hex input")]
-    public class ZeroColorPicker : Control
+    public class ColorPickEdit : Control, IZeroEditor
     {
         private Color _selectedColor = Color.FromArgb(79, 70, 229); // Default ZeroUI Primary
         private bool _isHovered = false;
@@ -27,6 +28,56 @@ namespace ZeroUI.WinForms.Editors
         private readonly ColorPickerPopupControl _popupControl;
 
         public event EventHandler? ColorChanged;
+        public event EventHandler? EditValueChanged;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => SelectedColor;
+            set
+            {
+                if (value == null || value == DBNull.Value)
+                {
+                    SelectedColor = Color.Empty;
+                }
+                else if (value is Color c)
+                {
+                    SelectedColor = c;
+                }
+                else if (value is string s)
+                {
+                    try
+                    {
+                        SelectedColor = ColorTranslator.FromHtml(s);
+                    }
+                    catch
+                    {
+                        SelectedColor = Color.Empty;
+                    }
+                }
+                else if (value is int argb)
+                {
+                    SelectedColor = Color.FromArgb(argb);
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly { get; set; } = false;
+
+        public void Reset()
+        {
+            SelectedColor = Color.FromArgb(79, 70, 229);
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
 
         [Category("Appearance")]
         public Color SelectedColor
@@ -37,13 +88,15 @@ namespace ZeroUI.WinForms.Editors
                 if (_selectedColor != value)
                 {
                     _selectedColor = value;
+                    IsModified = true;
                     ColorChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
                     Invalidate();
                 }
             }
         }
 
-        public ZeroColorPicker()
+        public ColorPickEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -155,6 +208,8 @@ namespace ZeroUI.WinForms.Editors
         {
             base.OnMouseDown(e);
             Focus();
+            if (ReadOnly || !Enabled) return;
+
             if (_isDroppedDown)
             {
                 _dropdown.Close();
@@ -185,7 +240,7 @@ namespace ZeroUI.WinForms.Editors
         // Popup with Palette Swatches and RGB Sliders
         private class ColorPickerPopupControl : Control
         {
-            private readonly ZeroColorPicker _owner;
+            private readonly ColorPickEdit _owner;
             private Color _currentColor;
             private readonly TextBox _hexBox;
 
@@ -208,7 +263,7 @@ namespace ZeroUI.WinForms.Editors
                 Color.FromArgb(255, 255, 255)  // Pure White
             };
 
-            public ColorPickerPopupControl(ZeroColorPicker owner)
+            public ColorPickerPopupControl(ColorPickEdit owner)
             {
                 _owner = owner;
                 SetStyle(
@@ -345,5 +400,17 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for ColorPickEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("ColorChanged")]
+    [Description("Legacy alias for ColorPickEdit")]
+    public class ZeroColorPicker : ColorPickEdit
+    {
     }
 }

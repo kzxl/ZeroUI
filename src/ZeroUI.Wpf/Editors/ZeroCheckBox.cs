@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -12,36 +13,69 @@ namespace ZeroUI.Wpf.Editors
     /// Supports two-state and three-state (Checked, Unchecked, Indeterminate),
     /// keyboard spacebar toggling, smooth vector checkmark / indeterminate dash, and responsive theme synchronization.
     /// </summary>
-    public class ZeroCheckBox : FrameworkElement
+    public class CheckEdit : FrameworkElement, IZeroEditor
     {
         private bool _isHovered = false;
         private bool _isPressed = false;
 
         #region Dependency Properties
 
+        public static readonly DependencyProperty EditValueProperty =
+            DependencyProperty.Register(nameof(EditValue), typeof(object), typeof(CheckEdit),
+                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
+
         public static readonly DependencyProperty IsCheckedProperty =
-            DependencyProperty.Register(nameof(IsChecked), typeof(bool?), typeof(ZeroCheckBox),
+            DependencyProperty.Register(nameof(IsChecked), typeof(bool?), typeof(CheckEdit),
                 new FrameworkPropertyMetadata((bool?)false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnIsCheckedChanged));
 
         public static readonly DependencyProperty ThreeStateProperty =
-            DependencyProperty.Register(nameof(ThreeState), typeof(bool), typeof(ZeroCheckBox),
+            DependencyProperty.Register(nameof(ThreeState), typeof(bool), typeof(CheckEdit),
                 new FrameworkPropertyMetadata(false));
 
         public static readonly DependencyProperty TextProperty =
-            DependencyProperty.Register(nameof(Text), typeof(string), typeof(ZeroCheckBox),
+            DependencyProperty.Register(nameof(Text), typeof(string), typeof(CheckEdit),
                 new FrameworkPropertyMetadata("CheckBox", FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BoxSizeProperty =
-            DependencyProperty.Register(nameof(BoxSize), typeof(double), typeof(ZeroCheckBox),
+            DependencyProperty.Register(nameof(BoxSize), typeof(double), typeof(CheckEdit),
                 new FrameworkPropertyMetadata(18.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(ZeroCheckBox),
+            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(CheckEdit),
                 new FrameworkPropertyMetadata(4.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty IsModifiedProperty =
+            DependencyProperty.Register(nameof(IsModified), typeof(bool), typeof(CheckEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty ReadOnlyProperty =
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(CheckEdit),
+                new PropertyMetadata(false));
 
         #endregion
 
         #region Properties & Events
+
+        public event EventHandler? EditValueChanged;
+        public event EventHandler<bool?>? CheckedChanged;
+
+        public object? EditValue
+        {
+            get => GetValue(EditValueProperty);
+            set => SetValue(EditValueProperty, value);
+        }
+
+        public bool IsModified
+        {
+            get => (bool)GetValue(IsModifiedProperty);
+            set => SetValue(IsModifiedProperty, value);
+        }
+
+        public bool ReadOnly
+        {
+            get => (bool)GetValue(ReadOnlyProperty);
+            set => SetValue(ReadOnlyProperty, value);
+        }
 
         public bool? IsChecked
         {
@@ -73,11 +107,18 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(CornerRadiusProperty, value);
         }
 
-        public event EventHandler<bool?>? CheckedChanged;
+        public void Reset()
+        {
+            IsChecked = false;
+            EditValue = false;
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
 
         #endregion
 
-        public ZeroCheckBox()
+        public CheckEdit()
         {
             Cursor = Cursors.Hand;
             Focusable = true;
@@ -86,17 +127,40 @@ namespace ZeroUI.Wpf.Editors
             ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
+        private static void OnEditValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is CheckEdit cb)
+            {
+                bool? val = null;
+                if (e.NewValue is bool b) val = b;
+                else if (e.NewValue != null && bool.TryParse(e.NewValue.ToString(), out bool pb)) val = pb;
+
+                if (cb.IsChecked != val)
+                {
+                    cb.IsChecked = val;
+                }
+                cb.EditValueChanged?.Invoke(cb, EventArgs.Empty);
+            }
+        }
+
         private static void OnIsCheckedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroCheckBox cb)
+            if (d is CheckEdit cb)
             {
-                cb.CheckedChanged?.Invoke(cb, (bool?)e.NewValue);
+                bool? newVal = (bool?)e.NewValue;
+                if (!Equals(cb.EditValue, newVal))
+                {
+                    cb.EditValue = newVal;
+                }
+                cb.IsModified = true;
+                cb.CheckedChanged?.Invoke(cb, newVal);
+                cb.EditValueChanged?.Invoke(cb, EventArgs.Empty);
             }
         }
 
         public void Toggle()
         {
-            if (!IsEnabled) return;
+            if (!IsEnabled || ReadOnly) return;
 
             if (ThreeState)
             {
@@ -310,5 +374,13 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for CheckEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    public class ZeroCheckBox : CheckEdit
+    {
     }
 }

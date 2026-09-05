@@ -9,13 +9,13 @@ using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Navigation
 {
-    public class WpfWizardPageValidatingEventArgs : CancelEventArgs
+    public class WizardPageValidatingEventArgs : CancelEventArgs
     {
         public int PageIndex { get; }
-        public ZeroWizardPage Page { get; }
+        public WizardPage Page { get; }
         public string? ErrorMessage { get; set; }
 
-        public WpfWizardPageValidatingEventArgs(int pageIndex, ZeroWizardPage page)
+        public WizardPageValidatingEventArgs(int pageIndex, WizardPage page)
         {
             PageIndex = pageIndex;
             Page = page;
@@ -23,18 +23,26 @@ namespace ZeroUI.Wpf.Navigation
     }
 
     /// <summary>
-    /// Represents an individual step/page container in a ZeroWizard sequence for WPF.
+    /// Backward-compatibility alias for <see cref="WizardPageValidatingEventArgs"/>.
     /// </summary>
-    public class ZeroWizardPage : ContentControl
+    public class WpfWizardPageValidatingEventArgs : WizardPageValidatingEventArgs
+    {
+        public WpfWizardPageValidatingEventArgs(int pageIndex, WizardPage page) : base(pageIndex, page) { }
+    }
+
+    /// <summary>
+    /// Represents an individual step/page container in a Wizard sequence for WPF.
+    /// </summary>
+    public class WizardPage : ContentControl
     {
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register(nameof(Title), typeof(string), typeof(ZeroWizardPage), new PropertyMetadata("Step Title"));
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(WizardPage), new PropertyMetadata("Step Title"));
 
         public static readonly DependencyProperty SubtitleProperty =
-            DependencyProperty.Register(nameof(Subtitle), typeof(string), typeof(ZeroWizardPage), new PropertyMetadata("Configure this step."));
+            DependencyProperty.Register(nameof(Subtitle), typeof(string), typeof(WizardPage), new PropertyMetadata("Configure this step."));
 
         public static readonly DependencyProperty IconProperty =
-            DependencyProperty.Register(nameof(Icon), typeof(string), typeof(ZeroWizardPage), new PropertyMetadata("📋"));
+            DependencyProperty.Register(nameof(Icon), typeof(string), typeof(WizardPage), new PropertyMetadata("📋"));
 
         public string Title
         {
@@ -54,14 +62,14 @@ namespace ZeroUI.Wpf.Navigation
             set => SetValue(IconProperty, value);
         }
 
-        public event EventHandler<WpfWizardPageValidatingEventArgs>? ValidatingStep;
+        public event EventHandler<WizardPageValidatingEventArgs>? ValidatingStep;
 
         internal bool ValidatePage(int index, out string? error)
         {
             error = null;
             if (ValidatingStep != null)
             {
-                var args = new WpfWizardPageValidatingEventArgs(index, this);
+                var args = new WizardPageValidatingEventArgs(index, this);
                 ValidatingStep(this, args);
                 if (args.Cancel)
                 {
@@ -74,13 +82,20 @@ namespace ZeroUI.Wpf.Navigation
     }
 
     /// <summary>
+    /// Backward-compatibility alias for <see cref="WizardPage"/>.
+    /// </summary>
+    public class ZeroWizardPage : WizardPage
+    {
+    }
+
+    /// <summary>
     /// Modern Enterprise Multi-Step Wizard container for ZeroUI WPF.
     /// Guides users through sequential configuration steps with step indicators,
     /// per-step validation, back/next/finish navigation, and dark/light theming.
     /// </summary>
-    public class ZeroWizard : Control
+    public class WizardControl : Control
     {
-        private readonly ObservableCollection<ZeroWizardPage> _pages = new ObservableCollection<ZeroWizardPage>();
+        private readonly ObservableCollection<WizardPage> _pages = new ObservableCollection<WizardPage>();
         private int _currentStep = 0;
 
         private TextBlock? _titleBlock;
@@ -93,7 +108,7 @@ namespace ZeroUI.Wpf.Navigation
         private Button? _btnFinish;
         private Button? _btnCancel;
 
-        public ObservableCollection<ZeroWizardPage> Pages => _pages;
+        public ObservableCollection<WizardPage> Pages => _pages;
 
         public int CurrentStep
         {
@@ -112,12 +127,12 @@ namespace ZeroUI.Wpf.Navigation
         public event EventHandler? Finished;
         public event EventHandler? Cancelled;
 
-        static ZeroWizard()
+        static WizardControl()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroWizard), new FrameworkPropertyMetadata(typeof(ZeroWizard)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(WizardControl), new FrameworkPropertyMetadata(typeof(WizardControl)));
         }
 
-        public ZeroWizard()
+        public WizardControl()
         {
             Background = ZeroWpfTheme.BgCard;
             BorderBrush = ZeroWpfTheme.BorderDefault;
@@ -149,28 +164,43 @@ namespace ZeroUI.Wpf.Navigation
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });   // Page Content
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(56, GridUnitType.Pixel) }); // Footer
 
-            // 1. Header
+            // --- HEADER ---
             var headerBorder = new Border
             {
                 Background = ZeroWpfTheme.BgInput,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
                 BorderThickness = new Thickness(0, 0, 0, 1),
-                Padding = new Thickness(18, 10, 18, 10)
+                Padding = new Thickness(20, 10, 20, 10)
             };
-
             var headerGrid = new Grid();
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            var titleStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            _titleBlock = new TextBlock { FontSize = 14.0, FontWeight = FontWeights.Bold, Foreground = ZeroWpfTheme.TextPrimary };
-            _subBlock = new TextBlock { FontSize = 11.5, Foreground = ZeroWpfTheme.TextMuted, Margin = new Thickness(0, 2, 0, 0) };
-            titleStack.Children.Add(_titleBlock);
-            titleStack.Children.Add(_subBlock);
-            Grid.SetColumn(titleStack, 0);
-            headerGrid.Children.Add(titleStack);
+            var headerTitles = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            _titleBlock = new TextBlock
+            {
+                FontSize = 16.0,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = ZeroWpfTheme.TextPrimary,
+                Text = "Step Title"
+            };
+            _subBlock = new TextBlock
+            {
+                FontSize = 12.0,
+                Foreground = ZeroWpfTheme.TextMuted,
+                Text = "Configure step description.",
+                Margin = new Thickness(0, 2, 0, 0)
+            };
+            headerTitles.Children.Add(_titleBlock);
+            headerTitles.Children.Add(_subBlock);
+            Grid.SetColumn(headerTitles, 0);
+            headerGrid.Children.Add(headerTitles);
 
-            _stepsIndicatorStack = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            _stepsIndicatorStack = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
             Grid.SetColumn(_stepsIndicatorStack, 1);
             headerGrid.Children.Add(_stepsIndicatorStack);
 
@@ -178,47 +208,81 @@ namespace ZeroUI.Wpf.Navigation
             Grid.SetRow(headerBorder, 0);
             mainGrid.Children.Add(headerBorder);
 
-            // 2. Page Content Host
-            _pageContentHost = new ContentControl { Margin = new Thickness(18) };
+            // --- CONTENT HOST ---
+            _pageContentHost = new ContentControl
+            {
+                Margin = new Thickness(24)
+            };
             Grid.SetRow(_pageContentHost, 1);
             mainGrid.Children.Add(_pageContentHost);
 
-            // 3. Footer Command Bar
+            // --- FOOTER ---
             var footerBorder = new Border
             {
                 Background = ZeroWpfTheme.BgInput,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
                 BorderThickness = new Thickness(0, 1, 0, 0),
-                Padding = new Thickness(18, 10, 18, 10)
+                Padding = new Thickness(20, 10, 20, 10)
+            };
+            var footerStack = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
             };
 
-            var footerGrid = new Grid();
-            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            _btnCancel = new Button { Content = "Cancel", Width = 80, Height = 32, Margin = new Thickness(0, 0, 8, 0) };
+            _btnCancel = new Button
+            {
+                Content = "Cancel",
+                Width = 84,
+                Height = 32,
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = Brushes.Transparent,
+                Foreground = ZeroWpfTheme.TextPrimary,
+                BorderBrush = ZeroWpfTheme.BorderDefault
+            };
             _btnCancel.Click += (s, e) => Cancelled?.Invoke(this, EventArgs.Empty);
-            Grid.SetColumn(_btnCancel, 0);
-            footerGrid.Children.Add(_btnCancel);
+            footerStack.Children.Add(_btnCancel);
 
-            var actionsStack = new StackPanel { Orientation = Orientation.Horizontal };
-            _btnBack = new Button { Content = "◀ Back", Width = 90, Height = 32, Margin = new Thickness(4, 0, 4, 0) };
-            _btnBack.Click += (s, e) => PreviousStep();
-            actionsStack.Children.Add(_btnBack);
+            _btnBack = new Button
+            {
+                Content = "← Back",
+                Width = 84,
+                Height = 32,
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = ZeroWpfTheme.BgCard,
+                Foreground = ZeroWpfTheme.TextPrimary,
+                BorderBrush = ZeroWpfTheme.BorderDefault
+            };
+            _btnBack.Click += BtnBack_Click;
+            footerStack.Children.Add(_btnBack);
 
-            _btnNext = new Button { Content = "Next ▶", Width = 90, Height = 32, Margin = new Thickness(4, 0, 4, 0) };
-            _btnNext.Click += (s, e) => NextStep();
-            actionsStack.Children.Add(_btnNext);
+            _btnNext = new Button
+            {
+                Content = "Next →",
+                Width = 84,
+                Height = 32,
+                Margin = new Thickness(0, 0, 8, 0),
+                Background = ZeroWpfTheme.PrimaryAccent,
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0)
+            };
+            _btnNext.Click += BtnNext_Click;
+            footerStack.Children.Add(_btnNext);
 
-            _btnFinish = new Button { Content = "✔ Finish", Width = 100, Height = 32, Margin = new Thickness(4, 0, 4, 0), Visibility = Visibility.Collapsed };
-            _btnFinish.Click += (s, e) => CompleteWizard();
-            actionsStack.Children.Add(_btnFinish);
+            _btnFinish = new Button
+            {
+                Content = "Finish ✓",
+                Width = 84,
+                Height = 32,
+                Background = ZeroWpfTheme.SuccessAccent,
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                Visibility = Visibility.Collapsed
+            };
+            _btnFinish.Click += BtnFinish_Click;
+            footerStack.Children.Add(_btnFinish);
 
-            Grid.SetColumn(actionsStack, 2);
-            footerGrid.Children.Add(actionsStack);
-
-            footerBorder.Child = footerGrid;
+            footerBorder.Child = footerStack;
             Grid.SetRow(footerBorder, 2);
             mainGrid.Children.Add(footerBorder);
 
@@ -229,65 +293,81 @@ namespace ZeroUI.Wpf.Navigation
             UpdateWizardView();
         }
 
-        public bool NextStep()
-        {
-            if (_pages.Count == 0 || _currentStep >= _pages.Count - 1) return false;
-
-            var curPage = _pages[_currentStep];
-            if (!curPage.ValidatePage(_currentStep, out string? error))
-            {
-                if (!string.IsNullOrEmpty(error))
-                {
-                    MessageBox.Show(error, "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-                return false;
-            }
-
-            _currentStep++;
-            UpdateWizardView();
-            return true;
-        }
-
-        public void PreviousStep()
+        private void BtnBack_Click(object sender, RoutedEventArgs e)
         {
             if (_currentStep > 0)
             {
                 _currentStep--;
                 UpdateWizardView();
+                StepChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        public void CompleteWizard()
+        private void BtnNext_Click(object sender, RoutedEventArgs e)
         {
-            if (_pages.Count == 0) return;
-            var curPage = _pages[_currentStep];
-            if (curPage.ValidatePage(_currentStep, out string? error))
+            if (_currentStep < _pages.Count)
             {
-                Finished?.Invoke(this, EventArgs.Empty);
+                var cur = _pages[_currentStep];
+                if (!cur.ValidatePage(_currentStep, out string? err))
+                {
+                    if (!string.IsNullOrEmpty(err))
+                    {
+                        MessageBox.Show(err, "Step Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    return;
+                }
+
+                if (_currentStep < _pages.Count - 1)
+                {
+                    _currentStep++;
+                    UpdateWizardView();
+                    StepChanged?.Invoke(this, EventArgs.Empty);
+                }
             }
-            else if (!string.IsNullOrEmpty(error))
+        }
+
+        private void BtnFinish_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentStep < _pages.Count)
             {
-                MessageBox.Show(error, "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var cur = _pages[_currentStep];
+                if (!cur.ValidatePage(_currentStep, out string? err))
+                {
+                    if (!string.IsNullOrEmpty(err))
+                    {
+                        MessageBox.Show(err, "Step Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    return;
+                }
             }
+            Finished?.Invoke(this, EventArgs.Empty);
         }
 
         private void UpdateWizardView()
         {
-            if (_pages.Count > 0 && _currentStep >= 0 && _currentStep < _pages.Count)
+            if (_pages.Count == 0)
             {
-                var cur = _pages[_currentStep];
-                if (_titleBlock != null) _titleBlock.Text = $"{cur.Icon}  {cur.Title}";
-                if (_subBlock != null) _subBlock.Text = cur.Subtitle;
-                if (_pageContentHost != null) _pageContentHost.Content = cur;
+                if (_titleBlock != null) _titleBlock.Text = "No Pages";
+                if (_subBlock != null) _subBlock.Text = "Add pages to this wizard.";
+                if (_pageContentHost != null) _pageContentHost.Content = null;
+                if (_btnBack != null) _btnBack.IsEnabled = false;
+                if (_btnNext != null) _btnNext.IsEnabled = false;
+                if (_btnFinish != null) _btnFinish.Visibility = Visibility.Collapsed;
+                return;
             }
 
-            bool isLast = (_currentStep == _pages.Count - 1);
-            if (_btnBack != null) _btnBack.IsEnabled = (_currentStep > 0);
+            var curPage = _pages[_currentStep];
+            if (_titleBlock != null) _titleBlock.Text = curPage.Title;
+            if (_subBlock != null) _subBlock.Text = curPage.Subtitle;
+            if (_pageContentHost != null) _pageContentHost.Content = curPage;
+
+            if (_btnBack != null) _btnBack.IsEnabled = _currentStep > 0;
+
+            bool isLast = _currentStep == _pages.Count - 1;
             if (_btnNext != null) _btnNext.Visibility = isLast ? Visibility.Collapsed : Visibility.Visible;
             if (_btnFinish != null) _btnFinish.Visibility = isLast ? Visibility.Visible : Visibility.Collapsed;
 
             RebuildStepIndicators();
-            StepChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void RebuildStepIndicators()
@@ -325,9 +405,16 @@ namespace ZeroUI.Wpf.Navigation
             }
         }
 
-        public void AddPage(ZeroWizardPage page)
+        public void AddPage(WizardPage page)
         {
             _pages.Add(page);
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="WizardControl"/>.
+    /// </summary>
+    public class ZeroWizard : WizardControl
+    {
     }
 }

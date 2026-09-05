@@ -14,7 +14,7 @@ namespace ZeroUI.Wpf.Reporting
     /// Provides integrated document pagination, high-DPI paper canvas preview with drop shadow,
     /// dynamic zoom (25% to 500%), page navigation, and direct hardware print dispatch.
     /// </summary>
-    public class ZeroPrintPreview : Control
+    public class DocumentPreviewControl : Control
     {
         private readonly List<Visual> _pages = new List<Visual>();
         private readonly ScrollViewer _scrollViewer;
@@ -69,7 +69,7 @@ namespace ZeroUI.Wpf.Reporting
             set { _paperHeight = value; UpdatePageDisplay(); }
         }
 
-        public ZeroPrintPreview()
+        public DocumentPreviewControl()
         {
             Background = new SolidColorBrush(Color.FromRgb(30, 30, 35)); // Neutral workspace dark
             ClipToBounds = true;
@@ -304,6 +304,13 @@ namespace ZeroUI.Wpf.Reporting
             protected override int VisualChildrenCount => 1;
             protected override Visual GetVisualChild(int index) => _visual;
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="DocumentPreviewControl"/>.
+    /// </summary>
+    public class ZeroPrintPreview : DocumentPreviewControl
+    {
     }
 
     internal static class PanelExtensions

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -8,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -72,9 +74,9 @@ namespace ZeroUI.Wpf.Editors
     /// <summary>
     /// Modern anti-aliased Multi-Select CheckedComboBox for ZeroUI WPF.
     /// Features drop-down list with check boxes, "Select All" toggle, live search filter,
-    /// and dynamic summary formatting.
+    /// and dynamic summary formatting. Implements <see cref="IZeroEditor"/>.
     /// </summary>
-    public class ZeroCheckedComboBox : Control
+    public class CheckedComboBoxEdit : Control, IZeroEditor
     {
         private readonly ObservableCollection<CheckedComboItem> _items = new ObservableCollection<CheckedComboItem>();
         private readonly ObservableCollection<CheckedComboItem> _filteredItems = new ObservableCollection<CheckedComboItem>();
@@ -87,13 +89,16 @@ namespace ZeroUI.Wpf.Editors
         private bool _isUpdatingSelectAll = false;
 
         public static readonly DependencyProperty PlaceholderProperty =
-            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(ZeroCheckedComboBox), new PropertyMetadata("Select items..."));
+            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(CheckedComboBoxEdit), new PropertyMetadata("Select items..."));
 
         public static readonly DependencyProperty SummaryFormatProperty =
-            DependencyProperty.Register(nameof(SummaryFormat), typeof(string), typeof(ZeroCheckedComboBox), new PropertyMetadata("{0} items selected"));
+            DependencyProperty.Register(nameof(SummaryFormat), typeof(string), typeof(CheckedComboBoxEdit), new PropertyMetadata("{0} items selected"));
 
         public static readonly DependencyProperty IsDropDownOpenProperty =
-            DependencyProperty.Register(nameof(IsDropDownOpen), typeof(bool), typeof(ZeroCheckedComboBox), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsDropDownOpenChanged));
+            DependencyProperty.Register(nameof(IsDropDownOpen), typeof(bool), typeof(CheckedComboBoxEdit), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsDropDownOpenChanged));
+
+        public static readonly DependencyProperty ReadOnlyProperty =
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(CheckedComboBoxEdit), new PropertyMetadata(false));
 
         public string Placeholder
         {
@@ -113,18 +118,60 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(IsDropDownOpenProperty, value);
         }
 
+        public bool ReadOnly
+        {
+            get => (bool)GetValue(ReadOnlyProperty);
+            set => SetValue(ReadOnlyProperty, value);
+        }
+
         public ObservableCollection<CheckedComboItem> Items => _items;
 
         public IEnumerable<object> CheckedValues => _items.Where(i => i.IsChecked).Select(i => i.Value);
 
-        public event EventHandler? SelectionChanged;
-
-        static ZeroCheckedComboBox()
+        public object? EditValue
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroCheckedComboBox), new FrameworkPropertyMetadata(typeof(ZeroCheckedComboBox)));
+            get => CheckedValues.ToList();
+            set
+            {
+                if (value is IEnumerable enumerable && !(value is string))
+                {
+                    var set = new HashSet<object>();
+                    foreach (var item in enumerable)
+                    {
+                        if (item != null) set.Add(item);
+                    }
+                    foreach (var itm in _items)
+                    {
+                        itm.IsChecked = set.Contains(itm.Value);
+                    }
+                }
+                else if (value == null)
+                {
+                    Reset();
+                }
+                else
+                {
+                    foreach (var itm in _items)
+                    {
+                        itm.IsChecked = Equals(itm.Value, value);
+                    }
+                }
+                IsModified = true;
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
-        public ZeroCheckedComboBox()
+        public bool IsModified { get; set; }
+
+        public event EventHandler? SelectionChanged;
+        public event EventHandler? EditValueChanged;
+
+        static CheckedComboBoxEdit()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(CheckedComboBoxEdit), new FrameworkPropertyMetadata(typeof(CheckedComboBoxEdit)));
+        }
+
+        public CheckedComboBoxEdit()
         {
             Background = ZeroWpfTheme.BgInput;
             Foreground = ZeroWpfTheme.TextPrimary;
@@ -279,6 +326,8 @@ namespace ZeroUI.Wpf.Editors
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
+            if (ReadOnly) return;
+
             if (!IsDropDownOpen)
             {
                 IsDropDownOpen = true;
@@ -288,7 +337,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnIsDropDownOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroCheckedComboBox cb && cb._popup != null)
+            if (d is CheckedComboBoxEdit cb && cb._popup != null)
             {
                 cb._popup.IsOpen = (bool)e.NewValue;
             }
@@ -300,13 +349,15 @@ namespace ZeroUI.Wpf.Editors
             {
                 UpdateDisplayText();
                 UpdateSelectAllState();
+                IsModified = true;
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
         private void SelectAllBox_Click(object sender, RoutedEventArgs e)
         {
-            if (_isUpdatingSelectAll || _selectAllBox == null) return;
+            if (ReadOnly || _isUpdatingSelectAll || _selectAllBox == null) return;
 
             bool target = _selectAllBox.IsChecked == true;
             foreach (var item in _items)
@@ -368,9 +419,28 @@ namespace ZeroUI.Wpf.Editors
             _items.Add(new CheckedComboItem(value, text, isChecked));
         }
 
+        public void Reset()
+        {
+            foreach (var item in _items)
+            {
+                item.IsChecked = false;
+            }
+            IsModified = false;
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         public void Clear()
         {
             _items.Clear();
+            IsModified = false;
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="CheckedComboBoxEdit"/>.
+    /// </summary>
+    public class ZeroCheckedComboBox : CheckedComboBoxEdit
+    {
     }
 }

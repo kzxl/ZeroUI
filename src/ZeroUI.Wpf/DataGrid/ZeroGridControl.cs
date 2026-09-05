@@ -21,11 +21,11 @@ namespace ZeroUI.Wpf.DataGrid
     /// Eliminates WPF Visual Tree overhead by rendering cells directly via DrawingContext,
     /// powered by ZeroUI.Core virtualization algorithms and RowIndexMap.
     /// </summary>
-    public class ZeroGridControl : FrameworkElement
+    public class GridControl : FrameworkElement
     {
         private static readonly Pen WhiteCheckPen;
 
-        static ZeroGridControl()
+        static GridControl()
         {
             WhiteCheckPen = new Pen(Brushes.White, 1.8);
             WhiteCheckPen.Freeze();
@@ -216,7 +216,7 @@ namespace ZeroUI.Wpf.DataGrid
             DependencyProperty.Register(
                 nameof(Density),
                 typeof(GridDensity),
-                typeof(ZeroGridControl),
+                typeof(GridControl),
                 new FrameworkPropertyMetadata(GridDensity.Middle, FrameworkPropertyMetadataOptions.AffectsRender, OnDensityChanged));
 
         public GridDensity Density
@@ -227,7 +227,7 @@ namespace ZeroUI.Wpf.DataGrid
 
         private static void OnDensityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroGridControl grid)
+            if (d is GridControl grid)
             {
                 grid._rowHeight = (GridDensity)e.NewValue switch
                 {
@@ -540,7 +540,7 @@ namespace ZeroUI.Wpf.DataGrid
 
         public RowIndexMap IndexMap => _rowIndexMap;
 
-        public ZeroGridControl()
+        public GridControl()
         {
             ClipToBounds = true;
             Focusable = true;
@@ -2515,5 +2515,12 @@ namespace ZeroUI.Wpf.DataGrid
                 return _direction == SortDirection.Ascending ? cmp : -cmp;
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="GridControl"/>.
+    /// </summary>
+    public class ZeroGridControl : GridControl
+    {
     }
 }

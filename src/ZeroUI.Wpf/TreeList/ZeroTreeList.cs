@@ -16,7 +16,7 @@ namespace ZeroUI.Wpf.TreeList
     /// Ultra-fast single-visual hierarchical TreeList / TreeGrid control with direct DrawingContext rendering.
     /// Provides 0-allocation tree virtualization, expand/collapse toggles, branch guide lines, and multi-column display.
     /// </summary>
-    public class ZeroTreeList : FrameworkElement
+    public class TreeList : FrameworkElement
     {
         private ZeroTreeModel _model = new ZeroTreeModel();
         private readonly ObservableCollection<ZeroColumn> _columns = new ObservableCollection<ZeroColumn>();
@@ -119,7 +119,7 @@ namespace ZeroUI.Wpf.TreeList
             }
         }
 
-        public ZeroTreeList()
+        public TreeList()
         {
             ClipToBounds = true;
             Focusable = true;
@@ -396,5 +396,12 @@ namespace ZeroUI.Wpf.TreeList
                 brush,
                 dpi.PixelsPerDip);
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="TreeList"/>.
+    /// </summary>
+    public class ZeroTreeList : TreeList
+    {
     }
 }

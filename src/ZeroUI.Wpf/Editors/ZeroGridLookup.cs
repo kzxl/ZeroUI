@@ -6,6 +6,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.DataGrid;
 using ZeroUI.Wpf.Theme;
 
@@ -16,11 +17,11 @@ namespace ZeroUI.Wpf.Editors
     /// Hosts an embedded virtual DataGrid within a Popup, enabling multi-column search,
     /// pagination, and instant selection for complex enterprise entities.
     /// </summary>
-    public class ZeroGridLookup : Control
+    public class GridLookupEdit : Control, IZeroEditor
     {
         private Popup? _popup;
         private TextBox? _searchBox;
-        private ZeroGridControl? _grid;
+        private GridControl? _grid;
         private TextBlock? _displayTextBlock;
 
         private string _selectedText = string.Empty;
@@ -28,15 +29,72 @@ namespace ZeroUI.Wpf.Editors
         private string _displayMember = "Name";
         private string _valueMember = "Id";
 
+        public static readonly DependencyProperty EditValueProperty =
+            DependencyProperty.Register(nameof(EditValue), typeof(object), typeof(GridLookupEdit),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
+
         public static readonly DependencyProperty PlaceholderProperty =
-            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(ZeroGridLookup), new PropertyMetadata("Click to search and select..."));
+            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(GridLookupEdit), new PropertyMetadata("Click to search and select..."));
 
         public static readonly DependencyProperty IsDropDownOpenProperty =
             DependencyProperty.Register(
                 nameof(IsDropDownOpen),
                 typeof(bool),
-                typeof(ZeroGridLookup),
+                typeof(GridLookupEdit),
                 new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsDropDownOpenChanged));
+
+        public static readonly DependencyProperty IsModifiedProperty =
+            DependencyProperty.Register(nameof(IsModified), typeof(bool), typeof(GridLookupEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty ReadOnlyProperty =
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(GridLookupEdit),
+                new PropertyMetadata(false));
+
+        public event EventHandler? EditValueChanged;
+        public event EventHandler? SelectionChanged;
+
+        public object? EditValue
+        {
+            get => GetValue(EditValueProperty);
+            set => SetValue(EditValueProperty, value);
+        }
+
+        public bool IsModified
+        {
+            get => (bool)GetValue(IsModifiedProperty);
+            set => SetValue(IsModifiedProperty, value);
+        }
+
+        public bool ReadOnly
+        {
+            get => (bool)GetValue(ReadOnlyProperty);
+            set => SetValue(ReadOnlyProperty, value);
+        }
+
+        public void Reset()
+        {
+            _selectedValue = null;
+            _selectedText = string.Empty;
+            EditValue = null;
+            IsModified = false;
+            if (_displayTextBlock != null)
+            {
+                _displayTextBlock.Text = Placeholder;
+                _displayTextBlock.Foreground = ZeroWpfTheme.TextMuted;
+            }
+        }
+
+        public void Clear() => Reset();
+
+        private static void OnEditValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is GridLookupEdit gl)
+            {
+                gl._selectedValue = e.NewValue;
+                gl.EditValueChanged?.Invoke(gl, EventArgs.Empty);
+            }
+        }
 
         public string Placeholder
         {
@@ -64,16 +122,14 @@ namespace ZeroUI.Wpf.Editors
 
         public string SelectedText => _selectedText;
         public object? SelectedValue => _selectedValue;
-        public ZeroGridControl? GridControl => _grid;
+        public GridControl? GridControl => _grid;
 
-        public event EventHandler? SelectionChanged;
-
-        static ZeroGridLookup()
+        static GridLookupEdit()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroGridLookup), new FrameworkPropertyMetadata(typeof(ZeroGridLookup)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(GridLookupEdit), new FrameworkPropertyMetadata(typeof(GridLookupEdit)));
         }
 
-        public ZeroGridLookup()
+        public GridLookupEdit()
         {
             Background = ZeroWpfTheme.BgInput;
             BorderBrush = ZeroWpfTheme.BorderDefault;
@@ -175,7 +231,7 @@ namespace ZeroUI.Wpf.Editors
             Grid.SetRow(_searchBox, 0);
             popupGrid.Children.Add(_searchBox);
 
-            _grid = new ZeroGridControl
+            _grid = new GridControl
             {
                 Margin = new Thickness(0, 6, 0, 0)
             };
@@ -209,6 +265,8 @@ namespace ZeroUI.Wpf.Editors
             _grid.DataSource.GetCellValue(modelRow, 0, ref buf);
             _selectedText = buf.Text.ToString();
             _selectedValue = modelRow;
+            EditValue = modelRow;
+            IsModified = true;
 
             if (_displayTextBlock != null)
             {
@@ -218,11 +276,14 @@ namespace ZeroUI.Wpf.Editors
 
             IsDropDownOpen = false;
             SelectionChanged?.Invoke(this, EventArgs.Empty);
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
+            if (ReadOnly || !IsEnabled) return;
+
             if (!IsDropDownOpen)
             {
                 IsDropDownOpen = true;
@@ -232,10 +293,18 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnIsDropDownOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroGridLookup gl && gl._popup != null)
+            if (d is GridLookupEdit gl && gl._popup != null)
             {
                 gl._popup.IsOpen = (bool)e.NewValue;
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for GridLookupEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    public class ZeroGridLookup : GridLookupEdit
+    {
     }
 }

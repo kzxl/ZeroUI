@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -31,7 +32,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("ItemCheck")]
     [Description("Modern checked combo box allowing multi-item selection with checkboxes and filter")]
-    public class ZeroCheckedComboBox : Control
+    public class CheckedComboBoxEdit : Control, IZeroEditor
     {
         public class CheckedItem
         {
@@ -63,6 +64,60 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler<ItemCheckEventArgs>? ItemCheck;
         public event EventHandler? CheckedChanged;
+        public event EventHandler? EditValueChanged;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => CheckedValues;
+            set
+            {
+                if (value == null)
+                {
+                    CheckAll(false);
+                    return;
+                }
+                if (value is System.Collections.IEnumerable enumerable && !(value is string))
+                {
+                    var set = new HashSet<object>();
+                    foreach (var item in enumerable)
+                    {
+                        if (item != null) set.Add(item);
+                    }
+                    for (int i = 0; i < _items.Count; i++)
+                    {
+                        SetItemChecked(i, set.Contains(_items[i].Value));
+                    }
+                }
+                else
+                {
+                    string strVal = value.ToString() ?? "";
+                    var tokens = new HashSet<string>(strVal.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+                    for (int i = 0; i < _items.Count; i++)
+                    {
+                        bool matches = tokens.Contains(_items[i].Value?.ToString() ?? "") || tokens.Contains(_items[i].DisplayText);
+                        SetItemChecked(i, matches);
+                    }
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly { get; set; } = false;
+
+        public void Reset()
+        {
+            CheckAll(false);
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
 
         [Category("Appearance")]
         [DefaultValue("Select items...")]
@@ -111,7 +166,7 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        public ZeroCheckedComboBox()
+        public CheckedComboBoxEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -161,8 +216,10 @@ namespace ZeroUI.WinForms.Editors
             if (_items[index].IsChecked != isChecked)
             {
                 _items[index].IsChecked = isChecked;
+                IsModified = true;
                 ItemCheck?.Invoke(this, new ItemCheckEventArgs(index, isChecked, _items[index].Value));
                 CheckedChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
@@ -181,7 +238,9 @@ namespace ZeroUI.WinForms.Editors
             }
             if (anyChanged)
             {
+                IsModified = true;
                 CheckedChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             }
         }
@@ -282,6 +341,7 @@ namespace ZeroUI.WinForms.Editors
 
         public void OpenDropDown()
         {
+            if (ReadOnly || !Enabled) return;
             if (_dropdown.Visible) return;
 
             _isDroppedDown = true;
@@ -310,13 +370,13 @@ namespace ZeroUI.WinForms.Editors
         // Internal Popup Control hosting search bar, Select-All toggle, and virtual items list
         private class CheckedComboPopupControl : Control
         {
-            private readonly ZeroCheckedComboBox _owner;
+            private readonly CheckedComboBoxEdit _owner;
             private readonly TextBox _searchBox;
             private readonly List<CheckedItem> _filteredItems = new List<CheckedItem>();
             private int _hoveredIndex = -1;
             private int _scrollY = 0;
 
-            public CheckedComboPopupControl(ZeroCheckedComboBox owner)
+            public CheckedComboPopupControl(CheckedComboBoxEdit owner)
             {
                 _owner = owner;
                 SetStyle(
@@ -508,5 +568,17 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for CheckedComboBoxEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("ItemCheck")]
+    [Description("Legacy alias for CheckedComboBoxEdit")]
+    public class ZeroCheckedComboBox : CheckedComboBoxEdit
+    {
     }
 }

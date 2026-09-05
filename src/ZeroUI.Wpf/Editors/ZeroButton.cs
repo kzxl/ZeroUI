@@ -19,20 +19,20 @@ namespace ZeroUI.Wpf.Editors
     /// <summary>
     /// Modern styled button adhering to AgentOption WPF UI standards.
     /// </summary>
-    public class ZeroButton : Button
+    public class SimpleButton : Button
     {
         public static readonly DependencyProperty VariantProperty =
             DependencyProperty.Register(
                 nameof(Variant),
                 typeof(ZeroButtonVariant),
-                typeof(ZeroButton),
+                typeof(SimpleButton),
                 new FrameworkPropertyMetadata(ZeroButtonVariant.Primary, OnVariantChanged));
 
         public static readonly DependencyProperty CornerRadiusProperty =
             DependencyProperty.Register(
                 nameof(CornerRadius),
                 typeof(CornerRadius),
-                typeof(ZeroButton),
+                typeof(SimpleButton),
                 new FrameworkPropertyMetadata(new CornerRadius(6)));
 
         public ZeroButtonVariant Variant
@@ -47,7 +47,7 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(CornerRadiusProperty, value);
         }
 
-        public ZeroButton()
+        public SimpleButton()
         {
             Height = 32;
             Padding = new Thickness(14, 6, 14, 6);
@@ -62,7 +62,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnVariantChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroButton btn) btn.ApplyStyle();
+            if (d is SimpleButton btn) btn.ApplyStyle();
         }
 
         private void ApplyStyle()
@@ -101,5 +101,13 @@ namespace ZeroUI.Wpf.Editors
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for SimpleButton.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    public class ZeroButton : SimpleButton
+    {
     }
 }

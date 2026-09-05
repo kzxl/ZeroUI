@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Theme;
 
@@ -19,12 +20,12 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("SelectionChanged")]
     [Description("Enterprise multi-column dropdown lookup with embedded virtual DataGrid and search")]
-    public class ZeroGridLookup : Control
+    public class GridLookupEdit : Control, IZeroEditor
     {
         private readonly ToolStripDropDown _dropdown;
         private readonly Panel _popupContainer;
         private readonly TextBox _searchBox;
-        private readonly ZeroGridControl _grid;
+        private readonly GridControl _grid;
 
         private string _placeholder = "Click to search and select...";
         private string _displayMember = "Name";
@@ -40,6 +41,40 @@ namespace ZeroUI.WinForms.Editors
         public event EventHandler? SelectionChanged;
         public event EventHandler? DropDownOpened;
         public event EventHandler? DropDownClosed;
+        public event EventHandler? EditValueChanged;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => SelectedValue;
+            set
+            {
+                if (!Equals(_selectedValue, value))
+                {
+                    SelectedValue = value;
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly { get; set; } = false;
+
+        public void Reset()
+        {
+            _selectedValue = null;
+            _selectedItem = null;
+            _selectedText = string.Empty;
+            IsModified = false;
+            Invalidate();
+        }
+
+        public void Clear() => Reset();
 
         [Category("Appearance")]
         [DefaultValue("Click to search and select...")]
@@ -71,8 +106,14 @@ namespace ZeroUI.WinForms.Editors
             get => _selectedValue;
             set
             {
-                _selectedValue = value;
-                Invalidate();
+                if (!Equals(_selectedValue, value))
+                {
+                    _selectedValue = value;
+                    IsModified = true;
+                    Invalidate();
+                    SelectionChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -83,9 +124,9 @@ namespace ZeroUI.WinForms.Editors
         public string SelectedText => _selectedText;
 
         [Browsable(false)]
-        public ZeroGridControl Grid => _grid;
+        public GridControl Grid => _grid;
 
-        public ZeroGridLookup()
+        public GridLookupEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -100,8 +141,8 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
 
-            // 1. Construct Embedded ZeroGridControl first
-            _grid = new ZeroGridControl
+            // 1. Construct Embedded GridControl first
+            _grid = new GridControl
             {
                 Dock = DockStyle.Fill
             };
@@ -248,10 +289,12 @@ namespace ZeroUI.WinForms.Editors
             src.GetCellValue(modelRow, displayCol, ref buf);
             _selectedText = buf.Text.ToString();
             _selectedValue = modelRow;
+            IsModified = true;
 
             _dropdown.Close();
             Invalidate();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -342,6 +385,7 @@ namespace ZeroUI.WinForms.Editors
 
         public void OpenDropDown()
         {
+            if (ReadOnly || !Enabled) return;
             if (_dropdown.Visible) return;
             _popupContainer.Size = new Size(Math.Max(Width, 520), 320);
             _dropdown.Size = _popupContainer.Size;
@@ -359,5 +403,17 @@ namespace ZeroUI.WinForms.Editors
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for GridLookupEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("SelectionChanged")]
+    [Description("Legacy alias for GridLookupEdit")]
+    public class ZeroGridLookup : GridLookupEdit
+    {
     }
 }

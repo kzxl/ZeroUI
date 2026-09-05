@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -12,8 +12,9 @@ namespace ZeroUI.Wpf.Editors
     /// <summary>
     /// Modern anti-aliased Color Picker editor for ZeroUI WPF.
     /// Provides live swatch preview, standard enterprise palette matrix, and HEX input.
+    /// Implements <see cref="IZeroEditor"/>.
     /// </summary>
-    public class ZeroColorPicker : Control
+    public class ColorPickEdit : Control, IZeroEditor
     {
         private static readonly Color[] Palette = new[]
         {
@@ -44,15 +45,22 @@ namespace ZeroUI.Wpf.Editors
             DependencyProperty.Register(
                 nameof(SelectedColor),
                 typeof(Color),
-                typeof(ZeroColorPicker),
+                typeof(ColorPickEdit),
                 new FrameworkPropertyMetadata(Color.FromRgb(79, 70, 229), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedColorChanged));
 
         public static readonly DependencyProperty IsDropDownOpenProperty =
             DependencyProperty.Register(
                 nameof(IsDropDownOpen),
                 typeof(bool),
-                typeof(ZeroColorPicker),
+                typeof(ColorPickEdit),
                 new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsDropDownOpenChanged));
+
+        public static readonly DependencyProperty ReadOnlyProperty =
+            DependencyProperty.Register(
+                nameof(ReadOnly),
+                typeof(bool),
+                typeof(ColorPickEdit),
+                new PropertyMetadata(false));
 
         public Color SelectedColor
         {
@@ -66,14 +74,45 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(IsDropDownOpenProperty, value);
         }
 
-        public event EventHandler<Color>? ColorChanged;
-
-        static ZeroColorPicker()
+        public bool ReadOnly
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroColorPicker), new FrameworkPropertyMetadata(typeof(ZeroColorPicker)));
+            get => (bool)GetValue(ReadOnlyProperty);
+            set => SetValue(ReadOnlyProperty, value);
         }
 
-        public ZeroColorPicker()
+        public object? EditValue
+        {
+            get => SelectedColor;
+            set
+            {
+                if (value is Color c)
+                {
+                    SelectedColor = c;
+                }
+                else if (value is string s && !string.IsNullOrWhiteSpace(s))
+                {
+                    TryApplyHex(s);
+                }
+                else if (value == null)
+                {
+                    SelectedColor = Colors.Transparent;
+                }
+                IsModified = true;
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public bool IsModified { get; set; }
+
+        public event EventHandler<Color>? ColorChanged;
+        public event EventHandler? EditValueChanged;
+
+        static ColorPickEdit()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ColorPickEdit), new FrameworkPropertyMetadata(typeof(ColorPickEdit)));
+        }
+
+        public ColorPickEdit()
         {
             Background = ZeroWpfTheme.BgInput;
             BorderBrush = ZeroWpfTheme.BorderDefault;
@@ -180,6 +219,7 @@ namespace ZeroUI.Wpf.Editors
                 };
                 btn.MouseDown += (s, e) =>
                 {
+                    if (ReadOnly) return;
                     SelectedColor = color;
                     IsDropDownOpen = false;
                 };
@@ -204,6 +244,7 @@ namespace ZeroUI.Wpf.Editors
             };
             _hexInputBox.KeyDown += (s, e) =>
             {
+                if (ReadOnly) return;
                 if (e.Key == Key.Enter)
                 {
                     TryApplyHex(_hexInputBox.Text);
@@ -238,6 +279,8 @@ namespace ZeroUI.Wpf.Editors
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
+            if (ReadOnly) return;
+
             if (!IsDropDownOpen)
             {
                 IsDropDownOpen = true;
@@ -252,20 +295,22 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnSelectedColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroColorPicker cp)
+            if (d is ColorPickEdit cp)
             {
                 Color color = (Color)e.NewValue;
                 if (cp._swatchBorder != null) cp._swatchBorder.Background = new SolidColorBrush(color);
                 if (cp._previewBorder != null) cp._previewBorder.Background = new SolidColorBrush(color);
                 if (cp._hexTextBlock != null) cp._hexTextBlock.Text = GetHex(color);
                 if (cp._hexInputBox != null) cp._hexInputBox.Text = GetHex(color);
+                cp.IsModified = true;
                 cp.ColorChanged?.Invoke(cp, color);
+                cp.EditValueChanged?.Invoke(cp, EventArgs.Empty);
             }
         }
 
         private static void OnIsDropDownOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroColorPicker cp && cp._popup != null)
+            if (d is ColorPickEdit cp && cp._popup != null)
             {
                 cp._popup.IsOpen = (bool)e.NewValue;
             }
@@ -288,5 +333,24 @@ namespace ZeroUI.Wpf.Editors
         }
 
         private static string GetHex(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+
+        public void Reset()
+        {
+            SelectedColor = Color.FromRgb(79, 70, 229);
+            IsModified = false;
+        }
+
+        public void Clear()
+        {
+            SelectedColor = Colors.Transparent;
+            IsModified = false;
+        }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ColorPickEdit"/>.
+    /// </summary>
+    public class ZeroColorPicker : ColorPickEdit
+    {
     }
 }

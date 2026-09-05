@@ -19,18 +19,18 @@ namespace ZeroUI.WinForms.Reporting
     [Category("ZeroUI - Reporting & Documents")]
     [DefaultProperty("Document")]
     [Description("Enterprise vector print preview control with toolbar, zoom, and printer dispatch")]
-    public class ZeroPrintPreview : Control
+    public class DocumentPreviewControl : Control
     {
         private PrintDocument? _document;
         private readonly PrintPreviewControl _previewControl;
         private readonly Panel _toolbarPanel;
 
-        private readonly ZeroButton _btnPrint;
-        private readonly ZeroButton _btnPrevPage;
-        private readonly ZeroButton _btnNextPage;
-        private readonly ZeroButton _btnZoomIn;
-        private readonly ZeroButton _btnZoomOut;
-        private readonly ZeroButton _btnFitPage;
+        private readonly SimpleButton _btnPrint;
+        private readonly SimpleButton _btnPrevPage;
+        private readonly SimpleButton _btnNextPage;
+        private readonly SimpleButton _btnZoomIn;
+        private readonly SimpleButton _btnZoomOut;
+        private readonly SimpleButton _btnFitPage;
         private readonly Label _lblPageInfo;
 
         [Category("Printing")]
@@ -66,7 +66,7 @@ namespace ZeroUI.WinForms.Reporting
             }
         }
 
-        public ZeroPrintPreview()
+        public DocumentPreviewControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -102,10 +102,10 @@ namespace ZeroUI.WinForms.Reporting
             };
 
             // Buttons
-            _btnPrint = new ZeroButton { Text = "🖨 Print", Width = 80, Height = 30, Location = new Point(10, 7) };
+            _btnPrint = new SimpleButton { Text = "🖨 Print", Width = 80, Height = 30, Location = new Point(10, 7) };
             _btnPrint.Click += (s, e) => Print();
 
-            _btnPrevPage = new ZeroButton { Text = "◀", Width = 34, Height = 30, Location = new Point(100, 7) };
+            _btnPrevPage = new SimpleButton { Text = "◀", Width = 34, Height = 30, Location = new Point(100, 7) };
             _btnPrevPage.Click += (s, e) => { if (_previewControl.StartPage > 0) _previewControl.StartPage--; UpdatePageInfo(); };
 
             _lblPageInfo = new Label
@@ -120,16 +120,16 @@ namespace ZeroUI.WinForms.Reporting
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold)
             };
 
-            _btnNextPage = new ZeroButton { Text = "▶", Width = 34, Height = 30, Location = new Point(212, 7) };
+            _btnNextPage = new SimpleButton { Text = "▶", Width = 34, Height = 30, Location = new Point(212, 7) };
             _btnNextPage.Click += (s, e) => { _previewControl.StartPage++; UpdatePageInfo(); };
 
-            _btnZoomOut = new ZeroButton { Text = "−", Width = 34, Height = 30, Location = new Point(260, 7) };
+            _btnZoomOut = new SimpleButton { Text = "−", Width = 34, Height = 30, Location = new Point(260, 7) };
             _btnZoomOut.Click += (s, e) => Zoom = _previewControl.Zoom * 0.8;
 
-            _btnZoomIn = new ZeroButton { Text = "+", Width = 34, Height = 30, Location = new Point(298, 7) };
+            _btnZoomIn = new SimpleButton { Text = "+", Width = 34, Height = 30, Location = new Point(298, 7) };
             _btnZoomIn.Click += (s, e) => Zoom = _previewControl.Zoom * 1.25;
 
-            _btnFitPage = new ZeroButton { Text = "Fit Page", Width = 70, Height = 30, Location = new Point(336, 7) };
+            _btnFitPage = new SimpleButton { Text = "Fit Page", Width = 70, Height = 30, Location = new Point(336, 7) };
             _btnFitPage.Click += (s, e) => _previewControl.AutoZoom = true;
 
             _toolbarPanel.Controls.Add(_btnPrint);
@@ -175,5 +175,17 @@ namespace ZeroUI.WinForms.Reporting
             _previewControl.InvalidatePreview();
             UpdatePageInfo();
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for DocumentPreviewControl.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Reporting & Documents")]
+    [DefaultProperty("Document")]
+    [Description("Legacy alias for DocumentPreviewControl")]
+    public class ZeroPrintPreview : DocumentPreviewControl
+    {
     }
 }

@@ -82,7 +82,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Statistical Box-and-Whisker chart for industrial SPC quality inspection")]
-    public class ZeroBoxPlotChart : Control
+    public class BoxPlotChart : Control
     {
         private readonly List<BoxPlotDataPoint> _dataPoints = new List<BoxPlotDataPoint>();
         private string _chartTitle = "Statistical Distribution (SPC)";
@@ -114,7 +114,7 @@ namespace ZeroUI.WinForms.Charts
         [Browsable(false)]
         public List<BoxPlotDataPoint> DataPoints => _dataPoints;
 
-        public ZeroBoxPlotChart()
+        public BoxPlotChart()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -308,5 +308,16 @@ namespace ZeroUI.WinForms.Charts
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for BoxPlotChart.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Charts & Analytics")]
+    [Description("Legacy alias for BoxPlotChart")]
+    public class ZeroBoxPlotChart : BoxPlotChart
+    {
     }
 }

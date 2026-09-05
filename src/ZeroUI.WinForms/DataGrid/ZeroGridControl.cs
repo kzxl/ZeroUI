@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultProperty("DataSource")]
     [Description("High-performance virtual DataGrid with direct Win32 DIBSection rendering")]
-    public class ZeroGridControl : Control
+    public class GridControl : Control
     {
         private readonly List<ZeroColumn> _columns = new List<ZeroColumn>();
 
@@ -76,8 +76,8 @@ namespace ZeroUI.WinForms.DataGrid
 
         // In-Place Floating Editors (Pluggable)
         private readonly TextBox _inPlaceEditor;
-        private readonly ZeroNumericBox _numericEditor;
-        private readonly ZeroDatePicker _dateEditor;
+        private readonly SpinEdit _numericEditor;
+        private readonly DateEdit _dateEditor;
         private readonly ZeroMaskedTextBox _maskedEditor;
         private Control? _activeInPlaceEditor;
         private bool _isEditing = false;
@@ -116,7 +116,7 @@ namespace ZeroUI.WinForms.DataGrid
         private uint _footerBgColor = 0x00F4F4F5;
         private uint _pinnedBorderColor = 0x006366F1; // Indigo accent border
 
-        public ZeroGridControl()
+        public GridControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -3364,6 +3364,18 @@ namespace ZeroUI.WinForms.DataGrid
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for GridControl.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - DataGrid")]
+    [DefaultProperty("DataSource")]
+    [Description("Legacy alias for GridControl")]
+    public class ZeroGridControl : GridControl
+    {
     }
 }
 

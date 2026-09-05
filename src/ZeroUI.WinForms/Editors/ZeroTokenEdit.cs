@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -29,7 +30,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("TokenAdded")]
     [Description("Modern token/chip input editor rendering discrete tag badges with dismiss buttons")]
-    public class ZeroTokenEdit : Control
+    public class TokenEdit : Control, IZeroEditor
     {
         private readonly List<string> _tokens = new List<string>();
         private readonly List<Rectangle> _tokenBounds = new List<Rectangle>();
@@ -44,6 +45,70 @@ namespace ZeroUI.WinForms.Editors
         public event EventHandler<TokenEventArgs>? TokenAdded;
         public event EventHandler<TokenEventArgs>? TokenRemoved;
         public event EventHandler? TokensChanged;
+        public event EventHandler? EditValueChanged;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => _tokens.ToArray();
+            set
+            {
+                _tokens.Clear();
+                if (value != null)
+                {
+                    if (value is System.Collections.IEnumerable enumerable && !(value is string))
+                    {
+                        foreach (var item in enumerable)
+                        {
+                            if (item != null)
+                            {
+                                string s = item.ToString()?.Trim() ?? "";
+                                if (!string.IsNullOrEmpty(s) && !_tokens.Contains(s))
+                                    _tokens.Add(s);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        string str = value.ToString() ?? "";
+                        var parts = str.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var part in parts)
+                        {
+                            string s = part.Trim();
+                            if (!string.IsNullOrEmpty(s) && !_tokens.Contains(s))
+                                _tokens.Add(s);
+                        }
+                    }
+                }
+                TokensChanged?.Invoke(this, EventArgs.Empty);
+                Relayout();
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly
+        {
+            get => _inputBox.ReadOnly;
+            set
+            {
+                _inputBox.ReadOnly = value;
+                Invalidate();
+            }
+        }
+
+        public void Reset()
+        {
+            ClearTokens();
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
 
         [Category("Appearance")]
         [DefaultValue("Type and press Enter...")]
@@ -56,7 +121,7 @@ namespace ZeroUI.WinForms.Editors
         [Browsable(false)]
         public IReadOnlyList<string> Tokens => _tokens;
 
-        public ZeroTokenEdit()
+        public TokenEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -92,34 +157,43 @@ namespace ZeroUI.WinForms.Editors
 
         public void AddToken(string token)
         {
+            if (ReadOnly || !Enabled) return;
             if (string.IsNullOrWhiteSpace(token)) return;
             string clean = token.Trim();
             if (!_tokens.Contains(clean))
             {
                 _tokens.Add(clean);
                 int idx = _tokens.Count - 1;
+                IsModified = true;
                 TokenAdded?.Invoke(this, new TokenEventArgs(clean, idx));
                 TokensChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
                 Relayout();
             }
         }
 
         public void RemoveToken(int index)
         {
+            if (ReadOnly || !Enabled) return;
             if (index < 0 || index >= _tokens.Count) return;
             string token = _tokens[index];
             _tokens.RemoveAt(index);
+            IsModified = true;
             TokenRemoved?.Invoke(this, new TokenEventArgs(token, index));
             TokensChanged?.Invoke(this, EventArgs.Empty);
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
             Relayout();
         }
 
         public void ClearTokens()
         {
+            if (ReadOnly || !Enabled) return;
             if (_tokens.Count > 0)
             {
                 _tokens.Clear();
+                IsModified = true;
                 TokensChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
                 Relayout();
             }
         }
@@ -305,5 +379,17 @@ namespace ZeroUI.WinForms.Editors
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for TokenEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("TokenAdded")]
+    [Description("Legacy alias for TokenEdit")]
+    public class ZeroTokenEdit : TokenEdit
+    {
     }
 }

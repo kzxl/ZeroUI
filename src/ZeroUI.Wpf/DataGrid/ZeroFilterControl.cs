@@ -13,7 +13,7 @@ namespace ZeroUI.Wpf.DataGrid
     /// Provides an interactive hierarchical tree allowing users to construct complex
     /// multi-level logical filter expressions [AND/OR] with type-safe operators.
     /// </summary>
-    public class ZeroFilterControl : Control
+    public class FilterControl : Control
     {
         private readonly GroupFilterNode _rootGroup = new GroupFilterNode(FilterGroupOperator.And);
         private readonly List<string> _availableFields = new List<string>();
@@ -24,12 +24,12 @@ namespace ZeroUI.Wpf.DataGrid
         public GroupFilterNode RootGroup => _rootGroup;
         public List<string> AvailableFields => _availableFields;
 
-        static ZeroFilterControl()
+        static FilterControl()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroFilterControl), new FrameworkPropertyMetadata(typeof(ZeroFilterControl)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(FilterControl), new FrameworkPropertyMetadata(typeof(FilterControl)));
         }
 
-        public ZeroFilterControl()
+        public FilterControl()
         {
             Background = ZeroWpfTheme.BgCard;
             BorderBrush = ZeroWpfTheme.BorderDefault;
@@ -255,5 +255,12 @@ namespace ZeroUI.Wpf.DataGrid
 
         public string GetSqlWhere() => _rootGroup.ToSqlWhere();
         public string GetDisplayString() => _rootGroup.ToDisplayString();
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="FilterControl"/>.
+    /// </summary>
+    public class ZeroFilterControl : FilterControl
+    {
     }
 }

@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("Click")]
     [DefaultProperty("Text")]
     [Description("Modern anti-aliased button with rounded corners and stateful styling")]
-    public class ZeroButton : Control
+    public class SimpleButton : Control
     {
 
         private ZeroButtonStyle _style = ZeroButtonStyle.Primary;
@@ -35,7 +35,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isHovered = false;
         private bool _isPressed = false;
 
-        public ZeroButton()
+        public SimpleButton()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -223,5 +223,18 @@ namespace ZeroUI.WinForms.Editors
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    }
+
+    /// <summary>
+    /// Legacy alias for SimpleButton.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultEvent("Click")]
+    [DefaultProperty("Text")]
+    [Description("Legacy alias for SimpleButton")]
+    public class ZeroButton : SimpleButton
+    {
     }
 }

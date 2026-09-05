@@ -144,7 +144,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("NodeSelected")]
     [Description("High-performance virtualized hierarchical Tree and BOM TreeList control")]
-    public class ZeroTreeList : Control
+    public class TreeList : Control
     {
         private readonly List<ZeroTreeNode> _nodes = new List<ZeroTreeNode>();
         private readonly List<ZeroTreeNode> _visibleNodes = new List<ZeroTreeNode>();
@@ -167,7 +167,7 @@ namespace ZeroUI.WinForms.Industrial
         public event EventHandler<ZeroTreeNode>? NodeCheckChanged;
         public event EventHandler<ZeroTreeNode>? NodeExpandedChanged;
 
-        public ZeroTreeList()
+        public TreeList()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -743,5 +743,17 @@ namespace ZeroUI.WinForms.Industrial
 
         private static GraphicsPath CreateRoundedRect(Rectangle r, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(r, radius);
+    }
+
+    /// <summary>
+    /// Legacy alias for TreeList.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Industrial & SCADA")]
+    [DefaultEvent("NodeSelected")]
+    [Description("Legacy alias for TreeList")]
+    public class ZeroTreeList : TreeList
+    {
     }
 }

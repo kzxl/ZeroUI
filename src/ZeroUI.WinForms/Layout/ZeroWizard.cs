@@ -73,7 +73,7 @@ namespace ZeroUI.WinForms.Layout
     [Category("ZeroUI - Layout & Navigation")]
     [DefaultEvent("Finished")]
     [Description("Enterprise multi-step guided process wizard with validation and step indicator")]
-    public class ZeroWizard : Control
+    public class WizardControl : Control
     {
         private readonly List<ZeroWizardPage> _pages = new List<ZeroWizardPage>();
         private int _currentStep = 0;
@@ -82,10 +82,10 @@ namespace ZeroUI.WinForms.Layout
         private readonly Panel _contentPanel = new Panel { Dock = DockStyle.Fill };
         private readonly Panel _footerPanel = new Panel { Dock = DockStyle.Bottom, Height = 56 };
 
-        private readonly ZeroButton _btnBack = new ZeroButton { Text = "◀ Back", Width = 90, Height = 34 };
-        private readonly ZeroButton _btnNext = new ZeroButton { Text = "Next ▶", Width = 90, Height = 34 };
-        private readonly ZeroButton _btnFinish = new ZeroButton { Text = "✔ Finish", Width = 100, Height = 34, Visible = false };
-        private readonly ZeroButton _btnCancel = new ZeroButton { Text = "Cancel", Width = 80, Height = 34 };
+        private readonly SimpleButton _btnBack = new SimpleButton { Text = "◀ Back", Width = 90, Height = 34 };
+        private readonly SimpleButton _btnNext = new SimpleButton { Text = "Next ▶", Width = 90, Height = 34 };
+        private readonly SimpleButton _btnFinish = new SimpleButton { Text = "✔ Finish", Width = 100, Height = 34, Visible = false };
+        private readonly SimpleButton _btnCancel = new SimpleButton { Text = "Cancel", Width = 80, Height = 34 };
 
         public event EventHandler? StepChanged;
         public event EventHandler? Finished;
@@ -107,7 +107,7 @@ namespace ZeroUI.WinForms.Layout
             }
         }
 
-        public ZeroWizard()
+        public WizardControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -317,5 +317,17 @@ namespace ZeroUI.WinForms.Layout
                 g.DrawLine(pen, 0, 0, _footerPanel.Width, 0);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for WizardControl.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Layout & Navigation")]
+    [DefaultEvent("Finished")]
+    [Description("Legacy alias for WizardControl")]
+    public class ZeroWizard : WizardControl
+    {
     }
 }

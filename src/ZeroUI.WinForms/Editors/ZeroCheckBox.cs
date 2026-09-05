@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -17,7 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Checked")]
     [DefaultEvent("CheckedChanged")]
     [Description("Modern anti-aliased flat CheckBox control with tri-state support")]
-    public class ZeroCheckBox : Control
+    public class CheckEdit : Control, IZeroEditor
     {
         private CheckState _checkState = CheckState.Unchecked;
         private bool _threeState = false;
@@ -28,8 +29,52 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? CheckedChanged;
         public event EventHandler? CheckStateChanged;
+        public event EventHandler? EditValueChanged;
 
-        public ZeroCheckBox()
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public object? EditValue
+        {
+            get => _threeState ? (object?)CheckState : Checked;
+            set
+            {
+                if (value == null)
+                {
+                    if (_threeState) CheckState = CheckState.Indeterminate;
+                    else Checked = false;
+                }
+                else if (value is bool b)
+                {
+                    Checked = b;
+                }
+                else if (value is CheckState cs)
+                {
+                    CheckState = cs;
+                }
+                else if (bool.TryParse(value.ToString(), out bool parsedBool))
+                {
+                    Checked = parsedBool;
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly { get; set; } = false;
+
+        public void Reset()
+        {
+            CheckState = CheckState.Unchecked;
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
+
+        public CheckEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -77,9 +122,11 @@ namespace ZeroUI.WinForms.Editors
                 if (_checkState != targetState)
                 {
                     _checkState = targetState;
+                    IsModified = true;
                     Invalidate();
                     CheckedChanged?.Invoke(this, EventArgs.Empty);
                     CheckStateChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -95,12 +142,14 @@ namespace ZeroUI.WinForms.Editors
                 {
                     bool wasChecked = Checked;
                     _checkState = value;
+                    IsModified = true;
                     Invalidate();
                     if (wasChecked != Checked)
                     {
                         CheckedChanged?.Invoke(this, EventArgs.Empty);
                     }
                     CheckStateChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -134,6 +183,8 @@ namespace ZeroUI.WinForms.Editors
 
         public void Toggle()
         {
+            if (ReadOnly || !Enabled) return;
+
             if (_threeState)
             {
                 switch (_checkState)
@@ -331,5 +382,18 @@ namespace ZeroUI.WinForms.Editors
             int b = Math.Max(0, (int)(c.B * (1f - amount)));
             return Color.FromArgb(c.A, r, g, b);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for CheckEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Editors")]
+    [DefaultProperty("Checked")]
+    [DefaultEvent("CheckedChanged")]
+    [Description("Legacy alias for CheckEdit")]
+    public class ZeroCheckBox : CheckEdit
+    {
     }
 }

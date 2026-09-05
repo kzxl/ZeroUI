@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Input.Date;
 using ZeroUI.Wpf.Theme;
 
@@ -15,7 +16,7 @@ namespace ZeroUI.Wpf.Editors
     /// Backed by headless CalendarModel from ZeroUI.Core with 42-cell matrix generation,
     /// quick presets (Today, Yesterday, Next Week), month/year navigation, and obsidian/light theming.
     /// </summary>
-    public class ZeroDatePicker : Control
+    public class DateEdit : Control, IZeroEditor
     {
         private readonly CalendarModel _calendarModel;
         private readonly TextBox _dateBox;
@@ -26,25 +27,58 @@ namespace ZeroUI.Wpf.Editors
 
         #region Dependency Properties
 
+        public static readonly DependencyProperty EditValueProperty =
+            DependencyProperty.Register(nameof(EditValue), typeof(object), typeof(DateEdit),
+                new FrameworkPropertyMetadata(DateTime.Today, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
+
         public static readonly DependencyProperty SelectedDateProperty =
-            DependencyProperty.Register(nameof(SelectedDate), typeof(DateTime), typeof(ZeroDatePicker),
+            DependencyProperty.Register(nameof(SelectedDate), typeof(DateTime), typeof(DateEdit),
                 new FrameworkPropertyMetadata(DateTime.Today, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedDateChanged));
 
         public static readonly DependencyProperty DateFormatProperty =
-            DependencyProperty.Register(nameof(DateFormat), typeof(string), typeof(ZeroDatePicker),
+            DependencyProperty.Register(nameof(DateFormat), typeof(string), typeof(DateEdit),
                 new FrameworkPropertyMetadata("yyyy-MM-dd", OnDateFormatChanged));
 
         public static readonly DependencyProperty ShowPresetsProperty =
-            DependencyProperty.Register(nameof(ShowPresets), typeof(bool), typeof(ZeroDatePicker),
+            DependencyProperty.Register(nameof(ShowPresets), typeof(bool), typeof(DateEdit),
                 new FrameworkPropertyMetadata(true));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(ZeroDatePicker),
+            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(DateEdit),
                 new FrameworkPropertyMetadata(new CornerRadius(6)));
+
+        public static readonly DependencyProperty IsModifiedProperty =
+            DependencyProperty.Register(nameof(IsModified), typeof(bool), typeof(DateEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty ReadOnlyProperty =
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(DateEdit),
+                new PropertyMetadata(false, OnReadOnlyChanged));
 
         #endregion
 
         #region Properties & Events
+
+        public event EventHandler? EditValueChanged;
+        public event EventHandler<DateTime>? SelectedDateChanged;
+
+        public object? EditValue
+        {
+            get => GetValue(EditValueProperty);
+            set => SetValue(EditValueProperty, value);
+        }
+
+        public bool IsModified
+        {
+            get => (bool)GetValue(IsModifiedProperty);
+            set => SetValue(IsModifiedProperty, value);
+        }
+
+        public bool ReadOnly
+        {
+            get => (bool)GetValue(ReadOnlyProperty);
+            set => SetValue(ReadOnlyProperty, value);
+        }
 
         public DateTime SelectedDate
         {
@@ -70,13 +104,44 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(CornerRadiusProperty, value);
         }
 
-        public event EventHandler<DateTime>? SelectedDateChanged;
-
         public bool IsDropDownOpen => _calendarPopup?.IsOpen == true;
+
+        public void Reset()
+        {
+            SelectedDate = DateTime.Today;
+            EditValue = DateTime.Today;
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
+
+        private static void OnEditValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateEdit edit)
+            {
+                if (e.NewValue is DateTime dt)
+                {
+                    if (edit.SelectedDate != dt) edit.SelectedDate = dt;
+                }
+                else if (e.NewValue != null && DateTime.TryParse(e.NewValue.ToString(), out DateTime parsed))
+                {
+                    if (edit.SelectedDate != parsed) edit.SelectedDate = parsed;
+                }
+                edit.EditValueChanged?.Invoke(edit, EventArgs.Empty);
+            }
+        }
+
+        private static void OnReadOnlyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateEdit edit && edit._dateBox != null)
+            {
+                edit._dateBox.IsReadOnly = (bool)e.NewValue;
+            }
+        }
 
         #endregion
 
-        public ZeroDatePicker()
+        public DateEdit()
         {
             Height = 32;
             Focusable = false;
@@ -172,18 +237,24 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnSelectedDateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroDatePicker dp)
+            if (d is DateEdit dp)
             {
                 DateTime dt = (DateTime)e.NewValue;
+                if (!Equals(dp.EditValue, dt))
+                {
+                    dp.EditValue = dt;
+                }
+                dp.IsModified = true;
                 dp._calendarModel.SelectDate(dt);
                 dp._dateBox.Text = dt.ToString(dp.DateFormat);
                 dp.SelectedDateChanged?.Invoke(dp, dt);
+                dp.EditValueChanged?.Invoke(dp, EventArgs.Empty);
             }
         }
 
         private static void OnDateFormatChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroDatePicker dp)
+            if (d is DateEdit dp)
             {
                 dp._dateBox.Text = dp.SelectedDate.ToString((string)e.NewValue);
             }
@@ -191,6 +262,7 @@ namespace ZeroUI.Wpf.Editors
 
         private void TogglePopup()
         {
+            if (ReadOnly || !IsEnabled) return;
             _calendarPopup.IsOpen = !_calendarPopup.IsOpen;
             if (_calendarPopup.IsOpen)
             {
@@ -205,6 +277,7 @@ namespace ZeroUI.Wpf.Editors
 
         private void TryCommitDateFromText()
         {
+            if (ReadOnly || !IsEnabled) return;
             if (DateTime.TryParseExact(_dateBox.Text, DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime parsed))
             {
                 SelectedDate = parsed;
@@ -252,20 +325,21 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        #region Nested Calendar Popup Content
+        #region Internal Popup Content
 
-        private class CalendarPopupContent : FrameworkElement
+        private sealed class CalendarPopupContent : FrameworkElement
         {
             private readonly CalendarModel _model;
-            private readonly ZeroDatePicker _owner;
-            private readonly CalendarDayCell[] _cells = new CalendarDayCell[CalendarModel.TotalCells];
-            private int _hoveredCellIndex = -1;
+            private readonly DateEdit _owner;
+            private readonly CalendarDayCell[] _cells = new CalendarDayCell[42];
+
             private int _hoveredPresetIndex = -1;
+            private int _hoveredCellIndex = -1;
             private bool _hoveredPrevMonth = false;
             private bool _hoveredNextMonth = false;
             private bool _hoveredTodayLink = false;
 
-            public CalendarPopupContent(CalendarModel model, ZeroDatePicker owner)
+            public CalendarPopupContent(CalendarModel model, DateEdit owner)
             {
                 _model = model;
                 _owner = owner;
@@ -545,5 +619,13 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for DateEdit.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    public class ZeroDatePicker : DateEdit
+    {
     }
 }

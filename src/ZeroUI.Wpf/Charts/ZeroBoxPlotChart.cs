@@ -78,14 +78,14 @@ namespace ZeroUI.Wpf.Charts
     /// Visualizes five-number statistical summaries (Min, Q1, Median, Q3, Max) and outliers
     /// for industrial SPC quality control, tolerance inspection, and batch variability analysis.
     /// </summary>
-    public class ZeroBoxPlotChart : FrameworkElement
+    public class BoxPlotChart : FrameworkElement
     {
         private readonly List<BoxPlotDataPoint> _dataPoints = new List<BoxPlotDataPoint>();
         private double? _upperSpecLimit = null;
         private double? _lowerSpecLimit = null;
 
         public static readonly DependencyProperty ChartTitleProperty =
-            DependencyProperty.Register(nameof(ChartTitle), typeof(string), typeof(ZeroBoxPlotChart),
+            DependencyProperty.Register(nameof(ChartTitle), typeof(string), typeof(BoxPlotChart),
                 new FrameworkPropertyMetadata("Statistical Distribution (SPC)", FrameworkPropertyMetadataOptions.AffectsRender));
 
         public string ChartTitle
@@ -108,7 +108,7 @@ namespace ZeroUI.Wpf.Charts
 
         public List<BoxPlotDataPoint> DataPoints => _dataPoints;
 
-        public ZeroBoxPlotChart()
+        public BoxPlotChart()
         {
             ClipToBounds = true;
             MinHeight = 240;
@@ -318,5 +318,12 @@ namespace ZeroUI.Wpf.Charts
                 dc.DrawText(xLabel, new Point(cx - xLabel.Width / 2, padTop + plotH + 8));
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="BoxPlotChart"/>.
+    /// </summary>
+    public class ZeroBoxPlotChart : BoxPlotChart
+    {
     }
 }

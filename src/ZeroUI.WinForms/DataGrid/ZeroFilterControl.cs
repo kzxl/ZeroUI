@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid & Reporting")]
     [DefaultEvent("FilterChanged")]
     [Description("Interactive hierarchical visual filter tree builder for complex logical queries")]
-    public class ZeroFilterControl : Control
+    public class FilterControl : Control
     {
         private readonly GroupFilterNode _rootGroup = new GroupFilterNode(FilterGroupOperator.And);
         private readonly List<string> _availableFields = new List<string>();
@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.DataGrid
         [Browsable(false)]
         public List<string> AvailableFields => _availableFields;
 
-        public ZeroFilterControl()
+        public FilterControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -279,5 +279,17 @@ namespace ZeroUI.WinForms.DataGrid
 
         public string GetSqlWhere() => _rootGroup.ToSqlWhere();
         public string GetDisplayString() => _rootGroup.ToDisplayString();
+    }
+
+    /// <summary>
+    /// Legacy alias for FilterControl.
+    /// Preserved for 100% backward compatibility.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - DataGrid & Reporting")]
+    [DefaultEvent("FilterChanged")]
+    [Description("Legacy alias for FilterControl")]
+    public class ZeroFilterControl : FilterControl
+    {
     }
 }
