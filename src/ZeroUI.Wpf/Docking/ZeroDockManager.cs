@@ -152,6 +152,25 @@ namespace ZeroUI.Wpf.Docking
             _panels.Add(panel);
         }
 
+        private static void DisconnectElement(object? content)
+        {
+            if (content is FrameworkElement fe && fe.Parent != null)
+            {
+                if (fe.Parent is ContentControl cc)
+                {
+                    cc.Content = null;
+                }
+                else if (fe.Parent is Decorator decorator)
+                {
+                    decorator.Child = null;
+                }
+                else if (fe.Parent is Panel panel)
+                {
+                    panel.Children.Remove(fe);
+                }
+            }
+        }
+
         private void RebuildLayout()
         {
             _documentTabs.Items.Clear();
@@ -162,6 +181,8 @@ namespace ZeroUI.Wpf.Docking
             for (int i = 0; i < _panels.Count; i++)
             {
                 var p = _panels[i];
+                DisconnectElement(p.Content);
+
                 switch (p.DockPosition)
                 {
                     case ZeroDockPosition.Document:
@@ -195,6 +216,8 @@ namespace ZeroUI.Wpf.Docking
 
         private static Border CreateDockWrapper(ZeroDockPanel panel)
         {
+            DisconnectElement(panel.Content);
+
             var headerGrid = new Grid
             {
                 Background = ZeroWpfTheme.BgCard,

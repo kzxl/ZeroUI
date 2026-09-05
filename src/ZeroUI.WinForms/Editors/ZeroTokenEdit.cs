@@ -134,7 +134,6 @@ namespace ZeroUI.WinForms.Editors
 
             ZeroLocalizer.CultureChanged += (s, e) => Invalidate();
 
-            Size = new Size(300, 40);
             Cursor = Cursors.IBeam;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
@@ -149,6 +148,8 @@ namespace ZeroUI.WinForms.Editors
             _inputBox.KeyDown += InputBox_KeyDown;
             _inputBox.TextChanged += (s, e) => Relayout();
             Controls.Add(_inputBox);
+
+            Size = new Size(300, 40);
 
             ZeroTheme.ThemeChanged += (s, e) =>
             {
@@ -227,6 +228,8 @@ namespace ZeroUI.WinForms.Editors
 
         private void Relayout()
         {
+            if (_inputBox == null) return;
+
             _tokenBounds.Clear();
             _closeBounds.Clear();
 
