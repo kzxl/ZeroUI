@@ -436,16 +436,22 @@ ZeroUI/
 │   │   ├── Common/                               # Memory pooling, Enums, Math utilities
 │   │   ├── Communication/                        # ModbusTcpAdapter, ModbusAddressPlanner, SiemensS7Adapter
 │   │   ├── Data/                                 # IZeroVirtualSource, RowIndexMap, Filter & Sort engines
+│   │   ├── Editors/                              # IZeroEditor, ZeroDataBinder standardized data contracts
 │   │   ├── Historian/                            # SqliteHistorianEngine (WAL mode), TimeSeriesPyramid
 │   │   ├── Layout/                               # Cell bounds, Viewport culling algorithms
+│   │   ├── Localization/                         # ZeroLocalizer runtime i18n & dynamic culture switching
 │   │   ├── Mes/                                  # PackMlStateMachine (ISA-TR88), OeeEngine
 │   │   ├── Runtime/                              # ZeroRuntime, ScadaPipelineCoordinator, ZeroTripleBuffer, UiDispatcher
 │   │   ├── Scada/                                # ZeroTagEngine v2, TagStorage, ScadaAlarmEngine, LttbDecimation
 │   │   ├── Scene/                                # ZeroScene, GridSpatialIndex, SceneNode core contracts
+│   │   ├── Validation/                           # ValidationProvider, IControlValidationRule engine
 │   │   ├── Virtualization/                       # Virtual scroll math, windowing & sliding buffer
 │   │   └── Warehouse/                            # GuidedPickingEngine, WarehouseLocation
 │   ├── ZeroUI.WinForms/                          # Standardized WinForms control suite
 │   │   ├── DataGrid/                             # [Subsystem] ZeroGridControl, SearchBar, Pagination, Exporter
+│   │   ├── PivotGrid/                            # [Subsystem] PivotGridControl cross-tab OLAP matrix
+│   │   ├── Range/                                # [Subsystem] RangeControl dual-thumb timeline selector
+│   │   ├── Validation/                           # [Subsystem] ZeroErrorProvider, form validation engine
 │   │   ├── Charts/                               # [Subsystem] ZeroChart, Candlestick, Radar, Funnel, Waterfall...
 │   │   ├── Warehouse/                            # [Subsystem] BarcodeScanControl, InventoryCard, LotSelector...
 │   │   ├── Industrial/                           # [Subsystem] ZeroSteps, ZeroCard, Actuators, P&ID Mimic, Alarms...
@@ -458,6 +464,11 @@ ZeroUI/
 │   │   └── Native/                               # Win32 GDI32/User32 P/Invoke interop layer
 │   ├── ZeroUI.Wpf/                               # High-performance WPF UI controls & themes
 │   │   ├── DataGrid/                             # ZeroGridControl, Pagination, SearchBar (WPF)
+│   │   ├── PivotGrid/                            # ZeroPivotGrid cross-tab OLAP reporting engine
+│   │   ├── Range/                                # RangeControl visual timeline & range slider
+│   │   ├── Validation/                           # ValidationProvider, visual error badge engine
+│   │   ├── Navigation/                           # ZeroWizard, ZeroSideNav, ZeroAccordion
+│   │   ├── Reporting/                            # ZeroPrintPreview vector report viewer
 │   │   ├── Industrial/                           # ZeroGauge, ZeroHeatmap, ZeroLedTower, SevenSegment (WPF)
 │   │   └── Theme/                                # WPF Skin Manager & Resource Dictionaries
 │   └── ZeroUI.Samples.BenchmarkDemo/             # Comprehensive benchmark & showcase application
