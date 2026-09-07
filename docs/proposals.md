@@ -146,86 +146,212 @@ graph TD
 
 ---
 
-### Tier P0: Core Foundations (Immediate Priority)
+### 6.1 Enterprise Feature Parity Matrix (ZeroUI vs. DevExpress XtraGrid)
+
+| Category | Enterprise Capability | DevExpress XtraGrid | Current ZeroUI | Proposed Expansion | Tier / Phase |
+| :--- | :--- | :---: | :---: | :--- | :---: |
+| **Hierarchy** | **Master-Detail Views** | `GridLevelTree` / `detailView` | ❌ Flat grouping only | In-place expandable sub-grids with isolated columns, footers & selection | **Tier P0 (Phase 20)** |
+| **Customization** | **Layout Persistence** | `SaveLayoutToXml` / `Restore` | ❌ Manual code only | Zero-alloc JSON & XML serialization for columns, widths, sort, filters | **Tier P0 (Phase 20)** |
+| **Data Filtering** | **Excel-Style Column Popup** | Dropdown with Checkbox/Date tree | ⚠️ AutoFilter row only | Floating header popup: distinct value checkbox tree & date grouping | **Tier P0 (Phase 20)** |
+| **Ergonomics** | **Runtime Column Chooser** | Drag & drop Column Chooser box | ❌ Code visibility only | Interactive floating field list with header drag-and-drop | **Tier P1 (Phase 21)** |
+| **Formatting** | **Auto Best-Fit Columns** | `BestFitColumns()` / Splitter dbl-clk | ❌ Fixed widths | Font-metrics sampling for optimal column width calculation | **Tier P1 (Phase 21)** |
+| **Clipboard** | **Rectangular Range Copy/Paste**| Excel TSV bidirectional sync | ⚠️ Single row only | Multi-cell TSV parser with type validation & block range highlight | **Tier P1 (Phase 21)** |
+| **In-Place UI** | **Decoupled Repository Editors**| `RepositoryItem` + `CustomRowCellEdit`| ⚠️ Hardcoded floating editors| Extensible `IRepositoryItem` registry & per-cell dynamic editor dispatch | **Tier P2 (Phase 22)** |
+| **Reporting** | **One-Click Print Preview** | `gridControl.ShowPrintPreview()` | ⚠️ Exporter only | Integrated vector paginated print preview with repeated headers | **Tier P2 (Phase 22)** |
+| **Layout Mode**| **Multi-Row Records (`AdvBanded`)**| `AdvBandedGridView` | ⚠️ Hierarchical bands only| Sub-row cell matrix within single logical record | **Tier P2 (Phase 22)** |
+| **Data Fetch** | **Async Server Mode (Instant Feedback)**| `InstantFeedbackSource` | ⚠️ Sync Virtual Source | Non-blocking chunked paging with background SQL streaming & shimmer | **Tier P2 (Phase 22)** |
+
+---
+
+### 6.2 Tier P0: Core Foundations (Immediate Priority — Phase 20)
 
 #### Proposal G.1: Grid Layout Serialization & Persistence (`SaveLayout` / `RestoreLayout`)
-* **Objective:** Enable users and applications to save and restore the complete runtime grid configuration (column widths, column order, visibility, pinned status, sorting, grouping, and filter criteria) per user profile.
-* **Architecture:**
-  - `GridLayoutModel` DTO schema serialized via high-speed zero-alloc `Utf8JsonWriter` (compact JSON) and `XmlWriter` (enterprise legacy compatibility).
-  - Methods:
+* **Business Problem:** Users spend minutes configuring column widths, hiding unnecessary fields, pinning key columns, and reordering bands. The application must persist this layout across sessions per user profile.
+* **Architecture Design:**
+  - `GridLayoutModel` POCO Schema serialized via high-speed zero-alloc `Utf8JsonWriter` (compact JSON) and `XmlWriter` (enterprise legacy compatibility):
+    ```csharp
+    public sealed class GridLayoutModel
+    {
+        public int Version { get; set; } = 1;
+        public List<ColumnLayoutModel> Columns { get; set; } = new();
+        public List<string> GroupedColumnNames { get; set; } = new();
+        public List<string> SortColumnNames { get; set; } = new();
+        public List<SortDirection> SortDirections { get; set; } = new();
+        public string? ActiveFilterCriteria { get; set; }
+    }
+
+    public sealed class ColumnLayoutModel
+    {
+        public string FieldName { get; set; } = string.Empty;
+        public int VisibleIndex { get; set; }
+        public int Width { get; set; }
+        public bool IsVisible { get; set; }
+        public bool IsPinned { get; set; }
+    }
+    ```
+  - Direct APIs:
     ```csharp
     gridControl.SaveLayoutToJson(Stream stream);
     gridControl.RestoreLayoutFromJson(Stream stream);
     gridControl.SaveLayoutToXml(string filePath);
     gridControl.RestoreLayoutFromXml(string filePath);
     ```
-* **Feasibility:** **10.0 / 10** | **Effort:** 1 day.
+* **Feasibility:** **10.0 / 10** | **Effort:** ~1 engineering day.
 
 #### Proposal G.2: Excel-Style Column Filtering Popup (`ExcelColumnFilterPopup`)
-* **Objective:** Interactive filter dropdown launched from the column header filter glyph, mirroring Excel and DevExpress column filtering.
-* **Architecture:**
+* **Business Problem:** Enterprise users expect to click a filter funnel icon on a column header to see an Excel-style popup with checkboxes for distinct values, search filtering, and hierarchical date grouping.
+* **Architecture Design:**
   - Lightweight borderless popup hosting:
-    1. Instant search box.
-    2. Checkbox tree of distinct column values with `(Select All)`.
-    3. Hierarchical Date Tree (`[+] Year -> Month -> Day`) for `DateTime` columns.
-    4. Numeric / String Rule builder tab (`Equals`, `Contains`, `GreaterThan`, `Between`).
-  - Distinct value sampling runs on background thread to prevent UI freezing on massive datasets.
-* **Feasibility:** **9.5 / 10** | **Effort:** 1.5 days.
+    1. **Values Tab:** Instant search box + Checkbox tree of distinct column values with `(Select All)`.
+    2. **Hierarchical Date Tree (for `DateTime` columns):** Expandable tree node `[+] 2026 -> [+] September -> [+] Day 07`.
+    3. **Rules Tab:** Operator dropdown (`Equals`, `Contains`, `GreaterThan`, `Between`) + input parameters.
+  - Distinct value sampling runs on a background worker thread to prevent UI freezing on massive datasets ($>100\text{K}$ rows).
+* **Feasibility:** **9.5 / 10** | **Effort:** ~1.5 engineering days.
 
 #### Proposal G.3: Master-Detail Hierarchical Engine (`GridLevelTree` & In-Place Nested Views)
-* **Objective:** Expandable master rows displaying nested sub-grids with independent columns, footers, and selection (e.g. Sales Order &rarr; Order Items, Stock In &rarr; Lot/Serial Tracking).
-* **Architecture:**
-  - `GridLevelTree` and `GridLevelNode` metadata hierarchy attached to `GridControl`.
-  - Nested child grid renders **in-place into the same Memory DIBSection** with an indented bounding box, avoiding the resource overhead of nested Win32 `HWND` controls.
-  - Contract: `IMasterDetailVirtualSource` providing child data sources per expanded row.
-* **Feasibility:** **9.0 / 10** | **Effort:** 2–3 days.
+* **Business Problem:** In ERP modules (Sales Orders $\to$ Order Items, Stock In $\to$ Lot/Serial Tracking, Production Orders $\to$ Operations), users need to expand a master row to see nested detail rows with independent columns, footers, and editor behaviors.
+* **Architecture Design:**
+  - `GridLevelTree` and `GridLevelNode` metadata hierarchy attached to `GridControl`:
+    ```csharp
+    public sealed class GridLevelNode
+    {
+        public string RelationName { get; set; } = string.Empty;
+        public GridView LevelTemplate { get; set; } = null!;
+        public List<GridLevelNode> Nodes { get; } = new List<GridLevelNode>();
+    }
+    ```
+  - **In-Place Fast GDI Rendering:** Nested child grids render **in-place into the same Memory DIBSection** with an indented bounding box ($X + 32\text{px}$), completely eliminating child Win32 `HWND` creation.
+  - Contract:
+    ```csharp
+    public interface IMasterDetailVirtualSource : IZeroVirtualSource
+    {
+        bool HasDetails(int masterModelRow, string relationName);
+        IZeroVirtualSource GetDetailSource(int masterModelRow, string relationName);
+    }
+    ```
+* **Feasibility:** **9.0 / 10** | **Effort:** ~2–3 engineering days.
 
 ---
 
-### Tier P1: Enterprise Productivity (High Priority)
+### 6.3 Tier P1: Enterprise Productivity (Phase 21)
 
 #### Proposal G.4: Runtime Column Chooser Form (`ColumnChooserDialog`)
-* **Objective:** Floating drag-and-drop tool window allowing end-users to customize column visibility at runtime by dragging headers between the grid and the chooser.
-* **Architecture:** Header drag state machine (`_isDraggingHeader`) with dual-arrow drop insertion indicators. Dropping out of the header band into the chooser hides the column; dragging from the chooser onto the header band displays and positions the column.
-* **Feasibility:** **9.5 / 10** | **Effort:** 1 day.
+* **Business Problem:** ERP tables often define 50–100 columns in the database. Users need a visual, drag-and-drop tool window to pull hidden columns into the grid or drag unwanted columns out.
+* **Architecture Design:**
+  - Floating lightweight tool window `ZeroColumnChooser` containing a virtual list of hidden columns.
+  - Drag-and-drop header state machine (`_isDraggingHeader`):
+    - Dropping a column off the header band into the chooser sets `column.IsVisible = false`.
+    - Dragging from the chooser onto the header band displays and inserts the column at target `VisibleIndex` with dual-arrow insertion glyphs.
+* **Feasibility:** **9.5 / 10** | **Effort:** ~1 engineering day.
 
 #### Proposal G.5: Smart Content-Aware Column Best Fit (`BestFitColumns()`)
-* **Objective:** Auto-sizes column widths based on cell text length, column header text, and sort glyphs.
-* **Architecture:**
-  - Optimal width calculated via sampling: $\text{OptimalWidth} = \max(W_{\text{header}}, \max_{r \in \text{SampleRows}} W_{\text{cell}}) + \text{Padding}$.
-  - Samples active viewport rows + top 100 rows using GDI `GetTextExtentPoint32W` (WinForms) or cached glyph metrics (WPF) with zero heap allocations.
+* **Business Problem:** Hardcoding column widths leads to truncated text or huge empty spaces. Users expect a 1-click action or double-click on column splitter to auto-size columns to fit content.
+* **Architecture Design:**
+  - Mathematical formula:
+    $$\text{OptimalWidth}(C) = \max\left(W_{\text{header}}, \max_{r \in \text{SampleRows}} W_{\text{cell}}(r, C)\right) + \text{Padding} + W_{\text{glyph}}$$
+  - Samples active viewport rows ($30 - 60$ rows) + a random sample of 100 rows across the dataset.
+  - Measures font widths via GDI `GetTextExtentPoint32W` (WinForms) or cached glyph metrics (WPF) with 0 heap allocations.
   - Double-clicking the 3px header resize splitter automatically triggers `BestFitColumn(c)`.
-* **Feasibility:** **9.8 / 10** | **Effort:** 0.5 day.
+* **Feasibility:** **9.8 / 10** | **Effort:** ~0.5 engineering day.
 
 #### Proposal G.6: Bidirectional Rectangular Range Copy/Paste (Excel TSV Integration)
-* **Objective:** Full rectangular range copy (`Ctrl+C`) to Windows Clipboard in Tab-Separated Values (`\t` and `\r\n`) and paste (`Ctrl+V`) directly from Excel into editable grid cells with type validation.
-* **Architecture:** Zero-allocation stream writing using pooled buffers; span-based TSV line/tab parser committing cell values through `IZeroEditableSource`.
-* **Feasibility:** **9.5 / 10** | **Effort:** 1 day.
+* **Business Problem:** Accountants and production planners routinely copy multi-column, multi-row matrix data from Excel and paste it into ERP tables, or copy grid ranges to Excel for ad-hoc pivots.
+* **Architecture Design:**
+  - Clipboard Format: Standard `CF_UNICODETEXT` containing Tab-Separated Values (`\t`) and CRLF (`\r\n`).
+  - Zero-allocation stream writing using pooled buffers (`ArrayPool<char>`).
+  - Span-based TSV line/tab parser committing cell values through `IZeroEditableSource.SetCellValue(...)` with type validation against `ColumnType`.
+* **Feasibility:** **9.5 / 10** | **Effort:** ~1 engineering day.
 
 ---
 
-### Tier P2: Advanced Architecture & Streaming
+### 6.4 Tier P2: Advanced Architecture & Streaming (Phase 22)
 
 #### Proposal G.7: Decoupled In-Place Repository Editors (`IRepositoryItem` & `CustomRowCellEdit`)
-* **Objective:** Decouple editors from hardcoded column types; enable dynamic per-cell editor resolution via event (e.g. Row 1: `NumericBox`, Row 2: `DatePicker`, Row 3: `GridLookupEdit`).
-* **Architecture:** Extensible `IRepositoryItem` factory contract and `CustomRowCellEdit(object sender, CustomRowCellEditEventArgs e)` event.
-* **Feasibility:** **9.0 / 10** | **Effort:** 1.5 days.
+* **Business Problem:** A grid column might normally be text, but depending on row data (e.g. dynamic property tables), Row 1 needs a `NumericBox`, Row 2 needs a `DatePicker`, Row 3 needs a `ColorPicker`, and Row 4 needs a `GridLookupEdit`.
+* **Architecture Design:**
+  - `IRepositoryItem` interface with editor factories:
+    ```csharp
+    public interface IRepositoryItem
+    {
+        Control CreateInPlaceEditor();
+        void FormatValue(object? rawValue, ref CellValueBuffer buffer);
+        bool ParseEditValue(ReadOnlySpan<char> text, out object? parsedValue);
+    }
+    ```
+  - Dynamic Per-Cell Event:
+    ```csharp
+    public event EventHandler<CustomRowCellEditEventArgs>? CustomRowCellEdit;
+    ```
+* **Feasibility:** **9.0 / 10** | **Effort:** ~1.5 engineering days.
 
 #### Proposal G.8: One-Click Vector Print Preview Bridge (`ShowPrintPreview()`)
-* **Objective:** Single-line call `gridControl.ShowPrintPreview()` bridging grid data to `ZeroPrintPreview` with A4/Letter pagination, repeated headers on every page, page numbers, and vector output.
-* **Feasibility:** **9.2 / 10** | **Effort:** 1 day.
+* **Business Problem:** Enterprise forms require an immediate "Print" button that shows the table partitioned across A4/Letter pages with proper margins, page numbers ("Page 1 of 5"), repeated column headers on every page, and company watermarks.
+* **Architecture Design:**
+  - Single-line call: `gridControl.ShowPrintPreview(IWin32Window? owner = null)`.
+  - Bridges the virtual grid data directly into `PrintDocument` and native vector preview.
+  - **Pagination Engine:**
+    - Computes page height minus header, footer, and margins ($H_{\text{printable}}$).
+    - Determines row pagination: $N_{\text{rows/page}} = \lfloor H_{\text{printable}} / \text{RowHeight} \rfloor$.
+    - Multi-page horizontal splitting: if column total width exceeds printable page width, splits across horizontal tiles (Pages 1A, 1B).
+    - Vector rasterization: Renders grid borders, cell texts, and zebra rows via standard vector GDI/WPF drawing context (100% crisp at 600 DPI / 1200 DPI).
+* **Feasibility:** **9.2 / 10** | **Effort:** ~1 engineering day.
 
 #### Proposal G.9: Advanced Banded Grid View (`AdvBandedGridView` - Multi-Row Records)
-* **Objective:** Format a single logical record as a multi-row visual card inside the table grid, eliminating wide horizontal scrolling in complex order entry forms.
-* **Feasibility:** **8.8 / 10** | **Effort:** 2 days.
+* **Business Problem:** In order entry and logistics manifests, displaying 20 columns on a single line forces extensive horizontal scrolling. `AdvBandedGridView` allows a single record to be formatted as a mini 2-line or 3-line card inside the table.
+* **Architecture Design:**
+  ```text
+  ┌───────────────────────────┬──────────────────────────────────────────┐
+  │ Product Code: PROD-9912   │ Description: Industrial Servo Controller │
+  ├─────────────┬─────────────┼──────────────────────────────────────────┤
+  │ Qty: 50 pcs │ Price: $420 │ Warehouse Bin: WH-A1-04                  │
+  └─────────────┴─────────────┴──────────────────────────────────────────┘
+  ```
+  - **Band Cell Coordinate Mapping:**
+    - Each `ZeroColumn` within an `AdvBand` defines `BandRow` and `BandRowSpan` (e.g. Row 0, Row 1).
+    - Row height of the record is dynamically scaled: $H_{\text{visual}} = \text{BandRowCount} \times \text{RowHeight}$.
+    - Viewport spatial calculation maps mouse clicks, hit-testing, and cell navigation directly to $(R_{\text{model}}, C_{\text{index}}, \text{SubRow})$ with zero heap allocations.
+* **Feasibility:** **8.8 / 10** | **Effort:** ~2 engineering days.
 
 #### Proposal G.10: Asynchronous Server Mode / Instant Feedback UI (`IAsyncVirtualSource`)
-* **Objective:** Seamless 120 FPS scrolling across remote SQL/WebAPI datasets with millions of records; background chunk fetching with skeleton/shimmer placeholders while awaiting query completion.
-* **Feasibility:** **8.5 / 10** | **Effort:** 2–3 days.
+* **Business Problem:** When querying databases with 50,000,000 rows across a 1Gbps or WAN network, executing `SELECT *` freezes the desktop. The grid must scroll smoothly at 120 FPS while fetching chunks asynchronously in background threads.
+* **Architecture Design:**
+  - **Contract Definition:**
+    ```csharp
+    public interface IAsyncVirtualSource
+    {
+        ValueTask<int> GetTotalRowCountAsync(CancellationToken ct);
+        ValueTask<ReadOnlyMemory<byte>> FetchRowChunkAsync(int startRow, int count, CancellationToken ct);
+    }
+    ```
+  - **Non-Blocking UI Behavior:**
+    - Viewport renders **Shimmer / Skeleton lines** or cached placeholders during rapid flinging.
+    - Low-priority background channel queues chunk requests; cancelled automatically if user scrolls past before fetch completes.
+    - Data reception invokes `InvalidateRowRange(start, count)` via `UiDispatcher` for smooth 120 FPS display updates.
+* **Feasibility:** **8.5 / 10** | **Effort:** ~2–3 engineering days.
+
+---
+
+### 6.5 Phased Implementation Roadmap & Milestone Schedule (Phases 20–22)
+
+```text
+Phase 20: Foundations (Tier P0) ──► Phase 21: Productivity (Tier P1) ──► Phase 22: Advanced & Streaming (Tier P2)
+  • Master-Detail Engine              • Runtime Column Chooser             • Decoupled Repositories
+  • Layout Save/Restore               • Smart BestFitColumns               • Print Preview Bridge
+  • Excel Column Popup                • Excel TSV Range Copy/Paste         • AdvBandedGridView
+                                                                           • Async Server Mode
+```
+
+| Phase | Milestone Name | Proposals Included | Target Deliverables | Effort Est. |
+| :---: | :--- | :--- | :--- | :---: |
+| **Phase 20** | **Tier P0: Core Foundations** | Proposals G.1, G.2, G.3 | `GridLayoutModel` (JSON/XML serialization), `ExcelColumnFilterPopup` (Values & Date tree), `GridLevelTree` (in-place detail expansion). | **3–4 days** |
+| **Phase 21** | **Tier P1: Enterprise Productivity** | Proposals G.4, G.5, G.6 | `ColumnChooserDialog` (header drag-and-drop), `BestFitColumns()` (zero-alloc font sampling), Bidirectional Excel TSV Copy/Paste (`Ctrl+C`/`Ctrl+V`). | **2–3 days** |
+| **Phase 22** | **Tier P2: Advanced UI & Streaming** | Proposals G.7, G.8, G.9, G.10 | `IRepositoryItem` + `CustomRowCellEdit`, `gridControl.ShowPrintPreview()`, `AdvBandedGridView` multi-row cards, and `IAsyncVirtualSource` instant feedback. | **3–4 days** |
 
 ---
 
 ## 7. Packaging & Architectural Stratification
+
+### 7.1 Component Tiering Diagram
 
 ```mermaid
 graph TD
@@ -267,5 +393,14 @@ graph TD
     Tier2 --> Tier3
 ```
 
-- **Core & Universal Controls:** `ZeroUI.Core`, `ZeroUI.WinForms`, and `ZeroUI.Wpf` host universal enterprise controls (Grid, Editors, Layout, Charts, Document Viewers).
-- **Zero Assembly Bloat:** Domain-specific suites remain cleanly segregated, ensuring minimal footprint and high developer velocity.
+### 7.2 Pragmatic Packaging Strategy (Two-Stage Evolution)
+
+To prevent premature over-engineering while maintaining clean separation of concerns:
+
+1. **Stage 1 (Current — Monolithic-Modular Co-existence):**
+   - Universal enterprise controls (`GridControl`, `ZeroChart`, `PdfViewer`, `SpreadsheetControl`, Form Editors) remain within `ZeroUI.WinForms` and `ZeroUI.Wpf`.
+   - Domain-specific controls live in isolated namespaces (e.g. `ZeroUI.WinForms.Industry.Bms`, `ZeroUI.WinForms.Industry.Network`).
+   - Eliminates build overhead, multiple csproj maintenance, and dependency versioning headaches during early evolution.
+2. **Stage 2 (Future — On-Demand NuGet Package Splitting):**
+   - When any industrial vertical exceeds 30–50 controls, extract the respective namespace into an independent package (e.g. `ZeroUI.Industry.Network.dll`).
+   - Because namespaces and core contracts (`IScadaDrawable`, `ITagBoundControl`, `ZeroTheme`) are already strictly standardized, consuming applications experience zero breaking code changes upon extraction.
