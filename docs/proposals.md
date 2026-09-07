@@ -361,9 +361,201 @@ To guide the long-term technical evolution of **ZeroUI** without compromising it
 
 ---
 
+### Subsystem 7: Network & Device Infrastructure Control Suite (Proposals 8.13 – 8.18)
+
+#### Proposal 8.13: `ZeroNetworkTopology` (Single-HWND Interactive Graph Canvas & Link Flow Engine)
+* **Objective:** A single-HWND high-performance vector graph canvas designed for visualizing thousands of interconnected network devices, switches, firewalls, edge servers, and industrial PLCs with real-time animated packet pulse flows.
+* **Target Scenarios:** Enterprise IT network operations centers (NOC), industrial OT network management systems (NMS), campus topology discovery, and data center interconnection maps.
+* **Technical Architecture:**
+  - **Core:** Extends `ZeroScene` and `GridSpatialIndex` for $O(1)$ spatial frustum culling and hit-testing across 5,000+ nodes and 10,000+ links.
+  - **Link Dynamics:** Renders fiber optic, copper twisted-pair, industrial bus, and wireless links with dynamic packet flow waves driven by `ZeroAnimationClock.Shared.PulsePhase` without heap allocations.
+  - **Layout Solvers:** Background asynchronous execution of Sugiyama layered layout (for tiered enterprise hierarchies) and Barnes-Hut $O(N \log N)$ force-directed layout (for multi-mesh networks).
+* **Feasibility Score:** **9.6 / 10** (Extremely High — directly leverages existing ZeroUI scene graph and animation clock).
+* **Implementation Effort:** ~4–5 engineering days.
+
+#### Proposal 8.14: `ZeroDeviceRack` (19-Inch 42U/24U/12U Equipment Rack & DIN-Rail Cabinet Visualizer)
+* **Objective:** A modular physical cabinet visualizer supporting standard 19-inch data center server racks (12U, 24U, 42U, 48U) and industrial automation DIN-rail enclosures with dynamic thermal heatmaps and power load telemetry.
+* **Target Scenarios:** Data Center Infrastructure Management (DCIM), server room monitoring, industrial field junction box and PLC cabinet inspection.
+* **Technical Architecture:**
+  - **Geometry Engine:** Configurable slot unit array (`TotalUnits = 42`, `ViewFace = Front | Rear`) rendering 1U/2U/4U blade servers, patch panels, horizontal cable managers, PDUs, and DIN-rail PLC mounts.
+  - **Telemetry Overlays:** Elevation thermal gradient heatmap ($18^\circ\text{C} \rightarrow 45^\circ\text{C}$ intake/exhaust), aggregated power draw against PDU breaker capacity, and weight distribution metrics.
+* **Feasibility Score:** **9.8 / 10** (Extremely High — builds upon proven `ZeroWarehouseRack` spatial indexing).
+* **Implementation Effort:** ~2–3 engineering days.
+
+#### Proposal 8.15: `ZeroSwitchFaceplate` (High-Density Physical Port Matrix & Patch Panel)
+* **Objective:** High-density hardware front-panel control rendering physical switches, routers, and patch panels (8, 16, 24, 48-port RJ45 + SFP/SFP+ optical cages) with true-to-life LED indicators and cable diagnostics.
+* **Target Scenarios:** Network switch monitoring, telecom patch bays, and industrial managed switch port diagnostics.
+* **Technical Architecture:**
+  - **Dual-LED Emulation:** Synchronized Link/Speed LED (10M/100M/1G/10G) and Activity blinking LED driven by `ZeroAnimationClock.Shared.BlinkFast`.
+  - **Port States:** `Forwarding`, `Blocking` (STP/RSTP), `AdminDown`, `LinkDown`, `Flapping`, and `ErrorDisabled`.
+  - **Diagnostic Popover:** Instant inspection HUD displaying assigned VLAN, Untagged/Tagged mode, MAC address table, Time Domain Reflectometry (TDR) cable fault length, PoE wattage, and Rx/Tx bandwidth gauges.
+* **Feasibility Score:** **9.7 / 10** (Extremely High — builds on `ZeroPlcIoMonitor` bit matrix design).
+* **Implementation Effort:** ~2 engineering days.
+
+#### Proposal 8.16: `ZeroIpMatrix` (IPAM Subnet Health & Allocation Heatmap)
+* **Objective:** High-density 2D matrix control visualizing complete IPv4 subnet blocks (e.g. $16 \times 16$ cell matrix for a `/24` subnet of 256 hosts, or expandable `/20`–`/28` blocks) with live ping RTT latency telemetry.
+* **Target Scenarios:** IP Address Management (IPAM), rogue device discovery, DHCP pool exhaustion tracking, and factory network IP collision alerts.
+* **Technical Architecture:**
+  - Compact vector cell array rendering host status: `Free`, `DHCP Leased`, `Static Reserved`, `Gateway`, `Offline`, `IP Conflict` (pulsing red), and `Unauthorized Device`.
+  - Embedded micro-trend sparklines (`ZeroSparkline`) on cell hover displaying the last 60 ping round-trip times (ms) and jitter.
+* **Feasibility Score:** **9.5 / 10** (Extremely High — borrows directly from `ZeroDefectMatrix` rendering patterns).
+* **Implementation Effort:** ~1.5 engineering days.
+
+#### Proposal 8.17: `ZeroFieldbusMonitor` (Industrial Ethernet & Daisy-Chain Bus Line)
+* **Objective:** Linear and ring communication line monitor for industrial automation protocols (Profinet, EtherCAT, Modbus RTU RS-485, EtherNet/IP DLR, CANopen).
+* **Target Scenarios:** Factory automation line diagnostics, fieldbus commissioning, and redundant ring break recovery monitoring.
+* **Technical Architecture:**
+  - Master/Controller node with sequential field slave drops and terminating resistor (EOL) indicators.
+  - Automatic physical cable break localization (identifying severed cable segment between drop stations).
+  - Real-time bus cycle time jitter, token rotation delays, and CRC error retries.
+* **Feasibility Score:** **9.4 / 10** (High — proven industrial requirement).
+* **Implementation Effort:** ~2 engineering days.
+
+#### Proposal 8.18: `ZeroDeviceFaceplate` (Hardware Chassis Health & Optical DDM HUD)
+* **Objective:** Compact modular instrument faceplate displaying low-level physical operating health of switches, servers, and edge gateways.
+* **Target Scenarios:** Hardware lifecycle management, predictive fan failure detection, and optical link degradation monitoring.
+* **Technical Architecture:**
+  - Dual Redundant Power Supply (PSU 1 & PSU 2) voltage/current and failover telemetry.
+  - Multi-fan tachometer gauges displaying RPM and tachometer error states.
+  - SFP Digital Optical Monitoring (DOM/DDM) metrics: Laser Transmit Power (dBm), Receiver Optical Power (dBm), transceiver temperature, and supply voltage.
+* **Feasibility Score:** **9.6 / 10** (High).
+* **Implementation Effort:** ~1.5 engineering days.
+
+---
+
+### Subsystem 8: Specialized Industry Verticals & Domain-Specific Control Clusters (Proposals 8.19 – 8.25)
+
+To establish ZeroUI as a truly universal, multi-industry high-performance UI ecosystem, specialized vertical clusters address mission-critical operational requirements across key industries without compromising core performance.
+
+#### Proposal 8.19: Energy, Smart Grid & Substation Automation Suite
+* **Target Industry:** Electrical power generation, transmission/distribution substations, microgrids, solar PV farms, and Battery Energy Storage Systems (BESS).
+* **Core Components:**
+  - **`SingleLineDiagram` (SLD Canvas):** Single-HWND vector electrical schematic canvas with dynamic topological busbar coloring (Energized, De-energized, Grounded, Faulted) adhering to IEC 61850 standards.
+  - **`SwitchgearFaceplate`:** High-voltage circuit breaker (CB), disconnector switch (DS), and earthing switch (ES) state indicators with physical lockout/tagout (LOTO) interlocks and trip coil telemetry.
+  - **`BessRackMonitor`:** Battery energy storage rack visualizer displaying State of Charge (SoC %), State of Health (SoH %), cell voltage balancing heatmaps, and thermal runaway precursor alerts.
+  - **`SolarPvMatrix`:** Multi-string photovoltaic array monitoring solar irradiance ($W/m^2$), individual string MPPT curves, and inverter efficiency degradation.
+* **Feasibility Score:** **9.1 / 10** | **Complexity:** Medium-High (~5–6 engineering days).
+
+#### Proposal 8.20: Building Automation Systems (BAS / BMS & HVAC) Suite
+* **Target Industry:** Commercial real estate, smart hospitals, airport terminals, and data center climate control.
+* **Core Components:**
+  - **`AhuSchematic` (Air Handling Unit Visualizer):** Dynamic mechanical cross-section displaying outside/return/exhaust air mixing dampers (0–100%), filter differential pressure ($\Delta P$), heating/cooling hydronic coils, and supply fan static pressure with animated airflow vectors.
+  - **`ChillerPlant`:** Central chiller plant schematic showing chillers, cooling towers, primary/secondary pumps, and real-time Coefficient of Performance (COP) and kW/Ton efficiency gauges.
+  - **`ZoneScheduler` (Multi-Zone 7-Day Time Schedule Matrix):** Interactive weekly 24-hour occupancy calendar control with comfort/economy setpoint bands, holiday exceptions, and drag-and-drop schedule windows.
+* **Feasibility Score:** **9.4 / 10** | **Complexity:** Medium (~3–4 engineering days).
+
+#### Proposal 8.21: Water & Wastewater Treatment (WWT) Suite
+* **Target Industry:** Municipal drinking water distribution, wastewater reclamation plants, and industrial effluent treatment facilities.
+* **Core Components:**
+  - **`ClarifierBasin`:** Circular/rectangular sedimentation basin visualizer with animated rotating sludge scraper bridge, torque feedback, sludge blanket depth telemetry, and effluent weir overflow vectors.
+  - **`ChemicalDosingSkid`:** Precision metering pump skid visualizer for coagulants, polymers, and sodium hypochlorite with flow proportional dosing rates (mg/L / ppm) and stroke frequency feedback.
+  - **`HydraulicGradientChart`:** Water elevation and hydraulic grade line (HGL) profile chart tracking gravity mains, siphon loops, and pump discharge head losses.
+* **Feasibility Score:** **9.3 / 10** | **Complexity:** Medium (~3 engineering days).
+
+#### Proposal 8.22: Pharmaceutical, Biotech & Batch Processing (ISA-88 / FDA 21 CFR Part 11) Suite
+* **Target Industry:** Pharmaceutical formulation, biomanufacturing, chemical synthesis, and food & beverage processing.
+* **Core Components:**
+  - **`SfcBatchTracker` (ISA-88 Sequential Function Chart):** Procedural batch recipe execution tracker visualizing active Unit Operations, Steps, and Transitions with step timers, holding states, and operator prompt checkpoints.
+  - **`BioreactorVessel`:** 3D sanitary fermenter vessel rendering sparging aeration, dissolved oxygen (DO %), pH sensor feedback, jacket thermal regulation, and mechanical impeller agitation.
+  - **`CipValidationMatrix`:** Clean-in-Place (CIP) and Steam-in-Place (SIP) cycle validation matrix plotting the 4 TACT parameters (Time, Action, Chemical Concentration, Temperature) against FDA sterilization envelopes ($F_0$ value).
+  - **`CleanroomEnvHud`:** ISO Class 5–8 cleanroom environmental monitor tracking room air change rates (ACH), continuous non-viable particle counts (0.5 $\mu m$ and 5.0 $\mu m$), and differential pressure cascade gradients ($\Delta P > 15\text{ Pa}$) preventing cross-contamination.
+* **Feasibility Score:** **8.9 / 10** | **Complexity:** High (~5–6 engineering days).
+
+#### Proposal 8.23: Intralogistics, Material Handling & Warehouse Robotics Suite
+* **Target Industry:** Automated fulfillment centers, e-commerce distribution hubs, and smart manufacturing kitting loops.
+* **Core Components:**
+  - **`AsrsCraneVisualizer`:** Automated Storage & Retrieval System (ASRS) stacker crane visualizer rendering 2D/3D aisle travel ($X$-axis), mast hoist ($Y$-axis), and telescopic fork extension ($Z$-axis) with live cycle times and load detection.
+  - **`AgvFleetCanvas`:** 2D LiDAR SLAM floor map canvas rendering real-time AGV/AMR robot footprints, planned trajectory splines, battery SoC, payload presence, station queues, and dynamic obstacle culling.
+  - **`ConveyorMergeMatrix`:** High-speed parcel sorting line visualizer displaying shoe sorters, cross-belt diverters, singulator gap controllers, and throughput parcel-per-hour (PPH) meters.
+* **Feasibility Score:** **9.2 / 10** | **Complexity:** Medium-High (~4–5 engineering days).
+
+#### Proposal 8.24: Oil & Gas, Refining & Petrochemicals Suite
+* **Target Industry:** Upstream wellheads, midstream pipeline networks, downstream oil refineries, and chemical continuous processing plants.
+* **Core Components:**
+  - **`DistillationColumn`:** Multi-tray fractional distillation column displaying tray-by-tray temperature/pressure gradients, reflux ratios, reboiler duty, and condenser liquid levels.
+  - **`EsdMatrix` (Safety Instrumented System / Cause & Effect Matrix):** Real-time safety matrix mapping sensor trip conditions (Inputs) to safety valve trips and pump shutdowns (Outputs) with Safety Integrity Level (SIL 1–4) status badges and bypass lockouts.
+  - **`PipelinePigMonitor`:** Long-distance pipeline pig tracking gauge showing intelligent inspection tool acoustic telemetry, velocity, odometer distance, and pipeline wall defect anomalies.
+* **Feasibility Score:** **8.8 / 10** | **Complexity:** High (~4–5 engineering days).
+
+#### Proposal 8.25: Healthcare, Clinical & Laboratory Automation Suite
+* **Target Industry:** Diagnostic laboratories, clinical analyzers, hospital pathology automation, and bio-banking cold chain facilities.
+* **Core Components:**
+  - **`MicroplateReader`:** 96-well and 384-well microtiter plate visualizer with absorbance/fluorescence optical density (OD) heatmaps, dilution curve inspectors, and multi-well selection.
+  - **`CentrifugeMonitor`:** High-speed centrifuge rotor visualizer displaying RPM, Relative Centrifugal Force (RCF / $g$-force), rotor bucket balance imbalance detection, and chamber vacuum/temperature.
+  - **`ColdChainTracker`:** Ultra-low temperature ($-80^\circ\text{C}$) biomedical freezer telemetry card displaying temperature stability ribbons, door opening duration logs, and liquid nitrogen ($LN_2$) backup levels.
+* **Feasibility Score:** **9.5 / 10** | **Complexity:** Medium (~2–3 engineering days).
+
+---
+
+## 9. Architectural Blueprint for a Universal, Multi-Industry ZeroUI Ecosystem
+
+### 9.1 The "Core vs Vertical" Architectural Dilemma
+A common pitfall of expanding UI libraries is **assembly bloat**: bundling hundreds of niche domain controls into a single monolith increases DLL sizes, slows down JIT compilation, and pollutes IDE toolboxes for developers who only need basic forms or grids.
+
+**ZeroUI's Strategic Solution: 3-Tier Layered Architecture & Modular Extension Packages**
+
+```mermaid
+graph TD
+    classDef tier1 fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef tier2 fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#fff;
+    classDef tier3 fill:#1e293b,stroke:#22c55e,stroke-width:2px,color:#fff;
+
+    subgraph Tier1 [Tier 1: Foundational Engine - ZeroUI.Core]
+        CoreMem[ZeroMemory & ZeroBufferPool]:::tier1
+        CoreSched[ZeroRuntime 7-Cycle Scheduler]:::tier1
+        CoreClock[ZeroAnimationClock 60FPS]:::tier1
+        CoreTag[TagStorage & TagEngine v2]:::tier1
+        CorePipe[ZeroTripleBuffer & TelemetryQueue]:::tier1
+        CoreScene[ZeroScene & GridSpatialIndex]:::tier1
+    end
+
+    subgraph Tier2 [Tier 2: Standard Enterprise Controls - ZeroUI.WinForms & ZeroUI.Wpf]
+        Grid[GridControl / ZeroGrid]:::tier2
+        Charts[ZeroChart & Analytics Suite]:::tier2
+        Editors[Form Editors & IZeroEditor]:::tier2
+        Docking[ZeroDockManager & Layout]:::tier2
+        BaseIndustrial[Plant Mimic & Gauges & Actuators]:::tier2
+    end
+
+    subgraph Tier3 [Tier 3: Modular Industry Extension Packages]
+        PackNet[ZeroUI.Industry.Network<br/>Topology, Racks, Switches, IPAM]:::tier3
+        PackEnergy[ZeroUI.Industry.Energy<br/>SLD, Switchgear, BESS, Solar]:::tier3
+        PackBms[ZeroUI.Industry.Bms<br/>AHU, Chiller, 7-Day Scheduler]:::tier3
+        PackProcess[ZeroUI.Industry.Process<br/>ISA-88 Batch, CIP, Fermenter]:::tier3
+        PackLogistics[ZeroUI.Industry.Logistics<br/>ASRS, AGV Canvas, Sorters]:::tier3
+        PackLifeSci[ZeroUI.Industry.LifeSciences<br/>Microplate, Centrifuge, ColdChain]:::tier3
+    end
+
+    Tier1 --> Tier2
+    Tier1 --> Tier3
+    Tier2 --> Tier3
+```
+
+### 9.2 The Universal Uniformity Contracts
+To guarantee that any control built for any industry performs with **Zero Allocation on Hot Paths** and **Sub-4ms Frame Budgets**, all industry packs must strictly implement ZeroUI's core engine contracts:
+
+1. **Vector Rendering Contract (`IScadaDrawable` / `SceneNode`):**
+   - Every physical entity (a switch port, an electrical breaker, a damper blade, an AGV robot, or a microplate well) implements lightweight vector drawing with single-HWND viewport culling.
+   - Prohibits child `HWND` creation. All elements render onto ZeroUI's offscreen `MemoryDIBSection`.
+2. **Deterministic Data Binding (`ITagBoundControl`):**
+   - Standardizes reactive subscription to `TagStorage` using primitive integer `TagId` tokens.
+   - Inverted index dirty dispatch delivers updates directly to controls in $< 20\text{ ns}$ with zero boxing or string lookups.
+3. **Master Clock Synchronization (`ZeroAnimationClock`):**
+   - All dynamic effects across all industries (network link packet pulses, breaker trip flashes, AHU airflow vectors, mixer impeller rotations, AGV motion trails) bind to `ZeroAnimationClock` shared phases (`BlinkFast`, `BlinkSlow`, `PulsePhase`, `FluidPhase`).
+   - Zero scattered `System.Windows.Forms.Timer` or `DispatcherTimer` instances in the entire ecosystem.
+4. **Theme Reactivity (`ZeroTheme`):**
+   - Every industry package inherits the unified design system, instantly adapting between **Clean Light Mode** and **Obsidian Dark Mode** with high-contrast accessibility compliance.
+
+### 9.3 Packaging & Distribution Strategy
+* `ZeroUI.Core`, `ZeroUI.WinForms`, and `ZeroUI.Wpf` remain lean, lightweight (< 1.5 MB total), hosting universal enterprise business controls.
+* Industry packs are published as independent, optional NuGet packages (`ZeroUI.Industry.Network`, `ZeroUI.Industry.Energy`, etc.).
+* Developers install only the vertical extensions required for their specific domain, completely eliminating code bloat.
+
+---
+
 ### Summary Feasibility & Priority Matrix
 
-| Proposal ID | Proposed Component | Target Subsystem | Feasibility Score | Implementation Complexity | Recommended Phase |
+| Proposal ID | Proposed Component | Target Subsystem / Industry | Feasibility Score | Implementation Complexity | Recommended Phase |
 | :---: | :--- | :--- | :---: | :---: | :---: |
 | **8.1** | **`CardView` / `TileView`** | Data & Matrix | **9.5 / 10** | Low-Medium | **Phase 10 (Next)** |
 | **8.2** | **`GridDataExporter` (XLSX/CSV)** | Data & Matrix | **10.0 / 10** | Low | **Phase 10 (Next)** |
@@ -377,4 +569,18 @@ To guide the long-term technical evolution of **ZeroUI** without compromising it
 | **8.10**| **`SpreadsheetControl` (Phase 1)** | Document & Office | **7.8 / 10** | High | **Phase 12** |
 | **8.11**| **`PdfViewerControl`** | Document & Office | **8.0 / 10** | High | **Phase 12** |
 | **8.12**| **`ZeroVisualDebugger`** | DX & Diagnostics | **9.8 / 10** | Low | **Phase 10 (Next)** |
+| **8.13**| **`ZeroNetworkTopology`** | Network Infrastructure | **9.6 / 10** | Medium-High | **Phase 13** |
+| **8.14**| **`ZeroDeviceRack`** | Network Infrastructure | **9.8 / 10** | Medium | **Phase 13** |
+| **8.15**| **`ZeroSwitchFaceplate`** | Network Infrastructure | **9.7 / 10** | Medium | **Phase 13** |
+| **8.16**| **`ZeroIpMatrix`** | Network Infrastructure | **9.5 / 10** | Low-Medium | **Phase 13** |
+| **8.17**| **`ZeroFieldbusMonitor`** | Network Infrastructure | **9.4 / 10** | Medium | **Phase 13** |
+| **8.18**| **`ZeroDeviceFaceplate`** | Network Infrastructure | **9.6 / 10** | Low-Medium | **Phase 13** |
+| **8.19**| **Energy & Smart Grid Suite** | Energy / Utilities | **9.1 / 10** | Medium-High | **Phase 14** |
+| **8.20**| **Building Automation (BMS) Suite** | Smart Facility / HVAC | **9.4 / 10** | Medium | **Phase 14** |
+| **8.21**| **Water Treatment Suite** | Environmental / Water | **9.3 / 10** | Medium | **Phase 14** |
+| **8.22**| **Pharma & Batch (ISA-88) Suite** | Biotech / Pharma | **8.9 / 10** | High | **Phase 14** |
+| **8.23**| **Intralogistics & Robotics Suite**| Logistics / AMR | **9.2 / 10** | Medium-High | **Phase 14** |
+| **8.24**| **Oil & Gas / Petrochemical Suite**| Oil & Gas / Chemical | **8.8 / 10** | High | **Phase 14** |
+| **8.25**| **Healthcare & Lab Automation** | Clinical / Laboratory | **9.5 / 10** | Medium | **Phase 14** |
+
 

@@ -123,4 +123,22 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 - **`SpreadsheetControl` MVP (Proposal 8.10):** Lightweight vector calculation sheet with core formulas (`SUM`, `AVERAGE`, `IF`).
 - **`PdfViewerControl` (Proposal 8.11):** Embedded CAD schematic and SOP technical document reader.
 
+#### Phase 13: Network & Device Infrastructure Control Suite (Proposals 8.13 – 8.18)
+- **`ZeroNetworkTopology` (Proposal 8.13):** Single-HWND graph canvas with Sugiyama/Barnes-Hut layout and animated packet pulse flows.
+- **`ZeroDeviceRack` (Proposal 8.14):** 19-inch 42U/24U/12U server rack and DIN-rail cabinet visualizer with thermal/power load overlays.
+- **`ZeroSwitchFaceplate` (Proposal 8.15):** High-density RJ45/SFP port matrix with dual-LED link/act states, PoE meter, and TDR diagnostics.
+- **`ZeroIpMatrix` (Proposal 8.16):** 2D IPAM subnet allocation heatmap with live ping RTT latency sparkline HUD.
+- **`ZeroFieldbusMonitor` (Proposal 8.17):** Industrial Ethernet (Profinet/EtherCAT) and RS-485 daisy-chain line monitor with cable break locator.
+- **`ZeroDeviceFaceplate` (Proposal 8.18):** Chassis hardware health HUD (Dual redundant PSU, Fan RPM, SFP optical DDM).
+
+#### Phase 14: Universal Multi-Industry Extension Packages (Proposals 8.19 – 8.25)
+- **`ZeroUI.Industry.Energy` (Proposal 8.19):** Single-Line Diagrams (SLD), Switchgear Faceplates, BESS Rack Monitor, Solar PV String Matrix.
+- **`ZeroUI.Industry.Bms` (Proposal 8.20):** Air Handling Unit (AHU) schematic, Chiller Plant COP monitor, 7-Day Multi-Zone Time Scheduler.
+- **`ZeroUI.Industry.Water` (Proposal 8.21):** Clarifier Basin with sludge rake, Chemical Dosing Skid, Hydraulic Grade Line (HGL) profile.
+- **`ZeroUI.Industry.Process` (Proposal 8.22):** ISA-88 Batch SFC tracker, Bioreactor/Fermenter 3D vessel, CIP/SIP validation matrix, Cleanroom HUD.
+- **`ZeroUI.Industry.Logistics` (Proposal 8.23):** ASRS Stacker Crane 3D/2D visualizer, AGV/AMR 2D LiDAR SLAM fleet canvas, High-speed parcel sorter.
+- **`ZeroUI.Industry.Petrochem` (Proposal 8.24):** Fractional Distillation Column tray profiles, SIS/ESD Cause & Effect Matrix, Pipeline PIG monitor.
+- **`ZeroUI.Industry.LifeSciences` (Proposal 8.25):** 96/384-Well Microplate Reader heatmap, Centrifuge RCF balance monitor, Cold Chain -80°C telemetry.
+
+
 
