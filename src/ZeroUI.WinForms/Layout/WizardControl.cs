@@ -339,11 +339,8 @@ namespace ZeroUI.WinForms.Layout
     /// Legacy alias for WizardControl.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Layout & Navigation")]
-    [DefaultEvent("Finished")]
-    [Description("Legacy alias for WizardControl")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroWizard.bmp")]
+    [Obsolete("ZeroWizard is deprecated. Please use WizardControl instead.")]
+    [ToolboxItem(false)]
     public class ZeroWizard : WizardControl
     {
     }

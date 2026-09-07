@@ -737,6 +737,8 @@ namespace ZeroUI.WinForms.Range
     /// <summary>
     /// Backward-compatible alias for RangeControl.
     /// </summary>
+    [Obsolete("ZeroRangeControl is deprecated. Please use RangeControl instead.")]
+    [ToolboxItem(false)]
     public class ZeroRangeControl : RangeControl
     {
     }

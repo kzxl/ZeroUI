@@ -296,10 +296,8 @@ namespace ZeroUI.WinForms.DataGrid
     /// Legacy alias for FilterControl.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - DataGrid & Reporting")]
-    [DefaultEvent("FilterChanged")]
-    [Description("Legacy alias for FilterControl")]
+    [Obsolete("ZeroFilterControl is deprecated. Please use FilterControl instead.")]
+    [ToolboxItem(false)]
     public class ZeroFilterControl : FilterControl
     {
     }

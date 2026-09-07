@@ -522,9 +522,9 @@ namespace ZeroUI.WinForms.Editors
                 return fitRatio > 0 ? 1.0f / fitRatio : 1.0f;
             }
 
-            private ZeroButton CreateToolButton(string text, int width, Action onClick)
+            private SimpleButton CreateToolButton(string text, int width, Action onClick)
             {
-                var btn = new ZeroButton
+                var btn = new SimpleButton
                 {
                     Text = text,
                     Dock = DockStyle.Left,

@@ -593,6 +593,8 @@ namespace ZeroUI.WinForms.Validation
     /// <summary>
     /// Backward-compatibility alias for <see cref="ValidationProvider"/>.
     /// </summary>
+    [Obsolete("ZeroErrorProvider is deprecated. Please use ValidationProvider instead.")]
+    [ToolboxItem(false)]
     public class ZeroErrorProvider : ValidationProvider
     {
         public ZeroErrorProvider() { }
@@ -602,6 +604,8 @@ namespace ZeroUI.WinForms.Validation
     /// <summary>
     /// Backward-compatibility alias for <see cref="ValidationProvider"/>.
     /// </summary>
+    [Obsolete("ZeroValidationProvider is deprecated. Please use ValidationProvider instead.")]
+    [ToolboxItem(false)]
     public class ZeroValidationProvider : ValidationProvider
     {
         public ZeroValidationProvider() { }

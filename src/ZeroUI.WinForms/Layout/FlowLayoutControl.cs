@@ -298,12 +298,4 @@ namespace ZeroUI.WinForms.Layout
 
         #endregion
     }
-
-    /// <summary>
-    /// ZeroUI naming alias for FlowLayoutControl.
-    /// </summary>
-    [ToolboxItem(false)]
-    public class ZeroFlowLayoutControl : FlowLayoutControl
-    {
-    }
 }

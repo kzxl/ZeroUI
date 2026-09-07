@@ -492,11 +492,8 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for SpinEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultEvent("ValueChanged")]
-    [DefaultProperty("Value")]
-    [Description("Legacy alias for SpinEdit")]
+    [Obsolete("ZeroNumericBox is deprecated. Please use SpinEdit instead.")]
+    [ToolboxItem(false)]
     public class ZeroNumericBox : SpinEdit
     {
     }

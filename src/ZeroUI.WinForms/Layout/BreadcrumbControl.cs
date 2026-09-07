@@ -425,18 +425,4 @@ namespace ZeroUI.WinForms.Layout
 
         #endregion
     }
-
-    /// <summary>
-    /// Legacy alias for BreadcrumbControl.
-    /// Preserved for 100% backward compatibility.
-    /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Layout")]
-    [DefaultProperty("Path")]
-    [DefaultEvent("PathChanged")]
-    [Description("Legacy alias for BreadcrumbControl")]
-    [ToolboxBitmap(typeof(ZeroIcons), "BreadcrumbControl.bmp")]
-    public class ZeroBreadcrumbControl : BreadcrumbControl
-    {
-    }
 }

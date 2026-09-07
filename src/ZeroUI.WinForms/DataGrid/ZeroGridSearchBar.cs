@@ -19,11 +19,11 @@ namespace ZeroUI.WinForms.DataGrid
     public class ZeroGridSearchBar : Panel
     {
 
-        private ZeroGridControl? _grid;
+        private GridControl? _grid;
         private readonly ZeroSearchBox _searchBox;
         private readonly Label _lblMatchCount;
-        private readonly ZeroButton _btnDensity;
-        private readonly ZeroButton _btnExport;
+        private readonly SimpleButton _btnDensity;
+        private readonly SimpleButton _btnExport;
 
         public event EventHandler? ExportClicked;
 
@@ -52,7 +52,7 @@ namespace ZeroUI.WinForms.DataGrid
                 Location = new Point(345, 14)
             };
 
-            _btnDensity = new ZeroButton
+            _btnDensity = new SimpleButton
             {
                 Text = "📏 Density: Normal",
                 ButtonStyle = ZeroButtonStyle.Ghost,
@@ -82,7 +82,7 @@ namespace ZeroUI.WinForms.DataGrid
                 };
             };
 
-            _btnExport = new ZeroButton
+            _btnExport = new SimpleButton
             {
                 Text = "📊 Export CSV",
                 ButtonStyle = ZeroButtonStyle.Secondary,
@@ -118,8 +118,7 @@ namespace ZeroUI.WinForms.DataGrid
             ExportClicked?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AttachToGrid(ZeroGridControl grid)
-
+        public void AttachToGrid(GridControl grid)
         {
             _grid = grid;
             UpdateCountBadge();

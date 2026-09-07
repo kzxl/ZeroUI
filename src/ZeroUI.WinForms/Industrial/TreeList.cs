@@ -751,11 +751,8 @@ namespace ZeroUI.WinForms.Industrial
     /// Legacy alias for TreeList.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Industrial & SCADA")]
-    [DefaultEvent("NodeSelected")]
-    [Description("Legacy alias for TreeList")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTreeList.bmp")]
+    [Obsolete("ZeroTreeList is deprecated. Please use TreeList instead.")]
+    [ToolboxItem(false)]
     public class ZeroTreeList : TreeList
     {
     }

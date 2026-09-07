@@ -316,9 +316,8 @@ namespace ZeroUI.WinForms.Charts
     /// Legacy alias for BoxPlotChart.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Charts & Analytics")]
-    [Description("Legacy alias for BoxPlotChart")]
+    [Obsolete("ZeroBoxPlotChart is deprecated. Please use BoxPlotChart instead.")]
+    [ToolboxItem(false)]
     public class ZeroBoxPlotChart : BoxPlotChart
     {
     }

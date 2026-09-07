@@ -40,7 +40,7 @@ namespace ZeroUI.WinForms.Charts
     [DefaultEvent("SelectedStageChanged")]
     [Description("High-performance Funnel and Pyramid chart with conversion and drop-off metrics")]
     [ToolboxBitmap(typeof(ZeroIcons), "FunnelChart.bmp")]
-    public class ZeroFunnelChart : Control
+    public class FunnelChart : Control
     {
         private readonly List<FunnelStage> _stages = new List<FunnelStage>();
 
@@ -55,7 +55,7 @@ namespace ZeroUI.WinForms.Charts
 
         public event EventHandler? SelectedStageChanged;
 
-        public ZeroFunnelChart()
+        public FunnelChart()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -376,10 +376,12 @@ namespace ZeroUI.WinForms.Charts
     }
 
     /// <summary>
-    /// Clean enterprise alias for ZeroFunnelChart.
+    /// Legacy alias for FunnelChart.
+    /// Preserved for backward compatibility.
     /// </summary>
+    [Obsolete("ZeroFunnelChart is deprecated. Please use FunnelChart instead.")]
     [ToolboxItem(false)]
-    public class FunnelChart : ZeroFunnelChart
+    public class ZeroFunnelChart : FunnelChart
     {
     }
 }

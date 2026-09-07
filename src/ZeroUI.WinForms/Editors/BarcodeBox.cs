@@ -286,20 +286,10 @@ namespace ZeroUI.WinForms.Editors
     }
 
     /// <summary>
-    /// Legacy alias for BarcodeBox.
-    /// <summary>
     /// Alias for BarcodeBox matching the BarcodeEdit convention.
     /// </summary>
     [ToolboxItem(false)]
     public class BarcodeEdit : BarcodeBox
-    {
-    }
-
-    /// <summary>
-    /// ZeroUI naming alias for BarcodeBox.
-    /// </summary>
-    [ToolboxItem(false)]
-    public class ZeroBarcodeEdit : BarcodeBox
     {
     }
 }

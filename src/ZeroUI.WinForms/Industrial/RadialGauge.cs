@@ -427,12 +427,4 @@ namespace ZeroUI.WinForms.Industrial
             base.Dispose(disposing);
         }
     }
-
-    /// <summary>
-    /// ZeroUI naming alias for RadialGauge.
-    /// </summary>
-    [ToolboxItem(false)]
-    public class ZeroRadialGauge : RadialGauge
-    {
-    }
 }

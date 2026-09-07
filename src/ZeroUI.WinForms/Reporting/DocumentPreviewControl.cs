@@ -194,10 +194,8 @@ namespace ZeroUI.WinForms.Reporting
     /// Legacy alias for DocumentPreviewControl.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Reporting & Documents")]
-    [DefaultProperty("Document")]
-    [Description("Legacy alias for DocumentPreviewControl")]
+    [Obsolete("ZeroPrintPreview is deprecated. Please use DocumentPreviewControl instead.")]
+    [ToolboxItem(false)]
     public class ZeroPrintPreview : DocumentPreviewControl
     {
     }

@@ -411,10 +411,8 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for GridLookupEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultEvent("SelectionChanged")]
-    [Description("Legacy alias for GridLookupEdit")]
+    [Obsolete("ZeroGridLookup is deprecated. Please use GridLookupEdit instead.")]
+    [ToolboxItem(false)]
     public class ZeroGridLookup : GridLookupEdit
     {
     }

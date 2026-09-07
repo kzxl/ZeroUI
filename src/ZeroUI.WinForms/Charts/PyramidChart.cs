@@ -15,19 +15,11 @@ namespace ZeroUI.WinForms.Charts
     [DefaultEvent("SelectedStageChanged")]
     [Description("Hierarchical pyramid chart visualizing tiered structures and cumulative yield metrics")]
     [ToolboxBitmap(typeof(ZeroIcons), "PyramidChart.bmp")]
-    public class PyramidChart : ZeroFunnelChart
+    public class PyramidChart : FunnelChart
     {
         public PyramidChart()
         {
             Mode = FunnelChartMode.Pyramid;
         }
-    }
-
-    /// <summary>
-    /// ZeroUI naming alias for PyramidChart.
-    /// </summary>
-    [ToolboxItem(false)]
-    public class ZeroPyramidChart : PyramidChart
-    {
     }
 }

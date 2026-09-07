@@ -393,10 +393,8 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for TokenEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultEvent("TokenAdded")]
-    [Description("Legacy alias for TokenEdit")]
+    [Obsolete("ZeroTokenEdit is deprecated. Please use TokenEdit instead.")]
+    [ToolboxItem(false)]
     public class ZeroTokenEdit : TokenEdit
     {
     }

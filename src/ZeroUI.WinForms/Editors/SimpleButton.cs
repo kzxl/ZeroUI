@@ -229,11 +229,8 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for SimpleButton.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultEvent("Click")]
-    [DefaultProperty("Text")]
-    [Description("Legacy alias for SimpleButton")]
+    [Obsolete("ZeroButton is deprecated. Please use SimpleButton instead.")]
+    [ToolboxItem(false)]
     public class ZeroButton : SimpleButton
     {
     }

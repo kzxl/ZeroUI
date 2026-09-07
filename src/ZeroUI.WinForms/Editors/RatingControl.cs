@@ -439,18 +439,4 @@ namespace ZeroUI.WinForms.Editors
 
         #endregion
     }
-
-    /// <summary>
-    /// Legacy alias for RatingControl.
-    /// Preserved for 100% backward compatibility.
-    /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultProperty("Value")]
-    [DefaultEvent("ValueChanged")]
-    [Description("Legacy alias for RatingControl")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroRatingControl.bmp")]
-    public class ZeroRatingControl : RatingControl
-    {
-    }
 }

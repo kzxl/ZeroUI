@@ -196,7 +196,7 @@ namespace ZeroUI.WinForms.DataGrid
             _inPlaceEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_inPlaceEditor);
 
-            _numericEditor = new ZeroNumericBox
+            _numericEditor = new SpinEdit
             {
                 Visible = false,
                 Font = Font
@@ -209,7 +209,7 @@ namespace ZeroUI.WinForms.DataGrid
             _numericEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_numericEditor);
 
-            _dateEditor = new ZeroDatePicker
+            _dateEditor = new DateEdit
             {
                 Visible = false,
                 Font = Font
@@ -3324,11 +3324,11 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 newText = tb.Text;
             }
-            else if (_activeInPlaceEditor is ZeroNumericBox nb)
+            else if (_activeInPlaceEditor is SpinEdit nb)
             {
                 newText = nb.Value.ToString(CultureInfo.InvariantCulture);
             }
-            else if (_activeInPlaceEditor is ZeroDatePicker dp)
+            else if (_activeInPlaceEditor is DateEdit dp)
             {
                 newText = dp.Value.ToString(dp.DateFormat);
             }
@@ -3563,11 +3563,8 @@ namespace ZeroUI.WinForms.DataGrid
     /// Legacy alias for GridControl.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - DataGrid")]
-    [DefaultProperty("DataSource")]
-    [Description("Legacy alias for GridControl")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroGridControl.bmp")]
+    [Obsolete("ZeroGridControl is deprecated. Please use GridControl instead.")]
+    [ToolboxItem(false)]
     public class ZeroGridControl : GridControl
     {
     }

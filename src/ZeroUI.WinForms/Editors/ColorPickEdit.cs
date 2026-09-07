@@ -408,10 +408,8 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for ColorPickEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultEvent("ColorChanged")]
-    [Description("Legacy alias for ColorPickEdit")]
+    [Obsolete("ZeroColorPicker is deprecated. Please use ColorPickEdit instead.")]
+    [ToolboxItem(false)]
     public class ZeroColorPicker : ColorPickEdit
     {
     }

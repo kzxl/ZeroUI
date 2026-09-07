@@ -996,11 +996,8 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for DateEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultProperty("Value")]
-    [DefaultEvent("ValueChanged")]
-    [Description("Legacy alias for DateEdit")]
+    [Obsolete("ZeroDatePicker is deprecated. Please use DateEdit instead.")]
+    [ToolboxItem(false)]
     public class ZeroDatePicker : DateEdit
     {
     }

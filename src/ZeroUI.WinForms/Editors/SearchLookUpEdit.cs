@@ -671,12 +671,4 @@ namespace ZeroUI.WinForms.Editors
 
         #endregion
     }
-
-    /// <summary>
-    /// ZeroUI naming alias for SearchLookUpEdit.
-    /// </summary>
-    [ToolboxItem(false)]
-    public class ZeroSearchLookUpEdit : SearchLookUpEdit
-    {
-    }
 }

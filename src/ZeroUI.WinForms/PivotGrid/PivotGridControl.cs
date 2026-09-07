@@ -561,9 +561,8 @@ namespace ZeroUI.WinForms.PivotGrid
     /// <summary>
     /// Backward-compatibility alias for <see cref="PivotGridControl"/>.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - DataGrid & Reporting")]
-    [Description("Legacy alias for PivotGridControl")]
+    [Obsolete("ZeroPivotGrid is deprecated. Please use PivotGridControl instead.")]
+    [ToolboxItem(false)]
     public class ZeroPivotGrid : PivotGridControl
     {
     }

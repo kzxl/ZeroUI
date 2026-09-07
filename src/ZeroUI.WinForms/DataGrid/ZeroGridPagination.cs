@@ -23,11 +23,11 @@ namespace ZeroUI.WinForms.DataGrid
         private int _currentPage = 1;
 
         private readonly Label _lblInfo;
-        private readonly ZeroButton _btnFirst;
-        private readonly ZeroButton _btnPrev;
+        private readonly SimpleButton _btnFirst;
+        private readonly SimpleButton _btnPrev;
         private readonly Label _lblPageInfo;
-        private readonly ZeroButton _btnNext;
-        private readonly ZeroButton _btnLast;
+        private readonly SimpleButton _btnNext;
+        private readonly SimpleButton _btnLast;
         private readonly ComboBox _cbPageSize;
         private readonly Label _lblPageSizeTitle;
 
@@ -50,7 +50,7 @@ namespace ZeroUI.WinForms.DataGrid
             };
 
 
-            _btnFirst = new ZeroButton
+            _btnFirst = new SimpleButton
             {
                 Text = "⏮",
                 Size = new Size(36, 30),
@@ -60,7 +60,7 @@ namespace ZeroUI.WinForms.DataGrid
             };
             _btnFirst.Click += (s, e) => NavigateToPage(1);
 
-            _btnPrev = new ZeroButton
+            _btnPrev = new SimpleButton
             {
                 Text = "◀",
                 Size = new Size(36, 30),
@@ -79,7 +79,7 @@ namespace ZeroUI.WinForms.DataGrid
                 Location = new Point(310, 14)
             };
 
-            _btnNext = new ZeroButton
+            _btnNext = new SimpleButton
             {
                 Text = "▶",
                 Size = new Size(36, 30),
@@ -89,7 +89,7 @@ namespace ZeroUI.WinForms.DataGrid
             };
             _btnNext.Click += (s, e) => NavigateToPage(_currentPage + 1);
 
-            _btnLast = new ZeroButton
+            _btnLast = new SimpleButton
             {
                 Text = "⏭",
                 Size = new Size(36, 30),

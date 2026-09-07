@@ -577,10 +577,8 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for CheckedComboBoxEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
-    [DefaultEvent("ItemCheck")]
-    [Description("Legacy alias for CheckedComboBoxEdit")]
+    [Obsolete("ZeroCheckedComboBox is deprecated. Please use CheckedComboBoxEdit instead.")]
+    [ToolboxItem(false)]
     public class ZeroCheckedComboBox : CheckedComboBoxEdit
     {
     }
