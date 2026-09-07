@@ -121,6 +121,11 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Dismisses the drawer when the user clicks outside the drawer on the parent container.")]
+        public bool CloseOnOutsideClick { get; set; } = true;
+
         [Browsable(false)]
         public bool IsOpen => _isOpen;
 
@@ -137,6 +142,7 @@ namespace ZeroUI.WinForms.Overlays
             _isOpen = true;
             Visible = true;
             BringToFront();
+            Focus();
             StartAnimation();
             Opened?.Invoke(this, EventArgs.Empty);
         }
@@ -235,13 +241,26 @@ namespace ZeroUI.WinForms.Overlays
             if (_trackedParent != null)
             {
                 _trackedParent.Resize -= OnParentResize;
+                _trackedParent.MouseDown -= OnParentMouseDown;
             }
 
             _trackedParent = Parent;
             if (_trackedParent != null)
             {
                 _trackedParent.Resize += OnParentResize;
+                _trackedParent.MouseDown += OnParentMouseDown;
                 UpdateBoundsAndLayout();
+            }
+        }
+
+        private void OnParentMouseDown(object? sender, MouseEventArgs e)
+        {
+            if (CloseOnOutsideClick && _isOpen && _mode == DrawerMode.FloatingOverlay)
+            {
+                if (!Bounds.Contains(e.Location))
+                {
+                    Close();
+                }
             }
         }
 
@@ -357,6 +376,16 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.Escape && _isOpen)
+            {
+                Close();
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -365,6 +394,7 @@ namespace ZeroUI.WinForms.Overlays
                 if (_trackedParent != null)
                 {
                     _trackedParent.Resize -= OnParentResize;
+                    _trackedParent.MouseDown -= OnParentMouseDown;
                     _trackedParent = null;
                 }
             }

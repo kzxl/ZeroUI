@@ -100,6 +100,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroToolbarButton _btnThemeToggle = null!;
         private ZeroToolbarDropdown _btnSkinsDropdown = null!;
         private ZeroDrawer _drawer = null!;
+        private ZeroDescriptions _descDrawer = null!;
         private ZeroSteps _mesSteps = null!;
 
         private ZeroListView _showcaseLog = null!;
@@ -280,7 +281,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             });
             btnNew.IsPrimary = true;
 
-            _mainToolbar.AddButton("Detail Drawer", "📋", (s, e) => _drawer.Toggle());
+            _mainToolbar.AddButton("Detail Drawer", "📋", (s, e) =>
+            {
+                UpdateDrawerFromSelection();
+                _drawer.Toggle();
+            });
 
             _mainToolbar.AddButton("Export CSV", "📊", (s, e) => _searchBar.TriggerExport());
             _mainToolbar.AddButton("Refresh", "🔄", (s, e) =>
@@ -394,17 +399,17 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Title = "Material & Lot Specification",
                 Subtitle = "Deep inspection for selected inventory entity",
-                DrawerWidth = 400
+                DrawerWidth = 420
             };
-            var descDrawer = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 30 };
-            descDrawer.Add("Part Number", "BOA437-SMT-V2");
-            descDrawer.Add("Category", "Microcontroller / Active");
-            descDrawer.Add("Standard Cost", "$14.20");
-            descDrawer.Add("Lead Time", "3 Days");
-            descDrawer.Add("Safety Stock", "500 Units");
-            descDrawer.Add("Supplier", "Foxconn Precision Co.");
-            descDrawer.Add("Inspection Status", "Passed OQC", Color.FromArgb(16, 185, 129));
-            _drawer.ContentPanel.Controls.Add(descDrawer);
+            _descDrawer = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 32 };
+            _descDrawer.Add("Part Number", "BOA437-SMT-V2");
+            _descDrawer.Add("Category", "Microcontroller / Active");
+            _descDrawer.Add("Standard Cost", "$14.20");
+            _descDrawer.Add("Lead Time", "3 Days");
+            _descDrawer.Add("Safety Stock", "500 Units");
+            _descDrawer.Add("Supplier", "Foxconn Precision Co.");
+            _descDrawer.Add("Inspection Status", "Passed OQC", Color.FromArgb(16, 185, 129));
+            _drawer.ContentPanel.Controls.Add(_descDrawer);
 
             // 4. Vertical Master Navigation (Modular Feature Clusters)
             _mainNav = new ZeroTabControl
@@ -811,6 +816,74 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 _zeroGrid.ScrollToRow(_pagination.PageStartRow);
             };
+
+            _zeroGrid.SelectionChanged += (s, e) =>
+            {
+                if (_drawer.IsOpen)
+                {
+                    UpdateDrawerFromSelection();
+                }
+            };
+
+            _zeroGrid.DoubleClick += (s, e) =>
+            {
+                UpdateDrawerFromSelection();
+                _drawer.Open();
+            };
+        }
+
+        private void UpdateDrawerFromSelection()
+        {
+            if (_zeroGrid == null || _descDrawer == null || _drawer == null) return;
+            int visualRow = _zeroGrid.SelectedVisualRow;
+            if (visualRow < 0 || _zeroGrid.DataSource == null) return;
+
+            int modelRow = _zeroGrid.GetModelRowIndex(visualRow);
+            if (modelRow < 0 || modelRow >= _zeroGrid.DataSource.TotalRowCount) return;
+
+            CellValueBuffer buf = new CellValueBuffer();
+            _zeroGrid.DataSource.GetCellValue(modelRow, 0, ref buf);
+            string id = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 1, ref buf);
+            string itemCode = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 2, ref buf);
+            string itemName = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 3, ref buf);
+            string qty = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 4, ref buf);
+            string price = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 5, ref buf);
+            string total = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 6, ref buf);
+            string batchNo = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 7, ref buf);
+            string status = buf.Text.ToString();
+
+            _drawer.Title = string.IsNullOrEmpty(itemCode) ? "Material Specification" : itemCode;
+            _drawer.Subtitle = string.IsNullOrEmpty(itemName) ? "Selected Entity Inspection" : itemName;
+
+            _descDrawer.Clear();
+            _descDrawer.Add("Record ID", $"#{id}");
+            _descDrawer.Add("Part Number", itemCode);
+            _descDrawer.Add("Description", itemName);
+            _descDrawer.Add("Batch / Lot No", batchNo);
+            _descDrawer.Add("Stock Quantity", $"{qty} Units");
+            _descDrawer.Add("Unit Cost", $"${price}");
+            _descDrawer.Add("Total Valuation", $"${total}");
+
+            Color statusColor = status.IndexOf("Pass", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("Active", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("Good", StringComparison.OrdinalIgnoreCase) >= 0
+                ? Color.FromArgb(16, 185, 129)
+                : status.IndexOf("Warn", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("Low", StringComparison.OrdinalIgnoreCase) >= 0
+                    ? Color.FromArgb(245, 158, 11)
+                    : Color.FromArgb(59, 130, 246);
+            _descDrawer.Add("QC / Lot Status", status, statusColor);
         }
 
 

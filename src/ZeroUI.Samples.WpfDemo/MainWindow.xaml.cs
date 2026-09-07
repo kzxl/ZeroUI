@@ -278,6 +278,23 @@ namespace ZeroUI.Samples.WpfDemo
                 TxtLatency.Text = $"Cell edited: [{args.VisualRowIndex},{args.ColumnIndex}] = \"{args.NewValue}\"";
             };
 
+            VirtualGrid.SelectionChanged += (s, e) =>
+            {
+                if (MainDetailDrawer.IsOpen)
+                {
+                    UpdateWpfDrawerSelection();
+                }
+            };
+
+            VirtualGrid.MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.ClickCount == 2)
+                {
+                    UpdateWpfDrawerSelection();
+                    MainDetailDrawer.Open();
+                }
+            };
+
             // Header sort click
             VirtualGrid.ColumnHeaderClicked += async (s, colIdx) =>
             {
@@ -1709,6 +1726,84 @@ namespace ZeroUI.Samples.WpfDemo
             {
                 ZeroToast.Warning(this, "Dispatch cancelled by operator.");
             }
+        }
+
+        #endregion
+
+        #region Detail Drawer Handlers
+
+        private void BtnDetailDrawer_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateWpfDrawerSelection();
+            MainDetailDrawer.Toggle();
+        }
+
+        private void BtnDrawerDispatch_Click(object sender, RoutedEventArgs e)
+        {
+            ToastNotification.Success(this, $"Express dispatch requested for {DrawerItemCode.Text} ({DrawerQuantity.Text})!");
+        }
+
+        private void BtnDrawerPrintLabel_Click(object sender, RoutedEventArgs e)
+        {
+            ToastNotification.Info(this, $"Print job queued for lot {DrawerLotNumber.Text} on Zebra Thermal Printer.");
+        }
+
+        private void BtnDrawerAuditLog_Click(object sender, RoutedEventArgs e)
+        {
+            ToastNotification.Info(this, $"Audit trail verified: All quality check gates passed for {DrawerItemCode.Text}.");
+        }
+
+        private void UpdateWpfDrawerSelection()
+        {
+            if (VirtualGrid == null || VirtualGrid.DataSource == null) return;
+            int modelRow = VirtualGrid.SelectedIndex;
+            if (modelRow < 0 || modelRow >= VirtualGrid.DataSource.TotalRowCount) return;
+
+            CellValueBuffer buf = new CellValueBuffer();
+            // Columns:
+            // 0: Active, 1: Category, 2: Id, 3: Material Code, 4: Description, 5: Quantity, 6: Unit Price, 7: Total Amount, 8: Yield, 9: Lot, 10: Status
+            VirtualGrid.DataSource.GetCellValue(modelRow, 3, ref buf);
+            string itemCode = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 4, ref buf);
+            string itemName = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 1, ref buf);
+            string category = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 5, ref buf);
+            string qty = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 6, ref buf);
+            string price = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 7, ref buf);
+            string total = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 8, ref buf);
+            string yieldRate = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 9, ref buf);
+            string lot = buf.Text.ToString();
+
+            VirtualGrid.DataSource.GetCellValue(modelRow, 10, ref buf);
+            string status = buf.Text.ToString();
+
+            MainDetailDrawer.Title = string.IsNullOrEmpty(itemCode) ? "Material Specification" : itemCode;
+            MainDetailDrawer.Subtitle = string.IsNullOrEmpty(itemName) ? "Entity Telemetry & Parameters" : itemName;
+
+            DrawerItemCode.Text = itemCode;
+            DrawerItemName.Text = itemName;
+            DrawerCategory.Text = category;
+            DrawerQuantity.Text = $"{qty} Units";
+            DrawerUnitPrice.Text = $"${price}";
+            DrawerTotalAmount.Text = $"${total}";
+            DrawerLotNumber.Text = lot;
+            DrawerYieldRate.Text = yieldRate;
+            DrawerStatus.Text = status;
+
+            bool isPassed = status.IndexOf("Pass", StringComparison.OrdinalIgnoreCase) >= 0;
+            DrawerStatus.Foreground = isPassed ? new SolidColorBrush(Color.FromRgb(16, 185, 129)) : new SolidColorBrush(Color.FromRgb(245, 158, 11));
         }
 
         #endregion

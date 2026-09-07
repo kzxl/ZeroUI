@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
@@ -24,12 +25,14 @@ namespace ZeroUI.Wpf.Overlays
     /// Uses hardware-accelerated TranslateTransform with cubic easing (220ms)
     /// to guarantee fluid 60-120 FPS sliding without triggering layout storms on sibling controls.
     /// </summary>
+    [ContentProperty(nameof(ContentElement))]
     public class ZeroDrawer : ZeroWpfControlBase
     {
         private Border? _scrimBorder;
         private Border? _drawerPanel;
         private ContentPresenter? _contentPresenter;
         private TextBlock? _titleBlock;
+        private TextBlock? _subtitleBlock;
         private TranslateTransform? _translateTransform;
         private bool _isAnimating;
 
@@ -47,7 +50,14 @@ namespace ZeroUI.Wpf.Overlays
                 nameof(Title),
                 typeof(string),
                 typeof(ZeroDrawer),
-                new PropertyMetadata("Detail Inspector"));
+                new PropertyMetadata("Detail Inspector", OnTitleChanged));
+
+        public static readonly DependencyProperty SubtitleProperty =
+            DependencyProperty.Register(
+                nameof(Subtitle),
+                typeof(string),
+                typeof(ZeroDrawer),
+                new PropertyMetadata(null, OnSubtitleChanged));
 
         public static readonly DependencyProperty DrawerWidthProperty =
             DependencyProperty.Register(
@@ -96,6 +106,12 @@ namespace ZeroUI.Wpf.Overlays
             set => SetValue(TitleProperty, value);
         }
 
+        public string? Subtitle
+        {
+            get => (string?)GetValue(SubtitleProperty);
+            set => SetValue(SubtitleProperty, value);
+        }
+
         public double DrawerWidth
         {
             get => (double)GetValue(DrawerWidthProperty);
@@ -128,6 +144,14 @@ namespace ZeroUI.Wpf.Overlays
 
         #endregion
 
+        #region Public Methods
+
+        public void Open() => IsOpen = true;
+        public void Close() => IsOpen = false;
+        public void Toggle() => IsOpen = !IsOpen;
+
+        #endregion
+
         #region Events
 
         public event EventHandler? Opened;
@@ -145,6 +169,16 @@ namespace ZeroUI.Wpf.Overlays
             Visibility = Visibility.Collapsed;
             HorizontalAlignment = HorizontalAlignment.Stretch;
             VerticalAlignment = VerticalAlignment.Stretch;
+            Focusable = true;
+
+            PreviewKeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Escape && IsOpen && !_isAnimating)
+                {
+                    IsOpen = false;
+                    e.Handled = true;
+                }
+            };
 
             BuildVisualTemplate();
         }
@@ -220,16 +254,27 @@ namespace ZeroUI.Wpf.Overlays
             DockPanel.SetDock(closeBtn, Dock.Right);
             headerDock.Children.Add(closeBtn);
 
-            // Title
+            // Title & Subtitle in StackPanel
+            var titleStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             _titleBlock = new TextBlock
             {
                 Text = Title,
                 Foreground = ZeroWpfTheme.TextPrimary,
                 FontWeight = FontWeights.SemiBold,
-                FontSize = 14,
-                VerticalAlignment = VerticalAlignment.Center
+                FontSize = 14
             };
-            headerDock.Children.Add(_titleBlock);
+            titleStack.Children.Add(_titleBlock);
+
+            _subtitleBlock = new TextBlock
+            {
+                Text = Subtitle,
+                Foreground = ZeroWpfTheme.TextSecondary,
+                FontSize = 11.5,
+                Margin = new Thickness(0, 2, 0, 0),
+                Visibility = string.IsNullOrEmpty(Subtitle) ? Visibility.Collapsed : Visibility.Visible
+            };
+            titleStack.Children.Add(_subtitleBlock);
+            headerDock.Children.Add(titleStack);
 
             headerBorder.Child = headerDock;
             Grid.SetRow(headerBorder, 0);
@@ -298,6 +343,24 @@ namespace ZeroUI.Wpf.Overlays
             }
         }
 
+        private static void OnTitleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ZeroDrawer drawer && drawer._titleBlock != null)
+            {
+                drawer._titleBlock.Text = e.NewValue as string ?? string.Empty;
+            }
+        }
+
+        private static void OnSubtitleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ZeroDrawer drawer && drawer._subtitleBlock != null)
+            {
+                var text = e.NewValue as string;
+                drawer._subtitleBlock.Text = text ?? string.Empty;
+                drawer._subtitleBlock.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+            }
+        }
+
         private static void OnDrawerDimensionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is ZeroDrawer drawer)
@@ -341,6 +404,7 @@ namespace ZeroUI.Wpf.Overlays
                 slideAnim.Completed += (s, e) =>
                 {
                     _isAnimating = false;
+                    Focus();
                     Opened?.Invoke(this, EventArgs.Empty);
                 };
                 _translateTransform.BeginAnimation(prop, slideAnim);
@@ -407,6 +471,10 @@ namespace ZeroUI.Wpf.Overlays
             if (_titleBlock != null)
             {
                 _titleBlock.Foreground = ZeroWpfTheme.TextPrimary;
+            }
+            if (_subtitleBlock != null)
+            {
+                _subtitleBlock.Foreground = ZeroWpfTheme.TextSecondary;
             }
         }
 
