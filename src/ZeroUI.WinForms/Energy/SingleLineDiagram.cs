@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Energy;
 using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Energy
@@ -17,63 +18,16 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("IEC 61850 Substation Single-Line Diagram (SLD) canvas with dynamic busbar coloring and power flows")]
-    public class SingleLineDiagram : Control
+    public class SingleLineDiagram : ZeroVisualControlBase
     {
         private readonly SldEngine _engine = new SldEngine();
-        private IDisposable? _animSub;
         private string _substationName = "110kV / 22kV Primary Substation";
+
+        protected override bool AutoAnimate => true;
 
         public SingleLineDiagram()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(760, 360);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -97,25 +51,15 @@ namespace ZeroUI.WinForms.Energy
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Canvas Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             // Header: Substation title, Frequency, Grid Stats
             DrawHeader(g, theme);
 
             int sldLeft = 30;
             int sldTop = 60;
-            int sldWidth = Width - 60;
-            int sldHeight = Height - sldTop - 20;
+            int sldWidth = bounds.Width - 60;
+            int sldHeight = bounds.Height - sldTop - 20;
 
             if (sldWidth < 200 || sldHeight < 120)
                 return;
@@ -145,7 +89,7 @@ namespace ZeroUI.WinForms.Energy
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
-            using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
+            using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
                 TextRenderer.DrawText(g, _substationName, fontTitle, new Point(24, 14), theme.TextPrimary);
 
@@ -155,15 +99,9 @@ namespace ZeroUI.WinForms.Energy
                     string freqStr = "Freq: 50.02 Hz | Power: 42.0 MW (8.5 MVAr)";
                     TextRenderer.DrawText(g, freqStr, fontSmall, new Point(statsX, 16), theme.TextSecondary);
 
-                    // Operational Status Pill
+                    // Operational Status Badge
                     Rectangle pillRect = new Rectangle(Width - 110, 12, 86, 24);
-                    using (var pillBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
-                    using (var pillPen = new Pen(Color.FromArgb(34, 197, 94), 1f))
-                    {
-                        g.FillRectangle(pillBrush, pillRect);
-                        g.DrawRectangle(pillPen, pillRect);
-                    }
-                    TextRenderer.DrawText(g, "ENERGIZED", fontBold, pillRect, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    DrawStatusBadge(g, pillRect, "ENERGIZED", fontBold, Color.FromArgb(34, 197, 94), Color.FromArgb(34, 197, 94), 4);
                 }
             }
         }
@@ -241,7 +179,7 @@ namespace ZeroUI.WinForms.Energy
 
                 // Cable termination line going downwards
                 g.DrawLine(pen, x, cbY, x, cbY - 30);
-                g.DrawLine(pen, x - 6, cbY - 30, x + 6, cbY - 30); // arrow/feed
+                g.DrawLine(pen, x - 6, cbY - 30, x + 6, cbY - 30);
             }
         }
 
@@ -250,24 +188,20 @@ namespace ZeroUI.WinForms.Energy
             int size = 14;
             Rectangle rect = new Rectangle((int)cx - size / 2, (int)cy - size / 2, size, size);
 
-            using (var borderPen = new Pen(color, 2f))
+            if (state == BreakerState.Closed)
             {
-                if (state == BreakerState.Closed)
+                using (var fillBrush = new SolidBrush(color))
                 {
-                    // Closed = solid square
-                    using (var fillBrush = new SolidBrush(color))
-                    {
-                        g.FillRectangle(fillBrush, rect);
-                    }
+                    g.FillRectangle(fillBrush, rect);
                 }
-                else
+            }
+            else
+            {
+                using (var borderPen = new Pen(color, 2f))
+                using (var bgBrush = new SolidBrush(Color.FromArgb(20, color)))
                 {
-                    // Open = hollow square
-                    using (var bgBrush = new SolidBrush(Color.FromArgb(20, color)))
-                    {
-                        g.FillRectangle(bgBrush, rect);
-                        g.DrawRectangle(borderPen, rect);
-                    }
+                    g.FillRectangle(bgBrush, rect);
+                    g.DrawRectangle(borderPen, rect);
                 }
             }
         }

@@ -17,28 +17,9 @@ namespace ZeroUI.Wpf.Energy
     public class SwitchgearFaceplate : ZeroWpfVisualBase
     {
         private readonly SwitchgearEngine _engine = new SwitchgearEngine();
-        private IDisposable? _animSub;
         private string _breakerTag = "VCB-BAY-04 (110kV Incomer)";
 
-        public SwitchgearFaceplate()
-        {
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded)
-                    {
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
-        }
+        protected override bool AutoAnimate => true;
 
         #region Properties
 
@@ -53,22 +34,6 @@ namespace ZeroUI.Wpf.Energy
                 InvalidateVisual();
             }
         }
-
-        #endregion
-
-        #region Helpers
-
-#if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-#else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-#endif
 
         #endregion
 
@@ -228,22 +193,6 @@ namespace ZeroUI.Wpf.Energy
             dc.DrawText(lotoTxt, new Point(lotoRect.X + (lotoRect.Width - lotoTxt.Width) / 2, lotoRect.Y + (lotoRect.Height - lotoTxt.Height) / 2));
         }
 
-        private void DrawCardBox(DrawingContext dc, Rect rect, string title, double dpi)
-        {
-            dc.DrawRoundedRectangle(ZeroWpfTheme.BgCard, ZeroWpfTheme.BorderPen, rect, 6, 6);
-
-            var titleText = CreateFormattedText(title, ZeroWpfTheme.BoldTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
-            dc.DrawText(titleText, new Point(rect.X + 14, rect.Y + 12));
-        }
-
-        private void DrawDataRow(DrawingContext dc, double left, double right, double y, string label, string value, Brush labelBrush, Brush valBrush, double dpi)
-        {
-            var lText = CreateFormattedText(label, ZeroWpfTheme.RegularTypeface, 10, labelBrush, dpi);
-            dc.DrawText(lText, new Point(left, y));
-
-            var vText = CreateFormattedText(value, ZeroWpfTheme.BoldTypeface, 10.5, valBrush, dpi);
-            dc.DrawText(vText, new Point(right - vText.Width, y));
-        }
 
         private void DrawTripCoilRow(DrawingContext dc, double left, double right, double y, string label, TripCoilState state, double dpi)
         {

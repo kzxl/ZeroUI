@@ -1,10 +1,9 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Energy;
-using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Energy
@@ -16,62 +15,15 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("Solar PV string matrix array with MPPT string mismatch, shading, and blown fuse diagnostics")]
-    public class SolarPvMatrix : Control
+    public class SolarPvMatrix : ZeroVisualControlBase
     {
         private readonly SolarPvEngine _engine = new SolarPvEngine();
-        private IDisposable? _animSub;
+
+        protected override bool AutoAnimate => true;
 
         public SolarPvMatrix()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(820, 420);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -83,38 +35,28 @@ namespace ZeroUI.WinForms.Energy
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             var plant = _engine.Plant;
 
             // Header Banner
-            DrawHeader(g, plant, theme);
+            DrawHeader(g, plant, bounds.Width, theme);
 
             // KPI Telemetry Strip
             int kpiY = 56;
             int kpiHeight = 52;
-            DrawKpiStrip(g, new Rectangle(20, kpiY, Width - 40, kpiHeight), plant, theme);
+            DrawKpiStrip(g, new Rectangle(20, kpiY, bounds.Width - 40, kpiHeight), plant, theme);
 
             // 16-String Grid Canvas
             int gridY = kpiY + kpiHeight + 14;
-            int gridHeight = Height - gridY - 16;
-            if (gridHeight < 120 || Width < 300)
+            int gridHeight = bounds.Height - gridY - 16;
+            if (gridHeight < 120 || bounds.Width < 300)
                 return;
 
-            DrawStringGrid(g, new Rectangle(20, gridY, Width - 40, gridHeight), plant, theme);
+            DrawStringGrid(g, new Rectangle(20, gridY, bounds.Width - 40, gridHeight), plant, theme);
         }
 
-        private void DrawHeader(Graphics g, SolarPvPlant plant, ZeroThemePalette theme)
+        private void DrawHeader(Graphics g, SolarPvPlant plant, int width, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
@@ -122,15 +64,8 @@ namespace ZeroUI.WinForms.Energy
                 string title = $"{plant.PlantId} — {plant.Name}";
                 TextRenderer.DrawText(g, title, fontTitle, new Point(20, 14), theme.TextPrimary);
 
-                // Generation Status Pill
-                Rectangle pillRect = new Rectangle(Width - 190, 12, 170, 26);
-                using (var pillBrush = new SolidBrush(Color.FromArgb(25, 34, 197, 94)))
-                using (var pillPen = new Pen(Color.FromArgb(34, 197, 94), 1f))
-                {
-                    g.FillRectangle(pillBrush, pillRect);
-                    g.DrawRectangle(pillPen, pillRect);
-                }
-                TextRenderer.DrawText(g, "GENERATING (MPPT OK)", fontBold, pillRect, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                Rectangle pillRect = new Rectangle(width - 190, 12, 170, 26);
+                DrawStatusBadge(g, pillRect, "GENERATING (MPPT OK)", fontBold, Color.FromArgb(34, 197, 94), Color.FromArgb(34, 197, 94), 4);
             }
         }
 
@@ -168,12 +103,6 @@ namespace ZeroUI.WinForms.Energy
                 Color statColor = activeCount == plant.Strings.Count ? Color.FromArgb(34, 197, 94) : Color.FromArgb(245, 158, 11);
                 DrawKpiCell(g, new Rectangle(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "FLEET STRINGS", strRatio, statColor, fontLabel, fontVal, theme);
             }
-        }
-
-        private void DrawKpiCell(Graphics g, Rectangle r, string label, string val, Color valColor, Font fLabel, Font fVal, ZeroThemePalette theme)
-        {
-            TextRenderer.DrawText(g, label, fLabel, new Point(r.X + 12, r.Y + 6), theme.TextSecondary);
-            TextRenderer.DrawText(g, val, fVal, new Point(r.X + 12, r.Y + 22), valColor);
         }
 
         private void DrawStringGrid(Graphics g, Rectangle rect, SolarPvPlant plant, ZeroThemePalette theme)

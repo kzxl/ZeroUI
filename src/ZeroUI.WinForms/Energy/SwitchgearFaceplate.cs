@@ -1,10 +1,9 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Energy;
-using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Energy
@@ -17,63 +16,16 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("MV/HV Switchgear faceplate with spring charge indicator, contact wear gauge, trip coil supervision, and LOTO interlock")]
-    public class SwitchgearFaceplate : Control
+    public class SwitchgearFaceplate : ZeroVisualControlBase
     {
         private readonly SwitchgearEngine _engine = new SwitchgearEngine();
-        private IDisposable? _animSub;
         private string _breakerTag = "VCB-BAY-04 (110kV Incomer)";
+
+        protected override bool AutoAnimate => true;
 
         public SwitchgearFaceplate()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(680, 360);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -97,31 +49,17 @@ namespace ZeroUI.WinForms.Energy
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             // Header banner
             DrawHeader(g, theme);
 
             int contentTop = 56;
-            int contentWidth = Width - 40;
-            int contentHeight = Height - contentTop - 16;
+            int contentWidth = bounds.Width - 40;
+            int contentHeight = bounds.Height - contentTop - 16;
             if (contentWidth < 200 || contentHeight < 100)
                 return;
 
-            // Divide into 3 columns:
-            // Col 1: Mechanical Status & Spring Charge (width 32%)
-            // Col 2: Vacuum Bottle Wear & Trip Coils (width 36%)
-            // Col 3: Protection Relay & LOTO Interlock (remaining width)
             int col1W = (int)(contentWidth * 0.32);
             int col2W = (int)(contentWidth * 0.36);
             int col3W = contentWidth - col1W - col2W - 24;
@@ -142,7 +80,6 @@ namespace ZeroUI.WinForms.Energy
         private void DrawHeader(Graphics g, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
-            using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
                 TextRenderer.DrawText(g, _breakerTag, fontTitle, new Point(20, 14), theme.TextPrimary);
@@ -151,29 +88,24 @@ namespace ZeroUI.WinForms.Energy
                 Color permitColor = permit ? Color.FromArgb(34, 197, 94) : Color.FromArgb(239, 68, 68);
 
                 Rectangle pillRect = new Rectangle(Width - 280, 12, 260, 26);
-                using (var pillBrush = new SolidBrush(Color.FromArgb(25, permitColor)))
-                using (var pillPen = new Pen(permitColor, 1f))
-                {
-                    g.FillRectangle(pillBrush, pillRect);
-                    g.DrawRectangle(pillPen, pillRect);
-                }
-                TextRenderer.DrawText(g, reason, fontBold, pillRect, permitColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                DrawStatusBadge(g, pillRect, reason, fontBold, permitColor, permitColor, 4);
             }
         }
 
         private void DrawMechanicalPanel(Graphics g, Rectangle rect, ZeroThemePalette theme)
         {
-            DrawCardBox(g, rect, "MECHANISM & CHARGE", theme);
-
-            var mech = _engine.Mechanism;
+            using (var fontHead = new Font("Segoe UI", 7.5f, FontStyle.Bold))
             using (var fontLabel = new Font("Segoe UI", 8.5f))
             using (var fontValue = new Font("Segoe UI", 9f, FontStyle.Bold))
             using (var fontFlag = new Font("Segoe UI", 11f, FontStyle.Bold))
             {
+                DrawCardBox(g, rect, "MECHANISM & CHARGE", fontHead, theme);
+
+                var mech = _engine.Mechanism;
+
                 // Spring Charge Mechanical Flag Box
                 Rectangle flagRect = new Rectangle(rect.X + 16, rect.Y + 38, rect.Width - 32, 50);
                 Color flagBg = mech.IsSpringCharged ? Color.FromArgb(245, 158, 11) : Color.FromArgb(75, 85, 99);
-                Color flagFg = Color.White;
                 string flagText = mech.IsSpringCharged ? "SPR. CHARGED" : "DISCHARGED";
 
                 using (var flagBrush = new SolidBrush(flagBg))
@@ -182,37 +114,35 @@ namespace ZeroUI.WinForms.Energy
                     g.FillRectangle(flagBrush, flagRect);
                     g.DrawRectangle(flagPen, flagRect);
                 }
-                TextRenderer.DrawText(g, flagText, fontFlag, flagRect, flagFg, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, flagText, fontFlag, flagRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
-                // Motor charging status
+                // Data rows
                 int rowY = flagRect.Bottom + 16;
                 string motorStatus = mech.IsMotorCharging ? "Motor Running..." : "Idle";
-                TextRenderer.DrawText(g, "Charge Motor:", fontLabel, new Point(rect.X + 16, rowY), theme.TextSecondary);
-                TextRenderer.DrawText(g, motorStatus, fontValue, new Point(rect.Right - 100, rowY), theme.TextPrimary);
+                DrawDataRow(g, new Rectangle(rect.X + 16, rowY, rect.Width - 32, 20), "Charge Motor:", motorStatus, theme.TextSecondary, theme.TextPrimary, fontLabel, fontValue);
 
                 rowY += 26;
-                TextRenderer.DrawText(g, "Operations Count:", fontLabel, new Point(rect.X + 16, rowY), theme.TextSecondary);
-                TextRenderer.DrawText(g, mech.TotalOperationsCount.ToString("N0"), fontValue, new Point(rect.Right - 80, rowY), theme.TextPrimary);
+                DrawDataRow(g, new Rectangle(rect.X + 16, rowY, rect.Width - 32, 20), "Operations Count:", mech.TotalOperationsCount.ToString("N0"), theme.TextSecondary, theme.TextPrimary, fontLabel, fontValue);
 
                 rowY += 26;
-                TextRenderer.DrawText(g, "Mech Temp:", fontLabel, new Point(rect.X + 16, rowY), theme.TextSecondary);
-                TextRenderer.DrawText(g, $"{mech.MechanismTemperatureC:F1} °C", fontValue, new Point(rect.Right - 80, rowY), theme.TextPrimary);
+                DrawDataRow(g, new Rectangle(rect.X + 16, rowY, rect.Width - 32, 20), "Mech Temp:", $"{mech.MechanismTemperatureC:F1} °C", theme.TextSecondary, theme.TextPrimary, fontLabel, fontValue);
 
                 rowY += 26;
-                TextRenderer.DrawText(g, "Rated Breaking:", fontLabel, new Point(rect.X + 16, rowY), theme.TextSecondary);
-                TextRenderer.DrawText(g, $"{mech.RatedShortCircuitKa:F1} kA", fontValue, new Point(rect.Right - 80, rowY), theme.TextPrimary);
+                DrawDataRow(g, new Rectangle(rect.X + 16, rowY, rect.Width - 32, 20), "Rated Breaking:", $"{mech.RatedShortCircuitKa:F1} kA", theme.TextSecondary, theme.TextPrimary, fontLabel, fontValue);
             }
         }
 
         private void DrawVacuumHealthPanel(Graphics g, Rectangle rect, ZeroThemePalette theme)
         {
-            DrawCardBox(g, rect, "VACUUM BOTTLE HEALTH", theme);
-
-            var mech = _engine.Mechanism;
+            using (var fontHead = new Font("Segoe UI", 7.5f, FontStyle.Bold))
             using (var fontLabel = new Font("Segoe UI", 8.5f))
             using (var fontValue = new Font("Segoe UI", 9f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 7.5f))
             {
+                DrawCardBox(g, rect, "VACUUM BOTTLE HEALTH", fontHead, theme);
+
+                var mech = _engine.Mechanism;
+
                 // Contact Wear Bar
                 int barY = rect.Y + 40;
                 TextRenderer.DrawText(g, "Contact Erosion Wear:", fontLabel, new Point(rect.X + 16, barY), theme.TextSecondary);
@@ -238,17 +168,15 @@ namespace ZeroUI.WinForms.Energy
                     }
                 }
 
-                // Trip Coil 1 Supervision
+                // Trip Coils Supervision
                 int coilY = barRect.Bottom + 20;
                 TextRenderer.DrawText(g, "Trip Coil 1 (TC1):", fontLabel, new Point(rect.X + 16, coilY), theme.TextSecondary);
-                DrawLedIndicator(g, rect.Right - 70, coilY + 2, mech.TripCoil1);
+                DrawTripCoil(g, rect.Right - 70, coilY + 2, mech.TripCoil1);
 
-                // Trip Coil 2 Supervision
                 coilY += 28;
                 TextRenderer.DrawText(g, "Trip Coil 2 (TC2):", fontLabel, new Point(rect.X + 16, coilY), theme.TextSecondary);
-                DrawLedIndicator(g, rect.Right - 70, coilY + 2, mech.TripCoil2);
+                DrawTripCoil(g, rect.Right - 70, coilY + 2, mech.TripCoil2);
 
-                // Arc Interruption Chamber Status
                 coilY += 32;
                 Rectangle chamberRect = new Rectangle(rect.X + 16, coilY, rect.Width - 32, 40);
                 using (var chBrush = new SolidBrush(Color.FromArgb(20, 59, 130, 246)))
@@ -263,26 +191,25 @@ namespace ZeroUI.WinForms.Energy
 
         private void DrawRelayInterlockPanel(Graphics g, Rectangle rect, ZeroThemePalette theme)
         {
-            DrawCardBox(g, rect, "RELAY & LOTO SAFETY", theme);
-
-            var relay = _engine.Relay;
-            var mech = _engine.Mechanism;
+            using (var fontHead = new Font("Segoe UI", 7.5f, FontStyle.Bold))
             using (var fontLabel = new Font("Segoe UI", 8.5f))
             using (var fontValue = new Font("Segoe UI", 9f, FontStyle.Bold))
             using (var fontBold = new Font("Segoe UI", 9.5f, FontStyle.Bold))
             {
+                DrawCardBox(g, rect, "RELAY & LOTO SAFETY", fontHead, theme);
+
+                var relay = _engine.Relay;
+                var mech = _engine.Mechanism;
+
                 int rowY = rect.Y + 38;
-                TextRenderer.DrawText(g, "Relay Type:", fontLabel, new Point(rect.X + 16, rowY), theme.TextSecondary);
-                TextRenderer.DrawText(g, relay.RelayTag, fontValue, new Point(rect.Right - 90, rowY), theme.TextPrimary);
+                DrawDataRow(g, new Rectangle(rect.X + 16, rowY, rect.Width - 32, 20), "Relay Type:", relay.RelayTag, theme.TextSecondary, theme.TextPrimary, fontLabel, fontValue);
 
                 rowY += 26;
-                TextRenderer.DrawText(g, "ANSI Protection:", fontLabel, new Point(rect.X + 16, rowY), theme.TextSecondary);
-                TextRenderer.DrawText(g, relay.ActiveAnsiCode, fontValue, new Point(rect.Right - 90, rowY), Color.FromArgb(59, 130, 246));
+                DrawDataRow(g, new Rectangle(rect.X + 16, rowY, rect.Width - 32, 20), "ANSI Protection:", relay.ActiveAnsiCode, theme.TextSecondary, Color.FromArgb(59, 130, 246), fontLabel, fontValue);
 
                 rowY += 26;
-                TextRenderer.DrawText(g, "Pickup / Alarm:", fontLabel, new Point(rect.X + 16, rowY), theme.TextSecondary);
-                TextRenderer.DrawText(g, relay.IsPickupActive ? "PICKUP ACTIVE" : "Normal", fontValue,
-                    new Point(rect.Right - 110, rowY), relay.IsPickupActive ? Color.FromArgb(239, 68, 68) : Color.FromArgb(34, 197, 94));
+                Color pickColor = relay.IsPickupActive ? Color.FromArgb(239, 68, 68) : Color.FromArgb(34, 197, 94);
+                DrawDataRow(g, new Rectangle(rect.X + 16, rowY, rect.Width - 32, 20), "Pickup / Alarm:", relay.IsPickupActive ? "PICKUP ACTIVE" : "Normal", theme.TextSecondary, pickColor, fontLabel, fontValue);
 
                 // LOTO Safety Lockout status box
                 rowY += 34;
@@ -291,44 +218,22 @@ namespace ZeroUI.WinForms.Energy
                                   mech.LotoState == LotoLockState.PermitActive ? Color.FromArgb(245, 158, 11) :
                                   Color.FromArgb(34, 197, 94);
 
-                using (var lotoBrush = new SolidBrush(Color.FromArgb(20, lotoColor)))
-                using (var lotoPen = new Pen(lotoColor, 1.5f))
-                {
-                    g.FillRectangle(lotoBrush, lotoRect);
-                    g.DrawRectangle(lotoPen, lotoRect);
-                }
-
                 string lotoText = mech.LotoState == LotoLockState.LockedOut ? "[LOCKED OUT] Padlock Applied" :
                                   mech.LotoState == LotoLockState.PermitActive ? "[PERMIT ACTIVE] Tagged" :
                                   "[UNLOCKED] No Interlock";
-                TextRenderer.DrawText(g, lotoText, fontBold, lotoRect, lotoColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                DrawStatusBadge(g, lotoRect, lotoText, fontBold, lotoColor, lotoColor, 4);
             }
         }
 
-        private void DrawCardBox(Graphics g, Rectangle rect, string title, ZeroThemePalette theme)
-        {
-            using (var boxBrush = new SolidBrush(Color.FromArgb(12, theme.TextPrimary)))
-            using (var borderPen = new Pen(theme.Border, 1f))
-            using (var fontTitle = new Font("Segoe UI", 7.5f, FontStyle.Bold))
-            {
-                g.FillRectangle(boxBrush, rect);
-                g.DrawRectangle(borderPen, rect);
-                TextRenderer.DrawText(g, title, fontTitle, new Point(rect.X + 14, rect.Y + 12), theme.TextSecondary);
-            }
-        }
-
-        private void DrawLedIndicator(Graphics g, int x, int y, TripCoilState state)
+        private void DrawTripCoil(Graphics g, int x, int y, TripCoilState state)
         {
             Color ledColor = state == TripCoilState.Healthy ? Color.FromArgb(34, 197, 94) :
                              state == TripCoilState.OpenCircuit ? Color.FromArgb(239, 68, 68) :
                              Color.FromArgb(245, 158, 11);
-
-            using (var brush = new SolidBrush(ledColor))
+            string text = state == TripCoilState.Healthy ? "OK" : "FAULT";
             using (var font = new Font("Segoe UI", 7.5f, FontStyle.Bold))
             {
-                g.FillEllipse(brush, x, y, 10, 10);
-                string text = state == TripCoilState.Healthy ? "OK" : "FAULT";
-                TextRenderer.DrawText(g, text, font, new Point(x + 14, y - 2), ledColor);
+                DrawLedIndicator(g, x, y, ledColor, text, font);
             }
         }
     }

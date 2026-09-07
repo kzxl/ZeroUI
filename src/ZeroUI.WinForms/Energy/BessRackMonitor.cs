@@ -1,10 +1,9 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Energy;
-using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Energy
@@ -16,62 +15,15 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("BESS High-Voltage Rack telemetry with cell voltage balancing heatmap and thermal runaway precursor alarm")]
-    public class BessRackMonitor : Control
+    public class BessRackMonitor : ZeroVisualControlBase
     {
         private readonly BessEngine _engine = new BessEngine();
-        private IDisposable? _animSub;
+
+        protected override bool AutoAnimate => true;
 
         public BessRackMonitor()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(820, 420);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -83,39 +35,29 @@ namespace ZeroUI.WinForms.Energy
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             var rack = _engine.Rack;
             var worstRisk = _engine.OverallRisk;
 
-            // Header Banner (Rack Name, SoC, SoH, Runaway risk pill)
-            DrawHeader(g, rack, worstRisk, theme);
+            // Header Banner
+            DrawHeader(g, rack, worstRisk, bounds.Width, theme);
 
             // Telemetry KPIs Strip
             int kpiY = 56;
             int kpiHeight = 52;
-            DrawKpiStrip(g, new Rectangle(20, kpiY, Width - 40, kpiHeight), rack, theme);
+            DrawKpiStrip(g, new Rectangle(20, kpiY, bounds.Width - 40, kpiHeight), rack, theme);
 
             // Module Balancing Heatmap List
             int modulesY = kpiY + kpiHeight + 14;
-            int modulesHeight = Height - modulesY - 16;
-            if (modulesHeight < 100 || Width < 300)
+            int modulesHeight = bounds.Height - modulesY - 16;
+            if (modulesHeight < 100 || bounds.Width < 300)
                 return;
 
-            DrawModuleList(g, new Rectangle(20, modulesY, Width - 40, modulesHeight), rack, theme);
+            DrawModuleList(g, new Rectangle(20, modulesY, bounds.Width - 40, modulesHeight), rack, theme);
         }
 
-        private void DrawHeader(Graphics g, BessRack rack, ThermalRunawayRisk worstRisk, ZeroThemePalette theme)
+        private void DrawHeader(Graphics g, BessRack rack, ThermalRunawayRisk worstRisk, int width, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
@@ -123,7 +65,6 @@ namespace ZeroUI.WinForms.Energy
                 string title = $"{rack.RackId} — {rack.Name}";
                 TextRenderer.DrawText(g, title, fontTitle, new Point(20, 14), theme.TextPrimary);
 
-                // Runaway Risk Pill
                 Color riskColor = worstRisk == ThermalRunawayRisk.Normal ? Color.FromArgb(34, 197, 94) :
                                   worstRisk == ThermalRunawayRisk.Elevated ? Color.FromArgb(59, 130, 246) :
                                   worstRisk == ThermalRunawayRisk.Warning ? Color.FromArgb(245, 158, 11) :
@@ -134,14 +75,8 @@ namespace ZeroUI.WinForms.Energy
                                   worstRisk == ThermalRunawayRisk.Warning ? "THERMAL: WARNING" :
                                   "RUNAWAY PRECURSOR ALARM";
 
-                Rectangle pillRect = new Rectangle(Width - 240, 12, 220, 26);
-                using (var pillBrush = new SolidBrush(Color.FromArgb(25, riskColor)))
-                using (var pillPen = new Pen(riskColor, 1.2f))
-                {
-                    g.FillRectangle(pillBrush, pillRect);
-                    g.DrawRectangle(pillPen, pillRect);
-                }
-                TextRenderer.DrawText(g, riskText, fontBold, pillRect, riskColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                Rectangle pillRect = new Rectangle(width - 240, 12, 220, 26);
+                DrawStatusBadge(g, pillRect, riskText, fontBold, riskColor, riskColor, 4);
             }
         }
 
@@ -179,21 +114,11 @@ namespace ZeroUI.WinForms.Energy
             }
         }
 
-        private void DrawKpiCell(Graphics g, Rectangle r, string label, string val, Color valColor, Font fLabel, Font fVal, ZeroThemePalette theme)
-        {
-            TextRenderer.DrawText(g, label, fLabel, new Point(r.X + 12, r.Y + 6), theme.TextSecondary);
-            TextRenderer.DrawText(g, val, fVal, new Point(r.X + 12, r.Y + 22), valColor);
-        }
-
         private void DrawModuleList(Graphics g, Rectangle rect, BessRack rack, ZeroThemePalette theme)
         {
-            using (var boxBrush = new SolidBrush(Color.FromArgb(8, theme.TextPrimary)))
-            using (var borderPen = new Pen(theme.Border, 1f))
             using (var fontHeader = new Font("Segoe UI", 7.5f, FontStyle.Bold))
             {
-                g.FillRectangle(boxBrush, rect);
-                g.DrawRectangle(borderPen, rect);
-                TextRenderer.DrawText(g, "MODULE BALANCING & THERMAL SUPERVISION (16 CELLS PER MODULE)", fontHeader, new Point(rect.X + 14, rect.Y + 8), theme.TextSecondary);
+                DrawCardBox(g, rect, "MODULE BALANCING & THERMAL SUPERVISION (16 CELLS PER MODULE)", fontHeader, theme);
             }
 
             int count = rack.Modules.Count;
@@ -213,7 +138,6 @@ namespace ZeroUI.WinForms.Energy
                     if (rowY + rowH > rect.Bottom) break;
 
                     var mod = rack.Modules[i];
-                    var risk = BessEngine.EvaluateRunawayRisk(mod);
 
                     // Row separator line
                     if (i > 0)
@@ -260,10 +184,8 @@ namespace ZeroUI.WinForms.Energy
             for (int c = 0; c < cellCount; c++)
             {
                 double v = mod.CellVoltages[c];
-                // Map v between 3.20V and 3.30V
                 float norm = (float)Math.Max(0.0, Math.Min(1.0, (v - minV) / (maxV - minV)));
 
-                // Color interpolation: blueish to emerald
                 int r = (int)(20 + (1.0f - norm) * 40);
                 int gr = (int)(150 + norm * 80);
                 int b = (int)(200 - norm * 100);

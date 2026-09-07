@@ -16,47 +16,12 @@ namespace ZeroUI.Wpf.Energy
     public class SolarPvMatrix : ZeroWpfVisualBase
     {
         private readonly SolarPvEngine _engine = new SolarPvEngine();
-        private IDisposable? _animSub;
 
-        public SolarPvMatrix()
-        {
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded)
-                    {
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
-        }
+        protected override bool AutoAnimate => true;
 
         #region Properties
 
         public SolarPvEngine Engine => _engine;
-
-        #endregion
-
-        #region Helpers
-
-#if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-#else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-#endif
 
         #endregion
 
@@ -130,14 +95,6 @@ namespace ZeroUI.Wpf.Energy
             DrawKpiCell(dc, new Rect(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "FLEET STRINGS", ratioStr, statBrush, dpi);
         }
 
-        private void DrawKpiCell(DrawingContext dc, Rect r, string label, string val, Brush valBrush, double dpi)
-        {
-            var lText = CreateFormattedText(label, ZeroWpfTheme.RegularTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
-            dc.DrawText(lText, new Point(r.X + 12, r.Y + 6));
-
-            var vText = CreateFormattedText(val, ZeroWpfTheme.BoldTypeface, 13, valBrush, dpi);
-            dc.DrawText(vText, new Point(r.X + 12, r.Y + 22));
-        }
 
         private void DrawStringGrid(DrawingContext dc, Rect rect, SolarPvPlant plant, double dpi)
         {

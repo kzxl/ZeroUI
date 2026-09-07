@@ -17,28 +17,9 @@ namespace ZeroUI.Wpf.Energy
     public class SingleLineDiagram : ZeroWpfVisualBase
     {
         private readonly SldEngine _engine = new SldEngine();
-        private IDisposable? _animSub;
         private string _substationName = "110kV / 22kV Primary Substation";
 
-        public SingleLineDiagram()
-        {
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded)
-                    {
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
-        }
+        protected override bool AutoAnimate => true;
 
         #region Properties
 
@@ -52,36 +33,6 @@ namespace ZeroUI.Wpf.Energy
                 _substationName = value;
                 InvalidateVisual();
             }
-        }
-
-        #endregion
-
-        #region Helpers
-
-#if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-#else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-#endif
-
-        private static Color HexToColor(string hex)
-        {
-            if (string.IsNullOrEmpty(hex)) return Colors.White;
-            hex = hex.TrimStart('#');
-            if (hex.Length == 6)
-            {
-                byte r = byte.Parse(hex.Substring(0, 2), NumberStyles.HexNumber);
-                byte g = byte.Parse(hex.Substring(2, 2), NumberStyles.HexNumber);
-                byte b = byte.Parse(hex.Substring(4, 2), NumberStyles.HexNumber);
-                return Color.FromRgb(r, g, b);
-            }
-            return Colors.White;
         }
 
         #endregion
