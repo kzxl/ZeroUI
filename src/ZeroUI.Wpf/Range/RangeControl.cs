@@ -294,11 +294,11 @@ namespace ZeroUI.Wpf.Range
 
             bool isDark = ZeroWpfTheme.IsDark;
 
-            Color bgColor = isDark ? Color.FromRgb(24, 27, 32) : Color.FromRgb(248, 250, 252);
-            Color borderColor = isDark ? Color.FromRgb(48, 54, 61) : Color.FromRgb(226, 232, 240);
-            Color accent = isDark ? Color.FromRgb(56, 139, 253) : Color.FromRgb(14, 116, 144);
-            Color textColor = isDark ? Color.FromRgb(230, 237, 243) : Color.FromRgb(30, 41, 59);
-            Color mutedColor = isDark ? Color.FromRgb(139, 148, 158) : Color.FromRgb(100, 116, 139);
+            Color bgColor = ZeroWpfTheme.BgCard.Color;
+            Color borderColor = ZeroWpfTheme.BorderDefault.Color;
+            Color accent = ZeroWpfTheme.PrimaryAccent.Color;
+            Color textColor = ZeroWpfTheme.TextPrimary.Color;
+            Color mutedColor = ZeroWpfTheme.TextMuted.Color;
 
             var bounds = new Rect(0, 0, ActualWidth, ActualHeight);
             if (bounds.Width <= 0 || bounds.Height <= 0) return;

@@ -230,17 +230,15 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawHeaderHud(DrawingContext dc, Rect r, double dpi)
         {
-            var headerBg = new SolidColorBrush(Color.FromRgb(28, 33, 46));
-            headerBg.Freeze();
-            var headerPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            headerPen.Freeze();
+            var headerBg = ZeroWpfTheme.BgCard;
+            var headerPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(headerBg, headerPen, r, 4, 4);
 
             double powerW = _engine.CalculateTotalPowerDrawWatts();
             double powerPct = _engine.CalculatePowerUtilizationPercent();
             double weightKg = _engine.CalculateTotalWeightKg();
 
-            var titleFt = CreateFormattedText($"19\" Cabinet ({TotalUnits}U)", ZeroWpfTheme.BoldTypeface, 11.0, Brushes.White, dpi);
+            var titleFt = CreateFormattedText($"19\" Cabinet ({TotalUnits}U)", ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
             var subFt = CreateFormattedText($"Power: {powerW:F0} W ({powerPct:F0}%) | Weight: {weightKg:F1} kg", ZeroWpfTheme.RegularTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
 
             dc.DrawText(titleFt, new Point(r.Left + 8, r.Top + 6));
@@ -248,8 +246,7 @@ namespace ZeroUI.Wpf.Network
 
             // Status Pill
             string statusText = _selectedItem != null ? $"{_selectedItem.Name} ({_selectedItem.UnitHeight}U)" : "Normal";
-            var pillBg = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-            pillBg.Freeze();
+            var pillBg = ZeroWpfTheme.BgInput;
             var pillPen = new Pen(ZeroWpfTheme.PrimaryAccent, 1.0);
             pillPen.Freeze();
 
@@ -265,10 +262,8 @@ namespace ZeroUI.Wpf.Network
         private void DrawRackFrameAndSlots(DrawingContext dc, Rect r, double dpi)
         {
             double postWidth = 24;
-            var postBg = new SolidColorBrush(Color.FromRgb(15, 18, 26));
-            postBg.Freeze();
-            var postPen = new Pen(new SolidColorBrush(Color.FromRgb(38, 46, 62)), 1.0);
-            postPen.Freeze();
+            var postBg = ZeroWpfTheme.BgInput;
+            var postPen = ZeroWpfTheme.BorderPen;
 
             // Left and Right EIA-310 rails
             dc.DrawRectangle(postBg, postPen, new Rect(r.Left, r.Top, postWidth, r.Height));
@@ -278,8 +273,7 @@ namespace ZeroUI.Wpf.Network
             double bayWidth = r.Width - (postWidth * 2);
             double unitHeightPx = r.Height / _engine.TotalUnits;
 
-            var slotPen = new Pen(new SolidColorBrush(Color.FromRgb(30, 36, 49)), 1.0);
-            slotPen.Freeze();
+            var slotPen = ZeroWpfTheme.GridLinePen;
 
             // U Tick marks
             for (int u = 1; u <= _engine.TotalUnits; u++)
@@ -311,22 +305,33 @@ namespace ZeroUI.Wpf.Network
         {
             bool isSelected = item == _selectedItem;
 
-            Color baseColor = item.Category switch
-            {
-                RackUnitCategory.Server => Color.FromRgb(30, 41, 59),
-                RackUnitCategory.Switch => Color.FromRgb(22, 47, 58),
-                RackUnitCategory.StorageArray => Color.FromRgb(40, 32, 56),
-                RackUnitCategory.Router => Color.FromRgb(58, 28, 30),
-                RackUnitCategory.Ups => Color.FromRgb(48, 42, 22),
-                RackUnitCategory.Pdu => Color.FromRgb(25, 45, 35),
-                _ => Color.FromRgb(28, 33, 44)
-            };
+            Color baseColor = ZeroWpfTheme.IsDark
+                ? item.Category switch
+                {
+                    RackUnitCategory.Server => Color.FromRgb(30, 41, 59),
+                    RackUnitCategory.Switch => Color.FromRgb(22, 47, 58),
+                    RackUnitCategory.StorageArray => Color.FromRgb(40, 32, 56),
+                    RackUnitCategory.Router => Color.FromRgb(58, 28, 30),
+                    RackUnitCategory.Ups => Color.FromRgb(48, 42, 22),
+                    RackUnitCategory.Pdu => Color.FromRgb(25, 45, 35),
+                    _ => Color.FromRgb(28, 33, 44)
+                }
+                : item.Category switch
+                {
+                    RackUnitCategory.Server => Color.FromRgb(224, 231, 255),
+                    RackUnitCategory.Switch => Color.FromRgb(207, 250, 254),
+                    RackUnitCategory.StorageArray => Color.FromRgb(243, 232, 255),
+                    RackUnitCategory.Router => Color.FromRgb(254, 226, 226),
+                    RackUnitCategory.Ups => Color.FromRgb(254, 243, 199),
+                    RackUnitCategory.Pdu => Color.FromRgb(220, 252, 231),
+                    _ => Color.FromRgb(241, 245, 249)
+                };
 
             var itemBg = new SolidColorBrush(baseColor);
             itemBg.Freeze();
             var itemPen = isSelected
                 ? new Pen(ZeroWpfTheme.PrimaryAccent, 2.0)
-                : new Pen(new SolidColorBrush(Color.FromRgb(55, 65, 81)), 1.0);
+                : ZeroWpfTheme.BorderPen;
             itemPen.Freeze();
 
             dc.DrawRoundedRectangle(itemBg, itemPen, r, 3, 3);
@@ -345,7 +350,7 @@ namespace ZeroUI.Wpf.Network
             double textX = r.Left + 22;
             if (r.Height >= 14)
             {
-                var nameFt = CreateFormattedText(item.Name, ZeroWpfTheme.BoldTypeface, 9.5, Brushes.White, dpi);
+                var nameFt = CreateFormattedText(item.Name, ZeroWpfTheme.BoldTypeface, 9.5, ZeroWpfTheme.TextPrimary, dpi);
                 dc.DrawText(nameFt, new Point(textX, r.Top + 2));
 
                 if (r.Height >= 28)
@@ -366,8 +371,7 @@ namespace ZeroUI.Wpf.Network
                 new Point(0, 1));
             lgb.Freeze();
 
-            var pen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            pen.Freeze();
+            var pen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(lgb, pen, r, 3, 3);
 
             var hotFt = CreateFormattedText("45°C", ZeroWpfTheme.BoldTypeface, 7.5, Brushes.White, dpi);

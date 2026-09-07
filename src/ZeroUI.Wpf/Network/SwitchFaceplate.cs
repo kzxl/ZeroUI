@@ -95,10 +95,8 @@ namespace ZeroUI.Wpf.Network
             #endif
 
             // Brushed Aluminum Chassis (1U rackmount)
-            var chassisBg = new SolidColorBrush(Color.FromRgb(24, 28, 38));
-            chassisBg.Freeze();
-            var chassisPen = new Pen(new SolidColorBrush(Color.FromRgb(48, 56, 74)), 1.5);
-            chassisPen.Freeze();
+            var chassisBg = ZeroWpfTheme.BgCard;
+            var chassisPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(chassisBg, chassisPen, new Rect(0.5, 0.5, w - 1, h - 1), 6, 6);
 
             // Rack Mounting Ears
@@ -126,15 +124,12 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawRackEar(DrawingContext dc, Rect r, bool isLeft)
         {
-            var earBg = new SolidColorBrush(Color.FromRgb(30, 36, 48));
-            earBg.Freeze();
-            var earPen = new Pen(new SolidColorBrush(Color.FromRgb(55, 65, 81)), 1.0);
-            earPen.Freeze();
+            var earBg = ZeroWpfTheme.BgInput;
+            var earPen = ZeroWpfTheme.BorderPen;
             dc.DrawRectangle(earBg, earPen, r);
 
             // Mounting screw holes
-            var screwPen = new Pen(new SolidColorBrush(Color.FromRgb(75, 85, 99)), 1.0);
-            screwPen.Freeze();
+            var screwPen = ZeroWpfTheme.GridLinePen;
             double holeR = 3.0;
             double cx = r.Left + r.Width / 2.0;
 
@@ -144,7 +139,7 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawBrandingBar(DrawingContext dc, Rect r, double dpi)
         {
-            var brandFt = CreateFormattedText("ZeroUI L3 Managed Switch - 24G 4SFP+", ZeroWpfTheme.BoldTypeface, 11.0, Brushes.White, dpi);
+            var brandFt = CreateFormattedText("ZeroUI L3 Managed Switch - 24G 4SFP+", ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
             dc.DrawText(brandFt, new Point(r.Left + 4, r.Top + 4));
 
             // System Master LEDs
@@ -238,10 +233,8 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawInspectionStrip(DrawingContext dc, Rect r, double dpi)
         {
-            var bg = new SolidColorBrush(Color.FromRgb(20, 24, 32));
-            bg.Freeze();
-            var pen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            pen.Freeze();
+            var bg = ZeroWpfTheme.BgInput;
+            var pen = ZeroWpfTheme.GridLinePen;
             dc.DrawRoundedRectangle(bg, pen, r, 3, 3);
 
             string info = _selectedPort != null

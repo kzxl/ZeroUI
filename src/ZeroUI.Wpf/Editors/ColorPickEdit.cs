@@ -35,8 +35,11 @@ namespace ZeroUI.Wpf.Editors
             Color.FromRgb(255, 255, 255)  // Pure White
         };
 
+        private Border? _border;
         private Border? _swatchBorder;
         private TextBlock? _hexTextBlock;
+        private TextBlock? _arrow;
+        private Border? _popupBorder;
         private Popup? _popup;
         private TextBox? _hexInputBox;
         private Border? _previewBorder;
@@ -123,13 +126,40 @@ namespace ZeroUI.Wpf.Editors
             Cursor = Cursors.Hand;
 
             BuildVisualTemplate();
+            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+        }
+
+        private void UpdateTheme()
+        {
+            Background = ZeroWpfTheme.BgInput;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_border != null)
+            {
+                _border.Background = ZeroWpfTheme.BgInput;
+                _border.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_swatchBorder != null) _swatchBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_hexTextBlock != null) _hexTextBlock.Foreground = ZeroWpfTheme.TextPrimary;
+            if (_arrow != null) _arrow.Foreground = ZeroWpfTheme.TextSecondary;
+            if (_popupBorder != null)
+            {
+                _popupBorder.Background = ZeroWpfTheme.BgCard;
+                _popupBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_hexInputBox != null)
+            {
+                _hexInputBox.Background = ZeroWpfTheme.BgInput;
+                _hexInputBox.Foreground = ZeroWpfTheme.TextPrimary;
+                _hexInputBox.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_previewBorder != null) _previewBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
         }
 
         private void BuildVisualTemplate()
         {
             var rootGrid = new Grid();
 
-            var border = new Border
+            _border = new Border
             {
                 Background = Background,
                 BorderBrush = BorderBrush,
@@ -166,7 +196,7 @@ namespace ZeroUI.Wpf.Editors
             Grid.SetColumn(_hexTextBlock, 1);
             headerGrid.Children.Add(_hexTextBlock);
 
-            var arrow = new TextBlock
+            _arrow = new TextBlock
             {
                 Text = "▼",
                 FontSize = 9.0,
@@ -174,11 +204,11 @@ namespace ZeroUI.Wpf.Editors
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Right
             };
-            Grid.SetColumn(arrow, 2);
-            headerGrid.Children.Add(arrow);
+            Grid.SetColumn(_arrow, 2);
+            headerGrid.Children.Add(_arrow);
 
-            border.Child = headerGrid;
-            rootGrid.Children.Add(border);
+            _border.Child = headerGrid;
+            rootGrid.Children.Add(_border);
 
             // Popup construction
             _popup = new Popup
@@ -189,7 +219,7 @@ namespace ZeroUI.Wpf.Editors
                 AllowsTransparency = true
             };
 
-            var popupBorder = new Border
+            _popupBorder = new Border
             {
                 Background = ZeroWpfTheme.BgCard,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
@@ -268,8 +298,8 @@ namespace ZeroUI.Wpf.Editors
             bottomGrid.Children.Add(_previewBorder);
 
             popupStack.Children.Add(bottomGrid);
-            popupBorder.Child = popupStack;
-            _popup.Child = popupBorder;
+            _popupBorder.Child = popupStack;
+            _popup.Child = _popupBorder;
 
             rootGrid.Children.Add(_popup);
             AddVisualChild(rootGrid);

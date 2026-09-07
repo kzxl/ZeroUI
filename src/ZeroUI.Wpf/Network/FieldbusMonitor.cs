@@ -81,10 +81,8 @@ namespace ZeroUI.Wpf.Network
             #endif
 
             // Outer Container Card
-            var bg = new SolidColorBrush(Color.FromRgb(20, 24, 33));
-            bg.Freeze();
-            var borderPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.5);
-            borderPen.Freeze();
+            var bg = ZeroWpfTheme.BgCard;
+            var borderPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(bg, borderPen, new Rect(0.5, 0.5, w - 1, h - 1), 6, 6);
 
             // 1. Top Telemetry HUD
@@ -108,13 +106,11 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawTelemetryHud(DrawingContext dc, Rect r, double dpi)
         {
-            var headerBg = new SolidColorBrush(Color.FromRgb(28, 33, 46));
-            headerBg.Freeze();
-            var headerPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            headerPen.Freeze();
+            var headerBg = ZeroWpfTheme.BgInput;
+            var headerPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(headerBg, headerPen, r, 4, 4);
 
-            var titleFt = CreateFormattedText($"{_network.Protocol} Fieldbus Line Monitor ({_network.Topology})", ZeroWpfTheme.BoldTypeface, 11.0, Brushes.White, dpi);
+            var titleFt = CreateFormattedText($"{_network.Protocol} Fieldbus Line Monitor ({_network.Topology})", ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
             string stats = $"Cycle: {_network.MasterCycleTimeMs:F1} ms | Jitter: {_network.JitterMicroseconds:F1} μs | Stations: {_network.Stations.Count}";
             var subFt = CreateFormattedText(stats, ZeroWpfTheme.RegularTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
 
@@ -129,8 +125,7 @@ namespace ZeroUI.Wpf.Network
             double pillW = 100;
             double pillH = 24;
             Rect pillRect = new Rect(r.Right - pillW - 8, r.Top + (r.Height - pillH) / 2.0, pillW, pillH);
-            var pillBg = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-            pillBg.Freeze();
+            var pillBg = ZeroWpfTheme.BgCard;
             var pillPen = new Pen(statusBrush, 1.0);
             pillPen.Freeze();
 
@@ -192,22 +187,19 @@ namespace ZeroUI.Wpf.Network
                 Rect sRect = new Rect(sx, sy, stationW, stationH);
 
                 bool isMaster = station.StationIndex == 1;
-                Color sBg = isMaster ? Color.FromRgb(30, 41, 59) : Color.FromRgb(24, 32, 44);
-                var fill = new SolidColorBrush(sBg);
-                fill.Freeze();
+                Brush fill = isMaster ? ZeroWpfTheme.BgInput : ZeroWpfTheme.BgCard;
 
                 Brush led = station.Status == StationStatus.Normal ? ZeroWpfTheme.SuccessAccent : ZeroWpfTheme.DangerAccent;
-                var pen = new Pen(isMaster ? ZeroWpfTheme.PrimaryAccent : new SolidColorBrush(Color.FromRgb(55, 65, 81)), 1.5);
-                pen.Freeze();
+                var pen = isMaster ? new Pen(ZeroWpfTheme.PrimaryAccent, 1.5) : ZeroWpfTheme.BorderPen;
 
                 dc.DrawRoundedRectangle(fill, pen, sRect, 4, 4);
 
                 // LED
-                dc.DrawEllipse(led, null, new Point(sRect.Left + 8, sRect.Top + 8), 3.0, 3.0);
+                dc.DrawEllipse(led, null, new Point(sRect.Left + 8, sRect.Top + 8), 3.5, 3.5);
 
                 // Title
                 string name = isMaster ? "Master" : $"Stn {station.StationIndex}";
-                var nameFt = CreateFormattedText(name, ZeroWpfTheme.BoldTypeface, 9.0, Brushes.White, dpi);
+                var nameFt = CreateFormattedText(name, ZeroWpfTheme.BoldTypeface, 9.0, ZeroWpfTheme.TextPrimary, dpi);
                 dc.DrawText(nameFt, new Point(sRect.Left + 16, sRect.Top + 3));
 
                 // Device Type

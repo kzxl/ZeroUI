@@ -113,6 +113,7 @@ namespace ZeroUI.Wpf.Charts
             ClipToBounds = true;
             MinHeight = 240;
             MinWidth = 320;
+            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         public void AddPoint(BoxPlotDataPoint point)

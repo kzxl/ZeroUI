@@ -76,10 +76,8 @@ namespace ZeroUI.Wpf.Network
             #endif
 
             // Outer Chassis Container
-            var chassisBg = new SolidColorBrush(Color.FromRgb(20, 24, 33));
-            chassisBg.Freeze();
-            var chassisPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.5);
-            chassisPen.Freeze();
+            var chassisBg = ZeroWpfTheme.BgCard;
+            var chassisPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(chassisBg, chassisPen, new Rect(0.5, 0.5, w - 1, h - 1), 6, 6);
 
             // 1. Chassis Header & Overall Status
@@ -105,13 +103,11 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawHeader(DrawingContext dc, Rect r, double dpi)
         {
-            var headerBg = new SolidColorBrush(Color.FromRgb(28, 33, 46));
-            headerBg.Freeze();
-            var headerPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            headerPen.Freeze();
+            var headerBg = ZeroWpfTheme.BgInput;
+            var headerPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(headerBg, headerPen, r, 4, 4);
 
-            var titleFt = CreateFormattedText($"{_profile.DeviceName} ({_profile.Model})", ZeroWpfTheme.BoldTypeface, 11.0, Brushes.White, dpi);
+            var titleFt = CreateFormattedText($"{_profile.DeviceName} ({_profile.Model})", ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
             double totalPower = _profile.Psu1.PowerWatts + _profile.Psu2.PowerWatts;
             var subFt = CreateFormattedText($"Serial: {_profile.SerialNumber} | Total Power: {totalPower:F0}W", ZeroWpfTheme.RegularTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
 
@@ -130,8 +126,7 @@ namespace ZeroUI.Wpf.Network
             double pillW = 90;
             double pillH = 24;
             Rect pillRect = new Rect(r.Right - pillW - 8, r.Top + (r.Height - pillH) / 2.0, pillW, pillH);
-            var pillBg = new SolidColorBrush(Color.FromRgb(30, 41, 59));
-            pillBg.Freeze();
+            var pillBg = ZeroWpfTheme.BgCard;
             var pillPen = new Pen(pillBrush, 1.0);
             pillPen.Freeze();
 
@@ -142,10 +137,8 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawPsuSection(DrawingContext dc, Rect r, double dpi)
         {
-            var secBg = new SolidColorBrush(Color.FromRgb(24, 28, 38));
-            secBg.Freeze();
-            var secPen = new Pen(new SolidColorBrush(Color.FromRgb(40, 48, 64)), 1.0);
-            secPen.Freeze();
+            var secBg = ZeroWpfTheme.BgInput;
+            var secPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(secBg, secPen, r, 4, 4);
 
             var titleFt = CreateFormattedText("Dual Redundant Power Supplies", ZeroWpfTheme.BoldTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
@@ -160,10 +153,8 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawSinglePsu(DrawingContext dc, PsuStatus psu, Rect r, double dpi)
         {
-            var psuBg = new SolidColorBrush(Color.FromRgb(18, 22, 30));
-            psuBg.Freeze();
-            var psuPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            psuPen.Freeze();
+            var psuBg = ZeroWpfTheme.BgCard;
+            var psuPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(psuBg, psuPen, r, 3, 3);
 
             Brush led = psu.Status == PsuHealthStatus.Normal ? ZeroWpfTheme.SuccessAccent :
@@ -171,7 +162,7 @@ namespace ZeroUI.Wpf.Network
 
             dc.DrawEllipse(led, null, new Point(r.Left + 10, r.Top + 12), 3.5, 3.5);
 
-            var nameFt = CreateFormattedText($"PSU {psu.PsuIndex} ({psu.Status})", ZeroWpfTheme.BoldTypeface, 9.0, Brushes.White, dpi);
+            var nameFt = CreateFormattedText($"PSU {psu.PsuIndex} ({psu.Status})", ZeroWpfTheme.BoldTypeface, 9.0, ZeroWpfTheme.TextPrimary, dpi);
             dc.DrawText(nameFt, new Point(r.Left + 20, r.Top + 5));
 
             string psuInfo = $"{psu.PowerWatts:F0}W | {psu.InputVoltageVolts:F0}V | {psu.TemperatureCelsius:F1}°C";
@@ -181,10 +172,8 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawFansSection(DrawingContext dc, Rect r, double dpi)
         {
-            var secBg = new SolidColorBrush(Color.FromRgb(24, 28, 38));
-            secBg.Freeze();
-            var secPen = new Pen(new SolidColorBrush(Color.FromRgb(40, 48, 64)), 1.0);
-            secPen.Freeze();
+            var secBg = ZeroWpfTheme.BgInput;
+            var secPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(secBg, secPen, r, 4, 4);
 
             var titleFt = CreateFormattedText("Chassis Fan Tachometers", ZeroWpfTheme.BoldTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
@@ -209,9 +198,8 @@ namespace ZeroUI.Wpf.Network
             double radius = 16.0;
 
             // Outer ring
-            var ringPen = new Pen(new SolidColorBrush(Color.FromRgb(55, 65, 81)), 1.5);
-            ringPen.Freeze();
-            dc.DrawEllipse(ZeroWpfTheme.BgInput, ringPen, new Point(cx, cy), radius, radius);
+            var ringPen = ZeroWpfTheme.BorderPen;
+            dc.DrawEllipse(ZeroWpfTheme.BgCard, ringPen, new Point(cx, cy), radius, radius);
 
             // Rotating fan blades
             var bladePen = new Pen(fan.Status == FanHealthStatus.Normal ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.DangerAccent, 2.0);
@@ -224,19 +212,17 @@ namespace ZeroUI.Wpf.Network
                 dc.DrawLine(bladePen, new Point(cx, cy), pEnd);
             }
 
-            dc.DrawEllipse(Brushes.White, null, new Point(cx, cy), 2.5, 2.5);
+            dc.DrawEllipse(ZeroWpfTheme.TextPrimary, null, new Point(cx, cy), 2.5, 2.5);
 
             // RPM text
-            var rpmFt = CreateFormattedText($"{fan.CurrentRpm} RPM", ZeroWpfTheme.BoldTypeface, 8.5, Brushes.White, dpi);
+            var rpmFt = CreateFormattedText($"{fan.CurrentRpm} RPM", ZeroWpfTheme.BoldTypeface, 8.5, ZeroWpfTheme.TextPrimary, dpi);
             dc.DrawText(rpmFt, new Point(cx - rpmFt.Width / 2.0, cy + radius + 6));
         }
 
         private void DrawOpticalDdmSection(DrawingContext dc, Rect r, double dpi)
         {
-            var secBg = new SolidColorBrush(Color.FromRgb(24, 28, 38));
-            secBg.Freeze();
-            var secPen = new Pen(new SolidColorBrush(Color.FromRgb(40, 48, 64)), 1.0);
-            secPen.Freeze();
+            var secBg = ZeroWpfTheme.BgInput;
+            var secPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(secBg, secPen, r, 4, 4);
 
             var titleFt = CreateFormattedText("SFP+ Optical DDM Telemetry", ZeroWpfTheme.BoldTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
@@ -251,7 +237,7 @@ namespace ZeroUI.Wpf.Network
                 var sfp = _profile.OpticalTransceivers[i];
                 double y = r.Top + 22 + i * slotH;
 
-                var portFt = CreateFormattedText(sfp.PortName, ZeroWpfTheme.BoldTypeface, 9.0, Brushes.White, dpi);
+                var portFt = CreateFormattedText(sfp.PortName, ZeroWpfTheme.BoldTypeface, 9.0, ZeroWpfTheme.TextPrimary, dpi);
                 dc.DrawText(portFt, new Point(r.Left + 8, y));
 
                 string metrics = $"Tx: {sfp.TxPowerDbm:F1} dBm | Rx: {sfp.RxPowerDbm:F1} dBm | {sfp.TransceiverTempCelsius:F1}°C";

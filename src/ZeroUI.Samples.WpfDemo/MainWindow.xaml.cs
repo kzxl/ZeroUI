@@ -528,10 +528,10 @@ namespace ZeroUI.Samples.WpfDemo
             BtnLoad100K.Foreground = ZeroWpfTheme.TextPrimary;
 
             BtnLoad1M.Background = ZeroWpfTheme.PrimaryAccent;
-            BtnLoad1M.Foreground = Brushes.White;
+            BtnLoad1M.Foreground = ZeroWpfTheme.SelectionForeground;
 
             BtnLoad10M.Background = ZeroWpfTheme.SecondaryAccent;
-            BtnLoad10M.Foreground = Brushes.White;
+            BtnLoad10M.Foreground = ZeroWpfTheme.SelectionForeground;
 
             BtnGroupCategory.Background = ZeroWpfTheme.BgInput;
             BtnGroupCategory.Foreground = ZeroWpfTheme.TextPrimary;

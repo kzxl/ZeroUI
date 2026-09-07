@@ -121,13 +121,11 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawHeader(DrawingContext dc, Rect r, double dpi)
         {
-            var headerBg = new SolidColorBrush(Color.FromRgb(28, 33, 46));
-            headerBg.Freeze();
-            var headerPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            headerPen.Freeze();
+            var headerBg = ZeroWpfTheme.BgCard;
+            var headerPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(headerBg, headerPen, r, 4, 4);
 
-            var titleFt = CreateFormattedText($"IPAM Matrix - {_engine.SubnetPrefix}.0/24", ZeroWpfTheme.BoldTypeface, 11.0, Brushes.White, dpi);
+            var titleFt = CreateFormattedText($"IPAM Matrix - {_engine.SubnetPrefix}.0/24", ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
             int allocated = _engine.CountByState(IpHostState.DhcpLeased) + _engine.CountByState(IpHostState.StaticReserved) + _engine.CountByState(IpHostState.Gateway);
             int free = _engine.CountByState(IpHostState.Free);
             int conflicts = _engine.CountByState(IpHostState.Conflict);
@@ -158,13 +156,13 @@ namespace ZeroUI.Wpf.Network
 
                 Color cellColor = host.State switch
                 {
-                    IpHostState.Free => Color.FromRgb(30, 38, 50),
+                    IpHostState.Free => ZeroWpfTheme.BgInput.Color,
                     IpHostState.DhcpLeased => Color.FromRgb(59, 130, 246),     // Blue
                     IpHostState.StaticReserved => Color.FromRgb(16, 185, 129), // Green
                     IpHostState.Gateway => Color.FromRgb(168, 85, 247),        // Purple
                     IpHostState.Conflict => Color.FromRgb(239, 68, 68),        // Red
                     IpHostState.Rogue => Color.FromRgb(245, 158, 11),          // Amber
-                    _ => Color.FromRgb(30, 38, 50)
+                    _ => ZeroWpfTheme.BgInput.Color
                 };
 
                 // Pulsing highlight on conflict
@@ -177,15 +175,15 @@ namespace ZeroUI.Wpf.Network
                 var cellBg = new SolidColorBrush(cellColor);
                 cellBg.Freeze();
                 Pen pen = isSelected
-                    ? new Pen(Brushes.White, 2.0)
-                    : new Pen(new SolidColorBrush(Color.FromRgb(38, 46, 62)), 0.5);
-                pen.Freeze();
+                    ? new Pen(ZeroWpfTheme.PrimaryAccent, 2.0)
+                    : ZeroWpfTheme.GridLinePen;
 
                 dc.DrawRectangle(cellBg, pen, cellRect);
 
                 if (cellW >= 18 && cellH >= 14)
                 {
-                    var numFt = CreateFormattedText(octet.ToString(), ZeroWpfTheme.RegularTypeface, 7.0, Brushes.White, dpi);
+                    Brush numBrush = host.State == IpHostState.Free ? ZeroWpfTheme.TextMuted : Brushes.White;
+                    var numFt = CreateFormattedText(octet.ToString(), ZeroWpfTheme.RegularTypeface, 7.0, numBrush, dpi);
                     dc.DrawText(numFt, new Point(cellRect.Left + (cellRect.Width - numFt.Width) / 2.0, cellRect.Top + (cellRect.Height - numFt.Height) / 2.0));
                 }
             }
@@ -193,10 +191,8 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawDetailHud(DrawingContext dc, Rect r, double dpi)
         {
-            var hudBg = new SolidColorBrush(Color.FromRgb(28, 33, 46));
-            hudBg.Freeze();
-            var hudPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            hudPen.Freeze();
+            var hudBg = ZeroWpfTheme.BgCard;
+            var hudPen = ZeroWpfTheme.BorderPen;
             dc.DrawRoundedRectangle(hudBg, hudPen, r, 4, 4);
 
             if (_selectedHost == null)
@@ -208,7 +204,7 @@ namespace ZeroUI.Wpf.Network
 
             // Host Info
             string hostTitle = $"{_selectedHost.IpAddress} ({_selectedHost.State})";
-            var titleFt = CreateFormattedText(hostTitle, ZeroWpfTheme.BoldTypeface, 10.5, Brushes.White, dpi);
+            var titleFt = CreateFormattedText(hostTitle, ZeroWpfTheme.BoldTypeface, 10.5, ZeroWpfTheme.TextPrimary, dpi);
             dc.DrawText(titleFt, new Point(r.Left + 10, r.Top + 8));
 
             string meta = $"Host: {_selectedHost.Hostname} | MAC: {_selectedHost.MacAddress} | RTT: {_selectedHost.PingRttMs:F1} ms";

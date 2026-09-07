@@ -82,6 +82,10 @@ namespace ZeroUI.Wpf.Editors
         private readonly ObservableCollection<CheckedComboItem> _items = new ObservableCollection<CheckedComboItem>();
         private readonly ObservableCollection<CheckedComboItem> _filteredItems = new ObservableCollection<CheckedComboItem>();
 
+        private Border? _border;
+        private TextBlock? _arrow;
+        private Border? _popupBorder;
+        private Separator? _separator;
         private Popup? _popup;
         private TextBox? _searchBox;
         private TextBlock? _displayTextBlock;
@@ -209,13 +213,47 @@ namespace ZeroUI.Wpf.Editors
             };
 
             BuildVisualTemplate();
+            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+        }
+
+        private void UpdateTheme()
+        {
+            Background = ZeroWpfTheme.BgInput;
+            Foreground = ZeroWpfTheme.TextPrimary;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_border != null)
+            {
+                _border.Background = ZeroWpfTheme.BgInput;
+                _border.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_arrow != null) _arrow.Foreground = ZeroWpfTheme.TextSecondary;
+            if (_popupBorder != null)
+            {
+                _popupBorder.Background = ZeroWpfTheme.BgCard;
+                _popupBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_searchBox != null)
+            {
+                _searchBox.Background = ZeroWpfTheme.BgInput;
+                _searchBox.Foreground = ZeroWpfTheme.TextPrimary;
+                _searchBox.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_selectAllBox != null)
+            {
+                _selectAllBox.Foreground = ZeroWpfTheme.TextPrimary;
+            }
+            if (_separator != null)
+            {
+                _separator.Background = ZeroWpfTheme.BorderDefault;
+            }
+            UpdateDisplayText();
         }
 
         private void BuildVisualTemplate()
         {
             var rootGrid = new Grid();
 
-            var border = new Border
+            _border = new Border
             {
                 Background = Background,
                 BorderBrush = BorderBrush,
@@ -238,7 +276,7 @@ namespace ZeroUI.Wpf.Editors
             Grid.SetColumn(_displayTextBlock, 0);
             headerGrid.Children.Add(_displayTextBlock);
 
-            var arrow = new TextBlock
+            _arrow = new TextBlock
             {
                 Text = "▼",
                 FontSize = 9.0,
@@ -246,11 +284,11 @@ namespace ZeroUI.Wpf.Editors
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
-            Grid.SetColumn(arrow, 1);
-            headerGrid.Children.Add(arrow);
+            Grid.SetColumn(_arrow, 1);
+            headerGrid.Children.Add(_arrow);
 
-            border.Child = headerGrid;
-            rootGrid.Children.Add(border);
+            _border.Child = headerGrid;
+            rootGrid.Children.Add(_border);
 
             // Popup construction
             _popup = new Popup
@@ -261,7 +299,7 @@ namespace ZeroUI.Wpf.Editors
                 AllowsTransparency = true
             };
 
-            var popupBorder = new Border
+            _popupBorder = new Border
             {
                 Background = ZeroWpfTheme.BgCard,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
@@ -296,12 +334,12 @@ namespace ZeroUI.Wpf.Editors
             _selectAllBox.Click += SelectAllBox_Click;
             popupStack.Children.Add(_selectAllBox);
 
-            var separator = new Separator
+            _separator = new Separator
             {
                 Margin = new Thickness(0, 0, 0, 4),
                 Background = ZeroWpfTheme.BorderDefault
             };
-            popupStack.Children.Add(separator);
+            popupStack.Children.Add(_separator);
 
             _listBox = new ListBox
             {
@@ -316,14 +354,14 @@ namespace ZeroUI.Wpf.Editors
             var factory = new FrameworkElementFactory(typeof(CheckBox));
             factory.SetBinding(CheckBox.IsCheckedProperty, new System.Windows.Data.Binding(nameof(CheckedComboItem.IsChecked)) { Mode = System.Windows.Data.BindingMode.TwoWay });
             factory.SetBinding(CheckBox.ContentProperty, new System.Windows.Data.Binding(nameof(CheckedComboItem.Text)));
-            factory.SetValue(CheckBox.ForegroundProperty, ZeroWpfTheme.TextPrimary);
+            factory.SetResourceReference(CheckBox.ForegroundProperty, "ZeroUI.TextPrimary");
             factory.SetValue(CheckBox.MarginProperty, new Thickness(4, 3, 4, 3));
             itemTemplate.VisualTree = factory;
             _listBox.ItemTemplate = itemTemplate;
 
             popupStack.Children.Add(_listBox);
-            popupBorder.Child = popupStack;
-            _popup.Child = popupBorder;
+            _popupBorder.Child = popupStack;
+            _popup.Child = _popupBorder;
 
             rootGrid.Children.Add(_popup);
             AddVisualChild(rootGrid);

@@ -32,6 +32,7 @@ namespace ZeroUI.Wpf.Editors
     public class TokenEdit : Control, IZeroEditor
     {
         private readonly ObservableCollection<string> _tokens = new ObservableCollection<string>();
+        private Border? _border;
         private WrapPanel? _wrapPanel;
         private TextBox? _inputBox;
 
@@ -110,11 +111,28 @@ namespace ZeroUI.Wpf.Editors
             };
 
             BuildVisualTemplate();
+            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+        }
+
+        private void UpdateTheme()
+        {
+            Background = ZeroWpfTheme.BgInput;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_border != null)
+            {
+                _border.Background = ZeroWpfTheme.BgInput;
+                _border.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_inputBox != null)
+            {
+                _inputBox.Foreground = ZeroWpfTheme.TextPrimary;
+            }
+            RebuildTokensUI();
         }
 
         private void BuildVisualTemplate()
         {
-            var border = new Border
+            _border = new Border
             {
                 Background = Background,
                 BorderBrush = BorderBrush,
@@ -141,9 +159,9 @@ namespace ZeroUI.Wpf.Editors
             };
             _inputBox.KeyDown += InputBox_KeyDown;
 
-            border.Child = _wrapPanel;
-            AddVisualChild(border);
-            AddLogicalChild(border);
+            _border.Child = _wrapPanel;
+            AddVisualChild(_border);
+            AddLogicalChild(_border);
 
             RebuildTokensUI();
         }

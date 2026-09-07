@@ -20,6 +20,10 @@ namespace ZeroUI.Wpf.Editors
     /// </summary>
     public class SearchLookUpEdit : Control, IZeroEditor
     {
+        private Border? _border;
+        private TextBlock? _iconBlock;
+        private TextBlock? _arrow;
+        private Border? _popupBorder;
         private Popup? _popup;
         private TextBox? _searchBox;
         private GridControl? _grid;
@@ -160,13 +164,46 @@ namespace ZeroUI.Wpf.Editors
             };
 
             BuildVisualTemplate();
+            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+        }
+
+        private void UpdateTheme()
+        {
+            Background = ZeroWpfTheme.BgInput;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_border != null)
+            {
+                _border.Background = ZeroWpfTheme.BgInput;
+                _border.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_iconBlock != null) _iconBlock.Foreground = ZeroWpfTheme.TextSecondary;
+            if (_arrow != null) _arrow.Foreground = ZeroWpfTheme.TextSecondary;
+            if (_displayTextBlock != null)
+            {
+                _displayTextBlock.Foreground = string.IsNullOrEmpty(_selectedText) ? ZeroWpfTheme.TextMuted : ZeroWpfTheme.TextPrimary;
+            }
+            if (_popupBorder != null)
+            {
+                _popupBorder.Background = ZeroWpfTheme.BgCard;
+                _popupBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_searchBox != null)
+            {
+                _searchBox.Background = ZeroWpfTheme.BgInput;
+                _searchBox.Foreground = ZeroWpfTheme.TextPrimary;
+                _searchBox.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_statusBlock != null)
+            {
+                _statusBlock.Foreground = ZeroWpfTheme.TextMuted;
+            }
         }
 
         private void BuildVisualTemplate()
         {
             var rootGrid = new Grid();
 
-            var border = new Border
+            _border = new Border
             {
                 Background = Background,
                 BorderBrush = BorderBrush,
@@ -180,15 +217,15 @@ namespace ZeroUI.Wpf.Editors
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(16, GridUnitType.Pixel) });
 
-            var iconBlock = new TextBlock
+            _iconBlock = new TextBlock
             {
                 Text = "⊞",
                 FontSize = 13.0,
                 Foreground = ZeroWpfTheme.TextSecondary,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            Grid.SetColumn(iconBlock, 0);
-            headerGrid.Children.Add(iconBlock);
+            Grid.SetColumn(_iconBlock, 0);
+            headerGrid.Children.Add(_iconBlock);
 
             _displayTextBlock = new TextBlock
             {
@@ -201,7 +238,7 @@ namespace ZeroUI.Wpf.Editors
             Grid.SetColumn(_displayTextBlock, 1);
             headerGrid.Children.Add(_displayTextBlock);
 
-            var arrow = new TextBlock
+            _arrow = new TextBlock
             {
                 Text = "▼",
                 FontSize = 9.0,
@@ -209,11 +246,11 @@ namespace ZeroUI.Wpf.Editors
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Right
             };
-            Grid.SetColumn(arrow, 2);
-            headerGrid.Children.Add(arrow);
+            Grid.SetColumn(_arrow, 2);
+            headerGrid.Children.Add(_arrow);
 
-            border.Child = headerGrid;
-            rootGrid.Children.Add(border);
+            _border.Child = headerGrid;
+            rootGrid.Children.Add(_border);
 
             // Popup construction hosting search bar & DataGrid
             _popup = new Popup
@@ -224,7 +261,7 @@ namespace ZeroUI.Wpf.Editors
                 AllowsTransparency = true
             };
 
-            var popupBorder = new Border
+            _popupBorder = new Border
             {
                 Background = ZeroWpfTheme.BgCard,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
@@ -349,8 +386,8 @@ namespace ZeroUI.Wpf.Editors
             Grid.SetRow(_statusBlock, 2);
             popupGrid.Children.Add(_statusBlock);
 
-            popupBorder.Child = popupGrid;
-            _popup.Child = popupBorder;
+            _popupBorder.Child = popupGrid;
+            _popup.Child = _popupBorder;
 
             rootGrid.Children.Add(_popup);
             AddVisualChild(rootGrid);

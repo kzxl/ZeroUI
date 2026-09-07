@@ -256,21 +256,31 @@ namespace ZeroUI.Wpf.Network
             bool isSelected = node == _selectedNode;
             Rect r = new Rect(node.X, node.Y, node.Width, node.Height);
 
-            Color bg = node.DeviceType switch
-            {
-                NetworkDeviceType.Router => Color.FromRgb(30, 41, 59),
-                NetworkDeviceType.Firewall => Color.FromRgb(58, 28, 30),
-                NetworkDeviceType.CoreSwitch or NetworkDeviceType.AccessSwitch => Color.FromRgb(22, 47, 58),
-                NetworkDeviceType.Server => Color.FromRgb(40, 32, 56),
-                NetworkDeviceType.Plc => Color.FromRgb(25, 45, 35),
-                _ => Color.FromRgb(28, 33, 44)
-            };
+            Color bg = ZeroWpfTheme.IsDark
+                ? node.DeviceType switch
+                {
+                    NetworkDeviceType.Router => Color.FromRgb(30, 41, 59),
+                    NetworkDeviceType.Firewall => Color.FromRgb(58, 28, 30),
+                    NetworkDeviceType.CoreSwitch or NetworkDeviceType.AccessSwitch => Color.FromRgb(22, 47, 58),
+                    NetworkDeviceType.Server => Color.FromRgb(40, 32, 56),
+                    NetworkDeviceType.Plc => Color.FromRgb(25, 45, 35),
+                    _ => Color.FromRgb(28, 33, 44)
+                }
+                : node.DeviceType switch
+                {
+                    NetworkDeviceType.Router => Color.FromRgb(224, 231, 255),
+                    NetworkDeviceType.Firewall => Color.FromRgb(254, 226, 226),
+                    NetworkDeviceType.CoreSwitch or NetworkDeviceType.AccessSwitch => Color.FromRgb(207, 250, 254),
+                    NetworkDeviceType.Server => Color.FromRgb(243, 232, 255),
+                    NetworkDeviceType.Plc => Color.FromRgb(220, 252, 231),
+                    _ => Color.FromRgb(241, 245, 249)
+                };
 
             var nodeBg = new SolidColorBrush(bg);
             nodeBg.Freeze();
             var nodePen = isSelected
                 ? new Pen(ZeroWpfTheme.PrimaryAccent, 2.0)
-                : new Pen(new SolidColorBrush(Color.FromRgb(55, 65, 81)), 1.0);
+                : ZeroWpfTheme.BorderPen;
             nodePen.Freeze();
 
             dc.DrawRoundedRectangle(nodeBg, nodePen, r, 4, 4);
@@ -280,7 +290,7 @@ namespace ZeroUI.Wpf.Network
             dc.DrawEllipse(statusBrush, null, new Point(r.Left + 8, r.Top + 10), 3.0, 3.0);
 
             // Device Name & IP
-            var nameFt = CreateFormattedText(node.Name, ZeroWpfTheme.BoldTypeface, 9.5, Brushes.White, dpi);
+            var nameFt = CreateFormattedText(node.Name, ZeroWpfTheme.BoldTypeface, 9.5, ZeroWpfTheme.TextPrimary, dpi);
             var ipFt = CreateFormattedText(node.IpAddress, ZeroWpfTheme.RegularTypeface, 8.0, ZeroWpfTheme.TextSecondary, dpi);
 
             dc.DrawText(nameFt, new Point(r.Left + 18, r.Top + 4));
@@ -289,15 +299,14 @@ namespace ZeroUI.Wpf.Network
 
         private void DrawHud(DrawingContext dc, double w, double h, double dpi)
         {
-            var hudBg = new SolidColorBrush(Color.FromArgb(200, 20, 24, 33));
+            var hudBg = new SolidColorBrush(Color.FromArgb(220, ZeroWpfTheme.BgCard.Color.R, ZeroWpfTheme.BgCard.Color.G, ZeroWpfTheme.BgCard.Color.B));
             hudBg.Freeze();
-            var hudPen = new Pen(new SolidColorBrush(Color.FromRgb(45, 55, 72)), 1.0);
-            hudPen.Freeze();
+            var hudPen = ZeroWpfTheme.BorderPen;
 
             Rect r = new Rect(10, 10, 260, 48);
             dc.DrawRoundedRectangle(hudBg, hudPen, r, 4, 4);
 
-            var titleFt = CreateFormattedText("ZeroUI OT/IT Topology Graph", ZeroWpfTheme.BoldTypeface, 11.0, Brushes.White, dpi);
+            var titleFt = CreateFormattedText("ZeroUI OT/IT Topology Graph", ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
             var subFt = CreateFormattedText($"Nodes: {_engine.Nodes.Count} | Links: {_engine.Links.Count} | Zoom: {_zoom * 100:0}%", ZeroWpfTheme.RegularTypeface, 9.5, ZeroWpfTheme.TextSecondary, dpi);
 
             dc.DrawText(titleFt, new Point(r.Left + 8, r.Top + 6));

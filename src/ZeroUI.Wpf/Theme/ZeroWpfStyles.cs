@@ -49,7 +49,13 @@ namespace ZeroUI.Wpf.Theme
             const string xaml = @"
 <ResourceDictionary xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
                     xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
-                    xmlns:edit=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf"">
+                    xmlns:edit=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf""
+                    xmlns:ind=""clr-namespace:ZeroUI.Wpf.Industrial;assembly=ZeroUI.Wpf"">
+
+    <!-- 0. DEFAULT TEXTBLOCK FOREGROUND STYLE -->
+    <Style TargetType=""{x:Type TextBlock}"">
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+    </Style>
 
     <!-- 1. SLIM FLUENT SCROLLBAR -->
     <ControlTemplate x:Key=""ZeroVerticalScrollBar"" TargetType=""{x:Type ScrollBar}"">
@@ -886,6 +892,51 @@ namespace ZeroUI.Wpf.Theme
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- 15. GRIDCARD / ZEROCARD STYLE -->
+    <Style TargetType=""{x:Type ind:GridCard}"">
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgCard}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""BorderThickness"" Value=""1"" />
+        <Setter Property=""Padding"" Value=""16"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type ind:GridCard}"">
+                    <Border Background=""{TemplateBinding Background}""
+                            BorderBrush=""{TemplateBinding BorderBrush}""
+                            BorderThickness=""{TemplateBinding BorderThickness}""
+                            CornerRadius=""8""
+                            Padding=""{TemplateBinding Padding}"">
+                        <DockPanel LastChildFill=""True"">
+                            <StackPanel x:Name=""PART_HeaderPanel"" DockPanel.Dock=""Top"" Margin=""0,0,0,10"">
+                                <TextBlock x:Name=""PART_HeaderText""
+                                           Text=""{Binding HeaderText, RelativeSource={RelativeSource TemplatedParent}}""
+                                           FontSize=""14"" FontWeight=""SemiBold""
+                                           Foreground=""{DynamicResource ZeroUI.TextPrimary}"" />
+                                <TextBlock x:Name=""PART_SubtitleText""
+                                           Text=""{Binding SubtitleText, RelativeSource={RelativeSource TemplatedParent}}""
+                                           FontSize=""11.5""
+                                           Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                           Margin=""0,2,0,0"" />
+                            </StackPanel>
+                            <ContentPresenter />
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""HeaderText"" Value="""">
+                            <Setter TargetName=""PART_HeaderPanel"" Property=""Visibility"" Value=""Collapsed"" />
+                        </Trigger>
+                        <Trigger Property=""SubtitleText"" Value="""">
+                            <Setter TargetName=""PART_SubtitleText"" Property=""Visibility"" Value=""Collapsed"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType=""{x:Type ind:ZeroCard}"" BasedOn=""{StaticResource {x:Type ind:GridCard}}"" />
 
 </ResourceDictionary>";
 

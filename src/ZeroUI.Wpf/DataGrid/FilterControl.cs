@@ -18,6 +18,7 @@ namespace ZeroUI.Wpf.DataGrid
     {
         private readonly GroupFilterNode _rootGroup = new GroupFilterNode(FilterGroupOperator.And);
         private readonly List<string> _availableFields = new List<string>();
+        private Border? _border;
         private StackPanel? _treeStack;
 
         public event EventHandler? FilterChanged;
@@ -39,14 +40,27 @@ namespace ZeroUI.Wpf.DataGrid
             Height = 280;
 
             ZeroLocalizer.CultureChanged += (s, e) => RebuildTreeUI();
+            ZeroWpfTheme.ThemeChanged += UpdateTheme;
 
             _rootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
             BuildVisualTemplate();
         }
 
+        private void UpdateTheme()
+        {
+            Background = ZeroWpfTheme.BgCard;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_border != null)
+            {
+                _border.Background = ZeroWpfTheme.BgCard;
+                _border.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            RebuildTreeUI();
+        }
+
         private void BuildVisualTemplate()
         {
-            var border = new Border
+            _border = new Border
             {
                 Background = Background,
                 BorderBrush = BorderBrush,
@@ -59,9 +73,9 @@ namespace ZeroUI.Wpf.DataGrid
             _treeStack = new StackPanel();
             scroll.Content = _treeStack;
 
-            border.Child = scroll;
-            AddVisualChild(border);
-            AddLogicalChild(border);
+            _border.Child = scroll;
+            AddVisualChild(_border);
+            AddLogicalChild(_border);
 
             RebuildTreeUI();
         }

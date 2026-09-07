@@ -18,6 +18,7 @@ namespace ZeroUI.Wpf.Reporting
     public class DocumentPreviewControl : Control
     {
         private readonly List<Visual> _pages = new List<Visual>();
+        private Border? _toolbar;
         private readonly ScrollViewer _scrollViewer;
         private readonly Border _paperCanvas;
         private readonly TextBlock _pageStatusLabel;
@@ -75,7 +76,7 @@ namespace ZeroUI.Wpf.Reporting
 
         public DocumentPreviewControl()
         {
-            Background = new SolidColorBrush(Color.FromRgb(30, 30, 35)); // Neutral workspace dark
+            Background = ZeroWpfTheme.BgPrimary;
             ClipToBounds = true;
 
             var rootGrid = new Grid();
@@ -83,7 +84,7 @@ namespace ZeroUI.Wpf.Reporting
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Viewport
 
             // 1. Build Command Toolbar
-            var toolbar = new Border
+            _toolbar = new Border
             {
                 Background = ZeroWpfTheme.BgCard,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
@@ -154,16 +155,16 @@ namespace ZeroUI.Wpf.Reporting
             barPanel.Children.Add(btnNext);
             barPanel.Children.Add(btnLast);
 
-            toolbar.Child = barPanel;
-            Grid.SetRow(toolbar, 0);
-            rootGrid.Children.Add(toolbar);
+            _toolbar.Child = barPanel;
+            Grid.SetRow(_toolbar, 0);
+            rootGrid.Children.Add(_toolbar);
 
             // 2. Build Document Paper Canvas within ScrollViewer
             _scrollViewer = new ScrollViewer
             {
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Background = new SolidColorBrush(Color.FromRgb(24, 24, 27)),
+                Background = ZeroWpfTheme.BgPrimary,
                 Padding = new Thickness(24)
             };
 
@@ -201,8 +202,27 @@ namespace ZeroUI.Wpf.Reporting
                 UpdateLocalizedStrings();
                 UpdatePageDisplay();
             };
+            ZeroWpfTheme.ThemeChanged += UpdateTheme;
             UpdateLocalizedStrings();
             UpdatePageDisplay();
+        }
+
+        private void UpdateTheme()
+        {
+            Background = ZeroWpfTheme.BgPrimary;
+            if (_toolbar != null)
+            {
+                _toolbar.Background = ZeroWpfTheme.BgCard;
+                _toolbar.BorderBrush = ZeroWpfTheme.BorderDefault;
+            }
+            if (_scrollViewer != null)
+            {
+                _scrollViewer.Background = ZeroWpfTheme.BgPrimary;
+            }
+            if (_pageStatusLabel != null)
+            {
+                _pageStatusLabel.Foreground = ZeroWpfTheme.TextPrimary;
+            }
         }
 
         public void SetPages(IEnumerable<Visual> pages)

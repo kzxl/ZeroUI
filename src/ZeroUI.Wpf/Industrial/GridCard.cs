@@ -29,18 +29,17 @@ namespace ZeroUI.Wpf.Industrial
             set => SetValue(SubtitleTextProperty, value);
         }
 
+        static GridCard()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(GridCard), new FrameworkPropertyMetadata(typeof(GridCard)));
+        }
+
         public GridCard()
         {
-            Background = ZeroWpfTheme.BgCard;
-            BorderBrush = ZeroWpfTheme.BorderDefault;
+            SetResourceReference(BackgroundProperty, "ZeroUI.BgCard");
+            SetResourceReference(BorderBrushProperty, "ZeroUI.BorderDefault");
             BorderThickness = new Thickness(1);
             Padding = new Thickness(16);
-
-            ZeroWpfTheme.ThemeChanged += () =>
-            {
-                Background = ZeroWpfTheme.BgCard;
-                BorderBrush = ZeroWpfTheme.BorderDefault;
-            };
         }
     }
 
@@ -50,5 +49,9 @@ namespace ZeroUI.Wpf.Industrial
     [Obsolete("ZeroCard is deprecated. Use GridCard instead.")]
     public class ZeroCard : GridCard
     {
+        static ZeroCard()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroCard), new FrameworkPropertyMetadata(typeof(GridCard)));
+        }
     }
 }
