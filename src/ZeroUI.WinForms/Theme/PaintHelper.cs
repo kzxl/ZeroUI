@@ -102,7 +102,79 @@ namespace ZeroUI.WinForms.Theme
         }
 
         /// <summary>
-        /// Creates a smooth GDI+ GraphicsPath for a rounded rectangle.
+        /// Draws a standardized industrial container card box with subtle theme-aware alpha fill and a header title.
+        /// </summary>
+        public static void DrawCardBox(Graphics g, Rectangle bounds, string title, Font titleFont, ZeroThemePalette palette)
+        {
+            if (g == null || bounds.Width <= 0 || bounds.Height <= 0) return;
+
+            using (var boxBrush = new SolidBrush(Color.FromArgb(12, palette.TextPrimary)))
+            using (var borderPen = new Pen(palette.Border, 1f))
+            {
+                g.FillRectangle(boxBrush, bounds);
+                g.DrawRectangle(borderPen, bounds);
+                if (!string.IsNullOrEmpty(title) && titleFont != null)
+                {
+                    TextRenderer.DrawText(g, title, titleFont, new Point(bounds.X + 14, bounds.Y + 10), palette.TextSecondary);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws a standardized KPI summary cell with a secondary small label and a prominent value.
+        /// </summary>
+        public static void DrawKpiCell(Graphics g, Rectangle bounds, string label, string value, Color valueColor, Font labelFont, Font valueFont, ZeroThemePalette palette)
+        {
+            if (g == null || bounds.Width <= 0 || bounds.Height <= 0) return;
+
+            if (!string.IsNullOrEmpty(label) && labelFont != null)
+            {
+                TextRenderer.DrawText(g, label, labelFont, new Point(bounds.X + 12, bounds.Y + 6), palette.TextSecondary);
+            }
+            if (!string.IsNullOrEmpty(value) && valueFont != null)
+            {
+                TextRenderer.DrawText(g, value, valueFont, new Point(bounds.X + 12, bounds.Y + 22), valueColor);
+            }
+        }
+
+        /// <summary>
+        /// Draws a two-column key-value data row aligned across a card panel.
+        /// </summary>
+        public static void DrawDataRow(Graphics g, Rectangle bounds, string label, string value, Color labelColor, Color valueColor, Font labelFont, Font valueFont)
+        {
+            if (g == null || bounds.Width <= 0 || bounds.Height <= 0) return;
+
+            if (!string.IsNullOrEmpty(label) && labelFont != null)
+            {
+                TextRenderer.DrawText(g, label, labelFont, new Point(bounds.X, bounds.Y), labelColor);
+            }
+            if (!string.IsNullOrEmpty(value) && valueFont != null)
+            {
+                Size valSize = TextRenderer.MeasureText(g, value, valueFont);
+                TextRenderer.DrawText(g, value, valueFont, new Point(bounds.Right - valSize.Width, bounds.Y), valueColor);
+            }
+        }
+
+        /// <summary>
+        /// Draws a small circular status LED indicator with an adjacent caption.
+        /// </summary>
+        public static void DrawLedIndicator(Graphics g, int x, int y, Color ledColor, string label, Font font)
+        {
+            if (g == null) return;
+
+            using (var brush = new SolidBrush(ledColor))
+            {
+                g.FillEllipse(brush, x, y, 10, 10);
+            }
+
+            if (!string.IsNullOrEmpty(label) && font != null)
+            {
+                TextRenderer.DrawText(g, label, font, new Point(x + 14, y - 2), ledColor);
+            }
+        }
+
+        /// <summary>
+        /// Creates a GraphicsPath for a rounded rectangle.
         /// </summary>
         public static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
         {
