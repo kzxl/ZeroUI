@@ -115,9 +115,9 @@ All 25 proposals from the Master Extension Catalog have been fully implemented, 
 
 ---
 
-## 6. Active Strategic Proposals: DevExpress-Grade GridControl Expansion
+## 6. Active Strategic Proposals: Enterprise-Grade GridControl Expansion
 
-To establish complete feature parity with **DevExpress XtraGrid / WPF GridControl** for enterprise ERP/MES applications while strictly preserving ZeroUI's Zero-Allocation and High-Refresh performance advantages:
+To establish complete feature parity with **Industry-Leading Enterprise DataGrids** for enterprise ERP/MES applications while strictly preserving ZeroUI's Zero-Allocation and High-Refresh performance advantages:
 
 ```mermaid
 graph TD
@@ -146,20 +146,20 @@ graph TD
 
 ---
 
-### 6.1 Enterprise Feature Parity Matrix (ZeroUI vs. DevExpress XtraGrid)
+### 6.1 Enterprise Feature Parity Matrix (ZeroUI vs. Enterprise Industry Standard)
 
-| Category | Enterprise Capability | DevExpress XtraGrid | Current ZeroUI | Proposed Expansion | Tier / Phase |
+| Category | Enterprise Capability | Industry Benchmark Standard | Current ZeroUI | Proposed Expansion | Tier / Phase |
 | :--- | :--- | :---: | :---: | :--- | :---: |
-| **Hierarchy** | **Master-Detail Views** | `GridLevelTree` / `detailView` | ❌ Flat grouping only | In-place expandable sub-grids with isolated columns, footers & selection | **Tier P0 (Phase 20)** |
-| **Customization** | **Layout Persistence** | `SaveLayoutToXml` / `Restore` | ❌ Manual code only | Zero-alloc JSON & XML serialization for columns, widths, sort, filters | **Tier P0 (Phase 20)** |
-| **Data Filtering** | **Excel-Style Column Popup** | Dropdown with Checkbox/Date tree | ⚠️ AutoFilter row only | Floating header popup: distinct value checkbox tree & date grouping | **Tier P0 (Phase 20)** |
-| **Ergonomics** | **Runtime Column Chooser** | Drag & drop Column Chooser box | ❌ Code visibility only | Interactive floating field list with header drag-and-drop | **Tier P1 (Phase 21)** |
-| **Formatting** | **Auto Best-Fit Columns** | `BestFitColumns()` / Splitter dbl-clk | ❌ Fixed widths | Font-metrics sampling for optimal column width calculation | **Tier P1 (Phase 21)** |
-| **Clipboard** | **Rectangular Range Copy/Paste**| Excel TSV bidirectional sync | ⚠️ Single row only | Multi-cell TSV parser with type validation & block range highlight | **Tier P1 (Phase 21)** |
-| **In-Place UI** | **Decoupled Repository Editors**| `RepositoryItem` + `CustomRowCellEdit`| ⚠️ Hardcoded floating editors| Extensible `IRepositoryItem` registry & per-cell dynamic editor dispatch | **Tier P2 (Phase 22)** |
-| **Reporting** | **One-Click Print Preview** | `gridControl.ShowPrintPreview()` | ⚠️ Exporter only | Integrated vector paginated print preview with repeated headers | **Tier P2 (Phase 22)** |
-| **Layout Mode**| **Multi-Row Records (`AdvBanded`)**| `AdvBandedGridView` | ⚠️ Hierarchical bands only| Sub-row cell matrix within single logical record | **Tier P2 (Phase 22)** |
-| **Data Fetch** | **Async Server Mode (Instant Feedback)**| `InstantFeedbackSource` | ⚠️ Sync Virtual Source | Non-blocking chunked paging with background SQL streaming & shimmer | **Tier P2 (Phase 22)** |
+| **Hierarchy** | **Master-Detail Views** | Hierarchical Relation Tree / Detail Views | ❌ Flat grouping only | In-place expandable sub-grids with isolated columns, footers & selection | **Tier P0 (Phase 20)** |
+| **Customization** | **Layout Persistence** | Save/Restore Layout (XML/JSON) | ❌ Manual code only | Zero-alloc JSON & XML serialization for columns, widths, sort, filters | **Tier P0 (Phase 20)** |
+| **Data Filtering** | **Excel-Style Column Popup** | Floating Header Dropdown with Tree Filter | ⚠️ AutoFilter row only | Floating header popup: distinct value checkbox tree & date grouping | **Tier P0 (Phase 20)** |
+| **Ergonomics** | **Runtime Column Chooser** | Drag & Drop Runtime Field Customization | ❌ Code visibility only | Interactive floating field list with header drag-and-drop | **Tier P1 (Phase 21)** |
+| **Formatting** | **Auto Best-Fit Columns** | Content-Aware Best Fit / Splitter Dbl-Click | ❌ Fixed widths | Font-metrics sampling for optimal column width calculation | **Tier P1 (Phase 21)** |
+| **Clipboard** | **Rectangular Range Copy/Paste**| Excel TSV Bidirectional Block Sync | ⚠️ Single row only | Multi-cell TSV parser with type validation & block range highlight | **Tier P1 (Phase 21)** |
+| **In-Place UI** | **Decoupled Repository Editors**| Per-Cell Dynamic Editor Registration | ⚠️ Hardcoded floating editors| Extensible `IRepositoryItem` registry & per-cell dynamic editor dispatch | **Tier P2 (Phase 22)** |
+| **Reporting** | **One-Click Print Preview** | Vector Paginated Print Engine | ⚠️ Exporter only | Integrated vector paginated print preview with repeated headers | **Tier P2 (Phase 22)** |
+| **Layout Mode**| **Multi-Row Records (`AdvBanded`)**| Multi-Row Record Card Bands | ⚠️ Hierarchical bands only| Sub-row cell matrix within single logical record | **Tier P2 (Phase 22)** |
+| **Data Fetch** | **Async Server Mode (Instant Feedback)**| Asynchronous Remote Streaming Source | ⚠️ Sync Virtual Source | Non-blocking chunked paging with background SQL streaming & shimmer | **Tier P2 (Phase 22)** |
 
 ---
 
@@ -404,3 +404,12 @@ To prevent premature over-engineering while maintaining clean separation of conc
 2. **Stage 2 (Future — On-Demand NuGet Package Splitting):**
    - When any industrial vertical exceeds 30–50 controls, extract the respective namespace into an independent package (e.g. `ZeroUI.Industry.Network.dll`).
    - Because namespaces and core contracts (`IScadaDrawable`, `ITagBoundControl`, `ZeroTheme`) are already strictly standardized, consuming applications experience zero breaking code changes upon extraction.
+
+---
+
+## 8. Control Ecosystem Audit & Composite Architecture Reference
+
+For the comprehensive, control-by-control audit of all 60+ components across the 7 functional suites, shared logic extraction specifications (`ZeroEditorBase`, `ZeroDropDownHost`, `ZeroTextRasterizer`), and strict single-HWND composite control rules (Flyweight In-Place Editing, In-Place Master-Detail Virtual Painting, Non-Activating Dropdown Popups), refer to the detailed technical specification:
+
+* **Architecture Document:** [`docs/architecture/control-ecosystem-audit-and-composite-architecture.md`](file:///e:/15.%20Other/dotnet/libs/ZeroUI/docs/architecture/control-ecosystem-audit-and-composite-architecture.md)
+
