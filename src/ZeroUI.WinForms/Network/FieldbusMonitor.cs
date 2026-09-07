@@ -172,9 +172,17 @@ namespace ZeroUI.WinForms.Network
             using var subFont = new Font(Font.FontFamily, 7.5f, FontStyle.Regular);
             using var textBrush = new SolidBrush(Color.FromArgb(241, 245, 249));
             using var subBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
+            using var sfText = new StringFormat
+            {
+                Alignment = StringAlignment.Near,
+                LineAlignment = StringAlignment.Center,
+                Trimming = StringTrimming.EllipsisCharacter,
+                FormatFlags = StringFormatFlags.NoWrap
+            };
 
-            g.DrawString($"Master: {_network.MasterName} ({_network.Topology})", titleFont, textBrush, r.Left + 112, r.Top + 6);
-            g.DrawString($"Bus Cycle: {_network.MasterCycleTimeMs:F1} ms | Jitter: ±{_network.JitterMicroseconds:F0} µs | Stations: {_network.Stations.Count}", subFont, subBrush, r.Left + 112, r.Top + 24);
+            int textW = Math.Max(40, r.Right - r.Left - 116);
+            g.DrawString($"Master: {_network.MasterName} ({_network.Topology})", titleFont, textBrush, new RectangleF(r.Left + 112, r.Top + 4, textW, 16), sfText);
+            g.DrawString($"Bus Cycle: {_network.MasterCycleTimeMs:F1} ms | Jitter: ±{_network.JitterMicroseconds:F0} µs | Stations: {_network.Stations.Count}", subFont, subBrush, new RectangleF(r.Left + 112, r.Top + 22, textW, 16), sfText);
         }
 
         private void DrawBreakAlert(Graphics g, FieldbusSegment seg, Rectangle r)
@@ -240,8 +248,8 @@ namespace ZeroUI.WinForms.Network
             {
                 var st = _network.Stations[i];
                 float cx = r.Left + (i * slotW) + (slotW / 2);
-                float boxW = Math.Min(84f, slotW - 12);
-                float boxH = Math.Min(68f, r.Height - 16);
+                float boxW = Math.Max(28f, Math.Min(84f, slotW - 8));
+                float boxH = Math.Max(40f, Math.Min(68f, r.Height - 16));
                 var boxRect = new Rectangle((int)(cx - boxW / 2), (int)(cy - boxH / 2), (int)boxW, (int)boxH);
 
                 DrawStationBox(g, st, boxRect);

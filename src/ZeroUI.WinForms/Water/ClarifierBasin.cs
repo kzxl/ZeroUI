@@ -121,31 +121,41 @@ namespace ZeroUI.WinForms.Water
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Header
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
-            int headerH = 48;
             int mainTop = bounds.Y + headerH;
             int mainHeight = bounds.Height - headerH - 12;
-            int basinSize = Math.Min(bounds.Width - 280, mainHeight);
 
-            if (basinSize < 120) return;
+            if (bounds.Width < 180 || mainHeight < 80) return;
 
-            Rectangle basinRect = new Rectangle(bounds.X + 20, mainTop + (mainHeight - basinSize) / 2, basinSize, basinSize);
-            Rectangle hudRect = new Rectangle(basinRect.Right + 20, mainTop, bounds.Right - basinRect.Right - 32, mainHeight);
+            if (bounds.Width >= 480)
+            {
+                int basinSize = Math.Min((int)((bounds.Width - 50) * 0.48f), mainHeight);
+                Rectangle basinRect = new Rectangle(bounds.X + 16, mainTop + (mainHeight - basinSize) / 2, basinSize, basinSize);
+                Rectangle hudRect = new Rectangle(basinRect.Right + 16, mainTop, bounds.Right - basinRect.Right - 28, mainHeight);
 
-            // Basin Visualizer
-            DrawBasin(g, basinRect, palette);
+                DrawBasin(g, basinRect, palette);
+                DrawTelemetryHud(g, hudRect, palette);
+            }
+            else
+            {
+                int halfH = (mainHeight - 12) / 2;
+                int basinSize = Math.Min(halfH, bounds.Width - 32);
+                Rectangle basinRect = new Rectangle(bounds.X + (bounds.Width - basinSize) / 2, mainTop, basinSize, halfH);
+                Rectangle hudRect = new Rectangle(bounds.X + 16, mainTop + halfH + 8, bounds.Width - 32, halfH - 8);
 
-            // Telemetry HUD Card
-            DrawTelemetryHud(g, hudRect, palette);
+                DrawBasin(g, basinRect, palette);
+                DrawTelemetryHud(g, hudRect, palette);
+            }
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSub = new Font("Segoe UI", 8.5f))
             {
-                TextRenderer.DrawText(g, $"{_basinTag} — Circular Clarifier & Sedimentation Basin", fontTitle, new Point(bounds.X + 20, bounds.Y + 12), palette.TextPrimary);
+                string title = $"{_basinTag} — Circular Clarifier Basin";
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 Color badgeColor = _engine.Scraper.TorqueStatus switch
                 {
@@ -157,20 +167,45 @@ namespace ZeroUI.WinForms.Water
                 string statusText = _engine.Scraper.TorqueStatus switch
                 {
                     ScraperTorqueStatus.OverTorqueTrip => "OVERTORQUE TRIP",
-                    ScraperTorqueStatus.HighTorqueWarning => "HIGH TORQUE WARNING",
+                    ScraperTorqueStatus.HighTorqueWarning => "HIGH TORQUE",
                     _ => _engine.Scraper.IsRunning ? "BRIDGE ROTATING" : "STOPPED"
                 };
 
-                Rectangle badgeRect = new Rectangle(bounds.Right - 190, bounds.Y + 10, 170, 24);
-                using (var brush = new SolidBrush(Color.FromArgb(35, badgeColor)))
-                using (var pen = new Pen(badgeColor, 1.2f))
-                {
-                    g.FillRectangle(brush, badgeRect);
-                    g.DrawRectangle(pen, badgeRect);
-                }
+                int badgeW = 150;
+                int badgeH = 24;
 
-                TextRenderer.DrawText(g, statusText, fontSub, badgeRect, badgeColor,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                if (bounds.Width - badgeW - 20 >= 16 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+
+                    Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 10, badgeW, badgeH);
+                    using (var brush = new SolidBrush(Color.FromArgb(35, badgeColor)))
+                    using (var pen = new Pen(badgeColor, 1.2f))
+                    {
+                        g.FillRectangle(brush, badgeRect);
+                        g.DrawRectangle(pen, badgeRect);
+                    }
+                    TextRenderer.DrawText(g, statusText, fontSub, badgeRect, badgeColor,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 46;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 22);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, palette.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle badgeRect = new Rectangle(bounds.X + 16, bounds.Y + 32, Math.Min(badgeW, bounds.Width - 32), badgeH);
+                    using (var brush = new SolidBrush(Color.FromArgb(35, badgeColor)))
+                    using (var pen = new Pen(badgeColor, 1.2f))
+                    {
+                        g.FillRectangle(brush, badgeRect);
+                        g.DrawRectangle(pen, badgeRect);
+                    }
+                    TextRenderer.DrawText(g, statusText, fontSub, badgeRect, badgeColor,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 64;
+                }
             }
         }
 

@@ -206,18 +206,23 @@ namespace ZeroUI.WinForms.Process
                         }
                     }
 
-                    // Step Tag & Name
-                    string tagStr = $"[{step.StepTag}]";
-                    TextRenderer.DrawText(g, tagStr, fontTag, new Point(stepBox.X + 8, stepBox.Y + 6), borderCol);
-
-                    TextRenderer.DrawText(g, step.StepName, fontName, new Point(stepBox.X + 54, stepBox.Y + 7), palette.TextPrimary);
-
                     // Countdown / Status Timer
                     string timeStr = step.State == SfcStepState.Completed ? "DONE ✓" :
                                      step.State == SfcStepState.Active ? $"{step.RemainingDurationSec:F0}s left" :
                                      step.State == SfcStepState.Held ? "HELD !" : $"{step.AllocatedDurationSec:F0}s";
                     var sz = TextRenderer.MeasureText(g, timeStr, fontTimer);
                     TextRenderer.DrawText(g, timeStr, fontTimer, new Point(stepBox.Right - sz.Width - 8, stepBox.Y + 6), borderCol);
+
+                    // Step Tag & Name with safe clipping bounds
+                    string tagStr = $"[{step.StepTag}]";
+                    var tagSize = TextRenderer.MeasureText(g, tagStr, fontTag);
+                    TextRenderer.DrawText(g, tagStr, fontTag, new Point(stepBox.X + 8, stepBox.Y + 6), borderCol);
+
+                    int nameX = stepBox.X + tagSize.Width + 12;
+                    int nameMaxW = Math.Max(20, stepBox.Right - sz.Width - 16 - nameX);
+                    Rectangle nameRect = new Rectangle(nameX, stepBox.Y + 6, nameMaxW, stepBox.Height - 12);
+                    TextRenderer.DrawText(g, step.StepName, fontName, nameRect, palette.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
                 }
             }
         }

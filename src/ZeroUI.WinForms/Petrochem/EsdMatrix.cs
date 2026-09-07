@@ -140,8 +140,8 @@ namespace ZeroUI.WinForms.Petrochem
             int effectCount = _engine.Effects.Count;
             if (causeCount == 0 || effectCount == 0) return;
 
-            int leftHeaderW = Math.Min(320, rect.Width / 3 + 40);
-            int topHeaderH = 68;
+            int leftHeaderW = Math.Max(130, Math.Min(260, (int)(rect.Width * 0.40f)));
+            int topHeaderH = 76;
             int gridW = rect.Width - leftHeaderW - 16;
             int gridH = rect.Height - topHeaderH - 16;
 
@@ -152,7 +152,7 @@ namespace ZeroUI.WinForms.Petrochem
             int gridY = rect.Y + topHeaderH;
 
             // 1. Column Headers (Effects)
-            using (var tagFont = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+            using (var tagFont = new Font("Segoe UI", 7f, FontStyle.Bold))
             using (var descFont = new Font("Segoe UI", 6.5f, FontStyle.Regular))
             using (var borderPen = new Pen(palette.Border, 1f))
             {
@@ -172,22 +172,59 @@ namespace ZeroUI.WinForms.Petrochem
                     }
                     g.DrawRectangle(borderPen, colRect.X, colRect.Y, colRect.Width, colRect.Height);
 
-                    // Effect Tag
                     Color tagCol = effect.Status == EffectStatus.DeEnergized ? palette.Danger : palette.TextPrimary;
                     using (var b = new SolidBrush(tagCol))
                     {
-                        g.DrawString(effect.Tag, tagFont, b, colX + 4, colRect.Y + 4);
-                    }
+                        if (cellW >= 55)
+                        {
+                            // Wide mode: horizontal text
+                            using (var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter })
+                            {
+                                g.DrawString(effect.Tag, tagFont, b, new RectangleF(colX, colRect.Y + 2, cellW, 16), sf);
+                            }
+                            float silX = colX + (cellW - 26) / 2f;
+                            DrawMiniSilBadge(g, silX, colRect.Y + 20, effect.SilRating, 26, 12);
 
-                    // SIL Badge
-                    DrawMiniSilBadge(g, colX + 4, colRect.Y + 20, effect.SilRating);
+                            string stStr = effect.Status == EffectStatus.DeEnergized ? "TRIP" : "ARMED";
+                            Color stCol = effect.Status == EffectStatus.DeEnergized ? palette.Danger : palette.Success;
+                            using (var stBrush = new SolidBrush(stCol))
+                            using (var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+                            {
+                                g.DrawString(stStr, descFont, stBrush, new RectangleF(colX, colRect.Y + 34, cellW, 12), sf);
+                            }
+                        }
+                        else
+                        {
+                            // Compact mode: rotated -90 deg vertical text to prevent severe overlap
+                            float silW = Math.Min(24f, cellW - 4f);
+                            float silX = colX + (cellW - silW) / 2f;
+                            float silY = colRect.Bottom - 20;
+                            DrawMiniSilBadge(g, silX, silY, effect.SilRating, silW, 11);
 
-                    // Status Indicator
-                    string stStr = effect.Status == EffectStatus.DeEnergized ? "TRIPPED" : "ENERGIZED";
-                    Color stCol = effect.Status == EffectStatus.DeEnergized ? palette.Danger : palette.Success;
-                    using (var b = new SolidBrush(stCol))
-                    {
-                        g.DrawString(stStr, descFont, b, colX + 4, colRect.Y + 34);
+                            // Status dot at bottom
+                            Color stCol = effect.Status == EffectStatus.DeEnergized ? palette.Danger : palette.Success;
+                            using (var stBrush = new SolidBrush(stCol))
+                            {
+                                g.FillEllipse(stBrush, colX + cellW / 2f - 3f, colRect.Bottom - 7f, 6f, 6f);
+                            }
+
+                            // Vertical rotated Tag above SIL badge
+                            var gState = g.Save();
+                            g.TranslateTransform(colX + cellW / 2f, silY - 4f);
+                            g.RotateTransform(-90);
+                            using (var sf = new StringFormat
+                            {
+                                Alignment = StringAlignment.Near,
+                                LineAlignment = StringAlignment.Center,
+                                Trimming = StringTrimming.EllipsisCharacter,
+                                FormatFlags = StringFormatFlags.NoWrap
+                            })
+                            {
+                                RectangleF tagBounds = new RectangleF(0, -cellW / 2f, silY - 4f - colRect.Y, cellW);
+                                g.DrawString(effect.Tag, tagFont, b, tagBounds, sf);
+                            }
+                            g.Restore(gState);
+                        }
                     }
                 }
             }
@@ -222,23 +259,36 @@ namespace ZeroUI.WinForms.Petrochem
                         : (cause.IsBypassed ? palette.Warning : palette.Success);
                     using (var b = new SolidBrush(dotColor))
                     {
-                        g.FillEllipse(b, rowRect.X + 4, rowRect.Y + (cellH - 10) / 2, 8, 8);
+                        g.FillEllipse(b, rowRect.X + 3, rowRect.Y + 5, 7, 7);
                     }
 
-                    // Cause Tag & SIL
+                    // Row 1: Cause Tag & SIL Badge placed cleanly at opposite sides
                     using (var b = new SolidBrush(palette.TextPrimary))
+                    using (var sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap })
                     {
-                        g.DrawString(cause.Tag, causeTagFont, b, rowRect.X + 18, rowRect.Y + 2);
+                        float tagMaxW = rowRect.Width - 46;
+                        g.DrawString(cause.Tag, causeTagFont, b, new RectangleF(rowRect.X + 13, rowRect.Y + 2, tagMaxW, 15), sf);
                     }
-                    DrawMiniSilBadge(g, rowRect.X + 105, rowRect.Y + 2, cause.SilRating);
+                    DrawMiniSilBadge(g, rowRect.Right - 28, rowRect.Y + 3, cause.SilRating, 26, 12);
 
-                    // Description & Value
+                    // Row 2: Process Value / Setpoint
                     string valStr = $"{cause.ProcessValue:F1} / {cause.TripSetpoint:F1} {cause.Unit}";
                     if (cause.IsBypassed) valStr += " [MOS]";
-                    using (var b = new SolidBrush(palette.TextSecondary))
+                    Color valColor = cause.IsTripped ? palette.Danger : palette.TextSecondary;
+                    using (var b = new SolidBrush(valColor))
+                    using (var sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap })
                     {
-                        g.DrawString(cause.Description, causeDescFont, b, rowRect.X + 18, rowRect.Y + 18);
-                        g.DrawString(valStr, causeDescFont, b, rowRect.Right - 90, rowRect.Y + 2);
+                        g.DrawString(valStr, causeDescFont, b, new RectangleF(rowRect.X + 13, rowRect.Y + 17, rowRect.Width - 16, 13), sf);
+                    }
+
+                    // Row 3: Description (if vertical room allows)
+                    if (cellH >= 42)
+                    {
+                        using (var b = new SolidBrush(Color.FromArgb(160, palette.TextSecondary)))
+                        using (var sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap })
+                        {
+                            g.DrawString(cause.Description, causeDescFont, b, new RectangleF(rowRect.X + 13, rowRect.Y + 30, rowRect.Width - 16, 13), sf);
+                        }
                     }
 
                     // Grid Cells for row
@@ -321,7 +371,7 @@ namespace ZeroUI.WinForms.Petrochem
             }
         }
 
-        private static void DrawMiniSilBadge(Graphics g, float x, float y, SafetyIntegrityLevel sil)
+        private static void DrawMiniSilBadge(Graphics g, float x, float y, SafetyIntegrityLevel sil, float width = 26f, float height = 12f)
         {
             Color silColor;
             switch (sil)
@@ -333,15 +383,17 @@ namespace ZeroUI.WinForms.Petrochem
                 default: silColor = Color.FromArgb(100, 116, 139); break;
             }
 
-            var badgeRect = new RectangleF(x, y, 30, 13);
+            var badgeRect = new RectangleF(x, y, width, height);
             using (var b = new SolidBrush(silColor))
             {
                 g.FillRectangle(b, badgeRect);
             }
-            using (var font = new Font(FontFamily.GenericSansSerif, 6.5f, FontStyle.Bold))
+            float fontSize = width < 25f ? 5.5f : 6.5f;
+            using (var font = new Font(FontFamily.GenericSansSerif, fontSize, FontStyle.Bold))
             using (var textBrush = new SolidBrush(Color.White))
+            using (var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
             {
-                g.DrawString(sil.ToString(), font, textBrush, x + 2, y + 0.5f);
+                g.DrawString(sil.ToString(), font, textBrush, badgeRect, sf);
             }
         }
     }

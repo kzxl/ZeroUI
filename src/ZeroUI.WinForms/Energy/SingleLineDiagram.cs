@@ -54,14 +54,14 @@ namespace ZeroUI.WinForms.Energy
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             // Header: Substation title, Frequency, Grid Stats
-            DrawHeader(g, theme);
+            int headerH = DrawHeader(g, bounds, theme);
 
-            int sldLeft = 30;
-            int sldTop = 60;
-            int sldWidth = bounds.Width - 60;
-            int sldHeight = bounds.Height - sldTop - 20;
+            int sldLeft = bounds.X + 16;
+            int sldTop = bounds.Y + headerH + 8;
+            int sldWidth = bounds.Width - 32;
+            int sldHeight = bounds.Height - sldTop - 16;
 
-            if (sldWidth < 200 || sldHeight < 120)
+            if (sldWidth < 180 || sldHeight < 80)
                 return;
 
             Rectangle canvasRect = new Rectangle(sldLeft, sldTop, sldWidth, sldHeight);
@@ -85,23 +85,47 @@ namespace ZeroUI.WinForms.Energy
             DrawOutgoerBay(g, feederX, bus22Y, color22, theme);
         }
 
-        private void DrawHeader(Graphics g, ZeroThemePalette theme)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, _substationName, fontTitle, new Point(24, 14), theme.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, _substationName, fontTitle);
+                string freqStr = "Freq: 50.02 Hz | Power: 42.0 MW (8.5 MVAr)";
+                Size freqSize = TextRenderer.MeasureText(g, freqStr, fontSmall);
 
-                int statsX = Width - 380;
-                if (statsX > 200)
+                int badgeW = 90;
+                int badgeH = 24;
+                bool isWide = bounds.Width >= titleSize.Width + freqSize.Width + badgeW + 50;
+
+                if (isWide)
                 {
-                    string freqStr = "Freq: 50.02 Hz | Power: 42.0 MW (8.5 MVAr)";
-                    TextRenderer.DrawText(g, freqStr, fontSmall, new Point(statsX, 16), theme.TextSecondary);
+                    TextRenderer.DrawText(g, _substationName, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), theme.TextPrimary);
+
+                    int statsX = bounds.Right - badgeW - freqSize.Width - 24;
+                    TextRenderer.DrawText(g, freqStr, fontSmall, new Point(statsX, bounds.Y + 15), theme.TextSecondary);
 
                     // Operational Status Badge
-                    Rectangle pillRect = new Rectangle(Width - 110, 12, 86, 24);
+                    Rectangle pillRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 11, badgeW, badgeH);
                     DrawStatusBadge(g, pillRect, "ENERGIZED", fontBold, Color.FromArgb(34, 197, 94), Color.FromArgb(34, 197, 94), 4);
+                    return 44;
+                }
+                else
+                {
+                    // Two-tier header:
+                    // Row 1: [Substation Name ............] [ENERGIZED]
+                    // Row 2: [Freq: 50.02 Hz | Power: 42.0 MW ...]
+                    Rectangle pillRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 8, badgeW, badgeH);
+                    DrawStatusBadge(g, pillRect, "ENERGIZED", fontBold, Color.FromArgb(34, 197, 94), Color.FromArgb(34, 197, 94), 4);
+
+                    int titleW = Math.Max(40, pillRect.Left - bounds.X - 24);
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 9, titleW, 20);
+                    TextRenderer.DrawText(g, _substationName, fontTitle, titleRect, theme.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle freqRect = new Rectangle(bounds.X + 16, bounds.Y + 34, bounds.Width - 32, 18);
+                    TextRenderer.DrawText(g, freqStr, fontSmall, freqRect, theme.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 58;
                 }
             }
         }

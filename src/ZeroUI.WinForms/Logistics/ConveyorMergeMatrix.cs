@@ -72,15 +72,15 @@ namespace ZeroUI.WinForms.Logistics
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Top Header: Title, Velocity, Throughput PPH
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
             // Main Conveyor Belt Area
-            int beltLeft = bounds.X + 30;
-            int beltTop = bounds.Y + 110;
-            int beltWidth = bounds.Width - 60;
+            int beltLeft = bounds.X + 24;
+            int beltTop = bounds.Y + headerH + 24;
+            int beltWidth = bounds.Width - 48;
             int beltHeight = 54;
 
-            if (beltWidth < 200)
+            if (beltWidth < 180)
                 return;
 
             Rectangle mainBeltRect = new Rectangle(beltLeft, beltTop, beltWidth, beltHeight);
@@ -101,23 +101,25 @@ namespace ZeroUI.WinForms.Logistics
             DrawParcels(g, mainBeltRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, _lineName, fontTitle, new Point(bounds.X + 24, bounds.Y + 14), theme.TextPrimary);
+                string pphStr = $"{_engine.HourlyThroughputPph:N0} PPH";
+                string speedStr = $"Speed: {_engine.MainSpeedMpm:F0} m/min | Parcels: {_engine.Parcels.Count}";
+                int badgeW = 96;
+                int badgeH = 24;
 
-                int hudX = bounds.Right - 380;
-                if (hudX > bounds.X + 200)
+                if (bounds.Width >= 540)
                 {
-                    string speedStr = $"Speed: {_engine.MainSpeedMpm:F0} m/min | Parcels: {_engine.Parcels.Count}";
+                    TextRenderer.DrawText(g, _lineName, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+
+                    int hudX = bounds.Right - 360;
                     TextRenderer.DrawText(g, speedStr, fontSmall, new Point(hudX, bounds.Y + 16), theme.TextSecondary);
 
-                    // PPH Badge
-                    string pphStr = $"{_engine.HourlyThroughputPph:N0} PPH";
-                    Rectangle pphBadge = new Rectangle(bounds.Right - 140, bounds.Y + 12, 110, 24);
+                    Rectangle pphBadge = new Rectangle(bounds.Right - badgeW - 20, bounds.Y + 12, badgeW, badgeH);
                     using (var badgeBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
                     using (var badgePen = new Pen(Color.FromArgb(34, 197, 94), 1f))
                     {
@@ -125,6 +127,27 @@ namespace ZeroUI.WinForms.Logistics
                         g.DrawRectangle(badgePen, pphBadge);
                     }
                     TextRenderer.DrawText(g, pphStr, fontBold, pphBadge, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 48;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 20, bounds.Y + 8, bounds.Width - badgeW - 40, 22);
+                    TextRenderer.DrawText(g, _lineName, fontTitle, titleRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle pphBadge = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 8, badgeW, badgeH);
+                    using (var badgeBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
+                    using (var badgePen = new Pen(Color.FromArgb(34, 197, 94), 1f))
+                    {
+                        g.FillRectangle(badgeBrush, pphBadge);
+                        g.DrawRectangle(badgePen, pphBadge);
+                    }
+                    TextRenderer.DrawText(g, pphStr, fontBold, pphBadge, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+                    Rectangle speedRect = new Rectangle(bounds.X + 20, bounds.Y + 32, bounds.Width - 40, 18);
+                    TextRenderer.DrawText(g, speedStr, fontSmall, speedRect, theme.TextSecondary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 54;
                 }
             }
         }

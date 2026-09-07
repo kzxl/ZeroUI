@@ -141,15 +141,15 @@ namespace ZeroUI.WinForms.Logistics
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Top Header & Telemetry HUD
-            DrawHeaderAndHud(g, bounds, palette);
+            int headerH = DrawHeaderAndHud(g, bounds, palette);
 
             // Rack Grid Area
             int rackLeft = bounds.X + 24;
-            int rackTop = bounds.Y + 64;
+            int rackTop = bounds.Y + headerH + 12;
             int rackWidth = bounds.Width - 48;
-            int rackHeight = bounds.Height - 64 - 24;
+            int rackHeight = bounds.Height - headerH - 24;
 
-            if (rackWidth < 200 || rackHeight < 100)
+            if (rackWidth < 180 || rackHeight < 80)
                 return;
 
             Rectangle rackRect = new Rectangle(rackLeft, rackTop, rackWidth, rackHeight);
@@ -164,18 +164,22 @@ namespace ZeroUI.WinForms.Logistics
             DrawCraneAssembly(g, rackRect, palette);
         }
 
-        private void DrawHeaderAndHud(Graphics g, Rectangle bounds, ZeroThemePalette theme)
+        private int DrawHeaderAndHud(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, $"{_aisleTag} — ASRS Stacker Crane", fontTitle, new Point(bounds.X + 24, bounds.Y + 14), theme.TextPrimary);
+                string title = $"{_aisleTag} — ASRS Stacker Crane";
+                string pphStr = $"{_engine.Stats.HourlyThroughputPph:F0} PPH";
+                int badgeW = 80;
+                int badgeH = 24;
 
-                // Right HUD: Pos (Bay/Tier), Payload, PPH
-                int hudX = bounds.Right - 460;
-                if (hudX > bounds.X + 220)
+                if (bounds.Width >= 560)
                 {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+
+                    int hudX = bounds.Right - 440;
                     string posStr = $"Bay: {_engine.Position.CurrentBay:F1} | Tier: {_engine.Position.CurrentTier:F1}";
                     TextRenderer.DrawText(g, posStr, fontSmall, new Point(hudX, bounds.Y + 16), theme.TextSecondary);
 
@@ -185,12 +189,9 @@ namespace ZeroUI.WinForms.Logistics
                     Color payloadColor = _engine.Payload.IsOverweight(_engine.Config.MaxPayloadWeightKg)
                         ? Color.FromArgb(239, 68, 68)
                         : (_engine.Payload.HasPallet ? Color.FromArgb(56, 189, 248) : theme.TextSecondary);
-
                     TextRenderer.DrawText(g, payloadStr, fontBold, new Point(hudX + 160, bounds.Y + 16), payloadColor);
 
-                    // PPH Badge
-                    string pphStr = $"{_engine.Stats.HourlyThroughputPph:F0} PPH";
-                    Rectangle pphBadge = new Rectangle(bounds.Right - 100, bounds.Y + 12, 76, 24);
+                    Rectangle pphBadge = new Rectangle(bounds.Right - badgeW - 20, bounds.Y + 12, badgeW, badgeH);
                     using (var badgeBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
                     using (var badgePen = new Pen(Color.FromArgb(34, 197, 94), 1f))
                     {
@@ -198,6 +199,28 @@ namespace ZeroUI.WinForms.Logistics
                         g.DrawRectangle(badgePen, pphBadge);
                     }
                     TextRenderer.DrawText(g, pphStr, fontBold, pphBadge, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 48;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 20, bounds.Y + 8, bounds.Width - badgeW - 36, 22);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle pphBadge = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 8, badgeW, badgeH);
+                    using (var badgeBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
+                    using (var badgePen = new Pen(Color.FromArgb(34, 197, 94), 1f))
+                    {
+                        g.FillRectangle(badgeBrush, pphBadge);
+                        g.DrawRectangle(badgePen, pphBadge);
+                    }
+                    TextRenderer.DrawText(g, pphStr, fontBold, pphBadge, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+                    string summaryStr = $"Bay {_engine.Position.CurrentBay:F0}/{_engine.Position.CurrentTier:F0} | {(_engine.Payload.HasPallet ? _engine.Payload.PalletBarcode : "EMPTY")}";
+                    Rectangle sumRect = new Rectangle(bounds.X + 20, bounds.Y + 32, bounds.Width - 40, 18);
+                    TextRenderer.DrawText(g, summaryStr, fontSmall, sumRect, theme.TextSecondary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 54;
                 }
             }
         }

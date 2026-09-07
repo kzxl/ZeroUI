@@ -109,30 +109,38 @@ namespace ZeroUI.WinForms.Petrochem
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // 1. Header
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
-            int headerH = 48;
             int mainY = bounds.Y + headerH;
             int mainH = bounds.Height - headerH - 12;
 
-            int colW = Math.Min(280, (bounds.Width - 32) / 2);
-            var colRect = new Rectangle(bounds.X + 16, mainY, colW, mainH);
-            var hudRect = new Rectangle(colRect.Right + 16, mainY, bounds.Right - colRect.Right - 32, mainH);
+            if (bounds.Width < 540)
+            {
+                int colW = Math.Max(110, (int)(bounds.Width * 0.42));
+                var colRect = new Rectangle(bounds.X + 12, mainY, colW, mainH);
+                var hudRect = new Rectangle(colRect.Right + 10, mainY, bounds.Right - colRect.Right - 22, mainH);
 
-            // 2. Distillation Column & Loops
-            DrawColumnSchematic(g, colRect, palette);
+                DrawColumnSchematic(g, colRect, palette);
+                DrawProcessTelemetry(g, hudRect, palette);
+            }
+            else
+            {
+                int colW = Math.Min(280, (bounds.Width - 32) / 2);
+                var colRect = new Rectangle(bounds.X + 16, mainY, colW, mainH);
+                var hudRect = new Rectangle(colRect.Right + 16, mainY, bounds.Right - colRect.Right - 32, mainH);
 
-            // 3. Process HUD & Diagnostics
-            DrawProcessTelemetry(g, hudRect, palette);
+                DrawColumnSchematic(g, colRect, palette);
+                DrawProcessTelemetry(g, hudRect, palette);
+            }
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             string title = $"{_engine.ColumnTag} — {_engine.ServiceDescription.ToUpperInvariant()}";
-            using (var font = new Font("Segoe UI", 11f, FontStyle.Bold))
+            using (var font = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var subFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, title, font, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, font);
 
                 // Operating State Badge
                 string badgeText = _engine.OperatingState.ToString().ToUpperInvariant();
@@ -157,7 +165,25 @@ namespace ZeroUI.WinForms.Petrochem
                         break;
                 }
 
-                PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.Right - 150, bounds.Y + 10, 134, 26), badgeText, subFont, badgeBg, badgeFg);
+                int badgeW = 140;
+                int badgeH = 26;
+                bool isWide = bounds.Width - badgeW - 20 >= 16 + titleSize.Width + 16;
+
+                if (isWide)
+                {
+                    TextRenderer.DrawText(g, title, font, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                    PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 10, badgeW, badgeH), badgeText, subFont, badgeBg, badgeFg);
+                    return 48;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 22);
+                    TextRenderer.DrawText(g, title, font, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle badgeRect = new Rectangle(bounds.X + 16, bounds.Y + 34, Math.Min(badgeW, bounds.Width - 32), badgeH);
+                    PaintHelper.DrawStatusBadge(g, badgeRect, badgeText, subFont, badgeBg, badgeFg);
+                    return 66;
+                }
             }
         }
 
@@ -324,50 +350,80 @@ namespace ZeroUI.WinForms.Petrochem
 
         private void DrawProcessTelemetry(Graphics g, Rectangle rect, ZeroThemePalette palette)
         {
-            int cardW = (rect.Width - 12) / 2;
-            int cardH = (rect.Height - 12) / 2;
+            if (rect.Width < 50 || rect.Height < 50) return;
 
             using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             using (var labelFont = new Font("Segoe UI", 8f))
             using (var valFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                // Card 1: Pressure & Hydraulic Gradient
-                var card1 = new Rectangle(rect.X, rect.Y, cardW, cardH);
-                PaintHelper.DrawCardBox(g, card1, "HYDRAULIC GRADIENT", titleFont, palette);
-                int rowY1 = card1.Y + 32;
-                int rowH = 22;
-                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1, card1.Width - 24, rowH), "Differential Pressure (ΔP)", $"{_engine.DifferentialPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1 + rowH, card1.Width - 24, rowH), "Top Pressure (Pt)", $"{_engine.TopPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1 + rowH * 2, card1.Width - 24, rowH), "Bottom Pressure (Pb)", $"{_engine.BottomPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                Color floodColor = _engine.FloodMarginPct >= 85.0 ? palette.Danger : palette.Success;
-                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1 + rowH * 3, card1.Width - 24, rowH), "Flood Margin Index", $"{_engine.FloodMarginPct:F1}%", palette.TextSecondary, floodColor, labelFont, valFont);
+                if (rect.Width < 280)
+                {
+                    // Narrow mode: 2 primary cards stacked vertically to maintain full label readability
+                    int cardH = (rect.Height - 10) / 2;
+                    var card1 = new Rectangle(rect.X, rect.Y, rect.Width, cardH);
+                    var card2 = new Rectangle(rect.X, card1.Bottom + 10, rect.Width, rect.Bottom - card1.Bottom - 10);
 
-                // Card 2: Thermal Profile & Heat Balance
-                var card2 = new Rectangle(card1.Right + 12, rect.Y, cardW, cardH);
-                PaintHelper.DrawCardBox(g, card2, "THERMAL BALANCE", titleFont, palette);
-                int rowY2 = card2.Y + 32;
-                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2, card2.Width - 24, rowH), "Overhead Temp (To)", $"{_engine.OverheadTempC:F1} °C", palette.TextSecondary, Color.FromArgb(56, 189, 248), labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2 + rowH, card2.Width - 24, rowH), "Bottoms Temp (Tb)", $"{_engine.BottomsTempC:F1} °C", palette.TextSecondary, Color.FromArgb(239, 68, 68), labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2 + rowH * 2, card2.Width - 24, rowH), "Reboiler Duty (Qr)", $"{_engine.ReboilerDutyKw:F0} kW", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2 + rowH * 3, card2.Width - 24, rowH), "Condenser Duty (Qc)", $"{_engine.CondenserDutyKw:F0} kW", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    // Card 1: Pressure & Hydraulic Gradient
+                    PaintHelper.DrawCardBox(g, card1, "HYDRAULIC GRADIENT", titleFont, palette);
+                    int rowY1 = card1.Y + 30;
+                    int rowH = Math.Max(18, (card1.Height - 36) / 4);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, rowY1, card1.Width - 20, rowH), "Diff Press (ΔP)", $"{_engine.DifferentialPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, rowY1 + rowH, card1.Width - 20, rowH), "Top Press (Pt)", $"{_engine.TopPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, rowY1 + rowH * 2, card1.Width - 20, rowH), "Bottom Press (Pb)", $"{_engine.BottomPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    Color floodColor = _engine.FloodMarginPct >= 85.0 ? palette.Danger : palette.Success;
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, rowY1 + rowH * 3, card1.Width - 20, rowH), "Flood Margin", $"{_engine.FloodMarginPct:F1}%", palette.TextSecondary, floodColor, labelFont, valFont);
 
-                // Card 3: Mass Flow & Distillate Reflux
-                var card3 = new Rectangle(rect.X, card1.Bottom + 12, cardW, cardH);
-                PaintHelper.DrawCardBox(g, card3, "FRACTIONATION FLOWS", titleFont, palette);
-                int rowY3 = card3.Y + 32;
-                PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3, card3.Width - 24, rowH), "Reflux Ratio (L/D)", $"{_engine.RefluxRatio:F2}", palette.TextSecondary, palette.Primary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3 + rowH, card3.Width - 24, rowH), "Reflux Flow Rate", $"{_engine.RefluxFlowRateM3H:F1} m³/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3 + rowH * 2, card3.Width - 24, rowH), "Distillate Draw", $"{_engine.DistillateFlowRateM3H:F1} m³/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3 + rowH * 3, card3.Width - 24, rowH), "Feed Rate", $"{_engine.FeedFlowRateKgH:F0} kg/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    // Card 2: Thermal Profile & Fractionation
+                    PaintHelper.DrawCardBox(g, card2, "THERMAL & FRACTIONATION", titleFont, palette);
+                    int rowY2 = card2.Y + 30;
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, rowY2, card2.Width - 20, rowH), "Overhead Temp", $"{_engine.OverheadTempC:F1} °C", palette.TextSecondary, Color.FromArgb(56, 189, 248), labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, rowY2 + rowH, card2.Width - 20, rowH), "Bottoms Temp", $"{_engine.BottomsTempC:F1} °C", palette.TextSecondary, Color.FromArgb(239, 68, 68), labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, rowY2 + rowH * 2, card2.Width - 20, rowH), "Reflux Ratio", $"{_engine.RefluxRatio:F2}", palette.TextSecondary, palette.Primary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, rowY2 + rowH * 3, card2.Width - 20, rowH), "Sump Level", $"{_engine.SumpLevelPct:F1}%", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                }
+                else
+                {
+                    int cardW = (rect.Width - 12) / 2;
+                    int cardH = (rect.Height - 12) / 2;
 
-                // Card 4: Sump & Vessel Level Telemetry
-                var card4 = new Rectangle(card3.Right + 12, card1.Bottom + 12, cardW, cardH);
-                PaintHelper.DrawCardBox(g, card4, "VESSEL INVENTORY", titleFont, palette);
-                int rowY4 = card4.Y + 32;
-                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4, card4.Width - 24, rowH), "Sump Liquid Level", $"{_engine.SumpLevelPct:F1}%", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4 + rowH, card4.Width - 24, rowH), "Reflux Drum Level", $"{_engine.RefluxDrumLevelPct:F1}%", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4 + rowH * 2, card4.Width - 24, rowH), "Bottoms Takeoff", $"{_engine.BottomsFlowRateM3H:F1} m³/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4 + rowH * 3, card4.Width - 24, rowH), "Active Tray Count", $"{_engine.TrayCount} Trays", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    // Card 1: Pressure & Hydraulic Gradient
+                    var card1 = new Rectangle(rect.X, rect.Y, cardW, cardH);
+                    PaintHelper.DrawCardBox(g, card1, "HYDRAULIC GRADIENT", titleFont, palette);
+                    int rowY1 = card1.Y + 32;
+                    int rowH = 22;
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1, card1.Width - 24, rowH), "Differential Pressure (ΔP)", $"{_engine.DifferentialPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1 + rowH, card1.Width - 24, rowH), "Top Pressure (Pt)", $"{_engine.TopPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1 + rowH * 2, card1.Width - 24, rowH), "Bottom Pressure (Pb)", $"{_engine.BottomPressureKpa:F1} kPa", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    Color floodColor = _engine.FloodMarginPct >= 85.0 ? palette.Danger : palette.Success;
+                    PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 12, rowY1 + rowH * 3, card1.Width - 24, rowH), "Flood Margin Index", $"{_engine.FloodMarginPct:F1}%", palette.TextSecondary, floodColor, labelFont, valFont);
+
+                    // Card 2: Thermal Profile & Heat Balance
+                    var card2 = new Rectangle(card1.Right + 12, rect.Y, cardW, cardH);
+                    PaintHelper.DrawCardBox(g, card2, "THERMAL BALANCE", titleFont, palette);
+                    int rowY2 = card2.Y + 32;
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2, card2.Width - 24, rowH), "Overhead Temp (To)", $"{_engine.OverheadTempC:F1} °C", palette.TextSecondary, Color.FromArgb(56, 189, 248), labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2 + rowH, card2.Width - 24, rowH), "Bottoms Temp (Tb)", $"{_engine.BottomsTempC:F1} °C", palette.TextSecondary, Color.FromArgb(239, 68, 68), labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2 + rowH * 2, card2.Width - 24, rowH), "Reboiler Duty (Qr)", $"{_engine.ReboilerDutyKw:F0} kW", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 12, rowY2 + rowH * 3, card2.Width - 24, rowH), "Condenser Duty (Qc)", $"{_engine.CondenserDutyKw:F0} kW", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+
+                    // Card 3: Mass Flow & Distillate Reflux
+                    var card3 = new Rectangle(rect.X, card1.Bottom + 12, cardW, cardH);
+                    PaintHelper.DrawCardBox(g, card3, "FRACTIONATION FLOWS", titleFont, palette);
+                    int rowY3 = card3.Y + 32;
+                    PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3, card3.Width - 24, rowH), "Reflux Ratio (L/D)", $"{_engine.RefluxRatio:F2}", palette.TextSecondary, palette.Primary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3 + rowH, card3.Width - 24, rowH), "Reflux Flow Rate", $"{_engine.RefluxFlowRateM3H:F1} m³/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3 + rowH * 2, card3.Width - 24, rowH), "Distillate Draw", $"{_engine.DistillateFlowRateM3H:F1} m³/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 12, rowY3 + rowH * 3, card3.Width - 24, rowH), "Feed Rate", $"{_engine.FeedFlowRateKgH:F0} kg/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+
+                    // Card 4: Sump & Vessel Level Telemetry
+                    var card4 = new Rectangle(card3.Right + 12, card1.Bottom + 12, cardW, cardH);
+                    PaintHelper.DrawCardBox(g, card4, "VESSEL INVENTORY", titleFont, palette);
+                    int rowY4 = card4.Y + 32;
+                    PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4, card4.Width - 24, rowH), "Sump Liquid Level", $"{_engine.SumpLevelPct:F1}%", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4 + rowH, card4.Width - 24, rowH), "Reflux Drum Level", $"{_engine.RefluxDrumLevelPct:F1}%", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4 + rowH * 2, card4.Width - 24, rowH), "Bottoms Takeoff", $"{_engine.BottomsFlowRateM3H:F1} m³/h", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                    PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 12, rowY4 + rowH * 3, card4.Width - 24, rowH), "Active Tray Count", $"{_engine.TrayCount} Trays", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                }
             }
         }
     }

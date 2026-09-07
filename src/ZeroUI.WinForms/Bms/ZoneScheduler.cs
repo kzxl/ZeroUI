@@ -145,7 +145,9 @@ namespace ZeroUI.WinForms.Bms
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8f))
             {
-                TextRenderer.DrawText(g, zoneTitle, fontTitle, new Point(bounds.X + 16, bounds.Y + 14), palette.TextPrimary);
+                Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 10, bounds.Width - 32, 22);
+                TextRenderer.DrawText(g, zoneTitle, fontTitle, titleRect, palette.TextPrimary,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
             int gridLeft = bounds.X + 60;
@@ -184,7 +186,8 @@ namespace ZeroUI.WinForms.Bms
         {
             using (var font = new Font("Segoe UI", 7.5f))
             {
-                for (int h = 0; h <= 24; h += 2)
+                int stepHours = width < 320 ? 6 : width < 480 ? 4 : 2;
+                for (int h = 0; h <= 24; h += stepHours)
                 {
                     float x = left + (h / 24.0f) * width;
                     string timeStr = $"{h:00}:00";

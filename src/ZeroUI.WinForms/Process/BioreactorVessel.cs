@@ -105,16 +105,15 @@ namespace ZeroUI.WinForms.Process
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // 1. Header
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
-            int headerH = 46;
             int mainTop = bounds.Y + headerH;
             int mainHeight = bounds.Height - headerH - 12;
 
-            int hudW = 230;
-            int vesselW = bounds.Width - hudW - 36;
+            if (bounds.Width < 180 || mainHeight < 80) return;
 
-            if (vesselW < 120 || mainHeight < 120) return;
+            int hudW = bounds.Width < 520 ? Math.Max(140, (int)((bounds.Width - 44) * 0.50f)) : 220;
+            int vesselW = bounds.Width - hudW - 44;
 
             Rectangle vesselRect = new Rectangle(bounds.X + 16, mainTop, vesselW, mainHeight);
             Rectangle hudRect = new Rectangle(vesselRect.Right + 12, mainTop, hudW, mainHeight);
@@ -126,12 +125,13 @@ namespace ZeroUI.WinForms.Process
             DrawProcessHud(g, hudRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSub = new Font("Segoe UI", 8.5f))
             {
-                TextRenderer.DrawText(g, $"{_engine.VesselTag} — 500L Single-Use Bioreactor ({_engine.Phase})", fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                string title = $"{_engine.VesselTag} — 500L Single-Use Bioreactor ({_engine.Phase})";
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 Color badgeColor = _engine.AlarmStatus switch
                 {
@@ -140,16 +140,41 @@ namespace ZeroUI.WinForms.Process
                     _ => Color.FromArgb(34, 197, 94)
                 };
 
-                Rectangle badgeRect = new Rectangle(bounds.Right - 160, bounds.Y + 10, 144, 24);
-                using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
-                using (var pen = new Pen(badgeColor, 1.2f))
-                {
-                    g.FillRectangle(brush, badgeRect);
-                    g.DrawRectangle(pen, badgeRect);
-                }
+                int badgeW = 144;
+                int badgeH = 24;
 
-                TextRenderer.DrawText(g, _engine.AlarmStatus.ToString().ToUpperInvariant(), fontSub, badgeRect, badgeColor,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                if (bounds.Width - badgeW - 20 >= 16 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+
+                    Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 10, badgeW, badgeH);
+                    using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
+                    using (var pen = new Pen(badgeColor, 1.2f))
+                    {
+                        g.FillRectangle(brush, badgeRect);
+                        g.DrawRectangle(pen, badgeRect);
+                    }
+                    TextRenderer.DrawText(g, _engine.AlarmStatus.ToString().ToUpperInvariant(), fontSub, badgeRect, badgeColor,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 46;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 22);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, palette.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle badgeRect = new Rectangle(bounds.X + 16, bounds.Y + 32, Math.Min(badgeW, bounds.Width - 32), badgeH);
+                    using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
+                    using (var pen = new Pen(badgeColor, 1.2f))
+                    {
+                        g.FillRectangle(brush, badgeRect);
+                        g.DrawRectangle(pen, badgeRect);
+                    }
+                    TextRenderer.DrawText(g, _engine.AlarmStatus.ToString().ToUpperInvariant(), fontSub, badgeRect, badgeColor,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 64;
+                }
             }
         }
 

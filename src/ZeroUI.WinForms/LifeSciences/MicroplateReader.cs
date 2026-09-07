@@ -96,45 +96,72 @@ namespace ZeroUI.WinForms.LifeSciences
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Header Banner
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
             // Layout
-            int gridLeft = bounds.X + 40;
-            int gridTop = bounds.Y + 64;
-            int rightPanelW = 160;
-            int gridWidth = bounds.Width - 40 - rightPanelW - 20;
-            int gridHeight = bounds.Height - 64 - 20;
+            int gridLeft = bounds.X + 36;
+            int gridTop = bounds.Y + headerH + 6;
+            int rightPanelW = Math.Min(160, Math.Max(120, (int)(bounds.Width * 0.32f)));
+            int gridWidth = bounds.Width - 36 - rightPanelW - 14;
+            int gridHeight = bounds.Height - headerH - 22;
 
-            if (gridWidth < 150 || gridHeight < 100) return;
+            if (gridWidth < 120 || gridHeight < 100) return;
 
             Rectangle gridRect = new Rectangle(gridLeft, gridTop, gridWidth, gridHeight);
-            Rectangle sideRect = new Rectangle(gridLeft + gridWidth + 14, gridTop, rightPanelW, gridHeight);
+            Rectangle sideRect = new Rectangle(gridLeft + gridWidth + 12, gridTop, rightPanelW, gridHeight);
 
             DrawMicroplateGrid(g, gridRect, palette);
             DrawSidebar(g, sideRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, _engine.AssayTitle, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, _engine.AssayTitle, fontTitle);
+                string rangeStr = $"Range: {_engine.MinValue:F3}-{_engine.MaxValue:F3} OD | Blank, Std, Ctrl";
+                string formatText = _engine.Format == PlateFormat.Wells96 ? "96-WELL" : "384-WELL";
 
-                string rangeStr = $"Range: {_engine.MinValue:F3} - {_engine.MaxValue:F3} OD | Replicates: Blank, Std, Ctrl, Unk";
-                TextRenderer.DrawText(g, rangeStr, fontSmall, new Point(bounds.X + 20, bounds.Y + 36), theme.TextSecondary);
+                int badgeW = 90;
+                int badgeH = 24;
 
-                // Format Pill
-                string formatText = _engine.Format == PlateFormat.Wells96 ? "96-WELL (8x12)" : "384-WELL (16x24)";
-                Rectangle pillRect = new Rectangle(bounds.Right - 140, bounds.Y + 14, 120, 24);
-                using (var pillBrush = new SolidBrush(Color.FromArgb(25, 59, 130, 246)))
-                using (var pillPen = new Pen(Color.FromArgb(59, 130, 246), 1f))
+                if (bounds.Width >= 520)
                 {
-                    g.FillRectangle(pillBrush, pillRect);
-                    g.DrawRectangle(pillPen, pillRect);
+                    TextRenderer.DrawText(g, _engine.AssayTitle, fontTitle, new Point(bounds.X + 20, bounds.Y + 12), theme.TextPrimary);
+                    TextRenderer.DrawText(g, rangeStr, fontSmall, new Point(bounds.X + 20, bounds.Y + 34), theme.TextSecondary);
+
+                    Rectangle pillRect = new Rectangle(bounds.Right - badgeW - 20, bounds.Y + 14, badgeW, badgeH);
+                    using (var pillBrush = new SolidBrush(Color.FromArgb(25, 59, 130, 246)))
+                    using (var pillPen = new Pen(Color.FromArgb(59, 130, 246), 1f))
+                    {
+                        g.FillRectangle(pillBrush, pillRect);
+                        g.DrawRectangle(pillPen, pillRect);
+                    }
+                    TextRenderer.DrawText(g, formatText, fontBold, pillRect, Color.FromArgb(59, 130, 246), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 56;
                 }
-                TextRenderer.DrawText(g, formatText, fontBold, pillRect, Color.FromArgb(59, 130, 246), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 20, bounds.Y + 8, bounds.Width - badgeW - 44, 22);
+                    TextRenderer.DrawText(g, _engine.AssayTitle, fontTitle, titleRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle pillRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 8, badgeW, badgeH);
+                    using (var pillBrush = new SolidBrush(Color.FromArgb(25, 59, 130, 246)))
+                    using (var pillPen = new Pen(Color.FromArgb(59, 130, 246), 1f))
+                    {
+                        g.FillRectangle(pillBrush, pillRect);
+                        g.DrawRectangle(pillPen, pillRect);
+                    }
+                    TextRenderer.DrawText(g, formatText, fontBold, pillRect, Color.FromArgb(59, 130, 246), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+                    Rectangle rangeRect = new Rectangle(bounds.X + 20, bounds.Y + 32, bounds.Width - 40, 18);
+                    TextRenderer.DrawText(g, rangeStr, fontSmall, rangeRect, theme.TextSecondary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 54;
+                }
             }
         }
 
@@ -158,13 +185,16 @@ namespace ZeroUI.WinForms.LifeSciences
             double maxVal = _engine.MaxValue;
             double valSpan = Math.Max(0.001, maxVal - minVal);
 
-            using (var fontHeader = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+            using (var fontHeader = new Font("Segoe UI", cellW < 18 ? 6f : 7f, FontStyle.Bold))
             {
-                // Column Labels (1..12 or 1..24) along top
+                // Column Labels (1..12 or 1..24) along top with adaptive skipping when narrow
+                int colStep = cellW < 14 ? 4 : cellW < 22 ? 2 : 1;
                 for (int c = 0; c < cols; c++)
                 {
+                    if (c % colStep != 0 && c != cols - 1) continue;
+
                     float cx = rect.X + c * cellW + cellW / 2;
-                    Rectangle colRect = new Rectangle((int)cx - 12, rect.Y - 18, 24, 14);
+                    Rectangle colRect = new Rectangle((int)cx - 10, rect.Y - 16, 20, 14);
                     TextRenderer.DrawText(g, $"{c + 1}", fontHeader, colRect, theme.TextSecondary, TextFormatFlags.HorizontalCenter);
                 }
 

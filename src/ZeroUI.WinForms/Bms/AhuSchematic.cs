@@ -171,15 +171,15 @@ namespace ZeroUI.WinForms.Bms
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Header: Tag, Mode, Airflow
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
             // Main Mechanical Duct Tunnel (Left = Intake, Right = Discharge)
-            int tunnelLeft = bounds.X + 20;
-            int tunnelTop = bounds.Y + 50;
-            int tunnelWidth = bounds.Width - 40;
-            int tunnelHeight = bounds.Height - 70;
+            int tunnelLeft = bounds.X + 16;
+            int tunnelTop = bounds.Y + headerH;
+            int tunnelWidth = bounds.Width - 32;
+            int tunnelHeight = bounds.Height - headerH - 16;
 
-            if (tunnelWidth < 200 || tunnelHeight < 80)
+            if (tunnelWidth < 180 || tunnelHeight < 70)
                 return;
 
             Rectangle tunnelRect = new Rectangle(tunnelLeft, tunnelTop, tunnelWidth, tunnelHeight);
@@ -212,13 +212,13 @@ namespace ZeroUI.WinForms.Bms
             DrawAirflowParticles(g, tunnelRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontBold = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f, FontStyle.Regular))
             {
-                // Title Tag
-                TextRenderer.DrawText(g, $"{_unitTag} — Air Handling Unit", fontBold, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+                string titleText = $"{_unitTag} — Air Handling Unit";
+                var titleSize = TextRenderer.MeasureText(g, titleText, fontBold);
 
                 // Operating Mode Badge
                 Color modeColor = _engine.Mode switch
@@ -233,20 +233,54 @@ namespace ZeroUI.WinForms.Bms
 
                 string modeText = $"Mode: {_engine.Mode.ToString().ToUpperInvariant()}";
                 var modeSize = TextRenderer.MeasureText(g, modeText, fontSmall);
-                Rectangle modeBadge = new Rectangle(240, 14, modeSize.Width + 14, 22);
+                int modeW = modeSize.Width + 14;
+                int modeH = 22;
 
-                using (var fillBrush = new SolidBrush(Color.FromArgb(35, modeColor)))
-                using (var borderPen = new Pen(modeColor, 1f))
-                {
-                    g.FillRectangle(fillBrush, modeBadge);
-                    g.DrawRectangle(borderPen, modeBadge);
-                }
-                TextRenderer.DrawText(g, modeText, fontSmall, modeBadge, modeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-
-                // Airflow Metric (Right-aligned)
-                string flowText = $"{_engine.Air.AirflowCfm:N0} CFM | SP: {_engine.Fans.SupplyStaticPressureInWg:F2} in.wg";
+                string flowText = $"{_engine.Air.AirflowCfm:N0} CFM | SP: {_engine.Fans.SupplyStaticPressureInWg:F2}\"";
                 var flowSize = TextRenderer.MeasureText(g, flowText, fontSmall);
-                TextRenderer.DrawText(g, flowText, fontSmall, new Point(Width - flowSize.Width - 20, 16), theme.TextSecondary);
+
+                bool isWide = bounds.Width >= titleSize.Width + modeW + flowSize.Width + 60;
+
+                if (isWide)
+                {
+                    // Single row: [Title]  [Mode Badge] ... [Airflow Metric]
+                    TextRenderer.DrawText(g, titleText, fontBold, new Point(bounds.X + 16, bounds.Y + 12), theme.TextPrimary);
+
+                    Rectangle modeBadge = new Rectangle(bounds.X + 16 + titleSize.Width + 12, bounds.Y + 11, modeW, modeH);
+                    using (var fillBrush = new SolidBrush(Color.FromArgb(35, modeColor)))
+                    using (var borderPen = new Pen(modeColor, 1f))
+                    {
+                        g.FillRectangle(fillBrush, modeBadge);
+                        g.DrawRectangle(borderPen, modeBadge);
+                    }
+                    TextRenderer.DrawText(g, modeText, fontSmall, modeBadge, modeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+                    TextRenderer.DrawText(g, flowText, fontSmall, new Point(bounds.Right - flowSize.Width - 16, bounds.Y + 14), theme.TextSecondary);
+                    return 46;
+                }
+                else
+                {
+                    // Two-tier row:
+                    // Row 1: [Title ............] [Mode Badge]
+                    // Row 2: [Airflow Metric .................]
+                    int badgeX = Math.Max(bounds.X + 16, bounds.Right - modeW - 16);
+                    Rectangle modeBadge = new Rectangle(badgeX, bounds.Y + 8, modeW, modeH);
+                    using (var fillBrush = new SolidBrush(Color.FromArgb(35, modeColor)))
+                    using (var borderPen = new Pen(modeColor, 1f))
+                    {
+                        g.FillRectangle(fillBrush, modeBadge);
+                        g.DrawRectangle(borderPen, modeBadge);
+                    }
+                    TextRenderer.DrawText(g, modeText, fontSmall, modeBadge, modeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    int titleW = Math.Max(40, modeBadge.Left - bounds.X - 24);
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 9, titleW, 20);
+                    TextRenderer.DrawText(g, titleText, fontBold, titleRect, theme.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle flowRect = new Rectangle(bounds.X + 16, bounds.Y + 34, bounds.Width - 32, 18);
+                    TextRenderer.DrawText(g, flowText, fontSmall, flowRect, theme.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 60;
+                }
             }
         }
 

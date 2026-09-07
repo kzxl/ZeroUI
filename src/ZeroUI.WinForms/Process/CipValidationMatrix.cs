@@ -184,11 +184,17 @@ namespace ZeroUI.WinForms.Process
                 g.FillRectangle(bgBrush, rect);
                 g.DrawRectangle(borderPen, rect);
 
-                TextRenderer.DrawText(g, title, fontTitle, new Point(rect.X + 10, rect.Y + 8), palette.TextSecondary);
-                TextRenderer.DrawText(g, value, fontVal, new Point(rect.X + 10, rect.Y + 28), palette.TextPrimary);
+                Rectangle titleRect = new Rectangle(rect.X + 8, rect.Y + 6, Math.Max(20, rect.Width - 16), 16);
+                TextRenderer.DrawText(g, title, fontTitle, titleRect, palette.TextSecondary,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
-                Rectangle tagRect = new Rectangle(rect.X + 10, rect.Bottom - 24, rect.Width - 20, 16);
-                TextRenderer.DrawText(g, $"● {status}", fontSub, tagRect, statusColor, TextFormatFlags.Left);
+                Rectangle valRect = new Rectangle(rect.X + 8, rect.Y + 24, Math.Max(20, rect.Width - 16), 22);
+                TextRenderer.DrawText(g, value, fontVal, valRect, palette.TextPrimary,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                Rectangle tagRect = new Rectangle(rect.X + 8, rect.Bottom - 22, Math.Max(20, rect.Width - 16), 16);
+                TextRenderer.DrawText(g, $"● {status}", fontSub, tagRect, statusColor,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
         }
 

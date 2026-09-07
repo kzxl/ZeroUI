@@ -116,24 +116,46 @@ namespace ZeroUI.WinForms.Water
             int mainTop = bounds.Y + headerH;
             int mainHeight = bounds.Height - headerH - 12;
 
-            int tankW = bounds.Width < 580 ? Math.Max(90, (int)(bounds.Width * 0.22)) : 140;
-            int hudW = bounds.Width < 580 ? Math.Max(160, (int)(bounds.Width * 0.38)) : 230;
-            int skidW = bounds.Width - tankW - hudW - 40;
+            if (bounds.Width < 180 || mainHeight < 60) return;
 
-            if (skidW < 80 || mainHeight < 80) return;
+            if (bounds.Width < 500)
+            {
+                // Compact stacked mode:
+                // Upper row: Tank (left) + Pumps Skid (right)
+                // Lower row: Telemetry HUD
+                int topH = Math.Max(120, (int)(mainHeight * 0.52));
+                int botH = mainHeight - topH - 10;
 
-            Rectangle tankRect = new Rectangle(bounds.X + 16, mainTop, tankW, mainHeight);
-            Rectangle skidRect = new Rectangle(tankRect.Right + 12, mainTop, skidW, mainHeight);
-            Rectangle hudRect = new Rectangle(skidRect.Right + 12, mainTop, hudW, mainHeight);
+                int tankW = Math.Max(75, (int)(bounds.Width * 0.28));
+                int skidW = bounds.Width - tankW - 44;
 
-            // 1. Chemical Storage Tank
-            DrawTank(g, tankRect, palette);
+                Rectangle tankRect = new Rectangle(bounds.X + 16, mainTop, tankW, topH);
+                Rectangle skidRect = new Rectangle(tankRect.Right + 12, mainTop, skidW, topH);
+                Rectangle hudRect = new Rectangle(bounds.X + 16, mainTop + topH + 10, bounds.Width - 32, botH);
 
-            // 2. Pumps & Piping Skid Schematic
-            DrawPumpsSkid(g, skidRect, palette);
+                DrawTank(g, tankRect, palette);
+                DrawPumpsSkid(g, skidRect, palette);
+                DrawTelemetryHud(g, hudRect, palette);
+            }
+            else
+            {
+                int tankW = bounds.Width < 680 ? Math.Max(90, (int)(bounds.Width * 0.20)) : 140;
+                int hudW = bounds.Width < 680 ? Math.Max(160, (int)(bounds.Width * 0.35)) : 230;
+                int skidW = bounds.Width - tankW - hudW - 56;
 
-            // 3. Telemetry & Pacing HUD
-            DrawTelemetryHud(g, hudRect, palette);
+                Rectangle tankRect = new Rectangle(bounds.X + 16, mainTop, tankW, mainHeight);
+                Rectangle skidRect = new Rectangle(tankRect.Right + 12, mainTop, skidW, mainHeight);
+                Rectangle hudRect = new Rectangle(skidRect.Right + 12, mainTop, hudW, mainHeight);
+
+                // 1. Chemical Storage Tank
+                DrawTank(g, tankRect, palette);
+
+                // 2. Pumps & Piping Skid Schematic
+                DrawPumpsSkid(g, skidRect, palette);
+
+                // 3. Telemetry & Pacing HUD
+                DrawTelemetryHud(g, hudRect, palette);
+            }
         }
 
         private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette, out int headerH)
@@ -323,6 +345,8 @@ namespace ZeroUI.WinForms.Water
 
         private void DrawTelemetryHud(Graphics g, Rectangle rect, ZeroThemePalette palette)
         {
+            if (rect.Width < 50 || rect.Height < 40) return;
+
             using (var fontTitle = new Font("Segoe UI", 9f, FontStyle.Bold))
             using (var fontLabel = new Font("Segoe UI", 8f))
             using (var fontValue = new Font("Segoe UI", 9f, FontStyle.Bold))
@@ -330,53 +354,51 @@ namespace ZeroUI.WinForms.Water
                 PaintHelper.DrawCardBox(g, rect, "DOSING TELEMETRY", fontTitle, palette);
 
                 int pad = 12;
-                int innerW = rect.Width - pad * 2;
-                int rowY = rect.Y + 34;
-                int rowH = 24;
-
-                // Main Water Flow
-                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
-                    "Main Flow", $"{_engine.WaterFlowM3H:N0} m³/h",
-                    palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
-                rowY += rowH;
-
-                // Target Dose Setpoint
-                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
-                    "Target Dose", $"{_engine.TargetDoseMgL:F2} mg/L",
-                    palette.TextSecondary, Color.FromArgb(56, 189, 248), fontLabel, fontValue);
-                rowY += rowH;
-
-                // Actual Delivery Rate
                 double delivered = _engine.TotalDeliveredDosingRateLh;
                 double req = _engine.CalculateRequiredDosingRateLh();
                 Color rateCol = Math.Abs(delivered - req) < 1.0 ? Color.FromArgb(34, 197, 94) : Color.FromArgb(245, 158, 11);
-
-                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
-                    "Actual Rate", $"{delivered:F1} / {req:F1} L/h",
-                    palette.TextSecondary, rateCol, fontLabel, fontValue);
-                rowY += rowH;
-
-                // Active Discharge Pressure
                 double press = _engine.PumpA.IsRunning ? _engine.PumpA.DischargePressureBar : _engine.PumpB.DischargePressureBar;
-                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
-                    "Discharge Press", $"{press:F1} bar",
-                    palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
-                rowY += rowH;
-
-                // Solution Concentration
-                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
-                    "Concentration", $"{_engine.Tank.SolutionConcentrationPct:F1}% (SG {_engine.Tank.SpecificGravity:F2})",
-                    palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
-                rowY += rowH;
-
-                // Estimated Storage Autonomy
                 double hoursLeft = _engine.EstimatedRunHoursRemaining;
                 string autoStr = double.IsPositiveInfinity(hoursLeft) ? "∞" : $"{hoursLeft:F1} hrs";
                 Color autoCol = hoursLeft < 24.0 ? Color.FromArgb(239, 68, 68) : Color.FromArgb(34, 197, 94);
 
-                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
-                    "Tank Autonomy", autoStr,
-                    palette.TextSecondary, autoCol, fontLabel, fontValue);
+                if (rect.Width >= 400 && rect.Height < 190)
+                {
+                    // 2-column layout
+                    int colW = (rect.Width - pad * 3) / 2;
+                    int rowH = Math.Max(18, (rect.Height - 38) / 3);
+
+                    // Col 1
+                    int y1 = rect.Y + 32;
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, y1, colW, rowH), "Main Flow", $"{_engine.WaterFlowM3H:N0} m³/h", palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, y1 + rowH, colW, rowH), "Target Dose", $"{_engine.TargetDoseMgL:F2} mg/L", palette.TextSecondary, Color.FromArgb(56, 189, 248), fontLabel, fontValue);
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, y1 + rowH * 2, colW, rowH), "Actual Rate", $"{delivered:F1} / {req:F1} L/h", palette.TextSecondary, rateCol, fontLabel, fontValue);
+
+                    // Col 2
+                    int col2X = rect.X + pad * 2 + colW;
+                    PaintHelper.DrawDataRow(g, new Rectangle(col2X, y1, colW, rowH), "Discharge Press", $"{press:F1} bar", palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                    PaintHelper.DrawDataRow(g, new Rectangle(col2X, y1 + rowH, colW, rowH), "Concentration", $"{_engine.Tank.SolutionConcentrationPct:F1}%", palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                    PaintHelper.DrawDataRow(g, new Rectangle(col2X, y1 + rowH * 2, colW, rowH), "Tank Autonomy", autoStr, palette.TextSecondary, autoCol, fontLabel, fontValue);
+                }
+                else
+                {
+                    // 1-column layout
+                    int innerW = rect.Width - pad * 2;
+                    int rowY = rect.Y + 32;
+                    int rowH = Math.Max(18, (rect.Height - 38) / 6);
+
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH), "Main Flow", $"{_engine.WaterFlowM3H:N0} m³/h", palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                    rowY += rowH;
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH), "Target Dose", $"{_engine.TargetDoseMgL:F2} mg/L", palette.TextSecondary, Color.FromArgb(56, 189, 248), fontLabel, fontValue);
+                    rowY += rowH;
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH), "Actual Rate", $"{delivered:F1} / {req:F1} L/h", palette.TextSecondary, rateCol, fontLabel, fontValue);
+                    rowY += rowH;
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH), "Discharge Press", $"{press:F1} bar", palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                    rowY += rowH;
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH), "Concentration", $"{_engine.Tank.SolutionConcentrationPct:F1}% (SG {_engine.Tank.SpecificGravity:F2})", palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                    rowY += rowH;
+                    PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH), "Tank Autonomy", autoStr, palette.TextSecondary, autoCol, fontLabel, fontValue);
+                }
             }
         }
     }

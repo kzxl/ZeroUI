@@ -83,13 +83,13 @@ namespace ZeroUI.WinForms.Logistics
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Top Header: Fleet Title, Active count, Avg Battery SoC
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
             // Floor Canvas Map
             int mapLeft = bounds.X + 20;
-            int mapTop = bounds.Y + 54;
+            int mapTop = bounds.Y + headerH + 6;
             int mapWidth = bounds.Width - 40;
-            int mapHeight = bounds.Height - 54 - 16;
+            int mapHeight = bounds.Height - headerH - 18;
 
             if (mapWidth < 180 || mapHeight < 100)
                 return;
@@ -115,22 +115,25 @@ namespace ZeroUI.WinForms.Logistics
             }
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, "AGV / AMR Fleet LiDAR SLAM Map", fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+                string title = "AGV / AMR Fleet LiDAR SLAM Map";
+                string fleetInfo = $"Vehicles: {_engine.Vehicles.Count} | Avg SoC: {_engine.AverageBatterySocPct:F0}%";
+                int badgeW = 76;
+                int badgeH = 24;
 
-                int statsX = bounds.Right - 320;
-                if (statsX > bounds.X + 240)
+                if (bounds.Width >= 540)
                 {
-                    string fleetInfo = $"Vehicles: {_engine.Vehicles.Count} | Avg SoC: {_engine.AverageBatterySocPct:F0}%";
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+
+                    int statsX = bounds.Right - 310;
                     TextRenderer.DrawText(g, fleetInfo, fontSmall, new Point(statsX, bounds.Y + 16), theme.TextSecondary);
 
-                    // Status pill
-                    Rectangle pillRect = new Rectangle(bounds.Right - 100, bounds.Y + 12, 80, 24);
+                    Rectangle pillRect = new Rectangle(bounds.Right - badgeW - 20, bounds.Y + 12, badgeW, badgeH);
                     using (var pillBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
                     using (var pillPen = new Pen(Color.FromArgb(34, 197, 94), 1f))
                     {
@@ -138,6 +141,27 @@ namespace ZeroUI.WinForms.Logistics
                         g.DrawRectangle(pillPen, pillRect);
                     }
                     TextRenderer.DrawText(g, "FLEET OK", fontBold, pillRect, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 48;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 20, bounds.Y + 8, bounds.Width - badgeW - 36, 22);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle pillRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 8, badgeW, badgeH);
+                    using (var pillBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
+                    using (var pillPen = new Pen(Color.FromArgb(34, 197, 94), 1f))
+                    {
+                        g.FillRectangle(pillBrush, pillRect);
+                        g.DrawRectangle(pillPen, pillRect);
+                    }
+                    TextRenderer.DrawText(g, "FLEET OK", fontBold, pillRect, Color.FromArgb(34, 197, 94), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+                    Rectangle statsRect = new Rectangle(bounds.X + 20, bounds.Y + 32, bounds.Width - 40, 18);
+                    TextRenderer.DrawText(g, fleetInfo, fontSmall, statsRect, theme.TextSecondary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 54;
                 }
             }
         }
