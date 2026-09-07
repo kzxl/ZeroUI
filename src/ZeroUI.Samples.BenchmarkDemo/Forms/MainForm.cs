@@ -34,6 +34,8 @@ using ZeroUI.Core.Validation;
 using ZeroUI.Core.Communication;
 using ZeroUI.Core.Historian;
 using ZeroUI.Core.Scene;
+using ZeroUI.Core.Network;
+using ZeroUI.WinForms.Network;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
@@ -61,6 +63,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _clusterAnalytics = null!;
         private ZeroTabPage _clusterComponents = null!;
         private ZeroTabPage _clusterScadaSynoptic = null!;
+        private ZeroTabPage _clusterNetwork = null!;
         private ZeroTabPage _tabScadaClosedLoop = null!;
         private ZeroTabPage _tabScadaPid = null!;
         private ZeroTabPage _tabScadaAlarms = null!;
@@ -511,6 +514,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             subTabsScada.AddTab(_tabIndustrialRuntime);
             _clusterScadaSynoptic.Controls.Add(subTabsScada);
 
+            // Cluster 8: Network & IT/OT Infrastructure (Phase 12 Suite)
+            _clusterNetwork = new ZeroTabPage("Network & Infrastructure", "🌐") { BadgeCount = 6 };
+            InitializeNetworkInfrastructure(_clusterNetwork);
+
             // Build individual cluster views
             InitializeZeroGrid();
             InitializeDataGridView();
@@ -536,7 +543,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabZero.Controls.Add(_searchBar);
             _tabDgv.Controls.Add(_dgv);
 
-            // Add all 7 clusters to master vertical navigation
+            // Add all 8 clusters to master vertical navigation
             _mainNav.AddTab(_clusterBenchmark);
             _mainNav.AddTab(_clusterMes);
             _mainNav.AddTab(_clusterWarehouse);
@@ -544,6 +551,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _mainNav.AddTab(_clusterScadaSynoptic);
             _mainNav.AddTab(_clusterAnalytics);
             _mainNav.AddTab(_clusterComponents);
+            _mainNav.AddTab(_clusterNetwork);
 
             // Start autonomous background PLC driver
             SimulatedPlcDriver.Start();
@@ -5000,6 +5008,228 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             splitRoot.Panel2.Controls.Add(rightStack);
             parent.Controls.Add(splitRoot);
+        }
+
+        private void InitializeNetworkInfrastructure(ZeroTabPage cluster)
+        {
+            var colors = ZeroTheme.Colors;
+            cluster.BackColor = colors.Background;
+
+            var subTabs = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+
+            // 1. Rack & Switch Faceplate
+            var tabRackSwitch = new ZeroTabPage("19\" Rack & Switch Faceplate", "🗄️");
+            var pnlRackRoot = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(12) };
+            var devRack = new DeviceRack { Dock = DockStyle.Left, Width = 340, ShowThermalOverlay = true };
+            var pnlSwitchContainer = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(12, 0, 0, 0) };
+            var swFaceplate = new SwitchFaceplate { Dock = DockStyle.Top, Height = 170 };
+            
+            var cardActions = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 180,
+                StepNumber = 1,
+                Title = "Cabinet & Hardware Controls",
+                Subtitle = "Interactive simulation of physical rack slots and switch ports"
+            };
+            var pnlCardBody = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, AutoScroll = true, Padding = new Padding(8) };
+            
+            var btnToggleThermal = new ZeroButton { Text = "🌡 Toggle Thermal Gradient", ButtonStyle = ZeroButtonStyle.Primary, Size = new Size(210, 34) };
+            btnToggleThermal.Click += (s, e) =>
+            {
+                devRack.ShowThermalOverlay = !devRack.ShowThermalOverlay;
+                ZeroToast.Info(this, $"Thermal Overlay: {(devRack.ShowThermalOverlay ? "Visible (18°C -> 45°C)" : "Hidden")}");
+            };
+
+            var btnAddServer = new ZeroButton { Text = "➕ Install Blade Server (2U)", ButtonStyle = ZeroButtonStyle.Secondary, Size = new Size(200, 34) };
+            btnAddServer.Click += (s, e) =>
+            {
+                if (devRack.Engine.CanPlaceItem(30, 2, out string reason))
+                {
+                    devRack.Engine.AddItem(new RackSlotItem
+                    {
+                        StartUnit = 30,
+                        UnitHeight = 2,
+                        Name = "Edge Compute Node 03",
+                        Model = "Dell PowerEdge R750",
+                        PowerDrawWatts = 420,
+                        TemperatureCelsius = 34.0,
+                        WeightKg = 22.0
+                    });
+                    devRack.Invalidate();
+                    ZeroToast.Success(this, "Installed Dell PowerEdge R750 into Unit 30..31.");
+                }
+                else
+                {
+                    ZeroToast.Warning(this, reason);
+                }
+            };
+
+            var btnPoE = new ZeroButton { Text = "⚡ Max Out PoE Load", ButtonStyle = ZeroButtonStyle.Danger, Size = new Size(180, 34) };
+            btnPoE.Click += (s, e) =>
+            {
+                for (int i = 1; i <= swFaceplate.PortLayout.Ports.Count; i++)
+                {
+                    var p = swFaceplate.PortLayout.FindPort(i);
+                    if (p != null && p.PortType == SwitchPortType.RJ45)
+                    {
+                        p.PoeWatts = 15.4;
+                    }
+                }
+                swFaceplate.Invalidate();
+                ZeroToast.Info(this, "Simulated active 802.3af PoE draw across all RJ45 ports.");
+            };
+
+            pnlCardBody.Controls.Add(btnToggleThermal);
+            pnlCardBody.Controls.Add(btnAddServer);
+            pnlCardBody.Controls.Add(btnPoE);
+            cardActions.Controls.Add(pnlCardBody);
+
+            pnlSwitchContainer.Controls.Add(cardActions);
+            pnlSwitchContainer.Controls.Add(swFaceplate);
+            pnlRackRoot.Controls.Add(pnlSwitchContainer);
+            pnlRackRoot.Controls.Add(devRack);
+            tabRackSwitch.Controls.Add(pnlRackRoot);
+
+            // 2. Interactive Network Topology Canvas
+            var tabTopology = new ZeroTabPage("Network Topology & Pulse Flows", "🕸️");
+            var netTopo = new NetworkTopology { Dock = DockStyle.Fill };
+            var pnlTopoBar = new Panel { Dock = DockStyle.Top, Height = 42, BackColor = Color.FromArgb(20, 24, 33), Padding = new Padding(8, 4, 8, 4) };
+            
+            var btnFit = new ZeroButton { Text = "🔍 Reset Zoom (100%)", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(8, 5), Size = new Size(160, 32) };
+            btnFit.Click += (s, e) =>
+            {
+                netTopo.ZoomLevel = 1.0f;
+                ZeroToast.Info(this, "Zoom reset to 100%.");
+            };
+
+            var btnHier = new ZeroButton { Text = "📐 Layered Layout", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(176, 5), Size = new Size(150, 32) };
+            btnHier.Click += (s, e) =>
+            {
+                netTopo.Engine.ApplyHierarchicalLayout(netTopo.Width, netTopo.Height);
+                netTopo.Invalidate();
+                ZeroToast.Info(this, "Applied Hierarchical layout.");
+            };
+
+            var btnRing = new ZeroButton { Text = "🔄 Ring Layout", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(334, 5), Size = new Size(140, 32) };
+            btnRing.Click += (s, e) =>
+            {
+                netTopo.Engine.ApplyCircularLayout(netTopo.Width / 2f, netTopo.Height / 2f, Math.Min(netTopo.Width, netTopo.Height) * 0.35f);
+                netTopo.Invalidate();
+                ZeroToast.Info(this, "Applied Circular / Ring topology layout.");
+            };
+
+            pnlTopoBar.Controls.Add(btnFit);
+            pnlTopoBar.Controls.Add(btnHier);
+            pnlTopoBar.Controls.Add(btnRing);
+            tabTopology.Controls.Add(netTopo);
+            tabTopology.Controls.Add(pnlTopoBar);
+
+            // 3. Chassis Health HUD & Optical DDM
+            var tabChassis = new ZeroTabPage("Chassis Health & Optical DDM", "🖥️");
+            var pnlChassisRoot = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(16), AutoScroll = true };
+            var devFaceplate = new DeviceFaceplate { Dock = DockStyle.Top, Height = 340 };
+            
+            var cardPsuActions = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 160,
+                StepNumber = 2,
+                Title = "Hardware Fault Injection & Health Testing",
+                Subtitle = "Simulate redundant PSU power loss, fan failure, and optical link degradation"
+            };
+            var pnlPsuBody = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(8) };
+            
+            var btnFailPsu = new ZeroButton { Text = "⚡ Cut PSU 2 Power", ButtonStyle = ZeroButtonStyle.Danger, Size = new Size(180, 34) };
+            btnFailPsu.Click += (s, e) =>
+            {
+                devFaceplate.Profile.Psu2.IsPowered = false;
+                devFaceplate.Profile.Psu2.Status = PsuHealthStatus.Fault;
+                devFaceplate.Invalidate();
+                ZeroToast.Warning(this, "PSU 2 Power Lost! Operating on single-PSU redundancy.");
+            };
+
+            var btnRestorePsu = new ZeroButton { Text = "✅ Restore PSU 2 Power", ButtonStyle = ZeroButtonStyle.Success, Size = new Size(180, 34) };
+            btnRestorePsu.Click += (s, e) =>
+            {
+                devFaceplate.Profile.Psu2.IsPowered = true;
+                devFaceplate.Profile.Psu2.Status = PsuHealthStatus.Normal;
+                devFaceplate.Invalidate();
+                ZeroToast.Success(this, "PSU 2 Restored! Dual redundancy healthy.");
+            };
+
+            pnlPsuBody.Controls.Add(btnFailPsu);
+            pnlPsuBody.Controls.Add(btnRestorePsu);
+            cardPsuActions.Controls.Add(pnlPsuBody);
+
+            pnlChassisRoot.Controls.Add(cardPsuActions);
+            pnlChassisRoot.Controls.Add(devFaceplate);
+            tabChassis.Controls.Add(pnlChassisRoot);
+
+            // 4. IPAM Subnet Matrix & Latency Sparklines
+            var tabIpMatrix = new ZeroTabPage("2D IPAM Subnet Matrix", "🌐");
+            var ipMatrix = new IpMatrix { Dock = DockStyle.Fill };
+            tabIpMatrix.Controls.Add(ipMatrix);
+
+            // 5. Industrial Fieldbus & Cable Break Locator
+            var tabFieldbus = new ZeroTabPage("Fieldbus & Break Locator", "🔌");
+            var pnlFbRoot = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(16), AutoScroll = true };
+            var fbMonitor = new FieldbusMonitor { Dock = DockStyle.Top, Height = 250 };
+            
+            var cardFbActions = new ZeroCard
+            {
+                Dock = DockStyle.Top,
+                Height = 160,
+                StepNumber = 3,
+                Title = "Fieldbus Fault Injection & Break Localization",
+                Subtitle = "Simulate cable severing between industrial drops (Profinet / EtherCAT)"
+            };
+            var pnlFbBody = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(8) };
+            
+            var btnBreakCable = new ZeroButton { Text = "✂ Sever Cable (Station 3 -> 4)", ButtonStyle = ZeroButtonStyle.Danger, Size = new Size(240, 34) };
+            btnBreakCable.Click += (s, e) =>
+            {
+                for (int i = 3; i < fbMonitor.Network.Stations.Count; i++)
+                {
+                    fbMonitor.Network.Stations[i].Status = StationStatus.CommunicationLost;
+                }
+                fbMonitor.Invalidate();
+                ZeroToast.Error(this, "Severed cable between Station #3 (Remote I/O) and Station #4 (Valve Island)!");
+            };
+
+            var btnRepairCable = new ZeroButton { Text = "🔧 Repair Cable Link", ButtonStyle = ZeroButtonStyle.Success, Size = new Size(180, 34) };
+            btnRepairCable.Click += (s, e) =>
+            {
+                for (int i = 0; i < fbMonitor.Network.Stations.Count; i++)
+                {
+                    fbMonitor.Network.Stations[i].Status = StationStatus.Normal;
+                }
+                fbMonitor.Network.RebuildSegments();
+                fbMonitor.Invalidate();
+                ZeroToast.Success(this, "Fieldbus line repaired. All stations online.");
+            };
+
+            pnlFbBody.Controls.Add(btnBreakCable);
+            pnlFbBody.Controls.Add(btnRepairCable);
+            cardFbActions.Controls.Add(pnlFbBody);
+
+            pnlFbRoot.Controls.Add(cardFbActions);
+            pnlFbRoot.Controls.Add(fbMonitor);
+            tabFieldbus.Controls.Add(pnlFbRoot);
+
+            // Assemble all subtabs into Cluster 8
+            subTabs.AddTab(tabRackSwitch);
+            subTabs.AddTab(tabTopology);
+            subTabs.AddTab(tabChassis);
+            subTabs.AddTab(tabIpMatrix);
+            subTabs.AddTab(tabFieldbus);
+            cluster.Controls.Add(subTabs);
         }
 
         private void InitializeScadaProcessFlow(ZeroTabPage parentTab)
