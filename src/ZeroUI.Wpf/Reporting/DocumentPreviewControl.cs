@@ -30,6 +30,7 @@ namespace ZeroUI.Wpf.Reporting
         // Standard A4 Paper in DIP at 96 DPI: 210mm x 297mm ≈ 794 x 1123 DIP
         private double _paperWidth = 794;
         private double _paperHeight = 1123;
+        private Grid? _rootGrid;
 
         private readonly Button _btnPrint;
         private readonly Button _btnFit;
@@ -80,6 +81,8 @@ namespace ZeroUI.Wpf.Reporting
             ClipToBounds = true;
 
             var rootGrid = new Grid();
+            _rootGrid = rootGrid;
+            AddLogicalChild(rootGrid);
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Toolbar
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Viewport
 
@@ -205,6 +208,25 @@ namespace ZeroUI.Wpf.Reporting
             ZeroWpfTheme.ThemeChanged += UpdateTheme;
             UpdateLocalizedStrings();
             UpdatePageDisplay();
+        }
+
+        protected override int VisualChildrenCount => _rootGrid != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index) => _rootGrid ?? throw new ArgumentOutOfRangeException(nameof(index));
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_rootGrid != null)
+            {
+                _rootGrid.Measure(constraint);
+                return _rootGrid.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            _rootGrid?.Arrange(new Rect(arrangeBounds));
+            return arrangeBounds;
         }
 
         private void UpdateTheme()

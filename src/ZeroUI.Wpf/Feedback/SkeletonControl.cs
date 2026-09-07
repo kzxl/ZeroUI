@@ -63,9 +63,12 @@ namespace ZeroUI.Wpf.Feedback
             BuildShimmerVisual();
         }
 
+        private Grid? _grid;
+
         private void BuildShimmerVisual()
         {
             var grid = new Grid();
+            _grid = grid;
 
             // Setup hardware-accelerated LinearGradientBrush shimmer
             var lgb = new LinearGradientBrush
@@ -118,6 +121,25 @@ namespace ZeroUI.Wpf.Feedback
 
             AddVisualChild(grid);
             AddLogicalChild(grid);
+        }
+
+        protected override int VisualChildrenCount => _grid != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index) => _grid ?? throw new ArgumentOutOfRangeException(nameof(index));
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_grid != null)
+            {
+                _grid.Measure(constraint);
+                return _grid.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            _grid?.Arrange(new Rect(arrangeBounds));
+            return arrangeBounds;
         }
 
         private static void OnShapeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

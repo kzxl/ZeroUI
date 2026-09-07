@@ -65,6 +65,11 @@ namespace ZeroUI.Wpf.PivotGrid
             {
                 Background = ZeroWpfTheme.BgCard;
                 BorderBrush = ZeroWpfTheme.BorderDefault;
+                if (_outerBorder != null)
+                {
+                    _outerBorder.Background = Background;
+                    _outerBorder.BorderBrush = BorderBrush;
+                }
                 RebuildMatrixUI();
             };
         }
@@ -88,6 +93,8 @@ namespace ZeroUI.Wpf.PivotGrid
             RebuildMatrixUI();
             DataRecalculated?.Invoke(this, EventArgs.Empty);
         }
+
+        private Border? _outerBorder;
 
         private void BuildVisualStructure()
         {
@@ -127,11 +134,31 @@ namespace ZeroUI.Wpf.PivotGrid
                 BorderThickness = BorderThickness,
                 Child = _rootGrid
             };
+            _outerBorder = outerBorder;
 
             AddVisualChild(outerBorder);
             AddLogicalChild(outerBorder);
 
             RebuildMatrixUI();
+        }
+
+        protected override int VisualChildrenCount => _outerBorder != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index) => _outerBorder ?? throw new ArgumentOutOfRangeException(nameof(index));
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_outerBorder != null)
+            {
+                _outerBorder.Measure(constraint);
+                return _outerBorder.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            _outerBorder?.Arrange(new Rect(arrangeBounds));
+            return arrangeBounds;
         }
 
         private void RebuildMatrixUI()

@@ -128,6 +128,8 @@ namespace ZeroUI.Wpf.Navigation
         public event EventHandler? Finished;
         public event EventHandler? Cancelled;
 
+        private Border? _rootBorder;
+
         static WizardControl()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(WizardControl), new FrameworkPropertyMetadata(typeof(WizardControl)));
@@ -148,8 +150,21 @@ namespace ZeroUI.Wpf.Navigation
             };
 
             ZeroLocalizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
+            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
 
             BuildVisualTemplate();
+        }
+
+        private void OnThemeChanged()
+        {
+            Background = ZeroWpfTheme.BgCard;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_rootBorder != null)
+            {
+                _rootBorder.Background = Background;
+                _rootBorder.BorderBrush = BorderBrush;
+            }
+            UpdateWizardView();
         }
 
         private void BuildVisualTemplate()
@@ -161,6 +176,7 @@ namespace ZeroUI.Wpf.Navigation
                 BorderThickness = BorderThickness,
                 CornerRadius = new CornerRadius(6)
             };
+            _rootBorder = rootBorder;
 
             var mainGrid = new Grid();
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(64, GridUnitType.Pixel) }); // Header
@@ -294,6 +310,25 @@ namespace ZeroUI.Wpf.Navigation
             AddLogicalChild(rootBorder);
 
             UpdateWizardView();
+        }
+
+        protected override int VisualChildrenCount => _rootBorder != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index) => _rootBorder ?? throw new ArgumentOutOfRangeException(nameof(index));
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_rootBorder != null)
+            {
+                _rootBorder.Measure(constraint);
+                return _rootBorder.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            _rootBorder?.Arrange(new Rect(arrangeBounds));
+            return arrangeBounds;
         }
 
         private void BtnBack_Click(object sender, RoutedEventArgs e)

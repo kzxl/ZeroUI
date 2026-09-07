@@ -250,9 +250,12 @@ namespace ZeroUI.Wpf.Editors
             UpdateDisplayText();
         }
 
+        private Grid? _rootGrid;
+
         private void BuildVisualTemplate()
         {
             var rootGrid = new Grid();
+            _rootGrid = rootGrid;
 
             _border = new Border
             {
@@ -367,6 +370,25 @@ namespace ZeroUI.Wpf.Editors
             rootGrid.Children.Add(_popup);
             AddVisualChild(rootGrid);
             AddLogicalChild(rootGrid);
+        }
+
+        protected override int VisualChildrenCount => _rootGrid != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index) => _rootGrid ?? throw new ArgumentOutOfRangeException(nameof(index));
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_rootGrid != null)
+            {
+                _rootGrid.Measure(constraint);
+                return _rootGrid.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            _rootGrid?.Arrange(new Rect(arrangeBounds));
+            return arrangeBounds;
         }
 
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)

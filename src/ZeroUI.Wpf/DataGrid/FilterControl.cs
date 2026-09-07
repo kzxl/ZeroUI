@@ -80,6 +80,25 @@ namespace ZeroUI.Wpf.DataGrid
             RebuildTreeUI();
         }
 
+        protected override int VisualChildrenCount => _border != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index) => _border ?? throw new ArgumentOutOfRangeException(nameof(index));
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_border != null)
+            {
+                _border.Measure(constraint);
+                return _border.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            _border?.Arrange(new Rect(arrangeBounds));
+            return arrangeBounds;
+        }
+
         public void SetColumns(IEnumerable<ZeroColumn> columns)
         {
             _availableFields.Clear();

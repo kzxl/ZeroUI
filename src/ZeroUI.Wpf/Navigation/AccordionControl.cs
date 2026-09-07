@@ -88,6 +88,7 @@ namespace ZeroUI.Wpf.Navigation
     {
         private readonly ObservableCollection<AccordionGroup> _groups = new ObservableCollection<AccordionGroup>();
         private StackPanel? _groupsStack;
+        private Border? _rootBorder;
         private AccordionExpandMode _expandMode = AccordionExpandMode.MultipleGroups;
 
         public ObservableCollection<AccordionGroup> Groups => _groups;
@@ -114,7 +115,20 @@ namespace ZeroUI.Wpf.Navigation
             Width = 260;
 
             _groups.CollectionChanged += (s, e) => RebuildUI();
+            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
             BuildVisualTemplate();
+        }
+
+        private void OnThemeChanged()
+        {
+            Background = ZeroWpfTheme.BgCard;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_rootBorder != null)
+            {
+                _rootBorder.Background = Background;
+                _rootBorder.BorderBrush = BorderBrush;
+            }
+            RebuildUI();
         }
 
         private void BuildVisualTemplate()
@@ -133,12 +147,29 @@ namespace ZeroUI.Wpf.Navigation
             scroll.Content = _groupsStack;
 
             border.Child = scroll;
+            _rootBorder = border;
             AddVisualChild(border);
             AddLogicalChild(border);
         }
 
-        protected override int VisualChildrenCount => 1;
-        protected override Visual GetVisualChild(int index) => (Visual)GetTemplateChild("Root") ?? (Visual)VisualTreeHelper.GetChild(this, 0);
+        protected override int VisualChildrenCount => _rootBorder != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index) => _rootBorder ?? throw new ArgumentOutOfRangeException(nameof(index));
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_rootBorder != null)
+            {
+                _rootBorder.Measure(constraint);
+                return _rootBorder.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            _rootBorder?.Arrange(new Rect(arrangeBounds));
+            return arrangeBounds;
+        }
 
         private void RebuildUI()
         {
