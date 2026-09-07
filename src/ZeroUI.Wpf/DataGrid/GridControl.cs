@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Virtualization;
 using ZeroUI.Wpf.Editors;
 using ZeroUI.Wpf.Theme;
@@ -21,7 +24,7 @@ namespace ZeroUI.Wpf.DataGrid
     /// Eliminates WPF Visual Tree overhead by rendering cells directly via DrawingContext,
     /// powered by ZeroUI.Core virtualization algorithms and RowIndexMap.
     /// </summary>
-    public class GridControl : FrameworkElement
+    public class GridControl : FrameworkElement, IAnimationFrameListener
     {
         private static readonly Pen WhiteCheckPen;
 
@@ -42,6 +45,67 @@ namespace ZeroUI.Wpf.DataGrid
         private int _rowHeight = 28;
         private int _scrollX = 0;
         private int _scrollY = 0;
+
+        // High-Frequency Scroll Conflation & Adaptive Display Clock
+        private int _pendingScrollDeltaY;
+        private int _idleScrollFrames;
+        private volatile bool _hasPendingScroll;
+        private bool _isClockSubscribed;
+        private readonly Action _flushScrollConflationAction;
+        private bool _enableAdaptiveHighRefresh = true;
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Enables adaptive display refresh rate synchronization and high-frequency scroll event conflation.")]
+        public bool EnableAdaptiveHighRefresh
+        {
+            get => _enableAdaptiveHighRefresh;
+            set => _enableAdaptiveHighRefresh = value;
+        }
+
+        private readonly struct FormattedTextCacheKey : IEquatable<FormattedTextCacheKey>
+        {
+            public readonly string Text;
+            public readonly Typeface Typeface;
+            public readonly double FontSize;
+            public readonly Brush Brush;
+            public readonly double Dpi;
+
+            public FormattedTextCacheKey(string text, Typeface typeface, double fontSize, Brush brush, double dpi)
+            {
+                Text = text;
+                Typeface = typeface;
+                FontSize = fontSize;
+                Brush = brush;
+                Dpi = dpi;
+            }
+
+            public bool Equals(FormattedTextCacheKey other)
+            {
+                return Text == other.Text &&
+                       FontSize.Equals(other.FontSize) &&
+                       Dpi.Equals(other.Dpi) &&
+                       ReferenceEquals(Typeface, other.Typeface) &&
+                       ReferenceEquals(Brush, other.Brush);
+            }
+
+            public override bool Equals(object? obj) => obj is FormattedTextCacheKey other && Equals(other);
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = Text != null ? Text.GetHashCode() : 0;
+                    hash = (hash * 397) ^ (Typeface != null ? Typeface.GetHashCode() : 0);
+                    hash = (hash * 397) ^ FontSize.GetHashCode();
+                    hash = (hash * 397) ^ (Brush != null ? Brush.GetHashCode() : 0);
+                    hash = (hash * 397) ^ Dpi.GetHashCode();
+                    return hash;
+                }
+            }
+        }
+
+        private readonly Dictionary<FormattedTextCacheKey, FormattedText> _formattedTextCache = new Dictionary<FormattedTextCacheKey, FormattedText>(256);
 
         public ObservableCollection<GridBand> Bands => _bands;
 
@@ -546,6 +610,10 @@ namespace ZeroUI.Wpf.DataGrid
             Focusable = true;
             _visualChildren = new VisualCollection(this);
 
+            _flushScrollConflationAction = FlushScrollConflation;
+            ZeroAnimationClock.AutoSynchronizeWithDisplay();
+            Unloaded += (s, e) => RemoveClockSubscribed();
+
             _inPlaceEditor = new TextBox
             {
                 Visibility = Visibility.Collapsed,
@@ -1014,17 +1082,28 @@ namespace ZeroUI.Wpf.DataGrid
             }
         }
 
-        #if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
+        private FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
         {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
+            var key = new FormattedTextCacheKey(text, typeface, fontSize, brush, pixelsPerDip);
+            if (_formattedTextCache.TryGetValue(key, out var cached))
+            {
+                return cached;
+            }
+
+            if (_formattedTextCache.Count > 512)
+            {
+                _formattedTextCache.Clear();
+            }
+
+            #if NETFRAMEWORK
+            var ft = new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
+            #else
+            var ft = new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
+            #endif
+
+            _formattedTextCache[key] = ft;
+            return ft;
         }
-        #else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-        #endif
 
         protected override void OnRender(DrawingContext dc)
         {
@@ -1990,8 +2069,99 @@ namespace ZeroUI.Wpf.DataGrid
         {
             base.OnMouseWheel(e);
             int scrollAmount = (e.Delta / 120) * _rowHeight * 3;
+
+            if (_enableAdaptiveHighRefresh)
+            {
+                Interlocked.Add(ref _pendingScrollDeltaY, scrollAmount);
+                _hasPendingScroll = true;
+                EnsureClockSubscribed();
+                return;
+            }
+
             _scrollY = Math.Max(0, Math.Min(GetMaxScrollY(), _scrollY - scrollAmount));
             if (_isEditing) InvalidateArrange();
+            InvalidateVisual();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void EnsureClockSubscribed()
+        {
+            if (!_isClockSubscribed)
+            {
+                _isClockSubscribed = true;
+                _idleScrollFrames = 0;
+                ZeroAnimationClock.Subscribe((IAnimationFrameListener)this);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RemoveClockSubscribed()
+        {
+            if (_isClockSubscribed)
+            {
+                _isClockSubscribed = false;
+                ZeroAnimationClock.Unsubscribe((IAnimationFrameListener)this);
+            }
+        }
+
+        void IAnimationFrameListener.OnAnimationFrame(double deltaSeconds, long frameCount)
+        {
+            if (!IsLoaded)
+            {
+                RemoveClockSubscribed();
+                return;
+            }
+
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(_flushScrollConflationAction);
+                return;
+            }
+
+            FlushScrollConflation();
+        }
+
+        private void FlushScrollConflation()
+        {
+            if (!_hasPendingScroll)
+            {
+                _idleScrollFrames++;
+                if (_idleScrollFrames > 2)
+                {
+                    RemoveClockSubscribed();
+                }
+                return;
+            }
+
+            int dy = Interlocked.Exchange(ref _pendingScrollDeltaY, 0);
+            _hasPendingScroll = false;
+            _idleScrollFrames = 0;
+
+            if (dy != 0)
+            {
+                int targetY = Math.Max(0, Math.Min(GetMaxScrollY(), _scrollY - dy));
+                if (targetY != _scrollY)
+                {
+                    _scrollY = targetY;
+                    if (_isEditing) InvalidateArrange();
+                    InvalidateVisual();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Invalidates visual rendering for the specified cell when data updates.
+        /// </summary>
+        public void InvalidateCell(int visualRow, int columnIndex)
+        {
+            InvalidateVisual();
+        }
+
+        /// <summary>
+        /// Invalidates visual rendering for the specified row.
+        /// </summary>
+        public void InvalidateRow(int visualRow)
+        {
             InvalidateVisual();
         }
 

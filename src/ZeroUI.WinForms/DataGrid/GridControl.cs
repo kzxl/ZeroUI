@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -12,6 +13,7 @@ using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Input;
 using ZeroUI.Core.Layout;
+using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Virtualization;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Icons;
@@ -27,7 +29,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultProperty("DataSource")]
     [Description("High-performance virtual DataGrid with direct Win32 DIBSection rendering")]
-    public class GridControl : Control
+    public class GridControl : Control, IAnimationFrameListener
     {
         private readonly List<ZeroColumn> _columns = new List<ZeroColumn>();
 
@@ -50,6 +52,28 @@ namespace ZeroUI.WinForms.DataGrid
         // Presentation View Type (Table / CardView / TileView)
         private GridViewType _viewType = GridViewType.Table;
         private readonly GridCardLayoutManager _cardLayout = new GridCardLayoutManager();
+
+        // High-Frequency Scroll Conflation & Adaptive Display Clock
+        private int _pendingScrollDeltaY;
+        private int _pendingScrollDeltaX;
+        private int _idleScrollFrames;
+        private volatile bool _hasPendingScroll;
+        private bool _isClockSubscribed;
+        private readonly Action _flushScrollConflationAction;
+        private bool _enableAdaptiveHighRefresh = true;
+
+        /// <summary>
+        /// When true, enables adaptive display refresh rate synchronization and high-frequency scroll event conflation.
+        /// Throttles continuous scroll events to the monitor's exact refresh rate (e.g. 60Hz, 120Hz, 144Hz, 240Hz).
+        /// </summary>
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Enables adaptive display refresh rate synchronization and high-frequency scroll event conflation.")]
+        public bool EnableAdaptiveHighRefresh
+        {
+            get => _enableAdaptiveHighRefresh;
+            set => _enableAdaptiveHighRefresh = value;
+        }
 
         [Category("View")]
         [DefaultValue(GridViewType.Table)]
@@ -167,6 +191,9 @@ namespace ZeroUI.WinForms.DataGrid
             DoubleBuffered = false; // We use our own zero-copy DIB Section
             TabStop = true;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+
+            _flushScrollConflationAction = FlushScrollConflation;
+            ZeroAnimationClock.AutoSynchronizeWithDisplay();
 
             // Auto filter floating editor setup
             _autoFilterEditor = new TextBox
@@ -2302,6 +2329,14 @@ namespace ZeroUI.WinForms.DataGrid
             int delta = unchecked((short)((long)wParam >> 16));
             int scrollDelta = (delta / 120) * (_rowHeight * 3);
 
+            if (_enableAdaptiveHighRefresh)
+            {
+                Interlocked.Add(ref _pendingScrollDeltaY, scrollDelta);
+                _hasPendingScroll = true;
+                EnsureClockSubscribed();
+                return;
+            }
+
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
             int effHeaderH = EffectiveHeaderHeight;
@@ -2313,6 +2348,173 @@ namespace ZeroUI.WinForms.DataGrid
             UpdateScrollBars();
             if (_isEditing) UpdateInPlaceEditorBounds();
             Invalidate();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void EnsureClockSubscribed()
+        {
+            if (!_isClockSubscribed)
+            {
+                _isClockSubscribed = true;
+                _idleScrollFrames = 0;
+                ZeroAnimationClock.Subscribe((IAnimationFrameListener)this);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RemoveClockSubscribed()
+        {
+            if (_isClockSubscribed)
+            {
+                _isClockSubscribed = false;
+                ZeroAnimationClock.Unsubscribe((IAnimationFrameListener)this);
+            }
+        }
+
+        void IAnimationFrameListener.OnAnimationFrame(double deltaSeconds, long frameCount)
+        {
+            if (IsDisposed || !IsHandleCreated)
+            {
+                RemoveClockSubscribed();
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(_flushScrollConflationAction);
+                return;
+            }
+
+            FlushScrollConflation();
+        }
+
+        private void FlushScrollConflation()
+        {
+            if (!_hasPendingScroll)
+            {
+                _idleScrollFrames++;
+                if (_idleScrollFrames > 2)
+                {
+                    RemoveClockSubscribed();
+                }
+                return;
+            }
+
+            int dy = Interlocked.Exchange(ref _pendingScrollDeltaY, 0);
+            int dx = Interlocked.Exchange(ref _pendingScrollDeltaX, 0);
+            _hasPendingScroll = false;
+            _idleScrollFrames = 0;
+
+            bool scrolled = false;
+
+            if (dy != 0)
+            {
+                int footerH = ShowFooter ? _footerHeight : 0;
+                int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
+                int effHeaderH = EffectiveHeaderHeight;
+                int maxScrollY = (_viewType != GridViewType.Table)
+                    ? Math.Max(0, _cardLayout.TotalHeight - ClientSize.Height)
+                    : Math.Max(0, totalH - (ClientSize.Height - effHeaderH - footerH));
+
+                int targetY = Math.Max(0, Math.Min(maxScrollY, _scrollY - dy));
+                if (targetY != _scrollY)
+                {
+                    _scrollY = targetY;
+                    scrolled = true;
+                }
+            }
+
+            if (dx != 0)
+            {
+                int unpinnedW = GetUnpinnedColumnsWidth();
+                int pinnedW = GetPinnedColumnsWidth();
+                int scrollableW = Math.Max(0, ClientSize.Width - pinnedW);
+                int maxScrollX = Math.Max(0, unpinnedW - scrollableW);
+
+                int targetX = Math.Max(0, Math.Min(maxScrollX, _scrollX - dx));
+                if (targetX != _scrollX)
+                {
+                    _scrollX = targetX;
+                    scrolled = true;
+                }
+            }
+
+            if (scrolled)
+            {
+                UpdateScrollBars();
+                if (_isEditing) UpdateInPlaceEditorBounds();
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Invalidates only the specified cell's bounding rectangle instead of the entire grid.
+        /// Dramatically reduces rendering overhead during real-time cell telemetry updates.
+        /// </summary>
+        public void InvalidateCell(int visualRow, int columnIndex)
+        {
+            if (visualRow < 0 || visualRow >= VisualRowCount || columnIndex < 0 || columnIndex >= _columns.Count) return;
+            if (!_columns[columnIndex].IsVisible) return;
+
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int rowY = topOffset + (visualRow * _rowHeight) - _scrollY;
+            int footerH = ShowFooter ? _footerHeight : 0;
+            int clientDataHeight = Math.Max(0, ClientSize.Height - topOffset - footerH);
+
+            if (rowY + _rowHeight <= topOffset || rowY >= topOffset + clientDataHeight) return;
+
+            int pinnedW = GetPinnedColumnsWidth();
+            int[] colWidths = GetVisibleColumnWidths();
+            int colX;
+
+            if (_columns[columnIndex].IsPinned)
+            {
+                colX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                for (int c = 0; c < columnIndex; c++)
+                {
+                    if (_columns[c].IsVisible && _columns[c].IsPinned)
+                        colX += colWidths[c];
+                }
+            }
+            else
+            {
+                colX = pinnedW - _scrollX;
+                for (int c = 0; c < columnIndex; c++)
+                {
+                    if (_columns[c].IsVisible && !_columns[c].IsPinned)
+                        colX += colWidths[c];
+                }
+            }
+
+            int colW = colWidths[columnIndex];
+            if (colX + colW <= (columnIndex < _columns.Count && _columns[columnIndex].IsPinned ? 0 : pinnedW) || colX >= ClientSize.Width)
+                return;
+
+            Rectangle cellRect = new Rectangle(
+                Math.Max(columnIndex < _columns.Count && _columns[columnIndex].IsPinned ? 0 : pinnedW, colX),
+                rowY,
+                Math.Min(ClientSize.Width - colX, colW),
+                _rowHeight);
+
+            Invalidate(cellRect);
+        }
+
+        /// <summary>
+        /// Invalidates only the specified visual row's bounding rectangle.
+        /// </summary>
+        public void InvalidateRow(int visualRow)
+        {
+            if (visualRow < 0 || visualRow >= VisualRowCount) return;
+
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int rowY = topOffset + (visualRow * _rowHeight) - _scrollY;
+            int footerH = ShowFooter ? _footerHeight : 0;
+            int clientDataHeight = Math.Max(0, ClientSize.Height - topOffset - footerH);
+
+            if (rowY + _rowHeight <= topOffset || rowY >= topOffset + clientDataHeight) return;
+
+            Rectangle rowRect = new Rectangle(0, rowY, ClientSize.Width, _rowHeight);
+            Invalidate(rowRect);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -3537,6 +3739,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (disposing)
             {
+                RemoveClockSubscribed();
                 ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _autoFilterEditor.Dispose();
                 _inPlaceEditor.Dispose();

@@ -113,6 +113,27 @@ namespace ZeroUI.Core.Tests
             ZeroAnimationClock.SetSynchronizationContext(null);
         }
 
+        [Fact]
+        public void DisplayRefreshDetector_ReturnsValidClampedRate()
+        {
+            int rate = ZeroUI.Core.Platform.DisplayRefreshDetector.GetPrimaryDisplayRefreshRate();
+            Assert.InRange(rate, 30, 240);
+        }
+
+        [Fact]
+        public void AutoSynchronizeWithDisplay_ConfiguresTargetFpsCorrectly()
+        {
+            int initialFps = ZeroAnimationClock.TargetFps;
+            int syncFps = ZeroAnimationClock.AutoSynchronizeWithDisplay();
+
+            Assert.InRange(syncFps, 30, 240);
+            Assert.Equal(syncFps, ZeroAnimationClock.TargetFps);
+            Assert.Equal(syncFps, ZeroAnimationClock.DetectedDisplayFps);
+
+            // Restore initial Fps
+            ZeroAnimationClock.TargetFps = initialFps;
+        }
+
         private sealed class TestFrameListener : IAnimationFrameListener
         {
             public int FramesReceived { get; private set; }

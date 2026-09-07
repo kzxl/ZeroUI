@@ -95,8 +95,38 @@ namespace ZeroUI.Core.Rendering
         /// </summary>
         public static bool IsRunning => _isRunning;
 
+        private static int _detectedDisplayFps;
+
         /// <summary>
-        /// Gets or sets the target frames per second (default is 60).
+        /// Gets the detected physical display refresh rate (in Hz) on this system.
+        /// </summary>
+        public static int DetectedDisplayFps
+        {
+            get
+            {
+                if (_detectedDisplayFps <= 0)
+                {
+                    _detectedDisplayFps = ZeroUI.Core.Platform.DisplayRefreshDetector.GetPrimaryDisplayRefreshRate();
+                }
+                return _detectedDisplayFps;
+            }
+        }
+
+        /// <summary>
+        /// Automatically synchronizes TargetFps to match the user's active display refresh rate.
+        /// Avoids wasted CPU on 60 Hz monitors while unlocking 120Hz/144Hz/240Hz on high-refresh monitors.
+        /// </summary>
+        /// <returns>The synchronized target FPS.</returns>
+        public static int AutoSynchronizeWithDisplay()
+        {
+            int hz = DetectedDisplayFps;
+            TargetFps = hz;
+            _baseFps = hz;
+            return hz;
+        }
+
+        /// <summary>
+        /// Gets or sets the target frames per second (default is 60, up to 240).
         /// </summary>
         public static int TargetFps
         {
@@ -104,7 +134,7 @@ namespace ZeroUI.Core.Rendering
             set
             {
                 if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), "FPS must be greater than 0.");
-                _targetFps = Math.Min(144, Math.Max(10, value));
+                _targetFps = Math.Min(240, Math.Max(10, value));
                 ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Animation, TimeSpan.FromMilliseconds(Math.Max(4, 1000.0 / _targetFps)));
                 if (_isRunning)
                 {
@@ -158,6 +188,10 @@ namespace ZeroUI.Core.Rendering
             lock (_lock)
             {
                 if (_isRunning) return;
+                if (targetFps <= 0)
+                {
+                    targetFps = DetectedDisplayFps;
+                }
                 _targetFps = targetFps;
                 _baseFps = targetFps;
                 _stopwatch.Restart();

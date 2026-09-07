@@ -18,6 +18,7 @@ namespace ZeroUI.WinForms.Rendering
         private int _width;
         private int _height;
         private bool _disposed;
+        private uint _lastTextColor = 0xFFFFFFFF;
 
         public int Width => _width;
         public int Height => _height;
@@ -116,7 +117,11 @@ namespace ZeroUI.WinForms.Rendering
         {
             if (_hMemDC == IntPtr.Zero || text.IsEmpty || rect.Width <= 0 || rect.Height <= 0) return;
 
-            NativeMethods.SetTextColor(_hMemDC, textColor);
+            if (_lastTextColor != textColor)
+            {
+                NativeMethods.SetTextColor(_hMemDC, textColor);
+                _lastTextColor = textColor;
+            }
 
             // Compute Y position vertically centered
             int y = rect.Top + Math.Max(0, (rect.Height - textHeight) / 2);
@@ -189,6 +194,7 @@ namespace ZeroUI.WinForms.Rendering
                 NativeMethods.DeleteDC(_hMemDC);
                 _hMemDC = IntPtr.Zero;
                 _pBits = null;
+                _lastTextColor = 0xFFFFFFFF;
             }
         }
 
