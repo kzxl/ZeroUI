@@ -79,5 +79,53 @@ namespace ZeroUI.Core.Tests
             var resolved = ZeroSkinManager.ResolveSkin(null);
             Assert.Same(ZeroSkinManager.CurrentSkin, resolved);
         }
+
+        [Fact]
+        public void AllDefaultSkins_HaveHighContrast_WcagCompliant()
+        {
+            foreach (var skin in ZeroSkinDefaults.GetAllDefaults())
+            {
+                Assert.NotNull(skin.Name);
+                Assert.NotNull(skin.DisplayName);
+                Assert.NotNull(skin.Tokens);
+
+                // Contrast ratio between text and card background must be >= 4.5:1 (WCAG AA)
+                double contrast = ZeroColorUtils.GetContrastRatio(skin.Tokens.TextPrimary, skin.Tokens.BgCard);
+                Assert.True(contrast >= 4.5, $"Skin '{skin.DisplayName}' failed WCAG AA text contrast: ratio was {contrast:F2}:1");
+            }
+        }
+
+        [Fact]
+        public void SkinManager_SwitchingThroughAllDefaults_NotifiesSubscribers()
+        {
+            int notificationCount = 0;
+            ZeroSkin? lastSkin = null;
+
+            Action<ZeroSkin> handler = skin =>
+            {
+                notificationCount++;
+                lastSkin = skin;
+            };
+
+            ZeroSkinManager.SkinChanged += handler;
+
+            try
+            {
+                foreach (var skin in ZeroSkinDefaults.GetAllDefaults())
+                {
+                    ZeroSkinManager.ApplySkin(skin);
+                    Assert.Same(skin, ZeroSkinManager.CurrentSkin);
+                    Assert.Same(skin, lastSkin);
+                }
+
+                Assert.True(notificationCount >= 9);
+            }
+            finally
+            {
+                ZeroSkinManager.SkinChanged -= handler;
+                // Restore default Obsidian Dark
+                ZeroSkinManager.ApplySkin("obsidian_dark");
+            }
+        }
     }
 }
