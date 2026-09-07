@@ -28,6 +28,7 @@ namespace ZeroUI.Wpf.Overlays
     [ContentProperty(nameof(ContentElement))]
     public class DrawerControl : ZeroWpfControlBase
     {
+        private Grid? _rootGrid;
         private Border? _scrimBorder;
         private Border? _drawerPanel;
         private ContentPresenter? _contentPresenter;
@@ -185,7 +186,7 @@ namespace ZeroUI.Wpf.Overlays
 
         private void BuildVisualTemplate()
         {
-            var rootGrid = new Grid();
+            _rootGrid = new Grid();
 
             // 1. Dimmed Scrim Background
             _scrimBorder = new Border
@@ -201,7 +202,7 @@ namespace ZeroUI.Wpf.Overlays
                     IsOpen = false;
                 }
             };
-            rootGrid.Children.Add(_scrimBorder);
+            _rootGrid.Children.Add(_scrimBorder);
 
             // 2. Sliding Drawer Panel
             _translateTransform = new TranslateTransform();
@@ -290,9 +291,9 @@ namespace ZeroUI.Wpf.Overlays
             innerGrid.Children.Add(_contentPresenter);
 
             _drawerPanel.Child = innerGrid;
-            rootGrid.Children.Add(_drawerPanel);
+            _rootGrid.Children.Add(_drawerPanel);
 
-            AddVisualChild(rootGrid);
+            AddVisualChild(_rootGrid);
         }
 
         private void UpdatePanelLayout()
@@ -480,29 +481,29 @@ namespace ZeroUI.Wpf.Overlays
 
         #region Visual Children Overrides
 
-        protected override int VisualChildrenCount => 1;
+        protected override int VisualChildrenCount => _rootGrid != null ? 1 : 0;
 
         protected override Visual GetVisualChild(int index)
         {
-            if (index != 0) throw new ArgumentOutOfRangeException(nameof(index));
-            return (Visual)VisualTreeHelper.GetChild(this, 0);
+            if (_rootGrid == null || index != 0) throw new ArgumentOutOfRangeException(nameof(index));
+            return _rootGrid;
         }
 
         protected override Size MeasureOverride(Size constraint)
         {
-            if (VisualChildrenCount > 0 && GetVisualChild(0) is UIElement child)
+            if (_rootGrid != null)
             {
-                child.Measure(constraint);
-                return child.DesiredSize;
+                _rootGrid.Measure(constraint);
+                return _rootGrid.DesiredSize;
             }
             return base.MeasureOverride(constraint);
         }
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
-            if (VisualChildrenCount > 0 && GetVisualChild(0) is UIElement child)
+            if (_rootGrid != null)
             {
-                child.Arrange(new Rect(arrangeBounds));
+                _rootGrid.Arrange(new Rect(arrangeBounds));
             }
             return arrangeBounds;
         }
