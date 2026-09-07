@@ -49,6 +49,8 @@ namespace ZeroUI.WinForms.Docking
         public event EventHandler? PinStateChanged;
         public event EventHandler? CloseRequested;
         public event EventHandler? FloatRequested;
+        public event EventHandler<Point>? HeaderDragged;
+        public event EventHandler<Point>? HeaderDragEnded;
 
         [Category("Appearance")]
         [DefaultValue("Panel")]
@@ -321,14 +323,13 @@ namespace ZeroUI.WinForms.Docking
                 Invalidate(new Rectangle(Width - 80, 0, 80, _headerHeight));
             }
 
-            if (_isDraggingHeader && _floatable && e.Button == MouseButtons.Left)
+            if (_isDraggingHeader && e.Button == MouseButtons.Left)
             {
                 int dx = Math.Abs(e.X - _dragStartPoint.X);
                 int dy = Math.Abs(e.Y - _dragStartPoint.Y);
-                if (dx > 8 || dy > 8)
+                if (dx > 4 || dy > 4)
                 {
-                    _isDraggingHeader = false;
-                    FloatRequested?.Invoke(this, EventArgs.Empty);
+                    HeaderDragged?.Invoke(this, PointToScreen(e.Location));
                 }
             }
         }
@@ -336,7 +337,11 @@ namespace ZeroUI.WinForms.Docking
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
-            _isDraggingHeader = false;
+            if (_isDraggingHeader)
+            {
+                _isDraggingHeader = false;
+                HeaderDragEnded?.Invoke(this, PointToScreen(e.Location));
+            }
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -434,9 +439,14 @@ namespace ZeroUI.WinForms.Docking
             TabStyle = ZeroTabStyle.Card
         };
 
-        // Auto-Hide Sidebars
+        // Auto-Hide Sidebars & Drawer Overlay
         private readonly Panel _leftAutoHideBar = new Panel { Width = 28, Dock = DockStyle.Left, Visible = false };
         private readonly Panel _rightAutoHideBar = new Panel { Width = 28, Dock = DockStyle.Right, Visible = false };
+        private readonly Panel _drawerOverlay;
+        private ZeroDockPanel? _activeDrawerPanel;
+
+        // Visual Dock Guides Diamond HUD
+        private readonly ZeroDockGuideHUD _guideHUD;
 
         [Browsable(false)]
         public IReadOnlyList<ZeroDockPanel> Panels => _panels;
@@ -472,14 +482,31 @@ namespace ZeroUI.WinForms.Docking
             Controls.Add(_leftAutoHideBar);
             Controls.Add(_rightAutoHideBar);
 
+            _drawerOverlay = new Panel
+            {
+                Width = 260,
+                Visible = false,
+                BackColor = ZeroTheme.Colors.Surface
+            };
+            Controls.Add(_drawerOverlay);
+
+            _guideHUD = new ZeroDockGuideHUD(this);
+            Controls.Add(_guideHUD);
+
             _leftSplitter.BackColor = ZeroTheme.Colors.Border;
             _rightSplitter.BackColor = ZeroTheme.Colors.Border;
             _topSplitter.BackColor = ZeroTheme.Colors.Border;
             _bottomSplitter.BackColor = ZeroTheme.Colors.Border;
 
+            _leftAutoHideBar.Paint += OnLeftAutoHideBarPaint;
+            _leftAutoHideBar.MouseDown += OnLeftAutoHideBarMouseDown;
+            _rightAutoHideBar.Paint += OnRightAutoHideBarPaint;
+            _rightAutoHideBar.MouseDown += OnRightAutoHideBarMouseDown;
+
             ZeroTheme.ThemeChanged += (s, e) =>
             {
                 BackColor = ZeroTheme.Colors.Background;
+                _drawerOverlay.BackColor = ZeroTheme.Colors.Surface;
                 _leftSplitter.BackColor = ZeroTheme.Colors.Border;
                 _rightSplitter.BackColor = ZeroTheme.Colors.Border;
                 _topSplitter.BackColor = ZeroTheme.Colors.Border;
@@ -503,6 +530,8 @@ namespace ZeroUI.WinForms.Docking
             panel.CloseRequested += Panel_CloseRequested;
             panel.FloatRequested += Panel_FloatRequested;
             panel.PinStateChanged += Panel_PinStateChanged;
+            panel.HeaderDragged += Panel_HeaderDragged;
+            panel.HeaderDragEnded += Panel_HeaderDragEnded;
 
             ArrangePanel(panel);
         }
@@ -514,12 +543,67 @@ namespace ZeroUI.WinForms.Docking
             panel.CloseRequested -= Panel_CloseRequested;
             panel.FloatRequested -= Panel_FloatRequested;
             panel.PinStateChanged -= Panel_PinStateChanged;
+            panel.HeaderDragged -= Panel_HeaderDragged;
+            panel.HeaderDragEnded -= Panel_HeaderDragEnded;
 
             if (panel.Parent != null)
             {
                 panel.Parent.Controls.Remove(panel);
             }
 
+            if (_activeDrawerPanel == panel)
+            {
+                _drawerOverlay.Controls.Clear();
+                _drawerOverlay.Visible = false;
+                _activeDrawerPanel = null;
+            }
+
+            RebuildLayout();
+        }
+
+        private void Panel_HeaderDragged(object? sender, Point screenPt)
+        {
+            if (sender is ZeroDockPanel panel)
+            {
+                _guideHUD.Bounds = ClientRectangle;
+                _guideHUD.BringToFront();
+                _guideHUD.Visible = true;
+                _guideHUD.UpdateMouse(screenPt);
+            }
+        }
+
+        private void Panel_HeaderDragEnded(object? sender, Point screenPt)
+        {
+            if (sender is ZeroDockPanel panel)
+            {
+                var targetPos = _guideHUD.HoveredPosition;
+                _guideHUD.Visible = false;
+                _guideHUD.Reset();
+
+                if (targetPos.HasValue)
+                {
+                    RedockPanel(panel, targetPos.Value);
+                }
+                else
+                {
+                    Point clientPt = PointToClient(screenPt);
+                    if (!ClientRectangle.Contains(clientPt))
+                    {
+                        FloatPanel(panel);
+                    }
+                }
+            }
+        }
+
+        public void RedockPanel(ZeroDockPanel panel, ZeroDockPosition position)
+        {
+            if (panel.Parent != null)
+            {
+                panel.Parent.Controls.Remove(panel);
+            }
+            panel.DockPosition = position;
+            panel.IsPinned = true;
+            ArrangePanel(panel);
             RebuildLayout();
         }
 
@@ -604,8 +688,189 @@ namespace ZeroUI.WinForms.Docking
         {
             if (sender is ZeroDockPanel panel)
             {
+                if (!panel.IsPinned)
+                {
+                    if (panel.Parent != null)
+                    {
+                        panel.Parent.Controls.Remove(panel);
+                    }
+                    if (_activeDrawerPanel == panel)
+                    {
+                        _drawerOverlay.Controls.Clear();
+                        _drawerOverlay.Visible = false;
+                        _activeDrawerPanel = null;
+                    }
+                }
+                else
+                {
+                    if (_activeDrawerPanel == panel)
+                    {
+                        _drawerOverlay.Controls.Clear();
+                        _drawerOverlay.Visible = false;
+                        _activeDrawerPanel = null;
+                    }
+                    ArrangePanel(panel);
+                }
                 RebuildLayout();
             }
+        }
+
+        private void OnLeftAutoHideBarPaint(object? sender, PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            var palette = ZeroTheme.Colors;
+
+            using var bgBrush = new SolidBrush(palette.HeaderBackground);
+            g.FillRectangle(bgBrush, _leftAutoHideBar.ClientRectangle);
+            using var borderPen = new Pen(palette.Border);
+            g.DrawLine(borderPen, _leftAutoHideBar.Width - 1, 0, _leftAutoHideBar.Width - 1, _leftAutoHideBar.Height);
+
+            int curY = 6;
+            using var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+            foreach (var p in _panels)
+            {
+                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Left)
+                {
+                    var textSz = g.MeasureString(p.Title, font);
+                    int tabH = (int)textSz.Width + 24;
+                    var tabRect = new Rectangle(2, curY, _leftAutoHideBar.Width - 4, tabH);
+
+                    bool isActive = _activeDrawerPanel == p;
+                    if (isActive)
+                    {
+                        using var activeBrush = new SolidBrush(palette.Primary);
+                        g.FillRectangle(activeBrush, tabRect);
+                    }
+
+                    using var sf = new StringFormat
+                    {
+                        Alignment = StringAlignment.Center,
+                        LineAlignment = StringAlignment.Center,
+                        FormatFlags = StringFormatFlags.DirectionVertical
+                    };
+                    using var tb = new SolidBrush(isActive ? Color.White : palette.TextPrimary);
+                    g.DrawString(p.Title, font, tb, tabRect, sf);
+
+                    curY += tabH + 6;
+                }
+            }
+        }
+
+        private void OnLeftAutoHideBarMouseDown(object? sender, MouseEventArgs e)
+        {
+            int curY = 6;
+            using var g = _leftAutoHideBar.CreateGraphics();
+            using var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+            foreach (var p in _panels)
+            {
+                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Left)
+                {
+                    var textSz = g.MeasureString(p.Title, font);
+                    int tabH = (int)textSz.Width + 24;
+                    var tabRect = new Rectangle(2, curY, _leftAutoHideBar.Width - 4, tabH);
+
+                    if (tabRect.Contains(e.Location))
+                    {
+                        ToggleDrawer(p, isLeft: true);
+                        return;
+                    }
+                    curY += tabH + 6;
+                }
+            }
+        }
+
+        private void OnRightAutoHideBarPaint(object? sender, PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            var palette = ZeroTheme.Colors;
+
+            using var bgBrush = new SolidBrush(palette.HeaderBackground);
+            g.FillRectangle(bgBrush, _rightAutoHideBar.ClientRectangle);
+            using var borderPen = new Pen(palette.Border);
+            g.DrawLine(borderPen, 0, 0, 0, _rightAutoHideBar.Height);
+
+            int curY = 6;
+            using var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+            foreach (var p in _panels)
+            {
+                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Right)
+                {
+                    var textSz = g.MeasureString(p.Title, font);
+                    int tabH = (int)textSz.Width + 24;
+                    var tabRect = new Rectangle(2, curY, _rightAutoHideBar.Width - 4, tabH);
+
+                    bool isActive = _activeDrawerPanel == p;
+                    if (isActive)
+                    {
+                        using var activeBrush = new SolidBrush(palette.Primary);
+                        g.FillRectangle(activeBrush, tabRect);
+                    }
+
+                    using var sf = new StringFormat
+                    {
+                        Alignment = StringAlignment.Center,
+                        LineAlignment = StringAlignment.Center,
+                        FormatFlags = StringFormatFlags.DirectionVertical
+                    };
+                    using var tb = new SolidBrush(isActive ? Color.White : palette.TextPrimary);
+                    g.DrawString(p.Title, font, tb, tabRect, sf);
+
+                    curY += tabH + 6;
+                }
+            }
+        }
+
+        private void OnRightAutoHideBarMouseDown(object? sender, MouseEventArgs e)
+        {
+            int curY = 6;
+            using var g = _rightAutoHideBar.CreateGraphics();
+            using var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+            foreach (var p in _panels)
+            {
+                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Right)
+                {
+                    var textSz = g.MeasureString(p.Title, font);
+                    int tabH = (int)textSz.Width + 24;
+                    var tabRect = new Rectangle(2, curY, _rightAutoHideBar.Width - 4, tabH);
+
+                    if (tabRect.Contains(e.Location))
+                    {
+                        ToggleDrawer(p, isLeft: false);
+                        return;
+                    }
+                    curY += tabH + 6;
+                }
+            }
+        }
+
+        private void ToggleDrawer(ZeroDockPanel panel, bool isLeft)
+        {
+            if (_activeDrawerPanel == panel)
+            {
+                _drawerOverlay.Controls.Clear();
+                _drawerOverlay.Visible = false;
+                _activeDrawerPanel = null;
+            }
+            else
+            {
+                _drawerOverlay.Controls.Clear();
+                panel.Dock = DockStyle.Fill;
+                _drawerOverlay.Controls.Add(panel);
+                int drawerW = Math.Min(300, Width / 2);
+                int drawerX = isLeft ? _leftAutoHideBar.Right : (Width - _rightAutoHideBar.Width - drawerW);
+                _drawerOverlay.SetBounds(drawerX, 0, drawerW, Height);
+                _drawerOverlay.BringToFront();
+                _drawerOverlay.Visible = true;
+                _activeDrawerPanel = panel;
+            }
+            _leftAutoHideBar.Invalidate();
+            _rightAutoHideBar.Invalidate();
         }
 
         public void RebuildLayout()
@@ -622,6 +887,21 @@ namespace ZeroUI.WinForms.Docking
             _topContainer.Visible = _topContainer.Controls.Count > 0;
             _topSplitter.Visible = _topContainer.Visible;
 
+            bool hasUnpinnedLeft = false;
+            bool hasUnpinnedRight = false;
+            foreach (var p in _panels)
+            {
+                if (!p.IsPinned)
+                {
+                    if (p.DockPosition == ZeroDockPosition.Left) hasUnpinnedLeft = true;
+                    if (p.DockPosition == ZeroDockPosition.Right) hasUnpinnedRight = true;
+                }
+            }
+            _leftAutoHideBar.Visible = hasUnpinnedLeft;
+            _rightAutoHideBar.Visible = hasUnpinnedRight;
+
+            _leftAutoHideBar.Invalidate();
+            _rightAutoHideBar.Invalidate();
             Invalidate(true);
         }
     }

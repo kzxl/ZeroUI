@@ -40,6 +40,10 @@ namespace ZeroUI.WinForms.PivotGrid
         private readonly VScrollBar _vScrollBar;
         private readonly HScrollBar _hScrollBar;
 
+        private PivotFieldChooserDialog? _fieldChooserDialog;
+        private Rectangle _fieldListButtonRect;
+        private bool _hoverFieldListBtn = false;
+
         public event EventHandler? DataRecalculated;
 
         [Browsable(false)]
@@ -139,8 +143,63 @@ namespace ZeroUI.WinForms.PivotGrid
         {
             _model = _engine.Calculate();
             UpdateScrollBars();
+            _fieldChooserDialog?.PopulateFields();
             DataRecalculated?.Invoke(this, EventArgs.Empty);
             Invalidate();
+        }
+
+        public void ShowFieldList()
+        {
+            if (_fieldChooserDialog == null || _fieldChooserDialog.IsDisposed)
+            {
+                _fieldChooserDialog = new PivotFieldChooserDialog(this);
+            }
+            if (!_fieldChooserDialog.Visible)
+            {
+                _fieldChooserDialog.Show(this);
+            }
+            else
+            {
+                _fieldChooserDialog.BringToFront();
+            }
+        }
+
+        public void HideFieldList()
+        {
+            _fieldChooserDialog?.Hide();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            bool hoverBtn = _fieldListButtonRect.Contains(e.Location);
+            if (hoverBtn != _hoverFieldListBtn)
+            {
+                _hoverFieldListBtn = hoverBtn;
+                Cursor = _hoverFieldListBtn ? Cursors.Hand : Cursors.Default;
+                Invalidate(new Rectangle(Width - 120, 0, 120, _headerAreaHeight));
+            }
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            Focus();
+
+            if (e.Button == MouseButtons.Left && _fieldListButtonRect.Contains(e.Location))
+            {
+                ShowFieldList();
+                return;
+            }
+
+            if (e.Button == MouseButtons.Right)
+            {
+                var menu = new ContextMenuStrip();
+                menu.Items.Add("Show Field List...", null, (s, ev) => ShowFieldList());
+                menu.Items.Add(new ToolStripSeparator());
+                menu.Items.Add("Recalculate Summary", null, (s, ev) => RefreshData());
+                menu.Show(this, e.Location);
+            }
         }
 
         protected override void OnResize(EventArgs e)
@@ -328,7 +387,26 @@ namespace ZeroUI.WinForms.PivotGrid
                 }
 
                 curX += badgeWidth + 6;
-                if (curX > Width - 100) break;
+                if (curX > Width - 120) break;
+            }
+
+            // Draw Field List Button
+            _fieldListButtonRect = new Rectangle(Width - 104, 6, 96, 24);
+            using (var bPath = CreateRoundedRectangle(_fieldListButtonRect, 4))
+            {
+                using (var bBrush = new SolidBrush(_hoverFieldListBtn ? colors.HeaderBackground : colors.Surface))
+                {
+                    g.FillPath(bBrush, bPath);
+                }
+                using (var bPen = new Pen(_hoverFieldListBtn ? colors.Primary : colors.Border, 1f))
+                {
+                    g.DrawPath(bPen, bPath);
+                }
+            }
+            using (var tBrush = new SolidBrush(_hoverFieldListBtn ? colors.Primary : colors.TextPrimary))
+            {
+                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                g.DrawString("⚙ Field List", new Font("Segoe UI", 8.2f, FontStyle.Bold), tBrush, _fieldListButtonRect, sf);
             }
         }
 

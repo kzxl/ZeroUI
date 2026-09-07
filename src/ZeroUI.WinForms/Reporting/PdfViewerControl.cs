@@ -10,6 +10,7 @@ using ZeroUI.Core.Localization;
 using ZeroUI.Core.Pdf;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Reporting
@@ -34,6 +35,10 @@ namespace ZeroUI.WinForms.Reporting
         // UI Controls
         private readonly Panel _toolbarPanel;
         private readonly Panel _canvasHost;
+        private readonly Panel _bookmarksPanel;
+        private readonly Splitter _bookmarksSplitter;
+        private readonly TreeList _bookmarksTree;
+        private readonly SimpleButton _btnBookmarks;
         private readonly SimpleButton _btnOpen;
         private readonly SimpleButton _btnPrint;
         private readonly SimpleButton _btnFirstPage;
@@ -75,11 +80,73 @@ namespace ZeroUI.WinForms.Reporting
                 _scrollY = 0;
                 _searchResults.Clear();
                 _currentSearchIndex = -1;
+                PopulateBookmarksTree();
                 UpdateSearchUI();
                 RefreshDocumentLayout();
                 UpdatePageInfo();
                 _canvasHost.Invalidate();
             }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        [Description("Shows or hides the bookmarks/outline sidebar.")]
+        public bool ShowBookmarksSidebar
+        {
+            get => _bookmarksPanel?.Visible ?? false;
+            set
+            {
+                if (_bookmarksPanel != null && _bookmarksPanel.Visible != value)
+                {
+                    _bookmarksPanel.Visible = value;
+                    _bookmarksSplitter.Visible = value;
+                    if (_btnBookmarks != null)
+                    {
+                        _btnBookmarks.Text = value ? "📑 Hide Outline" : "📑 Outline";
+                    }
+                    RefreshDocumentLayout();
+                    _canvasHost.Invalidate();
+                }
+            }
+        }
+
+        public void ToggleBookmarksSidebar()
+        {
+            ShowBookmarksSidebar = !ShowBookmarksSidebar;
+        }
+
+        private void PopulateBookmarksTree()
+        {
+            if (_bookmarksTree == null) return;
+
+            _bookmarksTree.ClearNodes();
+            if (_document?.Bookmarks == null || _document.Bookmarks.Count == 0)
+            {
+                if (_btnBookmarks != null) _btnBookmarks.Enabled = false;
+                ShowBookmarksSidebar = false;
+                return;
+            }
+
+            if (_btnBookmarks != null) _btnBookmarks.Enabled = true;
+            foreach (var b in _document.Bookmarks)
+            {
+                var node = CreateBookmarkNode(b);
+                _bookmarksTree.AddNode(node);
+            }
+        }
+
+        private ZeroTreeNode CreateBookmarkNode(PdfBookmarkModel bm)
+        {
+            var node = new ZeroTreeNode(bm.Title, "📑", $"Page {bm.PageIndex + 1}")
+            {
+                Tag = bm,
+                IsExpanded = true
+            };
+            foreach (var child in bm.Children)
+            {
+                node.AddChild(CreateBookmarkNode(child));
+            }
+            return node;
         }
 
         [Category("Document")]
@@ -174,7 +241,12 @@ namespace ZeroUI.WinForms.Reporting
             // Print Document
             _btnPrint = new SimpleButton { Text = "🖨️ Print", Left = btnX, Top = btnY, Width = 68, Height = btnH };
             _btnPrint.Click += (s, e) => PrintDocument();
-            btnX += 80;
+            btnX += 74;
+
+            // Bookmarks / Outline Sidebar Toggle
+            _btnBookmarks = new SimpleButton { Text = "📑 Outline", Left = btnX, Top = btnY, Width = 84, Height = btnH };
+            _btnBookmarks.Click += (s, e) => ToggleBookmarksSidebar();
+            btnX += 90;
 
             // Page Navigation: First, Prev, Next, Last
             _btnFirstPage = new SimpleButton { Text = "|<", Left = btnX, Top = btnY, Width = 28, Height = btnH };
@@ -204,12 +276,12 @@ namespace ZeroUI.WinForms.Reporting
 
             _btnLastPage = new SimpleButton { Text = ">|", Left = btnX, Top = btnY, Width = 28, Height = btnH };
             _btnLastPage.Click += (s, e) => CurrentPageIndex = _document.PageCount - 1;
-            btnX += 40;
+            btnX += 38;
 
             // View Mode Toggle
             _btnViewMode = new SimpleButton { Text = "📜 Continuous", Left = btnX, Top = btnY, Width = 96, Height = btnH };
             _btnViewMode.Click += (s, e) => ViewMode = (_viewMode == PdfViewMode.ContinuousScroll) ? PdfViewMode.SinglePage : PdfViewMode.ContinuousScroll;
-            btnX += 104;
+            btnX += 102;
 
             // Zoom Controls
             _btnZoomOut = new SimpleButton { Text = "➖", Left = btnX, Top = btnY, Width = 28, Height = btnH };
@@ -242,7 +314,7 @@ namespace ZeroUI.WinForms.Reporting
 
             _btnFitPage = new SimpleButton { Text = "⛶ Fit Page", Left = btnX, Top = btnY, Width = 78, Height = btnH };
             _btnFitPage.Click += (s, e) => ApplyFitPage();
-            btnX += 88;
+            btnX += 84;
 
             // Search Box & Buttons
             _txtSearch = new TextEdit { Left = btnX, Top = btnY, Width = 110, Height = btnH, Text = "" };
@@ -279,31 +351,107 @@ namespace ZeroUI.WinForms.Reporting
 
             _toolbarPanel.Controls.AddRange(new Control[]
             {
-                _btnOpen, _btnPrint,
+                _btnOpen, _btnPrint, _btnBookmarks,
                 _btnFirstPage, _btnPrevPage, _lblPageInfo, _btnNextPage, _btnLastPage,
                 _btnViewMode,
                 _btnZoomOut, _btnZoomIn, _comboZoom, _btnFitWidth, _btnFitPage,
                 _txtSearch, _btnSearchPrev, _btnSearchNext, _lblSearchCount
             });
-            Controls.Add(_toolbarPanel);
 
-            // 2. Vector Canvas Viewport Panel
+            // 2. Bookmarks Outline Sidebar
+            _bookmarksPanel = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = 230,
+                BackColor = ZeroTheme.Colors.Surface,
+                Visible = false
+            };
+
+            var bookmarksHeader = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 32,
+                BackColor = ZeroTheme.Colors.HeaderBackground
+            };
+            bookmarksHeader.Paint += (s, e) =>
+            {
+                using var pen = new Pen(ZeroTheme.Colors.Border, 1);
+                e.Graphics.DrawLine(pen, 0, bookmarksHeader.Height - 1, bookmarksHeader.Width, bookmarksHeader.Height - 1);
+            };
+
+            var lblOutline = new Label
+            {
+                Text = "📑 Document Outline",
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                Padding = new Padding(8, 0, 0, 0)
+            };
+
+            var btnCloseBookmarks = new SimpleButton
+            {
+                Text = "✕",
+                Dock = DockStyle.Right,
+                Width = 28,
+                Height = 28
+            };
+            btnCloseBookmarks.Click += (s, e) => ShowBookmarksSidebar = false;
+
+            bookmarksHeader.Controls.Add(lblOutline);
+            bookmarksHeader.Controls.Add(btnCloseBookmarks);
+
+            _bookmarksTree = new TreeList
+            {
+                Dock = DockStyle.Fill,
+                ShowCheckBoxes = false,
+                ShowColumnHeaders = false,
+                RowHeight = 28
+            };
+            _bookmarksTree.NodeSelected += (s, node) =>
+            {
+                if (node?.Tag is PdfBookmarkModel bm)
+                {
+                    CurrentPageIndex = bm.PageIndex;
+                    ScrollToPage(bm.PageIndex);
+                }
+            };
+
+            _bookmarksPanel.Controls.Add(_bookmarksTree);
+            _bookmarksPanel.Controls.Add(bookmarksHeader);
+
+            _bookmarksSplitter = new Splitter
+            {
+                Dock = DockStyle.Left,
+                Width = 4,
+                Visible = false
+            };
+
+            // 3. Vector Canvas Viewport Panel
             _canvasHost = new CanvasPanel(this)
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(24, 24, 37) // Obsidian charcoal canvas
             };
+
             Controls.Add(_canvasHost);
+            Controls.Add(_bookmarksSplitter);
+            Controls.Add(_bookmarksPanel);
+            Controls.Add(_toolbarPanel);
 
             // Reactivity
             ZeroTheme.ThemeChanged += (s, e) =>
             {
                 BackColor = ZeroTheme.Colors.Background;
                 _toolbarPanel.BackColor = ZeroTheme.Colors.Surface;
+                _bookmarksPanel.BackColor = ZeroTheme.Colors.Surface;
+                bookmarksHeader.BackColor = ZeroTheme.Colors.HeaderBackground;
+                lblOutline.ForeColor = ZeroTheme.Colors.TextPrimary;
                 _toolbarPanel.Invalidate();
                 _canvasHost.Invalidate();
             };
 
+            PopulateBookmarksTree();
             RefreshDocumentLayout();
             UpdatePageInfo();
         }

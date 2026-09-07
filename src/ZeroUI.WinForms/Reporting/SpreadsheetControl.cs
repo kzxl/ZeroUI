@@ -34,6 +34,8 @@ namespace ZeroUI.WinForms.Reporting
         private int _colHeaderHeight = 26;
         private int _scrollRow = 0;
         private int _scrollCol = 0;
+        private int _frozenRows = 0;
+        private int _frozenColumns = 0;
 
         // UI Controls
         private readonly Panel _toolbarPanel;
@@ -42,6 +44,7 @@ namespace ZeroUI.WinForms.Reporting
         private readonly TextBox _txtFormulaBar;
         private readonly SimpleButton _btnAutoSum;
         private readonly SimpleButton _btnRecalc;
+        private readonly SimpleButton _btnFreeze;
         private readonly SimpleButton _btnCurrency;
         private readonly SimpleButton _btnPercent;
         private readonly SimpleButton _btnSampleBom;
@@ -81,9 +84,116 @@ namespace ZeroUI.WinForms.Reporting
                 _selectionRange = new CellRange(_activeCell, _activeCell);
                 _scrollRow = 0;
                 _scrollCol = 0;
+                _frozenRows = 0;
+                _frozenColumns = 0;
+                UpdateFreezeButtonText();
                 UpdateFormulaBar();
                 UpdateScrollBars();
                 _canvas.Invalidate();
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(0)]
+        [Description("Number of rows frozen at the top of the worksheet.")]
+        public int FrozenRows
+        {
+            get => _frozenRows;
+            set
+            {
+                int val = Math.Max(0, value);
+                if (_frozenRows != val)
+                {
+                    _frozenRows = val;
+                    if (_scrollRow < _frozenRows)
+                        _scrollRow = _frozenRows;
+                    UpdateFreezeButtonText();
+                    UpdateScrollBars();
+                    _canvas.Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(0)]
+        [Description("Number of columns frozen at the left of the worksheet.")]
+        public int FrozenColumns
+        {
+            get => _frozenColumns;
+            set
+            {
+                int val = Math.Max(0, value);
+                if (_frozenColumns != val)
+                {
+                    _frozenColumns = val;
+                    if (_scrollCol < _frozenColumns)
+                        _scrollCol = _frozenColumns;
+                    UpdateFreezeButtonText();
+                    UpdateScrollBars();
+                    _canvas.Invalidate();
+                }
+            }
+        }
+
+        public void FreezePanes(int rows, int cols)
+        {
+            _frozenRows = Math.Max(0, rows);
+            _frozenColumns = Math.Max(0, cols);
+            if (_scrollRow < _frozenRows) _scrollRow = _frozenRows;
+            if (_scrollCol < _frozenColumns) _scrollCol = _frozenColumns;
+            UpdateFreezeButtonText();
+            UpdateScrollBars();
+            _canvas.Invalidate();
+        }
+
+        public void UnfreezePanes()
+        {
+            _frozenRows = 0;
+            _frozenColumns = 0;
+            UpdateFreezeButtonText();
+            UpdateScrollBars();
+            _canvas.Invalidate();
+        }
+
+        public void ToggleFreezePanes()
+        {
+            if (_frozenRows > 0 || _frozenColumns > 0)
+            {
+                UnfreezePanes();
+            }
+            else
+            {
+                FreezePanes(_activeCell.Row, _activeCell.Column);
+            }
+        }
+
+        private int GetFrozenWidth()
+        {
+            int w = 0;
+            int count = Math.Min(_frozenColumns, _worksheet.ColumnCount + 50);
+            for (int c = 0; c < count; c++)
+            {
+                w += (int)_worksheet.GetColumnWidth(c);
+            }
+            return w;
+        }
+
+        private int GetFrozenHeight()
+        {
+            int h = 0;
+            int count = Math.Min(_frozenRows, _worksheet.RowCount + 100);
+            for (int r = 0; r < count; r++)
+            {
+                h += (int)_worksheet.GetRowHeight(r);
+            }
+            return h;
+        }
+
+        private void UpdateFreezeButtonText()
+        {
+            if (_btnFreeze != null)
+            {
+                _btnFreeze.Text = (_frozenRows > 0 || _frozenColumns > 0) ? "❄ Unfreeze" : "❄ Freeze";
             }
         }
 
@@ -191,7 +301,7 @@ namespace ZeroUI.WinForms.Reporting
             _txtFormulaBar = new TextBox
             {
                 Location = new Point(94, 8),
-                Size = new Size(280, 23),
+                Size = new Size(230, 23),
                 Font = new Font("Consolas", 10f),
                 BackColor = ZeroTheme.Colors.Surface,
                 ForeColor = ZeroTheme.Colors.TextPrimary,
@@ -218,16 +328,16 @@ namespace ZeroUI.WinForms.Reporting
 
             _btnAutoSum = new SimpleButton
             {
-                Location = new Point(382, 6),
-                Size = new Size(62, 26),
+                Location = new Point(332, 6),
+                Size = new Size(58, 26),
                 Text = "∑ Sum"
             };
             _btnAutoSum.Click += (s, e) => InsertAutoSum();
 
             _btnRecalc = new SimpleButton
             {
-                Location = new Point(448, 6),
-                Size = new Size(64, 26),
+                Location = new Point(394, 6),
+                Size = new Size(58, 26),
                 Text = "⚡ Calc"
             };
             _btnRecalc.Click += (s, e) =>
@@ -237,26 +347,34 @@ namespace ZeroUI.WinForms.Reporting
                 _canvas.Invalidate();
             };
 
+            _btnFreeze = new SimpleButton
+            {
+                Location = new Point(456, 6),
+                Size = new Size(74, 26),
+                Text = "❄ Freeze"
+            };
+            _btnFreeze.Click += (s, e) => ToggleFreezePanes();
+
             _btnCurrency = new SimpleButton
             {
-                Location = new Point(516, 6),
-                Size = new Size(34, 26),
+                Location = new Point(534, 6),
+                Size = new Size(30, 26),
                 Text = "$"
             };
             _btnCurrency.Click += (s, e) => SetActiveCellFormat(SpreadsheetFormatType.Currency);
 
             _btnPercent = new SimpleButton
             {
-                Location = new Point(554, 6),
-                Size = new Size(34, 26),
+                Location = new Point(568, 6),
+                Size = new Size(30, 26),
                 Text = "%"
             };
             _btnPercent.Click += (s, e) => SetActiveCellFormat(SpreadsheetFormatType.Percentage);
 
             _btnSampleBom = new SimpleButton
             {
-                Location = new Point(594, 6),
-                Size = new Size(110, 26),
+                Location = new Point(604, 6),
+                Size = new Size(114, 26),
                 Text = "🏭 Costing BOM"
             };
             _btnSampleBom.Click += (s, e) =>
@@ -266,8 +384,8 @@ namespace ZeroUI.WinForms.Reporting
 
             _btnSampleQc = new SimpleButton
             {
-                Location = new Point(708, 6),
-                Size = new Size(110, 26),
+                Location = new Point(722, 6),
+                Size = new Size(118, 26),
                 Text = "🔬 QC Inspection"
             };
             _btnSampleQc.Click += (s, e) =>
@@ -280,6 +398,7 @@ namespace ZeroUI.WinForms.Reporting
             _toolbarPanel.Controls.Add(_txtFormulaBar);
             _toolbarPanel.Controls.Add(_btnAutoSum);
             _toolbarPanel.Controls.Add(_btnRecalc);
+            _toolbarPanel.Controls.Add(_btnFreeze);
             _toolbarPanel.Controls.Add(_btnCurrency);
             _toolbarPanel.Controls.Add(_btnPercent);
             _toolbarPanel.Controls.Add(_btnSampleBom);
@@ -293,7 +412,7 @@ namespace ZeroUI.WinForms.Reporting
             };
             _vScrollBar.ValueChanged += (s, e) =>
             {
-                _scrollRow = Math.Max(0, _vScrollBar.Value);
+                _scrollRow = Math.Max(_frozenRows, _vScrollBar.Value);
                 _canvas.Invalidate();
             };
 
@@ -304,7 +423,7 @@ namespace ZeroUI.WinForms.Reporting
             };
             _hScrollBar.ValueChanged += (s, e) =>
             {
-                _scrollCol = Math.Max(0, _hScrollBar.Value);
+                _scrollCol = Math.Max(_frozenColumns, _hScrollBar.Value);
                 _canvas.Invalidate();
             };
 
@@ -354,28 +473,34 @@ namespace ZeroUI.WinForms.Reporting
 
         private void UpdateScrollBars()
         {
-            _vScrollBar.Minimum = 0;
+            int fRows = Math.Max(0, _frozenRows);
+            int fCols = Math.Max(0, _frozenColumns);
+
+            _vScrollBar.Minimum = fRows;
             _vScrollBar.Maximum = Math.Max(100, _worksheet.RowCount + 50);
             _vScrollBar.SmallChange = 1;
             _vScrollBar.LargeChange = 15;
-            _vScrollBar.Value = Math.Min(_vScrollBar.Maximum, Math.Max(0, _scrollRow));
+            _vScrollBar.Value = Math.Min(_vScrollBar.Maximum, Math.Max(fRows, _scrollRow));
 
-            _hScrollBar.Minimum = 0;
+            _hScrollBar.Minimum = fCols;
             _hScrollBar.Maximum = Math.Max(50, _worksheet.ColumnCount + 20);
             _hScrollBar.SmallChange = 1;
             _hScrollBar.LargeChange = 5;
-            _hScrollBar.Value = Math.Min(_hScrollBar.Maximum, Math.Max(0, _scrollCol));
+            _hScrollBar.Value = Math.Min(_hScrollBar.Maximum, Math.Max(fCols, _scrollCol));
         }
 
         private void EnsureCellVisible(CellAddress cell)
         {
-            if (cell.Row < _scrollRow)
+            int fRows = Math.Max(0, _frozenRows);
+            int fCols = Math.Max(0, _frozenColumns);
+
+            if (cell.Row >= fRows && cell.Row < _scrollRow)
                 _scrollRow = cell.Row;
-            if (cell.Column < _scrollCol)
+            if (cell.Column >= fCols && cell.Column < _scrollCol)
                 _scrollCol = cell.Column;
 
-            _vScrollBar.Value = Math.Min(_vScrollBar.Maximum, Math.Max(0, _scrollRow));
-            _hScrollBar.Value = Math.Min(_hScrollBar.Maximum, Math.Max(0, _scrollCol));
+            _vScrollBar.Value = Math.Min(_vScrollBar.Maximum, Math.Max(fRows, _scrollRow));
+            _hScrollBar.Value = Math.Min(_hScrollBar.Maximum, Math.Max(fCols, _scrollCol));
         }
 
         private void UpdateFormulaBar()
@@ -503,21 +628,55 @@ namespace ZeroUI.WinForms.Reporting
 
         private Rectangle GetCellRectangle(int row, int col)
         {
-            if (row < _scrollRow || col < _scrollCol)
-                return Rectangle.Empty;
+            int fCols = Math.Max(0, _frozenColumns);
+            int fRows = Math.Max(0, _frozenRows);
+            int frozenW = GetFrozenWidth();
+            int frozenH = GetFrozenHeight();
 
-            int x = _rowHeaderWidth;
-            for (int c = _scrollCol; c < col; c++)
+            // Column X coordinate
+            int x;
+            if (col < fCols)
             {
-                x += (int)_worksheet.GetColumnWidth(c);
-                if (x > _canvas.Width) return Rectangle.Empty;
+                x = _rowHeaderWidth;
+                for (int c = 0; c < col; c++)
+                {
+                    x += (int)_worksheet.GetColumnWidth(c);
+                }
+            }
+            else
+            {
+                if (col < _scrollCol)
+                    return Rectangle.Empty;
+
+                x = _rowHeaderWidth + frozenW;
+                for (int c = Math.Max(fCols, _scrollCol); c < col; c++)
+                {
+                    x += (int)_worksheet.GetColumnWidth(c);
+                    if (x > _canvas.Width) return Rectangle.Empty;
+                }
             }
 
-            int y = _colHeaderHeight;
-            for (int r = _scrollRow; r < row; r++)
+            // Row Y coordinate
+            int y;
+            if (row < fRows)
             {
-                y += (int)_worksheet.GetRowHeight(r);
-                if (y > _canvas.Height) return Rectangle.Empty;
+                y = _colHeaderHeight;
+                for (int r = 0; r < row; r++)
+                {
+                    y += (int)_worksheet.GetRowHeight(r);
+                }
+            }
+            else
+            {
+                if (row < _scrollRow)
+                    return Rectangle.Empty;
+
+                y = _colHeaderHeight + frozenH;
+                for (int r = Math.Max(fRows, _scrollRow); r < row; r++)
+                {
+                    y += (int)_worksheet.GetRowHeight(r);
+                    if (y > _canvas.Height) return Rectangle.Empty;
+                }
             }
 
             int w = (int)_worksheet.GetColumnWidth(col);
@@ -530,28 +689,76 @@ namespace ZeroUI.WinForms.Reporting
             if (pt.X < _rowHeaderWidth || pt.Y < _colHeaderHeight)
                 return null;
 
-            int x = _rowHeaderWidth;
-            int col = _scrollCol;
-            while (col <= _scrollCol + 60)
+            int fCols = Math.Max(0, _frozenColumns);
+            int fRows = Math.Max(0, _frozenRows);
+            int frozenW = GetFrozenWidth();
+            int frozenH = GetFrozenHeight();
+
+            int col = -1;
+            if (fCols > 0 && pt.X < _rowHeaderWidth + frozenW)
             {
-                int cw = (int)_worksheet.GetColumnWidth(col);
-                if (pt.X >= x && pt.X < x + cw)
-                    break;
-                x += cw;
-                col++;
+                int x = _rowHeaderWidth;
+                for (int c = 0; c < fCols; c++)
+                {
+                    int cw = (int)_worksheet.GetColumnWidth(c);
+                    if (pt.X >= x && pt.X < x + cw)
+                    {
+                        col = c;
+                        break;
+                    }
+                    x += cw;
+                }
+            }
+            else
+            {
+                int x = _rowHeaderWidth + frozenW;
+                int c = Math.Max(fCols, _scrollCol);
+                while (c <= Math.Max(fCols, _scrollCol) + 60)
+                {
+                    int cw = (int)_worksheet.GetColumnWidth(c);
+                    if (pt.X >= x && pt.X < x + cw)
+                    {
+                        col = c;
+                        break;
+                    }
+                    x += cw;
+                    c++;
+                }
             }
 
-            int y = _colHeaderHeight;
-            int row = _scrollRow;
-            while (row <= _scrollRow + 200)
+            int row = -1;
+            if (fRows > 0 && pt.Y < _colHeaderHeight + frozenH)
             {
-                int rh = (int)_worksheet.GetRowHeight(row);
-                if (pt.Y >= y && pt.Y < y + rh)
-                    break;
-                y += rh;
-                row++;
+                int y = _colHeaderHeight;
+                for (int r = 0; r < fRows; r++)
+                {
+                    int rh = (int)_worksheet.GetRowHeight(r);
+                    if (pt.Y >= y && pt.Y < y + rh)
+                    {
+                        row = r;
+                        break;
+                    }
+                    y += rh;
+                }
+            }
+            else
+            {
+                int y = _colHeaderHeight + frozenH;
+                int r = Math.Max(fRows, _scrollRow);
+                while (r <= Math.Max(fRows, _scrollRow) + 200)
+                {
+                    int rh = (int)_worksheet.GetRowHeight(r);
+                    if (pt.Y >= y && pt.Y < y + rh)
+                    {
+                        row = r;
+                        break;
+                    }
+                    y += rh;
+                    r++;
+                }
             }
 
+            if (col < 0 || row < 0) return null;
             return new CellAddress(row, col);
         }
 
@@ -559,9 +766,22 @@ namespace ZeroUI.WinForms.Reporting
         {
             if (pt.Y > _colHeaderHeight) return -1;
 
+            int fCols = Math.Max(0, _frozenColumns);
+            int frozenW = GetFrozenWidth();
+
             int x = _rowHeaderWidth;
-            int col = _scrollCol;
-            while (x <= _canvas.Width && col <= _scrollCol + 60)
+            for (int c = 0; c < fCols; c++)
+            {
+                int cw = (int)_worksheet.GetColumnWidth(c);
+                int dividerX = x + cw;
+                if (Math.Abs(pt.X - dividerX) <= 4)
+                    return c;
+                x += cw;
+            }
+
+            x = _rowHeaderWidth + frozenW;
+            int col = Math.Max(fCols, _scrollCol);
+            while (x <= _canvas.Width && col <= Math.Max(fCols, _scrollCol) + 60)
             {
                 int cw = (int)_worksheet.GetColumnWidth(col);
                 int dividerX = x + cw;
@@ -577,9 +797,22 @@ namespace ZeroUI.WinForms.Reporting
         {
             if (pt.X > _rowHeaderWidth) return -1;
 
+            int fRows = Math.Max(0, _frozenRows);
+            int frozenH = GetFrozenHeight();
+
             int y = _colHeaderHeight;
-            int row = _scrollRow;
-            while (y <= _canvas.Height && row <= _scrollRow + 200)
+            for (int r = 0; r < fRows; r++)
+            {
+                int rh = (int)_worksheet.GetRowHeight(r);
+                int dividerY = y + rh;
+                if (Math.Abs(pt.Y - dividerY) <= 4)
+                    return r;
+                y += rh;
+            }
+
+            y = _colHeaderHeight + frozenH;
+            int row = Math.Max(fRows, _scrollRow);
+            while (y <= _canvas.Height && row <= Math.Max(fRows, _scrollRow) + 200)
             {
                 int rh = (int)_worksheet.GetRowHeight(row);
                 int dividerY = y + rh;
@@ -812,8 +1045,6 @@ namespace ZeroUI.WinForms.Reporting
 
                 int headerW = _owner._rowHeaderWidth;
                 int headerH = _owner._colHeaderHeight;
-                int startRow = _owner._scrollRow;
-                int startCol = _owner._scrollCol;
 
                 using var gridPen = new Pen(colors.Border);
                 using var headerBgBrush = new SolidBrush(colors.HeaderBackground);
@@ -825,7 +1056,20 @@ namespace ZeroUI.WinForms.Reporting
 
                 // 1. Calculate visible column positions
                 var visibleCols = new List<(int Col, int X, int Width)>();
+                int fCols = Math.Max(0, _owner.FrozenColumns);
+                int frozenWidth = 0;
                 int curX = headerW;
+
+                for (int fc = 0; fc < fCols; fc++)
+                {
+                    int w = (int)_owner._worksheet.GetColumnWidth(fc);
+                    visibleCols.Add((fc, curX, w));
+                    curX += w;
+                    frozenWidth += w;
+                    if (curX > bounds.Width) break;
+                }
+
+                int startCol = Math.Max(fCols, _owner._scrollCol);
                 int c = startCol;
                 while (curX < bounds.Width && c <= startCol + 100)
                 {
@@ -837,7 +1081,20 @@ namespace ZeroUI.WinForms.Reporting
 
                 // 2. Calculate visible row positions
                 var visibleRows = new List<(int Row, int Y, int Height)>();
+                int fRows = Math.Max(0, _owner.FrozenRows);
+                int frozenHeight = 0;
                 int curY = headerH;
+
+                for (int fr = 0; fr < fRows; fr++)
+                {
+                    int h = (int)_owner._worksheet.GetRowHeight(fr);
+                    visibleRows.Add((fr, curY, h));
+                    curY += h;
+                    frozenHeight += h;
+                    if (curY > bounds.Height) break;
+                }
+
+                int startRow = Math.Max(fRows, _owner._scrollRow);
                 int r = startRow;
                 while (curY < bounds.Height && r <= startRow + 200)
                 {
@@ -951,6 +1208,20 @@ namespace ZeroUI.WinForms.Reporting
                     // Bottom-right handle square
                     using var handleBrush = new SolidBrush(colors.Primary);
                     g.FillRectangle(handleBrush, selRect.Right - 3, selRect.Bottom - 3, 5, 5);
+                }
+
+                // 4.5. Render Freeze Divider Lines
+                if (fCols > 0 && frozenWidth > 0)
+                {
+                    int splitX = headerW + frozenWidth;
+                    using var freezePen = new Pen(colors.Primary, 2.5f);
+                    g.DrawLine(freezePen, splitX, 0, splitX, bounds.Height);
+                }
+                if (fRows > 0 && frozenHeight > 0)
+                {
+                    int splitY = headerH + frozenHeight;
+                    using var freezePen = new Pen(colors.Primary, 2.5f);
+                    g.DrawLine(freezePen, 0, splitY, bounds.Width, splitY);
                 }
 
                 // 5. Render Column Headers (Top Strip)

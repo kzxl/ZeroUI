@@ -154,11 +154,16 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Allows evaluating in-place arithmetic expressions like '25*4' or '(10+5)*2' when pressing Enter.")]
+        public bool EnableMathEvaluation { get; set; } = true;
+
         public SpinEdit()
         {
-            Size = new Size(180, 36);
-            Font = new Font("Segoe UI", 9.5f);
-            BackColor = Color.Transparent;
+            Size = new Size(130, 32);
+            Cursor = Cursors.IBeam;
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
             _innerBox = new TextBox
             {
@@ -173,7 +178,7 @@ namespace ZeroUI.WinForms.Editors
             _innerBox.LostFocus += (s, e) =>
             {
                 OnLostFocus(e);
-                FormatText();
+                CommitText();
             };
             _innerBox.GotFocus += (s, e) =>
             {
@@ -257,6 +262,25 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        private void CommitText()
+        {
+            if (_innerBox == null) return;
+            string clean = _innerBox.Text;
+            if (!string.IsNullOrEmpty(_prefix)) clean = clean.Replace(_prefix, "");
+            if (!string.IsNullOrEmpty(_suffix)) clean = clean.Replace(_suffix, "");
+            clean = clean.Trim().Replace(",", "");
+
+            if (EnableMathEvaluation && MathExpressionParser.TryEvaluate(clean, out decimal mathResult))
+            {
+                Value = Math.Max(_minValue, Math.Min(_maxValue, mathResult));
+            }
+            else if (decimal.TryParse(clean, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsed))
+            {
+                Value = Math.Max(_minValue, Math.Min(_maxValue, parsed));
+            }
+            FormatText();
+        }
+
         private void OnInnerBoxTextChanged(object? sender, EventArgs e)
         {
             if (_innerBox == null || !_innerBox.Focused) return;
@@ -265,6 +289,12 @@ namespace ZeroUI.WinForms.Editors
             if (!string.IsNullOrEmpty(_prefix)) clean = clean.Replace(_prefix, "");
             if (!string.IsNullOrEmpty(_suffix)) clean = clean.Replace(_suffix, "");
             clean = clean.Trim().Replace(",", "");
+
+            // When math evaluation is enabled, don't parse prematurely if user is typing an expression
+            if (EnableMathEvaluation && (clean.Contains("*") || clean.Contains("/") || clean.Contains("+") || clean.Contains("-") || clean.Contains("(") || clean.Contains("^") || clean.Contains("%")))
+            {
+                return;
+            }
 
             if (decimal.TryParse(clean, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsed))
             {
@@ -290,7 +320,7 @@ namespace ZeroUI.WinForms.Editors
             }
             else if (e.KeyCode == Keys.Enter)
             {
-                FormatText();
+                CommitText();
                 e.Handled = true;
             }
         }

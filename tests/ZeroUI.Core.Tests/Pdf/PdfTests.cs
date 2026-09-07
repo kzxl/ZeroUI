@@ -116,5 +116,31 @@ namespace ZeroUI.Core.Tests.Pdf
 
             Assert.Throws<InvalidDataException>(() => PdfParser.Parse(invalidData));
         }
+
+        [Fact]
+        public void PdfSampleGenerator_PopulatesDocumentBookmarksTree()
+        {
+            var doc = PdfSampleGenerator.CreateIndustrialCadAndSopDocument();
+
+            Assert.NotNull(doc);
+            Assert.NotEmpty(doc.Bookmarks);
+            Assert.Equal(3, doc.Bookmarks.Count);
+
+            // Bookmark 1
+            Assert.Equal("1. Electrical CAD Schematic", doc.Bookmarks[0].Title);
+            Assert.Equal(0, doc.Bookmarks[0].PageIndex);
+            Assert.Equal(2, doc.Bookmarks[0].Children.Count);
+            Assert.Equal("1.1 Power Incomer & Breakers", doc.Bookmarks[0].Children[0].Title);
+
+            // Bookmark 2
+            Assert.Equal("2. Extrusion Standard Operating Procedure", doc.Bookmarks[1].Title);
+            Assert.Equal(1, doc.Bookmarks[1].PageIndex);
+            Assert.Equal(2, doc.Bookmarks[1].Children.Count);
+
+            // Bookmark 3
+            Assert.Equal("3. Quality Compliance Certificate", doc.Bookmarks[2].Title);
+            Assert.Equal(2, doc.Bookmarks[2].PageIndex);
+            Assert.Equal(2, doc.Bookmarks[2].Children.Count);
+        }
     }
 }

@@ -100,6 +100,11 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Enables the desktop screen eyedropper button in the color picker popup.")]
+        public bool ShowEyedropper { get; set; } = true;
+
         public ColorPickEdit()
         {
             Size = new Size(160, 36);
@@ -227,12 +232,14 @@ namespace ZeroUI.WinForms.Editors
             return path;
         }
 
-        // Popup with Palette Swatches and RGB Sliders
+        // Popup with Palette Swatches, Eyedropper, and RGB/Hex Controls
         private class ColorPickerPopupControl : Control
         {
             private readonly ColorPickEdit _owner;
             private Color _currentColor;
             private readonly TextBox _hexBox;
+            private Rectangle _eyedropperRect;
+            private bool _hoverEyedropper = false;
 
             private static readonly Color[] Palette = new[]
             {
@@ -265,8 +272,8 @@ namespace ZeroUI.WinForms.Editors
 
                 _hexBox = new TextBox
                 {
-                    Location = new Point(12, 195),
-                    Width = 90,
+                    Location = new Point(12, 196),
+                    Width = 68,
                     Font = new Font("Segoe UI", 9f)
                 };
                 _hexBox.KeyDown += (s, e) =>
@@ -278,6 +285,7 @@ namespace ZeroUI.WinForms.Editors
                     }
                 };
                 Controls.Add(_hexBox);
+                _eyedropperRect = new Rectangle(86, 194, 28, 26);
             }
 
             public void SyncColor(Color color)
@@ -303,6 +311,33 @@ namespace ZeroUI.WinForms.Editors
                     }
                 }
                 catch { }
+            }
+
+            private void StartEyedropper()
+            {
+                _owner._dropdown.Close();
+                var overlay = new ZeroEyedropperOverlay(
+                    color =>
+                    {
+                        _owner.SelectedColor = color;
+                    },
+                    () => { });
+                overlay.Show();
+            }
+
+            protected override void OnMouseMove(MouseEventArgs e)
+            {
+                base.OnMouseMove(e);
+                if (_owner.ShowEyedropper)
+                {
+                    bool hoverEye = _eyedropperRect.Contains(e.Location);
+                    if (hoverEye != _hoverEyedropper)
+                    {
+                        _hoverEyedropper = hoverEye;
+                        Cursor = _hoverEyedropper ? Cursors.Hand : Cursors.Default;
+                        Invalidate();
+                    }
+                }
             }
 
             protected override void OnPaint(PaintEventArgs e)
@@ -346,11 +381,44 @@ namespace ZeroUI.WinForms.Editors
                     }
                 }
 
-                // Draw Color Preview
-                int previewX = 120;
-                int previewY = 190;
+                // Draw Eyedropper Button
+                if (_owner.ShowEyedropper)
+                {
+                    using (var eyePath = CreateRoundedRectanglePath(_eyedropperRect, 3))
+                    {
+                        if (_hoverEyedropper)
+                        {
+                            using (var bgBrush = new SolidBrush(colors.HeaderBackground))
+                            {
+                                g.FillPath(bgBrush, eyePath);
+                            }
+                        }
+                        using (var borderPen = new Pen(_hoverEyedropper ? colors.Primary : colors.Border, 1f))
+                        {
+                            g.DrawPath(borderPen, eyePath);
+                        }
+                    }
+
+                    // Vector Eyedropper Pipette Icon
+                    Color iconColor = _hoverEyedropper ? colors.Primary : colors.TextSecondary;
+                    using (var pen = new Pen(iconColor, 1.4f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                    {
+                        int cx = _eyedropperRect.X + _eyedropperRect.Width / 2;
+                        int cy = _eyedropperRect.Y + _eyedropperRect.Height / 2;
+                        // Pipette angled from top-right to bottom-left
+                        g.DrawLine(pen, cx - 4, cy + 4, cx + 2, cy - 2);
+                        // Bulb at top right
+                        g.DrawLine(pen, cx + 1, cy - 4, cx + 4, cy - 1);
+                        // Nozzle tip
+                        g.DrawLine(pen, cx - 5, cy + 5, cx - 6, cy + 6);
+                    }
+                }
+
+                // Draw Color Preview Swatch
+                int previewX = _owner.ShowEyedropper ? 120 : 90;
+                int previewY = 194;
                 int previewW = Width - previewX - 12;
-                int previewH = 32;
+                int previewH = 26;
                 var pRect = new Rectangle(previewX, previewY, previewW, previewH);
                 using (var path = CreateRoundedRectanglePath(pRect, 4))
                 {
@@ -368,6 +436,13 @@ namespace ZeroUI.WinForms.Editors
             protected override void OnMouseDown(MouseEventArgs e)
             {
                 base.OnMouseDown(e);
+
+                if (_owner.ShowEyedropper && _eyedropperRect.Contains(e.Location))
+                {
+                    StartEyedropper();
+                    return;
+                }
+
                 int swatchSize = 28;
                 int spacing = 8;
                 int startX = 12;

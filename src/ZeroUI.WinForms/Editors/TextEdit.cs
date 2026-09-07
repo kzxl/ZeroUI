@@ -29,9 +29,16 @@ namespace ZeroUI.WinForms.Editors
         private string _trailingIcon = "";
         private bool _hoverOnTrailing = false;
         private Rectangle _trailingIconRect;
+        private bool _showPasswordEyeButton = false;
+        private bool _isPasswordRevealed = false;
+        private bool _hoverOnEye = false;
+        private Rectangle _passwordEyeRect;
+        private bool _originalUseSystemPasswordChar = false;
+        private char _originalPasswordChar = '\0';
 
         public event EventHandler? TrailingIconClick;
         public event EventHandler? ClearClicked;
+        public event EventHandler? PasswordVisibilityChanged;
 
         [Category("Data")]
         [Description("The string value of the text editor.")]
@@ -116,7 +123,11 @@ namespace ZeroUI.WinForms.Editors
             get => _innerBox.PasswordChar;
             set
             {
-                _innerBox.PasswordChar = value;
+                _originalPasswordChar = value;
+                if (!_isPasswordRevealed)
+                {
+                    _innerBox.PasswordChar = value;
+                }
                 Invalidate();
             }
         }
@@ -128,10 +139,31 @@ namespace ZeroUI.WinForms.Editors
             get => _innerBox.UseSystemPasswordChar;
             set
             {
-                _innerBox.UseSystemPasswordChar = value;
+                _originalUseSystemPasswordChar = value;
+                if (!_isPasswordRevealed)
+                {
+                    _innerBox.UseSystemPasswordChar = value;
+                }
                 Invalidate();
             }
         }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        [Description("Displays an interactive eye action button that toggles password masking.")]
+        public bool ShowPasswordEyeButton
+        {
+            get => _showPasswordEyeButton;
+            set
+            {
+                _showPasswordEyeButton = value;
+                UpdateInnerBounds();
+                Invalidate();
+            }
+        }
+
+        [Browsable(false)]
+        public bool IsPasswordRevealed => _isPasswordRevealed;
 
         [Category("Behavior")]
         [DefaultValue(CharacterCasing.Normal)]
@@ -249,6 +281,24 @@ namespace ZeroUI.WinForms.Editors
             UpdateInnerBounds();
         }
 
+        public void TogglePasswordVisibility()
+        {
+            _isPasswordRevealed = !_isPasswordRevealed;
+            if (_isPasswordRevealed)
+            {
+                _innerBox.UseSystemPasswordChar = false;
+                _innerBox.PasswordChar = '\0';
+            }
+            else
+            {
+                _innerBox.UseSystemPasswordChar = _originalUseSystemPasswordChar;
+                _innerBox.PasswordChar = _originalPasswordChar;
+            }
+            _innerBox.Focus();
+            PasswordVisibilityChanged?.Invoke(this, EventArgs.Empty);
+            Invalidate();
+        }
+
         private void UpdateInnerBounds()
         {
             if (_innerBox == null) return;
@@ -261,6 +311,10 @@ namespace ZeroUI.WinForms.Editors
 
             int rightPad = 12;
             if (!string.IsNullOrEmpty(_trailingIcon))
+            {
+                rightPad += 22;
+            }
+            if (_showPasswordEyeButton)
             {
                 rightPad += 22;
             }
@@ -289,6 +343,16 @@ namespace ZeroUI.WinForms.Editors
                 _trailingIconRect = Rectangle.Empty;
             }
 
+            if (_showPasswordEyeButton)
+            {
+                _passwordEyeRect = new Rectangle(curRight - 16, iconY, 16, 16);
+                curRight -= 22;
+            }
+            else
+            {
+                _passwordEyeRect = Rectangle.Empty;
+            }
+
             if (ShowClearButton && !string.IsNullOrEmpty(_innerBox.Text) && !ReadOnly)
             {
                 ClearButtonRect = new Rectangle(curRight - 16, iconY, 16, 16);
@@ -302,6 +366,12 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+
+            if (_showPasswordEyeButton && _passwordEyeRect.Contains(e.Location))
+            {
+                TogglePasswordVisibility();
+                return;
+            }
 
             if (ClearButtonRect.Contains(e.Location) && !ReadOnly && !string.IsNullOrEmpty(_innerBox.Text))
             {
@@ -327,12 +397,14 @@ namespace ZeroUI.WinForms.Editors
             base.OnMouseMove(e);
             bool hoverClear = ClearButtonRect.Contains(e.Location);
             bool hoverTrail = _trailingIconRect.Contains(e.Location);
+            bool hoverEye = _showPasswordEyeButton && _passwordEyeRect.Contains(e.Location);
 
-            if (hoverClear != HoverOnClear || hoverTrail != _hoverOnTrailing)
+            if (hoverClear != HoverOnClear || hoverTrail != _hoverOnTrailing || hoverEye != _hoverOnEye)
             {
                 HoverOnClear = hoverClear;
                 _hoverOnTrailing = hoverTrail;
-                Cursor = (hoverClear || hoverTrail) ? Cursors.Hand : Cursors.IBeam;
+                _hoverOnEye = hoverEye;
+                Cursor = (hoverClear || hoverTrail || hoverEye) ? Cursors.Hand : Cursors.IBeam;
                 Invalidate();
             }
         }
@@ -394,7 +466,33 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
 
-            // 5. Draw Trailing Icon
+            // 5. Draw Password Eye Action Button
+            if (_showPasswordEyeButton && !_passwordEyeRect.IsEmpty)
+            {
+                Color eyeColor = _hoverOnEye ? p.Primary : p.TextSecondary;
+                using (var pen = new Pen(eyeColor, 1.3f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                {
+                    int cx = _passwordEyeRect.X + _passwordEyeRect.Width / 2;
+                    int cy = _passwordEyeRect.Y + _passwordEyeRect.Height / 2;
+
+                    // Eye almond contour: two overlapping arcs
+                    g.DrawArc(pen, cx - 6, cy - 4, 12, 8, 20, 140);
+                    g.DrawArc(pen, cx - 6, cy - 4, 12, 8, 200, 140);
+
+                    using (var brush = new SolidBrush(eyeColor))
+                    {
+                        g.FillEllipse(brush, cx - 2, cy - 2, 4, 4);
+                    }
+
+                    if (_isPasswordRevealed)
+                    {
+                        // Slashed eye indicates clear text is revealed
+                        g.DrawLine(pen, cx - 6, cy + 5, cx + 6, cy - 5);
+                    }
+                }
+            }
+
+            // 6. Draw Trailing Icon
             if (!_trailingIconRect.IsEmpty && !string.IsNullOrEmpty(_trailingIcon))
             {
                 Color trailColor = _hoverOnTrailing ? p.Primary : p.TextSecondary;

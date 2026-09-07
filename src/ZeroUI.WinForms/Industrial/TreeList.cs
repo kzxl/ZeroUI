@@ -1,19 +1,46 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
     /// <summary>
+    /// Represents a column definition in the TreeList hierarchical multi-column grid.
+    /// </summary>
+    public class TreeListColumn
+    {
+        public string Name { get; set; } = "";
+        public string Caption { get; set; } = "";
+        public int Width { get; set; } = 120;
+        public int MinWidth { get; set; } = 40;
+        public bool Visible { get; set; } = true;
+        public HorizontalAlignment Alignment { get; set; } = HorizontalAlignment.Left;
+        public SortOrder SortOrder { get; set; } = SortOrder.None;
+
+        internal Rectangle HeaderBounds;
+
+        public TreeListColumn() { }
+
+        public TreeListColumn(string name, string caption, int width = 120)
+        {
+            Name = name;
+            Caption = caption;
+            Width = width;
+        }
+    }
+
+    /// <summary>
     /// Represents a hierarchical node within the ZeroTreeList control.
     /// </summary>
     public class ZeroTreeNode
     {
+        private readonly Dictionary<string, object?> _cellValues = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public string Text { get; set; } = "";
         public string SubText { get; set; } = "";
@@ -30,6 +57,15 @@ namespace ZeroUI.WinForms.Industrial
         internal Rectangle RowBounds;
         internal Rectangle ChevronBounds;
         internal Rectangle CheckBounds;
+
+        public object? this[string columnName]
+        {
+            get => _cellValues.TryGetValue(columnName, out var val) ? val : null;
+            set => _cellValues[columnName] = value;
+        }
+
+        public void SetValue(string columnName, object? value) => this[columnName] = value;
+        public object? GetValue(string columnName) => this[columnName];
 
         public ZeroTreeNode() { }
 
@@ -150,12 +186,21 @@ namespace ZeroUI.WinForms.Industrial
     {
         private readonly List<ZeroTreeNode> _nodes = new List<ZeroTreeNode>();
         private readonly List<ZeroTreeNode> _visibleNodes = new List<ZeroTreeNode>();
+        private readonly List<TreeListColumn> _columns = new List<TreeListColumn>();
 
         private int _rowHeight = 34;
+        private int _headerHeight = 28;
+        private bool _showColumnHeaders = true;
         private int _indentWidth = 24;
         private bool _showCheckBoxes = true;
         private bool _showLines = true;
         private string _filterText = "";
+
+        private int _resizingColumnIndex = -1;
+        private int _resizeStartX;
+        private int _resizeStartWidth;
+        private int _hoveredColumnIndex = -1;
+        private bool _hoveredOnDivider = false;
 
         private ZeroTreeNode? _selectedNode;
         private ZeroTreeNode? _hoveredNode;
@@ -209,6 +254,92 @@ namespace ZeroUI.WinForms.Industrial
 
         [Browsable(false)]
         public List<ZeroTreeNode> Nodes => _nodes;
+
+        [Category("Columns")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public List<TreeListColumn> Columns => _columns;
+
+        [Category("Appearance")]
+        [DefaultValue(28)]
+        public int HeaderHeight
+        {
+            get => _headerHeight;
+            set
+            {
+                if (_headerHeight != value && value >= 18)
+                {
+                    _headerHeight = value;
+                    UpdateScrollBar();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        public bool ShowColumnHeaders
+        {
+            get => _showColumnHeaders;
+            set
+            {
+                if (_showColumnHeaders != value)
+                {
+                    _showColumnHeaders = value;
+                    UpdateScrollBar();
+                    Invalidate();
+                }
+            }
+        }
+
+        public TreeListColumn AddColumn(string name, string caption, int width = 120, HorizontalAlignment alignment = HorizontalAlignment.Left)
+        {
+            var col = new TreeListColumn(name, caption, width) { Alignment = alignment };
+            _columns.Add(col);
+            UpdateScrollBar();
+            Invalidate();
+            return col;
+        }
+
+        public void SortByColumn(TreeListColumn col)
+        {
+            var next = col.SortOrder switch
+            {
+                SortOrder.Ascending => SortOrder.Descending,
+                SortOrder.Descending => SortOrder.None,
+                _ => SortOrder.Ascending
+            };
+
+            foreach (var c in _columns) c.SortOrder = SortOrder.None;
+            col.SortOrder = next;
+
+            if (next != SortOrder.None)
+            {
+                SortNodesRecursive(_nodes, col.Name, next == SortOrder.Ascending);
+            }
+            UpdateVisibleNodes();
+            Invalidate();
+        }
+
+        private void SortNodesRecursive(List<ZeroTreeNode> list, string colName, bool ascending)
+        {
+            list.Sort((a, b) =>
+            {
+                object? valA = a[colName] ?? a.Text;
+                object? valB = b[colName] ?? b.Text;
+                string sA = valA?.ToString() ?? "";
+                string sB = valB?.ToString() ?? "";
+                int cmp = string.Compare(sA, sB, StringComparison.OrdinalIgnoreCase);
+                return ascending ? cmp : -cmp;
+            });
+
+            foreach (var n in list)
+            {
+                if (n.HasChildren)
+                {
+                    SortNodesRecursive(n.Children, colName, ascending);
+                }
+            }
+        }
 
         [Category("Appearance")]
         [DefaultValue(30)]
@@ -416,10 +547,11 @@ namespace ZeroUI.WinForms.Industrial
         private void UpdateScrollBar()
         {
             if (_vScrollBar == null || _visibleNodes == null) return;
+            int headerOffset = (_showColumnHeaders && _columns.Count > 0) ? _headerHeight : 0;
             int totalHeight = _visibleNodes.Count * _rowHeight;
-            int viewHeight = Height;
+            int viewHeight = Height - headerOffset;
 
-            if (totalHeight > viewHeight)
+            if (totalHeight > viewHeight && viewHeight > 0)
             {
                 _vScrollBar.Visible = true;
                 _vScrollBar.Maximum = Math.Max(0, _visibleNodes.Count - (viewHeight / _rowHeight) + 1);
@@ -455,9 +587,61 @@ namespace ZeroUI.WinForms.Industrial
         {
             base.OnMouseMove(e);
             int clientWidth = _vScrollBar.Visible ? Width - _vScrollBar.Width : Width;
+
+            // 1. Column Resizing Drag
+            if (_resizingColumnIndex >= 0 && _resizingColumnIndex < _columns.Count)
+            {
+                int delta = e.X - _resizeStartX;
+                var col = _columns[_resizingColumnIndex];
+                col.Width = Math.Max(col.MinWidth, _resizeStartWidth + delta);
+                Invalidate();
+                return;
+            }
+
+            int headerOffset = (_showColumnHeaders && _columns.Count > 0) ? _headerHeight : 0;
+
+            // 2. Column Header Hover & Divider VSplit detection
+            if (headerOffset > 0 && e.Y < headerOffset)
+            {
+                _hoveredNode = null;
+                int colIdx = -1;
+                bool nearDivider = false;
+                int curX = 0;
+
+                for (int c = 0; c < _columns.Count; c++)
+                {
+                    var col = _columns[c];
+                    if (!col.Visible) continue;
+                    int rightEdge = curX + col.Width;
+
+                    if (Math.Abs(e.X - rightEdge) <= 4)
+                    {
+                        colIdx = c;
+                        nearDivider = true;
+                        break;
+                    }
+                    else if (e.X >= curX && e.X < rightEdge)
+                    {
+                        colIdx = c;
+                        break;
+                    }
+                    curX = rightEdge;
+                }
+
+                _hoveredColumnIndex = colIdx;
+                _hoveredOnDivider = nearDivider;
+                Cursor = nearDivider ? Cursors.VSplit : Cursors.Default;
+                Invalidate();
+                return;
+            }
+
+            _hoveredColumnIndex = -1;
+            _hoveredOnDivider = false;
+
             if (e.X > clientWidth) return;
 
-            int index = (e.Y / _rowHeight) + _scrollOffset;
+            // 3. Tree Rows Hover
+            int index = ((e.Y - headerOffset) / _rowHeight) + _scrollOffset;
             if (index >= 0 && index < _visibleNodes.Count)
             {
                 var node = _visibleNodes[index];
@@ -485,6 +669,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             base.OnMouseLeave(e);
             _hoveredNode = null;
+            _hoveredColumnIndex = -1;
+            _hoveredOnDivider = false;
             Cursor = Cursors.Default;
             Invalidate();
         }
@@ -494,10 +680,38 @@ namespace ZeroUI.WinForms.Industrial
             base.OnMouseDown(e);
             Focus();
 
+            int headerOffset = (_showColumnHeaders && _columns.Count > 0) ? _headerHeight : 0;
+            if (headerOffset > 0 && e.Y < headerOffset)
+            {
+                int curX = 0;
+                for (int c = 0; c < _columns.Count; c++)
+                {
+                    var col = _columns[c];
+                    if (!col.Visible) continue;
+                    int rightEdge = curX + col.Width;
+
+                    if (Math.Abs(e.X - rightEdge) <= 4)
+                    {
+                        _resizingColumnIndex = c;
+                        _resizeStartX = e.X;
+                        _resizeStartWidth = col.Width;
+                        Capture = true;
+                        return;
+                    }
+                    else if (e.X >= curX && e.X < rightEdge)
+                    {
+                        SortByColumn(col);
+                        return;
+                    }
+                    curX = rightEdge;
+                }
+                return;
+            }
+
             int clientWidth = _vScrollBar.Visible ? Width - _vScrollBar.Width : Width;
             if (e.X > clientWidth) return;
 
-            int index = (e.Y / _rowHeight) + _scrollOffset;
+            int index = ((e.Y - headerOffset) / _rowHeight) + _scrollOffset;
             if (index < 0 || index >= _visibleNodes.Count) return;
 
             var node = _visibleNodes[index];
@@ -523,6 +737,18 @@ namespace ZeroUI.WinForms.Industrial
             SelectedNode = node;
         }
 
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+            if (_resizingColumnIndex >= 0)
+            {
+                _resizingColumnIndex = -1;
+                Capture = false;
+                Cursor = Cursors.Default;
+                Invalidate();
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
@@ -533,8 +759,71 @@ namespace ZeroUI.WinForms.Industrial
             g.Clear(palette.Background);
 
             int clientWidth = _vScrollBar.Visible ? Width - _vScrollBar.Width : Width;
+            int headerOffset = (_showColumnHeaders && _columns.Count > 0) ? _headerHeight : 0;
+
+            // 1. Draw Column Headers
+            if (headerOffset > 0)
+            {
+                int curColX = 0;
+                using var headerBgBrush = new SolidBrush(palette.HeaderBackground);
+                using var headerBorderPen = new Pen(palette.Border, 1f);
+                using var headerTextBrush = new SolidBrush(palette.TextPrimary);
+                using var headerFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+                g.FillRectangle(headerBgBrush, 0, 0, clientWidth, _headerHeight);
+                g.DrawLine(headerBorderPen, 0, _headerHeight - 1, clientWidth, _headerHeight - 1);
+
+                for (int c = 0; c < _columns.Count; c++)
+                {
+                    var col = _columns[c];
+                    if (!col.Visible) continue;
+                    col.HeaderBounds = new Rectangle(curColX, 0, col.Width, _headerHeight);
+
+                    // Hover highlight on header
+                    if (_hoveredColumnIndex == c && !_hoveredOnDivider)
+                    {
+                        using var hovBrush = new SolidBrush(Color.FromArgb(20, palette.Primary));
+                        g.FillRectangle(hovBrush, col.HeaderBounds);
+                    }
+
+                    // Divider line on right
+                    g.DrawLine(headerBorderPen, curColX + col.Width - 1, 0, curColX + col.Width - 1, _headerHeight);
+
+                    // Header Text
+                    int textRight = curColX + col.Width - 16;
+                    var textRect = new Rectangle(curColX + 8, 0, Math.Max(10, textRight - curColX - 8), _headerHeight);
+
+                    var sf = new StringFormat
+                    {
+                        Alignment = col.Alignment switch
+                        {
+                            HorizontalAlignment.Center => StringAlignment.Center,
+                            HorizontalAlignment.Right => StringAlignment.Far,
+                            _ => StringAlignment.Near
+                        },
+                        LineAlignment = StringAlignment.Center,
+                        Trimming = StringTrimming.EllipsisCharacter
+                    };
+                    g.DrawString(col.Caption, headerFont, headerTextBrush, textRect, sf);
+
+                    // Sort glyph
+                    if (col.SortOrder != SortOrder.None)
+                    {
+                        int glyphX = curColX + col.Width - 12;
+                        int glyphY = _headerHeight / 2;
+                        using var sortBrush = new SolidBrush(palette.Primary);
+                        PointF[] arrow = col.SortOrder == SortOrder.Ascending
+                            ? new[] { new PointF(glyphX - 3.5f, glyphY + 2f), new PointF(glyphX + 3.5f, glyphY + 2f), new PointF(glyphX, glyphY - 2.5f) }
+                            : new[] { new PointF(glyphX - 3.5f, glyphY - 2f), new PointF(glyphX + 3.5f, glyphY - 2f), new PointF(glyphX, glyphY + 2.5f) };
+                        g.FillPolygon(sortBrush, arrow);
+                    }
+
+                    curColX += col.Width;
+                }
+            }
+
             int startIdx = _scrollOffset;
-            int maxVisible = (Height / _rowHeight) + 2;
+            int maxVisible = ((Height - headerOffset) / _rowHeight) + 2;
             int endIdx = Math.Min(_visibleNodes.Count, startIdx + maxVisible);
 
             using var penGuide = new Pen(palette.Border, 1f) { DashStyle = DashStyle.Dot };
@@ -542,11 +831,12 @@ namespace ZeroUI.WinForms.Industrial
             using var fontBold = new Font(Font.FontFamily, 9.2f, FontStyle.Bold);
             using var fontSub = new Font(Font.FontFamily, 8f, FontStyle.Regular);
             using var fontBadge = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
+            using var penColDivider = new Pen(Color.FromArgb(20, palette.Border), 1f);
 
             for (int i = startIdx; i < endIdx; i++)
             {
                 var node = _visibleNodes[i];
-                int y = (i - startIdx) * _rowHeight;
+                int y = headerOffset + (i - startIdx) * _rowHeight;
                 node.RowBounds = new Rectangle(0, y, clientWidth, _rowHeight);
 
                 bool isSelected = node == _selectedNode;
@@ -566,113 +856,196 @@ namespace ZeroUI.WinForms.Industrial
                     g.FillRectangle(brushHov, node.RowBounds);
                 }
 
-                int indentX = 12 + (node.Level * _indentWidth);
-
-                // 2. Draw Connecting Hierarchy Guidelines
-                if (_showLines && node.Level > 0)
+                if (_columns.Count > 0)
                 {
-                    int parentLineX = indentX - (_indentWidth / 2);
-                    int midY = y + (_rowHeight / 2);
-                    g.DrawLine(penGuide, parentLineX, y, parentLineX, midY);
-                    g.DrawLine(penGuide, parentLineX, midY, indentX - 4, midY);
-                }
-
-                // 3. Draw Chevron Glyph (▶ / ▼)
-                node.ChevronBounds = new Rectangle(indentX, y + ((_rowHeight - 16) / 2), 16, 16);
-                if (node.HasChildren)
-                {
-                    Color chevColor = (_hoveredNode == node && _hoveredOnChevron) ? palette.Primary : palette.TextSecondary;
-                    DrawChevron(g, node.ChevronBounds, node.IsExpanded, chevColor);
-                }
-
-                int curX = indentX + 18;
-
-                // 4. Draw Checkbox
-                if (_showCheckBoxes)
-                {
-                    node.CheckBounds = new Rectangle(curX, y + ((_rowHeight - 16) / 2), 16, 16);
-                    DrawCheckBox(g, node.CheckBounds, node.CheckState, palette);
-                    curX += 22;
-                }
-                else
-                {
-                    node.CheckBounds = Rectangle.Empty;
-                }
-
-                // 5. Draw Icon / Glyph
-                if (!string.IsNullOrEmpty(node.Icon))
-                {
-                    using var iconFont = new Font("Segoe UI Emoji", 10f);
-                    using var brushIcon = new SolidBrush(palette.TextPrimary);
-                    g.DrawString(node.Icon, iconFont, brushIcon, curX, y + ((_rowHeight - 18) / 2));
-                    curX += 20;
-                }
-
-                // 6. Calculate Right Margin Reserved for Badge (Zero Overlap Guaranteed)
-                int badgeReserved = 0;
-                Rectangle badgeRect = Rectangle.Empty;
-                if (!string.IsNullOrEmpty(node.Badge))
-                {
-                    var bColor = node.BadgeColor ?? palette.Primary;
-                    var bTextSz = g.MeasureString(node.Badge, fontBadge);
-                    int badgeW = (int)bTextSz.Width + 12;
-                    int badgeH = 20;
-                    int badgeX = clientWidth - badgeW - 10;
-                    int badgeY = y + ((_rowHeight - badgeH) / 2);
-                    badgeRect = new Rectangle(badgeX, badgeY, badgeW, badgeH);
-                    badgeReserved = badgeW + 16;
-                }
-
-                int rightLimit = clientWidth - badgeReserved - 6;
-                int availableW = Math.Max(20, rightLimit - curX);
-
-                Color textColor = isSelected ? palette.Primary : palette.TextPrimary;
-                var activeFont = node.HasChildren ? fontBold : fontText;
-
-                // 7. Render Primary Text & SubText without colliding into Badge
-                bool hasSub = !string.IsNullOrEmpty(node.SubText) && availableW >= 180;
-
-                if (hasSub)
-                {
-                    var titleSz = g.MeasureString(node.Text, activeFont);
-                    int desiredTitleW = (int)titleSz.Width + 6;
-                    int titleW = Math.Min(desiredTitleW, (int)(availableW * 0.55f));
-                    if (titleW < 100 && availableW > 140) titleW = Math.Min(desiredTitleW, availableW - 70);
-
-                    var titleRect = new Rectangle(curX, y, titleW, _rowHeight);
-                    TextRenderer.DrawText(g, node.Text, activeFont, titleRect, textColor,
-                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
-
-                    int subX = curX + titleW + 8;
-                    int subW = Math.Max(0, rightLimit - subX);
-                    if (subW > 25)
+                    // MULTI-COLUMN RENDERING MODE
+                    int curColX = 0;
+                    for (int c = 0; c < _columns.Count; c++)
                     {
-                        var subRect = new Rectangle(subX, y, subW, _rowHeight);
-                        TextRenderer.DrawText(g, node.SubText, fontSub, subRect, palette.TextSecondary,
-                            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                        var col = _columns[c];
+                        if (!col.Visible) continue;
+                        int colW = col.Width;
+
+                        if (c == 0)
+                        {
+                            // Column 0 renders hierarchy tree
+                            var prevClip = g.Clip;
+                            g.SetClip(new Rectangle(curColX, y, colW, _rowHeight));
+
+                            int indentX = curColX + 12 + (node.Level * _indentWidth);
+
+                            if (_showLines && node.Level > 0)
+                            {
+                                int parentLineX = indentX - (_indentWidth / 2);
+                                int midY = y + (_rowHeight / 2);
+                                g.DrawLine(penGuide, parentLineX, y, parentLineX, midY);
+                                g.DrawLine(penGuide, parentLineX, midY, indentX - 4, midY);
+                            }
+
+                            node.ChevronBounds = new Rectangle(indentX, y + ((_rowHeight - 16) / 2), 16, 16);
+                            if (node.HasChildren)
+                            {
+                                Color chevColor = (_hoveredNode == node && _hoveredOnChevron) ? palette.Primary : palette.TextSecondary;
+                                DrawChevron(g, node.ChevronBounds, node.IsExpanded, chevColor);
+                            }
+
+                            int curX = indentX + 18;
+                            if (_showCheckBoxes)
+                            {
+                                node.CheckBounds = new Rectangle(curX, y + ((_rowHeight - 16) / 2), 16, 16);
+                                DrawCheckBox(g, node.CheckBounds, node.CheckState, palette);
+                                curX += 22;
+                            }
+                            else
+                            {
+                                node.CheckBounds = Rectangle.Empty;
+                            }
+
+                            if (!string.IsNullOrEmpty(node.Icon))
+                            {
+                                using var iconFont = new Font("Segoe UI Emoji", 10f);
+                                using var brushIcon = new SolidBrush(palette.TextPrimary);
+                                g.DrawString(node.Icon, iconFont, brushIcon, curX, y + ((_rowHeight - 18) / 2));
+                                curX += 20;
+                            }
+
+                            int col0TextW = Math.Max(10, (curColX + colW) - curX - 6);
+                            var col0TextRect = new Rectangle(curX, y, col0TextW, _rowHeight);
+                            string cell0Text = node[col.Name]?.ToString() ?? node.Text;
+                            Color text0Color = isSelected ? palette.Primary : palette.TextPrimary;
+                            var font0 = node.HasChildren ? fontBold : fontText;
+                            TextRenderer.DrawText(g, cell0Text, font0, col0TextRect, text0Color,
+                                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+
+                            g.Clip = prevClip;
+                        }
+                        else
+                        {
+                            // Columns 1..N render tabular cell values
+                            string cellText = node[col.Name]?.ToString() ?? "";
+                            if (!string.IsNullOrEmpty(cellText))
+                            {
+                                var cellTextRect = new Rectangle(curColX + 6, y, Math.Max(10, colW - 12), _rowHeight);
+                                TextFormatFlags tff = TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine;
+                                tff |= col.Alignment switch
+                                {
+                                    HorizontalAlignment.Center => TextFormatFlags.HorizontalCenter,
+                                    HorizontalAlignment.Right => TextFormatFlags.Right,
+                                    _ => TextFormatFlags.Left
+                                };
+                                TextRenderer.DrawText(g, cellText, fontText, cellTextRect, palette.TextPrimary, tff);
+                            }
+                        }
+
+                        // Column vertical divider line
+                        g.DrawLine(penColDivider, curColX + colW - 1, y, curColX + colW - 1, y + _rowHeight);
+                        curColX += colW;
                     }
                 }
                 else
                 {
-                    var titleRect = new Rectangle(curX, y, availableW, _rowHeight);
-                    TextRenderer.DrawText(g, node.Text, activeFont, titleRect, textColor,
-                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
-                }
+                    // SINGLE-COLUMN BADGE & SUBTEXT MODE (100% Backward Compatible)
+                    int indentX = 12 + (node.Level * _indentWidth);
 
-                // 8. Draw Status Badge (anchored on far right, completely separated from text)
-                if (!badgeRect.IsEmpty)
-                {
-                    var bColor = node.BadgeColor ?? palette.Primary;
-                    using var bBrush = new SolidBrush(Color.FromArgb(35, bColor));
-                    using var bPen = new Pen(bColor, 1f);
-                    int effBadgeRadius = ZeroUIConfig.GetEffectiveRadius(4);
-                    using var bPath = CreateRoundedRect(badgeRect, effBadgeRadius);
-                    g.FillPath(bBrush, bPath);
-                    g.DrawPath(bPen, bPath);
+                    if (_showLines && node.Level > 0)
+                    {
+                        int parentLineX = indentX - (_indentWidth / 2);
+                        int midY = y + (_rowHeight / 2);
+                        g.DrawLine(penGuide, parentLineX, y, parentLineX, midY);
+                        g.DrawLine(penGuide, parentLineX, midY, indentX - 4, midY);
+                    }
 
-                    using var bTextBrush = new SolidBrush(bColor);
-                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(node.Badge, fontBadge, bTextBrush, badgeRect, sf);
+                    node.ChevronBounds = new Rectangle(indentX, y + ((_rowHeight - 16) / 2), 16, 16);
+                    if (node.HasChildren)
+                    {
+                        Color chevColor = (_hoveredNode == node && _hoveredOnChevron) ? palette.Primary : palette.TextSecondary;
+                        DrawChevron(g, node.ChevronBounds, node.IsExpanded, chevColor);
+                    }
+
+                    int curX = indentX + 18;
+
+                    if (_showCheckBoxes)
+                    {
+                        node.CheckBounds = new Rectangle(curX, y + ((_rowHeight - 16) / 2), 16, 16);
+                        DrawCheckBox(g, node.CheckBounds, node.CheckState, palette);
+                        curX += 22;
+                    }
+                    else
+                    {
+                        node.CheckBounds = Rectangle.Empty;
+                    }
+
+                    if (!string.IsNullOrEmpty(node.Icon))
+                    {
+                        using var iconFont = new Font("Segoe UI Emoji", 10f);
+                        using var brushIcon = new SolidBrush(palette.TextPrimary);
+                        g.DrawString(node.Icon, iconFont, brushIcon, curX, y + ((_rowHeight - 18) / 2));
+                        curX += 20;
+                    }
+
+                    int badgeReserved = 0;
+                    Rectangle badgeRect = Rectangle.Empty;
+                    if (!string.IsNullOrEmpty(node.Badge))
+                    {
+                        var bColor = node.BadgeColor ?? palette.Primary;
+                        var bTextSz = g.MeasureString(node.Badge, fontBadge);
+                        int badgeW = (int)bTextSz.Width + 12;
+                        int badgeH = 20;
+                        int badgeX = clientWidth - badgeW - 10;
+                        int badgeY = y + ((_rowHeight - badgeH) / 2);
+                        badgeRect = new Rectangle(badgeX, badgeY, badgeW, badgeH);
+                        badgeReserved = badgeW + 16;
+                    }
+
+                    int rightLimit = clientWidth - badgeReserved - 6;
+                    int availableW = Math.Max(20, rightLimit - curX);
+
+                    Color textColor = isSelected ? palette.Primary : palette.TextPrimary;
+                    var activeFont = node.HasChildren ? fontBold : fontText;
+
+                    bool hasSub = !string.IsNullOrEmpty(node.SubText) && availableW >= 180;
+
+                    if (hasSub)
+                    {
+                        var titleSz = g.MeasureString(node.Text, activeFont);
+                        int desiredTitleW = (int)titleSz.Width + 6;
+                        int titleW = Math.Min(desiredTitleW, (int)(availableW * 0.55f));
+                        if (titleW < 100 && availableW > 140) titleW = Math.Min(desiredTitleW, availableW - 70);
+
+                        var titleRect = new Rectangle(curX, y, titleW, _rowHeight);
+                        TextRenderer.DrawText(g, node.Text, activeFont, titleRect, textColor,
+                            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+
+                        int subX = curX + titleW + 8;
+                        int subW = Math.Max(0, rightLimit - subX);
+                        if (subW > 25)
+                        {
+                            var subRect = new Rectangle(subX, y, subW, _rowHeight);
+                            TextRenderer.DrawText(g, node.SubText, fontSub, subRect, palette.TextSecondary,
+                                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                        }
+                    }
+                    else
+                    {
+                        var titleRect = new Rectangle(curX, y, availableW, _rowHeight);
+                        TextRenderer.DrawText(g, node.Text, activeFont, titleRect, textColor,
+                            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                    }
+
+                    if (!badgeRect.IsEmpty)
+                    {
+                        var bColor = node.BadgeColor ?? palette.Primary;
+                        using var bBrush = new SolidBrush(Color.FromArgb(35, bColor));
+                        using var bPen = new Pen(bColor, 1f);
+                        int effBadgeRadius = ZeroUIConfig.GetEffectiveRadius(4);
+                        using var bPath = CreateRoundedRect(badgeRect, effBadgeRadius);
+                        g.FillPath(bBrush, bPath);
+                        g.DrawPath(bPen, bPath);
+
+                        using var bTextBrush = new SolidBrush(bColor);
+                        var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                        g.DrawString(node.Badge, fontBadge, bTextBrush, badgeRect, sf);
+                    }
                 }
 
                 // Separator bottom line

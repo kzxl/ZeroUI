@@ -24,6 +24,22 @@ namespace ZeroUI.Core.Pdf
             doc.Pages.Add(CreateSopPage(1));
             doc.Pages.Add(CreateQcCertificatePage(2));
 
+            // Document Outline Bookmarks
+            var bm1 = new PdfBookmarkModel("1. Electrical CAD Schematic", 0);
+            bm1.Children.Add(new PdfBookmarkModel("1.1 Power Incomer & Breakers", 0));
+            bm1.Children.Add(new PdfBookmarkModel("1.2 3-Phase Extrusion Motor M1", 0));
+            doc.Bookmarks.Add(bm1);
+
+            var bm2 = new PdfBookmarkModel("2. Extrusion Standard Operating Procedure", 1);
+            bm2.Children.Add(new PdfBookmarkModel("2.1 Pre-Start Safety Inspection", 1));
+            bm2.Children.Add(new PdfBookmarkModel("2.2 Die Heating & Temperature Curves", 1));
+            doc.Bookmarks.Add(bm2);
+
+            var bm3 = new PdfBookmarkModel("3. Quality Compliance Certificate", 2);
+            bm3.Children.Add(new PdfBookmarkModel("3.1 ISO 9001 Batch Inspection", 2));
+            bm3.Children.Add(new PdfBookmarkModel("3.2 Quality Engineer Sign-off", 2));
+            doc.Bookmarks.Add(bm3);
+
             return doc;
         }
 

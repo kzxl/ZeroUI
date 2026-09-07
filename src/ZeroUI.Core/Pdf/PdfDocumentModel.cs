@@ -16,6 +16,7 @@ namespace ZeroUI.Core.Pdf
         public string Producer { get; set; } = "ZeroUI Vector PDF Engine";
         public string Version { get; set; } = "1.7";
         public List<PdfPageModel> Pages { get; } = new List<PdfPageModel>();
+        public List<PdfBookmarkModel> Bookmarks { get; } = new List<PdfBookmarkModel>();
 
         public int PageCount => Pages.Count;
 
@@ -200,6 +201,26 @@ namespace ZeroUI.Core.Pdf
             FontSize = fontSize;
             FontFamily = fontFamily;
             Color = color;
+        }
+    }
+
+    /// <summary>
+    /// Represents a document outline bookmark or table-of-contents entry pointing to a target page.
+    /// </summary>
+    public sealed class PdfBookmarkModel
+    {
+        public string Title { get; set; } = string.Empty;
+        public int PageIndex { get; set; }
+        public double YOffset { get; set; }
+        public List<PdfBookmarkModel> Children { get; } = new List<PdfBookmarkModel>();
+
+        public PdfBookmarkModel() { }
+
+        public PdfBookmarkModel(string title, int pageIndex, double yOffset = 0)
+        {
+            Title = title;
+            PageIndex = pageIndex;
+            YOffset = yOffset;
         }
     }
 }
