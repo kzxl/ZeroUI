@@ -103,6 +103,16 @@ namespace ZeroUI.Core.Tests
             ZeroAnimationClock.Unsubscribe(listener);
         }
 
+        [Fact]
+        public void SetSynchronizationContext_ConfiguresContextCorrectly()
+        {
+            var customContext = new SynchronizationContext();
+            ZeroAnimationClock.SetSynchronizationContext(customContext);
+            ZeroAnimationClock.ManualTick(0.016);
+            Assert.True(ZeroAnimationClock.FrameCount > 0);
+            ZeroAnimationClock.SetSynchronizationContext(null);
+        }
+
         private sealed class TestFrameListener : IAnimationFrameListener
         {
             public int FramesReceived { get; private set; }

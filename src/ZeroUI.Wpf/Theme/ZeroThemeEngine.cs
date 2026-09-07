@@ -15,6 +15,12 @@ namespace ZeroUI.Wpf.Theme
 
         public static void Initialize(Application? app = null, string defaultSkin = "obsidian_dark")
         {
+            var dispatcher = (app ?? Application.Current)?.Dispatcher ?? System.Windows.Threading.Dispatcher.CurrentDispatcher;
+            var syncContext = System.Threading.SynchronizationContext.Current ?? new System.Windows.Threading.DispatcherSynchronizationContext(dispatcher);
+            System.Threading.SynchronizationContext.SetSynchronizationContext(syncContext);
+            ZeroUI.Core.Runtime.UiDispatcher.Initialize(syncContext);
+            ZeroUI.Core.Rendering.ZeroAnimationClock.SetSynchronizationContext(syncContext);
+
             ZeroWpfStyles.ApplyStyles(app);
             ZeroSkinManager.ApplySkin(defaultSkin);
         }

@@ -28,7 +28,6 @@ namespace ZeroUI.Wpf.Network
         private bool _isPanning = false;
 
         private float _packetPulsePhase = 0f;
-        private IDisposable? _animSub;
 
         public event EventHandler? SelectedNodeChanged;
         public event EventHandler? SelectedLinkChanged;
@@ -77,28 +76,16 @@ namespace ZeroUI.Wpf.Network
 
         #endregion
 
+        protected override bool AutoAnimate => true;
+
+        protected override void OnAnimationTick(double delta, long frame)
+        {
+            _packetPulsePhase = (float)((_packetPulsePhase + delta * 0.8) % 1.0);
+        }
+
         public NetworkTopology()
         {
             InitializeDemoTopology();
-
-            Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                _packetPulsePhase = (_packetPulsePhase + 0.02f) % 1.0f;
-                Dispatcher.BeginInvoke(new Action(() => InvalidateVisual()));
-            });
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
         }
 
         private void InitializeDemoTopology()

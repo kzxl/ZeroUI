@@ -18,7 +18,6 @@ namespace ZeroUI.Wpf.Network
     {
         private readonly ChassisHealthProfile _profile = new ChassisHealthProfile();
         private double _fanBladeAngle = 0.0;
-        private IDisposable? _animSub;
 
         #region Properties
 
@@ -26,26 +25,15 @@ namespace ZeroUI.Wpf.Network
 
         #endregion
 
+        protected override bool AutoAnimate => true;
+
+        protected override void OnAnimationTick(double delta, long frame)
+        {
+            _fanBladeAngle = (_fanBladeAngle + delta * 360.0 * 2.0) % 360.0;
+        }
+
         public DeviceFaceplate()
         {
-            Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                _fanBladeAngle = (_fanBladeAngle + 12.0) % 360.0;
-                Dispatcher.BeginInvoke(new Action(() => InvalidateVisual()));
-            });
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
         }
 
         #if NETFRAMEWORK

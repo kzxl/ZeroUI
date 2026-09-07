@@ -19,7 +19,6 @@ namespace ZeroUI.Wpf.Network
     {
         private readonly IpSubnetEngine _engine = new IpSubnetEngine();
         private IpHostEntry? _selectedHost;
-        private IDisposable? _animSub;
         private float _pulsePhase = 0f;
 
         public event EventHandler? SelectedHostChanged;
@@ -44,29 +43,17 @@ namespace ZeroUI.Wpf.Network
 
         #endregion
 
+        protected override bool AutoAnimate => true;
+
+        protected override void OnAnimationTick(double delta, long frame)
+        {
+            _pulsePhase = (float)((_pulsePhase + delta * 3.0) % (Math.PI * 2.0));
+        }
+
         public IpMatrix()
         {
             _engine.PopulateDemoData();
             _selectedHost = _engine.GetHost(1);
-
-            Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                _pulsePhase = (_pulsePhase + 0.05f) % (float)(Math.PI * 2.0);
-                Dispatcher.BeginInvoke(new Action(() => InvalidateVisual()));
-            });
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
         }
 
         #if NETFRAMEWORK

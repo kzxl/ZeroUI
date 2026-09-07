@@ -19,7 +19,6 @@ namespace ZeroUI.Wpf.Network
     public class SwitchFaceplate : ZeroWpfVisualBase
     {
         private SwitchPortLayout _layout;
-        private IDisposable? _animSub;
         private SwitchPort? _selectedPort;
 
         public event EventHandler? SelectedPortChanged;
@@ -44,27 +43,11 @@ namespace ZeroUI.Wpf.Network
 
         #endregion
 
+        protected override bool AutoAnimate => true;
+
         public SwitchFaceplate()
         {
             _layout = new SwitchPortLayout(24, 4);
-
-            Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                Dispatcher.BeginInvoke(new Action(() => InvalidateVisual()));
-            });
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
         }
 
         #if NETFRAMEWORK

@@ -17,7 +17,6 @@ namespace ZeroUI.Wpf.Network
     public class FieldbusMonitor : ZeroWpfVisualBase
     {
         private readonly FieldbusNetwork _network = new FieldbusNetwork();
-        private IDisposable? _animSub;
         private bool _blinkState = false;
 
         #region Properties
@@ -26,31 +25,19 @@ namespace ZeroUI.Wpf.Network
 
         #endregion
 
+        protected override bool AutoAnimate => true;
+
+        protected override void OnAnimationTick(double delta, long frame)
+        {
+            if (frame % 30 == 0)
+            {
+                _blinkState = !_blinkState;
+            }
+        }
+
         public FieldbusMonitor()
         {
             _network.PopulateDemoIndustrialLine();
-
-            Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (frame % 30 == 0) // ~2 Hz blink
-                {
-                    _blinkState = !_blinkState;
-                    Dispatcher.BeginInvoke(new Action(() => InvalidateVisual()));
-                }
-            });
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
         }
 
         #if NETFRAMEWORK

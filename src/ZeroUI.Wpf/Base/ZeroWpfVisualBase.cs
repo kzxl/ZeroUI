@@ -16,6 +16,7 @@ namespace ZeroUI.Wpf.Base
     public abstract class ZeroWpfVisualBase : FrameworkElement, IZeroSkinnable
     {
         private IDisposable? _animSub;
+        private int _isRenderPending = 0;
 
         public static readonly DependencyProperty UseDefaultSkinProperty =
             DependencyProperty.Register(
@@ -64,12 +65,37 @@ namespace ZeroUI.Wpf.Base
 
             if (AutoAnimate && _animSub == null)
             {
+                var dispatcher = Dispatcher;
                 _animSub = ZeroAnimationClock.Subscribe((delta, frame) =>
                 {
-                    if (IsLoaded)
+                    if (dispatcher.CheckAccess())
                     {
-                        OnAnimationTick(delta, frame);
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
+                        if (IsLoaded)
+                        {
+                            OnAnimationTick(delta, frame);
+                            InvalidateVisual();
+                        }
+                    }
+                    else
+                    {
+                        if (System.Threading.Interlocked.CompareExchange(ref _isRenderPending, 1, 0) == 0)
+                        {
+                            dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Render, new Action(() =>
+                            {
+                                try
+                                {
+                                    if (IsLoaded)
+                                    {
+                                        OnAnimationTick(delta, frame);
+                                        InvalidateVisual();
+                                    }
+                                }
+                                finally
+                                {
+                                    System.Threading.Interlocked.Exchange(ref _isRenderPending, 0);
+                                }
+                            }));
+                        }
                     }
                 });
             }
@@ -89,6 +115,7 @@ namespace ZeroUI.Wpf.Base
             ZeroWpfTheme.ThemeChanged -= OnThemeChangedInternal;
             _animSub?.Dispose();
             _animSub = null;
+            System.Threading.Interlocked.Exchange(ref _isRenderPending, 0);
         }
 
         private void OnThemeChangedInternal()
