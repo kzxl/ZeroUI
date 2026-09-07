@@ -1,14 +1,15 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-
     public enum ZeroTagType
     {
         Default,
@@ -26,21 +27,13 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Text")]
     [Description("Lightweight status tag badge with clean border and status typography")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTag.bmp")]
-    public class TagControl : Control
+    public class TagControl : ZeroControlBase
     {
-
         private ZeroTagType _tagType = ZeroTagType.Default;
         private int _borderRadius = 4;
 
         public TagControl()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(80, 24);
             Font = new Font("Segoe UI", 8.5f, FontStyle.Regular);
             Text = "Tag";
@@ -51,6 +44,12 @@ namespace ZeroUI.WinForms.Editors
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 8.5f, FontStyle.Regular);
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Category("Appearance")]
@@ -75,10 +74,10 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var (bg, border, fg) = GetTagColors(_tagType);
+            var (bg, border, fg) = GetTagColors(_tagType, EffectiveSkin.IsDark);
 
             // 1. Fill parent background to eliminate black corner clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
             using (var brushParent = new SolidBrush(parentBg))
             {
                 g.FillRectangle(brushParent, ClientRectangle);
@@ -105,12 +104,20 @@ namespace ZeroUI.WinForms.Editors
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
         }
 
-        public static (Color bg, Color border, Color fg) GetTagColors(ZeroTagType type) => type switch
+        public static (Color bg, Color border, Color fg) GetTagColors(ZeroTagType type) => GetTagColors(type, false);
+
+        public static (Color bg, Color border, Color fg) GetTagColors(ZeroTagType type, bool isDark) => (type, isDark) switch
         {
-            ZeroTagType.Success => (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(56, 158, 13)),   // Emerald
-            ZeroTagType.Processing => (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(9, 88, 217)), // Sapphire
-            ZeroTagType.Warning => (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(212, 107, 8)),  // Amber
-            ZeroTagType.Error => (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(207, 19, 34)),   // Ruby
+            (ZeroTagType.Success, true) => (Color.FromArgb(19, 41, 26), Color.FromArgb(39, 80, 50), Color.FromArgb(73, 170, 95)),
+            (ZeroTagType.Processing, true) => (Color.FromArgb(17, 33, 56), Color.FromArgb(28, 64, 110), Color.FromArgb(88, 166, 255)),
+            (ZeroTagType.Warning, true) => (Color.FromArgb(46, 32, 12), Color.FromArgb(92, 65, 24), Color.FromArgb(232, 175, 59)),
+            (ZeroTagType.Error, true) => (Color.FromArgb(48, 16, 20), Color.FromArgb(98, 33, 41), Color.FromArgb(248, 81, 73)),
+            (_, true) => (Color.FromArgb(33, 38, 45), Color.FromArgb(48, 54, 61), Color.FromArgb(201, 209, 217)),
+
+            (ZeroTagType.Success, false) => (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(56, 158, 13)),   // Emerald
+            (ZeroTagType.Processing, false) => (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(9, 88, 217)), // Sapphire
+            (ZeroTagType.Warning, false) => (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(212, 107, 8)),  // Amber
+            (ZeroTagType.Error, false) => (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(207, 19, 34)),   // Ruby
             _ => (Color.FromArgb(250, 250, 250), Color.FromArgb(217, 217, 217), Color.FromArgb(38, 38, 38))                    // Slate
         };
 

@@ -1,9 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ZeroUI.Core.Input;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -18,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Radio button group container with auto-layout and selection management")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadioGroup.bmp")]
-    public class RadioGroup : Control
+    public class RadioGroup : ZeroControlBase
     {
         private string[] _items = Array.Empty<string>();
         private readonly SelectionModel<string> _selection = new SelectionModel<string>();
@@ -33,13 +35,6 @@ namespace ZeroUI.WinForms.Editors
 
         public RadioGroup()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(240, 100);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
@@ -51,12 +46,25 @@ namespace ZeroUI.WinForms.Editors
                 SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
             };
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 UpdateChildFonts();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            foreach (Control c in Controls)
+            {
+                if (c is RadioButtonControl rb)
+                {
+                    rb.UseDefaultSkin = UseDefaultSkin;
+                    rb.CustomSkin = CustomSkin;
+                }
+            }
+            Invalidate();
         }
 
         [Browsable(false)]
@@ -184,7 +192,9 @@ namespace ZeroUI.WinForms.Editors
                         Font = Font,
                         GroupName = grpName,
                         Checked = (i == _selection.SelectedIndex),
-                        Tag = index
+                        Tag = index,
+                        UseDefaultSkin = UseDefaultSkin,
+                        CustomSkin = CustomSkin
                     };
 
                     rb.CheckedChanged += (s, e) =>

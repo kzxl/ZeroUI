@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
@@ -184,7 +185,6 @@ namespace ZeroUI.WinForms.Editors
             _repeatTimer = new Timer();
             _repeatTimer.Tick += OnRepeatTimerTick;
 
-            ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -194,6 +194,12 @@ namespace ZeroUI.WinForms.Editors
             };
             UpdateTheme();
             FormatText();
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            UpdateTheme();
         }
 
         protected override bool TryConvertEditValue(object? rawValue, out decimal converted)
@@ -310,7 +316,7 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateTheme()
         {
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
             BackColor = Color.Transparent;
             if (_innerBox != null)
             {
@@ -413,7 +419,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
 
             Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
             using (var brushParent = new SolidBrush(parentBg))

@@ -1,9 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -18,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern anti-aliased multi-line text editor")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroMemoEdit.bmp")]
-    public class MemoEdit : Control
+    public class MemoEdit : ZeroControlBase
     {
         private readonly TextBox _innerBox;
         private string _placeholderText = "";
@@ -28,13 +30,6 @@ namespace ZeroUI.WinForms.Editors
 
         public MemoEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
@@ -73,7 +68,6 @@ namespace ZeroUI.WinForms.Editors
             Controls.Add(_innerBox);
             Size = new Size(320, 100);
 
-            ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -87,11 +81,20 @@ namespace ZeroUI.WinForms.Editors
             UpdateInnerBounds();
         }
 
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            UpdateTheme();
+        }
+
         private void UpdateTheme()
         {
-            var p = ZeroTheme.Colors;
-            _innerBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
-            _innerBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
+            var p = CurrentPalette;
+            if (_innerBox != null)
+            {
+                _innerBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
+                _innerBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
+            }
             Invalidate();
         }
 
@@ -244,8 +247,8 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
-            bool isDark = ZeroTheme.IsDark;
+            var palette = CurrentPalette;
+            bool isDark = EffectiveSkin.IsDark;
 
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
             var borderRect = new Rectangle(1, 1, Width - 2, Height - 2);

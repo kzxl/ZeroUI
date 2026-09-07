@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
@@ -20,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [DefaultEvent("ValueChanged")]
     [Description("Modern date picker with custom-drawn popup calendar and quick-select presets")]
-    public class DateEdit : Control, IZeroEditor
+    public class DateEdit : ZeroControlBase, IZeroEditor
     {
         private DateTime _selectedDate = DateTime.Today;
         private string _dateFormat = "yyyy-MM-dd";
@@ -84,13 +85,6 @@ namespace ZeroUI.WinForms.Editors
 
         public DateEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(160, 36);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.25f, FontStyle.Regular);
@@ -100,8 +94,8 @@ namespace ZeroUI.WinForms.Editors
             {
                 BorderStyle = BorderStyle.None,
                 Font = new Font(Font.FontFamily, 9.25f, FontStyle.Bold),
-                BackColor = ZeroTheme.Colors.Surface,
-                ForeColor = ZeroTheme.Colors.TextPrimary,
+                BackColor = CurrentPalette.Surface,
+                ForeColor = CurrentPalette.TextPrimary,
                 TextAlign = HorizontalAlignment.Left
             };
             _innerBox.Text = _selectedDate.ToString(_dateFormat);
@@ -119,12 +113,6 @@ namespace ZeroUI.WinForms.Editors
             };
             Controls.Add(_innerBox);
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                _innerBox.BackColor = ZeroTheme.Colors.Surface;
-                _innerBox.ForeColor = ZeroTheme.Colors.TextPrimary;
-                Invalidate();
-            };
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -132,6 +120,19 @@ namespace ZeroUI.WinForms.Editors
                 _innerBox.Font = new Font(Font.FontFamily, 9.25f, FontStyle.Bold);
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            var palette = CurrentPalette;
+            if (_innerBox != null)
+            {
+                _innerBox.BackColor = palette.Surface;
+                _innerBox.ForeColor = palette.TextPrimary;
+            }
+            _calendarControl?.Invalidate();
+            Invalidate();
         }
 
         private void ParseAndApplyText()
@@ -295,7 +296,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
 
             // 1. Fill parent background to eliminate black corner clipping artifacts
             Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
@@ -682,7 +683,7 @@ namespace ZeroUI.WinForms.Editors
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-                var palette = ZeroTheme.Colors;
+                var palette = _owner.CurrentPalette;
                 g.Clear(palette.CardBackground);
 
                 // Border around popup

@@ -1,9 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -19,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Description("Modern anti-aliased flat RadioButton control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadioButton.bmp")]
-    public class RadioButtonControl : Control
+    public class RadioButtonControl : ZeroControlBase
     {
         private bool _checked = false;
         private bool _autoCheck = true;
@@ -33,25 +35,24 @@ namespace ZeroUI.WinForms.Editors
 
         public RadioButtonControl()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.Selectable, true);
 
             Size = new Size(140, 26);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Category("Appearance")]
@@ -264,8 +265,8 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
-            bool isDark = ZeroTheme.IsDark;
+            var palette = CurrentPalette;
+            bool isDark = EffectiveSkin.IsDark;
 
             int circleSize = 18;
             int circleX = 4;

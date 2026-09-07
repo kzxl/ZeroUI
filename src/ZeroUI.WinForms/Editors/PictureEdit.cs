@@ -1,9 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 
@@ -36,7 +38,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Image")]
     [Description("Modern anti-aliased image and avatar control with initials fallback and zoom lightbox")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroImage.bmp")]
-    public class PictureEdit : Control
+    public class PictureEdit : ZeroControlBase
     {
         private Image? _image;
         private ImageScaleMode _scaleMode = ImageScaleMode.Cover;
@@ -54,19 +56,17 @@ namespace ZeroUI.WinForms.Editors
 
         public PictureEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(64, 64);
             BackColor = Color.Transparent;
             Cursor = Cursors.Hand;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Category("Appearance")]
@@ -232,7 +232,7 @@ namespace ZeroUI.WinForms.Editors
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
             Rectangle clientRect = new Rectangle(0, 0, Width, Height);
 
             // 1. Fill parent background to eliminate black corner clipping artifacts

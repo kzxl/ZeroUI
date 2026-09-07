@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Icons;
@@ -23,7 +24,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectionChanged")]
     [Description("Enterprise multi-column dropdown lookup with embedded virtual DataGrid and search")]
     [ToolboxBitmap(typeof(ZeroIcons), "GridLookupEdit.bmp")]
-    public class GridLookupEdit : Control, IZeroEditor
+    public class GridLookupEdit : ZeroControlBase, IZeroEditor
     {
         private readonly ZeroDropDownHost _dropdown;
         private readonly Panel _popupContainer;
@@ -131,14 +132,6 @@ namespace ZeroUI.WinForms.Editors
 
         public GridLookupEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(260, 36);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
@@ -242,13 +235,6 @@ namespace ZeroUI.WinForms.Editors
                 Invalidate();
             };
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                _popupContainer.BackColor = ZeroTheme.Colors.Surface;
-                _searchBox.BackColor = ZeroTheme.Colors.Surface;
-                _searchBox.ForeColor = ZeroTheme.Colors.TextPrimary;
-                Invalidate();
-            };
         }
 
         public void SetDataSource<T>(IList<T> items)
@@ -288,13 +274,26 @@ namespace ZeroUI.WinForms.Editors
             EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            var palette = CurrentPalette;
+            if (_popupContainer != null) _popupContainer.BackColor = palette.Surface;
+            if (_searchBox != null)
+            {
+                _searchBox.BackColor = palette.Surface;
+                _searchBox.ForeColor = palette.TextPrimary;
+            }
+            Invalidate();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            var colors = ZeroTheme.Colors;
+            var colors = CurrentPalette;
             var bounds = new Rectangle(0, 0, Width - 1, Height - 1);
 
             // Draw Background & Border

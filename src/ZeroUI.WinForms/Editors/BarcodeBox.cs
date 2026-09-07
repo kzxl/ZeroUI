@@ -6,6 +6,8 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 using ZeroUI.Core.Barcode;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
@@ -21,7 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Pure vector 1D barcode and 2D QR code generator and viewer")]
     [ToolboxBitmap(typeof(ZeroIcons), "BarcodeBox.bmp")]
-    public class BarcodeBox : Control, IZeroEditor
+    public class BarcodeBox : ZeroControlBase, IZeroEditor
     {
         private string _text = "LOT-123456";
         private BarcodeSymbology _symbology = BarcodeSymbology.Code128;
@@ -35,18 +37,15 @@ namespace ZeroUI.WinForms.Editors
 
         public BarcodeBox()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(200, 90);
             Font = new Font("Consolas", 9f);
             BackColor = Color.White;
+        }
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         #region Properties
@@ -212,8 +211,8 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.None; // Crisp pixel alignment
             g.PixelOffsetMode = PixelOffsetMode.Half;
 
-            Color bg = ZeroTheme.IsDark ? Color.FromArgb(15, 23, 42) : BackColor;
-            Color barCol = ZeroTheme.IsDark ? Color.FromArgb(241, 245, 249) : _barColor;
+            Color bg = EffectiveSkin.IsDark ? Color.FromArgb(15, 23, 42) : BackColor;
+            Color barCol = EffectiveSkin.IsDark ? Color.FromArgb(241, 245, 249) : _barColor;
             using var bgBrush = new SolidBrush(bg);
             using var barBrush = new SolidBrush(barCol);
 

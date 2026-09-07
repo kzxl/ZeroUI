@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
@@ -26,7 +27,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Placeholder")]
     [Description("High-capacity enterprise search lookup with persistent header search and virtual grid.")]
     [ToolboxBitmap(typeof(ZeroIcons), "SearchLookUpEdit.bmp")]
-    public class SearchLookUpEdit : Control, IZeroEditor
+    public class SearchLookUpEdit : ZeroControlBase, IZeroEditor
     {
         private readonly ZeroDropDownHost _dropdown;
         private readonly Panel _popupContainer;
@@ -34,6 +35,7 @@ namespace ZeroUI.WinForms.Editors
         private readonly Button _btnFind;
         private readonly Button _btnClear;
         private readonly Label _lblStatus;
+        private readonly Button _btnAddNew;
         private readonly GridControl _grid;
         private readonly Timer _debounceTimer;
         private readonly SearchFilterEngine _filterEngine = new SearchFilterEngine();
@@ -51,13 +53,55 @@ namespace ZeroUI.WinForms.Editors
         private int _debounceDelayMs = 250;
         private bool _isModified = false;
         private bool _isReadOnly = false;
+        private bool _showAddNewButton = false;
+        private string _addNewButtonText = "+ Add New Record";
 
         public event EventHandler? SelectionChanged;
         public event EventHandler? DropDownOpened;
         public event EventHandler? DropDownClosed;
         public event EventHandler? EditValueChanged;
 
+        /// <summary>
+        /// Occurs when the user requests to add a new record or enters an unlisted search value.
+        /// </summary>
+        public event EventHandler<ProcessNewValueEventArgs>? ProcessNewValue;
+
         #region Properties
+
+        [Category("ZeroUI - Behavior")]
+        [Description("Determines whether the '+ Add New Record' footer action button is visible.")]
+        [DefaultValue(false)]
+        public bool ShowAddNewButton
+        {
+            get => _showAddNewButton;
+            set
+            {
+                if (_showAddNewButton != value)
+                {
+                    _showAddNewButton = value;
+                    if (_btnAddNew != null)
+                    {
+                        _btnAddNew.Visible = _showAddNewButton;
+                    }
+                }
+            }
+        }
+
+        [Category("ZeroUI - Appearance")]
+        [Description("Text caption displayed on the add new record footer action button.")]
+        [DefaultValue("+ Add New Record")]
+        public string AddNewButtonText
+        {
+            get => _addNewButtonText;
+            set
+            {
+                _addNewButtonText = value ?? "+ Add New Record";
+                if (_btnAddNew != null)
+                {
+                    _btnAddNew.Text = _addNewButtonText;
+                }
+            }
+        }
 
         [Category("ZeroUI - Behavior")]
         [Description("Debounce delay in milliseconds before executing background filter.")]
@@ -195,14 +239,6 @@ namespace ZeroUI.WinForms.Editors
 
         public SearchLookUpEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(280, 36);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
@@ -259,6 +295,24 @@ namespace ZeroUI.WinForms.Editors
                 _btnClear.FlatAppearance.BorderSize = 0;
             }
 
+            _btnAddNew = new Button
+            {
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                Text = _addNewButtonText,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                BackColor = Color.Transparent,
+                ForeColor = ZeroTheme.Colors.Primary,
+                Visible = _showAddNewButton
+            };
+            if (_btnAddNew.FlatAppearance != null)
+            {
+                _btnAddNew.FlatAppearance.BorderSize = 0;
+            }
+            _btnAddNew.Click += (s, e) => HandleAddNewRecord();
+
             _lblStatus = new Label
             {
                 Dock = DockStyle.Fill,
@@ -287,6 +341,7 @@ namespace ZeroUI.WinForms.Editors
                 BackColor = ZeroTheme.IsDark ? Color.FromArgb(30, 30, 35) : Color.FromArgb(245, 246, 248)
             };
             footerPanel.Controls.Add(_lblStatus);
+            footerPanel.Controls.Add(_btnAddNew);
 
             _popupContainer = new Panel
             {
@@ -394,8 +449,6 @@ namespace ZeroUI.WinForms.Editors
                     e.Handled = true;
                 }
             };
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void SetDataSource<T>(IList<T> items)
@@ -556,7 +609,7 @@ namespace ZeroUI.WinForms.Editors
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            var colors = ZeroTheme.Colors;
+            var colors = CurrentPalette;
             var bounds = new Rectangle(0, 0, Width - 1, Height - 1);
 
             // Draw Background & Border
@@ -639,13 +692,34 @@ namespace ZeroUI.WinForms.Editors
             return path;
         }
 
-        private void OnThemeChanged(object? sender, EventArgs e)
+        private void HandleAddNewRecord()
         {
-            _popupContainer.BackColor = ZeroTheme.Colors.Surface;
-            _searchBox.BackColor = ZeroTheme.Colors.Surface;
-            _searchBox.ForeColor = ZeroTheme.Colors.TextPrimary;
-            _btnFind.BackColor = ZeroTheme.Colors.Primary;
-            _btnClear.ForeColor = ZeroTheme.Colors.TextSecondary;
+            var args = new ProcessNewValueEventArgs(_searchBox.Text);
+            ProcessNewValue?.Invoke(this, args);
+            if (args.Handled)
+            {
+                if (args.NewValue != null)
+                {
+                    SelectedValue = args.NewValue;
+                }
+                _dropdown.Close();
+            }
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            var palette = CurrentPalette;
+            if (_popupContainer != null) _popupContainer.BackColor = palette.Surface;
+            if (_searchBox != null)
+            {
+                _searchBox.BackColor = palette.Surface;
+                _searchBox.ForeColor = palette.TextPrimary;
+            }
+            if (_btnFind != null) _btnFind.BackColor = palette.Primary;
+            if (_btnClear != null) _btnClear.ForeColor = palette.TextSecondary;
+            if (_lblStatus != null) _lblStatus.ForeColor = palette.TextSecondary;
+            if (_btnAddNew != null) _btnAddNew.ForeColor = palette.Primary;
             Invalidate();
         }
 
@@ -653,7 +727,6 @@ namespace ZeroUI.WinForms.Editors
         {
             if (disposing)
             {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _debounceTimer.Dispose();
                 _dropdown.Dispose();
             }

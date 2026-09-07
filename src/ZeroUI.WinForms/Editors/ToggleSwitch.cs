@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 
@@ -18,14 +20,16 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Category("ZeroUI - Editors")]
     [Description("Smooth sliding animated toggle switch")]
-    public class ToggleSwitch : Control
+    public class ToggleSwitch : ZeroControlBase
     {
         private bool _checked = false;
         private string? _checkedText = "ON";
         private string? _uncheckedText = "OFF";
 
         private Color _checkedColor = Color.FromArgb(79, 70, 229);     // ZeroUI Indigo Accent
+        private bool _customCheckedColor = false;
         private Color _uncheckedColor = Color.FromArgb(203, 213, 225); // Slate 300
+        private bool _customUncheckedColor = false;
         private Color _thumbColor = Color.White;
         private IDisposable? _animSub;
 
@@ -35,17 +39,17 @@ namespace ZeroUI.WinForms.Editors
 
         public ToggleSwitch()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.Selectable, true);
 
             Size = new Size(52, 26);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 7.5f, FontStyle.Bold);
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Category("Behavior")]
@@ -93,15 +97,15 @@ namespace ZeroUI.WinForms.Editors
         [Category("Appearance")]
         public Color CheckedColor
         {
-            get => _checkedColor;
-            set { _checkedColor = value; Invalidate(); }
+            get => _customCheckedColor ? _checkedColor : CurrentPalette.Primary;
+            set { _checkedColor = value; _customCheckedColor = true; Invalidate(); }
         }
 
         [Category("Appearance")]
         public Color UncheckedColor
         {
-            get => _uncheckedColor;
-            set { _uncheckedColor = value; Invalidate(); }
+            get => _customUncheckedColor ? _uncheckedColor : (EffectiveSkin.IsDark ? Color.FromArgb(55, 65, 81) : Color.FromArgb(203, 213, 225));
+            set { _uncheckedColor = value; _customUncheckedColor = true; Invalidate(); }
         }
 
         private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
@@ -153,7 +157,7 @@ namespace ZeroUI.WinForms.Editors
             int radius = Height / 2;
 
             // 1. Interpolate Track Color
-            Color currentTrackColor = InterpolateColor(_uncheckedColor, _checkedColor, _thumbPosition);
+            Color currentTrackColor = InterpolateColor(UncheckedColor, CheckedColor, _thumbPosition);
 
             using (var trackPath = CreatePillPath(trackRect, radius))
             {

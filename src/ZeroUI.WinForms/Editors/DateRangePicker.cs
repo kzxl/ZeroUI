@@ -1,9 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -30,7 +32,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("StartDate")]
     [Description("Enterprise dual-date range selector with 1-click presets and calendar popup")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDateRangePicker.bmp")]
-    public class DateRangePicker : Control
+    public class DateRangePicker : ZeroControlBase
     {
         private DateTime _startDate = DateTime.Today.AddDays(-6);
         private DateTime _endDate = DateTime.Today;
@@ -39,7 +41,7 @@ namespace ZeroUI.WinForms.Editors
 
         private bool _isHovered = false;
         private bool _isFocused = false;
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly DateRangePopupControl _popupControl;
         private Rectangle _chevronRect;
 
@@ -47,47 +49,35 @@ namespace ZeroUI.WinForms.Editors
 
         public DateRangePicker()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(260, 36);
             Font = new Font("Segoe UI", 9.25f);
             BackColor = Color.Transparent;
             Cursor = Cursors.Hand;
 
             _popupControl = new DateRangePopupControl(this);
-            var host = new ToolStripControlHost(_popupControl)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _popupControl
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                AutoClose = true,
-                DropShadowEnabled = true,
-                Margin = Padding.Empty,
-                Padding = Padding.Empty
-            };
-            _dropdown.Items.Add(host);
             _dropdown.Closed += (s, e) =>
             {
                 _isFocused = false;
                 Invalidate();
             };
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            _popupControl?.Invalidate();
+            Invalidate();
         }
 
         [Category("Data")]
@@ -230,11 +220,9 @@ namespace ZeroUI.WinForms.Editors
             if (!_dropdown.Visible)
             {
                 _popupControl.SyncFromPicker(_startDate, _endDate);
-                _popupControl.Size = new Size(500, 280);
-                _dropdown.Size = new Size(500, 280);
                 _isFocused = true;
                 Invalidate();
-                _dropdown.Show(this, new Point(0, Height + 2), ToolStripDropDownDirection.BelowRight);
+                _dropdown.ShowDropDown(this, 500, 280);
             }
             else
             {
@@ -253,7 +241,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
 
             // 1. Fill parent background to eliminate black corner clipping artifacts
             Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
@@ -533,7 +521,7 @@ namespace ZeroUI.WinForms.Editors
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-                var palette = ZeroTheme.Colors;
+                var palette = _picker.CurrentPalette;
                 g.Clear(palette.CardBackground);
 
                 using (var penBorder = new Pen(palette.Border, 1f))

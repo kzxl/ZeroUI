@@ -1,12 +1,14 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
 using ZeroUI.Core.Localization;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -35,7 +37,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ItemCheck")]
     [Description("Modern checked combo box allowing multi-item selection with checkboxes and filter")]
     [ToolboxBitmap(typeof(ZeroIcons), "CheckedComboBoxEdit.bmp")]
-    public class CheckedComboBoxEdit : Control, IZeroEditor
+    public class CheckedComboBoxEdit : ZeroControlBase, IZeroEditor
     {
         public class CheckedItem
         {
@@ -62,7 +64,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
 
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly CheckedComboPopupControl _popupControl;
 
         public event EventHandler<ItemCheckEventArgs>? ItemCheck;
@@ -169,15 +171,6 @@ namespace ZeroUI.WinForms.Editors
 
         public CheckedComboBoxEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
-
-            DoubleBuffered = true;
             Height = 32;
             Cursor = Cursors.Hand;
             ZeroLocalizer.CultureChanged += (s, e) => Invalidate();
@@ -185,26 +178,22 @@ namespace ZeroUI.WinForms.Editors
             BackColor = Color.Transparent;
 
             _popupControl = new CheckedComboPopupControl(this);
-            var host = new ToolStripControlHost(_popupControl)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _popupControl
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoClose = true,
-                DropShadowEnabled = true
-            };
-            _dropdown.Items.Add(host);
             _dropdown.Closed += (s, e) =>
             {
                 _isDroppedDown = false;
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            _popupControl?.Invalidate();
+            Invalidate();
         }
 
         public void AddItem(object value, string displayText, bool isChecked = false)
@@ -267,7 +256,7 @@ namespace ZeroUI.WinForms.Editors
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            var colors = ZeroTheme.Colors;
+            var colors = CurrentPalette;
             var bounds = new Rectangle(0, 0, Width - 1, Height - 1);
 
             // Draw Background
@@ -352,9 +341,8 @@ namespace ZeroUI.WinForms.Editors
 
             int popupH = Math.Min(320, Math.Max(120, _items.Count * _itemHeight + 70));
             _popupControl.Size = new Size(Math.Max(Width, 240), popupH);
-            _dropdown.Size = _popupControl.Size;
 
-            _dropdown.Show(this, new Point(0, Height + 2));
+            _dropdown.ShowDropDown(this, Math.Max(Width, 240), popupH);
             Invalidate();
         }
 
@@ -432,7 +420,7 @@ namespace ZeroUI.WinForms.Editors
                 var g = e.Graphics;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                var colors = ZeroTheme.Colors;
+                var colors = _owner.CurrentPalette;
                 g.Clear(colors.Surface);
 
                 // Draw border around popup
@@ -471,7 +459,7 @@ namespace ZeroUI.WinForms.Editors
 
             private void DrawCheckboxItem(Graphics g, int x, int y, int w, int h, string text, bool isChecked, bool isHovered)
             {
-                var colors = ZeroTheme.Colors;
+                var colors = _owner.CurrentPalette;
                 if (isHovered)
                 {
                     using (var brush = new SolidBrush(colors.Hover))

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
@@ -51,7 +52,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedItem")]
     [Description("Searchable autocomplete dropdown & lookup box for large datasets")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroLookup.bmp")]
-    public class LookUpEdit : Control, IZeroEditor
+    public class LookUpEdit : ZeroControlBase, IZeroEditor
     {
         private readonly List<LookUpItem> _items = new List<LookUpItem>();
         private readonly List<LookUpItem> _filteredItems = new List<LookUpItem>();
@@ -68,9 +69,45 @@ namespace ZeroUI.WinForms.Editors
         private Rectangle _clearButtonRect;
         private Rectangle _chevronRect;
         private bool _hoverOnClear = false;
+        private bool _showAddNewButton = false;
+        private string _addNewButtonText = "+ Add New Record";
 
         public event EventHandler? SelectedItemChanged;
         public event EventHandler? EditValueChanged;
+
+        /// <summary>
+        /// Occurs when the user requests to add a new record or enters an unlisted search value.
+        /// </summary>
+        public event EventHandler<ProcessNewValueEventArgs>? ProcessNewValue;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        [Description("Determines whether the '+ Add New Record' footer action button is visible.")]
+        public bool ShowAddNewButton
+        {
+            get => _showAddNewButton;
+            set
+            {
+                if (_showAddNewButton != value)
+                {
+                    _showAddNewButton = value;
+                    _listControl?.Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue("+ Add New Record")]
+        [Description("Text caption displayed on the add new record footer action button.")]
+        public string AddNewButtonText
+        {
+            get => _addNewButtonText;
+            set
+            {
+                _addNewButtonText = value ?? "+ Add New Record";
+                _listControl?.Invalidate();
+            }
+        }
 
         [Category("Behavior")]
         [DefaultValue(false)]
@@ -123,13 +160,6 @@ namespace ZeroUI.WinForms.Editors
 
         public LookUpEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Font = new Font("Segoe UI", 9.5f);
             BackColor = Color.Transparent;
 
@@ -137,8 +167,8 @@ namespace ZeroUI.WinForms.Editors
             {
                 BorderStyle = BorderStyle.None,
                 Font = Font,
-                BackColor = ZeroTheme.Colors.Surface,
-                ForeColor = ZeroTheme.Colors.TextPrimary,
+                BackColor = CurrentPalette.Surface,
+                ForeColor = CurrentPalette.TextPrimary,
                 Location = new Point(32, 8),
                 Width = 190
             };
@@ -165,7 +195,6 @@ namespace ZeroUI.WinForms.Editors
 
             Size = new Size(260, 36);
 
-            ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -266,10 +295,11 @@ namespace ZeroUI.WinForms.Editors
 
         private void ShowPopup()
         {
-            if (_items.Count == 0 && _filteredItems.Count == 0) return;
+            if (_items.Count == 0 && _filteredItems.Count == 0 && !_showAddNewButton) return;
 
             int popupW = Math.Max(Width, 340);
-            int popupH = Math.Min(280, Math.Max(70, _filteredItems.Count * 36 + 4));
+            int footerH = _showAddNewButton ? 32 : 0;
+            int popupH = Math.Min(280, Math.Max(70, _filteredItems.Count * 36 + 4 + footerH));
 
             _dropdown.ShowDropDown(this, popupW, popupH);
         }
@@ -288,7 +318,14 @@ namespace ZeroUI.WinForms.Editors
             }
             else if (e.KeyCode == Keys.Enter)
             {
-                _listControl.CommitCurrentSelection();
+                if (_filteredItems.Count == 0 && _showAddNewButton)
+                {
+                    HandleAddNewRecord();
+                }
+                else
+                {
+                    _listControl.CommitCurrentSelection();
+                }
                 _dropdown.Close();
                 e.Handled = true;
             }
@@ -311,12 +348,50 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateTheme()
         {
-            var palette = ZeroTheme.Colors;
-            BackColor = palette.Surface;
-            _searchTextBox.BackColor = palette.Surface;
-            _searchTextBox.ForeColor = palette.TextPrimary;
-            _listControl.BackColor = palette.CardBackground;
+            var palette = CurrentPalette;
+            BackColor = Color.Transparent;
+            if (_searchTextBox != null)
+            {
+                _searchTextBox.BackColor = palette.Surface;
+                _searchTextBox.ForeColor = palette.TextPrimary;
+            }
+            if (_listControl != null)
+            {
+                _listControl.BackColor = palette.CardBackground;
+                _listControl.Invalidate();
+            }
             Invalidate();
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            UpdateTheme();
+        }
+
+        internal void HandleAddNewRecord()
+        {
+            var args = new ProcessNewValueEventArgs(_searchTextBox.Text);
+            ProcessNewValue?.Invoke(this, args);
+            if (args.Handled)
+            {
+                if (args.NewValue is LookUpItem item)
+                {
+                    if (!_items.Contains(item))
+                    {
+                        _items.Add(item);
+                    }
+                    CommitItem(item);
+                }
+                else if (args.NewValue != null)
+                {
+                    string str = args.NewValue.ToString() ?? _searchTextBox.Text;
+                    var newItem = new LookUpItem(str, str);
+                    _items.Add(newItem);
+                    CommitItem(newItem);
+                }
+                _dropdown.Close();
+            }
         }
 
         protected override void OnResize(EventArgs e)
@@ -376,7 +451,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
 
             // 1. Fill parent background to eliminate black corner clipping artifacts
             Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
@@ -581,6 +656,12 @@ namespace ZeroUI.WinForms.Editors
             protected override void OnMouseDown(MouseEventArgs e)
             {
                 base.OnMouseDown(e);
+                int footerH = _owner.ShowAddNewButton ? 32 : 0;
+                if (_owner.ShowAddNewButton && e.Y >= Height - footerH)
+                {
+                    _owner.HandleAddNewRecord();
+                    return;
+                }
                 int idx = (e.Y / _itemHeight) + _scrollOffset;
                 if (idx >= 0 && idx < _items.Count)
                 {
@@ -595,84 +676,104 @@ namespace ZeroUI.WinForms.Editors
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-                var palette = ZeroTheme.Colors;
+                var palette = _owner.CurrentPalette;
                 g.Clear(palette.CardBackground);
+
+                int footerH = _owner.ShowAddNewButton ? 32 : 0;
+                int listHeight = Height - footerH;
 
                 if (_items.Count == 0)
                 {
                     using var fontEmpty = new Font(Font.FontFamily, 9f, FontStyle.Italic);
                     using var brushEmpty = new SolidBrush(palette.TextSecondary);
                     g.DrawString("No matching items found", fontEmpty, brushEmpty, 14, 14);
-                    return;
+                }
+                else
+                {
+                    int clientW = _vScrollBar.Visible ? Width - _vScrollBar.Width : Width;
+                    int start = _scrollOffset;
+                    int end = Math.Min(_items.Count, start + (listHeight / _itemHeight) + 2);
+
+                    using var fontBold = new Font(Font.FontFamily, 9f, FontStyle.Bold);
+                    using var fontSub = new Font(Font.FontFamily, 8f, FontStyle.Regular);
+                    using var fontCat = new Font(Font.FontFamily, 7.5f, FontStyle.Regular);
+
+                    for (int i = start; i < end; i++)
+                    {
+                        var item = _items[i];
+                        int y = (i - start) * _itemHeight;
+                        if (y + _itemHeight > listHeight) break;
+                        var rowRect = new Rectangle(0, y, clientW, _itemHeight);
+
+                        bool isSel = i == _selectedIndex;
+                        bool isHov = i == _hoveredIndex;
+
+                        if (isSel)
+                        {
+                            using var brushSel = new SolidBrush(Color.FromArgb(45, palette.Primary));
+                            g.FillRectangle(brushSel, rowRect);
+                            using var penLeft = new SolidBrush(palette.Primary);
+                            g.FillRectangle(penLeft, new Rectangle(0, y, 3, _itemHeight));
+                        }
+                        else if (isHov)
+                        {
+                            using var brushHov = new SolidBrush(Color.FromArgb(20, palette.Primary));
+                            g.FillRectangle(brushHov, rowRect);
+                        }
+
+                        // Key / Code (e.g. "BOA472")
+                        int textX = 12;
+                        using (var brushKey = new SolidBrush(isSel ? palette.Primary : palette.TextPrimary))
+                        {
+                            g.DrawString(item.DisplayText, fontBold, brushKey, textX, y + 4);
+                            var sz = g.MeasureString(item.DisplayText, fontBold);
+                            textX += (int)sz.Width + 8;
+                        }
+
+                        // Category Pill
+                        if (!string.IsNullOrEmpty(item.Category))
+                        {
+                            var catSz = g.MeasureString(item.Category, fontCat);
+                            int pillW = (int)catSz.Width + 8;
+                            int pillH = 16;
+                            var pillRect = new Rectangle(textX, y + 5, pillW, pillH);
+
+                            using var pillBg = new SolidBrush(Color.FromArgb(30, palette.Info));
+                            using var pillPath = CreateRoundedRect(pillRect, 3);
+                            g.FillPath(pillBg, pillPath);
+
+                            using var pillText = new SolidBrush(palette.Info);
+                            var sfPill = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                            g.DrawString(item.Category, fontCat, pillText, pillRect, sfPill);
+                        }
+
+                        // SubText (Description / Cost with boundary guard)
+                        if (!string.IsNullOrEmpty(item.SubText))
+                        {
+                            var subRect = new Rectangle(12, y + 18, clientW - 24, 16);
+                            TextRenderer.DrawText(g, item.SubText, fontSub, subRect, palette.TextSecondary,
+                                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                        }
+
+                        // Divider
+                        using var penDiv = new Pen(Color.FromArgb(10, palette.Border));
+                        g.DrawLine(penDiv, 10, y + _itemHeight - 1, clientW - 10, y + _itemHeight - 1);
+                    }
                 }
 
-                int clientW = _vScrollBar.Visible ? Width - _vScrollBar.Width : Width;
-                int start = _scrollOffset;
-                int end = Math.Min(_items.Count, start + (Height / _itemHeight) + 2);
-
-                using var fontBold = new Font(Font.FontFamily, 9f, FontStyle.Bold);
-                using var fontSub = new Font(Font.FontFamily, 8f, FontStyle.Regular);
-                using var fontCat = new Font(Font.FontFamily, 7.5f, FontStyle.Regular);
-
-                for (int i = start; i < end; i++)
+                if (_owner.ShowAddNewButton)
                 {
-                    var item = _items[i];
-                    int y = (i - start) * _itemHeight;
-                    var rowRect = new Rectangle(0, y, clientW, _itemHeight);
+                    var footerRect = new Rectangle(0, Height - footerH, Width, footerH);
+                    using var brushFooter = new SolidBrush(palette.Surface);
+                    g.FillRectangle(brushFooter, footerRect);
 
-                    bool isSel = i == _selectedIndex;
-                    bool isHov = i == _hoveredIndex;
+                    using var penTop = new Pen(palette.Border, 1f);
+                    g.DrawLine(penTop, 0, Height - footerH, Width, Height - footerH);
 
-                    if (isSel)
-                    {
-                        using var brushSel = new SolidBrush(Color.FromArgb(45, palette.Primary));
-                        g.FillRectangle(brushSel, rowRect);
-                        using var penLeft = new SolidBrush(palette.Primary);
-                        g.FillRectangle(penLeft, new Rectangle(0, y, 3, _itemHeight));
-                    }
-                    else if (isHov)
-                    {
-                        using var brushHov = new SolidBrush(Color.FromArgb(20, palette.Primary));
-                        g.FillRectangle(brushHov, rowRect);
-                    }
-
-                    // Key / Code (e.g. "BOA472")
-                    int textX = 12;
-                    using (var brushKey = new SolidBrush(isSel ? palette.Primary : palette.TextPrimary))
-                    {
-                        g.DrawString(item.DisplayText, fontBold, brushKey, textX, y + 4);
-                        var sz = g.MeasureString(item.DisplayText, fontBold);
-                        textX += (int)sz.Width + 8;
-                    }
-
-                    // Category Pill
-                    if (!string.IsNullOrEmpty(item.Category))
-                    {
-                        var catSz = g.MeasureString(item.Category, fontCat);
-                        int pillW = (int)catSz.Width + 8;
-                        int pillH = 16;
-                        var pillRect = new Rectangle(textX, y + 5, pillW, pillH);
-
-                        using var pillBg = new SolidBrush(Color.FromArgb(30, palette.Info));
-                        using var pillPath = CreateRoundedRect(pillRect, 3);
-                        g.FillPath(pillBg, pillPath);
-
-                        using var pillText = new SolidBrush(palette.Info);
-                        var sfPill = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                        g.DrawString(item.Category, fontCat, pillText, pillRect, sfPill);
-                    }
-
-                    // SubText (Description / Cost with boundary guard)
-                    if (!string.IsNullOrEmpty(item.SubText))
-                    {
-                        var subRect = new Rectangle(12, y + 18, clientW - 24, 16);
-                        TextRenderer.DrawText(g, item.SubText, fontSub, subRect, palette.TextSecondary,
-                            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
-                    }
-
-                    // Divider
-                    using var penDiv = new Pen(Color.FromArgb(10, palette.Border));
-                    g.DrawLine(penDiv, 10, y + _itemHeight - 1, clientW - 10, y + _itemHeight - 1);
+                    using var fontNew = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+                    using var brushNew = new SolidBrush(palette.Primary);
+                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    g.DrawString(_owner.AddNewButtonText, fontNew, brushNew, footerRect, sf);
                 }
             }
         }

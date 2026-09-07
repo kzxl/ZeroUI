@@ -1,12 +1,14 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
 using ZeroUI.Core.Localization;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -33,7 +35,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TokenAdded")]
     [Description("Modern token/chip input editor rendering discrete tag badges with dismiss buttons")]
     [ToolboxBitmap(typeof(ZeroIcons), "TokenEdit.bmp")]
-    public class TokenEdit : Control, IZeroEditor
+    public class TokenEdit : ZeroControlBase, IZeroEditor
     {
         private readonly List<string> _tokens = new List<string>();
         private readonly List<Rectangle> _tokenBounds = new List<Rectangle>();
@@ -126,13 +128,7 @@ namespace ZeroUI.WinForms.Editors
 
         public TokenEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.Selectable, true);
 
             ZeroLocalizer.CultureChanged += (s, e) => Invalidate();
 
@@ -152,13 +148,14 @@ namespace ZeroUI.WinForms.Editors
             Controls.Add(_inputBox);
 
             Size = new Size(300, 40);
+        }
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                _inputBox.BackColor = ZeroTheme.Colors.Surface;
-                _inputBox.ForeColor = ZeroTheme.Colors.TextPrimary;
-                Invalidate();
-            };
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            _inputBox.BackColor = CurrentPalette.Surface;
+            _inputBox.ForeColor = CurrentPalette.TextPrimary;
+            Invalidate();
         }
 
         public void AddToken(string token)
@@ -268,7 +265,7 @@ namespace ZeroUI.WinForms.Editors
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            var colors = ZeroTheme.Colors;
+            var colors = CurrentPalette;
             var bounds = new Rectangle(0, 0, Width - 1, Height - 1);
 
             // Background & Border

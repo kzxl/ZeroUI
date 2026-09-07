@@ -1,15 +1,16 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Input;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-
     /// <summary>
     /// Modern Segmented Control (Pill switcher) for ZeroUI providing clean, compact view and filter switching.
     /// </summary>
@@ -19,9 +20,8 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedIndex")]
     [Description("Segmented pill switcher for view and filter options")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSegmented.bmp")]
-    public class SegmentedControl : Control
+    public class SegmentedControl : ZeroControlBase
     {
-
         private string[] _items = new[] { "All", "Daily", "Weekly", "Monthly" };
         private readonly SelectionModel<string> _selection = new SelectionModel<string> { WrapAround = false };
         private int _hoveredIndex = -1;
@@ -30,13 +30,6 @@ namespace ZeroUI.WinForms.Editors
 
         public SegmentedControl()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(320, 34);
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             Cursor = Cursors.Hand;
@@ -49,13 +42,18 @@ namespace ZeroUI.WinForms.Editors
                 SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
             };
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9f, FontStyle.Regular);
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Browsable(false)]
@@ -130,7 +128,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
 
             // 1. Fill parent background to eliminate black corner clipping artifacts
             Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);

@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -19,14 +21,14 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ColorChanged")]
     [Description("Modern color picker editor with swatch preview, palette, and hex input")]
     [ToolboxBitmap(typeof(ZeroIcons), "ColorPickEdit.bmp")]
-    public class ColorPickEdit : Control, IZeroEditor
+    public class ColorPickEdit : ZeroControlBase, IZeroEditor
     {
         private Color _selectedColor = Color.FromArgb(79, 70, 229); // Default ZeroUI Primary
         private bool _isHovered = false;
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
 
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly ColorPickerPopupControl _popupControl;
 
         public event EventHandler? ColorChanged;
@@ -100,40 +102,28 @@ namespace ZeroUI.WinForms.Editors
 
         public ColorPickEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(160, 36);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
 
             _popupControl = new ColorPickerPopupControl(this);
-            var host = new ToolStripControlHost(_popupControl)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _popupControl
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoClose = true,
-                DropShadowEnabled = true
-            };
-            _dropdown.Items.Add(host);
             _dropdown.Closed += (s, e) =>
             {
                 _isDroppedDown = false;
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            _popupControl?.Invalidate();
+            Invalidate();
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -142,7 +132,7 @@ namespace ZeroUI.WinForms.Editors
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            var colors = ZeroTheme.Colors;
+            var colors = CurrentPalette;
             var bounds = new Rectangle(0, 0, Width - 1, Height - 1);
 
             // Draw Background & Border
@@ -220,9 +210,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 _isDroppedDown = true;
                 _popupControl.SyncColor(_selectedColor);
-                _popupControl.Size = new Size(220, 240);
-                _dropdown.Size = _popupControl.Size;
-                _dropdown.Show(this, new Point(0, Height + 2));
+                _dropdown.ShowDropDown(this, 220, 240);
                 Invalidate();
             }
         }
@@ -323,7 +311,7 @@ namespace ZeroUI.WinForms.Editors
                 var g = e.Graphics;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                var colors = ZeroTheme.Colors;
+                var colors = _owner.CurrentPalette;
                 g.Clear(colors.Surface);
 
                 using (var pen = new Pen(colors.Border))

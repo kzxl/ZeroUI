@@ -1,14 +1,15 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-
     /// <summary>
     /// Modern search input with placeholder text, clear button, and debounced text change events.
     /// </summary>
@@ -18,9 +19,8 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("PlaceholderText")]
     [Description("Modern search box with debounced input and clear button")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSearchBox.bmp")]
-    public class SearchControl : Control
+    public class SearchControl : ZeroControlBase
     {
-
         private readonly TextBox _textBox;
         private readonly Timer _debounceTimer;
         private string _placeholder = "🔍 Search...";
@@ -32,13 +32,6 @@ namespace ZeroUI.WinForms.Editors
 
         public SearchControl()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(240, 34);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
@@ -60,7 +53,6 @@ namespace ZeroUI.WinForms.Editors
 
             Controls.Add(_textBox);
 
-            ZeroTheme.ThemeChanged += OnThemeChanged;
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -79,14 +71,15 @@ namespace ZeroUI.WinForms.Editors
             UpdateTheme();
         }
 
-        private void OnThemeChanged(object? sender, EventArgs e)
+        protected override void OnThemeChanged(ZeroSkin skin)
         {
+            base.OnThemeChanged(skin);
             UpdateTheme();
         }
 
         private void UpdateTheme()
         {
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
             _textBox.BackColor = palette.Surface;
             _textBox.ForeColor = palette.TextPrimary;
             Invalidate();
@@ -170,7 +163,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
             _textBox.BackColor = palette.Surface;
             _textBox.ForeColor = palette.TextPrimary;
 
@@ -234,7 +227,6 @@ namespace ZeroUI.WinForms.Editors
         {
             if (disposing)
             {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _debounceTimer.Dispose();
             }
             base.Dispose(disposing);

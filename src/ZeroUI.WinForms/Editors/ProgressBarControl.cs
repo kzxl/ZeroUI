@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -18,9 +20,8 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [Description("Modern flat progress bar with percentage overlay and indeterminate shimmer")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroProgressBar.bmp")]
-    public class ProgressBarControl : Control
+    public class ProgressBarControl : ZeroControlBase
     {
-
         private int _value = 0;
         private int _maximum = 100;
         private int _minimum = 0;
@@ -30,19 +31,21 @@ namespace ZeroUI.WinForms.Editors
         private IDisposable? _clockToken;
 
         private Color _progressColor = Color.FromArgb(79, 70, 229); // Indigo 600
+        private bool _customProgress = false;
         private Color _trackColor = Color.FromArgb(243, 244, 246);   // Gray 100
+        private bool _customTrack = false;
         private int _borderRadius = 4;
 
         public ProgressBarControl()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
-
             Size = new Size(200, 20);
             Font = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Category("Behavior")]
@@ -144,15 +147,15 @@ namespace ZeroUI.WinForms.Editors
         [Category("Appearance")]
         public Color ProgressColor
         {
-            get => _progressColor;
-            set { _progressColor = value; Invalidate(); }
+            get => _customProgress ? _progressColor : CurrentPalette.Primary;
+            set { _progressColor = value; _customProgress = true; Invalidate(); }
         }
 
         [Category("Appearance")]
         public Color TrackColor
         {
-            get => _trackColor;
-            set { _trackColor = value; Invalidate(); }
+            get => _customTrack ? _trackColor : (EffectiveSkin.IsDark ? Color.FromArgb(40, 46, 58) : Color.FromArgb(243, 244, 246));
+            set { _trackColor = value; _customTrack = true; Invalidate(); }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -162,11 +165,13 @@ namespace ZeroUI.WinForms.Editors
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             Rectangle trackRect = new Rectangle(0, 0, Width, Height);
+            Color effectiveTrack = TrackColor;
+            Color effectiveProgress = ProgressColor;
 
             // 1. Draw Track
             using (var path = CreateRoundedRectangle(trackRect, _borderRadius))
             {
-                using var trackBrush = new SolidBrush(_trackColor);
+                using var trackBrush = new SolidBrush(effectiveTrack);
                 g.FillPath(trackBrush, path);
             }
 
@@ -175,7 +180,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 int blockW = Math.Max(40, Width / 3);
                 Rectangle blockRect = new Rectangle(_marqueeOffset - blockW, 0, blockW, Height);
-                using var progBrush = new SolidBrush(_progressColor);
+                using var progBrush = new SolidBrush(effectiveProgress);
                 g.SetClip(CreateRoundedRectangle(trackRect, _borderRadius));
                 g.FillRectangle(progBrush, blockRect);
                 g.ResetClip();
@@ -191,7 +196,7 @@ namespace ZeroUI.WinForms.Editors
                 {
                     Rectangle fillRect = new Rectangle(0, 0, fillW, Height);
                     using var fillPath = CreateRoundedRectangle(fillRect, _borderRadius);
-                    using var progBrush = new SolidBrush(_progressColor);
+                    using var progBrush = new SolidBrush(effectiveProgress);
                     g.FillPath(progBrush, fillPath);
                 }
 
@@ -199,7 +204,7 @@ namespace ZeroUI.WinForms.Editors
                 if (_showPercentage && Height >= 14)
                 {
                     string text = $"{(int)(pct * 100)}%";
-                    Color textColor = pct > 0.55f ? Color.White : Color.FromArgb(55, 65, 81);
+                    Color textColor = pct > 0.55f ? Color.White : (EffectiveSkin.IsDark ? CurrentPalette.TextPrimary : Color.FromArgb(55, 65, 81));
                     TextRenderer.DrawText(
                         g,
                         text,

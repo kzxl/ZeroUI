@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
@@ -30,7 +32,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Precision half-star rating and defect severity editor")]
     [ToolboxBitmap(typeof(ZeroIcons), "RatingControl.bmp")]
-    public class RatingControl : Control, IZeroEditor
+    public class RatingControl : ZeroControlBase, IZeroEditor
     {
         private decimal _value = 0m;
         private int _maxRating = 5;
@@ -51,18 +53,15 @@ namespace ZeroUI.WinForms.Editors
 
         public RatingControl()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(140, 32);
             Cursor = Cursors.Hand;
             BackColor = Color.Transparent;
+        }
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         #region Properties
@@ -332,7 +331,7 @@ namespace ZeroUI.WinForms.Editors
 
             decimal displayScore = _hoverValue ?? _value;
             Color activeColor = (_hoverValue != null && !_isReadOnly) ? _hoverColor : _ratedColor;
-            Color inactiveColor = ZeroTheme.IsDark ? Color.FromArgb(71, 85, 105) : _unratedColor;
+            Color inactiveColor = EffectiveSkin.IsDark ? Color.FromArgb(71, 85, 105) : _unratedColor;
 
             int startX = Padding.Left + 2;
             int startY = (Height - _itemSize) / 2;

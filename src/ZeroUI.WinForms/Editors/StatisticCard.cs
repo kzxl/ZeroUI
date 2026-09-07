@@ -1,14 +1,15 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-
     public enum ZeroTrendDirection
     {
         None,
@@ -24,9 +25,8 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [Description("KPI Metric Card component for dashboards and analytical summaries")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroStatistic.bmp")]
-    public class StatisticCard : Control
+    public class StatisticCard : ZeroControlBase
     {
-
         private string _title = "Metric Title";
         private string _value = "0";
         private string? _prefix;
@@ -39,21 +39,15 @@ namespace ZeroUI.WinForms.Editors
 
         public StatisticCard()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(200, 95);
-            BackColor = ZeroTheme.Colors.CardBackground;
+            BackColor = CurrentPalette.CardBackground;
+        }
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.CardBackground;
-                Invalidate();
-            };
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            BackColor = CurrentPalette.CardBackground;
+            Invalidate();
         }
 
         [Category("Data")]
@@ -120,7 +114,7 @@ namespace ZeroUI.WinForms.Editors
 
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
 
             // 1. Card Container
             using (var path = CreateRoundedRectangle(rect, _borderRadius))

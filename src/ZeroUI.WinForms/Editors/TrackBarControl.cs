@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Input;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -20,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Modern anti-aliased slider control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSlider.bmp")]
-    public class TrackBarControl : Control
+    public class TrackBarControl : ZeroControlBase
     {
         private readonly RangeModel _rangeModel = new RangeModel(0f, 100f, 0f, 1f);
         private Orientation _orientation = Orientation.Horizontal;
@@ -39,13 +41,7 @@ namespace ZeroUI.WinForms.Editors
 
         public TrackBarControl()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.Selectable, true);
 
             Size = new Size(200, 36);
             Cursor = Cursors.Hand;
@@ -58,8 +54,12 @@ namespace ZeroUI.WinForms.Editors
                 ValueChanged?.Invoke(this, EventArgs.Empty);
                 Scroll?.Invoke(this, EventArgs.Empty);
             };
+        }
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Browsable(false)]
@@ -314,8 +314,8 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
-            bool isDark = ZeroTheme.IsDark;
+            var palette = CurrentPalette;
+            bool isDark = EffectiveSkin.IsDark;
 
             int trackMargin = _thumbSize / 2 + 4;
             float fraction = GetFraction();

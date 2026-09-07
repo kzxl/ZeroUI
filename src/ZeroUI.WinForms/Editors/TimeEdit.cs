@@ -1,11 +1,13 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Input.Time;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -21,7 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Modern anti-aliased time picker control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTimePicker.bmp")]
-    public class TimeEdit : Control
+    public class TimeEdit : ZeroControlBase
     {
         private readonly TimeSegmentModel _model = new TimeSegmentModel();
         private bool _isHovered = false;
@@ -33,21 +35,13 @@ namespace ZeroUI.WinForms.Editors
         private Rectangle _secondRect;
         private Rectangle _clockIconRect;
 
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly TimePresetListControl _presetControl;
 
         public event EventHandler? ValueChanged;
 
         public TimeEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(160, 36);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 10f, FontStyle.Regular);
@@ -61,35 +55,26 @@ namespace ZeroUI.WinForms.Editors
             _model.SegmentChanged += (s, e) => Invalidate();
 
             _presetControl = new TimePresetListControl(this);
-            var host = new ToolStripControlHost(_presetControl)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _presetControl
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                AutoClose = true,
-                DropShadowEnabled = true,
-                Margin = Padding.Empty,
-                Padding = Padding.Empty
-            };
-            _dropdown.Items.Add(host);
             _dropdown.Opened += (s, e) => { _isDroppedDown = true; Invalidate(); };
             _dropdown.Closed += (s, e) => { _isDroppedDown = false; Invalidate(); };
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                _presetControl.UpdateTheme();
-                Invalidate();
-            };
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            _presetControl?.UpdateTheme();
+            Invalidate();
         }
 
         /// <summary>
@@ -216,17 +201,7 @@ namespace ZeroUI.WinForms.Editors
 
             int popW = 200;
             int popH = 190;
-            _presetControl.Size = new Size(popW, popH);
-
-            Point screenPt = PointToScreen(new Point(0, Height + 2));
-            Screen currentScreen = Screen.FromControl(this);
-
-            if (screenPt.Y + popH > currentScreen.WorkingArea.Bottom)
-            {
-                screenPt = PointToScreen(new Point(0, -popH - 2));
-            }
-
-            _dropdown.Show(screenPt);
+            _dropdown.ShowDropDown(this, popW, popH);
         }
 
         protected override void OnMouseEnter(EventArgs e)
@@ -279,12 +254,13 @@ namespace ZeroUI.WinForms.Editors
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            base.OnPaint(e);
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
-            bool isDark = ZeroTheme.IsDark;
+            var palette = CurrentPalette;
+            bool isDark = EffectiveSkin.IsDark;
 
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
             var borderRect = new Rectangle(1, 1, Width - 2, Height - 2);
@@ -429,7 +405,7 @@ namespace ZeroUI.WinForms.Editors
 
             public void UpdateTheme()
             {
-                BackColor = ZeroTheme.Colors.CardBackground;
+                BackColor = _owner.CurrentPalette.CardBackground;
                 Invalidate();
             }
 
@@ -462,11 +438,12 @@ namespace ZeroUI.WinForms.Editors
 
             protected override void OnPaint(PaintEventArgs e)
             {
+                base.OnPaint(e);
                 var g = e.Graphics;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-                var palette = ZeroTheme.Colors;
+                var palette = _owner.CurrentPalette;
                 int itemH = Height / _presetItems.Count;
 
                 using var borderPen = new Pen(palette.Border, 1f);
