@@ -14,6 +14,7 @@
 | **Phase 9** | **Enterprise DX & Advanced Analytics** | Unified `EditValue`, Validation, OLAP, Range | **Completed** | `IZeroEditor`, `ZeroDataBinder`, `ValidationProvider`, `ZeroLocalizer`, `PivotGridControl`, `RangeControl`. |
 | **Phase 10** | **Enterprise Presentation & DX (Tier P0)** | Immediate Enterprise Control Suite | **Completed** | `GridDataExporter` (Streaming XLSX/CSV), `ZeroVisualDebugger` (Runtime F12 HUD), `RatingControl` (Precision stars/symbols), `CardView`/`TileView` (`GridControl`), `BreadcrumbControl` (Navigation), `BarcodeBox` (Vector 1D/2D QR), `SearchLookUpEdit` (Paginated 50k+ dropdown). |
 | **Phase 11** | **SCADA Dials & Operational Layout (Tier P1)** | Precision Instrumentation & Dashboard Reflow | **Completed** | `RadialGauge` & `LinearGauge` (Threshold arcs & Damping), `FunnelChart` & `PyramidChart` (Yield & Drop-off metrics), `FlowLayoutControl` (Responsive wrapping & Drag reordering). |
+| **Phase 12** | **Network & Device Infrastructure (Tier P1)** | Physical Rack, Switch Faceplate, Topology & Fieldbus | **Completed** | `DeviceRack` (19" 42U/24U/12U & DIN-rail visualizer), `SwitchFaceplate` (High-density RJ45/SFP+ port matrix), `NetworkTopology` (Vector canvas & packet pulse flows), `DeviceFaceplate` (Chassis health HUD), `IpMatrix` (2D IPAM /24 heatmap), `FieldbusMonitor` (Industrial line & cable break locator). |
 
 ---
 
@@ -113,6 +114,14 @@
 * [x] **`FunnelChart` / `PyramidChart` (Rank #15 / Proposal 8.9):** Production line yield, conversion pipeline, and scrap loss visualizer with dual presentation modes (`Funnel` and `Pyramid`), interactive slice selection (`SelectedStageChanged`), drop-off metrics, and `FunnelMath` geometric calculations.
 * [x] **`FlowLayoutControl` (Rank #16 / Proposal 8.7):** Responsive card container that automatically wraps child cards based on container width using `FlowLayoutEngine`, featuring animated drag-and-drop tile reordering and JSON layout state persistence (`ExportLayoutJson` / `ImportLayoutJson`).
 
+### Phase 12: Network & Device Infrastructure (Tier P1 — Completed)
+* [x] **`DeviceRack` (Rank #8 / Proposal 8.14):** 19-inch 42U/24U/12U server rack and DIN-rail cabinet visualizer with EIA-310 vertical rails, blade server faceplates, power/weight rollups, and elevation thermal gradient heatmap overlay.
+* [x] **`SwitchFaceplate` (Rank #9 / Proposal 8.15):** High-density hardware front-panel control (24/48-port RJ45 + SFP/SFP+ optical cages) with synchronized Link/Speed and Activity LEDs driven by `ZeroAnimationClock`, VLAN/PoE badges, and cable TDR diagnostics.
+* [x] **`NetworkTopology` (Rank #10 / Proposal 8.13):** Single-HWND vector graph canvas supporting pan/zoom, device nodes (Router, Switch, Firewall, Server, PLC), and zero-allocation animated packet pulse wave flows along links.
+* [x] **`DeviceFaceplate` (Rank #11 / Proposal 8.18):** Compact chassis operating health HUD displaying dual redundant PSU failover status, fan tachometer gauges with rotating blades, and SFP digital optical monitoring (DDM) power budget gauges.
+* [x] **`IpMatrix` (Rank #12 / Proposal 8.16):** 2D IPAM IPv4 /24 subnet allocation matrix (16x16 grid of 256 hosts) with color-coded host states, conflict alert pulsing, and embedded ping RTT latency sparklines.
+* [x] **`FieldbusMonitor` (Rank #13 / Proposal 8.17):** Industrial communication line & redundant ring monitor (Profinet, EtherCAT, Modbus RTU) with automated cable break localization and line jitter telemetry.
+
 ---
 
 ## 3. Future Enhancements & Proposals Catalog
@@ -135,13 +144,13 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 - **`FunnelChart` / `PyramidChart` (Rank #15 / Proposal 8.9):** Completed. Production line yield, drop-off, and scrap rate visualizer with Funnel and Pyramid modes.
 - **`FlowLayoutControl` (Rank #16 / Proposal 8.7):** Completed. Responsive card layout container with drag-and-drop tile reordering and JSON state persistence.
 
-#### Phase 12: Network & Device Infrastructure Control Suite (Tier P1 — Mid-Term, Weeks 7–9)
-- **`ZeroDeviceRack` (Rank #8 / Proposal 8.14):** 19-inch 42U/24U/12U server rack and DIN-rail cabinet visualizer with thermal/power load overlays.
-- **`ZeroSwitchFaceplate` (Rank #9 / Proposal 8.15):** High-density RJ45/SFP port matrix with dual-LED link/act states, PoE meter, and TDR diagnostics.
-- **`ZeroNetworkTopology` (Rank #10 / Proposal 8.13):** Single-HWND graph canvas with Sugiyama/Barnes-Hut layout and animated packet pulse flows.
-- **`ZeroDeviceFaceplate` (Rank #11 / Proposal 8.18):** Chassis hardware health HUD (Dual redundant PSU, Fan RPM, SFP optical DDM).
-- **`ZeroIpMatrix` (Rank #12 / Proposal 8.16):** 2D IPAM subnet allocation heatmap with live ping RTT latency sparkline HUD.
-- **`ZeroFieldbusMonitor` (Rank #13 / Proposal 8.17):** Industrial Ethernet (Profinet/EtherCAT) and RS-485 daisy-chain line monitor with cable break locator.
+#### Phase 12: Network & Device Infrastructure Control Suite (Tier P1 — COMPLETED)
+- **`DeviceRack` (Rank #8 / Proposal 8.14):** Completed. 19-inch 42U/24U/12U server rack and DIN-rail cabinet visualizer with thermal/power load overlays.
+- **`SwitchFaceplate` (Rank #9 / Proposal 8.15):** Completed. High-density RJ45/SFP port matrix with dual-LED link/act states, PoE meter, and TDR diagnostics.
+- **`NetworkTopology` (Rank #10 / Proposal 8.13):** Completed. Single-HWND graph canvas with animated packet pulse flows.
+- **`DeviceFaceplate` (Rank #11 / Proposal 8.18):** Completed. Chassis hardware health HUD (Dual redundant PSU, Fan RPM, SFP optical DDM).
+- **`IpMatrix` (Rank #12 / Proposal 8.16):** Completed. 2D IPAM subnet allocation heatmap with live ping RTT latency sparkline HUD.
+- **`FieldbusMonitor` (Rank #13 / Proposal 8.17):** Completed. Industrial Ethernet (Profinet/EtherCAT) and RS-485 daisy-chain line monitor with cable break locator.
 
 #### Phase 13: High-Volume Industrial Verticals (Tier P2 — Weeks 10–14)
 - **`ZeroUI.Industry.Bms` (Rank #17 / Proposal 8.20):** Air Handling Unit (AHU) mechanical cross-section, Chiller Plant COP monitor, 7-Day Multi-Zone Time Scheduler.
