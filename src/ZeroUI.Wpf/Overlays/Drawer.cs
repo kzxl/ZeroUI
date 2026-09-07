@@ -384,7 +384,10 @@ namespace ZeroUI.Wpf.Overlays
 
             _isAnimating = true;
             var duration = TimeSpan.FromMilliseconds(220);
-            var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+            var ease = new QuarticEase { EasingMode = EasingMode.EaseOut };
+
+            // Transient GPU bitmap cache during sliding to accelerate DropShadowEffect at 120 FPS
+            _drawerPanel.CacheMode = new BitmapCache { RenderAtScale = 1.0, EnableClearType = false };
 
             if (open)
             {
@@ -394,6 +397,7 @@ namespace ZeroUI.Wpf.Overlays
 
                 // Scrim opacity 0 -> 1
                 var scrimAnim = new DoubleAnimation(0.0, 1.0, duration) { EasingFunction = ease };
+                Timeline.SetDesiredFrameRate(scrimAnim, 120);
                 _scrimBorder.BeginAnimation(UIElement.OpacityProperty, scrimAnim);
 
                 // Drawer translation -> 0
@@ -402,9 +406,11 @@ namespace ZeroUI.Wpf.Overlays
                     : TranslateTransform.YProperty;
 
                 var slideAnim = new DoubleAnimation(initialOffset, 0.0, duration) { EasingFunction = ease };
+                Timeline.SetDesiredFrameRate(slideAnim, 120);
                 slideAnim.Completed += (s, e) =>
                 {
                     _isAnimating = false;
+                    _drawerPanel.CacheMode = null; // Restore crisp ClearType rendering when stationary
                     Focus();
                     Opened?.Invoke(this, EventArgs.Empty);
                 };
@@ -416,6 +422,7 @@ namespace ZeroUI.Wpf.Overlays
 
                 // Scrim opacity 1 -> 0
                 var scrimAnim = new DoubleAnimation(1.0, 0.0, duration) { EasingFunction = ease };
+                Timeline.SetDesiredFrameRate(scrimAnim, 120);
                 _scrimBorder.BeginAnimation(UIElement.OpacityProperty, scrimAnim);
 
                 // Drawer translation -> targetOffset
@@ -424,9 +431,11 @@ namespace ZeroUI.Wpf.Overlays
                     : TranslateTransform.YProperty;
 
                 var slideAnim = new DoubleAnimation(targetOffset, duration) { EasingFunction = ease };
+                Timeline.SetDesiredFrameRate(slideAnim, 120);
                 slideAnim.Completed += (s, e) =>
                 {
                     _isAnimating = false;
+                    _drawerPanel.CacheMode = null; // Restore ClearType
                     Visibility = Visibility.Collapsed;
                     Closed?.Invoke(this, EventArgs.Empty);
                 };

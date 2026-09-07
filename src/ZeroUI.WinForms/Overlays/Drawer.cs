@@ -27,6 +27,10 @@ namespace ZeroUI.WinForms.Overlays
     /// High-performance modern slide-out drawer panel for Master-Detail inspection and side forms.
     /// Features fluid time-based cubic easing animation, zero parent relayout storms via Floating Overlay,
     /// and automatic ZeroUI Skin Framework synchronization.
+    /// <summary>
+    /// High-performance modern slide-out drawer panel for Master-Detail inspection and side forms.
+    /// Features fluid time-based cubic/quartic easing animation, zero parent relayout storms via Floating Overlay,
+    /// 120 FPS high-refresh boost, and automatic ZeroUI Skin Framework synchronization.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
@@ -34,15 +38,20 @@ namespace ZeroUI.WinForms.Overlays
     [Description("High-performance slide-out drawer panel with non-blocking floating overlay")]
     public class ZeroDrawer : ZeroControlBase
     {
+        private static readonly Font TitleFont = new Font("Segoe UI", 11f, FontStyle.Bold);
+        private static readonly Font SubFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+        private static readonly Font CloseFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+
         private string _title = "Detail Inspection";
         private string? _subtitle;
         private int _drawerWidth = 420;
         private bool _isOpen = false;
-        private readonly Panel _contentPanel;
+        private readonly DoubleBufferedPanel _contentPanel;
         private Rectangle _closeRect;
         private bool _isCloseHovered = false;
 
         private IDisposable? _animSub;
+        private IDisposable? _fpsBoost;
         private double _progress = 0.0; // 0.0 (Closed) -> 1.0 (Fully Open)
         private const double AnimationDuration = 0.22; // 220 ms fluid animation standard
         private DrawerMode _mode = DrawerMode.FloatingOverlay;
@@ -51,15 +60,24 @@ namespace ZeroUI.WinForms.Overlays
         public event EventHandler? Opened;
         public event EventHandler? Closed;
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED: Windows DWM top-down double-buffering
+                return cp;
+            }
+        }
+
         public ZeroDrawer()
         {
             Dock = DockStyle.None;
             Width = 0;
             Visible = false;
 
-            _contentPanel = new Panel
+            _contentPanel = new DoubleBufferedPanel
             {
-                BackColor = Color.Transparent,
                 Padding = new Padding(16),
                 Location = new Point(0, 56)
             };
@@ -71,7 +89,7 @@ namespace ZeroUI.WinForms.Overlays
 
         [Category("Behavior")]
         [DefaultValue(DrawerMode.FloatingOverlay)]
-        [Description("Display mode: FloatingOverlay (60 FPS zero parent relayout) or DockRight.")]
+        [Description("Display mode: FloatingOverlay (60-120 FPS zero parent relayout) or DockRight.")]
         public DrawerMode Mode
         {
             get => _mode;
@@ -140,6 +158,8 @@ namespace ZeroUI.WinForms.Overlays
         {
             if (_isOpen) return;
             _isOpen = true;
+            _progress = 0.0;
+            UpdateBoundsAndLayout();
             Visible = true;
             BringToFront();
             Focus();
@@ -166,6 +186,7 @@ namespace ZeroUI.WinForms.Overlays
 
         private void StartAnimation()
         {
+            _fpsBoost ??= ZeroAnimationClock.BoostTargetFps(120);
             _animSub ??= ZeroAnimationClock.Subscribe(OnAnimationStep);
         }
 
@@ -173,12 +194,14 @@ namespace ZeroUI.WinForms.Overlays
         {
             _animSub?.Dispose();
             _animSub = null;
+            _fpsBoost?.Dispose();
+            _fpsBoost = null;
         }
 
-        private static double EaseOutCubic(double t)
+        private static double EaseOutQuart(double t)
         {
             double f = 1.0 - t;
-            return 1.0 - f * f * f;
+            return 1.0 - f * f * f * f;
         }
 
         private void OnAnimationStep(double deltaSeconds, long frameCount)
@@ -208,28 +231,33 @@ namespace ZeroUI.WinForms.Overlays
 
             UpdateBoundsAndLayout();
             Invalidate();
+            Update(); // Force immediate paint to avoid WM_PAINT starvation in message queue
         }
 
         private void UpdateBoundsAndLayout()
         {
             if (Parent == null) return;
 
-            int currentWidth = (int)Math.Round(_drawerWidth * EaseOutCubic(_progress));
+            double eased = EaseOutQuart(_progress);
 
             if (_mode == DrawerMode.FloatingOverlay)
             {
                 int top = 0;
                 int height = Parent.ClientSize.Height;
-                int left = Parent.ClientSize.Width - currentWidth;
+                int hiddenLeft = Parent.ClientSize.Width;
+                int currentLeft = hiddenLeft - (int)Math.Round(_drawerWidth * eased);
 
-                SetBounds(left, top, currentWidth, height);
+                // Fixed-size window sliding: Keep Width = _drawerWidth and Height = Parent.Height constant!
+                // This completely eliminates WM_SIZE cascades and child layout storms during sliding.
+                SetBounds(currentLeft, top, _drawerWidth, height, BoundsSpecified.All);
             }
             else
             {
+                int currentWidth = (int)Math.Round(_drawerWidth * eased);
                 Width = currentWidth;
             }
 
-            // Keep child content panel width anchored to total target width to prevent child relayout storm
+            // Keep child content panel fixed at full target dimensions
             _contentPanel.Width = _drawerWidth;
             _contentPanel.Height = Math.Max(0, Height - 56);
         }
@@ -283,7 +311,7 @@ namespace ZeroUI.WinForms.Overlays
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.SmoothingMode = SmoothingMode.None; // Fast crisp rectangle and border rendering
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var skin = EffectiveSkin;
@@ -305,32 +333,32 @@ namespace ZeroUI.WinForms.Overlays
                 g.DrawLine(borderPen, 0, 56, Width, 56); // Header divider
             }
 
-            // 2. Draw Title & Subtitle
+            // 2. Draw Title & Subtitle (using cached static fonts)
             int textLeft = 16;
-            using var titleFont = new Font("Segoe UI", 11f, FontStyle.Bold);
             Rectangle titleRect = new Rectangle(textLeft, string.IsNullOrEmpty(_subtitle) ? 16 : 8, Math.Max(0, Width - textLeft - 44), 22);
-            TextRenderer.DrawText(g, _title, titleFont, titleRect, textPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+            TextRenderer.DrawText(g, _title, TitleFont, titleRect, textPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
             if (!string.IsNullOrEmpty(_subtitle))
             {
-                using var subFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
                 Rectangle subRect = new Rectangle(textLeft, titleRect.Bottom + 1, Math.Max(0, Width - textLeft - 44), 18);
-                TextRenderer.DrawText(g, _subtitle, subFont, subRect, textSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(g, _subtitle, SubFont, subRect, textSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
             // 3. Draw Close Button (✕)
             _closeRect = new Rectangle(Width - 36, 16, 24, 24);
             if (_isCloseHovered)
             {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
                 using var bPath = PaintHelper.CreateRoundedRectangle(_closeRect, 4);
                 using var bBrush = new SolidBrush(hoverBg);
                 g.FillPath(bBrush, bPath);
+                g.SmoothingMode = SmoothingMode.None;
             }
 
             TextRenderer.DrawText(
                 g,
                 "✕",
-                new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                CloseFont,
                 _closeRect,
                 _isCloseHovered ? textPrimary : textSecondary,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
@@ -416,5 +444,22 @@ namespace ZeroUI.WinForms.Overlays
     /// </summary>
     public class Drawer : DrawerControl
     {
+    }
+
+    /// <summary>
+    /// High-performance container panel with enabled double-buffering and zero-flicker flags.
+    /// </summary>
+    internal sealed class DoubleBufferedPanel : Panel
+    {
+        public DoubleBufferedPanel()
+        {
+            SetStyle(
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.UserPaint |
+                ControlStyles.ResizeRedraw, true);
+            DoubleBuffered = true;
+            BackColor = Color.Transparent;
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using ZeroUI.Core.Runtime;
 
@@ -36,10 +37,19 @@ namespace ZeroUI.Core.Rendering
         private static long _frameCount;
         private static bool _isRunning;
         private static int _targetFps = 60;
+        private static int _baseFps = 60;
+        private static int _boostCount;
         private static SynchronizationContext? _syncContext;
+        private static bool _timerPeriodSet;
 
         private static IDisposable? _runtimeSub;
         private static double _totalElapsedTime;
+
+        [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod", ExactSpelling = true)]
+        private static extern uint TimeBeginPeriod(uint uMilliseconds);
+
+        [DllImport("winmm.dll", EntryPoint = "timeEndPeriod", ExactSpelling = true)]
+        private static extern uint TimeEndPeriod(uint uMilliseconds);
 
         /// <summary>
         /// Total monotonic frames rendered since clock startup.
@@ -94,13 +104,42 @@ namespace ZeroUI.Core.Rendering
             set
             {
                 if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), "FPS must be greater than 0.");
-                _targetFps = Math.Min(120, Math.Max(10, value));
-                ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Animation, TimeSpan.FromMilliseconds(Math.Max(8, 1000.0 / _targetFps)));
+                _targetFps = Math.Min(144, Math.Max(10, value));
+                ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Animation, TimeSpan.FromMilliseconds(Math.Max(4, 1000.0 / _targetFps)));
                 if (_isRunning)
                 {
                     RestartTimer();
                 }
             }
+        }
+
+        /// <summary>
+        /// Temporarily boosts animation framerate to a high-refresh target (e.g. 120 FPS)
+        /// while interactive transient animations (Drawer, Modal, Toast) are active.
+        /// Reverts automatically to standard cadence (60 FPS) when disposed.
+        /// </summary>
+        public static IDisposable BoostTargetFps(int boostedFps = 120)
+        {
+            lock (_lock)
+            {
+                _boostCount++;
+                if (_targetFps < boostedFps)
+                {
+                    TargetFps = boostedFps;
+                }
+            }
+
+            return new SubscriptionToken(() =>
+            {
+                lock (_lock)
+                {
+                    _boostCount = Math.Max(0, _boostCount - 1);
+                    if (_boostCount == 0 && _targetFps != _baseFps)
+                    {
+                        TargetFps = _baseFps;
+                    }
+                }
+            });
         }
 
         /// <summary>
@@ -120,11 +159,22 @@ namespace ZeroUI.Core.Rendering
             {
                 if (_isRunning) return;
                 _targetFps = targetFps;
+                _baseFps = targetFps;
                 _stopwatch.Restart();
                 _lastElapsedSeconds = 0;
                 _isRunning = true;
 
-                ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Animation, TimeSpan.FromMilliseconds(Math.Max(8, 1000.0 / _targetFps)));
+                if (!_timerPeriodSet && Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    try
+                    {
+                        TimeBeginPeriod(1);
+                        _timerPeriodSet = true;
+                    }
+                    catch { }
+                }
+
+                ZeroRuntime.Shared.SetCycleInterval(RuntimeCycle.Animation, TimeSpan.FromMilliseconds(Math.Max(4, 1000.0 / _targetFps)));
                 _runtimeSub ??= ZeroRuntime.Shared.Register(RuntimeCycle.Animation, (delta, frame) => TriggerFrame(delta.TotalSeconds));
                 if (!ZeroRuntime.Shared.IsRunning)
                 {
@@ -146,6 +196,16 @@ namespace ZeroUI.Core.Rendering
                 _timer?.Dispose();
                 _timer = null;
                 _stopwatch.Stop();
+
+                if (_timerPeriodSet && Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    try
+                    {
+                        TimeEndPeriod(1);
+                        _timerPeriodSet = false;
+                    }
+                    catch { }
+                }
             }
         }
 
