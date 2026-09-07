@@ -17,27 +17,12 @@ namespace ZeroUI.Wpf.Bms
     public class AhuSchematic : ZeroWpfVisualBase
     {
         private readonly AhuEngine _engine = new AhuEngine();
-        private IDisposable? _animSub;
         private string _unitTag = "AHU-01";
+
+        protected override bool AutoAnimate => true;
 
         public AhuSchematic()
         {
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded && _engine.Fans.IsSupplyFanRunning)
-                    {
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
         }
 
         #region Properties

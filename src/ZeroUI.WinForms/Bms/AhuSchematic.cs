@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Bms;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Bms
@@ -17,63 +18,16 @@ namespace ZeroUI.WinForms.Bms
     [ToolboxItem(true)]
     [Category("ZeroUI - BMS & HVAC")]
     [Description("Air Handling Unit (AHU) mechanical schematic with animated dampers, filters, coils, and fans")]
-    public class AhuSchematic : Control
+    public class AhuSchematic : ZeroVisualControlBase
     {
         private readonly AhuEngine _engine = new AhuEngine();
-        private IDisposable? _animSub;
         private string _unitTag = "AHU-01";
+
+        protected override bool AutoAnimate => true;
 
         public AhuSchematic()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(680, 260);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed && _engine.Fans.IsSupplyFanRunning)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -214,67 +168,57 @@ namespace ZeroUI.WinForms.Bms
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Canvas Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             // Header: Tag, Mode, Airflow
-            DrawHeader(g, theme);
+            DrawHeader(g, bounds, palette);
 
             // Main Mechanical Duct Tunnel (Left = Intake, Right = Discharge)
-            int tunnelLeft = 20;
-            int tunnelTop = 50;
-            int tunnelWidth = Width - 40;
-            int tunnelHeight = Height - 70;
+            int tunnelLeft = bounds.X + 20;
+            int tunnelTop = bounds.Y + 50;
+            int tunnelWidth = bounds.Width - 40;
+            int tunnelHeight = bounds.Height - 70;
 
             if (tunnelWidth < 200 || tunnelHeight < 80)
                 return;
 
             Rectangle tunnelRect = new Rectangle(tunnelLeft, tunnelTop, tunnelWidth, tunnelHeight);
-            DrawTunnelCasing(g, tunnelRect, theme);
+            DrawTunnelCasing(g, tunnelRect, palette);
 
             // Section widths proportional to casing
             float secW = tunnelWidth / 5.0f;
 
             // 1. Mixing Chamber & Dampers
             RectangleF damperRect = new RectangleF(tunnelLeft, tunnelTop, secW, tunnelHeight);
-            DrawDamperSection(g, damperRect, theme);
+            DrawDamperSection(g, damperRect, palette);
 
             // 2. Filter Bank (Pre + Final)
             RectangleF filterRect = new RectangleF(tunnelLeft + secW, tunnelTop, secW * 0.8f, tunnelHeight);
-            DrawFilterSection(g, filterRect, theme);
+            DrawFilterSection(g, filterRect, palette);
 
             // 3. Hydronic Coils (Heating + Cooling)
             RectangleF coilRect = new RectangleF(tunnelLeft + secW * 1.8f, tunnelTop, secW * 1.2f, tunnelHeight);
-            DrawCoilSection(g, coilRect, theme);
+            DrawCoilSection(g, coilRect, palette);
 
             // 4. Supply Fan Scroll & Rotating Impeller
             RectangleF fanRect = new RectangleF(tunnelLeft + secW * 3.0f, tunnelTop, secW * 1.1f, tunnelHeight);
-            DrawFanSection(g, fanRect, theme);
+            DrawFanSection(g, fanRect, palette);
 
             // 5. Discharge Duct, Static Pressure, & Airflow Vectors
             RectangleF dischargeRect = new RectangleF(tunnelLeft + secW * 4.1f, tunnelTop, secW * 0.9f, tunnelHeight);
-            DrawDischargeSection(g, dischargeRect, theme);
+            DrawDischargeSection(g, dischargeRect, palette);
 
             // Flow Particles across tunnel
-            DrawAirflowParticles(g, tunnelRect, theme);
+            DrawAirflowParticles(g, tunnelRect, palette);
         }
 
-        private void DrawHeader(Graphics g, ZeroThemePalette theme)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontBold = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f, FontStyle.Regular))
             {
                 // Title Tag
-                TextRenderer.DrawText(g, $"{_unitTag} — Air Handling Unit", fontBold, new Point(20, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, $"{_unitTag} — Air Handling Unit", fontBold, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
 
                 // Operating Mode Badge
                 Color modeColor = _engine.Mode switch

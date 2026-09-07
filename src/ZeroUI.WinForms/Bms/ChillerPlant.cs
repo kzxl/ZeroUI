@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Bms;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Bms
@@ -17,63 +18,16 @@ namespace ZeroUI.WinForms.Bms
     [ToolboxItem(true)]
     [Category("ZeroUI - BMS & HVAC")]
     [Description("Central Chiller Plant visualizer with animated water loops and efficiency gauges")]
-    public class ChillerPlant : Control
+    public class ChillerPlant : ZeroVisualControlBase
     {
         private readonly ChillerPlantEngine _engine = new ChillerPlantEngine();
-        private IDisposable? _animSub;
         private string _plantTitle = "Central Utility Plant";
+
+        protected override bool AutoAnimate => true;
 
         public ChillerPlant()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(720, 320);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -97,59 +51,49 @@ namespace ZeroUI.WinForms.Bms
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             // Top Header & Efficiency HUD
-            DrawHeaderAndHud(g, theme);
+            DrawHeaderAndHud(g, bounds, palette);
 
             // Layout split: Left = Chillers & Evaporator Loop, Right = Cooling Towers & Condenser Loop
-            int mainTop = 64;
-            int mainHeight = Height - mainTop - 16;
-            int halfWidth = (Width - 40) / 2;
+            int mainTop = bounds.Y + 64;
+            int mainHeight = bounds.Height - 64 - 16;
+            int halfWidth = (bounds.Width - 40) / 2;
 
             if (halfWidth < 180 || mainHeight < 120)
                 return;
 
-            Rectangle chillerArea = new Rectangle(20, mainTop, halfWidth, mainHeight);
-            Rectangle towerArea = new Rectangle(20 + halfWidth + 10, mainTop, halfWidth, mainHeight);
+            Rectangle chillerArea = new Rectangle(bounds.X + 20, mainTop, halfWidth, mainHeight);
+            Rectangle towerArea = new Rectangle(bounds.X + 20 + halfWidth + 10, mainTop, halfWidth, mainHeight);
 
-            DrawChillersSection(g, chillerArea, theme);
-            DrawTowersSection(g, towerArea, theme);
+            DrawChillersSection(g, chillerArea, palette);
+            DrawTowersSection(g, towerArea, palette);
 
             // Water Loop Interconnect Pipes
-            DrawInterconnectPipes(g, chillerArea, towerArea, theme);
+            DrawInterconnectPipes(g, chillerArea, towerArea, palette);
         }
 
-        private void DrawHeaderAndHud(Graphics g, ZeroThemePalette theme)
+        private void DrawHeaderAndHud(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
                 // Title
-                TextRenderer.DrawText(g, _plantTitle, fontTitle, new Point(20, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, _plantTitle, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
 
                 // Right HUD: Total Load, Power, kW/Ton, COP
-                int hudX = Width - 420;
-                if (hudX > 220)
+                int hudX = bounds.Right - 420;
+                if (hudX > bounds.X + 220)
                 {
                     // Total Load
                     string loadStr = $"Load: {_engine.TotalActualTons:N0} TR / {_engine.TotalRatedTons:N0} TR";
-                    TextRenderer.DrawText(g, loadStr, fontSmall, new Point(hudX, 16), theme.TextSecondary);
+                    TextRenderer.DrawText(g, loadStr, fontSmall, new Point(hudX, bounds.Y + 16), theme.TextSecondary);
 
                     // Power
                     string pwrStr = $"{_engine.TotalPowerKw:N0} kW";
-                    TextRenderer.DrawText(g, pwrStr, fontSmall, new Point(hudX + 160, 16), theme.TextSecondary);
+                    TextRenderer.DrawText(g, pwrStr, fontSmall, new Point(hudX + 160, bounds.Y + 16), theme.TextSecondary);
 
                     // Efficiency Badge: kW/Ton & COP
                     double kwTon = _engine.PlantAverageKwPerTon;
@@ -159,7 +103,7 @@ namespace ZeroUI.WinForms.Bms
                                      kwTon < 0.80 ? Color.FromArgb(245, 158, 11) :
                                      Color.FromArgb(239, 68, 68);
 
-                    Rectangle effBadge = new Rectangle(Width - 160, 10, 140, 26);
+                    Rectangle effBadge = new Rectangle(bounds.Right - 160, bounds.Y + 10, 140, 26);
                     using (var badgeBrush = new SolidBrush(Color.FromArgb(30, effColor)))
                     using (var badgePen = new Pen(effColor, 1f))
                     {

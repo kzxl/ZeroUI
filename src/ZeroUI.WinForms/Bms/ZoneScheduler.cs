@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Bms;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Bms
@@ -16,7 +17,7 @@ namespace ZeroUI.WinForms.Bms
     [ToolboxItem(true)]
     [Category("ZeroUI - BMS & HVAC")]
     [Description("Multi-Zone 7-day 24-hour occupancy calendar schedule matrix")]
-    public class ZoneScheduler : Control
+    public class ZoneScheduler : ZeroVisualControlBase
     {
         private readonly ZoneSchedulerEngine _engine = new ZoneSchedulerEngine();
         private int _selectedZoneIndex = 0;
@@ -36,34 +37,7 @@ namespace ZeroUI.WinForms.Bms
 
         public ZoneScheduler()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(740, 300);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -162,18 +136,8 @@ namespace ZeroUI.WinForms.Bms
             return null;
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Canvas Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             var schedule = CurrentSchedule;
             string zoneTitle = schedule != null ? $"{schedule.ZoneId} — {schedule.ZoneName}" : "Zone Schedule";
 
@@ -181,13 +145,13 @@ namespace ZeroUI.WinForms.Bms
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8f))
             {
-                TextRenderer.DrawText(g, zoneTitle, fontTitle, new Point(16, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, zoneTitle, fontTitle, new Point(bounds.X + 16, bounds.Y + 14), palette.TextPrimary);
             }
 
-            int gridLeft = 60;
-            int gridTop = 50;
-            int gridWidth = Width - gridLeft - 20;
-            int gridHeight = Height - gridTop - 40;
+            int gridLeft = bounds.X + 60;
+            int gridTop = bounds.Y + 50;
+            int gridWidth = bounds.Width - 60 - 20;
+            int gridHeight = bounds.Height - 50 - 40;
 
             if (gridWidth < 200 || gridHeight < 100)
                 return;
@@ -195,24 +159,24 @@ namespace ZeroUI.WinForms.Bms
             int rowHeight = gridHeight / 7;
 
             // Hours Header (00:00 to 24:00)
-            DrawHoursHeader(g, gridLeft, gridTop - 18, gridWidth, theme);
+            DrawHoursHeader(g, gridLeft, gridTop - 18, gridWidth, palette);
 
             // 7-Day Rows Background and Gridlines
-            DrawGrid(g, gridLeft, gridTop, gridWidth, rowHeight, theme);
+            DrawGrid(g, gridLeft, gridTop, gridWidth, rowHeight, palette);
 
             // Schedule Blocks
             if (schedule != null)
             {
-                DrawScheduleBlocks(g, schedule, gridLeft, gridTop, gridWidth, rowHeight, theme);
+                DrawScheduleBlocks(g, schedule, gridLeft, gridTop, gridWidth, rowHeight, palette);
             }
 
             // Legend Footer
-            DrawLegend(g, gridLeft, Height - 26, theme);
+            DrawLegend(g, gridLeft, bounds.Bottom - 26, palette);
 
             // Tooltip if hovering a block
             if (_hoveredBlock != null)
             {
-                DrawBlockTooltip(g, _hoveredBlock, _lastMousePos, theme);
+                DrawBlockTooltip(g, _hoveredBlock, _lastMousePos, bounds, palette);
             }
         }
 
@@ -331,7 +295,7 @@ namespace ZeroUI.WinForms.Bms
             curX += sz.Width + 24;
         }
 
-        private void DrawBlockTooltip(Graphics g, ScheduleTimeBlock block, Point mouse, ZeroThemePalette theme)
+        private void DrawBlockTooltip(Graphics g, ScheduleTimeBlock block, Point mouse, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             using (var font = new Font("Segoe UI", 8f))
@@ -342,8 +306,8 @@ namespace ZeroUI.WinForms.Bms
 
                 int tipW = 190;
                 int tipH = 58;
-                int tipX = Math.Min(Width - tipW - 8, mouse.X + 12);
-                int tipY = Math.Min(Height - tipH - 8, mouse.Y + 12);
+                int tipX = Math.Min(bounds.Right - tipW - 8, mouse.X + 12);
+                int tipY = Math.Min(bounds.Bottom - tipH - 8, mouse.Y + 12);
 
                 Rectangle tipRect = new Rectangle(tipX, tipY, tipW, tipH);
                 using (var tipBg = new SolidBrush(Color.FromArgb(240, 17, 19, 31)))

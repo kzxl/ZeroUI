@@ -16,27 +16,12 @@ namespace ZeroUI.Wpf.Bms
     public class ChillerPlant : ZeroWpfVisualBase
     {
         private readonly ChillerPlantEngine _engine = new ChillerPlantEngine();
-        private IDisposable? _animSub;
         private string _plantTitle = "Central Utility Plant";
+
+        protected override bool AutoAnimate => true;
 
         public ChillerPlant()
         {
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded)
-                    {
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
         }
 
         #region Properties
@@ -52,22 +37,6 @@ namespace ZeroUI.Wpf.Bms
                 InvalidateVisual();
             }
         }
-
-        #endregion
-
-        #region Helpers
-
-#if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-#else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-#endif
 
         #endregion
 
