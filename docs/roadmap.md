@@ -15,7 +15,7 @@
 | **Phase 10** | **Enterprise Presentation & DX (Tier P0)** | Immediate Enterprise Control Suite | **Completed** | `GridDataExporter` (Streaming XLSX/CSV), `ZeroVisualDebugger` (Runtime F12 HUD), `RatingControl` (Precision stars/symbols), `CardView`/`TileView` (`GridControl`), `BreadcrumbControl` (Navigation), `BarcodeBox` (Vector 1D/2D QR), `SearchLookUpEdit` (Paginated 50k+ dropdown). |
 | **Phase 11** | **SCADA Dials & Operational Layout (Tier P1)** | Precision Instrumentation & Dashboard Reflow | **Completed** | `RadialGauge` & `LinearGauge` (Threshold arcs & Damping), `FunnelChart` & `PyramidChart` (Yield & Drop-off metrics), `FlowLayoutControl` (Responsive wrapping & Drag reordering). |
 | **Phase 12** | **Network & Device Infrastructure (Tier P1)** | Physical Rack, Switch Faceplate, Topology & Fieldbus | **Completed** | `DeviceRack` (19" 42U/24U/12U & DIN-rail visualizer), `SwitchFaceplate` (High-density RJ45/SFP+ port matrix), `NetworkTopology` (Vector canvas & packet pulse flows), `DeviceFaceplate` (Chassis health HUD), `IpMatrix` (2D IPAM /24 heatmap), `FieldbusMonitor` (Industrial line & cable break locator). |
-| **Phase 13** | **High-Volume Industrial Verticals (Tier P2)** | BMS & Smart HVAC, Logistics, Energy, Life Sciences | **In Progress** | `AhuSchematic` (Mechanical cross-section & louvers), `ChillerPlant` (COP & kW/Ton efficiency meters), `ZoneScheduler` (7-Day 24h occupancy matrix). |
+| **Phase 13** | **High-Volume Industrial Verticals (Tier P2)** | BMS & Smart HVAC, Logistics, Energy, Life Sciences | **In Progress** | `AhuSchematic`, `ChillerPlant`, `ZoneScheduler`, `AsrsCraneVisualizer`, `AgvFleetCanvas`, `ConveyorMergeMatrix`. |
 
 ---
 
@@ -128,7 +128,10 @@
   - `AhuSchematic`: Air Handling Unit mechanical cross-section visualizer (Outside/Return/Exhaust dampers, differential pressure filters, hydronic heating/cooling coils, supply fans with rotating impeller blades driven by `ZeroAnimationClock`, dynamic airflow particle vectors, and static pressure badges).
   - `ChillerPlant`: Central chiller plant schematic showing chillers, cooling towers, primary/secondary loops with animated fluid pulses, and real-time COP and kW/Ton efficiency meters.
   - `ZoneScheduler`: Multi-Zone 7-day 24-hour occupancy calendar matrix with Comfort, Standby, and Unoccupied color blocks, setpoint tooltips, and deadband validation.
-* [ ] **`ZeroUI.Industry.Logistics` (Rank #18 / Proposal 8.23):** `AsrsCraneVisualizer`, `AgvFleetCanvas`, `ConveyorMergeMatrix`.
+* [x] **`ZeroUI.Industry.Logistics` (Rank #18 / Proposal 8.23):**
+  - `AsrsCraneVisualizer`: Automated Storage & Retrieval System (ASRS) stacker crane 2D elevation visualizer with high-bay rack cells, traveling mast, hoist carriage, telescopic forks with pallet load, and cycle throughput (PPH).
+  - `AgvFleetCanvas`: 2D LiDAR SLAM floor map canvas rendering real-time AGV/AMR robot footprints, orientation headings, LiDAR safety fields, trajectory splines, battery SoC %, and automated dock stations.
+  - `ConveyorMergeMatrix`: High-speed parcel sorting conveyor merge visualizer with photo-eye infrared beam sensors, moving parcels, divert chutes, and sorting throughput (PPH) meters.
 * [ ] **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):** `SingleLineDiagram`, `SwitchgearFaceplate`, `BessRackMonitor`, `SolarPvMatrix`.
 * [ ] **`ZeroUI.Industry.LifeSciences` (Rank #20 / Proposal 8.25):** `MicroplateReader`, `CentrifugeMonitor`, `ColdChainTracker`.
 
@@ -164,7 +167,7 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 
 #### Phase 13: High-Volume Industrial Verticals (Tier P2 — In Progress)
 - **`ZeroUI.Industry.Bms` (Rank #17 / Proposal 8.20):** Completed. Air Handling Unit (AHU) mechanical cross-section, Chiller Plant COP monitor, 7-Day Multi-Zone Time Scheduler.
-- **`ZeroUI.Industry.Logistics` (Rank #18 / Proposal 8.23):** ASRS Stacker Crane 3D/2D visualizer, AGV/AMR 2D LiDAR SLAM fleet canvas, High-speed parcel sorter.
+- **`ZeroUI.Industry.Logistics` (Rank #18 / Proposal 8.23):** Completed. ASRS Stacker Crane 3D/2D visualizer, AGV/AMR 2D LiDAR SLAM fleet canvas, High-speed parcel sorter.
 - **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):** Single-Line Diagrams (IEC 61850), High-voltage switchgear faceplates, BESS rack monitor, Solar PV string matrix.
 - **`ZeroUI.Industry.LifeSciences` (Rank #20 / Proposal 8.25):** 96/384-Well Microplate Reader heatmap, Centrifuge RCF balance monitor, Cold Chain -80°C telemetry ribbons.
 
