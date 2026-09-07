@@ -1320,6 +1320,30 @@
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
+
+                        <!-- Sub-Tab 7.5: Office & Technical Documents (PDF & Spreadsheet) -->
+                        <TabItem Header="📑 Office &amp; Technical Documents (PDF &amp; Spreadsheet)">
+                            <Grid Margin="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Column 0: Vector PDF & CAD Schematic Reader -->
+                                <ind:ZeroCard Grid.Column="0" HeaderText="Vector PDF &amp; CAD Schematic Reader (PdfViewerControl)" SubtitleText="Vector CAD schematics, SOP work instructions, multi-level zoom (25%–400%), search &amp; print" Margin="0,0,8,0">
+                                    <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgInput}">
+                                        <report:PdfViewerControl x:Name="DemoPdfViewer" />
+                                    </Border>
+                                </ind:ZeroCard>
+
+                                <!-- Column 1: Vector Spreadsheet & Formula Engine -->
+                                <ind:ZeroCard Grid.Column="1" HeaderText="Vector Spreadsheet &amp; Formula Engine (SpreadsheetControl)" SubtitleText="Sparse matrix, interactive Formula Bar, live =SUM/AVERAGE/IF calculations, column/row resizing dividers &amp; BOM costing" Margin="8,0,0,0">
+                                    <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgInput}">
+                                        <report:SpreadsheetControl x:Name="DemoSpreadsheet" />
+                                    </Border>
+                                </ind:ZeroCard>
+                            </Grid>
+                        </TabItem>
                     </TabControl>
                 </TabItem>
             </TabControl>
