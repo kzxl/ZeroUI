@@ -51,5 +51,14 @@ namespace ZeroUI.Core.Common
                 LerpRgb(245, 158, 11, 239, 68, 68, t, out r, out g, out b);
             }
         }
+        /// <summary>
+        /// Interpolates a standardized 4-stop industrial heatmap color (Navy -> Emerald -> Amber -> Crimson).
+        /// Returns (r, g, b) tuple for convenience.
+        /// </summary>
+        public static (byte r, byte g, byte b) InterpolateHeatmapRgb(float norm)
+        {
+            InterpolateHeatmapRgb(norm, out byte r, out byte g, out byte b);
+            return (r, g, b);
+        }
     }
 }

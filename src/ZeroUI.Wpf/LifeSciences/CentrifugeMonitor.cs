@@ -17,47 +17,12 @@ namespace ZeroUI.Wpf.LifeSciences
     public class CentrifugeMonitor : ZeroWpfVisualBase
     {
         private readonly CentrifugeEngine _engine = new CentrifugeEngine();
-        private IDisposable? _animSub;
 
-        public CentrifugeMonitor()
-        {
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded)
-                    {
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
-        }
+        protected override bool AutoAnimate => true;
 
         #region Properties
 
         public CentrifugeEngine Engine => _engine;
-
-        #endregion
-
-        #region Helpers
-
-#if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-#else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-#endif
 
         #endregion
 

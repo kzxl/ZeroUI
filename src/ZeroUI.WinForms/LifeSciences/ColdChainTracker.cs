@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.LifeSciences;
 using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.LifeSciences
@@ -17,62 +18,15 @@ namespace ZeroUI.WinForms.LifeSciences
     [ToolboxItem(true)]
     [Category("ZeroUI - Life Sciences")]
     [Description("Cold Chain -80°C ULT freezer telemetry ribbon with Mean Kinetic Temperature (MKT) and excursion alerts")]
-    public class ColdChainTracker : Control
+    public class ColdChainTracker : ZeroVisualControlBase
     {
         private readonly ColdChainEngine _engine = new ColdChainEngine();
-        private IDisposable? _animSub;
+
+        protected override bool AutoAnimate => true;
 
         public ColdChainTracker()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(820, 420);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -84,49 +38,39 @@ namespace ZeroUI.WinForms.LifeSciences
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             var tele = _engine.Telemetry;
 
             // Header Banner
-            DrawHeader(g, tele, theme);
+            DrawHeader(g, bounds, tele, palette);
 
             // KPI Telemetry Strip
-            int kpiY = 56;
+            int kpiY = bounds.Y + 56;
             int kpiHeight = 52;
-            DrawKpiStrip(g, new Rectangle(20, kpiY, Width - 40, kpiHeight), tele, theme);
+            DrawKpiStrip(g, new Rectangle(bounds.X + 20, kpiY, bounds.Width - 40, kpiHeight), tele, palette);
 
             // Temperature History Ribbon Canvas
             int ribbonY = kpiY + kpiHeight + 14;
-            int ribbonHeight = Height - ribbonY - 16;
-            if (ribbonHeight < 120 || Width < 300) return;
+            int ribbonHeight = bounds.Height - (ribbonY - bounds.Y) - 16;
+            if (ribbonHeight < 120 || bounds.Width < 300) return;
 
-            DrawRibbonCanvas(g, new Rectangle(20, ribbonY, Width - 40, ribbonHeight), tele, theme);
+            DrawRibbonCanvas(g, new Rectangle(bounds.X + 20, ribbonY, bounds.Width - 40, ribbonHeight), tele, palette);
         }
 
-        private void DrawHeader(Graphics g, ColdChainTelemetry tele, ZeroThemePalette theme)
+        private void DrawHeader(Graphics g, Rectangle bounds, ColdChainTelemetry tele, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
                 string title = $"{tele.UnitTag} — Ultra-Low Temp (ULT) -80°C Freezer";
-                TextRenderer.DrawText(g, title, fontTitle, new Point(20, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
 
                 bool isExcursion = _engine.IsInExcursion;
                 Color badgeCol = isExcursion ? Color.FromArgb(239, 68, 68) : Color.FromArgb(34, 197, 94);
                 string badgeText = isExcursion ? "EXCURSION BREACH" : "COMPLIANT (STABLE)";
 
-                Rectangle pillRect = new Rectangle(Width - 190, 12, 170, 26);
+                Rectangle pillRect = new Rectangle(bounds.Right - 190, bounds.Y + 12, 170, 26);
                 using (var pillBrush = new SolidBrush(Color.FromArgb(25, badgeCol)))
                 using (var pillPen = new Pen(badgeCol, 1f))
                 {
@@ -170,11 +114,6 @@ namespace ZeroUI.WinForms.LifeSciences
             }
         }
 
-        private void DrawKpiCell(Graphics g, Rectangle r, string label, string val, Color valColor, Font fLabel, Font fVal, ZeroThemePalette theme)
-        {
-            TextRenderer.DrawText(g, label, fLabel, new Point(r.X + 12, r.Y + 6), theme.TextSecondary);
-            TextRenderer.DrawText(g, val, fVal, new Point(r.X + 12, r.Y + 22), valColor);
-        }
 
         private void DrawRibbonCanvas(Graphics g, Rectangle rect, ColdChainTelemetry tele, ZeroThemePalette theme)
         {

@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.LifeSciences;
 using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.LifeSciences
@@ -17,62 +18,15 @@ namespace ZeroUI.WinForms.LifeSciences
     [ToolboxItem(true)]
     [Category("ZeroUI - Life Sciences")]
     [Description("Refrigerated centrifuge monitor with animated rotor, RCF g-force, bucket balance, and vibration sensors")]
-    public class CentrifugeMonitor : Control
+    public class CentrifugeMonitor : ZeroVisualControlBase
     {
         private readonly CentrifugeEngine _engine = new CentrifugeEngine();
-        private IDisposable? _animSub;
+
+        protected override bool AutoAnimate => true;
 
         public CentrifugeMonitor()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(780, 420);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -84,26 +38,16 @@ namespace ZeroUI.WinForms.LifeSciences
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             var tele = _engine.Telemetry;
 
             // Header Banner
-            DrawHeader(g, tele, theme);
+            DrawHeader(g, bounds, tele, palette);
 
-            int contentTop = 56;
-            int contentWidth = Width - 40;
-            int contentHeight = Height - contentTop - 16;
+            int contentTop = bounds.Y + 56;
+            int contentWidth = bounds.Width - 40;
+            int contentHeight = bounds.Height - 56 - 16;
             if (contentWidth < 200 || contentHeight < 100) return;
 
             // Divide into 2 columns:
@@ -112,29 +56,29 @@ namespace ZeroUI.WinForms.LifeSciences
             int rotorW = (int)(contentWidth * 0.48);
             int kpiW = contentWidth - rotorW - 16;
 
-            Rectangle rotorRect = new Rectangle(20, contentTop, rotorW, contentHeight);
-            Rectangle kpiRect = new Rectangle(20 + rotorW + 16, contentTop, kpiW, contentHeight);
+            Rectangle rotorRect = new Rectangle(bounds.X + 20, contentTop, rotorW, contentHeight);
+            Rectangle kpiRect = new Rectangle(bounds.X + 20 + rotorW + 16, contentTop, kpiW, contentHeight);
 
-            DrawRotorChamber(g, rotorRect, tele, theme);
-            DrawTelemetryPanel(g, kpiRect, tele, theme);
+            DrawRotorChamber(g, rotorRect, tele, palette);
+            DrawTelemetryPanel(g, kpiRect, tele, palette);
         }
 
-        private void DrawHeader(Graphics g, CentrifugeTelemetry tele, ZeroThemePalette theme)
+        private void DrawHeader(Graphics g, Rectangle bounds, CentrifugeTelemetry tele, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, tele.ModelTag, fontTitle, new Point(20, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, tele.ModelTag, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
 
                 string subStr = $"Rotor: {tele.Rotor} (r_max = {tele.RotorRadiusMm:F0} mm) | Program: 14,500 RPM @ 4°C";
-                TextRenderer.DrawText(g, subStr, fontSmall, new Point(20, 36), theme.TextSecondary);
+                TextRenderer.DrawText(g, subStr, fontSmall, new Point(bounds.X + 20, bounds.Y + 36), theme.TextSecondary);
 
                 // Run Status Pill
                 Color statusCol = tele.IsRunning ? Color.FromArgb(34, 197, 94) : Color.FromArgb(156, 163, 175);
                 string statusText = tele.IsRunning ? "SPINNING (RUN)" : "STOPPED";
 
-                Rectangle pillRect = new Rectangle(Width - 160, 14, 140, 26);
+                Rectangle pillRect = new Rectangle(bounds.Right - 160, bounds.Y + 14, 140, 26);
                 using (var pillBrush = new SolidBrush(Color.FromArgb(25, statusCol)))
                 using (var pillPen = new Pen(statusCol, 1f))
                 {

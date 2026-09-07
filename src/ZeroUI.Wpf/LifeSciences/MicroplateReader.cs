@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Common;
 using ZeroUI.Core.LifeSciences;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Wpf.Base;
@@ -18,10 +19,11 @@ namespace ZeroUI.Wpf.LifeSciences
     public class MicroplateReader : ZeroWpfVisualBase
     {
         private readonly MicroplateEngine _engine;
-        private IDisposable? _animSub;
         private MicroplateWell? _selectedWell;
 
         public event EventHandler? SelectedWellChanged;
+
+        protected override bool AutoAnimate => true;
 
         public MicroplateReader() : this(PlateFormat.Wells96)
         {
@@ -30,24 +32,6 @@ namespace ZeroUI.Wpf.LifeSciences
         public MicroplateReader(PlateFormat format)
         {
             _engine = new MicroplateEngine(format);
-
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded)
-                    {
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
-
             MouseDown += OnPlateMouseDown;
         }
 
@@ -70,22 +54,6 @@ namespace ZeroUI.Wpf.LifeSciences
                 }
             }
         }
-
-        #endregion
-
-        #region Helpers
-
-#if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-#else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-#endif
 
         #endregion
 
@@ -211,7 +179,8 @@ namespace ZeroUI.Wpf.LifeSciences
                     double cy = rect.Y + r * cellH + cellH / 2;
 
                     float norm = (float)Math.Max(0.0, Math.Min(1.0, (well.Value - minVal) / valSpan));
-                    Color wellCol = InterpolateOdColor(norm);
+                    (byte rVal, byte gVal, byte bVal) = ColorScaleHelper.InterpolateHeatmapRgb(norm);
+                    Color wellCol = Color.FromRgb(rVal, gVal, bVal);
 
                     dc.DrawEllipse(new SolidColorBrush(wellCol), null, new Point(cx, cy), wellDiameter / 2, wellDiameter / 2);
 
@@ -285,32 +254,6 @@ namespace ZeroUI.Wpf.LifeSciences
 
             var highTxt = CreateFormattedText("High OD", ZeroWpfTheme.RegularTypeface, 9, ZeroWpfTheme.TextSecondary, dpi);
             dc.DrawText(highTxt, new Point(rect.Right - 12 - highTxt.Width, legY));
-        }
-
-        private static Color InterpolateOdColor(float norm)
-        {
-            if (norm < 0.35f)
-            {
-                float t = norm / 0.35f;
-                return BlendColor(Color.FromRgb(30, 58, 138), Color.FromRgb(16, 185, 129), t);
-            }
-            if (norm < 0.70f)
-            {
-                float t = (norm - 0.35f) / 0.35f;
-                return BlendColor(Color.FromRgb(16, 185, 129), Color.FromRgb(245, 158, 11), t);
-            }
-            {
-                float t = (norm - 0.70f) / 0.30f;
-                return BlendColor(Color.FromRgb(245, 158, 11), Color.FromRgb(239, 68, 68), t);
-            }
-        }
-
-        private static Color BlendColor(Color c1, Color c2, float t)
-        {
-            byte r = (byte)(c1.R + (c2.R - c1.R) * t);
-            byte g = (byte)(c1.G + (c2.G - c1.G) * t);
-            byte b = (byte)(c1.B + (c2.B - c1.B) * t);
-            return Color.FromRgb(r, g, b);
         }
     }
 }
