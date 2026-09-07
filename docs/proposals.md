@@ -561,8 +561,6 @@ Strict compliance (FDA/ISA-88), heavy mathematical solvers, or specialized docum
 
 ---
 
----
-
 #### [Rank #25 | P3] Proposal 8.10: `SpreadsheetControl` (Phase 1: Tabular Formula Sheet MVP)
 * **Objective:** A lightweight vector spreadsheet grid (A1..Z100) supporting freeform cell data entry, cell formatting (font style, fill color, text alignment, number formatting), freeze panes, and core mathematical formula calculation (`SUM`, `AVERAGE`, `MIN`, `MAX`, `IF`, arithmetic operators).
 * **Target Scenarios:** In-app formula calculation templates, laboratory test record entry, and custom costing workbooks without launching external office software.
