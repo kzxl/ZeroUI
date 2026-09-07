@@ -1,17 +1,19 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.Windows.Forms;
+using ZeroUI.Core.Data;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
 {
     /// <summary>
-    /// Represents a single stage in a funnel conversion chart.
+    /// Represents a single stage in a funnel or pyramid conversion chart.
     /// </summary>
     public class FunnelStage
     {
@@ -30,21 +32,28 @@ namespace ZeroUI.WinForms.Charts
     }
 
     /// <summary>
-    /// High-performance Process Pipeline and Conversion Funnel chart control with stage drop-off metrics.
+    /// High-performance Process Pipeline, Conversion Funnel, and Pyramid chart control with stage drop-off metrics.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroFunnelChart.bmp")]
+    [DefaultProperty("Stages")]
+    [DefaultEvent("SelectedStageChanged")]
+    [Description("High-performance Funnel and Pyramid chart with conversion and drop-off metrics")]
+    [ToolboxBitmap(typeof(ZeroIcons), "FunnelChart.bmp")]
     public class ZeroFunnelChart : Control
     {
         private readonly List<FunnelStage> _stages = new List<FunnelStage>();
 
+        private FunnelChartMode _mode = FunnelChartMode.Funnel;
         private string _valueSuffix = " pcs";
         private bool _showConversionRates = true;
         private bool _showPercentages = true;
         private int _neckWidth = 100;
         private int _segmentGap = 4;
         private int _hoverIndex = -1;
+        private int _selectedIndex = -1;
+
+        public event EventHandler? SelectedStageChanged;
 
         public ZeroFunnelChart()
         {
@@ -62,15 +71,35 @@ namespace ZeroUI.WinForms.Charts
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
-        [Category("Appearance")]
+        #region Properties
+
+        [Category("ZeroUI - Presentation")]
+        [Description("Visual chart mode: Funnel (taper downward) or Pyramid (expand downward).")]
+        [DefaultValue(FunnelChartMode.Funnel)]
+        public FunnelChartMode Mode
+        {
+            get => _mode;
+            set
+            {
+                if (_mode != value)
+                {
+                    _mode = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("ZeroUI - Appearance")]
+        [Description("Value unit suffix displayed on data labels.")]
         [DefaultValue(" pcs")]
         public string ValueSuffix
         {
             get => _valueSuffix;
-            set { _valueSuffix = value; Invalidate(); }
+            set { _valueSuffix = value ?? string.Empty; Invalidate(); }
         }
 
-        [Category("Appearance")]
+        [Category("ZeroUI - Appearance")]
+        [Description("Displays conversion rate relative to the preceding stage.")]
         [DefaultValue(true)]
         public bool ShowConversionRates
         {
@@ -78,7 +107,8 @@ namespace ZeroUI.WinForms.Charts
             set { _showConversionRates = value; Invalidate(); }
         }
 
-        [Category("Appearance")]
+        [Category("ZeroUI - Appearance")]
+        [Description("Displays percentage of the initial intake value.")]
         [DefaultValue(true)]
         public bool ShowPercentages
         {
@@ -86,16 +116,48 @@ namespace ZeroUI.WinForms.Charts
             set { _showPercentages = value; Invalidate(); }
         }
 
-        [Category("Appearance")]
+        [Category("ZeroUI - Appearance")]
+        [Description("Minimum width in pixels for the narrowest apex/neck tier.")]
         [DefaultValue(100)]
         public int NeckWidth
         {
             get => _neckWidth;
-            set { _neckWidth = Math.Max(40, value); Invalidate(); }
+            set { _neckWidth = Math.Max(20, value); Invalidate(); }
+        }
+
+        [Category("ZeroUI - Appearance")]
+        [Description("Vertical gap between consecutive segments.")]
+        [DefaultValue(4)]
+        public int SegmentGap
+        {
+            get => _segmentGap;
+            set { _segmentGap = Math.Max(0, value); Invalidate(); }
         }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public int SelectedIndex
+        {
+            get => _selectedIndex;
+            set
+            {
+                if (_selectedIndex != value)
+                {
+                    _selectedIndex = value;
+                    Invalidate();
+                    SelectedStageChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public FunnelStage? SelectedStage =>
+            (_selectedIndex >= 0 && _selectedIndex < _stages.Count) ? _stages[_selectedIndex] : null;
+
+        [Browsable(false)]
         public List<FunnelStage> Stages => _stages;
+
+        #endregion
 
         public void AddStage(string name, double value, Color color, string? description = null)
         {
@@ -106,19 +168,20 @@ namespace ZeroUI.WinForms.Charts
         public void ClearStages()
         {
             _stages.Clear();
+            _selectedIndex = -1;
+            _hoverIndex = -1;
             Invalidate();
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-
             if (_stages.Count == 0) return;
 
-            int topMargin = 20;
+            int count = _stages.Count;
+            int topMargin = 24;
             int bottomMargin = 20;
             int availH = Height - topMargin - bottomMargin;
-            int count = _stages.Count;
             float stageH = (availH - (count - 1) * _segmentGap) / (float)count;
 
             int newHover = -1;
@@ -150,11 +213,21 @@ namespace ZeroUI.WinForms.Charts
             }
         }
 
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            base.OnMouseClick(e);
+            if (e.Button == MouseButtons.Left && _hoverIndex >= 0 && _hoverIndex < _stages.Count)
+            {
+                SelectedIndex = (_selectedIndex == _hoverIndex) ? -1 : _hoverIndex;
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
+            base.OnPaint(e);
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
             var palette = ZeroTheme.Colors;
 
@@ -176,10 +249,12 @@ namespace ZeroUI.WinForms.Charts
             // Compute Widths: Funnel occupies center 45% of width
             float funnelCenter = Width * 0.45f;
             float maxFunnelW = Math.Min(340f, Width * 0.42f);
-            float minFunnelW = Math.Max(50f, Math.Min(_neckWidth, maxFunnelW * 0.4f));
+            float minFunnelW = Math.Max(40f, Math.Min(_neckWidth, maxFunnelW * 0.35f));
 
-            double topValue = _stages[0].Value;
-            if (topValue <= 0) topValue = 1.0;
+            double baseReferenceValue = (_mode == FunnelChartMode.Funnel)
+                ? _stages[0].Value
+                : _stages[_stages.Count - 1].Value;
+            if (baseReferenceValue <= 0) baseReferenceValue = 1.0;
 
             var centerFont = ZeroFontCache.Get(8.5f, FontStyle.Bold);
             var nameFont = ZeroFontCache.Get(9f, FontStyle.Bold);
@@ -191,6 +266,7 @@ namespace ZeroUI.WinForms.Charts
             using var nameBrush = new SolidBrush(palette.TextPrimary);
             using var descBrush = new SolidBrush(palette.TextSecondary);
             using var borderPen = new Pen(palette.Surface, 1.5f);
+            using var selectedPen = new Pen(palette.Primary, 2.5f);
             using var topTagBrush = new SolidBrush(palette.Success);
             using var rateBrush = new SolidBrush(palette.Success);
 
@@ -200,14 +276,11 @@ namespace ZeroUI.WinForms.Charts
                 float yTop = topMargin + i * (stageH + _segmentGap);
                 float yBot = yTop + stageH;
 
-                float tRatio = i / (float)count;
-                float bRatio = (i + 1) / (float)count;
+                // Pure geometric calculation from FunnelMath
+                FunnelMath.CalculateSegmentWidths(i, count, maxFunnelW, minFunnelW, _mode, out float wTop, out float wBot);
 
-                float wTop = maxFunnelW - (maxFunnelW - minFunnelW) * tRatio;
-                float wBot = maxFunnelW - (maxFunnelW - minFunnelW) * bRatio;
-
-                // Expand slightly on hover
-                if (i == _hoverIndex)
+                // Expand slightly on hover or selection
+                if (i == _hoverIndex || i == _selectedIndex)
                 {
                     wTop += 8f;
                     wBot += 8f;
@@ -228,24 +301,39 @@ namespace ZeroUI.WinForms.Charts
                     Math.Max(0, fillA.G - 25),
                     Math.Max(0, fillA.B - 25));
 
-                using (var lgb = new LinearGradientBrush(new PointF(funnelCenter - wTop / 2f, yTop), new PointF(funnelCenter + wTop / 2f, yBot), fillA, fillB))
+                using (var lgb = new LinearGradientBrush(
+                    new PointF(funnelCenter - wTop / 2f, yTop),
+                    new PointF(funnelCenter + wTop / 2f, yBot),
+                    fillA,
+                    fillB))
                 {
                     g.FillPolygon(lgb, trapezoid);
                 }
 
-                g.DrawPolygon(borderPen, trapezoid);
+                // Draw selection highlight or standard border
+                if (i == _selectedIndex)
+                {
+                    g.DrawPolygon(selectedPen, trapezoid);
+                }
+                else
+                {
+                    g.DrawPolygon(borderPen, trapezoid);
+                }
 
                 // Center Value Label inside trapezoid
-                double pctOfTop = (stage.Value / topValue) * 100.0;
+                double pctOfBase = FunnelMath.CalculateOverallYield(stage.Value, baseReferenceValue);
                 string centerLabel = $"{stage.Value:N0}{_valueSuffix}";
-                if (_showPercentages && i > 0) centerLabel += $" ({pctOfTop:F1}%)";
+                if (_showPercentages && ((_mode == FunnelChartMode.Funnel && i > 0) || (_mode == FunnelChartMode.Pyramid && i < count - 1)))
+                {
+                    centerLabel += $" ({pctOfBase:F1}%)";
+                }
 
                 var cSz = g.MeasureString(centerLabel, centerFont);
                 float cy = yTop + stageH / 2f - cSz.Height / 2f;
                 g.DrawString(centerLabel, centerFont, centerBrush, funnelCenter - cSz.Width / 2f, cy);
 
                 // Left Label: Stage Name & description
-                float textRight = funnelCenter - wTop / 2f - 12f;
+                float textRight = funnelCenter - Math.Max(wTop, wBot) / 2f - 12f;
                 var nSz = g.MeasureString(stage.Name, nameFont);
                 float nx = Math.Max(8f, textRight - nSz.Width);
                 float ny = yTop + (stageH - nSz.Height) / 2f;
@@ -268,13 +356,13 @@ namespace ZeroUI.WinForms.Charts
 
                     if (i == 0)
                     {
-                        g.DrawString("100% INWARD YIELD", tagFont, topTagBrush, rightX, midY - 6f);
+                        g.DrawString("100% INWARD INTAKE", tagFont, topTagBrush, rightX, midY - 6f);
                     }
                     else
                     {
                         double prevVal = _stages[i - 1].Value;
-                        double convRate = prevVal > 0 ? (stage.Value / prevVal) * 100.0 : 0.0;
-                        double dropOff = 100.0 - convRate;
+                        double convRate = FunnelMath.CalculateConversionRate(stage.Value, prevVal);
+                        double dropOff = FunnelMath.CalculateDropOffRate(stage.Value, prevVal);
 
                         string rateText = $"Yield: {convRate:F1}%  (Loss: -{dropOff:F1}%)";
                         Color rateColor = convRate >= 95 ? palette.Success : (convRate >= 80 ? palette.Warning : palette.Danger);
@@ -285,5 +373,13 @@ namespace ZeroUI.WinForms.Charts
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Clean enterprise alias for ZeroFunnelChart.
+    /// </summary>
+    [ToolboxItem(false)]
+    public class FunnelChart : ZeroFunnelChart
+    {
     }
 }
