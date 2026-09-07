@@ -101,44 +101,45 @@
 
 ## 3. Future Enhancements & Proposals Catalog
 
-For detailed architectural evaluations, design trade-offs, and implementation specifications, refer to [ZeroUI Proposals Catalog — Section 8](file:///e:/15.%20Other/dotnet/libs/ZeroUI/docs/proposals.md#8-feasible-enterprise-control-expansion-proposals-multi-subsystem-blueprint).
+For detailed architectural evaluations, design trade-offs, and implementation specifications, refer to [ZeroUI Proposals Catalog — Section 8](file:///e:/15.%20Other/dotnet/libs/ZeroUI/docs/proposals.md#8-prioritized-enterprise-control-proposals-ranked-catalog).
 
-### Upcoming Phases Overview
+### Upcoming Phases Overview (Prioritized Execution Tiers)
 
-#### Phase 10: High-Impact Enterprise Presentation & Productivity (Near-Term)
-- **`CardView` & `TileView` Mode for `GridControl` (Proposal 8.1):** Responsive multi-column virtualized card/tile grid view.
-- **`GridDataExporter` (Proposal 8.2):** Zero-dependency streaming Excel (`.xlsx`) and `.csv` exporter.
-- **`SearchLookUpEdit` (Proposal 8.3):** Paginated high-capacity dropdown with persistent top search bar.
-- **`BarcodeBox` & `BarcodeEdit` (Proposal 8.4):** Vector 1D/2D barcode & QR Code generator/renderer.
-- **`RatingControl` (Proposal 8.5):** Inspection severity & QA score half-star selector.
-- **`BreadcrumbControl` (Proposal 8.6):** Hierarchical asset path navigator with sibling dropdowns.
-- **`ZeroVisualDebugger` (Proposal 8.12):** In-app runtime UI tree inspector and performance HUD.
+#### Phase 10: High-Impact Enterprise Presentation & Productivity (Tier P0 — Immediate, Weeks 1–3)
+- **`GridDataExporter` (Rank #1 / Proposal 8.2):** Zero-dependency streaming Excel (`.xlsx`) and `.csv` exporter directly from active grid views.
+- **`ZeroVisualDebugger` (Rank #2 / Proposal 8.12):** In-app runtime UI visual tree inspector, frame latency HUD, and GC monitor.
+- **`RatingControl` (Rank #3 / Proposal 8.5):** Inspection severity & QA score half-star selector.
+- **`CardView` & `TileView` Mode for `GridControl` (Rank #4 / Proposal 8.1):** Responsive multi-column virtualized card/tile presentation without data source alterations.
+- **`BreadcrumbControl` (Rank #5 / Proposal 8.6):** Hierarchical domain and asset path navigator with sibling dropdowns.
+- **`BarcodeBox` & `BarcodeEdit` (Rank #6 / Proposal 8.4):** Pure vector 1D/2D barcode & QR Code generator/renderer.
+- **`SearchLookUpEdit` (Rank #7 / Proposal 8.3):** Paginated high-capacity dropdown with persistent top search bar for 50,000+ item BOMs.
 
-#### Phase 11: Industrial SCADA & Advanced Operations (Mid-Term)
-- **`RadialGauge` & `LinearGauge` (Proposal 8.8):** Industrial dials & thermometer gauges bound directly to `TagEngine`.
-- **`FunnelChart` / `PyramidChart` (Proposal 8.9):** Production line conversion and scrap loss visualizer.
-- **`FlowLayoutControl` (Proposal 8.7):** Responsive card layout container with drag-and-drop tile reordering.
+#### Phase 11: Core SCADA Dials & Operational Layout (Tier P1 — Mid-Term, Weeks 4–6)
+- **`RadialGauge` & `LinearGauge` (Rank #14 / Proposal 8.8):** High-precision circular dials & thermometers bound directly to unboxed `TagEngine`.
+- **`FunnelChart` / `PyramidChart` (Rank #15 / Proposal 8.9):** Production line yield, drop-off, and scrap rate visualizer.
+- **`FlowLayoutControl` (Rank #16 / Proposal 8.7):** Responsive card layout container with spring-damper drag-and-drop tile reordering.
 
-#### Phase 12: Specialized Document & Office Viewers (Long-Term)
-- **`SpreadsheetControl` MVP (Proposal 8.10):** Lightweight vector calculation sheet with core formulas (`SUM`, `AVERAGE`, `IF`).
-- **`PdfViewerControl` (Proposal 8.11):** Embedded CAD schematic and SOP technical document reader.
+#### Phase 12: Network & Device Infrastructure Control Suite (Tier P1 — Mid-Term, Weeks 7–9)
+- **`ZeroDeviceRack` (Rank #8 / Proposal 8.14):** 19-inch 42U/24U/12U server rack and DIN-rail cabinet visualizer with thermal/power load overlays.
+- **`ZeroSwitchFaceplate` (Rank #9 / Proposal 8.15):** High-density RJ45/SFP port matrix with dual-LED link/act states, PoE meter, and TDR diagnostics.
+- **`ZeroNetworkTopology` (Rank #10 / Proposal 8.13):** Single-HWND graph canvas with Sugiyama/Barnes-Hut layout and animated packet pulse flows.
+- **`ZeroDeviceFaceplate` (Rank #11 / Proposal 8.18):** Chassis hardware health HUD (Dual redundant PSU, Fan RPM, SFP optical DDM).
+- **`ZeroIpMatrix` (Rank #12 / Proposal 8.16):** 2D IPAM subnet allocation heatmap with live ping RTT latency sparkline HUD.
+- **`ZeroFieldbusMonitor` (Rank #13 / Proposal 8.17):** Industrial Ethernet (Profinet/EtherCAT) and RS-485 daisy-chain line monitor with cable break locator.
 
-#### Phase 13: Network & Device Infrastructure Control Suite (Proposals 8.13 – 8.18)
-- **`ZeroNetworkTopology` (Proposal 8.13):** Single-HWND graph canvas with Sugiyama/Barnes-Hut layout and animated packet pulse flows.
-- **`ZeroDeviceRack` (Proposal 8.14):** 19-inch 42U/24U/12U server rack and DIN-rail cabinet visualizer with thermal/power load overlays.
-- **`ZeroSwitchFaceplate` (Proposal 8.15):** High-density RJ45/SFP port matrix with dual-LED link/act states, PoE meter, and TDR diagnostics.
-- **`ZeroIpMatrix` (Proposal 8.16):** 2D IPAM subnet allocation heatmap with live ping RTT latency sparkline HUD.
-- **`ZeroFieldbusMonitor` (Proposal 8.17):** Industrial Ethernet (Profinet/EtherCAT) and RS-485 daisy-chain line monitor with cable break locator.
-- **`ZeroDeviceFaceplate` (Proposal 8.18):** Chassis hardware health HUD (Dual redundant PSU, Fan RPM, SFP optical DDM).
+#### Phase 13: High-Volume Industrial Verticals (Tier P2 — Weeks 10–14)
+- **`ZeroUI.Industry.Bms` (Rank #17 / Proposal 8.20):** Air Handling Unit (AHU) mechanical cross-section, Chiller Plant COP monitor, 7-Day Multi-Zone Time Scheduler.
+- **`ZeroUI.Industry.Logistics` (Rank #18 / Proposal 8.23):** ASRS Stacker Crane 3D/2D visualizer, AGV/AMR 2D LiDAR SLAM fleet canvas, High-speed parcel sorter.
+- **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):** Single-Line Diagrams (IEC 61850), High-voltage switchgear faceplates, BESS rack monitor, Solar PV string matrix.
+- **`ZeroUI.Industry.LifeSciences` (Rank #20 / Proposal 8.25):** 96/384-Well Microplate Reader heatmap, Centrifuge RCF balance monitor, Cold Chain -80°C telemetry ribbons.
 
-#### Phase 14: Universal Multi-Industry Extension Packages (Proposals 8.19 – 8.25)
-- **`ZeroUI.Industry.Energy` (Proposal 8.19):** Single-Line Diagrams (SLD), Switchgear Faceplates, BESS Rack Monitor, Solar PV String Matrix.
-- **`ZeroUI.Industry.Bms` (Proposal 8.20):** Air Handling Unit (AHU) schematic, Chiller Plant COP monitor, 7-Day Multi-Zone Time Scheduler.
-- **`ZeroUI.Industry.Water` (Proposal 8.21):** Clarifier Basin with sludge rake, Chemical Dosing Skid, Hydraulic Grade Line (HGL) profile.
-- **`ZeroUI.Industry.Process` (Proposal 8.22):** ISA-88 Batch SFC tracker, Bioreactor/Fermenter 3D vessel, CIP/SIP validation matrix, Cleanroom HUD.
-- **`ZeroUI.Industry.Logistics` (Proposal 8.23):** ASRS Stacker Crane 3D/2D visualizer, AGV/AMR 2D LiDAR SLAM fleet canvas, High-speed parcel sorter.
-- **`ZeroUI.Industry.Petrochem` (Proposal 8.24):** Fractional Distillation Column tray profiles, SIS/ESD Cause & Effect Matrix, Pipeline PIG monitor.
-- **`ZeroUI.Industry.LifeSciences` (Proposal 8.25):** 96/384-Well Microplate Reader heatmap, Centrifuge RCF balance monitor, Cold Chain -80°C telemetry.
+#### Phase 14: Specialized Process, Heavy Industry & Complex Viewers (Tier P3 — Long-Term, Weeks 15–18)
+- **`ZeroUI.Industry.Water` (Rank #21 / Proposal 8.21):** Clarifier Basin with rotating sludge rake, Chemical Dosing Skid, Hydraulic Grade Line (HGL) profile.
+- **`ZeroUI.Industry.Process` (Rank #22 / Proposal 8.22):** ISA-88 procedural batch SFC tracker, sanitary bioreactor/fermenter vessel, CIP/SIP 4-TACT validation matrix, ISO cleanroom HUD.
+- **`ZeroUI.Industry.Petrochem` (Rank #23 / Proposal 8.24):** Fractional Distillation Column tray profiles, SIL-rated SIS/ESD Cause & Effect matrix, Pipeline PIG monitor.
+- **`PdfViewerControl` (Rank #24 / Proposal 8.11):** Embedded technical CAD schematic, electrical wiring diagram, and SOP PDF document viewer.
+- **`SpreadsheetControl` MVP (Rank #25 / Proposal 8.10):** Lightweight vector calculation sheet with core formulas (`SUM`, `AVERAGE`, `IF`).
+
 
 
 
