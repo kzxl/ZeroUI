@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -41,7 +43,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedItem")]
     [Description("Searchable autocomplete dropdown & lookup box for large datasets")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroLookup.bmp")]
-    public class ZeroLookup : Control
+    public class ZeroLookup : Control, IZeroEditor
     {
         private readonly List<ZeroLookupItem> _items = new List<ZeroLookupItem>();
         private readonly List<ZeroLookupItem> _filteredItems = new List<ZeroLookupItem>();
@@ -52,7 +54,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isFocused = false;
 
         private readonly TextBox _searchTextBox;
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly LookupListControl _listControl;
 
         private Rectangle _clearButtonRect;
@@ -60,6 +62,56 @@ namespace ZeroUI.WinForms.Editors
         private bool _hoverOnClear = false;
 
         public event EventHandler? SelectedItemChanged;
+        public event EventHandler? EditValueChanged;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly
+        {
+            get => _searchTextBox?.ReadOnly ?? false;
+            set
+            {
+                if (_searchTextBox != null)
+                {
+                    _searchTextBox.ReadOnly = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public object? EditValue
+        {
+            get => SelectedItem;
+            set
+            {
+                if (value == null)
+                {
+                    SelectedItem = null;
+                }
+                else if (value is ZeroLookupItem item)
+                {
+                    SelectedItem = item;
+                }
+                else
+                {
+                    string str = value.ToString() ?? "";
+                    SelectedItem = _items.Find(x => x.Key == str || x.DisplayText == str);
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            SelectedItem = null;
+            IsModified = false;
+        }
+
+        public void Clear() => Reset();
 
         public ZeroLookup()
         {
@@ -98,21 +150,10 @@ namespace ZeroUI.WinForms.Editors
             Controls.Add(_searchTextBox);
 
             _listControl = new LookupListControl(this);
-            var host = new ToolStripControlHost(_listControl)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _listControl
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                AutoClose = true,
-                DropShadowEnabled = true,
-                Margin = Padding.Empty,
-                Padding = Padding.Empty
-            };
-            _dropdown.Items.Add(host);
 
             Size = new Size(260, 36);
 
@@ -160,6 +201,7 @@ namespace ZeroUI.WinForms.Editors
                         _searchTextBox.Text = "";
                     }
                     SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
                     Invalidate();
                 }
             }
@@ -221,10 +263,7 @@ namespace ZeroUI.WinForms.Editors
             int popupW = Math.Max(Width, 340);
             int popupH = Math.Min(280, Math.Max(70, _filteredItems.Count * 36 + 4));
 
-            _listControl.Size = new Size(popupW, popupH);
-            _dropdown.Size = new Size(popupW, popupH);
-
-            _dropdown.Show(this, new Point(0, Height + 2), ToolStripDropDownDirection.BelowRight);
+            _dropdown.ShowDropDown(this, popupW, popupH);
         }
 
         private void OnSearchTextBoxKeyDown(object? sender, KeyEventArgs e)

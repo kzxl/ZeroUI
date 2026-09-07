@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
@@ -27,7 +28,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isHovered = false;
         private bool _isFocused = false;
 
-        private ToolStripDropDown? _popup;
+        private ZeroDropDownHost? _popup;
         private ZeroCalendarPopupControl? _calendarControl;
         private Rectangle _chevronRect;
         private readonly TextBox _innerBox;
@@ -266,22 +267,10 @@ namespace ZeroUI.WinForms.Editors
             }
 
             _calendarControl = new ZeroCalendarPopupControl(this, _selectedDate, _showPresets);
-            var host = new ToolStripControlHost(_calendarControl)
+            _popup = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false,
-                Size = _calendarControl.Size
+                Content = _calendarControl
             };
-
-            _popup = new ToolStripDropDown
-            {
-                Padding = Padding.Empty,
-                Margin = Padding.Empty,
-                DropShadowEnabled = true,
-                AutoClose = true
-            };
-            _popup.Items.Add(host);
 
             _popup.Closed += (s, e) =>
             {
@@ -291,7 +280,7 @@ namespace ZeroUI.WinForms.Editors
 
             _isFocused = true;
             Invalidate();
-            _popup.Show(this, new Point(0, Height + 2), ToolStripDropDownDirection.BelowRight);
+            _popup.ShowDropDown(this, _calendarControl.Width, _calendarControl.Height);
         }
 
         internal void OnDateSelectedFromPopup(DateTime date)

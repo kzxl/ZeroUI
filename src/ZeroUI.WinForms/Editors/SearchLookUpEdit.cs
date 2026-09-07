@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
 using ZeroUI.WinForms.DataGrid;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
@@ -27,7 +28,7 @@ namespace ZeroUI.WinForms.Editors
     [ToolboxBitmap(typeof(ZeroIcons), "SearchLookUpEdit.bmp")]
     public class SearchLookUpEdit : Control, IZeroEditor
     {
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly Panel _popupContainer;
         private readonly TextBox _searchBox;
         private readonly Button _btnFind;
@@ -298,21 +299,10 @@ namespace ZeroUI.WinForms.Editors
             _popupContainer.Controls.Add(footerPanel);
             _grid.BringToFront();
 
-            var host = new ToolStripControlHost(_popupContainer)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _popupContainer
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoClose = true,
-                DropShadowEnabled = true
-            };
-            _dropdown.Items.Add(host);
 
             // 2. Wire Events
             _dropdown.Closed += (s, e) =>
@@ -418,8 +408,9 @@ namespace ZeroUI.WinForms.Editors
         {
             if (_isReadOnly || _isDroppedDown) return;
 
-            Point screenPt = PointToScreen(new Point(0, Height));
-            _dropdown.Show(screenPt);
+            int width = Math.Max(Width, 560);
+            int height = 360;
+            _dropdown.ShowDropDown(this, width, height);
         }
 
         public void CloseDropDown()

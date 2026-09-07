@@ -1,13 +1,14 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.DataGrid;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -24,7 +25,7 @@ namespace ZeroUI.WinForms.Editors
     [ToolboxBitmap(typeof(ZeroIcons), "GridLookupEdit.bmp")]
     public class GridLookupEdit : Control, IZeroEditor
     {
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly Panel _popupContainer;
         private readonly TextBox _searchBox;
         private readonly GridControl _grid;
@@ -156,22 +157,10 @@ namespace ZeroUI.WinForms.Editors
                 Padding = new Padding(6)
             };
 
-            // Wrap in ToolStripDropDown
-            var host = new ToolStripControlHost(_popupContainer)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _popupContainer
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoClose = true,
-                DropShadowEnabled = true
-            };
-            _dropdown.Items.Add(host);
             _dropdown.Closed += (s, e) =>
             {
                 _isDroppedDown = false;
@@ -389,9 +378,9 @@ namespace ZeroUI.WinForms.Editors
         {
             if (ReadOnly || !Enabled) return;
             if (_dropdown.Visible) return;
-            _popupContainer.Size = new Size(Math.Max(Width, 520), 320);
-            _dropdown.Size = _popupContainer.Size;
-            _dropdown.Show(this, new Point(0, Height + 2));
+            int width = Math.Max(Width, 520);
+            int height = 320;
+            _dropdown.ShowDropDown(this, width, height);
         }
 
         private static GraphicsPath CreateRoundedRectanglePath(Rectangle rect, int radius)

@@ -43,12 +43,61 @@ namespace ZeroUI.WinForms.Editors
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
 
-        private readonly ToolStripDropDown _dropdown;
+        private readonly ZeroDropDownHost _dropdown;
         private readonly ComboListControl _listControl;
 
         public event EventHandler? SelectedIndexChanged;
         public event EventHandler? DropDownOpened;
         public event EventHandler? DropDownClosed;
+        public event EventHandler? EditValueChanged;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool IsModified { get; set; } = false;
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly { get; set; } = false;
+
+        [Browsable(false)]
+        public object? EditValue
+        {
+            get => SelectedItem;
+            set
+            {
+                if (value == null)
+                {
+                    SelectedIndex = -1;
+                }
+                else
+                {
+                    int idx = _items.IndexOf(value);
+                    if (idx >= 0)
+                    {
+                        SelectedIndex = idx;
+                    }
+                    else
+                    {
+                        // Match by ToString()
+                        string valStr = value.ToString() ?? "";
+                        idx = _items.FindIndex(item => item?.ToString() == valStr);
+                        SelectedIndex = idx;
+                    }
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            SelectedIndex = _items.Count > 0 ? 0 : -1;
+            IsModified = false;
+        }
+
+        public void Clear()
+        {
+            SelectedIndex = -1;
+            IsModified = false;
+        }
 
         public ZeroComboBox()
         {
@@ -62,26 +111,17 @@ namespace ZeroUI.WinForms.Editors
             _selection.SetSource(_items);
             _selection.SelectionChanged += (s, e) =>
             {
+                IsModified = true;
                 Invalidate();
                 SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
             };
 
             _listControl = new ComboListControl(this);
-            var host = new ToolStripControlHost(_listControl)
+            _dropdown = new ZeroDropDownHost
             {
-                Margin = Padding.Empty,
-                Padding = Padding.Empty,
-                AutoSize = false
+                Content = _listControl
             };
-
-            _dropdown = new ToolStripDropDown
-            {
-                AutoClose = true,
-                DropShadowEnabled = true,
-                Margin = Padding.Empty,
-                Padding = Padding.Empty
-            };
-            _dropdown.Items.Add(host);
             _dropdown.Opened += (s, e) =>
             {
                 _isDroppedDown = true;
@@ -225,18 +265,8 @@ namespace ZeroUI.WinForms.Editors
             int popH = visibleCount * _itemHeight + 4;
             int popW = Math.Max(Width, 160);
 
-            _listControl.Size = new Size(popW, popH);
             _listControl.RefreshList();
-
-            Point screenPt = PointToScreen(new Point(0, Height + 2));
-            Screen currentScreen = Screen.FromControl(this);
-
-            if (screenPt.Y + popH > currentScreen.WorkingArea.Bottom)
-            {
-                screenPt = PointToScreen(new Point(0, -popH - 2));
-            }
-
-            _dropdown.Show(screenPt);
+            _dropdown.ShowDropDown(this, popW, popH);
         }
 
         public void CloseDropDown()

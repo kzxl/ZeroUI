@@ -14,6 +14,7 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Modern, anti-aliased text input control for ZeroUI with built-in placeholder text,
     /// one-click clear button, password masking, character casing, and action icon slots.
+    /// Standardized on ZeroEditorBase for unified theme, focus rings, and data binding.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
@@ -21,116 +22,31 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern text input control with clear button, placeholder, and action icons")]
     [ToolboxBitmap(typeof(ZeroIcons), "TextEdit.bmp")]
-    public class TextEdit : ZeroControlBase, IZeroEditor
+    public class TextEdit : ZeroEditorBase<string>
     {
         private readonly TextBox _innerBox;
-        private string _placeholder = "";
-        private bool _showClearButton = true;
         private string _leadingIcon = "";
         private string _trailingIcon = "";
-
-        private bool _isHovered = false;
-        private bool _isFocused = false;
-        private bool _hoverOnClear = false;
         private bool _hoverOnTrailing = false;
-
-        private Rectangle _clearButtonRect;
         private Rectangle _trailingIconRect;
 
         public event EventHandler? TrailingIconClick;
         public event EventHandler? ClearClicked;
-        public event EventHandler? EditValueChanged;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public object? EditValue
+        [Category("Data")]
+        [Description("The string value of the text editor.")]
+        public override string Value
         {
-            get => Text;
+            get => _innerBox?.Text ?? base.Value ?? string.Empty;
             set
             {
-                string str = value?.ToString() ?? string.Empty;
-                if (Text != str)
+                string newVal = value ?? string.Empty;
+                if (_innerBox != null && _innerBox.Text != newVal)
                 {
-                    Text = str;
+                    _innerBox.Text = newVal;
                 }
+                base.Value = newVal;
             }
-        }
-
-        [Category("Behavior")]
-        [DefaultValue(false)]
-        public bool IsModified { get; set; } = false;
-
-        public void Reset()
-        {
-            Text = string.Empty;
-            IsModified = false;
-        }
-
-        public TextEdit()
-        {
-            BackColor = Color.Transparent;
-            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
-
-            _innerBox = new TextBox
-            {
-                BorderStyle = BorderStyle.None,
-                Font = Font,
-                BackColor = CurrentPalette.Surface,
-                ForeColor = CurrentPalette.TextPrimary
-            };
-
-            _innerBox.TextChanged += (s, e) =>
-            {
-                IsModified = true;
-                OnTextChanged(e);
-                EditValueChanged?.Invoke(this, EventArgs.Empty);
-                Invalidate();
-            };
-            _innerBox.GotFocus += (s, e) =>
-            {
-                _isFocused = true;
-                Invalidate();
-            };
-            _innerBox.LostFocus += (s, e) =>
-            {
-                _isFocused = false;
-                Invalidate();
-            };
-            _innerBox.KeyDown += (s, e) => OnKeyDown(e);
-            _innerBox.KeyPress += (s, e) => OnKeyPress(e);
-            _innerBox.KeyUp += (s, e) => OnKeyUp(e);
-
-            Controls.Add(_innerBox);
-
-            Size = new Size(220, 36);
-
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
-            ZeroUIConfig.FontChanged += (s, e) =>
-            {
-                Font = ZeroUIConfig.DefaultFont;
-                _innerBox.Font = ZeroUIConfig.DefaultFont;
-                UpdateInnerBounds();
-                Invalidate();
-            };
-
-            UpdateInnerTheme();
-            UpdateInnerBounds();
-        }
-
-        protected override void OnThemeChanged(ZeroSkin skin)
-        {
-            base.OnThemeChanged(skin);
-            BackColor = Color.Transparent;
-            UpdateInnerTheme();
-            Invalidate();
-        }
-
-        private void UpdateInnerTheme()
-        {
-            if (_innerBox == null) return;
-            var p = CurrentPalette;
-            _innerBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
-            _innerBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
         }
 
         [Category("Appearance")]
@@ -138,15 +54,8 @@ namespace ZeroUI.WinForms.Editors
 #pragma warning disable CS8765, CS8764
         public override string Text
         {
-            get => _innerBox.Text;
-            set
-            {
-                if (_innerBox.Text != value)
-                {
-                    _innerBox.Text = value ?? "";
-                    Invalidate();
-                }
-            }
+            get => Value;
+            set => Value = value;
         }
 #pragma warning restore CS8765, CS8764
 
@@ -154,25 +63,8 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue("")]
         public string PlaceholderText
         {
-            get => _placeholder;
-            set
-            {
-                _placeholder = value ?? "";
-                Invalidate();
-            }
-        }
-
-        [Category("Behavior")]
-        [DefaultValue(true)]
-        public bool ShowClearButton
-        {
-            get => _showClearButton;
-            set
-            {
-                _showClearButton = value;
-                UpdateInnerBounds();
-                Invalidate();
-            }
+            get => Placeholder;
+            set => Placeholder = value;
         }
 
         [Category("Appearance")]
@@ -203,13 +95,17 @@ namespace ZeroUI.WinForms.Editors
 
         [Category("Behavior")]
         [DefaultValue(false)]
-        public bool ReadOnly
+        public override bool ReadOnly
         {
-            get => _innerBox.ReadOnly;
+            get => base.ReadOnly;
             set
             {
-                _innerBox.ReadOnly = value;
-                UpdateInnerTheme();
+                base.ReadOnly = value;
+                if (_innerBox != null)
+                {
+                    _innerBox.ReadOnly = value;
+                    UpdateInnerTheme();
+                }
             }
         }
 
@@ -242,10 +138,7 @@ namespace ZeroUI.WinForms.Editors
         public CharacterCasing CharacterCasing
         {
             get => _innerBox.CharacterCasing;
-            set
-            {
-                _innerBox.CharacterCasing = value;
-            }
+            set => _innerBox.CharacterCasing = value;
         }
 
         [Category("Appearance")]
@@ -268,8 +161,87 @@ namespace ZeroUI.WinForms.Editors
             set => _innerBox.MaxLength = value;
         }
 
+        public TextEdit()
+        {
+            BackColor = Color.Transparent;
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+            ShowClearButton = true;
+
+            _innerBox = new TextBox
+            {
+                BorderStyle = BorderStyle.None,
+                Font = Font,
+                BackColor = CurrentPalette.Surface,
+                ForeColor = CurrentPalette.TextPrimary
+            };
+
+            _innerBox.TextChanged += (s, e) =>
+            {
+                IsModified = true;
+                OnTextChanged(e);
+                OnValueChanged();
+                UpdateInnerBounds();
+                Invalidate();
+            };
+            _innerBox.GotFocus += (s, e) =>
+            {
+                OnGotFocus(e);
+                Invalidate();
+            };
+            _innerBox.LostFocus += (s, e) =>
+            {
+                OnLostFocus(e);
+                Invalidate();
+            };
+            _innerBox.KeyDown += (s, e) => OnKeyDown(e);
+            _innerBox.KeyPress += (s, e) => OnKeyPress(e);
+            _innerBox.KeyUp += (s, e) => OnKeyUp(e);
+
+            Controls.Add(_innerBox);
+            Size = new Size(220, 36);
+
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                _innerBox.Font = ZeroUIConfig.DefaultFont;
+                UpdateInnerBounds();
+                Invalidate();
+            };
+
+            UpdateInnerTheme();
+            UpdateInnerBounds();
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            BackColor = Color.Transparent;
+            UpdateInnerTheme();
+            Invalidate();
+        }
+
+        private void UpdateInnerTheme()
+        {
+            if (_innerBox == null) return;
+            var p = CurrentPalette;
+            _innerBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
+            _innerBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
+        }
+
         public void SelectAll() => _innerBox.SelectAll();
-        public void Clear() => _innerBox.Clear();
+
+        public override void Clear()
+        {
+            _innerBox.Clear();
+            base.Clear();
+        }
+
+        public override void Reset()
+        {
+            _innerBox.Clear();
+            base.Reset();
+        }
 
         protected override void OnResize(EventArgs e)
         {
@@ -292,7 +264,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 rightPad += 22;
             }
-            if (_showClearButton && !string.IsNullOrEmpty(_innerBox.Text) && !ReadOnly)
+            if (ShowClearButton && !string.IsNullOrEmpty(_innerBox.Text) && !ReadOnly)
             {
                 rightPad += 20;
             }
@@ -317,13 +289,13 @@ namespace ZeroUI.WinForms.Editors
                 _trailingIconRect = Rectangle.Empty;
             }
 
-            if (_showClearButton && !string.IsNullOrEmpty(_innerBox.Text) && !ReadOnly)
+            if (ShowClearButton && !string.IsNullOrEmpty(_innerBox.Text) && !ReadOnly)
             {
-                _clearButtonRect = new Rectangle(curRight - 16, iconY, 16, 16);
+                ClearButtonRect = new Rectangle(curRight - 16, iconY, 16, 16);
             }
             else
             {
-                _clearButtonRect = Rectangle.Empty;
+                ClearButtonRect = Rectangle.Empty;
             }
         }
 
@@ -331,9 +303,9 @@ namespace ZeroUI.WinForms.Editors
         {
             base.OnMouseDown(e);
 
-            if (_clearButtonRect.Contains(e.Location) && !ReadOnly && !string.IsNullOrEmpty(_innerBox.Text))
+            if (ClearButtonRect.Contains(e.Location) && !ReadOnly && !string.IsNullOrEmpty(_innerBox.Text))
             {
-                _innerBox.Clear();
+                Clear();
                 _innerBox.Focus();
                 ClearClicked?.Invoke(this, EventArgs.Empty);
                 UpdateInnerBounds();
@@ -353,33 +325,16 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            bool hoverClear = _clearButtonRect.Contains(e.Location);
+            bool hoverClear = ClearButtonRect.Contains(e.Location);
             bool hoverTrail = _trailingIconRect.Contains(e.Location);
 
-            if (hoverClear != _hoverOnClear || hoverTrail != _hoverOnTrailing)
+            if (hoverClear != HoverOnClear || hoverTrail != _hoverOnTrailing)
             {
-                _hoverOnClear = hoverClear;
+                HoverOnClear = hoverClear;
                 _hoverOnTrailing = hoverTrail;
                 Cursor = (hoverClear || hoverTrail) ? Cursors.Hand : Cursors.IBeam;
                 Invalidate();
             }
-        }
-
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            base.OnMouseEnter(e);
-            _isHovered = true;
-            Invalidate();
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            _isHovered = false;
-            _hoverOnClear = false;
-            _hoverOnTrailing = false;
-            Cursor = Cursors.Default;
-            Invalidate();
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -393,8 +348,8 @@ namespace ZeroUI.WinForms.Editors
             int radius = ZeroUIConfig.RoundedCorners ? ZeroUIConfig.DefaultBorderRadius : 0;
 
             Color bgColor = ReadOnly ? p.HeaderBackground : p.Surface;
-            Color borderColor = _isFocused ? p.Primary : (_isHovered ? p.TextSecondary : p.Border);
-            float borderWidth = _isFocused ? 1.75f : 1.0f;
+            Color borderColor = HasError ? p.Danger : (IsEditorFocused ? p.Primary : (IsHovered ? p.PrimaryHover : p.Border));
+            float borderWidth = IsEditorFocused ? 1.75f : 1.0f;
 
             // 1. Fill & Border
             using (var path = CreateRoundedRectangle(rect, radius))
@@ -418,21 +373,21 @@ namespace ZeroUI.WinForms.Editors
             }
 
             // 3. Draw Placeholder if empty
-            if (string.IsNullOrEmpty(_innerBox.Text) && !string.IsNullOrEmpty(_placeholder) && !_isFocused)
+            if (string.IsNullOrEmpty(_innerBox.Text) && !string.IsNullOrEmpty(Placeholder) && !IsEditorFocused)
             {
                 Rectangle placeRect = new Rectangle(_innerBox.Left + 2, 0, _innerBox.Width, Height);
-                TextRenderer.DrawText(g, _placeholder, Font, placeRect, p.TextSecondary,
+                TextRenderer.DrawText(g, Placeholder, Font, placeRect, p.TextSecondary,
                     TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
             }
 
             // 4. Draw Clear Button ('✕')
-            if (!_clearButtonRect.IsEmpty)
+            if (!ClearButtonRect.IsEmpty)
             {
-                Color clearColor = _hoverOnClear ? p.Primary : p.TextSecondary;
+                Color clearColor = HoverOnClear ? p.Primary : p.TextSecondary;
                 using (var pen = new Pen(clearColor, 1.5f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
                 {
-                    int cx = _clearButtonRect.X + _clearButtonRect.Width / 2;
-                    int cy = _clearButtonRect.Y + _clearButtonRect.Height / 2;
+                    int cx = ClearButtonRect.X + ClearButtonRect.Width / 2;
+                    int cy = ClearButtonRect.Y + ClearButtonRect.Height / 2;
                     int sz = 4;
                     g.DrawLine(pen, cx - sz, cy - sz, cx + sz, cy + sz);
                     g.DrawLine(pen, cx - sz, cy + sz, cx + sz, cy - sz);

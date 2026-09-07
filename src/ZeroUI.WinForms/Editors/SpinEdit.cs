@@ -1,11 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -13,6 +14,7 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// High-precision numeric stepper and spin box editor for industrial tolerances, setpoints,
     /// and quantities with unit prefixes/suffixes, acceleration on hold, and decimal formatting.
+    /// Standardized on ZeroEditorBase for unified theme, focus rings, and data binding.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
@@ -20,9 +22,8 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [Description("Precision numeric stepper and spin box editor with unit formatting")]
     [ToolboxBitmap(typeof(ZeroIcons), "SpinEdit.bmp")]
-    public class SpinEdit : Control, IZeroEditor
+    public class SpinEdit : ZeroEditorBase<decimal>
     {
-        private decimal _value = 0m;
         private decimal _minValue = 0m;
         private decimal _maxValue = 1000000m;
         private decimal _step = 1m;
@@ -43,116 +44,30 @@ namespace ZeroUI.WinForms.Editors
         private int _repeatCount = 0;
         private int _direction = 0; // 1 = up, -1 = down
 
-        public event EventHandler? ValueChanged;
-        public event EventHandler? EditValueChanged;
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public object? EditValue
-        {
-            get => Value;
-            set
-            {
-                if (value == null || value == DBNull.Value)
-                {
-                    Value = MinValue;
-                }
-                else if (value is decimal d)
-                {
-                    Value = d;
-                }
-                else if (decimal.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsed))
-                {
-                    Value = parsed;
-                }
-                else if (decimal.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.CurrentCulture, out decimal parsedLocal))
-                {
-                    Value = parsedLocal;
-                }
-            }
-        }
-
-        [Category("Behavior")]
-        [DefaultValue(false)]
-        public bool IsModified { get; set; } = false;
-
-        [Category("Behavior")]
-        [DefaultValue(false)]
-        public bool ReadOnly
-        {
-            get => _innerBox.ReadOnly;
-            set
-            {
-                _innerBox.ReadOnly = value;
-                Invalidate();
-            }
-        }
-
-        public void Reset()
-        {
-            Value = MinValue;
-            IsModified = false;
-        }
-
-        public void Clear() => Reset();
-
-        public SpinEdit()
-        {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
-            Size = new Size(180, 36);
-            Font = new Font("Segoe UI", 9.5f);
-            BackColor = Color.Transparent;
-
-            _innerBox = new TextBox
-            {
-                BorderStyle = BorderStyle.None,
-                Font = Font,
-                BackColor = ZeroTheme.Colors.Surface,
-                ForeColor = ZeroTheme.Colors.TextPrimary,
-                TextAlign = HorizontalAlignment.Left
-            };
-            _innerBox.TextChanged += OnInnerBoxTextChanged;
-            _innerBox.KeyDown += OnInnerBoxKeyDown;
-            _innerBox.LostFocus += (s, e) => FormatText();
-            _innerBox.GotFocus += (s, e) => Invalidate();
-            Controls.Add(_innerBox);
-
-            _repeatTimer = new Timer();
-            _repeatTimer.Tick += OnRepeatTimerTick;
-
-            ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
-            ZeroUIConfig.FontChanged += (s, e) =>
-            {
-                Font = ZeroUIConfig.DefaultFont;
-                _innerBox.Font = ZeroUIConfig.DefaultFont;
-                Invalidate();
-            };
-            UpdateTheme();
-            FormatText();
-        }
-
         [Category("Data")]
         [DefaultValue(typeof(decimal), "0")]
-        public decimal Value
+        public override decimal Value
         {
-            get => _value;
+            get => base.Value;
             set
             {
                 decimal clamped = Math.Max(_minValue, Math.Min(_maxValue, value));
-                if (_value != clamped)
+                base.Value = clamped;
+                FormatText();
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public override bool ReadOnly
+        {
+            get => base.ReadOnly;
+            set
+            {
+                base.ReadOnly = value;
+                if (_innerBox != null)
                 {
-                    _value = clamped;
-                    IsModified = true;
-                    FormatText();
-                    ValueChanged?.Invoke(this, EventArgs.Empty);
-                    EditValueChanged?.Invoke(this, EventArgs.Empty);
+                    _innerBox.ReadOnly = value;
                     Invalidate();
                 }
             }
@@ -166,7 +81,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _minValue = value;
-                if (_value < _minValue) Value = _minValue;
+                if (Value < _minValue) Value = _minValue;
             }
         }
 
@@ -178,7 +93,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _maxValue = value;
-                if (_value > _maxValue) Value = _maxValue;
+                if (Value > _maxValue) Value = _maxValue;
             }
         }
 
@@ -238,17 +153,98 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        public SpinEdit()
+        {
+            Size = new Size(180, 36);
+            Font = new Font("Segoe UI", 9.5f);
+            BackColor = Color.Transparent;
+
+            _innerBox = new TextBox
+            {
+                BorderStyle = BorderStyle.None,
+                Font = Font,
+                BackColor = ZeroTheme.Colors.Surface,
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                TextAlign = HorizontalAlignment.Left
+            };
+            _innerBox.TextChanged += OnInnerBoxTextChanged;
+            _innerBox.KeyDown += OnInnerBoxKeyDown;
+            _innerBox.LostFocus += (s, e) =>
+            {
+                OnLostFocus(e);
+                FormatText();
+            };
+            _innerBox.GotFocus += (s, e) =>
+            {
+                OnGotFocus(e);
+                Invalidate();
+            };
+            Controls.Add(_innerBox);
+
+            _repeatTimer = new Timer();
+            _repeatTimer.Tick += OnRepeatTimerTick;
+
+            ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
+            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.FontChanged += (s, e) =>
+            {
+                Font = ZeroUIConfig.DefaultFont;
+                _innerBox.Font = ZeroUIConfig.DefaultFont;
+                Invalidate();
+            };
+            UpdateTheme();
+            FormatText();
+        }
+
+        protected override bool TryConvertEditValue(object? rawValue, out decimal converted)
+        {
+            if (rawValue == null || rawValue == DBNull.Value)
+            {
+                converted = _minValue;
+                return true;
+            }
+            if (rawValue is decimal d)
+            {
+                converted = d;
+                return true;
+            }
+            if (decimal.TryParse(rawValue.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsed))
+            {
+                converted = parsed;
+                return true;
+            }
+            if (decimal.TryParse(rawValue.ToString(), NumberStyles.Any, CultureInfo.CurrentCulture, out decimal parsedLocal))
+            {
+                converted = parsedLocal;
+                return true;
+            }
+
+            converted = _minValue;
+            return false;
+        }
+
+        public override void Reset()
+        {
+            Value = MinValue;
+            base.Reset();
+        }
+
+        public override void Clear()
+        {
+            Reset();
+        }
+
         private void FormatText()
         {
             string numFormat = _thousandsSeparator ? $"N{_decimalPlaces}" : $"F{_decimalPlaces}";
-            string formatted = _value.ToString(numFormat, CultureInfo.InvariantCulture);
+            string formatted = Value.ToString(numFormat, CultureInfo.InvariantCulture);
 
             string full = "";
             if (!string.IsNullOrEmpty(_prefix)) full += _prefix + " ";
             full += formatted;
             if (!string.IsNullOrEmpty(_suffix)) full += " " + _suffix;
 
-            if (_innerBox.Text != full)
+            if (_innerBox != null && _innerBox.Text != full)
             {
                 _innerBox.Text = full;
                 _innerBox.SelectionStart = _innerBox.Text.Length;
@@ -257,7 +253,7 @@ namespace ZeroUI.WinForms.Editors
 
         private void OnInnerBoxTextChanged(object? sender, EventArgs e)
         {
-            if (!_innerBox.Focused) return;
+            if (_innerBox == null || !_innerBox.Focused) return;
 
             string clean = _innerBox.Text;
             if (!string.IsNullOrEmpty(_prefix)) clean = clean.Replace(_prefix, "");
@@ -267,11 +263,9 @@ namespace ZeroUI.WinForms.Editors
             if (decimal.TryParse(clean, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal parsed))
             {
                 decimal clamped = Math.Max(_minValue, Math.Min(_maxValue, parsed));
-                if (_value != clamped)
+                if (Value != clamped)
                 {
-                    _value = clamped;
-                    ValueChanged?.Invoke(this, EventArgs.Empty);
-                    Invalidate();
+                    Value = clamped;
                 }
             }
         }
@@ -298,13 +292,13 @@ namespace ZeroUI.WinForms.Editors
         public void StepUp()
         {
             if (ReadOnly || !Enabled) return;
-            Value = Math.Min(_maxValue, _value + _step);
+            Value = Math.Min(_maxValue, Value + _step);
         }
 
         public void StepDown()
         {
             if (ReadOnly || !Enabled) return;
-            Value = Math.Max(_minValue, _value - _step);
+            Value = Math.Max(_minValue, Value - _step);
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -318,8 +312,11 @@ namespace ZeroUI.WinForms.Editors
         {
             var palette = ZeroTheme.Colors;
             BackColor = Color.Transparent;
-            _innerBox.BackColor = palette.Surface;
-            _innerBox.ForeColor = palette.TextPrimary;
+            if (_innerBox != null)
+            {
+                _innerBox.BackColor = palette.Surface;
+                _innerBox.ForeColor = palette.TextPrimary;
+            }
             Invalidate();
         }
 
@@ -394,7 +391,7 @@ namespace ZeroUI.WinForms.Editors
         private void StartRepeatTimer()
         {
             _repeatCount = 0;
-            _repeatTimer.Interval = 300; // Initial delay
+            _repeatTimer.Interval = 300;
             _repeatTimer.Start();
         }
 
@@ -403,7 +400,7 @@ namespace ZeroUI.WinForms.Editors
             _repeatCount++;
             if (_repeatCount > 3)
             {
-                _repeatTimer.Interval = Math.Max(30, 100 - (_repeatCount * 5)); // Accelerate
+                _repeatTimer.Interval = Math.Max(30, 100 - (_repeatCount * 5));
             }
 
             if (_direction == 1) StepUp();
@@ -418,7 +415,6 @@ namespace ZeroUI.WinForms.Editors
 
             var palette = ZeroTheme.Colors;
 
-            // 1. Fill parent background to eliminate black corner clipping artifacts
             Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
             using (var brushParent = new SolidBrush(parentBg))
             {
@@ -428,14 +424,14 @@ namespace ZeroUI.WinForms.Editors
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
 
-            // 2. Box Background & Border
+            // 1. Box Background & Border
             using (var path = ZeroUIConfig.CreateRoundedRectangle(rect, effRadius))
             {
                 using var brushBg = new SolidBrush(palette.Surface);
                 g.FillPath(brushBg, path);
 
-                Color borderCol = _innerBox.Focused ? palette.Primary : palette.Border;
-                using var penBorder = new Pen(borderCol, _innerBox.Focused ? 1.5f : 1f);
+                Color borderCol = HasError ? palette.Danger : (IsEditorFocused || (_innerBox != null && _innerBox.Focused) ? palette.Primary : (IsHovered ? palette.PrimaryHover : palette.Border));
+                using var penBorder = new Pen(borderCol, (IsEditorFocused || (_innerBox != null && _innerBox.Focused)) ? 1.5f : 1f);
                 g.DrawPath(penBorder, path);
             }
 
@@ -444,7 +440,7 @@ namespace ZeroUI.WinForms.Editors
             if (upBg != Color.Transparent)
             {
                 using var brushUp = new SolidBrush(upBg);
-                using var pathUp = CreateRoundedRect(_upButtonRect, 3);
+                using var pathUp = ZeroUIConfig.CreateRoundedRectangle(_upButtonRect, 3);
                 g.FillPath(brushUp, pathUp);
             }
 
@@ -466,7 +462,7 @@ namespace ZeroUI.WinForms.Editors
             if (downBg != Color.Transparent)
             {
                 using var brushDown = new SolidBrush(downBg);
-                using var pathDown = CreateRoundedRect(_downButtonRect, 3);
+                using var pathDown = ZeroUIConfig.CreateRoundedRectangle(_downButtonRect, 3);
                 g.FillPath(brushDown, pathDown);
             }
 
@@ -484,8 +480,14 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        private static GraphicsPath CreateRoundedRect(Rectangle r, int radius) =>
-            ZeroUIConfig.CreateRoundedRectangle(r, radius);
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _repeatTimer.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 
     /// <summary>
