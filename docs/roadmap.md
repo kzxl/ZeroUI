@@ -132,7 +132,11 @@
   - `AsrsCraneVisualizer`: Automated Storage & Retrieval System (ASRS) stacker crane 2D elevation visualizer with high-bay rack cells, traveling mast, hoist carriage, telescopic forks with pallet load, and cycle throughput (PPH).
   - `AgvFleetCanvas`: 2D LiDAR SLAM floor map canvas rendering real-time AGV/AMR robot footprints, orientation headings, LiDAR safety fields, trajectory splines, battery SoC %, and automated dock stations.
   - `ConveyorMergeMatrix`: High-speed parcel sorting conveyor merge visualizer with photo-eye infrared beam sensors, moving parcels, divert chutes, and sorting throughput (PPH) meters.
-* [ ] **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):** `SingleLineDiagram`, `SwitchgearFaceplate`, `BessRackMonitor`, `SolarPvMatrix`.
+* [x] **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):**
+  - `SingleLineDiagram`: IEC 61850 Substation Single-Line Diagram (SLD) vector canvas with standard voltage level coloring (500kV, 220kV, 110kV, 22kV), dual-circle transformer bay, circuit breakers, and animated active/reactive power flows.
+  - `SwitchgearFaceplate`: Medium/High-Voltage Vacuum Circuit Breaker (VCB) front faceplate with operating spring charge mechanical flag, vacuum bottle contact wear gauge, continuous trip coil supervision LEDs, and LOTO safety interlocks.
+  - `BessRackMonitor`: Battery Energy Storage System (BESS) high-voltage rack and module health visualizer with SoC/SoH indicators, 16-cell series balancing micro-heatmaps, and early thermal runaway precursor ($dT/dt \ge 1.0^\circ\text{C/min}$) detection.
+  - `SolarPvMatrix`: Utility/Commercial Solar PV plant string array visualizer monitoring real-time string currents, voltages, MPPT power generation, and string mismatch/shading diagnostics.
 * [ ] **`ZeroUI.Industry.LifeSciences` (Rank #20 / Proposal 8.25):** `MicroplateReader`, `CentrifugeMonitor`, `ColdChainTracker`.
 
 ---
@@ -168,7 +172,7 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 #### Phase 13: High-Volume Industrial Verticals (Tier P2 — In Progress)
 - **`ZeroUI.Industry.Bms` (Rank #17 / Proposal 8.20):** Completed. Air Handling Unit (AHU) mechanical cross-section, Chiller Plant COP monitor, 7-Day Multi-Zone Time Scheduler.
 - **`ZeroUI.Industry.Logistics` (Rank #18 / Proposal 8.23):** Completed. ASRS Stacker Crane 3D/2D visualizer, AGV/AMR 2D LiDAR SLAM fleet canvas, High-speed parcel sorter.
-- **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):** Single-Line Diagrams (IEC 61850), High-voltage switchgear faceplates, BESS rack monitor, Solar PV string matrix.
+- **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):** Completed. Single-Line Diagrams (IEC 61850), High-voltage switchgear faceplates, BESS rack monitor, Solar PV string matrix.
 - **`ZeroUI.Industry.LifeSciences` (Rank #20 / Proposal 8.25):** 96/384-Well Microplate Reader heatmap, Centrifuge RCF balance monitor, Cold Chain -80°C telemetry ribbons.
 
 #### Phase 14: Specialized Process, Heavy Industry & Complex Viewers (Tier P3 — Long-Term, Weeks 15–18)
