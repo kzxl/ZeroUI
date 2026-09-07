@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using ZeroUI.Core.Network;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Network
@@ -13,7 +14,7 @@ namespace ZeroUI.Wpf.Network
     /// Monitors industrial networks (Profinet MRP, EtherCAT, Modbus RTU), calculates cable break localization,
     /// and renders line jitter telemetry with alert flashing driven by <see cref="ZeroAnimationClock"/>.
     /// </summary>
-    public class FieldbusMonitor : FrameworkElement
+    public class FieldbusMonitor : ZeroWpfVisualBase
     {
         private readonly FieldbusNetwork _network = new FieldbusNetwork();
         private IDisposable? _animSub;
@@ -27,12 +28,10 @@ namespace ZeroUI.Wpf.Network
 
         public FieldbusMonitor()
         {
-            ClipToBounds = true;
             _network.PopulateDemoIndustrialLine();
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)

@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.DataGrid;
 using ZeroUI.Wpf.Theme;
 
@@ -18,7 +19,7 @@ namespace ZeroUI.Wpf.Editors
     /// Hosts an embedded virtual DataGrid within a Popup, enabling multi-column search,
     /// pagination, and instant selection for complex enterprise entities.
     /// </summary>
-    public class SearchLookUpEdit : Control, IZeroEditor
+    public class SearchLookUpEdit : ZeroWpfControlBase, IZeroEditor
     {
         private Border? _border;
         private TextBlock? _iconBlock;
@@ -164,11 +165,11 @@ namespace ZeroUI.Wpf.Editors
             };
 
             BuildVisualTemplate();
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
         }
 
-        private void UpdateTheme()
+        protected override void OnThemeChanged()
         {
+            base.OnThemeChanged();
             Background = ZeroWpfTheme.BgInput;
             BorderBrush = ZeroWpfTheme.BorderDefault;
             if (_border != null)

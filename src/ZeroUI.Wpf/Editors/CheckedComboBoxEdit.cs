@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Core.Localization;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -77,7 +78,7 @@ namespace ZeroUI.Wpf.Editors
     /// Features drop-down list with check boxes, "Select All" toggle, live search filter,
     /// and dynamic summary formatting. Implements <see cref="IZeroEditor"/>.
     /// </summary>
-    public class CheckedComboBoxEdit : Control, IZeroEditor
+    public class CheckedComboBoxEdit : ZeroWpfControlBase, IZeroEditor
     {
         private readonly ObservableCollection<CheckedComboItem> _items = new ObservableCollection<CheckedComboItem>();
         private readonly ObservableCollection<CheckedComboItem> _filteredItems = new ObservableCollection<CheckedComboItem>();
@@ -213,11 +214,11 @@ namespace ZeroUI.Wpf.Editors
             };
 
             BuildVisualTemplate();
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
         }
 
-        private void UpdateTheme()
+        protected override void OnThemeChanged()
         {
+            base.OnThemeChanged();
             Background = ZeroWpfTheme.BgInput;
             Foreground = ZeroWpfTheme.TextPrimary;
             BorderBrush = ZeroWpfTheme.BorderDefault;

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Network;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Network
@@ -13,7 +14,7 @@ namespace ZeroUI.Wpf.Network
     /// Renders standard EIA-310 vertical mounting rails, blade servers, switches, PDUs,
     /// with real-time thermal gradient overlays and power/weight load rollups.
     /// </summary>
-    public class DeviceRack : FrameworkElement
+    public class DeviceRack : ZeroWpfVisualBase
     {
         private readonly RackLayoutEngine _engine = new RackLayoutEngine();
         private bool _showThermalOverlay = false;
@@ -69,9 +70,7 @@ namespace ZeroUI.Wpf.Network
 
         public DeviceRack()
         {
-            ClipToBounds = true;
             InitializeDemoRack();
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         private void InitializeDemoRack()

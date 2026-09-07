@@ -5,6 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Editors;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -14,7 +15,7 @@ namespace ZeroUI.Wpf.Editors
     /// Provides live swatch preview, standard enterprise palette matrix, and HEX input.
     /// Implements <see cref="IZeroEditor"/>.
     /// </summary>
-    public class ColorPickEdit : Control, IZeroEditor
+    public class ColorPickEdit : ZeroWpfControlBase, IZeroEditor
     {
         private static readonly Color[] Palette = new[]
         {
@@ -126,11 +127,11 @@ namespace ZeroUI.Wpf.Editors
             Cursor = Cursors.Hand;
 
             BuildVisualTemplate();
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
         }
 
-        private void UpdateTheme()
+        protected override void OnThemeChanged()
         {
+            base.OnThemeChanged();
             Background = ZeroWpfTheme.BgInput;
             BorderBrush = ZeroWpfTheme.BorderDefault;
             if (_border != null)

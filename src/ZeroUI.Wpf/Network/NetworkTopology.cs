@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Network;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Network
@@ -14,7 +15,7 @@ namespace ZeroUI.Wpf.Network
     /// Supports canvas pan and zoom, device node dragging, multi-type links (Fiber, Copper, Bus, Wireless),
     /// and zero-allocation animated packet pulse wave flows driven by <see cref="ZeroAnimationClock"/>.
     /// </summary>
-    public class NetworkTopology : FrameworkElement
+    public class NetworkTopology : ZeroWpfVisualBase
     {
         private readonly TopologyGraphEngine _engine = new TopologyGraphEngine();
         private double _zoom = 1.0;
@@ -78,12 +79,10 @@ namespace ZeroUI.Wpf.Network
 
         public NetworkTopology()
         {
-            ClipToBounds = true;
             InitializeDemoTopology();
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)

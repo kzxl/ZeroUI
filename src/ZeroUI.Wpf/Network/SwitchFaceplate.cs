@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Network;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Network
@@ -15,7 +16,7 @@ namespace ZeroUI.Wpf.Network
     /// Link/Speed and Activity LEDs driven by <see cref="ZeroAnimationClock"/>, VLAN/PoE badges,
     /// and diagnostic inspection strip.
     /// </summary>
-    public class SwitchFaceplate : FrameworkElement
+    public class SwitchFaceplate : ZeroWpfVisualBase
     {
         private SwitchPortLayout _layout;
         private IDisposable? _animSub;
@@ -45,12 +46,10 @@ namespace ZeroUI.Wpf.Network
 
         public SwitchFaceplate()
         {
-            ClipToBounds = true;
             _layout = new SwitchPortLayout(24, 4);
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using ZeroUI.Core.Network;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Network
@@ -13,7 +14,7 @@ namespace ZeroUI.Wpf.Network
     /// Displays dual redundant PSU failover status, fan tachometer gauges with rotating blades,
     /// and SFP digital optical monitoring (DDM) power budget meters.
     /// </summary>
-    public class DeviceFaceplate : FrameworkElement
+    public class DeviceFaceplate : ZeroWpfVisualBase
     {
         private readonly ChassisHealthProfile _profile = new ChassisHealthProfile();
         private double _fanBladeAngle = 0.0;
@@ -27,10 +28,8 @@ namespace ZeroUI.Wpf.Network
 
         public DeviceFaceplate()
         {
-            ClipToBounds = true;
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)

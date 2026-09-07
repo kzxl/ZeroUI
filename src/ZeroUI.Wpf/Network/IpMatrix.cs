@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Network;
 using ZeroUI.Core.Rendering;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Network
@@ -14,7 +15,7 @@ namespace ZeroUI.Wpf.Network
     /// Renders a 16x16 grid (256 hosts for a /24 IPv4 subnet) with color-coded host states,
     /// conflict alert pulsing via <see cref="ZeroAnimationClock"/>, and an embedded ping RTT latency sparkline HUD.
     /// </summary>
-    public class IpMatrix : FrameworkElement
+    public class IpMatrix : ZeroWpfVisualBase
     {
         private readonly IpSubnetEngine _engine = new IpSubnetEngine();
         private IpHostEntry? _selectedHost;
@@ -45,13 +46,11 @@ namespace ZeroUI.Wpf.Network
 
         public IpMatrix()
         {
-            ClipToBounds = true;
             _engine.PopulateDemoData();
             _selectedHost = _engine.GetHost(1);
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)

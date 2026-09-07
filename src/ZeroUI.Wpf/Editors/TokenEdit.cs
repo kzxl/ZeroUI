@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Core.Localization;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -29,7 +30,7 @@ namespace ZeroUI.Wpf.Editors
     /// Displays discrete tag badges with dismiss buttons, inline keyboard typing,
     /// backspace deletion, and theme synchronization. Implements <see cref="IZeroEditor"/>.
     /// </summary>
-    public class TokenEdit : Control, IZeroEditor
+    public class TokenEdit : ZeroWpfControlBase, IZeroEditor
     {
         private readonly ObservableCollection<string> _tokens = new ObservableCollection<string>();
         private Border? _border;
@@ -111,11 +112,11 @@ namespace ZeroUI.Wpf.Editors
             };
 
             BuildVisualTemplate();
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
         }
 
-        private void UpdateTheme()
+        protected override void OnThemeChanged()
         {
+            base.OnThemeChanged();
             Background = ZeroWpfTheme.BgInput;
             BorderBrush = ZeroWpfTheme.BorderDefault;
             if (_border != null)
