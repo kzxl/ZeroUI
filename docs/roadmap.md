@@ -16,6 +16,10 @@
 | **Phase 11** | **SCADA Dials & Operational Layout (Tier P1)** | Precision Instrumentation & Dashboard Reflow | **Completed** | `RadialGauge` & `LinearGauge` (Threshold arcs & Damping), `FunnelChart` & `PyramidChart` (Yield & Drop-off metrics), `FlowLayoutControl` (Responsive wrapping & Drag reordering). |
 | **Phase 12** | **Network & Device Infrastructure (Tier P1)** | Physical Rack, Switch Faceplate, Topology & Fieldbus | **Completed** | `DeviceRack` (19" 42U/24U/12U & DIN-rail visualizer), `SwitchFaceplate` (High-density RJ45/SFP+ port matrix), `NetworkTopology` (Vector canvas & packet pulse flows), `DeviceFaceplate` (Chassis health HUD), `IpMatrix` (2D IPAM /24 heatmap), `FieldbusMonitor` (Industrial line & cable break locator). |
 | **Phase 13** | **High-Volume Industrial Verticals (Tier P2)** | BMS & Smart HVAC, Logistics, Energy, Life Sciences | **Completed** | Full suite: `AhuSchematic`, `ChillerPlant`, `ZoneScheduler`, `AsrsCraneVisualizer`, `AgvFleetCanvas`, `ConveyorMergeMatrix`, `SingleLineDiagram`, `SwitchgearFaceplate`, `BessRackMonitor`, `SolarPvMatrix`, `MicroplateReader`, `CentrifugeMonitor`, `ColdChainTracker`. |
+| **Phase 15** | **Water & Wastewater Treatment Suite (Tier P3)** | Environmental & Process Automation | **Completed** | `ClarifierBasin` (Rotating sludge scraper bridge), `ChemicalDosingSkid` (Proportional dosing pumps), `HydraulicGradientChart` (HGL hydraulic grade line profile). |
+| **Phase 16** | **Pharmaceutical, Biotech & Batch Processing (Tier P3)** | FDA 21 CFR Part 11 & ISA-88 Compliance | **Completed** | `SfcBatchTracker` (ISA-88 procedural batch SFC), `BioreactorVessel` (Sanitary bioreactor with DO/pH/impeller), `CipValidationMatrix` (4-TACT validation), `CleanroomEnvHud` (ISO Class 5-8 particles & delta P). |
+| **Phase 17** | **Oil & Gas, Refining & Petrochemicals (Tier P3)** | Continuous Petrochemical Refining & Safety | **Completed** | `DistillationColumn` (Multi-tray thermal/pressure profiles), `EsdMatrix` (SIL 1-4 Cause & Effect safety matrix), `PipelinePigMonitor` (Intelligent pig acoustic tracking & wall anomalies). |
+| **Phase 18** | **Vector PDF & CAD Schematic Reader (Tier P3)** | Document & Office Viewers | **Completed** | `PdfViewerControl` (Multi-page continuous vector reader, 25%-400% zoom, full-text search with highlights, pure C# FlateDecode `PdfParser`, CAD/SOP `PdfSampleGenerator`, WinForms & WPF). |
 
 ---
 
@@ -178,11 +182,19 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 - **`ZeroUI.Industry.Energy` (Rank #19 / Proposal 8.19):** Completed. Single-Line Diagrams (IEC 61850), High-voltage switchgear faceplates, BESS rack monitor, Solar PV string matrix.
 - **`ZeroUI.Industry.LifeSciences` (Rank #20 / Proposal 8.25):** Completed. 96/384-Well Microplate Reader heatmap, Centrifuge RCF balance monitor, Cold Chain -80°C telemetry ribbons.
 
-#### Phase 14: Specialized Process, Heavy Industry & Complex Viewers (Tier P3 — Long-Term, Weeks 15–18)
-- **`ZeroUI.Industry.Water` (Rank #21 / Proposal 8.21):** Clarifier Basin with rotating sludge rake, Chemical Dosing Skid, Hydraulic Grade Line (HGL) profile.
-- **`ZeroUI.Industry.Process` (Rank #22 / Proposal 8.22):** ISA-88 procedural batch SFC tracker, sanitary bioreactor/fermenter vessel, CIP/SIP 4-TACT validation matrix, ISO cleanroom HUD.
-- **`ZeroUI.Industry.Petrochem` (Rank #23 / Proposal 8.24):** Fractional Distillation Column tray profiles, SIL-rated SIS/ESD Cause & Effect matrix, Pipeline PIG monitor.
-- **`PdfViewerControl` (Rank #24 / Proposal 8.11):** Embedded technical CAD schematic, electrical wiring diagram, and SOP PDF document viewer.
+#### Phase 15: Water & Wastewater Treatment Suite (Tier P3 — COMPLETED)
+- **`ZeroUI.Industry.Water` (Rank #21 / Proposal 8.21):** Completed. Clarifier Basin with rotating sludge rake, Chemical Dosing Skid, Hydraulic Grade Line (HGL) profile.
+
+#### Phase 16: Pharmaceutical, Biotech & Batch Processing Suite (Tier P3 — COMPLETED)
+- **`ZeroUI.Industry.Process` (Rank #22 / Proposal 8.22):** Completed. ISA-88 procedural batch SFC tracker, sanitary bioreactor/fermenter vessel, CIP/SIP 4-TACT validation matrix, ISO cleanroom HUD.
+
+#### Phase 17: Oil & Gas, Refining & Petrochemicals Suite (Tier P3 — COMPLETED)
+- **`ZeroUI.Industry.Petrochem` (Rank #23 / Proposal 8.24):** Completed. Fractional Distillation Column tray profiles, SIL-rated SIS/ESD Cause & Effect matrix, Pipeline PIG monitor.
+
+#### Phase 18: Vector PDF & CAD Schematic Reader (Tier P3 — COMPLETED)
+- **`PdfViewerControl` (Rank #24 / Proposal 8.11):** Completed. Embedded technical CAD schematic, electrical wiring diagram, and SOP PDF document viewer with continuous vertical scrolling, zoom (Fit Width, Fit Page, 25%-400%), full-text search with highlights, and printing dispatch.
+
+#### Phase 19: Spreadsheet & Tabular Calculation Suite (Tier P3 — Upcoming)
 - **`SpreadsheetControl` MVP (Rank #25 / Proposal 8.10):** Lightweight vector calculation sheet with core formulas (`SUM`, `AVERAGE`, `IF`).
 
 
