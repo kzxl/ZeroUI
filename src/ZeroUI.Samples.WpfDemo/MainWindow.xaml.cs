@@ -1091,7 +1091,7 @@ namespace ZeroUI.Samples.WpfDemo
         private void SetupDockAndDiagram()
         {
             // Left Toolbox Panel
-            var leftPanel = new ZeroDockPanel { Title = "Toolbox & Asset Library", DockPosition = ZeroDockPosition.Left };
+            var leftPanel = new ZeroDockPanel { Title = "Toolbox & Asset Library", DockPosition = DockPosition.Left };
             var toolboxStack = new StackPanel { Margin = new Thickness(12) };
             toolboxStack.Children.Add(new TextBlock { Text = "📐 Process Library", FontWeight = FontWeights.Bold, Foreground = ZeroWpfTheme.TextPrimary, Margin = new Thickness(0, 0, 0, 8) });
             toolboxStack.Children.Add(new TextBlock { Text = "• Primary Buffer Tank (TK-101)\n• Centrifugal Feed Pump (P-201)\n• Proportional Control Valve (XV-301)\n• Exothermic Reactor Vessel (RX-401)\n• RTD Temperature Sensor (TE-501)", Foreground = ZeroWpfTheme.TextSecondary, LineHeight = 20 });
@@ -1099,13 +1099,13 @@ namespace ZeroUI.Samples.WpfDemo
             DemoDockManager.AddPanel(leftPanel);
 
             // Center Document: ZeroDiagramCanvas
-            var centerDoc = new ZeroDockPanel { Title = "P&ID Process Diagram Loop", DockPosition = ZeroDockPosition.Document };
+            var centerDoc = new ZeroDockPanel { Title = "P&ID Process Diagram Loop", DockPosition = DockPosition.Document };
             _diagramCanvas = new ZeroDiagramCanvas();
             centerDoc.Content = _diagramCanvas;
             DemoDockManager.AddPanel(centerDoc);
 
             // Bottom Output Panel
-            var bottomPanel = new ZeroDockPanel { Title = "Output & Fieldbus Telemetry", DockPosition = ZeroDockPosition.Bottom };
+            var bottomPanel = new ZeroDockPanel { Title = "Output & Fieldbus Telemetry", DockPosition = DockPosition.Bottom };
             var outputBox = new TextBox
             {
                 IsReadOnly = true,
@@ -1120,7 +1120,7 @@ namespace ZeroUI.Samples.WpfDemo
             DemoDockManager.AddPanel(bottomPanel);
 
             // Right Properties Panel
-            var rightPanel = new ZeroDockPanel { Title = "Node Inspector", DockPosition = ZeroDockPosition.Right };
+            var rightPanel = new ZeroDockPanel { Title = "Node Inspector", DockPosition = DockPosition.Right };
             var rightStack = new StackPanel { Margin = new Thickness(12) };
             var lblInspector = new TextBlock { Text = "Select a diagram node to inspect parameters", TextWrapping = TextWrapping.Wrap, Foreground = ZeroWpfTheme.TextMuted };
             rightStack.Children.Add(lblInspector);

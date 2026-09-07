@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>ZeroUI.Samples.WpfDemo</RootNamespace>
     <AssemblyName>ZeroUI.Samples.WpfDemo</AssemblyName>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
