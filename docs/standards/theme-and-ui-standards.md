@@ -117,7 +117,16 @@ Every control in ZeroUI must consume one of the standardized semantic tokens bel
          }
 
          TextRenderer.DrawText(g, Text, Font, ClientRectangle, theme.TextPrimary, TextFormatFlags.VerticalCenter);
-### 3.2 ZeroUI Skin Framework Base Classes & Contracts
+     }
+     ```
+
+2. **Event Hooking & Cleanup:**
+   - In constructor: `ZeroTheme.ThemeChanged += OnThemeChanged;`
+   - In `Dispose(bool disposing)`: `ZeroTheme.ThemeChanged -= OnThemeChanged;` to prevent memory leaks.
+
+---
+
+### 3.3 ZeroUI Skin Framework Base Classes & Contracts
 
 To eliminate boilerplate and ensure uniform, zero-leak theme lifecycle management, all controls should inherit from the platform-specific architectural base classes:
 
