@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -24,6 +25,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultProperty("Text")]
     [Description("Lightweight status tag badge with clean border and status typography")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTag.bmp")]
     public class ZeroTag : Control
     {
 

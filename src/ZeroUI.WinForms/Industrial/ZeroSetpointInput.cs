@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -16,6 +17,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial setpoint input control with on-screen numeric keypad support")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSetpointInput.bmp")]
     public class ZeroSetpointInput : Control, IScadaBindable
     {
         private double _setpointValue = 50.0;

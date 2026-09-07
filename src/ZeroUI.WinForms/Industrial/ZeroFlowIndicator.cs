@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -25,6 +26,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Directional animated fluid flow indicator with moving chevron vectors")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroFlowIndicator.bmp")]
     public class ZeroFlowIndicator : Control, IScadaBindable, IAnimationFrameListener
     {
         private FlowIndicatorDirection _direction = FlowIndicatorDirection.LeftToRight;

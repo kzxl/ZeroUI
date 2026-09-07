@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
@@ -20,6 +21,7 @@ namespace ZeroUI.WinForms.Reporting
     [Category("ZeroUI - Reporting & Documents")]
     [DefaultProperty("Document")]
     [Description("Enterprise vector print preview control with toolbar, zoom, and printer dispatch")]
+    [ToolboxBitmap(typeof(ZeroIcons), "DocumentPreviewControl.bmp")]
     public class DocumentPreviewControl : Control
     {
         private PrintDocument? _document;

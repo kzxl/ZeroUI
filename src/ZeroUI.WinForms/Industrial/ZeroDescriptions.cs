@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
@@ -32,6 +33,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Key-Value metadata description grid component")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDescriptions.bmp")]
     public class ZeroDescriptions : Control
     {
 

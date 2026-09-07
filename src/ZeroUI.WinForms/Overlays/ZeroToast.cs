@@ -1,5 +1,7 @@
 using System;
-using System.Drawing;
+
+
+using System.ComponentModel;using ZeroUI.WinForms.Icons;using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Theme;
@@ -18,6 +20,8 @@ namespace ZeroUI.WinForms.Overlays
     /// <summary>
     /// Lightweight non-blocking floating toast notification component for ZeroUI that slides in and auto-dismisses.
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroToast.bmp")]
     public sealed class ZeroToast : Form
 
     {

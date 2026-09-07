@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 
@@ -40,6 +41,7 @@ namespace ZeroUI.WinForms.Overlays
     [Category("ZeroUI - Overlays")]
     [DefaultEvent("ItemSelected")]
     [Description("High-throughput log viewer and virtual list view")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroListView.bmp")]
     public class ZeroListView : Control
     {
 

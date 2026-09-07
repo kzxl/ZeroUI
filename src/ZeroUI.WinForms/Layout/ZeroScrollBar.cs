@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -21,6 +22,7 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Provides a custom modern flat scrollbar supporting horizontal and vertical orientations.")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroScrollBar.bmp")]
     public class ZeroScrollBar : Control
     {
         private ZeroScrollOrientation _orientation = ZeroScrollOrientation.Vertical;

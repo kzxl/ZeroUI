@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -39,6 +40,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedItemChanged")]
     [DefaultProperty("SelectedItem")]
     [Description("Searchable autocomplete dropdown & lookup box for large datasets")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroLookup.bmp")]
     public class ZeroLookup : Control
     {
         private readonly List<ZeroLookupItem> _items = new List<ZeroLookupItem>();

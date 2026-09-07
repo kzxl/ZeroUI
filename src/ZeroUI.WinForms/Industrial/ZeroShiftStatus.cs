@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -16,6 +17,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial shift overview card with crew assignment and downtime tracker")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroShiftStatus.bmp")]
     public class ZeroShiftStatus : Control, IScadaBindable
     {
         private string _shiftName = "SHIFT A (DAY)";

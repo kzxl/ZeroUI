@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -15,6 +16,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Value")]
     [Description("Industrial Linear Level and Pressure Gauge for SCADA telemetry")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroLinearGauge.bmp")]
     public class ZeroLinearGauge : Control
     {
 

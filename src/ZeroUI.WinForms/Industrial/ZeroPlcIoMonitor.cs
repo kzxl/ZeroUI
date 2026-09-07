@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -28,6 +29,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("OutputCoilChanged")]
     [Description("PLC Digital I/O 16-Bit Monitor with live LED bit registers")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroPlcIoMonitor.bmp")]
     public class ZeroPlcIoMonitor : Control
     {
         private ushort _digitalInputs = 0x0055;  // Default sample bits

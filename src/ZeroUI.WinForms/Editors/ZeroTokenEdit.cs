@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -31,6 +32,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("TokenAdded")]
     [Description("Modern token/chip input editor rendering discrete tag badges with dismiss buttons")]
+    [ToolboxBitmap(typeof(ZeroIcons), "TokenEdit.bmp")]
     public class TokenEdit : Control, IZeroEditor
     {
         private readonly List<string> _tokens = new List<string>();

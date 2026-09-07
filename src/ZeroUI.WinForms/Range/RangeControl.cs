@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -16,6 +17,8 @@ namespace ZeroUI.WinForms.Range
     /// Provides interactive thumb sliding, range panning, zoom scaling, ruler scale,
     /// and background histogram/sparkline distribution visualization with rich configurable options.
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "RangeControl.bmp")]
     public class RangeControl : Control
     {
         private readonly RangeControlModel _model = new RangeControlModel();

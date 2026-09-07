@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -19,6 +20,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Single-HWND high-performance P&ID plant mimic canvas with ZeroScene graph engine and spatial culling")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroPlantMimicCanvas.bmp")]
     public class ZeroPlantMimicCanvas : Control
     {
         private ZeroScene _scene;

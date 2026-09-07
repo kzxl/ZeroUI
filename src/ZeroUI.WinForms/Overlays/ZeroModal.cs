@@ -1,5 +1,7 @@
 using System;
-using System.Drawing;
+
+
+using System.ComponentModel;using ZeroUI.WinForms.Icons;using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Editors;
@@ -22,6 +24,8 @@ namespace ZeroUI.WinForms.Overlays
     /// Modern enterprise modal dialog with rounded container, backdrop dimming,
     /// and built-in notification dialogs (Success, Warning, Error, Info, Confirm, Prompt).
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroModal.bmp")]
     public class ZeroModal : Form
     {
         private readonly string _title;

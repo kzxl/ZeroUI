@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -40,6 +41,7 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Splits the control display area into two resizable panels.")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSplitContainer.bmp")]
     public class ZeroSplitContainer : Control
     {
         private readonly ZeroSplitterPanel _panel1;

@@ -3384,6 +3384,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultProperty("DataSource")]
     [Description("Legacy alias for GridControl")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroGridControl.bmp")]
     public class ZeroGridControl : GridControl
     {
     }

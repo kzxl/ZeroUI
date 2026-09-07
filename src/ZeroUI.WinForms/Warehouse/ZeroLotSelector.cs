@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -19,6 +20,7 @@ namespace ZeroUI.WinForms.Warehouse
     [ToolboxItem(true)]
     [Category("ZeroUI - Warehouse & Logistics")]
     [Description("Industrial Lot Selector with automated FIFO / FEFO allocation logic")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroLotSelector.bmp")]
     public class ZeroLotSelector : Control
     {
         private string _productCode = "ABC-001";

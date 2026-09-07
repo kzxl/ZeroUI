@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+
+using ZeroUI.WinForms.Icons;using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -21,6 +22,7 @@ namespace ZeroUI.WinForms.PivotGrid
     [Category("ZeroUI - DataGrid & Reporting")]
     [DefaultEvent("CellClick")]
     [Description("Multidimensional cross-tab OLAP reporting grid with dynamic grouping, aggregations, and grand totals")]
+    [ToolboxBitmap(typeof(ZeroIcons), "PivotGridControl.bmp")]
     public class PivotGridControl : Control
     {
         private readonly PivotEngine _engine = new PivotEngine();

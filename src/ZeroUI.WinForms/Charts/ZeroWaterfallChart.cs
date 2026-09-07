@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -41,6 +42,7 @@ namespace ZeroUI.WinForms.Charts
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroWaterfallChart.bmp")]
     public class ZeroWaterfallChart : Control
     {
         private readonly List<WaterfallItem> _items = new List<WaterfallItem>();

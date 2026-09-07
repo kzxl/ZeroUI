@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -63,6 +64,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("StepClicked")]
     [Description("Data-Driven Manufacturing Workflow Steps control")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSteps.bmp")]
     public class ZeroSteps : Control
     {
 

@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -33,6 +34,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("ItemCheck")]
     [Description("Modern checked combo box allowing multi-item selection with checkboxes and filter")]
+    [ToolboxBitmap(typeof(ZeroIcons), "CheckedComboBoxEdit.bmp")]
     public class CheckedComboBoxEdit : Control, IZeroEditor
     {
         public class CheckedItem

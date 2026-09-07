@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -34,6 +35,7 @@ namespace ZeroUI.WinForms.Charts
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadarChart.bmp")]
     public class ZeroRadarChart : Control
     {
         private readonly List<string> _axes = new List<string>();

@@ -1,5 +1,7 @@
 using System;
-using System.Drawing;
+
+
+using System.ComponentModel;using ZeroUI.WinForms.Icons;using System.Drawing;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Theme;
 
@@ -9,6 +11,8 @@ namespace ZeroUI.WinForms.Industrial
     /// Industrial touch-screen on-screen numeric keypad popup dialog.
     /// Provides large touch targets, Min/Max boundary checks, and engineering unit display.
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroNumericKeypad.bmp")]
     public class ZeroNumericKeypad : Form
     {
         private readonly Label _lblTitle;

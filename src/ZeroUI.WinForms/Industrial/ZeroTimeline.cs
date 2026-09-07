@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -42,6 +43,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Vertical timeline control for lot tracking and manufacturing audit trails")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTimeline.bmp")]
     public class ZeroTimeline : Control
     {
 

@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -34,6 +35,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Title")]
     [Description("Statistical Process Control (SPC) X-Bar chart with automated control limits")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSpcChart.bmp")]
     public class ZeroSpcChart : Control
     {
         private readonly List<SpcDataPoint> _points = new List<SpcDataPoint>();

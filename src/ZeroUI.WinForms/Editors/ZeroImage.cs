@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -34,6 +35,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultProperty("Image")]
     [Description("Modern anti-aliased image and avatar control with initials fallback and zoom lightbox")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroImage.bmp")]
     public class ZeroImage : Control
     {
         private Image? _image;

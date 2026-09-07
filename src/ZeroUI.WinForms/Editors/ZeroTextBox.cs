@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Text")]
     [DefaultEvent("TextChanged")]
     [Description("Modern text input control with clear button, placeholder, and action icons")]
+    [ToolboxBitmap(typeof(ZeroIcons), "TextEdit.bmp")]
     public class TextEdit : Control, IZeroEditor
     {
         private readonly TextBox _innerBox;

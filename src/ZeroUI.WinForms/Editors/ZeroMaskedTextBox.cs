@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -18,6 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Mask")]
     [DefaultEvent("TextChanged")]
     [Description("Modern anti-aliased masked text box")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroMaskedTextBox.bmp")]
     public class ZeroMaskedTextBox : Control
     {
         private readonly MaskedTextBox _innerBox;

@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -60,6 +61,7 @@ namespace ZeroUI.WinForms.Overlays
     [DefaultEvent("SelectedIndexChanged")]
     [DefaultProperty("SelectedIndex")]
     [Description("Modern flat TabControl container with Horizontal/Vertical orientations, Underline/Pill styles and notification badges")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTabControl.bmp")]
     public class ZeroTabControl : Control
     {
         private readonly List<ZeroTabPage> _tabPages = new List<ZeroTabPage>();

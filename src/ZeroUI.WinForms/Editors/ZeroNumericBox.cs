@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
@@ -18,6 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [DefaultProperty("Value")]
     [Description("Precision numeric stepper and spin box editor with unit formatting")]
+    [ToolboxBitmap(typeof(ZeroIcons), "SpinEdit.bmp")]
     public class SpinEdit : Control, IZeroEditor
     {
         private decimal _value = 0m;

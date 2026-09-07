@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -82,6 +83,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Statistical Box-and-Whisker chart for industrial SPC quality inspection")]
+    [ToolboxBitmap(typeof(ZeroIcons), "BoxPlotChart.bmp")]
     public class BoxPlotChart : Control
     {
         private readonly List<BoxPlotDataPoint> _dataPoints = new List<BoxPlotDataPoint>();

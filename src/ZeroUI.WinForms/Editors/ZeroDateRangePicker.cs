@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -28,6 +29,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("DateRangeChanged")]
     [DefaultProperty("StartDate")]
     [Description("Enterprise dual-date range selector with 1-click presets and calendar popup")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDateRangePicker.bmp")]
     public class ZeroDateRangePicker : Control
     {
         private DateTime _startDate = DateTime.Today.AddDays(-6);

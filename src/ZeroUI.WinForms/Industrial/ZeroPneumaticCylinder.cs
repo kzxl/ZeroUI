@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -25,6 +26,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial pneumatic cylinder with animated piston rod and magnetic limit sensors")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroPneumaticCylinder.bmp")]
     public class ZeroPneumaticCylinder : Control, IScadaBindable, IAnimationFrameListener
     {
         private CylinderState _state = CylinderState.Extended;

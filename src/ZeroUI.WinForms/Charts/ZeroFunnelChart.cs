@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -33,6 +34,7 @@ namespace ZeroUI.WinForms.Charts
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroFunnelChart.bmp")]
     public class ZeroFunnelChart : Control
     {
         private readonly List<FunnelStage> _stages = new List<FunnelStage>();

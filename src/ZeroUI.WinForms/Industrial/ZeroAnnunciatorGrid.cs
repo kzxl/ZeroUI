@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -42,6 +43,8 @@ namespace ZeroUI.WinForms.Industrial
     /// Alarm Management Life Cycle (Unacknowledged Fast Flash, Acknowledged Steady,
     /// Return-To-Normal Slow Flash, Integrated Command Bar: ACK, SILENCE, RESET, TEST).
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefaultControl.bmp")]
     public class ZeroAnnunciatorGrid : Control, IScadaBindable
     {
         private readonly List<IsaAlarmTile> _tiles = new List<IsaAlarmTile>();

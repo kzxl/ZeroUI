@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -22,6 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultProperty("Value")]
     [Description("KPI Metric Card component for dashboards and analytical summaries")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroStatistic.bmp")]
     public class ZeroStatistic : Control
     {
 

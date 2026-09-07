@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -53,6 +54,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Value")]
     [Description("Industrial 7-Segment Digital LED Display for SCADA & MES telemetry")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSevenSegment.bmp")]
     public class ZeroSevenSegment : Control
     {
         private string _value = "1420";

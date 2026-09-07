@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -28,6 +29,7 @@ namespace ZeroUI.WinForms.Validation
     [ProvideProperty("IconAlignment", typeof(Control))]
     [ProvideProperty("IconPadding", typeof(Control))]
     [Description("Modern vector error provider with smooth hover tooltips")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ValidationProvider.bmp")]
     public class ValidationProvider : Component, IExtenderProvider
     {
         private class ControlRuleBinding

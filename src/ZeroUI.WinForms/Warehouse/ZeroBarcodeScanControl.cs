@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -21,6 +22,7 @@ namespace ZeroUI.WinForms.Warehouse
     [Category("ZeroUI - Warehouse & Logistics")]
     [DefaultEvent("BarcodeScanned")]
     [Description("Industrial Barcode & QR Code Workstation Scanner Control")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroBarcodeScanControl.bmp")]
     public class ZeroBarcodeScanControl : Control
     {
         private readonly TextBox _txtBarcode;

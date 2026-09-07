@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -31,6 +32,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial material conveyor belt with animated kinematics and jam detection")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroConveyorBelt.bmp")]
     public class ZeroConveyorBelt : Control, IScadaBindable, IAnimationFrameListener
     {
         private ConveyorState _state = ConveyorState.Running;

@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedIndexChanged")]
     [DefaultProperty("SelectedIndex")]
     [Description("Segmented pill switcher for view and filter options")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSegmented.bmp")]
     public class ZeroSegmented : Control
     {
 

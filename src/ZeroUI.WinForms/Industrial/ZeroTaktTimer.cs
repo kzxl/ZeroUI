@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -24,6 +25,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultProperty("TargetTaktSeconds")]
     [DefaultEvent("TaktCompleted")]
     [Description("Industrial Takt Time countdown ring and cycle timer for manufacturing lines")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTaktTimer.bmp")]
     public class ZeroTaktTimer : Control
     {
         private float _targetTaktSeconds = 30f;

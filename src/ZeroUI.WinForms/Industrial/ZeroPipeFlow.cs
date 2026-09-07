@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -35,6 +36,8 @@ namespace ZeroUI.WinForms.Industrial
     /// High-performance industrial vector piping component with subpixel animated fluid flow pulses.
     /// Implements IScadaBindable for real-time SCADA telemetry synchronization.
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroPipeFlow.bmp")]
     public class ZeroPipeFlow : Control, IScadaBindable
     {
         private ZeroPipeShape _shape = ZeroPipeShape.Horizontal;

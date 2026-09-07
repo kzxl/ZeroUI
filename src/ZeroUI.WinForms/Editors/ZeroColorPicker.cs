@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("ColorChanged")]
     [Description("Modern color picker editor with swatch preview, palette, and hex input")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ColorPickEdit.bmp")]
     public class ColorPickEdit : Control, IZeroEditor
     {
         private Color _selectedColor = Color.FromArgb(79, 70, 229); // Default ZeroUI Primary

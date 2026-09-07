@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -55,6 +56,7 @@ namespace ZeroUI.WinForms.Overlays
     [Category("ZeroUI - Overlays & Navigation")]
     [DefaultEvent("ItemSelected")]
     [Description("Enterprise Sidebar Navigation with brand header, categorized items, and collapsible rail")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSideNav.bmp")]
     public class ZeroSideNav : Control
     {
         private readonly List<ZeroSideNavItem> _items = new List<ZeroSideNavItem>();

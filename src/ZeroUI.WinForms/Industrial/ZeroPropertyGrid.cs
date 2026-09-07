@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -19,6 +20,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("PropertyValueChanged")]
     [Description("Enterprise property inspector with categories, search filter, and in-place editors")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroPropertyGrid.bmp")]
     public class ZeroPropertyGrid : Control
     {
         private readonly ZeroPropertyModel _model = new ZeroPropertyModel();

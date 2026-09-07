@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -18,6 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [DefaultEvent("ValueChanged")]
     [Description("Modern anti-aliased slider control")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSlider.bmp")]
     public class ZeroSlider : Control
     {
         private readonly RangeModel _rangeModel = new RangeModel(0f, 100f, 0f, 1f);

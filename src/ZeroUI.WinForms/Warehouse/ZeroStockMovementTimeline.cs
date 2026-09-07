@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace ZeroUI.WinForms.Warehouse
     [ToolboxItem(true)]
     [Category("ZeroUI - Warehouse & Logistics")]
     [Description("Industrial Stock Movement and Lot Traceability Timeline Tree")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroStockMovementTimeline.bmp")]
     public class ZeroStockMovementTimeline : Control
     {
         private StockMovementTraceModel _traceData = new StockMovementTraceModel

@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -17,6 +18,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial Gantt chart for production scheduling, machine timelines, and maintenance")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroGanttChart.bmp")]
     public class ZeroGanttChart : Control
     {
         private readonly List<GanttTaskItem> _tasks = new List<GanttTaskItem>();

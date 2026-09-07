@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -27,6 +28,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("BarcodeScanned")]
     [Description("Hardware barcode and QR code scanner input control for factory workstations")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroBarcodeBox.bmp")]
     public class ZeroBarcodeBox : Control
     {
 

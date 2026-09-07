@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -30,6 +31,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Two-stage high-reliability SCADA command button with interlocks and hold confirmation")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroCommandButton.bmp")]
     public class ZeroCommandButton : Control, IAnimationFrameListener
     {
         private CommandButtonAction _action = CommandButtonAction.Start;

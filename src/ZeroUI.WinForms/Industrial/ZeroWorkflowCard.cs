@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -50,6 +51,7 @@ namespace ZeroUI.WinForms.Industrial
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroWorkflowCard.bmp")]
     public class ZeroWorkflowCard : Control
     {
         private readonly List<WorkflowStage> _stages = new List<WorkflowStage>();

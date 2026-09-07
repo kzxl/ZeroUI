@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -45,6 +46,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("SlotClicked")]
     [Description("2D Defect Inspection Matrix for PCB panels, wafers, and QC carrier trays")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefectMatrix.bmp")]
     public class ZeroDefectMatrix : Control
     {
         private int _rows = 3;

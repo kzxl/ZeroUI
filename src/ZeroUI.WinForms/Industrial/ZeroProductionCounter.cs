@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -16,6 +17,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial production counter scoreboard displaying Plan, Actual, NG, and Remaining")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroProductionCounter.bmp")]
     public class ZeroProductionCounter : Control, IScadaBindable
     {
         private int _plan = 2500;

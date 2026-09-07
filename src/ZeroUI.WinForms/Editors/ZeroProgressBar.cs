@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -16,6 +17,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultProperty("Value")]
     [Description("Modern flat progress bar with percentage overlay and indeterminate shimmer")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroProgressBar.bmp")]
     public class ZeroProgressBar : Control
     {
 

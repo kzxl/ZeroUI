@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -24,6 +25,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultProperty("Title")]
     [DefaultEvent("Closed")]
     [Description("Dismissible alert banner for factory floor stoppages and system notifications")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroAlertBanner.bmp")]
     public class ZeroAlertBanner : Control
     {
 

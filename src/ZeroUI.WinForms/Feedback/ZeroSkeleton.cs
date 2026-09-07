@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -23,6 +24,7 @@ namespace ZeroUI.WinForms.Feedback
     [ToolboxItem(true)]
     [Category("ZeroUI - Feedback")]
     [Description("Animated shimmer placeholder placeholder for loading states")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSkeleton.bmp")]
     public class ZeroSkeleton : Control
     {
         private SkeletonShape _shape = SkeletonShape.RoundedRectangle;

@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -16,6 +17,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial digital telemetry readout indicator with alarm threshold coloring")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDigitalIndicator.bmp")]
     public class ZeroDigitalIndicator : Control, IScadaBindable
     {
         private double _value = 48.7;

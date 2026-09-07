@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+
+using ZeroUI.WinForms.Icons;using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -26,6 +27,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedIndex")]
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Modern anti-aliased ComboBox dropdown control")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroComboBox.bmp")]
     public class ZeroComboBox : Control
     {
         private readonly List<object> _items = new List<object>();

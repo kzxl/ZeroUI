@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -20,6 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [Category("ZeroUI - Editors")]
     [DefaultEvent("SelectionChanged")]
     [Description("Enterprise multi-column dropdown lookup with embedded virtual DataGrid and search")]
+    [ToolboxBitmap(typeof(ZeroIcons), "GridLookupEdit.bmp")]
     public class GridLookupEdit : Control, IZeroEditor
     {
         private readonly ToolStripDropDown _dropdown;

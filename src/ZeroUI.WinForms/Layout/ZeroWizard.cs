@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -74,6 +75,7 @@ namespace ZeroUI.WinForms.Layout
     [Category("ZeroUI - Layout & Navigation")]
     [DefaultEvent("Finished")]
     [Description("Enterprise multi-step guided process wizard with validation and step indicator")]
+    [ToolboxBitmap(typeof(ZeroIcons), "WizardControl.bmp")]
     public class WizardControl : Control
     {
         private readonly List<ZeroWizardPage> _pages = new List<ZeroWizardPage>();
@@ -341,6 +343,7 @@ namespace ZeroUI.WinForms.Layout
     [Category("ZeroUI - Layout & Navigation")]
     [DefaultEvent("Finished")]
     [Description("Legacy alias for WizardControl")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroWizard.bmp")]
     public class ZeroWizard : WizardControl
     {
     }

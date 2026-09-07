@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -19,6 +20,7 @@ namespace ZeroUI.WinForms.Warehouse
     [Category("ZeroUI - Warehouse & Logistics")]
     [DefaultProperty("ProductCode")]
     [Description("Industrial Inventory Stock Metric Card with allocation distribution")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroInventoryCard.bmp")]
     public class ZeroInventoryCard : Control
     {
         private InventoryStockModel _data = new InventoryStockModel

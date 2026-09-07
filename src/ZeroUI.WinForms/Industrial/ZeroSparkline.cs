@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Compact micro-trend sparkline graph for inline sensor telemetry")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSparkline.bmp")]
     public class ZeroSparkline : Control, IScadaBindable
     {
         private readonly float[] _buffer;

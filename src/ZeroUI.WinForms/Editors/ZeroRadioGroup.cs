@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ZeroUI.Core.Input;
@@ -16,6 +17,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedIndex")]
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Radio button group container with auto-layout and selection management")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadioGroup.bmp")]
     public class ZeroRadioGroup : Control
     {
         private string[] _items = Array.Empty<string>();

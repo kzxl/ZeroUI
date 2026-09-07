@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -144,6 +145,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("NodeSelected")]
     [Description("High-performance virtualized hierarchical Tree and BOM TreeList control")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTreeList.bmp")]
     public class TreeList : Control
     {
         private readonly List<ZeroTreeNode> _nodes = new List<ZeroTreeNode>();
@@ -753,6 +755,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("NodeSelected")]
     [Description("Legacy alias for TreeList")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTreeList.bmp")]
     public class ZeroTreeList : TreeList
     {
     }

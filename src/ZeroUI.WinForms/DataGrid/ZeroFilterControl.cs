@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -20,6 +21,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid & Reporting")]
     [DefaultEvent("FilterChanged")]
     [Description("Interactive hierarchical visual filter tree builder for complex logical queries")]
+    [ToolboxBitmap(typeof(ZeroIcons), "FilterControl.bmp")]
     public class FilterControl : Control
     {
         private readonly GroupFilterNode _rootGroup = new GroupFilterNode(FilterGroupOperator.And);

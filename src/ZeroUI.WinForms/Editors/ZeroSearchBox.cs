@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -16,6 +17,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("DebouncedTextChanged")]
     [DefaultProperty("PlaceholderText")]
     [Description("Modern search box with debounced input and clear button")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSearchBox.bmp")]
     public class ZeroSearchBox : Control
     {
 

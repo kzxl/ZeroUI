@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -39,6 +40,7 @@ namespace ZeroUI.WinForms.Charts
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroCandlestickChart.bmp")]
     public class ZeroCandlestickChart : Control
     {
         private readonly List<CandlestickItem> _items = new List<CandlestickItem>();

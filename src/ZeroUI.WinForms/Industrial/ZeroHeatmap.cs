@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -42,6 +43,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("CellClicked")]
     [Description("2D Matrix Heatmap for machine throughput, thermal maps, and load distribution")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroHeatmap.bmp")]
     public class ZeroHeatmap : Control
     {
         private string[] _xLabels = Array.Empty<string>();

@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -354,6 +355,8 @@ namespace ZeroUI.WinForms.Docking
     /// <summary>
     /// Independent floating tool window hosting a detached ZeroDockPanel across multiple monitors.
     /// </summary>
+    [ToolboxItem(true)]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroFloatingWindow.bmp")]
     public class ZeroFloatingWindow : Form
     {
         private readonly ZeroDockPanel _panel;
@@ -405,6 +408,7 @@ namespace ZeroUI.WinForms.Docking
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout & Windowing")]
     [Description("Enterprise Visual Studio-style multi-region dock manager with splitters, tabs, and multi-monitor floating panels.")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDockManager.bmp")]
     public class ZeroDockManager : Control
     {
         private readonly List<ZeroDockPanel> _panels = new List<ZeroDockPanel>();

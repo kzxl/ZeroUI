@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+
+using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -37,6 +38,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("CallTriggered")]
     [Description("Shopfloor Touchscreen Andon Call Pad with live SLA response timers")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroAndonCallPad.bmp")]
     public class ZeroAndonCallPad : Control
     {
         private class CallTile

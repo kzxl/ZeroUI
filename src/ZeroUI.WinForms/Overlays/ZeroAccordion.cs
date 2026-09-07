@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+
+using ZeroUI.WinForms.Icons;using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -77,6 +78,7 @@ namespace ZeroUI.WinForms.Overlays
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
     [Description("Multi-level collapsible accordion navigation menu with search filtering and badges.")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroAccordion.bmp")]
     public class ZeroAccordion : Control
     {
         private readonly List<ZeroAccordionGroup> _groups = new List<ZeroAccordionGroup>();
