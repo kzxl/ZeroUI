@@ -237,13 +237,13 @@ To guide the long-term technical evolution of **ZeroUI** without compromising it
 
 | Rank | Priority | Proposal ID | Component / Extension Suite | Target Subsystem / Package | Feasibility | Effort | Strategic Value & Implementation Justification | Target Phase |
 | :---: | :---: | :---: | :--- | :--- | :---: | :---: | :--- | :---: |
-| **#1** | **P0** | **8.2** | **`GridDataExporter`** | Data & Matrix | **10.0 / 10** | 1–2 days | Essential enterprise feature: streaming XLSX/CSV with zero Office/SDK dependencies. | **Phase 10** |
-| **#2** | **P0** | **8.12**| **`ZeroVisualDebugger`** | DX & Diagnostics | **9.8 / 10** | 1.5 days | Invaluable internal tooling: live inspection of visual tree, frame latency HUD, and GC monitoring. | **Phase 10** |
-| **#3** | **P0** | **8.5** | **`RatingControl`** | Form Editors | **10.0 / 10** | 0.5 day | Quick win: compact half-star inspection score selector for QA workflows. | **Phase 10** |
-| **#4** | **P0** | **8.1** | **`CardView` / `TileView`** | Data & Matrix | **9.5 / 10** | 2–3 days | Transformative UI presentation: switches `GridControl` to multi-column visual cards without changing data sources. | **Phase 10** |
-| **#5** | **P0** | **8.6** | **`BreadcrumbControl`** | Navigation / Layout | **9.5 / 10** | 2 days | High UX impact: hierarchical asset path navigator (`Enterprise > Plant > Cell > Machine`). | **Phase 10** |
-| **#6** | **P0** | **8.4** | **`BarcodeBox` / `BarcodeEdit`** | Form Editors | **9.2 / 10** | 2–3 days | Self-contained vector 1D/2D barcode & QR Code generator for shopfloor labels. | **Phase 10** |
-| **#7** | **P0** | **8.3** | **`SearchLookUpEdit`** | Form Editors | **9.0 / 10** | 2 days | High-capacity enterprise dropdown with persistent search bar for 50,000+ item BOMs. | **Phase 10** |
+| **#1** | **P0** | **8.2** | **`GridDataExporter`** | Data & Matrix | **10.0 / 10** | 1–2 days | Essential enterprise feature: streaming XLSX/CSV with zero Office/SDK dependencies. | **Phase 10 (Completed)** |
+| **#2** | **P0** | **8.12**| **`ZeroVisualDebugger`** | DX & Diagnostics | **9.8 / 10** | 1.5 days | Invaluable internal tooling: live inspection of visual tree, frame latency HUD, and GC monitoring. | **Phase 10 (Completed)** |
+| **#3** | **P0** | **8.5** | **`RatingControl`** | Form Editors | **10.0 / 10** | 0.5 day | Quick win: compact half-star inspection score selector for QA workflows. | **Phase 10 (Completed)** |
+| **#4** | **P0** | **8.1** | **`CardView` / `TileView`** | Data & Matrix | **9.5 / 10** | 2–3 days | Transformative UI presentation: switches `GridControl` to multi-column visual cards without changing data sources. | **Phase 10 (Completed)** |
+| **#5** | **P0** | **8.6** | **`BreadcrumbControl`** | Navigation / Layout | **9.5 / 10** | 2 days | High UX impact: hierarchical asset path navigator (`Enterprise > Plant > Cell > Machine`). | **Phase 10 (Completed)** |
+| **#6** | **P0** | **8.4** | **`BarcodeBox` / `BarcodeEdit`** | Form Editors | **9.2 / 10** | 2–3 days | Self-contained vector 1D/2D barcode & QR Code generator for shopfloor labels. | **Phase 10 (Completed)** |
+| **#7** | **P0** | **8.3** | **`SearchLookUpEdit`** | Form Editors | **9.0 / 10** | 2 days | High-capacity enterprise dropdown with persistent search bar for 50,000+ item BOMs. | **Phase 10 (Completed)** |
 | **#8** | **P1** | **8.14**| **`ZeroDeviceRack`** | `ZeroUI.Industry.Network` | **9.8 / 10** | 2–3 days | 19" 42U/DIN-rail rack visualizer with thermal/power load overlays. Reuses `ZeroWarehouseRack` math. | **Phase 12** |
 | **#9** | **P1** | **8.15**| **`ZeroSwitchFaceplate`** | `ZeroUI.Industry.Network` | **9.7 / 10** | 2 days | High-density 48-port switch front-panel with dual-LED link/act states and PoE wattage meters. | **Phase 12** |
 | **#10**| **P1** | **8.13**| **`ZeroNetworkTopology`** | `ZeroUI.Industry.Network` | **9.6 / 10** | 4–5 days | Flagship network canvas: animated packet pulse flows, Sugiyama & Barnes-Hut layout solvers. | **Phase 12** |
