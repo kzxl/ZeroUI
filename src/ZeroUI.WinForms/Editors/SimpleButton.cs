@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
@@ -26,7 +28,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("Click")]
     [DefaultProperty("Text")]
     [Description("Modern anti-aliased button with rounded corners and stateful styling")]
-    public class SimpleButton : Control
+    public class SimpleButton : ZeroControlBase
     {
 
         private ZeroButtonStyle _style = ZeroButtonStyle.Primary;
@@ -37,24 +39,22 @@ namespace ZeroUI.WinForms.Editors
 
         public SimpleButton()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(130, 36);
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             Cursor = Cursors.Hand;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold);
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            Invalidate();
         }
 
         [Category("Appearance")]
@@ -122,7 +122,7 @@ namespace ZeroUI.WinForms.Editors
             var (bg, fg, border) = GetColors();
 
             // 1. Fill parent background to eliminate black corner artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
             using (var brushParent = new SolidBrush(parentBg))
             {
                 g.FillRectangle(brushParent, ClientRectangle);
@@ -177,11 +177,11 @@ namespace ZeroUI.WinForms.Editors
 
         private (Color bg, Color fg, Color border) GetColors()
         {
-            var palette = ZeroTheme.Colors;
+            var palette = CurrentPalette;
 
             if (!Enabled)
             {
-                Color disabledBg = ZeroTheme.IsDark ? Color.FromArgb(40, 44, 60) : Color.FromArgb(229, 231, 235);
+                Color disabledBg = EffectiveSkin.IsDark ? Color.FromArgb(40, 44, 60) : Color.FromArgb(229, 231, 235);
                 return (disabledBg, palette.TextSecondary, Color.Transparent);
             }
 

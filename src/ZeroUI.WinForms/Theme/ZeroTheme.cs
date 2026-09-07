@@ -112,9 +112,15 @@ namespace ZeroUI.WinForms.Theme
         public static void ApplyPalette(ZeroPaletteTokens tokens, bool isDark)
         {
             if (tokens == null) throw new ArgumentNullException(nameof(tokens));
-
             _currentMode = isDark ? ZeroThemeMode.Dark : ZeroThemeMode.Light;
-            _currentPalette = new ZeroThemePalette
+            _currentPalette = CreatePaletteFromTokens(tokens, isDark);
+            ThemeChanged?.Invoke(null, EventArgs.Empty);
+        }
+
+        public static ZeroThemePalette CreatePaletteFromTokens(ZeroPaletteTokens tokens, bool isDark)
+        {
+            if (tokens == null) throw new ArgumentNullException(nameof(tokens));
+            return new ZeroThemePalette
             {
                 Background = SafeColor(tokens.BgPrimary, isDark ? Dark.Background : Light.Background),
                 Surface = SafeColor(tokens.BgCard, isDark ? Dark.Surface : Light.Surface),
@@ -131,8 +137,12 @@ namespace ZeroUI.WinForms.Theme
                 Hover = SafeColor(tokens.BgHover, isDark ? Dark.Hover : Light.Hover),
                 HeaderBackground = SafeColor(tokens.BgInput, isDark ? Dark.HeaderBackground : Light.HeaderBackground)
             };
+        }
 
-            ThemeChanged?.Invoke(null, EventArgs.Empty);
+        public static ZeroThemePalette CreatePaletteFromSkin(ZeroSkin skin)
+        {
+            if (skin == null) throw new ArgumentNullException(nameof(skin));
+            return CreatePaletteFromTokens(skin.Tokens, skin.IsDark);
         }
 
         private static Color SafeColor(string hex, Color fallback)

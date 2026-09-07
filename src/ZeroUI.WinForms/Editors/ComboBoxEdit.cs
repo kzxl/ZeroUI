@@ -1,12 +1,14 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Input;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -28,7 +30,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Modern anti-aliased ComboBox dropdown control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroComboBox.bmp")]
-    public class ZeroComboBox : Control
+    public class ZeroComboBox : ZeroControlBase
     {
         private readonly List<object> _items = new List<object>();
         private readonly SelectionModel<object> _selection = new SelectionModel<object>();
@@ -50,13 +52,7 @@ namespace ZeroUI.WinForms.Editors
 
         public ZeroComboBox()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.Selectable, true);
 
             Size = new Size(220, 36);
             Cursor = Cursors.Hand;
@@ -99,11 +95,6 @@ namespace ZeroUI.WinForms.Editors
                 DropDownClosed?.Invoke(this, EventArgs.Empty);
             };
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                _listControl.UpdateTheme();
-                Invalidate();
-            };
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -111,6 +102,14 @@ namespace ZeroUI.WinForms.Editors
                 _listControl.Font = ZeroUIConfig.DefaultFont;
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            BackColor = Color.Transparent;
+            _listControl?.UpdateTheme();
+            Invalidate();
         }
 
         [Browsable(false)]
@@ -322,8 +321,8 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            var palette = ZeroTheme.Colors;
-            bool isDark = ZeroTheme.IsDark;
+            var palette = CurrentPalette;
+            bool isDark = EffectiveSkin.IsDark;
 
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
             var borderRect = new Rectangle(1, 1, Width - 2, Height - 2);
@@ -468,7 +467,7 @@ namespace ZeroUI.WinForms.Editors
 
             public void UpdateTheme()
             {
-                var palette = ZeroTheme.Colors;
+                var palette = _owner.CurrentPalette;
                 BackColor = palette.CardBackground;
                 Invalidate();
             }
@@ -575,7 +574,7 @@ namespace ZeroUI.WinForms.Editors
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-                var palette = ZeroTheme.Colors;
+                var palette = _owner.CurrentPalette;
                 int count = _owner.Items.Count;
                 int renderW = _vScrollBar.Visible ? Width - _vScrollBar.Width : Width;
                 int visibleCount = (Height / _itemHeight) + 1;

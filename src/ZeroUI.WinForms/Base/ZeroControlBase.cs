@@ -69,6 +69,25 @@ namespace ZeroUI.WinForms.Base
         [Browsable(false)]
         protected ZeroPaletteTokens Palette => EffectiveSkin.Tokens;
 
+        private ZeroThemePalette? _localPalette;
+
+        /// <summary>
+        /// Gets the active GDI+ color palette for this control, resolving to either the global ZeroTheme.Colors or localized CustomSkin.
+        /// </summary>
+        [Browsable(false)]
+        protected ZeroThemePalette CurrentPalette
+        {
+            get
+            {
+                if (UseDefaultSkin) return ZeroTheme.Colors;
+                if (_localPalette == null)
+                {
+                    _localPalette = ZeroTheme.CreatePaletteFromSkin(EffectiveSkin);
+                }
+                return _localPalette;
+            }
+        }
+
         #endregion
 
         protected ZeroControlBase()
@@ -84,9 +103,9 @@ namespace ZeroUI.WinForms.Base
 
             _skinChangedHandler = skin =>
             {
-                if (_useDefaultSkin && !_isDisposed && IsHandleCreated)
+                if (_useDefaultSkin && !_isDisposed)
                 {
-                    if (InvokeRequired)
+                    if (IsHandleCreated && InvokeRequired)
                     {
                         try { BeginInvoke(new Action(() => { OnThemeChanged(skin); Invalidate(); })); }
                         catch (ObjectDisposedException) { }
@@ -101,10 +120,18 @@ namespace ZeroUI.WinForms.Base
 
             _themeChangedHandler = (s, e) =>
             {
-                if (_useDefaultSkin && !_isDisposed && IsHandleCreated)
+                if (_useDefaultSkin && !_isDisposed)
                 {
-                    OnThemeChanged(EffectiveSkin);
-                    Invalidate();
+                    if (IsHandleCreated && InvokeRequired)
+                    {
+                        try { BeginInvoke(new Action(() => { OnThemeChanged(EffectiveSkin); Invalidate(); })); }
+                        catch (ObjectDisposedException) { }
+                    }
+                    else
+                    {
+                        OnThemeChanged(EffectiveSkin);
+                        Invalidate();
+                    }
                 }
             };
 
@@ -112,6 +139,13 @@ namespace ZeroUI.WinForms.Base
             ZeroTheme.ThemeChanged += _themeChangedHandler;
 
             OnThemeChanged(EffectiveSkin);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            OnThemeChanged(EffectiveSkin);
+            Invalidate();
         }
 
         /// <summary>
@@ -134,6 +168,7 @@ namespace ZeroUI.WinForms.Base
         protected virtual void OnThemeChanged(ZeroSkin skin)
         {
             if (skin == null) return;
+            _localPalette = !UseDefaultSkin ? ZeroTheme.CreatePaletteFromSkin(skin) : null;
             BackColor = ColorTranslator.FromHtml(skin.Tokens.BgCard);
             ForeColor = ColorTranslator.FromHtml(skin.Tokens.TextPrimary);
         }

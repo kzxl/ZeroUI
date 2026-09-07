@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -19,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern text input control with clear button, placeholder, and action icons")]
     [ToolboxBitmap(typeof(ZeroIcons), "TextEdit.bmp")]
-    public class TextEdit : Control, IZeroEditor
+    public class TextEdit : ZeroControlBase, IZeroEditor
     {
         private readonly TextBox _innerBox;
         private string _placeholder = "";
@@ -66,13 +68,6 @@ namespace ZeroUI.WinForms.Editors
 
         public TextEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
@@ -80,8 +75,8 @@ namespace ZeroUI.WinForms.Editors
             {
                 BorderStyle = BorderStyle.None,
                 Font = Font,
-                BackColor = ZeroTheme.Colors.Surface,
-                ForeColor = ZeroTheme.Colors.TextPrimary
+                BackColor = CurrentPalette.Surface,
+                ForeColor = CurrentPalette.TextPrimary
             };
 
             _innerBox.TextChanged += (s, e) =>
@@ -109,7 +104,6 @@ namespace ZeroUI.WinForms.Editors
 
             Size = new Size(220, 36);
 
-            ZeroTheme.ThemeChanged += (s, e) => UpdateTheme();
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -119,16 +113,24 @@ namespace ZeroUI.WinForms.Editors
                 Invalidate();
             };
 
-            UpdateTheme();
+            UpdateInnerTheme();
             UpdateInnerBounds();
         }
 
-        private void UpdateTheme()
+        protected override void OnThemeChanged(ZeroSkin skin)
         {
-            var p = ZeroTheme.Colors;
+            base.OnThemeChanged(skin);
+            BackColor = Color.Transparent;
+            UpdateInnerTheme();
+            Invalidate();
+        }
+
+        private void UpdateInnerTheme()
+        {
+            if (_innerBox == null) return;
+            var p = CurrentPalette;
             _innerBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
             _innerBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
-            Invalidate();
         }
 
         [Category("Appearance")]
@@ -207,7 +209,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _innerBox.ReadOnly = value;
-                UpdateTheme();
+                UpdateInnerTheme();
             }
         }
 
@@ -386,7 +388,7 @@ namespace ZeroUI.WinForms.Editors
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-            var p = ZeroTheme.Colors;
+            var p = CurrentPalette;
             Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
             int radius = ZeroUIConfig.RoundedCorners ? ZeroUIConfig.DefaultBorderRadius : 0;
 

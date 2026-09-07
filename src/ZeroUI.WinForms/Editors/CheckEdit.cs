@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -20,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Description("Modern anti-aliased flat CheckBox control with tri-state support")]
     [ToolboxBitmap(typeof(ZeroIcons), "CheckEdit.bmp")]
-    public class CheckEdit : Control, IZeroEditor
+    public class CheckEdit : ZeroControlBase, IZeroEditor
     {
         private CheckState _checkState = CheckState.Unchecked;
         private bool _threeState = false;
@@ -78,25 +80,24 @@ namespace ZeroUI.WinForms.Editors
 
         public CheckEdit()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.Selectable |
-                ControlStyles.SupportsTransparentBackColor, true);
-
+            SetStyle(ControlStyles.Selectable, true);
             Size = new Size(140, 26);
             Cursor = Cursors.Hand;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = ZeroUIConfig.DefaultFont;
                 Invalidate();
             };
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            BackColor = Color.Transparent;
+            Invalidate();
         }
 
         [Category("Appearance")]
@@ -282,7 +283,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-            var p = ZeroTheme.Colors;
+            var p = CurrentPalette;
             int boxSize = 18;
             int boxY = (Height - boxSize) / 2;
             int boxX = (_checkAlign == ContentAlignment.MiddleRight) ? Width - boxSize - 2 : 2;
