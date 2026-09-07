@@ -13,6 +13,7 @@
 | **Phase 8** | **Enterprise Commercial Parity** | 8 Major Control Clusters | **Completed** | Full WinForms & WPF parity: `ZeroGridLookup`, `ZeroFilterControl`, `ZeroDockManager`, `ZeroWorkspaceSerializer`, `ZeroWizard`, `ZeroBoxPlotChart`, `ZeroGanttChart`, `ZeroPropertyGrid`, `ZeroPrintPreview`, `ZeroSkeleton`, `ZeroToast`, `ZeroModal`. |
 | **Phase 9** | **Enterprise DX & Advanced Analytics** | Unified `EditValue`, Validation, OLAP, Range | **Completed** | `IZeroEditor`, `ZeroDataBinder`, `ValidationProvider`, `ZeroLocalizer`, `PivotGridControl`, `RangeControl`. |
 | **Phase 10** | **Enterprise Presentation & DX (Tier P0)** | Immediate Enterprise Control Suite | **Completed** | `GridDataExporter` (Streaming XLSX/CSV), `ZeroVisualDebugger` (Runtime F12 HUD), `RatingControl` (Precision stars/symbols), `CardView`/`TileView` (`GridControl`), `BreadcrumbControl` (Navigation), `BarcodeBox` (Vector 1D/2D QR), `SearchLookUpEdit` (Paginated 50k+ dropdown). |
+| **Phase 11** | **SCADA Dials & Operational Layout (Tier P1)** | Precision Instrumentation & Dashboard Reflow | **Completed** | `RadialGauge` & `LinearGauge` (Threshold arcs & Damping), `FunnelChart` & `PyramidChart` (Yield & Drop-off metrics), `FlowLayoutControl` (Responsive wrapping & Drag reordering). |
 
 ---
 
@@ -107,6 +108,11 @@
 * [x] **`BarcodeBox` & `BarcodeEdit` (Rank #6 / Proposal 8.4):** Pure vector 1D (Code 128, Code 39) and 2D (QR Code with Reed-Solomon $GF(2^8)$ error correction) generator, renderer, and PNG export without any external ZXing/QRCoder dependencies.
 * [x] **`SearchLookUpEdit` (Rank #7 / Proposal 8.3):** Paginated high-capacity dropdown with persistent top search bar, Find/Clear buttons, count status footer, and debounced multi-token asynchronous querying engine (`SearchFilterEngine`) for 50,000+ item BOMs.
 
+### Phase 11: Core SCADA Dials & Operational Layout (Tier P1 — Completed)
+* [x] **`RadialGauge` & `LinearGauge` (Rank #14 / Proposal 8.8):** High-precision industrial dials (180° / 270° sweep) & vertical/horizontal thermometer gauges with customizable multi-color threshold bands (`GaugeThresholdRange`: Normal, Warning, Critical), magnetic needle damping (`GaugeMath.ApplyDamping`), and direct telemetry binding via `IScadaBindable`.
+* [x] **`FunnelChart` / `PyramidChart` (Rank #15 / Proposal 8.9):** Production line yield, conversion pipeline, and scrap loss visualizer with dual presentation modes (`Funnel` and `Pyramid`), interactive slice selection (`SelectedStageChanged`), drop-off metrics, and `FunnelMath` geometric calculations.
+* [x] **`FlowLayoutControl` (Rank #16 / Proposal 8.7):** Responsive card container that automatically wraps child cards based on container width using `FlowLayoutEngine`, featuring animated drag-and-drop tile reordering and JSON layout state persistence (`ExportLayoutJson` / `ImportLayoutJson`).
+
 ---
 
 ## 3. Future Enhancements & Proposals Catalog
@@ -124,10 +130,10 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 - **`BarcodeBox` & `BarcodeEdit` (Rank #6 / Proposal 8.4):** Completed. Pure vector 1D/2D barcode & QR Code generator/renderer.
 - **`SearchLookUpEdit` (Rank #7 / Proposal 8.3):** Completed. Paginated high-capacity dropdown with persistent top search bar for 50,000+ item BOMs.
 
-#### Phase 11: Core SCADA Dials & Operational Layout (Tier P1 — Mid-Term, Weeks 4–6)
-- **`RadialGauge` & `LinearGauge` (Rank #14 / Proposal 8.8):** High-precision circular dials & thermometers bound directly to unboxed `TagEngine`.
-- **`FunnelChart` / `PyramidChart` (Rank #15 / Proposal 8.9):** Production line yield, drop-off, and scrap rate visualizer.
-- **`FlowLayoutControl` (Rank #16 / Proposal 8.7):** Responsive card layout container with spring-damper drag-and-drop tile reordering.
+#### Phase 11: Core SCADA Dials & Operational Layout (Tier P1 — COMPLETED)
+- **`RadialGauge` & `LinearGauge` (Rank #14 / Proposal 8.8):** Completed. High-precision circular dials & thermometers bound directly to unboxed `TagEngine` via `IScadaBindable`.
+- **`FunnelChart` / `PyramidChart` (Rank #15 / Proposal 8.9):** Completed. Production line yield, drop-off, and scrap rate visualizer with Funnel and Pyramid modes.
+- **`FlowLayoutControl` (Rank #16 / Proposal 8.7):** Completed. Responsive card layout container with drag-and-drop tile reordering and JSON state persistence.
 
 #### Phase 12: Network & Device Infrastructure Control Suite (Tier P1 — Mid-Term, Weeks 7–9)
 - **`ZeroDeviceRack` (Rank #8 / Proposal 8.14):** 19-inch 42U/24U/12U server rack and DIN-rail cabinet visualizer with thermal/power load overlays.
