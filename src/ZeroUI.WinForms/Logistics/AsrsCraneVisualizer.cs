@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Logistics;
 using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Logistics
@@ -17,64 +18,16 @@ namespace ZeroUI.WinForms.Logistics
     [ToolboxItem(true)]
     [Category("ZeroUI - Logistics & Warehouse")]
     [Description("ASRS Stacker Crane 2D elevation visualizer with mast, hoist, forks, and cycle telemetry")]
-    public class AsrsCraneVisualizer : Control
+    public class AsrsCraneVisualizer : ZeroVisualControlBase
     {
         private readonly AsrsEngine _engine = new AsrsEngine();
-        private IDisposable? _animSub;
         private string _aisleTag = "AISLE-04";
+
+        protected override bool AutoAnimate => true;
 
         public AsrsCraneVisualizer()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(760, 340);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    // Gentle motion oscillation when active or simulating
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -185,26 +138,16 @@ namespace ZeroUI.WinForms.Logistics
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             // Top Header & Telemetry HUD
-            DrawHeaderAndHud(g, theme);
+            DrawHeaderAndHud(g, bounds, palette);
 
             // Rack Grid Area
-            int rackLeft = 24;
-            int rackTop = 64;
-            int rackWidth = Width - 48;
-            int rackHeight = Height - rackTop - 24;
+            int rackLeft = bounds.X + 24;
+            int rackTop = bounds.Y + 64;
+            int rackWidth = bounds.Width - 48;
+            int rackHeight = bounds.Height - 64 - 24;
 
             if (rackWidth < 200 || rackHeight < 100)
                 return;
@@ -212,29 +155,29 @@ namespace ZeroUI.WinForms.Logistics
             Rectangle rackRect = new Rectangle(rackLeft, rackTop, rackWidth, rackHeight);
 
             // Draw High-Bay Rack Grid
-            DrawRackGrid(g, rackRect, theme);
+            DrawRackGrid(g, rackRect, palette);
 
             // Draw Bottom Rail & Top Guide
-            DrawRails(g, rackRect, theme);
+            DrawRails(g, rackRect, palette);
 
             // Draw Crane (Mast + Hoist Carriage + Forks + Pallet)
-            DrawCraneAssembly(g, rackRect, theme);
+            DrawCraneAssembly(g, rackRect, palette);
         }
 
-        private void DrawHeaderAndHud(Graphics g, ZeroThemePalette theme)
+        private void DrawHeaderAndHud(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, $"{_aisleTag} — ASRS Stacker Crane", fontTitle, new Point(24, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, $"{_aisleTag} — ASRS Stacker Crane", fontTitle, new Point(bounds.X + 24, bounds.Y + 14), theme.TextPrimary);
 
                 // Right HUD: Pos (Bay/Tier), Payload, PPH
-                int hudX = Width - 460;
-                if (hudX > 220)
+                int hudX = bounds.Right - 460;
+                if (hudX > bounds.X + 220)
                 {
                     string posStr = $"Bay: {_engine.Position.CurrentBay:F1} | Tier: {_engine.Position.CurrentTier:F1}";
-                    TextRenderer.DrawText(g, posStr, fontSmall, new Point(hudX, 16), theme.TextSecondary);
+                    TextRenderer.DrawText(g, posStr, fontSmall, new Point(hudX, bounds.Y + 16), theme.TextSecondary);
 
                     string payloadStr = _engine.Payload.HasPallet
                         ? $"Pallet: {_engine.Payload.PalletBarcode} ({_engine.Payload.WeightKg:N0} kg)"
@@ -243,11 +186,11 @@ namespace ZeroUI.WinForms.Logistics
                         ? Color.FromArgb(239, 68, 68)
                         : (_engine.Payload.HasPallet ? Color.FromArgb(56, 189, 248) : theme.TextSecondary);
 
-                    TextRenderer.DrawText(g, payloadStr, fontBold, new Point(hudX + 160, 16), payloadColor);
+                    TextRenderer.DrawText(g, payloadStr, fontBold, new Point(hudX + 160, bounds.Y + 16), payloadColor);
 
                     // PPH Badge
                     string pphStr = $"{_engine.Stats.HourlyThroughputPph:F0} PPH";
-                    Rectangle pphBadge = new Rectangle(Width - 100, 12, 76, 24);
+                    Rectangle pphBadge = new Rectangle(bounds.Right - 100, bounds.Y + 12, 76, 24);
                     using (var badgeBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
                     using (var badgePen = new Pen(Color.FromArgb(34, 197, 94), 1f))
                     {

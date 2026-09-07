@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Logistics;
 using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Logistics
@@ -17,66 +18,18 @@ namespace ZeroUI.WinForms.Logistics
     [ToolboxItem(true)]
     [Category("ZeroUI - Logistics & Warehouse")]
     [Description("2D LiDAR SLAM floor map canvas for AGV / AMR robot fleets with trajectory splines")]
-    public class AgvFleetCanvas : Control
+    public class AgvFleetCanvas : ZeroVisualControlBase
     {
         private readonly AgvFleetEngine _engine = new AgvFleetEngine();
-        private IDisposable? _animSub;
         private AgvVehicle? _selectedVehicle;
 
         public event EventHandler? SelectedVehicleChanged;
 
+        protected override bool AutoAnimate => true;
+
         public AgvFleetCanvas()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(740, 360);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    // Gentle vehicle orientation & pulse animation
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -127,26 +80,16 @@ namespace ZeroUI.WinForms.Logistics
             return null;
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             // Top Header: Fleet Title, Active count, Avg Battery SoC
-            DrawHeader(g, theme);
+            DrawHeader(g, bounds, palette);
 
             // Floor Canvas Map
-            int mapLeft = 20;
-            int mapTop = 54;
-            int mapWidth = Width - 40;
-            int mapHeight = Height - mapTop - 16;
+            int mapLeft = bounds.X + 20;
+            int mapTop = bounds.Y + 54;
+            int mapWidth = bounds.Width - 40;
+            int mapHeight = bounds.Height - 54 - 16;
 
             if (mapWidth < 180 || mapHeight < 100)
                 return;
@@ -154,40 +97,40 @@ namespace ZeroUI.WinForms.Logistics
             Rectangle mapRect = new Rectangle(mapLeft, mapTop, mapWidth, mapHeight);
 
             // Grid background
-            DrawFloorGrid(g, mapRect, theme);
+            DrawFloorGrid(g, mapRect, palette);
 
             // Stations (Charging docks, Pick/Drop zones)
-            DrawStations(g, mapRect, theme);
+            DrawStations(g, mapRect, palette);
 
             // Trajectory Splines
-            DrawPlannedTrajectories(g, mapRect, theme);
+            DrawPlannedTrajectories(g, mapRect, palette);
 
             // Vehicles (Footprints, Orientation, Safety zones)
-            DrawVehicles(g, mapRect, theme);
+            DrawVehicles(g, mapRect, palette);
 
             // Selected Vehicle Telemetry HUD Card
             if (_selectedVehicle != null)
             {
-                DrawSelectedVehicleHud(g, _selectedVehicle, mapRect, theme);
+                DrawSelectedVehicleHud(g, _selectedVehicle, mapRect, palette);
             }
         }
 
-        private void DrawHeader(Graphics g, ZeroThemePalette theme)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, "AGV / AMR Fleet LiDAR SLAM Map", fontTitle, new Point(20, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, "AGV / AMR Fleet LiDAR SLAM Map", fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
 
-                int statsX = Width - 320;
-                if (statsX > 240)
+                int statsX = bounds.Right - 320;
+                if (statsX > bounds.X + 240)
                 {
                     string fleetInfo = $"Vehicles: {_engine.Vehicles.Count} | Avg SoC: {_engine.AverageBatterySocPct:F0}%";
-                    TextRenderer.DrawText(g, fleetInfo, fontSmall, new Point(statsX, 16), theme.TextSecondary);
+                    TextRenderer.DrawText(g, fleetInfo, fontSmall, new Point(statsX, bounds.Y + 16), theme.TextSecondary);
 
                     // Status pill
-                    Rectangle pillRect = new Rectangle(Width - 100, 12, 80, 24);
+                    Rectangle pillRect = new Rectangle(bounds.Right - 100, bounds.Y + 12, 80, 24);
                     using (var pillBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
                     using (var pillPen = new Pen(Color.FromArgb(34, 197, 94), 1f))
                     {

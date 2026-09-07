@@ -37,10 +37,18 @@ namespace ZeroUI.WinForms.Base
                 {
                     if (IsHandleCreated && !IsDisposed)
                     {
+                        OnAnimationTick(delta, frame);
                         Invalidate();
                     }
                 });
             }
+        }
+
+        /// <summary>
+        /// Invoked on each animation clock tick when AutoAnimate is true. Override to advance kinematics or simulation state.
+        /// </summary>
+        protected virtual void OnAnimationTick(double delta, long frame)
+        {
         }
 
         protected override void OnHandleDestroyed(EventArgs e)

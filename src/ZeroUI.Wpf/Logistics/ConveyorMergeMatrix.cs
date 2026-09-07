@@ -17,28 +17,17 @@ namespace ZeroUI.Wpf.Logistics
     public class ConveyorMergeMatrix : ZeroWpfVisualBase
     {
         private readonly ConveyorMergeEngine _engine = new ConveyorMergeEngine();
-        private IDisposable? _animSub;
         private string _lineName = "Main Infeed & Merge Line 1";
+
+        protected override bool AutoAnimate => true;
+
+        protected override void OnAnimationTick(double delta, long frame)
+        {
+            _engine.AdvanceParcels(delta);
+        }
 
         public ConveyorMergeMatrix()
         {
-            Loaded += (s, e) =>
-            {
-                _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-                {
-                    if (IsLoaded)
-                    {
-                        _engine.AdvanceParcels(delta);
-                        Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
-                    }
-                });
-            };
-
-            Unloaded += (s, e) =>
-            {
-                _animSub?.Dispose();
-                _animSub = null;
-            };
         }
 
         #region Properties
@@ -64,22 +53,6 @@ namespace ZeroUI.Wpf.Logistics
                 InvalidateVisual();
             }
         }
-
-        #endregion
-
-        #region Helpers
-
-#if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-#else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-#endif
 
         #endregion
 

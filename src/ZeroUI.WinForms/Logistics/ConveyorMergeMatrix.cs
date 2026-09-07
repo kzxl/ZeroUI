@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Logistics;
 using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Logistics
@@ -17,64 +18,21 @@ namespace ZeroUI.WinForms.Logistics
     [ToolboxItem(true)]
     [Category("ZeroUI - Logistics & Warehouse")]
     [Description("High-speed parcel sorting conveyor merge visualizer with photo-eyes, divert chutes, and PPH meter")]
-    public class ConveyorMergeMatrix : Control
+    public class ConveyorMergeMatrix : ZeroVisualControlBase
     {
         private readonly ConveyorMergeEngine _engine = new ConveyorMergeEngine();
-        private IDisposable? _animSub;
         private string _lineName = "Main Infeed & Merge Line 1";
+
+        protected override bool AutoAnimate => true;
+
+        protected override void OnAnimationTick(double delta, long frame)
+        {
+            _engine.AdvanceParcels(delta);
+        }
 
         public ConveyorMergeMatrix()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint |
-                     ControlStyles.UserPaint |
-                     ControlStyles.OptimizedDoubleBuffer |
-                     ControlStyles.ResizeRedraw, true);
-            DoubleBuffered = true;
             Size = new Size(760, 300);
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _animSub ??= ZeroAnimationClock.Subscribe((delta, frame) =>
-            {
-                if (IsHandleCreated && !IsDisposed)
-                {
-                    _engine.AdvanceParcels(delta);
-                    Invalidate();
-                }
-            });
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            _animSub?.Dispose();
-            _animSub = null;
-            base.OnHandleDestroyed(e);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animSub?.Dispose();
-                _animSub = null;
-            }
-            base.Dispose(disposing);
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e)
-        {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(Invalidate));
-                else
-                    Invalidate();
-            }
         }
 
         #region Public Properties
@@ -111,25 +69,15 @@ namespace ZeroUI.WinForms.Logistics
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var theme = ZeroTheme.Colors;
-
-            // Background
-            using (var bgBrush = new SolidBrush(theme.Background))
-            {
-                g.FillRectangle(bgBrush, ClientRectangle);
-            }
-
             // Top Header: Title, Velocity, Throughput PPH
-            DrawHeader(g, theme);
+            DrawHeader(g, bounds, palette);
 
             // Main Conveyor Belt Area
-            int beltLeft = 30;
-            int beltTop = 110;
-            int beltWidth = Width - 60;
+            int beltLeft = bounds.X + 30;
+            int beltTop = bounds.Y + 110;
+            int beltWidth = bounds.Width - 60;
             int beltHeight = 54;
 
             if (beltWidth < 200)
@@ -138,38 +86,38 @@ namespace ZeroUI.WinForms.Logistics
             Rectangle mainBeltRect = new Rectangle(beltLeft, beltTop, beltWidth, beltHeight);
 
             // 1. Draw Divert Chutes (Branching upwards from belt)
-            DrawDivertChutes(g, mainBeltRect, theme);
+            DrawDivertChutes(g, mainBeltRect, palette);
 
             // 2. Draw Merge Feeder (Branching from bottom left into belt)
-            DrawMergeFeeder(g, mainBeltRect, theme);
+            DrawMergeFeeder(g, mainBeltRect, palette);
 
             // 3. Draw Main Conveyor Belt Bed
-            DrawConveyorBelt(g, mainBeltRect, theme);
+            DrawConveyorBelt(g, mainBeltRect, palette);
 
             // 4. Draw Photo-eye Optical Sensors
-            DrawPhotoEyeSensors(g, mainBeltRect, theme);
+            DrawPhotoEyeSensors(g, mainBeltRect, palette);
 
             // 5. Draw Traveling Parcels
-            DrawParcels(g, mainBeltRect, theme);
+            DrawParcels(g, mainBeltRect, palette);
         }
 
-        private void DrawHeader(Graphics g, ZeroThemePalette theme)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, _lineName, fontTitle, new Point(24, 14), theme.TextPrimary);
+                TextRenderer.DrawText(g, _lineName, fontTitle, new Point(bounds.X + 24, bounds.Y + 14), theme.TextPrimary);
 
-                int hudX = Width - 380;
-                if (hudX > 200)
+                int hudX = bounds.Right - 380;
+                if (hudX > bounds.X + 200)
                 {
                     string speedStr = $"Speed: {_engine.MainSpeedMpm:F0} m/min | Parcels: {_engine.Parcels.Count}";
-                    TextRenderer.DrawText(g, speedStr, fontSmall, new Point(hudX, 16), theme.TextSecondary);
+                    TextRenderer.DrawText(g, speedStr, fontSmall, new Point(hudX, bounds.Y + 16), theme.TextSecondary);
 
                     // PPH Badge
                     string pphStr = $"{_engine.HourlyThroughputPph:N0} PPH";
-                    Rectangle pphBadge = new Rectangle(Width - 140, 12, 110, 24);
+                    Rectangle pphBadge = new Rectangle(bounds.Right - 140, bounds.Y + 12, 110, 24);
                     using (var badgeBrush = new SolidBrush(Color.FromArgb(30, 34, 197, 94)))
                     using (var badgePen = new Pen(Color.FromArgb(34, 197, 94), 1f))
                     {

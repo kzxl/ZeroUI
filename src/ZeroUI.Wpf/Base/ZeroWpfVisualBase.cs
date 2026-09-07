@@ -68,12 +68,20 @@ namespace ZeroUI.Wpf.Base
                 {
                     if (IsLoaded)
                     {
+                        OnAnimationTick(delta, frame);
                         Dispatcher.InvokeAsync(InvalidateVisual, System.Windows.Threading.DispatcherPriority.Render);
                     }
                 });
             }
 
             InvalidateVisual();
+        }
+
+        /// <summary>
+        /// Invoked on each animation clock tick when AutoAnimate is true. Override to advance kinematics or simulation state.
+        /// </summary>
+        protected virtual void OnAnimationTick(double delta, long frame)
+        {
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
