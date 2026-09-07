@@ -259,7 +259,7 @@ To guide the long-term technical evolution of **ZeroUI** without compromising it
 | **#20**| **P2** | **8.25**| **Healthcare & Lab Automation** | `ZeroUI.Industry.LifeSciences`| **9.5 / 10** | 2–3 days | 96/384-well microplate heatmap, high-speed centrifuge RCF monitor, -80°C cold chain ribbons. | **Phase 13** |
 | **#21**| **P3** | **8.21**| **Water Treatment Suite** | `ZeroUI.Industry.Water` | **9.3 / 10** | 3 days | Clarifier basin with rotating sludge scraper, chemical dosing skids, hydraulic grade line (HGL). | **Phase 15 (Completed)** |
 | **#22**| **P3** | **8.22**| **Pharma & Batch (ISA-88) Suite** | `ZeroUI.Industry.Process` | **8.9 / 10** | 5–6 days | ISA-88 procedural batch SFC tracker, sanitary bioreactor, CIP/SIP 4-TACT validation matrix. | **Phase 16 (Completed)** |
-| **#23**| **P3** | **8.24**| **Oil & Gas / Petrochemical Suite**| `ZeroUI.Industry.Petrochem` | **8.8 / 10** | 4–5 days | Fractional distillation column tray profiles, SIL-rated SIS/ESD Cause & Effect matrix. | **Phase 14** |
+| **#23**| **P3** | **8.24**| **Oil & Gas / Petrochemical Suite**| `ZeroUI.Industry.Petrochem` | **8.8 / 10** | 4–5 days | Fractional distillation column tray profiles, SIL-rated SIS/ESD Cause & Effect matrix. | **Phase 17 (Completed)** |
 | **#24**| **P3** | **8.11**| **`PdfViewerControl`** | Document & Office | **8.0 / 10** | 3–4 days | Embedded technical drawing, electrical CAD schematic, and SOP PDF document viewer. | **Phase 14** |
 | **#25**| **P3** | **8.10**| **`SpreadsheetControl` (Phase 1)** | Document & Office | **7.8 / 10** | 4–5 days | Lightweight vector calculation sheet with core formulas (`SUM`, `AVERAGE`, `IF`). | **Phase 14** |
 
