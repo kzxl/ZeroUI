@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Wpf.Base;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Navigation
@@ -63,11 +64,17 @@ namespace ZeroUI.Wpf.Navigation
     /// Supports brand header, category section grouping, notification badges,
     /// collapsible rail mode (240px ⇄ 64px), and automatic view switching.
     /// </summary>
-    public class SideNav : Control
+    public class SideNav : ZeroWpfControlBase
     {
         private readonly ObservableCollection<SideNavItem> _items = new ObservableCollection<SideNavItem>();
         private StackPanel? _itemsStack;
         private Border? _rootBorder;
+        private Border? _brandBorder;
+        private Border? _footerBorder;
+        private TextBlock? _logoBlock;
+        private TextBlock? _titleBlock;
+        private TextBlock? _subBlock;
+        private TextBlock? _collapseBtn;
         private ContentControl? _contentContainer;
         private int _selectedIndex = 0;
 
@@ -75,13 +82,13 @@ namespace ZeroUI.Wpf.Navigation
             DependencyProperty.Register(nameof(IsCollapsed), typeof(bool), typeof(SideNav), new PropertyMetadata(false, OnIsCollapsedChanged));
 
         public static readonly DependencyProperty BrandTitleProperty =
-            DependencyProperty.Register(nameof(BrandTitle), typeof(string), typeof(SideNav), new PropertyMetadata("ZeroUI Suite"));
+            DependencyProperty.Register(nameof(BrandTitle), typeof(string), typeof(SideNav), new PropertyMetadata("ZeroUI Suite", OnBrandPropertyChanged));
 
         public static readonly DependencyProperty BrandSubtitleProperty =
-            DependencyProperty.Register(nameof(BrandSubtitle), typeof(string), typeof(SideNav), new PropertyMetadata("Enterprise Station"));
+            DependencyProperty.Register(nameof(BrandSubtitle), typeof(string), typeof(SideNav), new PropertyMetadata("Enterprise Station", OnBrandPropertyChanged));
 
         public static readonly DependencyProperty BrandLogoProperty =
-            DependencyProperty.Register(nameof(BrandLogo), typeof(string), typeof(SideNav), new PropertyMetadata("⚡"));
+            DependencyProperty.Register(nameof(BrandLogo), typeof(string), typeof(SideNav), new PropertyMetadata("⚡", OnBrandPropertyChanged));
 
         public bool IsCollapsed
         {
@@ -120,23 +127,22 @@ namespace ZeroUI.Wpf.Navigation
             get => _selectedIndex;
             set
             {
-                if (value >= 0 && value < _items.Count && _selectedIndex != value)
+                if (value >= 0 && value < _items.Count)
                 {
+                    bool changed = (_selectedIndex != value);
                     _selectedIndex = value;
                     SwitchToSelectedItem();
                     RebuildItemsUI();
-                    ItemSelected?.Invoke(this, new SideNavEventArgs(_items[value], value));
+                    if (changed)
+                    {
+                        ItemSelected?.Invoke(this, new SideNavEventArgs(_items[value], value));
+                    }
                 }
             }
         }
 
         public event EventHandler<SideNavEventArgs>? ItemSelected;
         public event EventHandler? CollapseChanged;
-
-        static SideNav()
-        {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(SideNav), new FrameworkPropertyMetadata(typeof(SideNav)));
-        }
 
         public SideNav()
         {
@@ -148,35 +154,6 @@ namespace ZeroUI.Wpf.Navigation
 
             _items.CollectionChanged += (s, e) => RebuildItemsUI();
             BuildVisualTemplate();
-
-            ZeroUI.Core.Theme.ZeroSkinManager.SkinChanged += skin =>
-            {
-                if (Dispatcher.CheckAccess())
-                {
-                    Background = ZeroWpfTheme.BgCard;
-                    BorderBrush = ZeroWpfTheme.BorderDefault;
-                    if (_rootBorder != null)
-                    {
-                        _rootBorder.Background = Background;
-                        _rootBorder.BorderBrush = BorderBrush;
-                    }
-                    RebuildItemsUI();
-                }
-                else
-                {
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        Background = ZeroWpfTheme.BgCard;
-                        BorderBrush = ZeroWpfTheme.BorderDefault;
-                        if (_rootBorder != null)
-                        {
-                            _rootBorder.Background = Background;
-                            _rootBorder.BorderBrush = BorderBrush;
-                        }
-                        RebuildItemsUI();
-                    }));
-                }
-            };
         }
 
         public void Refresh() => RebuildItemsUI();
@@ -196,7 +173,7 @@ namespace ZeroUI.Wpf.Navigation
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(44, GridUnitType.Pixel) }); // Collapse Footer
 
             // 1. Brand Header
-            var brandBorder = new Border
+            _brandBorder = new Border
             {
                 Background = Brushes.Transparent,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
@@ -207,27 +184,27 @@ namespace ZeroUI.Wpf.Navigation
             brandGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(36, GridUnitType.Pixel) });
             brandGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            var logoBlock = new TextBlock
+            _logoBlock = new TextBlock
             {
                 Text = BrandLogo,
                 FontSize = 18.0,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
-            Grid.SetColumn(logoBlock, 0);
-            brandGrid.Children.Add(logoBlock);
+            Grid.SetColumn(_logoBlock, 0);
+            brandGrid.Children.Add(_logoBlock);
 
             var titlesStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
-            var titleBlock = new TextBlock { Text = BrandTitle, FontWeight = FontWeights.Bold, FontSize = 13.0, Foreground = ZeroWpfTheme.TextPrimary };
-            var subBlock = new TextBlock { Text = BrandSubtitle, FontSize = 10.5, Foreground = ZeroWpfTheme.TextMuted };
-            titlesStack.Children.Add(titleBlock);
-            titlesStack.Children.Add(subBlock);
+            _titleBlock = new TextBlock { Text = BrandTitle, FontWeight = FontWeights.Bold, FontSize = 13.0, Foreground = ZeroWpfTheme.TextPrimary };
+            _subBlock = new TextBlock { Text = BrandSubtitle, FontSize = 10.5, Foreground = ZeroWpfTheme.TextMuted };
+            titlesStack.Children.Add(_titleBlock);
+            titlesStack.Children.Add(_subBlock);
             Grid.SetColumn(titlesStack, 1);
             brandGrid.Children.Add(titlesStack);
 
-            brandBorder.Child = brandGrid;
-            Grid.SetRow(brandBorder, 0);
-            mainGrid.Children.Add(brandBorder);
+            _brandBorder.Child = brandGrid;
+            Grid.SetRow(_brandBorder, 0);
+            mainGrid.Children.Add(_brandBorder);
 
             // 2. Items List inside ScrollViewer
             var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
@@ -237,29 +214,28 @@ namespace ZeroUI.Wpf.Navigation
             mainGrid.Children.Add(scroll);
 
             // 3. Collapse/Expand Toggle Footer
-            var footerBorder = new Border
+            _footerBorder = new Border
             {
                 BorderBrush = ZeroWpfTheme.BorderDefault,
                 BorderThickness = new Thickness(0, 1, 0, 0),
                 Background = Brushes.Transparent,
                 Cursor = Cursors.Hand
             };
-            var collapseBtn = new TextBlock
+            _collapseBtn = new TextBlock
             {
-                Text = "◀",
+                Text = IsCollapsed ? "▶" : "◀",
                 FontSize = 12.0,
                 Foreground = ZeroWpfTheme.TextSecondary,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
-            footerBorder.Child = collapseBtn;
-            footerBorder.MouseDown += (s, e) =>
+            _footerBorder.Child = _collapseBtn;
+            _footerBorder.MouseDown += (s, e) =>
             {
                 IsCollapsed = !IsCollapsed;
-                collapseBtn.Text = IsCollapsed ? "▶" : "◀";
             };
-            Grid.SetRow(footerBorder, 2);
-            mainGrid.Children.Add(footerBorder);
+            Grid.SetRow(_footerBorder, 2);
+            mainGrid.Children.Add(_footerBorder);
 
             _rootBorder.Child = mainGrid;
             AddVisualChild(_rootBorder);
@@ -268,16 +244,93 @@ namespace ZeroUI.Wpf.Navigation
             RebuildItemsUI();
         }
 
+        private static void OnBrandPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SideNav nav)
+            {
+                nav.UpdateBrandUI();
+            }
+        }
+
+        private void UpdateBrandUI()
+        {
+            if (_logoBlock != null) _logoBlock.Text = BrandLogo;
+            if (_titleBlock != null) _titleBlock.Text = BrandTitle;
+            if (_subBlock != null) _subBlock.Text = BrandSubtitle;
+        }
+
         private static void OnIsCollapsedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroSideNav nav)
+            if (d is SideNav nav)
             {
                 bool collapsed = (bool)e.NewValue;
                 nav.Width = collapsed ? 64 : 240;
+                if (nav._collapseBtn != null)
+                {
+                    nav._collapseBtn.Text = collapsed ? "▶" : "◀";
+                }
                 nav.RebuildItemsUI();
                 nav.CollapseChanged?.Invoke(nav, EventArgs.Empty);
             }
         }
+
+        protected override void OnThemeChanged()
+        {
+            base.OnThemeChanged();
+            Background = ZeroWpfTheme.BgCard;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_rootBorder != null)
+            {
+                _rootBorder.Background = Background;
+                _rootBorder.BorderBrush = BorderBrush;
+            }
+            if (_titleBlock != null) _titleBlock.Foreground = ZeroWpfTheme.TextPrimary;
+            if (_subBlock != null) _subBlock.Foreground = ZeroWpfTheme.TextMuted;
+            if (_brandBorder != null) _brandBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_footerBorder != null) _footerBorder.BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_collapseBtn != null) _collapseBtn.Foreground = ZeroWpfTheme.TextSecondary;
+            RebuildItemsUI();
+        }
+
+        #region Visual & Logical Children Overrides
+
+        protected override int VisualChildrenCount => _rootBorder != null ? 1 : 0;
+
+        protected override Visual GetVisualChild(int index)
+        {
+            if (_rootBorder == null || index != 0) throw new ArgumentOutOfRangeException(nameof(index));
+            return _rootBorder;
+        }
+
+        protected override System.Collections.IEnumerator LogicalChildren
+        {
+            get
+            {
+                if (_rootBorder != null) yield return _rootBorder;
+            }
+        }
+
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_rootBorder != null)
+            {
+                _rootBorder.Measure(constraint);
+                return _rootBorder.DesiredSize;
+            }
+            return base.MeasureOverride(constraint);
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            if (_rootBorder != null)
+            {
+                _rootBorder.Arrange(new Rect(arrangeBounds));
+                return arrangeBounds;
+            }
+            return base.ArrangeOverride(arrangeBounds);
+        }
+
+        #endregion
 
         private void RebuildItemsUI()
         {
@@ -392,9 +445,10 @@ namespace ZeroUI.Wpf.Navigation
                     if (index != _selectedIndex) rowBorder.Background = Brushes.Transparent;
                 };
 
-                rowBorder.MouseDown += (s, e) =>
+                rowBorder.MouseLeftButtonDown += (s, e) =>
                 {
                     SelectedIndex = index;
+                    e.Handled = true;
                 };
 
                 rowBorder.Child = rowGrid;
