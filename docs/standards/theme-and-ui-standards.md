@@ -117,12 +117,47 @@ Every control in ZeroUI must consume one of the standardized semantic tokens bel
          }
 
          TextRenderer.DrawText(g, Text, Font, ClientRectangle, theme.TextPrimary, TextFormatFlags.VerticalCenter);
-     }
-     ```
+### 3.2 ZeroUI Skin Framework Base Classes & Contracts
 
-2. **Event Hooking & Cleanup:**
-   - In constructor: `ZeroTheme.ThemeChanged += OnThemeChanged;`
-   - In `Dispose(bool disposing)`: `ZeroTheme.ThemeChanged -= OnThemeChanged;` to prevent memory leaks.
+To eliminate boilerplate and ensure uniform, zero-leak theme lifecycle management, all controls should inherit from the platform-specific architectural base classes:
+
+#### 1. Core Contract (`IZeroSkinnable`)
+Defined in `ZeroUI.Core.Theme`:
+```csharp
+public interface IZeroSkinnable
+{
+    bool UseDefaultSkin { get; set; }
+    ZeroSkin? CustomSkin { get; set; }
+    ZeroSkin EffectiveSkin { get; }
+    void ApplySkin(ZeroSkin skin);
+}
+```
+
+#### 2. WinForms Architecture (`ZeroControlBase` & `ZeroPaintHelper`)
+- **`ZeroControlBase`**:
+  - Automatically configures high-speed double-buffering (`UserPaint`, `AllPaintingInWmPaint`, `OptimizedDoubleBuffer`, `ResizeRedraw`).
+  - Subscribes to `ZeroSkinManager.SkinChanged` and `ZeroTheme.ThemeChanged`, safely marshaling to UI thread via `BeginInvoke` and unhooking on `Dispose(bool disposing)`.
+  - Exposes `protected ZeroThemePalette CurrentPalette` resolving to either global `ZeroTheme.Colors` or scoped `EffectiveSkin`.
+  - Override `protected virtual void OnThemeChanged(ZeroSkin skin)` to update child controls or internal GDI+ caches.
+- **`ZeroPaintHelper`**:
+  - High-performance zero-alloc GDI+ routines: `DrawCard()`, `DrawStatusBadge()`, `DrawFocusRing()`, `CreateRoundedRectangle()`.
+
+#### 3. WPF Architecture (`ZeroWpfControlBase` & `ZeroWpfVisualBase`)
+- **`ZeroWpfControlBase`**:
+  - Architectural base for composite/templated WPF controls (`Control`).
+  - Dynamically binds default `Background`, `Foreground`, and `BorderBrush` to theme dynamic resources.
+  - Automatically binds and unbinds to `ZeroWpfTheme.ThemeChanged` via `Loaded` / `Unloaded` to prevent memory leaks.
+  - Exposes `EffectiveSkin`, `UseDefaultSkin`, and `CustomSkin` dependency properties.
+- **`ZeroWpfVisualBase`**:
+  - Architectural base for direct vector visualizers (`FrameworkElement` / `OnRender`).
+  - Automatically invalidates visual surface on theme changes.
+- **`ZeroSkinProps.SkinName`**:
+  - Attached property allowing localized theme scoping on any container:
+    ```xml
+    <Border theme:ZeroSkinProps.SkinName="ObsidianDark">
+        <!-- Child controls inside this container render in Obsidian Dark regardless of window theme -->
+    </Border>
+    ```
 
 ---
 
@@ -130,10 +165,11 @@ Every control in ZeroUI must consume one of the standardized semantic tokens bel
 
 1. **Prohibit Sibling-Degrading Docking for Transient Overlays:**
    - Side drawers, flyouts, and modal sidebars must **never** use `Dock = DockStyle.Right` or `Dock = DockStyle.Left` when sibling controls host heavy computational datasets (e.g., virtualized grids, high-frequency charts).
-   - Transient panels must use **Floating Overlay** mode (`Dock = None`, `Anchor = Top | Bottom | Right`) or GPU transforms (`TranslateTransform.X`) so that sibling controls undergo zero layout passes and remain locked at 60–120 FPS.
+   - Transient panels must use **Floating Overlay** mode (`Dock = None`, `Anchor = Top | Bottom | Right`) in WinForms or GPU transforms (`TranslateTransform.X`) in WPF so that sibling controls undergo zero layout passes and remain locked at 60–120 FPS.
+   - Use `ZeroDrawer` (available in both `ZeroUI.WinForms.Overlays` and `ZeroUI.Wpf.Overlays`) which implements this standard out-of-the-box.
 
 2. **Time-Based Animation Interpolation:**
-   - All interactive sliding or fading motions must consume `deltaSeconds` from `ZeroAnimationClock`.
+   - All interactive sliding or fading motions must consume `deltaSeconds` from `ZeroAnimationClock` (WinForms) or `CubicEase` (WPF).
    - Never compute step deltas using crude distance division (e.g. `(target - current) / 3`) which produces step stuttering across varying screen refresh rates.
    - Recommended duration: `200ms - 250ms` using `EaseOutCubic`:
      $$\text{Progress}(t) = 1 - (1 - t)^3 \quad \text{where } t \in [0, 1]$$
