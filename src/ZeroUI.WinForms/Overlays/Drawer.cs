@@ -322,7 +322,7 @@ namespace ZeroUI.WinForms.Overlays
             _closeRect = new Rectangle(Width - 36, 16, 24, 24);
             if (_isCloseHovered)
             {
-                using var bPath = ZeroPaintHelper.CreateRoundedRectangle(_closeRect, 4);
+                using var bPath = PaintHelper.CreateRoundedRectangle(_closeRect, 4);
                 using var bBrush = new SolidBrush(hoverBg);
                 g.FillPath(bBrush, bPath);
             }
@@ -402,5 +402,19 @@ namespace ZeroUI.WinForms.Overlays
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Modern enterprise slide-out drawer panel for ZeroUI WinForms.
+    /// </summary>
+    public class DrawerControl : ZeroDrawer
+    {
+    }
+
+    /// <summary>
+    /// Standard alias for <see cref="DrawerControl"/>.
+    /// </summary>
+    public class Drawer : DrawerControl
+    {
     }
 }

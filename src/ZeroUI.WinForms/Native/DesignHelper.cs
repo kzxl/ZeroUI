@@ -9,7 +9,7 @@ namespace ZeroUI.WinForms.Native
     /// Utility helper for robust Visual Studio Form Designer and DesignMode detection.
     /// Prevents background threads, animations, and timers from executing inside devenv.exe.
     /// </summary>
-    public static class ZeroDesignHelper
+    public static class DesignHelper
     {
         private static bool? _isDevenv;
 
@@ -52,5 +52,13 @@ namespace ZeroUI.WinForms.Native
 
             return _isDevenv.Value;
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="DesignHelper"/>.
+    /// </summary>
+    public static class ZeroDesignHelper
+    {
+        public static bool IsInDesignMode(Control? control = null) => DesignHelper.IsInDesignMode(control);
     }
 }

@@ -6,9 +6,9 @@ namespace ZeroUI.WinForms.Theme
     /// <summary>
     /// Modern anti-aliased menu renderer for ZeroUI context menus with Dark/Light design token support.
     /// </summary>
-    public class ZeroMenuRenderer : ToolStripProfessionalRenderer
+    public class MenuRenderer : ToolStripProfessionalRenderer
     {
-        public ZeroMenuRenderer() : base(new ZeroMenuColorTable())
+        public MenuRenderer() : base(new ZeroMenuColorTable())
         {
             RoundedEdges = true;
         }
@@ -43,6 +43,13 @@ namespace ZeroUI.WinForms.Theme
             using var pen = new Pen(theme.Border, 1);
             e.Graphics.DrawRectangle(pen, 0, 0, e.ToolStrip.Width - 1, e.ToolStrip.Height - 1);
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="MenuRenderer"/>.
+    /// </summary>
+    public class ZeroMenuRenderer : MenuRenderer
+    {
     }
 
     internal class ZeroMenuColorTable : ProfessionalColorTable

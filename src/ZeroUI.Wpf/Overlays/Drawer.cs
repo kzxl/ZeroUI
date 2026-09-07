@@ -26,7 +26,7 @@ namespace ZeroUI.Wpf.Overlays
     /// to guarantee fluid 60-120 FPS sliding without triggering layout storms on sibling controls.
     /// </summary>
     [ContentProperty(nameof(ContentElement))]
-    public class ZeroDrawer : ZeroWpfControlBase
+    public class DrawerControl : ZeroWpfControlBase
     {
         private Border? _scrimBorder;
         private Border? _drawerPanel;
@@ -42,56 +42,56 @@ namespace ZeroUI.Wpf.Overlays
             DependencyProperty.Register(
                 nameof(IsOpen),
                 typeof(bool),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsOpenChanged));
 
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register(
                 nameof(Title),
                 typeof(string),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new PropertyMetadata("Detail Inspector", OnTitleChanged));
 
         public static readonly DependencyProperty SubtitleProperty =
             DependencyProperty.Register(
                 nameof(Subtitle),
                 typeof(string),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new PropertyMetadata(null, OnSubtitleChanged));
 
         public static readonly DependencyProperty DrawerWidthProperty =
             DependencyProperty.Register(
                 nameof(DrawerWidth),
                 typeof(double),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new PropertyMetadata(400.0, OnDrawerDimensionChanged));
 
         public static readonly DependencyProperty DrawerHeightProperty =
             DependencyProperty.Register(
                 nameof(DrawerHeight),
                 typeof(double),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new PropertyMetadata(350.0, OnDrawerDimensionChanged));
 
         public static readonly DependencyProperty EdgeProperty =
             DependencyProperty.Register(
                 nameof(Edge),
                 typeof(DrawerEdge),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new PropertyMetadata(DrawerEdge.Right, OnDrawerDimensionChanged));
 
         public static readonly DependencyProperty CloseOnDimClickProperty =
             DependencyProperty.Register(
                 nameof(CloseOnDimClick),
                 typeof(bool),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty ContentElementProperty =
             DependencyProperty.Register(
                 nameof(ContentElement),
                 typeof(object),
-                typeof(ZeroDrawer),
+                typeof(DrawerControl),
                 new PropertyMetadata(null, OnContentElementChanged));
 
         public bool IsOpen
@@ -159,12 +159,12 @@ namespace ZeroUI.Wpf.Overlays
 
         #endregion
 
-        static ZeroDrawer()
+        static DrawerControl()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroDrawer), new FrameworkPropertyMetadata(typeof(ZeroDrawer)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(DrawerControl), new FrameworkPropertyMetadata(typeof(DrawerControl)));
         }
 
-        public ZeroDrawer()
+        public DrawerControl()
         {
             Visibility = Visibility.Collapsed;
             HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -337,7 +337,7 @@ namespace ZeroUI.Wpf.Overlays
 
         private static void OnIsOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroDrawer drawer)
+            if (d is DrawerControl drawer)
             {
                 drawer.AnimateDrawer((bool)e.NewValue);
             }
@@ -345,7 +345,7 @@ namespace ZeroUI.Wpf.Overlays
 
         private static void OnTitleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroDrawer drawer && drawer._titleBlock != null)
+            if (d is DrawerControl drawer && drawer._titleBlock != null)
             {
                 drawer._titleBlock.Text = e.NewValue as string ?? string.Empty;
             }
@@ -353,7 +353,7 @@ namespace ZeroUI.Wpf.Overlays
 
         private static void OnSubtitleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroDrawer drawer && drawer._subtitleBlock != null)
+            if (d is DrawerControl drawer && drawer._subtitleBlock != null)
             {
                 var text = e.NewValue as string;
                 drawer._subtitleBlock.Text = text ?? string.Empty;
@@ -363,7 +363,7 @@ namespace ZeroUI.Wpf.Overlays
 
         private static void OnDrawerDimensionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroDrawer drawer)
+            if (d is DrawerControl drawer)
             {
                 drawer.UpdatePanelLayout();
             }
@@ -371,7 +371,7 @@ namespace ZeroUI.Wpf.Overlays
 
         private static void OnContentElementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroDrawer drawer && drawer._contentPresenter != null)
+            if (d is DrawerControl drawer && drawer._contentPresenter != null)
             {
                 drawer._contentPresenter.Content = e.NewValue;
             }
@@ -514,11 +514,11 @@ namespace ZeroUI.Wpf.Overlays
         /// <summary>
         /// Instantly displays a drawer overlay over the specified container panel.
         /// </summary>
-        public static ZeroDrawer Show(Panel container, object content, string title = "Detail Inspector", double width = 420, DrawerEdge edge = DrawerEdge.Right)
+        public static DrawerControl Show(Panel container, object content, string title = "Detail Inspector", double width = 420, DrawerEdge edge = DrawerEdge.Right)
         {
             if (container == null) throw new ArgumentNullException(nameof(container));
 
-            var drawer = new ZeroDrawer
+            var drawer = new DrawerControl
             {
                 Title = title,
                 DrawerWidth = width,
@@ -537,5 +537,20 @@ namespace ZeroUI.Wpf.Overlays
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Standard alias for <see cref="DrawerControl"/>.
+    /// </summary>
+    public class Drawer : DrawerControl
+    {
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="DrawerControl"/>.
+    /// </summary>
+    [Obsolete("ZeroDrawer is deprecated. Use DrawerControl or Drawer instead.")]
+    public class ZeroDrawer : DrawerControl
+    {
     }
 }

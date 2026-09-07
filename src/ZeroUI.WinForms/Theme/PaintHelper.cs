@@ -9,7 +9,7 @@ namespace ZeroUI.WinForms.Theme
     /// High-performance GDI+ graphics routines and styling helpers for ZeroUI WinForms controls.
     /// Standardizes anti-aliased card backgrounds, status badges, focus rings, and borders.
     /// </summary>
-    public static class ZeroPaintHelper
+    public static class PaintHelper
     {
         /// <summary>
         /// Draws a smooth anti-aliased card surface with rounded corners and border.
@@ -135,5 +135,23 @@ namespace ZeroUI.WinForms.Theme
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="PaintHelper"/>.
+    /// </summary>
+    public static class ZeroPaintHelper
+    {
+        public static void DrawCard(Graphics g, Rectangle bounds, Color backColor, Color borderColor, int cornerRadius = 4)
+            => PaintHelper.DrawCard(g, bounds, backColor, borderColor, cornerRadius);
+
+        public static void DrawStatusBadge(Graphics g, Rectangle bounds, string text, Font font, Color statusColor, Color textColor, int cornerRadius = 3)
+            => PaintHelper.DrawStatusBadge(g, bounds, text, font, statusColor, textColor, cornerRadius);
+
+        public static void DrawFocusRing(Graphics g, Rectangle bounds, Color focusColor, int cornerRadius = 4)
+            => PaintHelper.DrawFocusRing(g, bounds, focusColor, cornerRadius);
+
+        public static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius)
+            => PaintHelper.CreateRoundedRectangle(rect, radius);
     }
 }
