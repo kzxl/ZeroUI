@@ -1,0 +1,283 @@
+using System;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+using ZeroUI.Core.Process;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Theme;
+
+namespace ZeroUI.WinForms.Process
+{
+    /// <summary>
+    /// ANSI/ISA-88 (IEC 61512) Sequential Function Chart (SFC) batch recipe tracker for WinForms.
+    /// Visualizes active procedural steps, countdown timers, holding interlocks, and
+    /// 21 CFR Part 11 electronic signature checkpoints.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Process & Life Sciences")]
+    [Description("ISA-88 Sequential Function Chart (SFC) procedural batch execution tracker")]
+    public class SfcBatchTracker : ZeroVisualControlBase
+    {
+        private readonly SfcRecipeExecutionEngine _engine = new SfcRecipeExecutionEngine();
+
+        protected override bool AutoAnimate => true;
+
+        public SfcBatchTracker()
+        {
+            Size = new Size(760, 360);
+        }
+
+        #region Public Properties
+
+        [Category("ISA-88")]
+        [Description("Access to the underlying pure ISA-88 recipe execution engine")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public SfcRecipeExecutionEngine Engine => _engine;
+
+        [Category("ISA-88")]
+        [DefaultValue("Monoclonal Antibody Harvest Recipe")]
+        public string RecipeName
+        {
+            get => _engine.RecipeName;
+            set
+            {
+                _engine.RecipeName = value ?? "Batch Recipe";
+                Invalidate();
+            }
+        }
+
+        [Category("ISA-88")]
+        [DefaultValue("B2609-MAB-042")]
+        public string BatchId
+        {
+            get => _engine.BatchId;
+            set
+            {
+                _engine.BatchId = value ?? "BATCH-01";
+                Invalidate();
+            }
+        }
+
+        [Category("ISA-88")]
+        [DefaultValue(S88BatchState.Running)]
+        public S88BatchState State
+        {
+            get => _engine.State;
+            set
+            {
+                _engine.State = value;
+                Invalidate();
+            }
+        }
+
+        #endregion
+
+        protected override void OnAnimationTick(double delta, long frame)
+        {
+            _engine.AdvanceTime(delta);
+        }
+
+        protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        {
+            // 1. Top Header
+            DrawHeader(g, bounds, palette);
+
+            int headerH = 46;
+            int mainTop = bounds.Y + headerH;
+            int mainHeight = bounds.Height - headerH - 12;
+
+            int hudW = 240;
+            int sfcW = bounds.Width - hudW - 32;
+
+            if (sfcW < 120 || mainHeight < 100) return;
+
+            Rectangle sfcRect = new Rectangle(bounds.X + 16, mainTop, sfcW, mainHeight);
+            Rectangle hudRect = new Rectangle(sfcRect.Right + 12, mainTop, hudW, mainHeight);
+
+            // 2. Sequential Function Chart (SFC) Layout
+            DrawSfcDiagram(g, sfcRect, palette);
+
+            // 3. Active Step & 21 CFR Part 11 HUD
+            DrawBatchHud(g, hudRect, palette);
+        }
+
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        {
+            using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
+            using (var fontSub = new Font("Segoe UI", 8.5f))
+            {
+                TextRenderer.DrawText(g, $"{_engine.RecipeName} — {_engine.BatchId}", fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+
+                Color badgeColor = _engine.State switch
+                {
+                    S88BatchState.Running => Color.FromArgb(34, 197, 94),
+                    S88BatchState.Holding or S88BatchState.Held => Color.FromArgb(245, 158, 11),
+                    S88BatchState.Aborting or S88BatchState.Aborted => Color.FromArgb(239, 68, 68),
+                    S88BatchState.Complete => Color.FromArgb(56, 189, 248),
+                    _ => Color.FromArgb(148, 163, 184)
+                };
+
+                Rectangle badgeRect = new Rectangle(bounds.Right - 170, bounds.Y + 10, 154, 24);
+                using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
+                using (var pen = new Pen(badgeColor, 1.2f))
+                {
+                    g.FillRectangle(brush, badgeRect);
+                    g.DrawRectangle(pen, badgeRect);
+                }
+
+                TextRenderer.DrawText(g, _engine.State.ToString().ToUpperInvariant(), fontSub, badgeRect, badgeColor,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+        }
+
+        private void DrawSfcDiagram(Graphics g, Rectangle rect, ZeroThemePalette palette)
+        {
+            using (var fontTag = new Font("Segoe UI", 8f, FontStyle.Bold))
+            using (var fontName = new Font("Segoe UI", 7.5f))
+            using (var fontTimer = new Font("Segoe UI", 7.5f, FontStyle.Bold))
+            using (var linePen = new Pen(Color.FromArgb(148, 163, 184), 1.5f))
+            {
+                int stepCount = _engine.Steps.Count;
+                if (stepCount == 0) return;
+
+                int stepH = Math.Min(48, (rect.Height - (stepCount - 1) * 20) / stepCount);
+                int stepW = Math.Min(340, rect.Width - 40);
+                int stepX = rect.X + (rect.Width - stepW) / 2;
+
+                for (int i = 0; i < stepCount; i++)
+                {
+                    var step = _engine.Steps[i];
+                    int stepY = rect.Y + i * (stepH + 20);
+                    Rectangle stepBox = new Rectangle(stepX, stepY, stepW, stepH);
+
+                    // Connecting line & transition crossbar to next step
+                    if (i < stepCount - 1)
+                    {
+                        int lineY1 = stepBox.Bottom;
+                        int lineY2 = lineY1 + 20;
+                        int midX = stepBox.X + stepBox.Width / 2;
+
+                        g.DrawLine(linePen, midX, lineY1, midX, lineY2);
+
+                        // Horizontal Transition Crossbar
+                        int transBarW = 24;
+                        g.DrawLine(linePen, midX - transBarW / 2, lineY1 + 10, midX + transBarW / 2, lineY1 + 10);
+                    }
+
+                    // Step Box Colors
+                    Color borderCol = step.State switch
+                    {
+                        SfcStepState.Active => Color.FromArgb(34, 197, 94),
+                        SfcStepState.Completed => Color.FromArgb(56, 189, 248),
+                        SfcStepState.Held => Color.FromArgb(245, 158, 11),
+                        _ => palette.Border
+                    };
+
+                    using (var fillBrush = new SolidBrush(step.State == SfcStepState.Active ? Color.FromArgb(35, 34, 197, 94) : Color.FromArgb(20, palette.Border)))
+                    using (var borderPen = new Pen(borderCol, step.State == SfcStepState.Active ? 2f : 1f))
+                    {
+                        g.FillRectangle(fillBrush, stepBox);
+                        g.DrawRectangle(borderPen, stepBox);
+
+                        // Initial step double line border
+                        if (step.Type == SfcStepType.Initial)
+                        {
+                            g.DrawRectangle(borderPen, stepBox.X + 2, stepBox.Y + 2, stepBox.Width - 4, stepBox.Height - 4);
+                        }
+                    }
+
+                    // Progress track under active/completed step
+                    if (step.ProgressPct > 0)
+                    {
+                        Rectangle progTrack = new Rectangle(stepBox.X + 2, stepBox.Bottom - 4, stepBox.Width - 4, 3);
+                        int fillW = (int)(progTrack.Width * (step.ProgressPct / 100.0));
+                        using (var progBrush = new SolidBrush(borderCol))
+                        {
+                            g.FillRectangle(progBrush, progTrack.X, progTrack.Y, fillW, progTrack.Height);
+                        }
+                    }
+
+                    // Step Tag & Name
+                    string tagStr = $"[{step.StepTag}]";
+                    TextRenderer.DrawText(g, tagStr, fontTag, new Point(stepBox.X + 8, stepBox.Y + 6), borderCol);
+
+                    TextRenderer.DrawText(g, step.StepName, fontName, new Point(stepBox.X + 54, stepBox.Y + 7), palette.TextPrimary);
+
+                    // Countdown / Status Timer
+                    string timeStr = step.State == SfcStepState.Completed ? "DONE ✓" :
+                                     step.State == SfcStepState.Active ? $"{step.RemainingDurationSec:F0}s left" :
+                                     step.State == SfcStepState.Held ? "HELD !" : $"{step.AllocatedDurationSec:F0}s";
+                    var sz = TextRenderer.MeasureText(g, timeStr, fontTimer);
+                    TextRenderer.DrawText(g, timeStr, fontTimer, new Point(stepBox.Right - sz.Width - 8, stepBox.Y + 6), borderCol);
+                }
+            }
+        }
+
+        private void DrawBatchHud(Graphics g, Rectangle rect, ZeroThemePalette palette)
+        {
+            using (var fontTitle = new Font("Segoe UI", 9f, FontStyle.Bold))
+            using (var fontLabel = new Font("Segoe UI", 8f))
+            using (var fontValue = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+            {
+                PaintHelper.DrawCardBox(g, rect, "BATCH STEP EXECUTION", fontTitle, palette);
+
+                int pad = 12;
+                int innerW = rect.Width - pad * 2;
+                int rowY = rect.Y + 34;
+                int rowH = 24;
+
+                var step = _engine.CurrentStep;
+
+                // Active Step Tag
+                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
+                    "Active Step", step != null ? $"[{step.StepTag}]" : "None",
+                    palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                rowY += rowH;
+
+                // Step Progress %
+                double prog = step?.ProgressPct ?? 0.0;
+                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
+                    "Phase Progress", $"{prog:F1}%",
+                    palette.TextSecondary, Color.FromArgb(56, 189, 248), fontLabel, fontValue);
+                rowY += rowH;
+
+                // Elapsed Time
+                double elapsed = step?.ElapsedDurationSec ?? 0.0;
+                double allocated = step?.AllocatedDurationSec ?? 0.0;
+                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
+                    "Duration", $"{elapsed:F0}s / {allocated:F0}s",
+                    palette.TextSecondary, palette.TextPrimary, fontLabel, fontValue);
+                rowY += rowH;
+
+                // 21 CFR Part 11 Sign-off
+                bool needsSignOff = step?.RequiresSignOff ?? false;
+                string? signedBy = step?.SignedOffBy;
+                string signStr = !needsSignOff ? "Not Required" :
+                                 !string.IsNullOrEmpty(signedBy) ? $"Signed: {signedBy}" : "PENDING SIG";
+                Color signCol = !needsSignOff ? palette.TextSecondary :
+                                !string.IsNullOrEmpty(signedBy) ? Color.FromArgb(34, 197, 94) : Color.FromArgb(239, 68, 68);
+
+                PaintHelper.DrawDataRow(g, new Rectangle(rect.X + pad, rowY, innerW, rowH),
+                    "Electronic Sig", signStr,
+                    palette.TextSecondary, signCol, fontLabel, fontValue);
+                rowY += rowH + 6;
+
+                // Hold Reason if any
+                if (!string.IsNullOrEmpty(_engine.HoldReason))
+                {
+                    Rectangle holdBox = new Rectangle(rect.X + pad, rowY, innerW, 42);
+                    using (var holdBrush = new SolidBrush(Color.FromArgb(30, 245, 158, 11)))
+                    using (var holdPen = new Pen(Color.FromArgb(245, 158, 11), 1f))
+                    {
+                        g.FillRectangle(holdBrush, holdBox);
+                        g.DrawRectangle(holdPen, holdBox);
+                    }
+                    TextRenderer.DrawText(g, _engine.HoldReason, fontLabel,
+                        new Rectangle(holdBox.X + 4, holdBox.Y + 4, holdBox.Width - 8, holdBox.Height - 8),
+                        Color.FromArgb(245, 158, 11), TextFormatFlags.WordBreak);
+                }
+            }
+        }
+    }
+}

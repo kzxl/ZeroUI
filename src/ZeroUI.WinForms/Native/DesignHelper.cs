@@ -40,7 +40,7 @@ namespace ZeroUI.WinForms.Native
             {
                 try
                 {
-                    string procName = Process.GetCurrentProcess().ProcessName;
+                    string procName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
                     _isDevenv = procName.IndexOf("devenv", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                 procName.IndexOf("DesignToolsServer", StringComparison.OrdinalIgnoreCase) >= 0;
                 }
