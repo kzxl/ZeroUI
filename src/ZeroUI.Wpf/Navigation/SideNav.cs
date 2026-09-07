@@ -148,7 +148,38 @@ namespace ZeroUI.Wpf.Navigation
 
             _items.CollectionChanged += (s, e) => RebuildItemsUI();
             BuildVisualTemplate();
+
+            ZeroUI.Core.Theme.ZeroSkinManager.SkinChanged += skin =>
+            {
+                if (Dispatcher.CheckAccess())
+                {
+                    Background = ZeroWpfTheme.BgCard;
+                    BorderBrush = ZeroWpfTheme.BorderDefault;
+                    if (_rootBorder != null)
+                    {
+                        _rootBorder.Background = Background;
+                        _rootBorder.BorderBrush = BorderBrush;
+                    }
+                    RebuildItemsUI();
+                }
+                else
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        Background = ZeroWpfTheme.BgCard;
+                        BorderBrush = ZeroWpfTheme.BorderDefault;
+                        if (_rootBorder != null)
+                        {
+                            _rootBorder.Background = Background;
+                            _rootBorder.BorderBrush = BorderBrush;
+                        }
+                        RebuildItemsUI();
+                    }));
+                }
+            };
         }
+
+        public void Refresh() => RebuildItemsUI();
 
         private void BuildVisualTemplate()
         {

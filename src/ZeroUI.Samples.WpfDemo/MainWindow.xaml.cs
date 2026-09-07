@@ -59,6 +59,7 @@ namespace ZeroUI.Samples.WpfDemo
         public MainWindow()
         {
             InitializeComponent();
+            SetupNavigationRail();
             SetupColumns();
             SetupCharts();
             SetupTelemetry();
@@ -182,6 +183,35 @@ namespace ZeroUI.Samples.WpfDemo
         {
             var dialog = new ZeroSkinStudioDialog { Owner = this };
             dialog.ShowDialog();
+        }
+
+        private void SetupNavigationRail()
+        {
+            MainNavRail.Items.Clear();
+            MainNavRail.Items.Add(new SideNavItem("c1", "Big Data & Grids", "⚡", "DATA & BENCHMARK", 3));
+            MainNavRail.Items.Add(new SideNavItem("c2", "Industrial Verticals", "🏭", "VERTICAL DOMAINS", 7));
+            MainNavRail.Items.Add(new SideNavItem("c3", "SCADA & Edge", "⚙️", "AUTOMATION & SCADA", 4));
+            MainNavRail.Items.Add(new SideNavItem("c4", "Network & Infra", "🌐", "AUTOMATION & SCADA", 6));
+            MainNavRail.Items.Add(new SideNavItem("c5", "MES Smart Factory", "📦", "MANUFACTURING & OPS", 2));
+            MainNavRail.Items.Add(new SideNavItem("c6", "Analytics & Signals", "📊", "ANALYTICS & DIAGNOSTICS", 4));
+            MainNavRail.Items.Add(new SideNavItem("c7", "Form Editors & UI", "🎨", "UI TOOLKIT & CONTROLS", 4));
+
+            MainNavRail.SelectedIndex = 0;
+            MainNavRail.ItemSelected += (s, e) =>
+            {
+                if (MainTabs.SelectedIndex != e.Index && e.Index >= 0 && e.Index < MainTabs.Items.Count)
+                {
+                    MainTabs.SelectedIndex = e.Index;
+                }
+            };
+
+            MainTabs.SelectionChanged += (s, e) =>
+            {
+                if (e.Source == MainTabs && MainNavRail.SelectedIndex != MainTabs.SelectedIndex && MainTabs.SelectedIndex >= 0)
+                {
+                    MainNavRail.SelectedIndex = MainTabs.SelectedIndex;
+                }
+            };
         }
 
         private void SetupColumns()
@@ -628,6 +658,7 @@ namespace ZeroUI.Samples.WpfDemo
             CandleChart.InvalidateVisual();
             DonutChart.InvalidateVisual();
             MesHeatmap.InvalidateVisual();
+            MainNavRail.Refresh();
         }
 
         private void BtnLoad100K_Click(object sender, RoutedEventArgs e) => LoadData(100000);

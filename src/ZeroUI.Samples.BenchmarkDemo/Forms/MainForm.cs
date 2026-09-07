@@ -41,7 +41,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
 
 {
-    public sealed class MainForm : Form
+    public sealed partial class MainForm : Form
     {
         private readonly PerformanceMonitor _perfMonitor = new PerformanceMonitor();
         private readonly System.Windows.Forms.Timer _hudTimer = new System.Windows.Forms.Timer();
@@ -57,6 +57,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         // Vertical Master Navigation & Modular Feature Clusters
         private ZeroTabControl _mainNav = null!;
         private ZeroTabPage _clusterBenchmark = null!;
+        private ZeroTabPage _clusterIndustrial = null!;
         private ZeroTabPage _clusterMes = null!;
         private ZeroTabPage _clusterWarehouse = null!;
         private ZeroTabPage _clusterScada = null!;
@@ -523,6 +524,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _clusterNetwork = new ZeroTabPage("Network & Infrastructure", "🌐") { BadgeCount = 6 };
             InitializeNetworkInfrastructure(_clusterNetwork);
 
+            // Cluster 9: Industrial Domain Verticals (Phases 13, 15, 16, 17)
+            _clusterIndustrial = new ZeroTabPage("Industrial Verticals", "🏭") { BadgeCount = 7 };
+            InitializeIndustrialVerticals(_clusterIndustrial);
+
             // Build individual cluster views
             InitializeZeroGrid();
             InitializeDataGridView();
@@ -548,15 +553,15 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabZero.Controls.Add(_searchBar);
             _tabDgv.Controls.Add(_dgv);
 
-            // Add all 8 clusters to master vertical navigation
+            // Add all clusters to master vertical navigation
             _mainNav.AddTab(_clusterBenchmark);
+            _mainNav.AddTab(_clusterIndustrial);
+            _mainNav.AddTab(_clusterScadaSynoptic);
+            _mainNav.AddTab(_clusterNetwork);
             _mainNav.AddTab(_clusterMes);
             _mainNav.AddTab(_clusterWarehouse);
-            _mainNav.AddTab(_clusterScada);
-            _mainNav.AddTab(_clusterScadaSynoptic);
             _mainNav.AddTab(_clusterAnalytics);
             _mainNav.AddTab(_clusterComponents);
-            _mainNav.AddTab(_clusterNetwork);
 
             // Start autonomous background PLC driver
             SimulatedPlcDriver.Start();
@@ -662,6 +667,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             if (_lblGc != null) _lblGc.ForeColor = hudMetricColor;
 
             if (_clusterBenchmark != null) _clusterBenchmark.BackColor = colors.Background;
+            if (_clusterIndustrial != null) _clusterIndustrial.BackColor = colors.Background;
             if (_clusterMes != null) _clusterMes.BackColor = colors.Background;
             if (_clusterWarehouse != null) _clusterWarehouse.BackColor = colors.Background;
             if (_clusterScada != null) _clusterScada.BackColor = colors.Background;
