@@ -133,13 +133,13 @@ public interface IZeroSkinnable
 }
 ```
 
-#### 2. WinForms Architecture (`ZeroControlBase` & `ZeroPaintHelper`)
+#### 2. WinForms Architecture (`ZeroControlBase` & `PaintHelper`)
 - **`ZeroControlBase`**:
   - Automatically configures high-speed double-buffering (`UserPaint`, `AllPaintingInWmPaint`, `OptimizedDoubleBuffer`, `ResizeRedraw`).
   - Subscribes to `ZeroSkinManager.SkinChanged` and `ZeroTheme.ThemeChanged`, safely marshaling to UI thread via `BeginInvoke` and unhooking on `Dispose(bool disposing)`.
   - Exposes `protected ZeroThemePalette CurrentPalette` resolving to either global `ZeroTheme.Colors` or scoped `EffectiveSkin`.
   - Override `protected virtual void OnThemeChanged(ZeroSkin skin)` to update child controls or internal GDI+ caches.
-- **`ZeroPaintHelper`**:
+- **`PaintHelper` (`ZeroPaintHelper`)**:
   - High-performance zero-alloc GDI+ routines: `DrawCard()`, `DrawStatusBadge()`, `DrawFocusRing()`, `CreateRoundedRectangle()`.
 
 #### 3. WPF Architecture (`ZeroWpfControlBase` & `ZeroWpfVisualBase`)
@@ -166,7 +166,7 @@ public interface IZeroSkinnable
 1. **Prohibit Sibling-Degrading Docking for Transient Overlays:**
    - Side drawers, flyouts, and modal sidebars must **never** use `Dock = DockStyle.Right` or `Dock = DockStyle.Left` when sibling controls host heavy computational datasets (e.g., virtualized grids, high-frequency charts).
    - Transient panels must use **Floating Overlay** mode (`Dock = None`, `Anchor = Top | Bottom | Right`) in WinForms or GPU transforms (`TranslateTransform.X`) in WPF so that sibling controls undergo zero layout passes and remain locked at 60–120 FPS.
-   - Use `ZeroDrawer` (available in both `ZeroUI.WinForms.Overlays` and `ZeroUI.Wpf.Overlays`) which implements this standard out-of-the-box.
+   - Use `DrawerControl` / `ZeroDrawer` (available in both `ZeroUI.WinForms.Overlays` and `ZeroUI.Wpf.Overlays`) which implements this standard out-of-the-box.
 
 2. **Time-Based Animation Interpolation:**
    - All interactive sliding or fading motions must consume `deltaSeconds` from `ZeroAnimationClock` (WinForms) or `CubicEase` (WPF).
