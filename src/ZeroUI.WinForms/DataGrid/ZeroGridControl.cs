@@ -47,6 +47,45 @@ namespace ZeroUI.WinForms.DataGrid
         private int _scrollX = 0;
         private int _scrollY = 0;
 
+        // Presentation View Type (Table / CardView / TileView)
+        private GridViewType _viewType = GridViewType.Table;
+        private readonly GridCardLayoutManager _cardLayout = new GridCardLayoutManager();
+
+        [Category("View")]
+        [DefaultValue(GridViewType.Table)]
+        [Description("Presentation mode of the grid (Table, CardView, or TileView).")]
+        public GridViewType ViewType
+        {
+            get => _viewType;
+            set
+            {
+                if (_viewType != value)
+                {
+                    _viewType = value;
+                    UpdateScrollBars();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("View")]
+        [DefaultValue(240)]
+        [Description("Width of each card in CardView mode.")]
+        public int CardWidth
+        {
+            get => _cardLayout.CardWidth;
+            set { _cardLayout.CardWidth = Math.Max(80, value); UpdateScrollBars(); Invalidate(); }
+        }
+
+        [Category("View")]
+        [DefaultValue(120)]
+        [Description("Height of each card in CardView mode.")]
+        public int CardHeight
+        {
+            get => _cardLayout.CardHeight;
+            set { _cardLayout.CardHeight = Math.Max(40, value); UpdateScrollBars(); Invalidate(); }
+        }
+
         // Selection & Interaction
         private int _selectedVisualRow = -1;
         private readonly HashSet<int> _selectedVisualRows = new HashSet<int>();
@@ -1351,11 +1390,40 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (!IsHandleCreated) return;
 
+            int clientW = ClientSize.Width;
+            int totalRows = VisualRowCount;
+
+            if (_viewType != GridViewType.Table)
+            {
+                _cardLayout.UpdateLayout(clientW, totalRows);
+                int cardClientH = ClientSize.Height;
+                SCROLLINFO siCardV = new SCROLLINFO
+                {
+                    cbSize = (uint)Marshal.SizeOf(typeof(SCROLLINFO)),
+                    fMask = NativeMethods.SIF_RANGE | NativeMethods.SIF_PAGE | NativeMethods.SIF_POS,
+                    nMin = 0,
+                    nMax = Math.Max(0, _cardLayout.TotalHeight),
+                    nPage = (uint)Math.Max(0, cardClientH),
+                    nPos = _scrollY
+                };
+                NativeMethods.SetScrollInfo(Handle, NativeMethods.SB_VERT, ref siCardV, true);
+
+                SCROLLINFO siCardH = new SCROLLINFO
+                {
+                    cbSize = (uint)Marshal.SizeOf(typeof(SCROLLINFO)),
+                    fMask = NativeMethods.SIF_RANGE | NativeMethods.SIF_PAGE | NativeMethods.SIF_POS,
+                    nMin = 0,
+                    nMax = 0,
+                    nPage = (uint)clientW,
+                    nPos = 0
+                };
+                NativeMethods.SetScrollInfo(Handle, NativeMethods.SB_HORZ, ref siCardH, true);
+                return;
+            }
+
             int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
             int clientH = ClientSize.Height - topOffset - footerH;
-            int clientW = ClientSize.Width;
-            int totalRows = VisualRowCount;
             int totalH = totalRows * _rowHeight;
             int pinnedW = GetPinnedColumnsWidth();
             int unpinnedW = GetUnpinnedColumnsWidth();
@@ -1408,6 +1476,14 @@ namespace ZeroUI.WinForms.DataGrid
                 int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
                 int footerH = ShowFooter ? _footerHeight : 0;
                 int clientDataHeight = Math.Max(0, height - topOffset - footerH);
+
+                // CardView / TileView Mode Dispatch
+                if (_viewType != GridViewType.Table)
+                {
+                    RenderCardView(width, height, textHeight);
+                    _dibSection.BitBltTo(hdc, 0, 0, width, height);
+                    return;
+                }
 
                 // 1. Render Cells
                 if (_dataSource != null && totalRows > 0 && totalCols > 0)
@@ -2000,6 +2076,101 @@ namespace ZeroUI.WinForms.DataGrid
             }
         }
 
+        private void RenderCardView(int width, int height, int textHeight)
+        {
+            int totalRows = VisualRowCount;
+            if (_dataSource == null || totalRows <= 0 || _columns.Count <= 0) return;
+
+            _cardLayout.UpdateLayout(width, totalRows);
+            _cardLayout.GetVisibleRange(_scrollY, height, totalRows, out int startCard, out int endCard);
+
+            uint cardBg = ZeroTheme.IsDark ? 0x00261F1Eu : 0x00FFFFFFu;
+            uint cardBorder = ZeroTheme.IsDark ? 0x003A302Du : 0x00E2E8F0u;
+            uint cardSelectedBg = _selectedBgColor;
+            uint cardSelectedBorder = _pinnedBorderColor;
+            uint titleColor = _cellTextColor;
+            uint labelColor = ZeroTheme.IsDark ? 0x0094A3B8u : 0x0064748Bu;
+
+            CellValueBuffer cellBuffer = new CellValueBuffer();
+
+            for (int i = startCard; i <= endCard && i < totalRows; i++)
+            {
+                _cardLayout.GetCardBounds(i, _scrollY, out int cx, out int cy, out int cw, out int ch);
+                if (cy + ch < 0 || cy > height) continue;
+
+                int modelRow = GetModelRowIndex(i);
+                if (modelRow < 0) continue;
+
+                bool isSelected = (_selectionMode == ZeroGridSelectionMode.MultiRow)
+                    ? _selectedVisualRows.Contains(i)
+                    : (i == _selectedVisualRow);
+
+                uint bg = isSelected ? cardSelectedBg : cardBg;
+                uint border = isSelected ? cardSelectedBorder : cardBorder;
+
+                // Card background & 1px border
+                _dibSection.FillRectangle(cx, cy, cw, ch, bg);
+                _dibSection.FillRectangle(cx, cy, cw, 1, border);
+                _dibSection.FillRectangle(cx, cy + ch - 1, cw, 1, border);
+                _dibSection.FillRectangle(cx, cy, 1, ch, border);
+                _dibSection.FillRectangle(cx + cw - 1, cy, 1, ch, border);
+
+                int fieldY = cy + 8;
+                int maxFieldY = cy + ch - 8;
+
+                // 1. Title / Key Field (First visible column)
+                _dibSection.SelectFont(_hHeaderFont);
+                int firstVisibleCol = -1;
+                for (int c = 0; c < _columns.Count; c++)
+                {
+                    if (_columns[c].IsVisible)
+                    {
+                        firstVisibleCol = c;
+                        break;
+                    }
+                }
+
+                if (firstVisibleCol >= 0)
+                {
+                    cellBuffer.Reset();
+                    _dataSource.GetCellValue(modelRow, firstVisibleCol, ref cellBuffer);
+                    RECT titleRect = new RECT(cx + 10, fieldY, cx + cw - 10, fieldY + textHeight + 2);
+                    _dibSection.DrawText(cellBuffer.Text, ref titleRect, isSelected ? 0x00FFFFFFu : titleColor, CellAlignment.Left, textHeight);
+                    fieldY += textHeight + 6;
+
+                    // Divider below title
+                    _dibSection.FillRectangle(cx + 8, fieldY, cw - 16, 1, border);
+                    fieldY += 6;
+                }
+
+                // 2. Field slots
+                _dibSection.SelectFont(_hFont);
+                int fieldCount = 0;
+                for (int c = 0; c < _columns.Count; c++)
+                {
+                    if (!_columns[c].IsVisible || c == firstVisibleCol) continue;
+                    if (fieldY + textHeight > maxFieldY) break;
+
+                    cellBuffer.Reset();
+                    _dataSource.GetCellValue(modelRow, c, ref cellBuffer);
+
+                    if (_viewType == GridViewType.TileView && fieldCount >= 2) break;
+
+                    // Label (left)
+                    string label = _columns[c].HeaderText + ":";
+                    RECT labelRect = new RECT(cx + 10, fieldY, cx + (cw / 2) - 4, fieldY + textHeight);
+                    _dibSection.DrawText(label.AsSpan(), ref labelRect, labelColor, CellAlignment.Left, textHeight);
+
+                    // Value (right)
+                    RECT valRect = new RECT(cx + (cw / 2), fieldY, cx + cw - 10, fieldY + textHeight);
+                    _dibSection.DrawText(cellBuffer.Text, ref valRect, isSelected ? 0x00FFFFFFu : titleColor, CellAlignment.Right, textHeight);
+
+                    fieldY += textHeight + 4;
+                    fieldCount++;
+                }
+            }
+        }
+
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             // Do nothing: zero flicker
@@ -2134,7 +2305,9 @@ namespace ZeroUI.WinForms.DataGrid
             int footerH = ShowFooter ? _footerHeight : 0;
             int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
             int effHeaderH = EffectiveHeaderHeight;
-            int maxScroll = Math.Max(0, totalH - (ClientSize.Height - effHeaderH - footerH));
+            int maxScroll = (_viewType != GridViewType.Table)
+                ? Math.Max(0, _cardLayout.TotalHeight - ClientSize.Height)
+                : Math.Max(0, totalH - (ClientSize.Height - effHeaderH - footerH));
 
             _scrollY = Math.Max(0, Math.Min(maxScroll, _scrollY - scrollDelta));
             UpdateScrollBars();
@@ -2146,6 +2319,16 @@ namespace ZeroUI.WinForms.DataGrid
         {
             base.OnMouseDown(e);
             Focus();
+
+            if (_viewType != GridViewType.Table)
+            {
+                int hitCard = _cardLayout.HitTest(e.X, e.Y, _scrollY, VisualRowCount);
+                if (hitCard >= 0)
+                {
+                    SelectedVisualRow = hitCard;
+                }
+                return;
+            }
 
             int effHeaderH = EffectiveHeaderHeight;
             int footerH = ShowFooter ? _footerHeight : 0;
