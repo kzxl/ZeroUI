@@ -1,9 +1,10 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -17,9 +18,8 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultProperty("Value")]
     [Description("Industrial Linear Level and Pressure Gauge for SCADA telemetry")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroLinearGauge.bmp")]
-    public class ZeroLinearGauge : Control
+    public class ZeroLinearGauge : Control, IScadaBindable
     {
-
         private float _value = 65f;
         private float _minimum = 0f;
         private float _maximum = 100f;
@@ -27,6 +27,7 @@ namespace ZeroUI.WinForms.Industrial
         private string _unit = "Bar";
         private float _warningThreshold = 75f;
         private float _criticalThreshold = 90f;
+        private string? _boundTagPath;
 
         public ZeroLinearGauge()
         {
@@ -112,6 +113,23 @@ namespace ZeroUI.WinForms.Industrial
         {
             get => _criticalThreshold;
             set { _criticalThreshold = value; Invalidate(); }
+        }
+
+        [Category("ZeroUI - SCADA")]
+        [Description("Direct SCADA telemetry tag binding path.")]
+        [DefaultValue(null)]
+        public string? BoundTagPath
+        {
+            get => _boundTagPath;
+            set => _boundTagPath = value;
+        }
+
+        public void OnTagValueChanged(IScadaTag tag)
+        {
+            if (tag != null)
+            {
+                Value = tag.GetValue<float>();
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
