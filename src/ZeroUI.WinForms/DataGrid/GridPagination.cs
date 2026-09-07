@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultEvent("PageChanged")]
     [Description("High-performance pagination toolbar control for virtual grids")]
-    public class ZeroGridPagination : Panel
+    public class GridPagination : Panel
     {
 
         private int _totalRows = 0;
@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.DataGrid
 
         public event EventHandler? PageChanged;
 
-        public ZeroGridPagination()
+        public GridPagination()
         {
             Dock = DockStyle.Bottom;
             Height = 46;
@@ -238,5 +238,15 @@ namespace ZeroUI.WinForms.DataGrid
             using var pen = new Pen(ZeroTheme.Colors.Border, 1f);
             e.Graphics.DrawLine(pen, 0, 0, Width, 0);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for GridPagination.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroGridPagination is deprecated. Please use GridPagination instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGridPagination : GridPagination
+    {
     }
 }

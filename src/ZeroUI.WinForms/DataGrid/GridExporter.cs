@@ -11,7 +11,7 @@ namespace ZeroUI.WinForms.DataGrid
     /// High-throughput zero-allocation streaming Excel (.xlsx) and CSV exporter for ZeroUI controls.
     /// Capable of streaming 1,000,000+ rows directly to disk at hundreds of thousands of rows per second.
     /// </summary>
-    public static class ZeroGridExporter
+    public static class GridExporter
     {
         public static Task<int> ExportToXlsxAsync(
             IZeroVirtualSource dataSource,
@@ -50,5 +50,30 @@ namespace ZeroUI.WinForms.DataGrid
                 progress,
                 cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for GridExporter.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroGridExporter is deprecated. Please use GridExporter instead.")]
+    public static class ZeroGridExporter
+    {
+        public static Task<int> ExportToXlsxAsync(
+            IZeroVirtualSource dataSource,
+            GridControl grid,
+            string filePath,
+            string sheetName = "Sheet1",
+            IProgress<int>? progress = null,
+            CancellationToken cancellationToken = default) =>
+            GridExporter.ExportToXlsxAsync(dataSource, grid, filePath, sheetName, progress, cancellationToken);
+
+        public static Task<int> ExportToCsvAsync(
+            IZeroVirtualSource dataSource,
+            GridControl grid,
+            string filePath,
+            IProgress<int>? progress = null,
+            CancellationToken cancellationToken = default) =>
+            GridExporter.ExportToCsvAsync(dataSource, grid, filePath, progress, cancellationToken);
     }
 }

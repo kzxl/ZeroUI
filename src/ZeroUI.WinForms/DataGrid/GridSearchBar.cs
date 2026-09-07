@@ -15,8 +15,8 @@ namespace ZeroUI.WinForms.DataGrid
     [ToolboxItem(true)]
     [Category("ZeroUI - DataGrid")]
     [DefaultEvent("ExportClicked")]
-    [Description("Integrated search bar and toolbar for ZeroGridControl")]
-    public class ZeroGridSearchBar : Panel
+    [Description("Integrated search bar and toolbar for GridControl")]
+    public class GridSearchBar : Panel
     {
 
         private GridControl? _grid;
@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.DataGrid
 
         public event EventHandler? ExportClicked;
 
-        public ZeroGridSearchBar()
+        public GridSearchBar()
         {
             Dock = DockStyle.Top;
             Height = 48;
@@ -185,5 +185,15 @@ namespace ZeroUI.WinForms.DataGrid
             using var pen = new Pen(ZeroTheme.Colors.Border, 1f);
             e.Graphics.DrawLine(pen, 0, Height - 1, Width, Height - 1);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for GridSearchBar.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroGridSearchBar is deprecated. Please use GridSearchBar instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGridSearchBar : GridSearchBar
+    {
     }
 }
