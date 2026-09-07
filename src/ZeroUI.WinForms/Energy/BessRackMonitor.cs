@@ -63,7 +63,7 @@ namespace ZeroUI.WinForms.Energy
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
                 string title = $"{rack.RackId} — {rack.Name}";
-                TextRenderer.DrawText(g, title, fontTitle, new Point(20, 14), theme.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 Color riskColor = worstRisk == ThermalRunawayRisk.Normal ? Color.FromArgb(34, 197, 94) :
                                   worstRisk == ThermalRunawayRisk.Elevated ? Color.FromArgb(59, 130, 246) :
@@ -73,10 +73,23 @@ namespace ZeroUI.WinForms.Energy
                 string riskText = worstRisk == ThermalRunawayRisk.Normal ? "THERMAL: STABLE" :
                                   worstRisk == ThermalRunawayRisk.Elevated ? "THERMAL: ELEVATED" :
                                   worstRisk == ThermalRunawayRisk.Warning ? "THERMAL: WARNING" :
-                                  "RUNAWAY PRECURSOR ALARM";
+                                  "RUNAWAY PRECURSOR";
 
-                Rectangle pillRect = new Rectangle(width - 240, 12, 220, 26);
-                DrawStatusBadge(g, pillRect, riskText, fontBold, riskColor, riskColor, 4);
+                int badgeW = 190;
+                int badgeH = 26;
+
+                if (width - badgeW - 20 >= 20 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(20, 14), theme.TextPrimary);
+                    Rectangle pillRect = new Rectangle(width - badgeW - 20, 12, badgeW, badgeH);
+                    DrawStatusBadge(g, pillRect, riskText, fontBold, riskColor, riskColor, 4);
+                }
+                else
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(20, 10), theme.TextPrimary);
+                    Rectangle pillRect = new Rectangle(20, 34, Math.Min(width - 40, badgeW), badgeH);
+                    DrawStatusBadge(g, pillRect, riskText, fontBold, riskColor, riskColor, 4);
+                }
             }
         }
 
@@ -89,28 +102,40 @@ namespace ZeroUI.WinForms.Energy
                 g.DrawRectangle(borderPen, rect);
             }
 
-            int colW = rect.Width / 5;
+            int cols = rect.Width < 420 ? 3 : 5;
+            int colW = rect.Width / cols;
             using (var fontLabel = new Font("Segoe UI", 7.5f))
-            using (var fontVal = new Font("Segoe UI", 11f, FontStyle.Bold))
+            using (var fontVal = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             {
                 // KPI 1: SoC
                 DrawKpiCell(g, new Rectangle(rect.X, rect.Y, colW, rect.Height), "STATE OF CHARGE", $"{rack.SocPct:F1}%", Color.FromArgb(34, 197, 94), fontLabel, fontVal, theme);
 
                 // KPI 2: SoH
-                DrawKpiCell(g, new Rectangle(rect.X + colW, rect.Y, colW, rect.Height), "BATTERY HEALTH (SoH)", $"{rack.SohPct:F1}%", Color.FromArgb(59, 130, 246), fontLabel, fontVal, theme);
+                DrawKpiCell(g, new Rectangle(rect.X + colW, rect.Y, colW, rect.Height), "BATTERY HEALTH", $"{rack.SohPct:F1}%", Color.FromArgb(59, 130, 246), fontLabel, fontVal, theme);
 
-                // KPI 3: String Voltage
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, colW, rect.Height), "STRING VOLTAGE", $"{rack.StringVoltageV:F1} V", theme.TextPrimary, fontLabel, fontVal, theme);
+                if (cols >= 5)
+                {
+                    // KPI 3: String Voltage
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, colW, rect.Height), "STRING VOLTAGE", $"{rack.StringVoltageV:F1} V", theme.TextPrimary, fontLabel, fontVal, theme);
 
-                // KPI 4: Current / Power
-                string pwrStr = $"{rack.PowerKw:F1} kW ({rack.CurrentAmps:F1} A)";
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 3, rect.Y, colW, rect.Height), "POWER FLOW", pwrStr, theme.TextPrimary, fontLabel, fontVal, theme);
+                    // KPI 4: Current / Power
+                    string pwrStr = $"{rack.PowerKw:F1} kW";
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 3, rect.Y, colW, rect.Height), "POWER FLOW", pwrStr, theme.TextPrimary, fontLabel, fontVal, theme);
 
-                // KPI 5: Max Cell Delta mV
-                double maxDelta = _engine.RackMaxDeltaCellMv;
-                Color deltaColor = maxDelta < 25.0 ? Color.FromArgb(34, 197, 94) :
-                                   maxDelta < 45.0 ? Color.FromArgb(245, 158, 11) : Color.FromArgb(239, 68, 68);
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "MAX CELL DELTA", $"{maxDelta:F1} mV", deltaColor, fontLabel, fontVal, theme);
+                    // KPI 5: Max Cell Delta mV
+                    double maxDelta = _engine.RackMaxDeltaCellMv;
+                    Color deltaColor = maxDelta < 25.0 ? Color.FromArgb(34, 197, 94) :
+                                       maxDelta < 45.0 ? Color.FromArgb(245, 158, 11) : Color.FromArgb(239, 68, 68);
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "MAX CELL DELTA", $"{maxDelta:F1} mV", deltaColor, fontLabel, fontVal, theme);
+                }
+                else
+                {
+                    // In compact 3-column mode, show Max Cell Delta as the 3rd key metric
+                    double maxDelta = _engine.RackMaxDeltaCellMv;
+                    Color deltaColor = maxDelta < 25.0 ? Color.FromArgb(34, 197, 94) :
+                                       maxDelta < 45.0 ? Color.FromArgb(245, 158, 11) : Color.FromArgb(239, 68, 68);
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, rect.Right - (rect.X + colW * 2), rect.Height), "MAX DELTA", $"{maxDelta:F1} mV", deltaColor, fontLabel, fontVal, theme);
+                }
             }
         }
 

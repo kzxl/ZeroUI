@@ -99,9 +99,8 @@ namespace ZeroUI.WinForms.Water
             if (profile.Count == 0) return;
 
             // 1. Top Header
-            DrawHeader(g, bounds, palette);
+            int headerH = DrawHeader(g, bounds, palette);
 
-            int headerH = 46;
             int chartLeft = bounds.X + 54;
             int chartTop = bounds.Y + headerH;
             int chartW = bounds.Width - 70;
@@ -143,12 +142,13 @@ namespace ZeroUI.WinForms.Water
             }
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private int DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSub = new Font("Segoe UI", 8.5f))
             {
-                TextRenderer.DrawText(g, $"{_pipelineTag} — Hydraulic Grade Profile (HGL & EGL)", fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                string title = $"{_pipelineTag} — Hydraulic Grade Profile (HGL & EGL)";
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 bool hasCavitation = _engine.HasNegativePressureAnomaly(out double worstSt, out double minHead);
                 string statusStr = hasCavitation
@@ -156,16 +156,45 @@ namespace ZeroUI.WinForms.Water
                     : $"POSITIVE PRESSURE (Min Head: {minHead:F1} m)";
                 Color badgeColor = hasCavitation ? Color.FromArgb(239, 68, 68) : Color.FromArgb(34, 197, 94);
 
-                Rectangle badgeRect = new Rectangle(bounds.Right - 280, bounds.Y + 10, 260, 24);
-                using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
-                using (var pen = new Pen(badgeColor, 1.2f))
-                {
-                    g.FillRectangle(brush, badgeRect);
-                    g.DrawRectangle(pen, badgeRect);
-                }
+                int badgeW = 260;
+                int badgeH = 24;
+                bool isWide = bounds.Width - badgeW - 20 >= 16 + titleSize.Width + 12;
 
-                TextRenderer.DrawText(g, statusStr, fontSub, badgeRect, badgeColor,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                if (isWide)
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+
+                    Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 10, badgeW, badgeH);
+                    using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
+                    using (var pen = new Pen(badgeColor, 1.2f))
+                    {
+                        g.FillRectangle(brush, badgeRect);
+                        g.DrawRectangle(pen, badgeRect);
+                    }
+
+                    TextRenderer.DrawText(g, statusStr, fontSub, badgeRect, badgeColor,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 46;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 22);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, palette.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    int actualBadgeW = Math.Min(badgeW, bounds.Width - 32);
+                    Rectangle badgeRect = new Rectangle(bounds.X + 16, bounds.Y + 34, actualBadgeW, badgeH);
+                    using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
+                    using (var pen = new Pen(badgeColor, 1.2f))
+                    {
+                        g.FillRectangle(brush, badgeRect);
+                        g.DrawRectangle(pen, badgeRect);
+                    }
+
+                    TextRenderer.DrawText(g, statusStr, fontSub, badgeRect, badgeColor,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 66;
+                }
             }
         }
 

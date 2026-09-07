@@ -62,10 +62,23 @@ namespace ZeroUI.WinForms.Energy
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
                 string title = $"{plant.PlantId} — {plant.Name}";
-                TextRenderer.DrawText(g, title, fontTitle, new Point(20, 14), theme.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
-                Rectangle pillRect = new Rectangle(width - 190, 12, 170, 26);
-                DrawStatusBadge(g, pillRect, "GENERATING (MPPT OK)", fontBold, Color.FromArgb(34, 197, 94), Color.FromArgb(34, 197, 94), 4);
+                int badgeW = 180;
+                int badgeH = 26;
+
+                if (width - badgeW - 20 >= 20 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(20, 14), theme.TextPrimary);
+                    Rectangle pillRect = new Rectangle(width - badgeW - 20, 12, badgeW, badgeH);
+                    DrawStatusBadge(g, pillRect, "GENERATING (MPPT OK)", fontBold, Color.FromArgb(34, 197, 94), Color.FromArgb(34, 197, 94), 4);
+                }
+                else
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(20, 10), theme.TextPrimary);
+                    Rectangle pillRect = new Rectangle(20, 34, Math.Min(width - 40, badgeW), badgeH);
+                    DrawStatusBadge(g, pillRect, "GENERATING (MPPT OK)", fontBold, Color.FromArgb(34, 197, 94), Color.FromArgb(34, 197, 94), 4);
+                }
             }
         }
 
@@ -78,9 +91,10 @@ namespace ZeroUI.WinForms.Energy
                 g.DrawRectangle(borderPen, rect);
             }
 
-            int colW = rect.Width / 5;
+            int cols = rect.Width < 420 ? 3 : 5;
+            int colW = rect.Width / cols;
             using (var fontLabel = new Font("Segoe UI", 7.5f))
-            using (var fontVal = new Font("Segoe UI", 11f, FontStyle.Bold))
+            using (var fontVal = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             {
                 // KPI 1: Fleet Power
                 DrawKpiCell(g, new Rectangle(rect.X, rect.Y, colW, rect.Height), "FLEET POWER", $"{plant.TotalPowerKw:F1} kW", Color.FromArgb(34, 197, 94), fontLabel, fontVal, theme);
@@ -88,20 +102,28 @@ namespace ZeroUI.WinForms.Energy
                 // KPI 2: Irradiance
                 DrawKpiCell(g, new Rectangle(rect.X + colW, rect.Y, colW, rect.Height), "SOLAR IRRADIANCE", $"{plant.SolarIrradianceWm2:F0} W/m²", Color.FromArgb(245, 158, 11), fontLabel, fontVal, theme);
 
-                // KPI 3: PR %
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, colW, rect.Height), "PERFORMANCE RATIO", $"{plant.PerformanceRatioPct:F1}%", Color.FromArgb(59, 130, 246), fontLabel, fontVal, theme);
+                if (cols >= 5)
+                {
+                    // KPI 3: PR %
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, colW, rect.Height), "PERFORMANCE", $"{plant.PerformanceRatioPct:F1}%", Color.FromArgb(59, 130, 246), fontLabel, fontVal, theme);
 
-                // KPI 4: Cell Temp
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 3, rect.Y, colW, rect.Height), "CELL TEMPERATURE", $"{plant.CellTempC:F1} °C", theme.TextPrimary, fontLabel, fontVal, theme);
+                    // KPI 4: Cell Temp
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 3, rect.Y, colW, rect.Height), "CELL TEMP", $"{plant.CellTempC:F1} °C", theme.TextPrimary, fontLabel, fontVal, theme);
 
-                // KPI 5: Strings Active
-                int activeCount = 0;
-                for (int i = 0; i < plant.Strings.Count; i++)
-                    if (plant.Strings[i].Status == PvStringStatus.Normal) activeCount++;
+                    // KPI 5: Strings Active
+                    int activeCount = 0;
+                    for (int i = 0; i < plant.Strings.Count; i++)
+                        if (plant.Strings[i].Status == PvStringStatus.Normal) activeCount++;
 
-                string strRatio = $"{activeCount}/{plant.Strings.Count} Healthy";
-                Color statColor = activeCount == plant.Strings.Count ? Color.FromArgb(34, 197, 94) : Color.FromArgb(245, 158, 11);
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "FLEET STRINGS", strRatio, statColor, fontLabel, fontVal, theme);
+                    string strRatio = $"{activeCount}/{plant.Strings.Count} Healthy";
+                    Color statColor = activeCount == plant.Strings.Count ? Color.FromArgb(34, 197, 94) : Color.FromArgb(245, 158, 11);
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "FLEET STRINGS", strRatio, statColor, fontLabel, fontVal, theme);
+                }
+                else
+                {
+                    // KPI 3 in compact mode
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, rect.Right - (rect.X + colW * 2), rect.Height), "PR RATIO", $"{plant.PerformanceRatioPct:F1}%", Color.FromArgb(59, 130, 246), fontLabel, fontVal, theme);
+                }
             }
         }
 

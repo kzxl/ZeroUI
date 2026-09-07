@@ -54,65 +54,98 @@ namespace ZeroUI.WinForms.Bms
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Top Header & Efficiency HUD
-            DrawHeaderAndHud(g, bounds, palette);
+            int headerH = DrawHeaderAndHud(g, bounds, palette);
 
-            // Layout split: Left = Chillers & Evaporator Loop, Right = Cooling Towers & Condenser Loop
-            int mainTop = bounds.Y + 64;
-            int mainHeight = bounds.Height - 64 - 16;
-            int halfWidth = (bounds.Width - 40) / 2;
-
-            if (halfWidth < 180 || mainHeight < 120)
+            int mainTop = bounds.Y + headerH + 8;
+            int mainHeight = bounds.Height - headerH - 16;
+            if (mainHeight < 80 || bounds.Width < 200)
                 return;
 
-            Rectangle chillerArea = new Rectangle(bounds.X + 20, mainTop, halfWidth, mainHeight);
-            Rectangle towerArea = new Rectangle(bounds.X + 20 + halfWidth + 10, mainTop, halfWidth, mainHeight);
+            bool isStacked = bounds.Width < 520;
+            if (!isStacked)
+            {
+                int halfWidth = (bounds.Width - 44) / 2;
+                if (halfWidth < 160) return;
 
-            DrawChillersSection(g, chillerArea, palette);
-            DrawTowersSection(g, towerArea, palette);
+                Rectangle chillerArea = new Rectangle(bounds.X + 16, mainTop, halfWidth, mainHeight);
+                Rectangle towerArea = new Rectangle(bounds.X + 16 + halfWidth + 12, mainTop, halfWidth, mainHeight);
 
-            // Water Loop Interconnect Pipes
-            DrawInterconnectPipes(g, chillerArea, towerArea, palette);
+                DrawChillersSection(g, chillerArea, palette);
+                DrawTowersSection(g, towerArea, palette);
+                DrawInterconnectPipes(g, chillerArea, towerArea, palette);
+            }
+            else
+            {
+                int halfHeight = (mainHeight - 10) / 2;
+                if (halfHeight < 60) return;
+
+                Rectangle chillerArea = new Rectangle(bounds.X + 16, mainTop, bounds.Width - 32, halfHeight);
+                Rectangle towerArea = new Rectangle(bounds.X + 16, mainTop + halfHeight + 10, bounds.Width - 32, halfHeight);
+
+                DrawChillersSection(g, chillerArea, palette);
+                DrawTowersSection(g, towerArea, palette);
+            }
         }
 
-        private void DrawHeaderAndHud(Graphics g, Rectangle bounds, ZeroThemePalette theme)
+        private int DrawHeaderAndHud(Graphics g, Rectangle bounds, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontSmall = new Font("Segoe UI", 8.5f))
             using (var fontBold = new Font("Segoe UI", 9f, FontStyle.Bold))
             {
-                // Title
-                TextRenderer.DrawText(g, _plantTitle, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, _plantTitle, fontTitle);
+                double kwTon = _engine.PlantAverageKwPerTon;
+                double cop = _engine.PlantAverageCop;
+                Color effColor = kwTon < 0.65 ? Color.FromArgb(34, 197, 94) :
+                                 kwTon < 0.80 ? Color.FromArgb(245, 158, 11) :
+                                 Color.FromArgb(239, 68, 68);
+                string effStr = $"{kwTon:F2} kW/TR | COP {cop:F1}";
 
-                // Right HUD: Total Load, Power, kW/Ton, COP
-                int hudX = bounds.Right - 420;
-                if (hudX > bounds.X + 220)
+                // Wide header (1 line)
+                if (bounds.Width >= 560)
                 {
-                    // Total Load
-                    string loadStr = $"Load: {_engine.TotalActualTons:N0} TR / {_engine.TotalRatedTons:N0} TR";
+                    TextRenderer.DrawText(g, _plantTitle, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), theme.TextPrimary);
+
+                    int hudX = bounds.Right - 420;
+                    string loadStr = $"Load: {_engine.TotalActualTons:N0}/{_engine.TotalRatedTons:N0} TR";
                     TextRenderer.DrawText(g, loadStr, fontSmall, new Point(hudX, bounds.Y + 16), theme.TextSecondary);
 
-                    // Power
                     string pwrStr = $"{_engine.TotalPowerKw:N0} kW";
-                    TextRenderer.DrawText(g, pwrStr, fontSmall, new Point(hudX + 160, bounds.Y + 16), theme.TextSecondary);
+                    TextRenderer.DrawText(g, pwrStr, fontSmall, new Point(hudX + 140, bounds.Y + 16), theme.TextSecondary);
 
-                    // Efficiency Badge: kW/Ton & COP
-                    double kwTon = _engine.PlantAverageKwPerTon;
-                    double cop = _engine.PlantAverageCop;
-
-                    Color effColor = kwTon < 0.65 ? Color.FromArgb(34, 197, 94) :
-                                     kwTon < 0.80 ? Color.FromArgb(245, 158, 11) :
-                                     Color.FromArgb(239, 68, 68);
-
-                    Rectangle effBadge = new Rectangle(bounds.Right - 160, bounds.Y + 10, 140, 26);
+                    Rectangle effBadge = new Rectangle(bounds.Right - 156, bounds.Y + 10, 140, 26);
                     using (var badgeBrush = new SolidBrush(Color.FromArgb(30, effColor)))
                     using (var badgePen = new Pen(effColor, 1f))
                     {
                         g.FillRectangle(badgeBrush, effBadge);
                         g.DrawRectangle(badgePen, effBadge);
                     }
-
-                    string effStr = $"{kwTon:F2} kW/TR | COP {cop:F1}";
                     TextRenderer.DrawText(g, effStr, fontBold, effBadge, effColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 48;
+                }
+                else
+                {
+                    // Compact stacked header (2 lines)
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 22);
+                    TextRenderer.DrawText(g, _plantTitle, fontTitle, titleRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    string summaryStr = $"Load: {_engine.TotalActualTons:N0} TR | {_engine.TotalPowerKw:N0} kW";
+                    TextRenderer.DrawText(g, summaryStr, fontSmall, new Point(bounds.X + 16, bounds.Y + 34), theme.TextSecondary);
+
+                    int badgeW = 140;
+                    Rectangle effBadge = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 30, badgeW, 24);
+                    if (effBadge.Left > bounds.X + 160)
+                    {
+                        using (var badgeBrush = new SolidBrush(Color.FromArgb(30, effColor)))
+                        using (var badgePen = new Pen(effColor, 1f))
+                        {
+                            g.FillRectangle(badgeBrush, effBadge);
+                            g.DrawRectangle(badgePen, effBadge);
+                        }
+                        TextRenderer.DrawText(g, effStr, fontBold, effBadge, effColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    }
+                    return 62;
                 }
             }
         }
@@ -158,17 +191,23 @@ namespace ZeroUI.WinForms.Bms
                     }
 
                     // Chiller Name & Status
-                    TextRenderer.DrawText(g, ch.Name, fontHeader, new Point(itemRect.Left + 48, itemRect.Top + 6), theme.TextPrimary);
+                    Rectangle nameRect = new Rectangle(itemRect.Left + 48, itemRect.Top + 4, Math.Max(20, itemRect.Width - 54), 18);
+                    TextRenderer.DrawText(g, ch.Name, fontHeader, nameRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                     string statusStr = ch.Status == ChillerStatus.Running
                         ? $"{ch.ActualTons:N0} TR ({ch.PowerKw:N0} kW) | {ch.EfficiencyKwPerTon:F2} kW/TR"
                         : "OFFLINE / STANDBY";
-                    TextRenderer.DrawText(g, statusStr, fontSmall, new Point(itemRect.Left + 48, itemRect.Top + 24),
-                        ch.Status == ChillerStatus.Running ? theme.TextSecondary : Color.FromArgb(148, 163, 184));
+                    Rectangle statusRect = new Rectangle(itemRect.Left + 48, itemRect.Top + 22, Math.Max(20, itemRect.Width - 54), 16);
+                    TextRenderer.DrawText(g, statusStr, fontSmall, statusRect,
+                        ch.Status == ChillerStatus.Running ? theme.TextSecondary : Color.FromArgb(148, 163, 184),
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                     // Temperatures CHWST / CHWRT
                     string tempStr = $"CHW: {ch.ChwSupplyTempC:F1}°C / {ch.ChwReturnTempC:F1}°C (ΔT {ch.ChwDeltaTempC:F1}°C)";
-                    TextRenderer.DrawText(g, tempStr, fontSmall, new Point(itemRect.Left + 48, itemRect.Top + 40), Color.FromArgb(56, 189, 248));
+                    Rectangle tempRect = new Rectangle(itemRect.Left + 48, itemRect.Top + 38, Math.Max(20, itemRect.Width - 54), 16);
+                    TextRenderer.DrawText(g, tempStr, fontSmall, tempRect, Color.FromArgb(56, 189, 248),
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
                 }
             }
         }
@@ -222,14 +261,20 @@ namespace ZeroUI.WinForms.Bms
                     }
 
                     // Tower Name & Status
-                    TextRenderer.DrawText(g, tw.Name, fontHeader, new Point(itemRect.Left + 48, itemRect.Top + 6), theme.TextPrimary);
+                    Rectangle nameRect = new Rectangle(itemRect.Left + 48, itemRect.Top + 4, Math.Max(20, itemRect.Width - 54), 18);
+                    TextRenderer.DrawText(g, tw.Name, fontHeader, nameRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                     string rpmStr = tw.IsFanRunning ? $"{tw.FanRpm:N0} RPM (Running)" : "FAN STOPPED";
-                    TextRenderer.DrawText(g, rpmStr, fontSmall, new Point(itemRect.Left + 48, itemRect.Top + 24),
-                        tw.IsFanRunning ? theme.TextSecondary : Color.FromArgb(148, 163, 184));
+                    Rectangle rpmRect = new Rectangle(itemRect.Left + 48, itemRect.Top + 22, Math.Max(20, itemRect.Width - 54), 16);
+                    TextRenderer.DrawText(g, rpmStr, fontSmall, rpmRect,
+                        tw.IsFanRunning ? theme.TextSecondary : Color.FromArgb(148, 163, 184),
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
-                    string approachStr = $"Approach: {tw.ApproachTempC:F1}°C (Entering: {tw.WaterTempInC:F1}°C / Leaving: {tw.WaterTempOutC:F1}°C)";
-                    TextRenderer.DrawText(g, approachStr, fontSmall, new Point(itemRect.Left + 48, itemRect.Top + 40), Color.FromArgb(34, 197, 94));
+                    string approachStr = $"Approach: {tw.ApproachTempC:F1}°C (In: {tw.WaterTempInC:F1}°C / Out: {tw.WaterTempOutC:F1}°C)";
+                    Rectangle appRect = new Rectangle(itemRect.Left + 48, itemRect.Top + 38, Math.Max(20, itemRect.Width - 54), 16);
+                    TextRenderer.DrawText(g, approachStr, fontSmall, appRect, Color.FromArgb(34, 197, 94),
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
                 }
             }
         }

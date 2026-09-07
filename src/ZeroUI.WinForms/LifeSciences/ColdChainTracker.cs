@@ -43,41 +43,68 @@ namespace ZeroUI.WinForms.LifeSciences
             var tele = _engine.Telemetry;
 
             // Header Banner
-            DrawHeader(g, bounds, tele, palette);
+            int headerH = DrawHeader(g, bounds, tele, palette);
 
             // KPI Telemetry Strip
-            int kpiY = bounds.Y + 56;
+            int kpiY = bounds.Y + headerH + 6;
             int kpiHeight = 52;
             DrawKpiStrip(g, new Rectangle(bounds.X + 20, kpiY, bounds.Width - 40, kpiHeight), tele, palette);
 
             // Temperature History Ribbon Canvas
-            int ribbonY = kpiY + kpiHeight + 14;
+            int ribbonY = kpiY + kpiHeight + 12;
             int ribbonHeight = bounds.Height - (ribbonY - bounds.Y) - 16;
-            if (ribbonHeight < 120 || bounds.Width < 300) return;
+            if (ribbonHeight < 100 || bounds.Width < 240) return;
 
             DrawRibbonCanvas(g, new Rectangle(bounds.X + 20, ribbonY, bounds.Width - 40, ribbonHeight), tele, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ColdChainTelemetry tele, ZeroThemePalette theme)
+        private int DrawHeader(Graphics g, Rectangle bounds, ColdChainTelemetry tele, ZeroThemePalette theme)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var fontBold = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
                 string title = $"{tele.UnitTag} — Ultra-Low Temp (ULT) -80°C Freezer";
-                TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 bool isExcursion = _engine.IsInExcursion;
                 Color badgeCol = isExcursion ? Color.FromArgb(239, 68, 68) : Color.FromArgb(34, 197, 94);
                 string badgeText = isExcursion ? "EXCURSION BREACH" : "COMPLIANT (STABLE)";
 
-                Rectangle pillRect = new Rectangle(bounds.Right - 190, bounds.Y + 12, 170, 26);
-                using (var pillBrush = new SolidBrush(Color.FromArgb(25, badgeCol)))
-                using (var pillPen = new Pen(badgeCol, 1f))
+                int badgeW = 170;
+                int badgeH = 26;
+                bool isWide = bounds.Width - badgeW - 20 >= 20 + titleSize.Width + 16;
+
+                if (isWide)
                 {
-                    g.FillRectangle(pillBrush, pillRect);
-                    g.DrawRectangle(pillPen, pillRect);
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 20, bounds.Y + 14), theme.TextPrimary);
+
+                    Rectangle pillRect = new Rectangle(bounds.Right - badgeW - 20, bounds.Y + 12, badgeW, badgeH);
+                    using (var pillBrush = new SolidBrush(Color.FromArgb(25, badgeCol)))
+                    using (var pillPen = new Pen(badgeCol, 1f))
+                    {
+                        g.FillRectangle(pillBrush, pillRect);
+                        g.DrawRectangle(pillPen, pillRect);
+                    }
+                    TextRenderer.DrawText(g, badgeText, fontBold, pillRect, badgeCol, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    return 48;
                 }
-                TextRenderer.DrawText(g, badgeText, fontBold, pillRect, badgeCol, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 20, bounds.Y + 8, bounds.Width - 40, 22);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, theme.TextPrimary,
+                        TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+                    Rectangle pillRect = new Rectangle(bounds.X + 20, bounds.Y + 34, Math.Min(badgeW, bounds.Width - 40), badgeH);
+                    using (var pillBrush = new SolidBrush(Color.FromArgb(25, badgeCol)))
+                    using (var pillPen = new Pen(badgeCol, 1f))
+                    {
+                        g.FillRectangle(pillBrush, pillRect);
+                        g.DrawRectangle(pillPen, pillRect);
+                    }
+                    TextRenderer.DrawText(g, badgeText, fontBold, pillRect, badgeCol,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    return 66;
+                }
             }
         }
 
@@ -90,7 +117,8 @@ namespace ZeroUI.WinForms.LifeSciences
                 g.DrawRectangle(borderPen, rect);
             }
 
-            int colW = rect.Width / 5;
+            int cols = rect.Width < 420 ? 3 : 5;
+            int colW = rect.Width / cols;
             using (var fontLabel = new Font("Segoe UI", 7.5f))
             using (var fontVal = new Font("Segoe UI", 11f, FontStyle.Bold))
             {
@@ -100,17 +128,25 @@ namespace ZeroUI.WinForms.LifeSciences
 
                 // KPI 2: MKT
                 double mkt = ColdChainEngine.CalculateMeanKineticTemperature(tele.TempHistory);
-                DrawKpiCell(g, new Rectangle(rect.X + colW, rect.Y, colW, rect.Height), "MEAN KINETIC (MKT)", $"{mkt:F1} °C", Color.FromArgb(34, 197, 94), fontLabel, fontVal, theme);
+                DrawKpiCell(g, new Rectangle(rect.X + colW, rect.Y, colW, rect.Height), "MEAN KINETIC", $"{mkt:F1} °C", Color.FromArgb(34, 197, 94), fontLabel, fontVal, theme);
 
-                // KPI 3: Setpoint
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, colW, rect.Height), "SETPOINT", $"{tele.SetpointTempC:F1} °C", theme.TextPrimary, fontLabel, fontVal, theme);
+                if (cols >= 5)
+                {
+                    // KPI 3: Setpoint
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, colW, rect.Height), "SETPOINT", $"{tele.SetpointTempC:F1} °C", theme.TextPrimary, fontLabel, fontVal, theme);
 
-                // KPI 4: Door Opens
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 3, rect.Y, colW, rect.Height), "DOOR OPENS TODAY", $"{tele.DoorOpenCountToday} Cycles", theme.TextPrimary, fontLabel, fontVal, theme);
+                    // KPI 4: Door Opens
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 3, rect.Y, colW, rect.Height), "DOOR OPENS", $"{tele.DoorOpenCountToday} Cycles", theme.TextPrimary, fontLabel, fontVal, theme);
 
-                // KPI 5: LN2 & Battery Backup
-                string backupStr = $"Batt: {tele.BackupBatteryPct:F0}% | LN2 OK";
-                DrawKpiCell(g, new Rectangle(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "BACKUP SYSTEMS", backupStr, Color.FromArgb(16, 185, 129), fontLabel, fontVal, theme);
+                    // KPI 5: LN2 & Battery Backup
+                    string backupStr = $"Batt: {tele.BackupBatteryPct:F0}% | LN2 OK";
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 4, rect.Y, rect.Right - (rect.X + colW * 4), rect.Height), "BACKUP SYSTEMS", backupStr, Color.FromArgb(16, 185, 129), fontLabel, fontVal, theme);
+                }
+                else
+                {
+                    // In compact 3-column mode, show Setpoint as the 3rd metric
+                    DrawKpiCell(g, new Rectangle(rect.X + colW * 2, rect.Y, rect.Right - (rect.X + colW * 2), rect.Height), "SETPOINT", $"{tele.SetpointTempC:F1} °C", theme.TextPrimary, fontLabel, fontVal, theme);
+                }
             }
         }
 
@@ -125,7 +161,9 @@ namespace ZeroUI.WinForms.LifeSciences
                 g.FillRectangle(cardBrush, rect);
                 g.DrawRectangle(borderPen, rect);
 
-                TextRenderer.DrawText(g, "TEMPERATURE TELEMETRY RIBBON & EXCURSION LIMITS (21 CFR PART 11 AUDIT)", fontHeader, new Point(rect.X + 14, rect.Y + 8), theme.TextSecondary);
+                Rectangle titleRect = new Rectangle(rect.X + 14, rect.Y + 8, Math.Max(20, rect.Width - 28), 18);
+                TextRenderer.DrawText(g, "TEMPERATURE TELEMETRY RIBBON & EXCURSION LIMITS (21 CFR PART 11 AUDIT)", fontHeader, titleRect, theme.TextSecondary,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
                 int plotLeft = rect.X + 60;
                 int plotTop = rect.Y + 32;

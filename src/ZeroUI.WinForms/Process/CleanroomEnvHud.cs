@@ -51,16 +51,15 @@ namespace ZeroUI.WinForms.Process
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // 1. Header
-            DrawHeader(g, bounds, palette);
+            DrawHeader(g, bounds, palette, out int headerH);
 
-            int headerH = 46;
             int mainTop = bounds.Y + headerH;
             int mainHeight = bounds.Height - headerH - 12;
 
-            int hudW = 260;
+            int hudW = bounds.Width < 540 ? Math.Max(160, (int)(bounds.Width * 0.42)) : 260;
             int cascadeW = bounds.Width - hudW - 32;
 
-            if (cascadeW < 120 || mainHeight < 100) return;
+            if (cascadeW < 80 || mainHeight < 80) return;
 
             Rectangle cascadeRect = new Rectangle(bounds.X + 16, mainTop, cascadeW, mainHeight);
             Rectangle hudRect = new Rectangle(cascadeRect.Right + 12, mainTop, hudW, mainHeight);
@@ -72,27 +71,36 @@ namespace ZeroUI.WinForms.Process
             DrawCleanroomHud(g, hudRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette, out int headerH)
         {
+            string title = $"{_facilityTag} — Cleanroom Cascade & Environmental Monitor";
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
-            using (var fontSub = new Font("Segoe UI", 8.5f))
+            using (var fontSub = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, $"{_facilityTag} — Cleanroom Cascade & Environmental Monitor", fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 bool isCompliant = _engine.IsOverallFacilityCompliant;
                 Color badgeColor = isCompliant ? Color.FromArgb(34, 197, 94) : Color.FromArgb(239, 68, 68);
                 string badgeStr = isCompliant ? "ISO 14644-1 COMPLIANT" : "CASCADE BREACH";
 
-                Rectangle badgeRect = new Rectangle(bounds.Right - 210, bounds.Y + 10, 194, 24);
-                using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
-                using (var pen = new Pen(badgeColor, 1.2f))
-                {
-                    g.FillRectangle(brush, badgeRect);
-                    g.DrawRectangle(pen, badgeRect);
-                }
+                int badgeW = 194;
+                int badgeH = 24;
 
-                TextRenderer.DrawText(g, badgeStr, fontSub, badgeRect, badgeColor,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                if (bounds.Width - badgeW - 20 >= 20 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                    Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 10, badgeW, badgeH);
+                    PaintHelper.DrawStatusBadge(g, badgeRect, badgeStr, fontSub, badgeColor, badgeColor, 4);
+                    headerH = 46;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 20);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                    Rectangle badgeRect = new Rectangle(bounds.X + 16, bounds.Y + 32, Math.Min(bounds.Width - 32, badgeW), badgeH);
+                    PaintHelper.DrawStatusBadge(g, badgeRect, badgeStr, fontSub, badgeColor, badgeColor, 4);
+                    headerH = 64;
+                }
             }
         }
 

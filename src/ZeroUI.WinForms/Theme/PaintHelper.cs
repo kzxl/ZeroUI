@@ -115,7 +115,9 @@ namespace ZeroUI.WinForms.Theme
                 g.DrawRectangle(borderPen, bounds);
                 if (!string.IsNullOrEmpty(title) && titleFont != null)
                 {
-                    TextRenderer.DrawText(g, title, titleFont, new Point(bounds.X + 14, bounds.Y + 10), palette.TextSecondary);
+                    Rectangle titleRect = new Rectangle(bounds.X + 14, bounds.Y + 8, Math.Max(10, bounds.Width - 28), 18);
+                    TextRenderer.DrawText(g, title, titleFont, titleRect, palette.TextSecondary,
+                        TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
                 }
             }
         }
@@ -129,29 +131,44 @@ namespace ZeroUI.WinForms.Theme
 
             if (!string.IsNullOrEmpty(label) && labelFont != null)
             {
-                TextRenderer.DrawText(g, label, labelFont, new Point(bounds.X + 12, bounds.Y + 6), palette.TextSecondary);
+                Rectangle lblRect = new Rectangle(bounds.X + 10, bounds.Y + 5, Math.Max(10, bounds.Width - 16), 16);
+                TextRenderer.DrawText(g, label, labelFont, lblRect, palette.TextSecondary,
+                    TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
             }
             if (!string.IsNullOrEmpty(value) && valueFont != null)
             {
-                TextRenderer.DrawText(g, value, valueFont, new Point(bounds.X + 12, bounds.Y + 22), valueColor);
+                Rectangle valRect = new Rectangle(bounds.X + 10, bounds.Y + 22, Math.Max(10, bounds.Width - 16), Math.Max(16, bounds.Height - 24));
+                TextRenderer.DrawText(g, value, valueFont, valRect, valueColor,
+                    TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
             }
         }
 
         /// <summary>
-        /// Draws a two-column key-value data row aligned across a card panel.
+        /// Draws a two-column key-value data row aligned across a card panel with overlap prevention.
         /// </summary>
         public static void DrawDataRow(Graphics g, Rectangle bounds, string label, string value, Color labelColor, Color valueColor, Font labelFont, Font valueFont)
         {
             if (g == null || bounds.Width <= 0 || bounds.Height <= 0) return;
 
+            Size valSize = (!string.IsNullOrEmpty(value) && valueFont != null)
+                ? TextRenderer.MeasureText(g, value, valueFont)
+                : Size.Empty;
+
             if (!string.IsNullOrEmpty(label) && labelFont != null)
             {
-                TextRenderer.DrawText(g, label, labelFont, new Point(bounds.X, bounds.Y), labelColor);
+                int maxLabelW = Math.Max(10, bounds.Width - valSize.Width - 8);
+                Rectangle labelRect = new Rectangle(bounds.X, bounds.Y, maxLabelW, bounds.Height);
+                TextRenderer.DrawText(g, label, labelFont, labelRect, labelColor,
+                    TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
             }
-            if (!string.IsNullOrEmpty(value) && valueFont != null)
+
+            if (valSize.Width > 0 && valueFont != null)
             {
-                Size valSize = TextRenderer.MeasureText(g, value, valueFont);
-                TextRenderer.DrawText(g, value, valueFont, new Point(bounds.Right - valSize.Width, bounds.Y), valueColor);
+                int valX = Math.Max(bounds.X, bounds.Right - valSize.Width);
+                int valW = Math.Min(valSize.Width, bounds.Right - valX);
+                Rectangle valRect = new Rectangle(valX, bounds.Y, valW, bounds.Height);
+                TextRenderer.DrawText(g, value, valueFont, valRect, valueColor,
+                    TextFormatFlags.Right | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
             }
         }
 

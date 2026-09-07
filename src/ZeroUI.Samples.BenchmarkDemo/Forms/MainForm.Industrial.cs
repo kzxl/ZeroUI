@@ -35,7 +35,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 640
+                SplitterDistance = 540
             };
             var sld = new SingleLineDiagram { Dock = DockStyle.Fill };
             splitEnergy.Panel1.Controls.Add(sld);
@@ -68,7 +68,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 620
+                SplitterDistance = 540
             };
             splitPetro.Panel1.Controls.Add(new DistillationColumn { Dock = DockStyle.Fill });
 
@@ -97,7 +97,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 580
+                SplitterDistance = 540
             };
             var tabsPharmaLeft = new ZeroTabControl
             {
@@ -145,7 +145,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 560
+                SplitterDistance = 520
             };
             splitWaterTop.Panel1.Controls.Add(new ClarifierBasin { Dock = DockStyle.Fill });
             splitWaterTop.Panel2.Controls.Add(new ChemicalDosingSkid { Dock = DockStyle.Fill });
@@ -162,7 +162,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 580
+                SplitterDistance = 540
             };
             splitBms.Panel1.Controls.Add(new AhuSchematic { Dock = DockStyle.Fill });
 
@@ -191,7 +191,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 560
+                SplitterDistance = 530
             };
             splitLife.Panel1.Controls.Add(new MicroplateReader { Dock = DockStyle.Fill });
 
@@ -220,7 +220,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 560
+                SplitterDistance = 530
             };
             splitLogistics.Panel1.Controls.Add(new AgvFleetCanvas { Dock = DockStyle.Fill });
 

@@ -70,22 +70,21 @@ namespace ZeroUI.WinForms.Petrochem
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // 1. Safety Header
-            DrawHeader(g, bounds, palette);
+            DrawHeader(g, bounds, palette, out int headerH);
 
-            int headerH = 50;
             var matrixRect = new Rectangle(bounds.X + 16, bounds.Y + headerH, bounds.Width - 32, bounds.Height - headerH - 16);
 
             // 2. Cause & Effect Crossbar Grid
             DrawMatrixGrid(g, matrixRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette, out int headerH)
         {
             string title = $"{_engine.SisTag} — {_engine.AreaDescription.ToUpperInvariant()}";
-            using (var font = new Font("Segoe UI", 11f, FontStyle.Bold))
+            using (var font = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var subFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, title, font, new Point(bounds.X + 16, bounds.Y + 14), palette.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, font);
 
                 // Global SIS Status Badge
                 string statusText;
@@ -100,7 +99,7 @@ namespace ZeroUI.WinForms.Petrochem
                 }
                 else if (_engine.ActiveBypassCount > 0)
                 {
-                    statusText = $"DEGRADED (MOS BYPASS: {_engine.ActiveBypassCount})";
+                    statusText = $"DEGRADED ({_engine.ActiveBypassCount})";
                     statusBg = palette.Warning;
                     statusFg = Color.Black;
                 }
@@ -111,7 +110,22 @@ namespace ZeroUI.WinForms.Petrochem
                     statusFg = Color.White;
                 }
 
-                PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.Right - 220, bounds.Y + 12, 204, 26), statusText, subFont, statusBg, statusFg);
+                int badgeW = 200;
+                int badgeH = 26;
+
+                if (bounds.Width - badgeW - 20 >= 20 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, font, new Point(bounds.X + 16, bounds.Y + 14), palette.TextPrimary);
+                    PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 12, badgeW, badgeH), statusText, subFont, statusBg, statusFg);
+                    headerH = 48;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 10, bounds.Width - 32, 20);
+                    TextRenderer.DrawText(g, title, font, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                    PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.X + 16, bounds.Y + 34, Math.Min(bounds.Width - 32, badgeW), badgeH), statusText, subFont, statusBg, statusFg);
+                    headerH = 68;
+                }
             }
         }
 

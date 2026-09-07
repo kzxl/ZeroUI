@@ -81,16 +81,15 @@ namespace ZeroUI.WinForms.Process
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // 1. Top Header
-            DrawHeader(g, bounds, palette);
+            DrawHeader(g, bounds, palette, out int headerH);
 
-            int headerH = 46;
             int mainTop = bounds.Y + headerH;
             int mainHeight = bounds.Height - headerH - 12;
 
-            int hudW = 240;
+            int hudW = bounds.Width < 540 ? Math.Max(160, (int)(bounds.Width * 0.42)) : 240;
             int sfcW = bounds.Width - hudW - 32;
 
-            if (sfcW < 120 || mainHeight < 100) return;
+            if (sfcW < 80 || mainHeight < 80) return;
 
             Rectangle sfcRect = new Rectangle(bounds.X + 16, mainTop, sfcW, mainHeight);
             Rectangle hudRect = new Rectangle(sfcRect.Right + 12, mainTop, hudW, mainHeight);
@@ -102,12 +101,13 @@ namespace ZeroUI.WinForms.Process
             DrawBatchHud(g, hudRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette, out int headerH)
         {
+            string title = $"{_engine.RecipeName} — {_engine.BatchId}";
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
-            using (var fontSub = new Font("Segoe UI", 8.5f))
+            using (var fontSub = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, $"{_engine.RecipeName} — {_engine.BatchId}", fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 Color badgeColor = _engine.State switch
                 {
@@ -118,16 +118,24 @@ namespace ZeroUI.WinForms.Process
                     _ => Color.FromArgb(148, 163, 184)
                 };
 
-                Rectangle badgeRect = new Rectangle(bounds.Right - 170, bounds.Y + 10, 154, 24);
-                using (var brush = new SolidBrush(Color.FromArgb(30, badgeColor)))
-                using (var pen = new Pen(badgeColor, 1.2f))
-                {
-                    g.FillRectangle(brush, badgeRect);
-                    g.DrawRectangle(pen, badgeRect);
-                }
+                int badgeW = 154;
+                int badgeH = 24;
 
-                TextRenderer.DrawText(g, _engine.State.ToString().ToUpperInvariant(), fontSub, badgeRect, badgeColor,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                if (bounds.Width - badgeW - 20 >= 20 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                    Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 10, badgeW, badgeH);
+                    PaintHelper.DrawStatusBadge(g, badgeRect, _engine.State.ToString().ToUpperInvariant(), fontSub, badgeColor, badgeColor, 4);
+                    headerH = 46;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 20);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                    Rectangle badgeRect = new Rectangle(bounds.X + 16, bounds.Y + 32, Math.Min(bounds.Width - 32, badgeW), badgeH);
+                    PaintHelper.DrawStatusBadge(g, badgeRect, _engine.State.ToString().ToUpperInvariant(), fontSub, badgeColor, badgeColor, 4);
+                    headerH = 64;
+                }
             }
         }
 

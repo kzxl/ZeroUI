@@ -111,17 +111,16 @@ namespace ZeroUI.WinForms.Water
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // Header
-            DrawHeader(g, bounds, palette);
+            DrawHeader(g, bounds, palette, out int headerH);
 
-            int headerH = 48;
             int mainTop = bounds.Y + headerH;
             int mainHeight = bounds.Height - headerH - 12;
 
-            int tankW = 140;
-            int hudW = 230;
+            int tankW = bounds.Width < 580 ? Math.Max(90, (int)(bounds.Width * 0.22)) : 140;
+            int hudW = bounds.Width < 580 ? Math.Max(160, (int)(bounds.Width * 0.38)) : 230;
             int skidW = bounds.Width - tankW - hudW - 40;
 
-            if (skidW < 140 || mainHeight < 120) return;
+            if (skidW < 80 || mainHeight < 80) return;
 
             Rectangle tankRect = new Rectangle(bounds.X + 16, mainTop, tankW, mainHeight);
             Rectangle skidRect = new Rectangle(tankRect.Right + 12, mainTop, skidW, mainHeight);
@@ -137,10 +136,10 @@ namespace ZeroUI.WinForms.Water
             DrawTelemetryHud(g, hudRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette, out int headerH)
         {
             using (var fontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold))
-            using (var fontSub = new Font("Segoe UI", 8.5f))
+            using (var fontSub = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
                 string chemName = _engine.Chemical switch
                 {
@@ -152,22 +151,30 @@ namespace ZeroUI.WinForms.Water
                     _ => "Treatment Chemical"
                 };
 
-                TextRenderer.DrawText(g, $"{_skidTag} — {chemName} Dosing Skid", fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                string title = $"{_skidTag} — {chemName} Dosing Skid";
+                Size titleSize = TextRenderer.MeasureText(g, title, fontTitle);
 
                 // Target Dosing Rate Badge
                 double reqLh = _engine.CalculateRequiredDosingRateLh();
                 string doseStr = $"Target: {_engine.TargetDoseMgL:F1} mg/L ({reqLh:F1} L/h)";
-                Rectangle badgeRect = new Rectangle(bounds.Right - 210, bounds.Y + 10, 194, 24);
+                int badgeW = 194;
+                int badgeH = 24;
 
-                using (var brush = new SolidBrush(Color.FromArgb(30, 56, 189, 248)))
-                using (var pen = new Pen(Color.FromArgb(56, 189, 248), 1.2f))
+                if (bounds.Width - badgeW - 20 >= 20 + titleSize.Width + 16)
                 {
-                    g.FillRectangle(brush, badgeRect);
-                    g.DrawRectangle(pen, badgeRect);
+                    TextRenderer.DrawText(g, title, fontTitle, new Point(bounds.X + 16, bounds.Y + 12), palette.TextPrimary);
+                    Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 10, badgeW, badgeH);
+                    PaintHelper.DrawStatusBadge(g, badgeRect, doseStr, fontSub, Color.FromArgb(56, 189, 248), Color.FromArgb(56, 189, 248), 4);
+                    headerH = 48;
                 }
-
-                TextRenderer.DrawText(g, doseStr, fontSub, badgeRect, Color.FromArgb(56, 189, 248),
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 8, bounds.Width - 32, 20);
+                    TextRenderer.DrawText(g, title, fontTitle, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                    Rectangle badgeRect = new Rectangle(bounds.X + 16, bounds.Y + 32, Math.Min(bounds.Width - 32, badgeW), badgeH);
+                    PaintHelper.DrawStatusBadge(g, badgeRect, doseStr, fontSub, Color.FromArgb(56, 189, 248), Color.FromArgb(56, 189, 248), 4);
+                    headerH = 66;
+                }
             }
         }
 

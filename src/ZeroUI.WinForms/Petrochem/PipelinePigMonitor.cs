@@ -83,12 +83,11 @@ namespace ZeroUI.WinForms.Petrochem
         protected override void OnDrawVisual(Graphics g, Rectangle bounds, ZeroThemePalette palette)
         {
             // 1. Header
-            DrawHeader(g, bounds, palette);
+            DrawHeader(g, bounds, palette, out int headerH);
 
-            int headerH = 50;
-            int pipeH = 170;
+            int pipeH = Math.Min(170, Math.Max(120, (bounds.Height - headerH - 36) / 2));
             var trackRect = new Rectangle(bounds.X + 16, bounds.Y + headerH, bounds.Width - 32, pipeH);
-            var telemetryRect = new Rectangle(bounds.X + 16, trackRect.Bottom + 12, bounds.Width - 32, bounds.Height - trackRect.Bottom - 24);
+            var telemetryRect = new Rectangle(bounds.X + 16, trackRect.Bottom + 10, bounds.Width - 32, Math.Max(80, bounds.Height - trackRect.Bottom - 18));
 
             // 2. Longitudinal Pipeline & Pig Track
             DrawPipelineTrack(g, trackRect, palette);
@@ -97,13 +96,13 @@ namespace ZeroUI.WinForms.Petrochem
             DrawTelemetryGrid(g, telemetryRect, palette);
         }
 
-        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette)
+        private void DrawHeader(Graphics g, Rectangle bounds, ZeroThemePalette palette, out int headerH)
         {
             string title = $"{_engine.PipelineTag} — {_engine.RouteDescription.ToUpperInvariant()}";
-            using (var font = new Font("Segoe UI", 11f, FontStyle.Bold))
+            using (var font = new Font("Segoe UI", 10.5f, FontStyle.Bold))
             using (var subFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                TextRenderer.DrawText(g, title, font, new Point(bounds.X + 16, bounds.Y + 14), palette.TextPrimary);
+                Size titleSize = TextRenderer.MeasureText(g, title, font);
 
                 // Status Badge
                 string badgeText = _engine.Status.ToString().ToUpperInvariant();
@@ -128,7 +127,22 @@ namespace ZeroUI.WinForms.Petrochem
                         break;
                 }
 
-                PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.Right - 200, bounds.Y + 12, 184, 26), badgeText, subFont, badgeBg, badgeFg);
+                int badgeW = 184;
+                int badgeH = 26;
+
+                if (bounds.Width - badgeW - 20 >= 20 + titleSize.Width + 16)
+                {
+                    TextRenderer.DrawText(g, title, font, new Point(bounds.X + 16, bounds.Y + 14), palette.TextPrimary);
+                    PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.Right - badgeW - 16, bounds.Y + 12, badgeW, badgeH), badgeText, subFont, badgeBg, badgeFg);
+                    headerH = 48;
+                }
+                else
+                {
+                    Rectangle titleRect = new Rectangle(bounds.X + 16, bounds.Y + 10, bounds.Width - 32, 20);
+                    TextRenderer.DrawText(g, title, font, titleRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                    PaintHelper.DrawStatusBadge(g, new Rectangle(bounds.X + 16, bounds.Y + 34, Math.Min(bounds.Width - 32, badgeW), badgeH), badgeText, subFont, badgeBg, badgeFg);
+                    headerH = 68;
+                }
             }
         }
 
@@ -264,47 +278,61 @@ namespace ZeroUI.WinForms.Petrochem
 
         private void DrawTelemetryGrid(Graphics g, Rectangle rect, ZeroThemePalette palette)
         {
-            int colW = (rect.Width - 36) / 4;
-
             using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             using (var labelFont = new Font("Segoe UI", 8f))
             using (var valFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
+                Rectangle card1, card2, card3, card4;
+                int rowH = 21;
+
+                if (rect.Width >= 580)
+                {
+                    int colW = (rect.Width - 36) / 4;
+                    card1 = new Rectangle(rect.X, rect.Y, colW, rect.Height);
+                    card2 = new Rectangle(card1.Right + 12, rect.Y, colW, rect.Height);
+                    card3 = new Rectangle(card2.Right + 12, rect.Y, colW, rect.Height);
+                    card4 = new Rectangle(card3.Right + 12, rect.Y, rect.Right - card3.Right - 12, rect.Height);
+                }
+                else
+                {
+                    int colW = (rect.Width - 10) / 2;
+                    int rowHCard = Math.Max(95, (rect.Height - 8) / 2);
+                    card1 = new Rectangle(rect.X, rect.Y, colW, rowHCard);
+                    card2 = new Rectangle(card1.Right + 10, rect.Y, rect.Right - card1.Right - 10, rowHCard);
+                    card3 = new Rectangle(rect.X, card1.Bottom + 8, colW, rect.Bottom - card1.Bottom - 8);
+                    card4 = new Rectangle(card3.Right + 10, card1.Bottom + 8, rect.Right - card3.Right - 10, rect.Bottom - card1.Bottom - 8);
+                }
+
                 // Card 1: Position & Progress
-                var card1 = new Rectangle(rect.X, rect.Y, colW, rect.Height);
                 PaintHelper.DrawCardBox(g, card1, "ODOMETER & KP", titleFont, palette);
-                int y1 = card1.Y + 32;
-                int rowH = 22;
-                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, y1, card1.Width - 20, rowH), "Current Distance", $"{_engine.CurrentDistanceKm:F1} km", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, y1 + rowH, card1.Width - 20, rowH), "Total Pipeline", $"{_engine.TotalLengthKm:F1} km", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, y1 + rowH * 2, card1.Width - 20, rowH), "Run Progress", $"{_engine.ProgressPct:F1}%", palette.TextSecondary, Color.FromArgb(56, 189, 248), labelFont, valFont);
+                int y1 = card1.Y + 30;
+                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, y1, card1.Width - 20, rowH), "Distance", $"{_engine.CurrentDistanceKm:F1} km", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, y1 + rowH, card1.Width - 20, rowH), "Total Pipe", $"{_engine.TotalLengthKm:F1} km", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                PaintHelper.DrawDataRow(g, new Rectangle(card1.X + 10, y1 + rowH * 2, card1.Width - 20, rowH), "Progress", $"{_engine.ProgressPct:F1}%", palette.TextSecondary, Color.FromArgb(56, 189, 248), labelFont, valFont);
 
                 // Card 2: Kinematics & Hydraulics
-                var card2 = new Rectangle(card1.Right + 12, rect.Y, colW, rect.Height);
                 PaintHelper.DrawCardBox(g, card2, "VELOCITY & HEAD", titleFont, palette);
-                int y2 = card2.Y + 32;
+                int y2 = card2.Y + 30;
                 PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, y2, card2.Width - 20, rowH), "PIG Speed", $"{_engine.PigVelocityMs:F2} m/s", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, y2 + rowH, card2.Width - 20, rowH), "Differential Head", $"{_engine.DifferentialPressureBar:F2} bar", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
-                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, y2 + rowH * 2, card2.Width - 20, rowH), "Wheel Revs", $"{_engine.OdometerRevs:F0}", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, y2 + rowH, card2.Width - 20, rowH), "Diff Head", $"{_engine.DifferentialPressureBar:F2} bar", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                PaintHelper.DrawDataRow(g, new Rectangle(card2.X + 10, y2 + rowH * 2, card2.Width - 20, rowH), "Revs", $"{_engine.OdometerRevs:F0}", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
 
                 // Card 3: Tool Health
-                var card3 = new Rectangle(card2.Right + 12, rect.Y, colW, rect.Height);
                 PaintHelper.DrawCardBox(g, card3, "ONBOARD DIAGNOSTICS", titleFont, palette);
-                int y3 = card3.Y + 32;
-                PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 10, y3, card3.Width - 20, rowH), "Battery State", $"{_engine.BatteryPct:F0}%", palette.TextSecondary, palette.Success, labelFont, valFont);
+                int y3 = card3.Y + 30;
+                PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 10, y3, card3.Width - 20, rowH), "Battery", $"{_engine.BatteryPct:F0}%", palette.TextSecondary, palette.Success, labelFont, valFont);
                 PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 10, y3 + rowH, card3.Width - 20, rowH), "MFL Storage", $"{_engine.StorageMemoryPct:F0}%", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
                 PaintHelper.DrawDataRow(g, new Rectangle(card3.X + 10, y3 + rowH * 2, card3.Width - 20, rowH), "Tool Class", _engine.ToolType.ToString(), palette.TextSecondary, palette.Primary, labelFont, valFont);
 
                 // Card 4: Operations & Anomalies
-                var card4 = new Rectangle(card3.Right + 12, rect.Y, colW, rect.Height);
                 PaintHelper.DrawCardBox(g, card4, "INTEGRITY & ETA", titleFont, palette);
-                int y4 = card4.Y + 32;
+                int y4 = card4.Y + 30;
                 string etaStr = _engine.EstimatedTimeToReceiver.TotalHours < 24.0
                     ? $"{_engine.EstimatedTimeToReceiver.Hours}h {_engine.EstimatedTimeToReceiver.Minutes}m"
                     : "> 24h";
-                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 10, y4, card4.Width - 20, rowH), "ETA to Receiver", etaStr, palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
+                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 10, y4, card4.Width - 20, rowH), "ETA Receiver", etaStr, palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
                 Color defColor = _engine.Anomalies.Count > 0 ? palette.Warning : palette.Success;
-                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 10, y4 + rowH, card4.Width - 20, rowH), "Wall Anomalies", $"{_engine.Anomalies.Count} Defects", palette.TextSecondary, defColor, labelFont, valFont);
+                PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 10, y4 + rowH, card4.Width - 20, rowH), "Anomalies", $"{_engine.Anomalies.Count} Defects", palette.TextSecondary, defColor, labelFont, valFont);
                 PaintHelper.DrawDataRow(g, new Rectangle(card4.X + 10, y4 + rowH * 2, card4.Width - 20, rowH), "AGM Stations", $"{_engine.Markers.Count} Markers", palette.TextSecondary, palette.TextPrimary, labelFont, valFont);
             }
         }
