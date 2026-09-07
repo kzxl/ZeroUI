@@ -140,5 +140,18 @@ namespace ZeroUI.Core.Theme
             }
             ZeroSkinSerializer.SaveToFile(skin, filePath);
         }
+
+        /// <summary>
+        /// Resolves the effective skin for an <see cref="IZeroSkinnable"/> element,
+        /// returning its custom skin if local override is enabled, or falling back to <see cref="CurrentSkin"/>.
+        /// </summary>
+        public static ZeroSkin ResolveSkin(IZeroSkinnable? skinnable)
+        {
+            if (skinnable != null && !skinnable.UseDefaultSkin && skinnable.CustomSkin != null)
+            {
+                return skinnable.CustomSkin;
+            }
+            return _currentSkin;
+        }
     }
 }
