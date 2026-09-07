@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Image")]
     [Description("Modern anti-aliased image and avatar control with initials fallback and zoom lightbox")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroImage.bmp")]
-    public class ZeroImage : Control
+    public class PictureEdit : Control
     {
         private Image? _image;
         private ImageScaleMode _scaleMode = ImageScaleMode.Cover;
@@ -52,7 +52,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? ImageClicked;
 
-        public ZeroImage()
+        public PictureEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -662,4 +662,11 @@ namespace ZeroUI.WinForms.Editors
             }
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="PictureEdit"/>.
+    /// </summary>
+    [Obsolete("ZeroImage is deprecated. Use PictureEdit instead.")]
+    [ToolboxItem(false)]
+    public class ZeroImage : PictureEdit { }
 }

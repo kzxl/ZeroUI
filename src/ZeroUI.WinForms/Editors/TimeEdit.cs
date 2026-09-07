@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Modern anti-aliased time picker control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTimePicker.bmp")]
-    public class ZeroTimePicker : Control
+    public class TimeEdit : Control
     {
         private readonly TimeSegmentModel _model = new TimeSegmentModel();
         private bool _isHovered = false;
@@ -38,7 +38,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? ValueChanged;
 
-        public ZeroTimePicker()
+        public TimeEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -403,11 +403,11 @@ namespace ZeroUI.WinForms.Editors
         /// </summary>
         private class TimePresetListControl : Control
         {
-            private readonly ZeroTimePicker _owner;
+            private readonly TimeEdit _owner;
             private int _hoveredIndex = -1;
             private readonly List<TimePreset> _presetItems;
 
-            public TimePresetListControl(ZeroTimePicker owner)
+            public TimePresetListControl(TimeEdit owner)
             {
                 _owner = owner;
                 SetStyle(
@@ -491,5 +491,14 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="TimeEdit"/>.
+    /// </summary>
+    [Obsolete("ZeroTimePicker is deprecated. Use TimeEdit instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTimePicker : TimeEdit
+    {
     }
 }

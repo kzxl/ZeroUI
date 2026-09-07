@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedIndex")]
     [Description("Segmented pill switcher for view and filter options")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSegmented.bmp")]
-    public class ZeroSegmented : Control
+    public class SegmentedControl : Control
     {
 
         private string[] _items = new[] { "All", "Daily", "Weekly", "Monthly" };
@@ -28,7 +28,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? SelectedIndexChanged;
 
-        public ZeroSegmented()
+        public SegmentedControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -194,5 +194,14 @@ namespace ZeroUI.WinForms.Editors
 
         private static GraphicsPath CreateRoundedRectangleF(RectangleF rect, float radius) =>
             ZeroUIConfig.CreateRoundedRectangleF(rect, radius);
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="SegmentedControl"/>.
+    /// </summary>
+    [Obsolete("ZeroSegmented is deprecated. Use SegmentedControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSegmented : SegmentedControl
+    {
     }
 }

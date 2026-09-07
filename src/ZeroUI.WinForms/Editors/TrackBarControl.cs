@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Modern anti-aliased slider control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSlider.bmp")]
-    public class ZeroSlider : Control
+    public class TrackBarControl : Control
     {
         private readonly RangeModel _rangeModel = new RangeModel(0f, 100f, 0f, 1f);
         private Orientation _orientation = Orientation.Horizontal;
@@ -37,7 +37,7 @@ namespace ZeroUI.WinForms.Editors
         public event EventHandler? ValueChanged;
         public event EventHandler? Scroll;
 
-        public ZeroSlider()
+        public TrackBarControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -431,5 +431,14 @@ namespace ZeroUI.WinForms.Editors
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="TrackBarControl"/>.
+    /// </summary>
+    [Obsolete("ZeroSlider is deprecated. Use TrackBarControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSlider : TrackBarControl
+    {
     }
 }

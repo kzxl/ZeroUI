@@ -24,7 +24,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [Description("KPI Metric Card component for dashboards and analytical summaries")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroStatistic.bmp")]
-    public class ZeroStatistic : Control
+    public class StatisticCard : Control
     {
 
         private string _title = "Metric Title";
@@ -37,7 +37,7 @@ namespace ZeroUI.WinForms.Editors
         private Color _valueColor = Color.Empty;
         private int _borderRadius = 8;
 
-        public ZeroStatistic()
+        public StatisticCard()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -175,5 +175,14 @@ namespace ZeroUI.WinForms.Editors
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="StatisticCard"/>.
+    /// </summary>
+    [Obsolete("ZeroStatistic is deprecated. Use StatisticCard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroStatistic : StatisticCard
+    {
     }
 }

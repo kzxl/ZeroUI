@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("PlaceholderText")]
     [Description("Modern search box with debounced input and clear button")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSearchBox.bmp")]
-    public class ZeroSearchBox : Control
+    public class SearchControl : Control
     {
 
         private readonly TextBox _textBox;
@@ -30,7 +30,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler<string>? DebouncedTextChanged;
 
-        public ZeroSearchBox()
+        public SearchControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -239,5 +239,14 @@ namespace ZeroUI.WinForms.Editors
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="SearchControl"/>.
+    /// </summary>
+    [Obsolete("ZeroSearchBox is deprecated. Use SearchControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSearchBox : SearchControl
+    {
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -11,10 +12,12 @@ using System.Windows.Forms;
 
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.DataGrid;
 using ZeroUI.Core.Input;
 using ZeroUI.Core.Layout;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Virtualization;
+using ZeroUI.WinForms.DataGrid.Repositories;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
@@ -141,7 +144,7 @@ namespace ZeroUI.WinForms.DataGrid
         private readonly TextBox _inPlaceEditor;
         private readonly SpinEdit _numericEditor;
         private readonly DateEdit _dateEditor;
-        private readonly ZeroMaskedTextBox _maskedEditor;
+        private readonly MaskBox _maskedEditor;
         private Control? _activeInPlaceEditor;
         private bool _isEditing = false;
         private int _editingVisualRow = -1;
@@ -167,6 +170,7 @@ namespace ZeroUI.WinForms.DataGrid
         public event EventHandler? CellBeginEdit;
         public event EventHandler? CellEndEdit;
         public event EventHandler? SelectionChanged;
+        public event EventHandler<CustomRowCellEditEventArgs>? CustomRowCellEdit;
 
         // Color Palettes (Win32 0x00BBGGRR format)
         private uint _headerBgColor = 0x00F0F0F0;
@@ -249,7 +253,7 @@ namespace ZeroUI.WinForms.DataGrid
             _dateEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_dateEditor);
 
-            _maskedEditor = new ZeroMaskedTextBox
+            _maskedEditor = new MaskBox
             {
                 Visible = false,
                 Font = Font
@@ -1130,6 +1134,138 @@ namespace ZeroUI.WinForms.DataGrid
             catch
             {
                 // Fallback gracefully on parsing errors
+            }
+        }
+
+        public void SaveLayoutToJson(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            string json = SaveLayoutToJson();
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        public void SaveLayoutToJson(string filePath)
+        {
+            using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            {
+                SaveLayoutToJson(fs);
+            }
+        }
+
+        public void RestoreLayoutFromJson(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8, true, 1024, leaveOpen: true))
+            {
+                string json = reader.ReadToEnd();
+                RestoreLayoutFromJson(json);
+            }
+        }
+
+        public void SaveLayoutToXml(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using (var writer = System.Xml.XmlWriter.Create(stream, new System.Xml.XmlWriterSettings { Indent = true, Encoding = System.Text.Encoding.UTF8 }))
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("GridLayout");
+                writer.WriteAttributeString("Version", "1");
+                writer.WriteStartElement("Columns");
+                for (int i = 0; i < _columns.Count; i++)
+                {
+                    var col = _columns[i];
+                    writer.WriteStartElement("Column");
+                    writer.WriteAttributeString("FieldName", col.FieldName);
+                    writer.WriteAttributeString("HeaderText", col.HeaderText);
+                    writer.WriteAttributeString("Width", col.Width.ToString());
+                    writer.WriteAttributeString("IsVisible", col.IsVisible.ToString());
+                    writer.WriteAttributeString("IsPinned", col.IsPinned.ToString());
+                    writer.WriteAttributeString("SortOrder", ((int)col.SortOrder).ToString());
+                    writer.WriteEndElement();
+                }
+                writer.WriteEndElement(); // Columns
+                writer.WriteEndElement(); // GridLayout
+                writer.WriteEndDocument();
+            }
+        }
+
+        public void SaveLayoutToXml(string filePath)
+        {
+            using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            {
+                SaveLayoutToXml(fs);
+            }
+        }
+
+        public void RestoreLayoutFromXml(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            try
+            {
+                var doc = new System.Xml.XmlDocument();
+                doc.Load(stream);
+                var colNodes = doc.SelectNodes("/GridLayout/Columns/Column");
+                if (colNodes == null || colNodes.Count == 0) return;
+
+                var reordered = new List<ZeroColumn>();
+                var remaining = new List<ZeroColumn>(_columns);
+
+                foreach (System.Xml.XmlNode node in colNodes)
+                {
+                    if (node.Attributes == null) continue;
+                    string fieldName = node.Attributes["FieldName"]?.Value ?? "";
+                    string headerText = node.Attributes["HeaderText"]?.Value ?? "";
+
+                    ZeroColumn? matched = null;
+                    if (!string.IsNullOrEmpty(fieldName))
+                    {
+                        matched = remaining.Find(c => string.Equals(c.FieldName, fieldName, StringComparison.OrdinalIgnoreCase));
+                    }
+                    if (matched == null && !string.IsNullOrEmpty(headerText))
+                    {
+                        matched = remaining.Find(c => string.Equals(c.HeaderText, headerText, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (matched != null)
+                    {
+                        if (int.TryParse(node.Attributes["Width"]?.Value, out int w))
+                        {
+                            matched.Width = Math.Max(matched.MinWidth, Math.Min(matched.MaxWidth, w));
+                        }
+                        if (bool.TryParse(node.Attributes["IsVisible"]?.Value, out bool vis))
+                        {
+                            matched.IsVisible = vis;
+                        }
+                        if (bool.TryParse(node.Attributes["IsPinned"]?.Value, out bool pin))
+                        {
+                            matched.IsPinned = pin;
+                        }
+                        if (int.TryParse(node.Attributes["SortOrder"]?.Value, out int sortVal))
+                        {
+                            matched.SortOrder = (SortDirection)sortVal;
+                        }
+
+                        remaining.Remove(matched);
+                        reordered.Add(matched);
+                    }
+                }
+
+                reordered.AddRange(remaining);
+                _columns.Clear();
+                _columns.AddRange(reordered);
+                UpdateScrollBars();
+                Invalidate();
+            }
+            catch { }
+        }
+
+        public void RestoreLayoutFromXml(string filePath)
+        {
+            if (!File.Exists(filePath)) return;
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                RestoreLayoutFromXml(fs);
             }
         }
 
@@ -2621,6 +2757,12 @@ namespace ZeroUI.WinForms.DataGrid
                 }
                 else if (hit.Region == HitRegion.Cell)
                 {
+                    if (_enableMasterDetail && e.X < 24 && hit.RowIndex >= 0)
+                    {
+                        ToggleMasterRow(hit.RowIndex);
+                        return;
+                    }
+
                     if (_groupedMap.HasGrouping && hit.RowIndex < _groupedMap.ActiveCount && _groupedMap[hit.RowIndex].IsGroup)
                     {
                         _groupedMap.ToggleGroup(hit.RowIndex);
@@ -3157,8 +3299,24 @@ namespace ZeroUI.WinForms.DataGrid
                     UpdateScrollBars();
                     Invalidate();
                 });
-                menu.Items.Add(itemShowAll);
             }
+
+            menu.Items.Add(new ToolStripSeparator());
+            var itemFilter = new ToolStripMenuItem("🔍  Filter...", null, (s, e) =>
+            {
+                ShowColumnFilterPopup(columnIndex);
+            });
+            var itemChooser = new ToolStripMenuItem("⚙️  Column Chooser...", null, (s, e) =>
+            {
+                ShowColumnChooser();
+            });
+            var itemPrint = new ToolStripMenuItem("🖨️  Print Preview...", null, (s, e) =>
+            {
+                ShowPrintPreview();
+            });
+            menu.Items.Add(itemFilter);
+            menu.Items.Add(itemChooser);
+            menu.Items.Add(itemPrint);
 
             menu.Show(this, location);
         }
@@ -3217,6 +3375,11 @@ namespace ZeroUI.WinForms.DataGrid
             if (e.Control && e.KeyCode == Keys.C)
             {
                 CopySelectionToClipboard();
+                e.Handled = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.V)
+            {
+                PasteFromClipboard();
                 e.Handled = true;
             }
             else if (e.Control && e.KeyCode == Keys.A)
@@ -3382,14 +3545,302 @@ namespace ZeroUI.WinForms.DataGrid
             try { Clipboard.SetText(sb.ToString()); } catch { }
         }
 
-        public Rectangle GetCellRectangle(int visualRow, int colIndex)
+        public void PasteFromClipboard()
         {
-            if (visualRow < 0 || colIndex < 0 || colIndex >= _columns.Count) return Rectangle.Empty;
+            if (_dataSource == null || _columns.Count == 0) return;
+            string text = string.Empty;
+            try
+            {
+                text = Clipboard.GetText();
+            }
+            catch { return; }
 
-            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
-            int cellY = topOffset + (visualRow * _rowHeight) - _scrollY;
+            if (string.IsNullOrEmpty(text)) return;
+
+            int startRow = _selectedVisualRow >= 0 ? _selectedVisualRow : 0;
+            int startCol = 0;
+            if (_selectedBlock.LeftColumn >= 0)
+            {
+                startRow = _selectedBlock.TopRow;
+                startCol = _selectedBlock.LeftColumn;
+            }
+
+            var rows = new List<List<string>>();
+            ZeroClipboardHelper.ParseTsv(text.AsSpan(), (rIdx, cIdx, cellSpan) =>
+            {
+                while (rows.Count <= rIdx) rows.Add(new List<string>());
+                while (rows[rIdx].Count <= cIdx) rows[rIdx].Add(string.Empty);
+                rows[rIdx][cIdx] = cellSpan.ToString();
+            });
+
+            if (rows.Count == 0) return;
+
+            var editableSource = _dataSource as IZeroEditableSource;
+            if (editableSource == null) return;
+
+            for (int r = 0; r < rows.Count; r++)
+            {
+                int targetVisualRow = startRow + r;
+                if (targetVisualRow >= VisualRowCount) break;
+                int modelRow = GetModelRowIndex(targetVisualRow);
+                if (modelRow < 0) continue;
+
+                var rowCells = rows[r];
+                for (int c = 0; c < rowCells.Count; c++)
+                {
+                    int targetCol = startCol + c;
+                    if (targetCol >= _columns.Count) break;
+                    if (_columns[targetCol].ReadOnly || !_columns[targetCol].IsVisible) continue;
+
+                    string cellVal = rowCells[c];
+                    try
+                    {
+                        if (editableSource.IsCellEditable(modelRow, targetCol))
+                        {
+                            editableSource.SetCellValue(modelRow, targetCol, cellVal);
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore cell conversion errors
+                    }
+                }
+            }
+
+            Invalidate();
+        }
+
+        private ColumnFilterPopup? _activeFilterPopup;
+        private readonly Dictionary<int, HashSet<string>> _columnValueFilters = new Dictionary<int, HashSet<string>>();
+
+        public void ShowColumnFilterPopup(int columnIndex)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null) return;
+            var col = _columns[columnIndex];
+
+            var distinctValues = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int rowCount = Math.Min(VisualRowCount, 10000);
+            CellValueBuffer buf = new CellValueBuffer();
+            for (int r = 0; r < rowCount; r++)
+            {
+                int modelRow = GetModelRowIndex(r);
+                if (modelRow >= 0)
+                {
+                    buf.Reset();
+                    _dataSource.GetCellValue(modelRow, columnIndex, ref buf);
+                    string val = buf.Text.ToString();
+                    distinctValues.Add(string.IsNullOrEmpty(val) ? "(Blanks)" : val);
+                    if (distinctValues.Count >= 1000) break;
+                }
+            }
+
+            _columnValueFilters.TryGetValue(columnIndex, out var currentSelected);
+
+            Point pt = PointToScreen(new Point(Math.Max(0, GetColumnX(columnIndex)), EffectiveHeaderHeight));
+            _activeFilterPopup?.Dispose();
+            _activeFilterPopup = new ColumnFilterPopup(
+                columnIndex,
+                col.HeaderText,
+                distinctValues,
+                currentSelected,
+                (cIdx, selected) =>
+                {
+                    if (selected == null)
+                    {
+                        _columnValueFilters.Remove(cIdx);
+                    }
+                    else
+                    {
+                        _columnValueFilters[cIdx] = selected;
+                    }
+                    ApplyAllColumnFilters();
+                });
+
+            _activeFilterPopup.Show(this, pt);
+        }
+
+        private void ApplyAllColumnFilters()
+        {
+            if (_columnValueFilters.Count == 0)
+            {
+                ApplyFilter(null);
+                return;
+            }
+
+            ApplyFilter(modelRow =>
+            {
+                if (_dataSource == null) return true;
+                CellValueBuffer buf = new CellValueBuffer();
+                foreach (var kvp in _columnValueFilters)
+                {
+                    buf.Reset();
+                    _dataSource.GetCellValue(modelRow, kvp.Key, ref buf);
+                    string val = buf.Text.ToString();
+                    if (string.IsNullOrEmpty(val)) val = "(Blanks)";
+                    if (!kvp.Value.Contains(val))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            });
+        }
+
+        private ColumnChooserDialog? _columnChooser;
+
+        public void ShowColumnChooser()
+        {
+            if (_columnChooser == null || _columnChooser.IsDisposed)
+            {
+                _columnChooser = new ColumnChooserDialog(this);
+            }
+            Point screenPt = PointToScreen(new Point(Math.Max(0, Width - 260), 40));
+            _columnChooser.Location = screenPt;
+            _columnChooser.RefreshColumns();
+            _columnChooser.Show();
+            _columnChooser.BringToFront();
+        }
+
+        public void HideColumnChooser()
+        {
+            _columnChooser?.Hide();
+        }
+
+        private GridLevelTree _levelTree = new GridLevelTree();
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public GridLevelTree LevelTree
+        {
+            get => _levelTree;
+            set => _levelTree = value ?? new GridLevelTree();
+        }
+
+        private readonly HashSet<int> _expandedMasterRows = new HashSet<int>();
+        private bool _enableMasterDetail = false;
+        private int _detailRowHeight = 120;
+        private int _bandRowCount = 1;
+
+        [Category("ZeroUI - MasterDetail")]
+        [DefaultValue(false)]
+        [Description("Enables in-place hierarchical Master-Detail row expansion.")]
+        public bool EnableMasterDetail
+        {
+            get => _enableMasterDetail;
+            set
+            {
+                if (_enableMasterDetail != value)
+                {
+                    _enableMasterDetail = value;
+                    UpdateScrollBars();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("ZeroUI - MasterDetail")]
+        [DefaultValue(120)]
+        [Description("Height in pixels of the expanded detail container.")]
+        public int DetailRowHeight
+        {
+            get => _detailRowHeight;
+            set
+            {
+                _detailRowHeight = Math.Max(40, value);
+                if (_expandedMasterRows.Count > 0)
+                {
+                    UpdateScrollBars();
+                    Invalidate();
+                }
+            }
+        }
+
+        public bool IsMasterRowExpanded(int visualRow) => _expandedMasterRows.Contains(visualRow);
+
+        public void ExpandMasterRow(int visualRow)
+        {
+            if (visualRow >= 0 && visualRow < VisualRowCount && _expandedMasterRows.Add(visualRow))
+            {
+                UpdateScrollBars();
+                Invalidate();
+            }
+        }
+
+        public void CollapseMasterRow(int visualRow)
+        {
+            if (_expandedMasterRows.Remove(visualRow))
+            {
+                UpdateScrollBars();
+                Invalidate();
+            }
+        }
+
+        public void ToggleMasterRow(int visualRow)
+        {
+            if (IsMasterRowExpanded(visualRow)) CollapseMasterRow(visualRow);
+            else ExpandMasterRow(visualRow);
+        }
+
+        [Category("ZeroUI - Layout")]
+        [DefaultValue(1)]
+        [Description("Number of sub-rows per logical record in AdvBanded mode.")]
+        public int BandRowCount
+        {
+            get => _bandRowCount;
+            set
+            {
+                _bandRowCount = Math.Max(1, value);
+                Invalidate();
+            }
+        }
+
+        public void ShowPrintPreview(IWin32Window? owner = null)
+        {
+            using (var printer = new GridPrintManager(this))
+            {
+                printer.ShowPrintPreview(owner);
+            }
+        }
+
+        public void Print(System.Drawing.Printing.PrinterSettings? settings = null)
+        {
+            using (var printer = new GridPrintManager(this))
+            {
+                printer.Print(settings);
+            }
+        }
+
+        [Browsable(false)]
+        public IReadOnlyList<ZeroColumn> VisibleColumns
+        {
+            get
+            {
+                var list = new List<ZeroColumn>();
+                for (int i = 0; i < _columns.Count; i++)
+                {
+                    if (_columns[i].IsVisible) list.Add(_columns[i]);
+                }
+                return list;
+            }
+        }
+
+        public string GetCellDisplayText(int visualRow, int colIndex)
+        {
+            if (_dataSource == null || visualRow < 0 || visualRow >= VisualRowCount || colIndex < 0 || colIndex >= _columns.Count)
+                return string.Empty;
+
+            int modelRow = GetModelRowIndex(visualRow);
+            if (modelRow < 0) return string.Empty;
+
+            CellValueBuffer buf = new CellValueBuffer();
+            _dataSource.GetCellValue(modelRow, colIndex, ref buf);
+            return buf.Text.ToString();
+        }
+
+        public int GetColumnX(int colIndex)
+        {
+            if (colIndex < 0 || colIndex >= _columns.Count) return 0;
             int pinnedW = GetPinnedColumnsWidth();
-
             int cellX;
             if (_columns[colIndex].IsPinned)
             {
@@ -3407,6 +3858,16 @@ namespace ZeroUI.WinForms.DataGrid
                     if (_columns[c].IsVisible && !_columns[c].IsPinned) cellX += _columns[c].Width;
                 }
             }
+            return cellX;
+        }
+
+        public Rectangle GetCellRectangle(int visualRow, int colIndex)
+        {
+            if (visualRow < 0 || colIndex < 0 || colIndex >= _columns.Count) return Rectangle.Empty;
+
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int cellY = topOffset + (visualRow * _rowHeight) - _scrollY;
+            int cellX = GetColumnX(colIndex);
 
             return new Rectangle(cellX, cellY, _columns[colIndex].Width, _rowHeight);
         }
@@ -3454,10 +3915,34 @@ namespace ZeroUI.WinForms.DataGrid
             CellEditorShowing?.Invoke(this, showingArgs);
             if (showingArgs.Cancel) return;
 
+            // Resolve dynamic repository item
+            IRepositoryItem? resolvedRepository = col.ColumnEdit as IRepositoryItem;
+            if (CustomRowCellEdit != null)
+            {
+                var repArgs = new CustomRowCellEditEventArgs(visualRow, modelRow, col, resolvedRepository);
+                CustomRowCellEdit.Invoke(this, repArgs);
+                resolvedRepository = repArgs.RepositoryItem;
+            }
+
             Control editor;
             if (showingArgs.CustomEditor != null)
             {
                 editor = showingArgs.CustomEditor;
+            }
+            else if (resolvedRepository is IRepositoryItemWinForms repWf)
+            {
+                editor = repWf.CreateInPlaceEditor();
+                if (editor is TextBox tbRep) tbRep.Text = val;
+                else if (editor is SpinEdit spRep && decimal.TryParse(val.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) spRep.Value = n;
+                else if (editor is DateEdit deRep && DateTime.TryParse(val, out var d)) deRep.Value = d;
+                else if (editor is CheckBox cbRep && bool.TryParse(val, out var b)) cbRep.Checked = b;
+                editor.KeyDown += (s, e) =>
+                {
+                    if (e.KeyCode == Keys.Enter) CommitEdit();
+                    else if (e.KeyCode == Keys.Escape) CancelEdit();
+                };
+                editor.LostFocus += (s, e) => CommitEdit();
+                Controls.Add(editor);
             }
             else if (col.ColumnType == GridColumnType.Masked || !string.IsNullOrEmpty(col.Mask))
             {
@@ -3518,9 +4003,17 @@ namespace ZeroUI.WinForms.DataGrid
             int colIndex = _editingColIndex;
             string newText = string.Empty;
 
-            if (_activeInPlaceEditor is ZeroMaskedTextBox mtb)
+            if (_activeInPlaceEditor is MaskBox mtb)
             {
                 newText = mtb.Text;
+            }
+            else if (_activeInPlaceEditor is CheckBox cb)
+            {
+                newText = cb.Checked.ToString();
+            }
+            else if (_activeInPlaceEditor is ComboBoxEdit cmb)
+            {
+                newText = cmb.SelectedItem?.ToString() ?? cmb.Text;
             }
             else if (_activeInPlaceEditor is TextBox tb)
             {
@@ -3592,8 +4085,20 @@ namespace ZeroUI.WinForms.DataGrid
                 }
             }
 
-            _activeInPlaceEditor.Visible = false;
-            _activeInPlaceEditor = null;
+            if (_activeInPlaceEditor != null)
+            {
+                _activeInPlaceEditor.Visible = false;
+                if (_activeInPlaceEditor != _inPlaceEditor &&
+                    _activeInPlaceEditor != _numericEditor &&
+                    _activeInPlaceEditor != _dateEditor &&
+                    _activeInPlaceEditor != _maskedEditor)
+                {
+                    Controls.Remove(_activeInPlaceEditor);
+                    _activeInPlaceEditor.Dispose();
+                }
+                _activeInPlaceEditor = null;
+            }
+
             _isEditing = false;
             _editingVisualRow = -1;
             _editingColIndex = -1;
@@ -3608,6 +4113,14 @@ namespace ZeroUI.WinForms.DataGrid
             if (_activeInPlaceEditor != null)
             {
                 _activeInPlaceEditor.Visible = false;
+                if (_activeInPlaceEditor != _inPlaceEditor &&
+                    _activeInPlaceEditor != _numericEditor &&
+                    _activeInPlaceEditor != _dateEditor &&
+                    _activeInPlaceEditor != _maskedEditor)
+                {
+                    Controls.Remove(_activeInPlaceEditor);
+                    _activeInPlaceEditor.Dispose();
+                }
                 _activeInPlaceEditor = null;
             }
             _isEditing = false;

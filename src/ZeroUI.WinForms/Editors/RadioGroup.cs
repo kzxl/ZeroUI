@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Radio button group container with auto-layout and selection management")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadioGroup.bmp")]
-    public class ZeroRadioGroup : Control
+    public class RadioGroup : Control
     {
         private string[] _items = Array.Empty<string>();
         private readonly SelectionModel<string> _selection = new SelectionModel<string>();
@@ -31,7 +31,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? SelectedIndexChanged;
 
-        public ZeroRadioGroup()
+        public RadioGroup()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -178,7 +178,7 @@ namespace ZeroUI.WinForms.Editors
                 for (int i = 0; i < _items.Length; i++)
                 {
                     int index = i;
-                    var rb = new ZeroRadioButton
+                    var rb = new RadioButtonControl
                     {
                         Text = _items[i],
                         Font = Font,
@@ -213,7 +213,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 for (int i = 0; i < Controls.Count; i++)
                 {
-                    if (Controls[i] is ZeroRadioButton rb)
+                    if (Controls[i] is RadioButtonControl rb)
                     {
                         rb.Checked = (i == _selection.SelectedIndex);
                     }
@@ -229,7 +229,7 @@ namespace ZeroUI.WinForms.Editors
         {
             foreach (Control c in Controls)
             {
-                if (c is ZeroRadioButton rb)
+                if (c is RadioButtonControl rb)
                 {
                     rb.Font = Font;
                 }
@@ -306,5 +306,14 @@ namespace ZeroUI.WinForms.Editors
                 ResumeLayout();
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="RadioGroup"/>.
+    /// </summary>
+    [Obsolete("ZeroRadioGroup is deprecated. Use RadioGroup instead.")]
+    [ToolboxItem(false)]
+    public class ZeroRadioGroup : RadioGroup
+    {
     }
 }

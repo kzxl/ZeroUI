@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern anti-aliased multi-line text editor")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroMemoEdit.bmp")]
-    public class ZeroMemoEdit : Control
+    public class MemoEdit : Control
     {
         private readonly TextBox _innerBox;
         private string _placeholderText = "";
@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isHovered = false;
         private bool _showCharacterCount = false;
 
-        public ZeroMemoEdit()
+        public MemoEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -313,4 +313,11 @@ namespace ZeroUI.WinForms.Editors
             }
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="MemoEdit"/>.
+    /// </summary>
+    [Obsolete("ZeroMemoEdit is deprecated. Use MemoEdit instead.")]
+    [ToolboxItem(false)]
+    public class ZeroMemoEdit : MemoEdit { }
 }

@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [Description("Modern flat progress bar with percentage overlay and indeterminate shimmer")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroProgressBar.bmp")]
-    public class ZeroProgressBar : Control
+    public class ProgressBarControl : Control
     {
 
         private int _value = 0;
@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.Editors
         private Color _trackColor = Color.FromArgb(243, 244, 246);   // Gray 100
         private int _borderRadius = 4;
 
-        public ZeroProgressBar()
+        public ProgressBarControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -223,5 +223,14 @@ namespace ZeroUI.WinForms.Editors
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ProgressBarControl"/>.
+    /// </summary>
+    [Obsolete("ZeroProgressBar is deprecated. Use ProgressBarControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroProgressBar : ProgressBarControl
+    {
     }
 }

@@ -148,18 +148,18 @@ graph TD
 
 ### 6.1 Enterprise Feature Parity Matrix (ZeroUI vs. Enterprise Industry Standard)
 
-| Category | Enterprise Capability | Industry Benchmark Standard | Current ZeroUI | Proposed Expansion | Tier / Phase |
+| Category | Enterprise Capability | Industry Benchmark Standard | Current ZeroUI | Proposed Expansion | Status |
 | :--- | :--- | :---: | :---: | :--- | :---: |
-| **Hierarchy** | **Master-Detail Views** | Hierarchical Relation Tree / Detail Views | ❌ Flat grouping only | In-place expandable sub-grids with isolated columns, footers & selection | **Tier P0 (Phase 20)** |
-| **Customization** | **Layout Persistence** | Save/Restore Layout (XML/JSON) | ❌ Manual code only | Zero-alloc JSON & XML serialization for columns, widths, sort, filters | **Tier P0 (Phase 20)** |
-| **Data Filtering** | **Excel-Style Column Popup** | Floating Header Dropdown with Tree Filter | ⚠️ AutoFilter row only | Floating header popup: distinct value checkbox tree & date grouping | **Tier P0 (Phase 20)** |
-| **Ergonomics** | **Runtime Column Chooser** | Drag & Drop Runtime Field Customization | ❌ Code visibility only | Interactive floating field list with header drag-and-drop | **Tier P1 (Phase 21)** |
-| **Formatting** | **Auto Best-Fit Columns** | Content-Aware Best Fit / Splitter Dbl-Click | ❌ Fixed widths | Font-metrics sampling for optimal column width calculation | **Tier P1 (Phase 21)** |
-| **Clipboard** | **Rectangular Range Copy/Paste**| Excel TSV Bidirectional Block Sync | ⚠️ Single row only | Multi-cell TSV parser with type validation & block range highlight | **Tier P1 (Phase 21)** |
-| **In-Place UI** | **Decoupled Repository Editors**| Per-Cell Dynamic Editor Registration | ⚠️ Hardcoded floating editors| Extensible `IRepositoryItem` registry & per-cell dynamic editor dispatch | **Tier P2 (Phase 22)** |
-| **Reporting** | **One-Click Print Preview** | Vector Paginated Print Engine | ⚠️ Exporter only | Integrated vector paginated print preview with repeated headers | **Tier P2 (Phase 22)** |
-| **Layout Mode**| **Multi-Row Records (`AdvBanded`)**| Multi-Row Record Card Bands | ⚠️ Hierarchical bands only| Sub-row cell matrix within single logical record | **Tier P2 (Phase 22)** |
-| **Data Fetch** | **Async Server Mode (Instant Feedback)**| Asynchronous Remote Streaming Source | ⚠️ Sync Virtual Source | Non-blocking chunked paging with background SQL streaming & shimmer | **Tier P2 (Phase 22)** |
+| **Hierarchy** | **Master-Detail Views** | Hierarchical Relation Tree / Detail Views | ✅ Delivered | In-place expandable sub-grids with `GridLevelTree` & `IMasterDetailVirtualSource` | **Delivered (Phase 20)** |
+| **Customization** | **Layout Persistence** | Save/Restore Layout (XML/JSON) | ✅ Delivered | Zero-alloc JSON & XML serialization for columns, widths, sort, filters | **Delivered (Phase 20)** |
+| **Data Filtering** | **Excel-Style Column Popup** | Floating Header Dropdown with Tree Filter | ✅ Delivered | Floating header popup: distinct value checkbox tree & instant search | **Delivered (Phase 20)** |
+| **Ergonomics** | **Runtime Column Chooser** | Drag & Drop Runtime Field Customization | ✅ Delivered | Interactive floating tool window with column visibility control | **Delivered (Phase 21)** |
+| **Formatting** | **Auto Best-Fit Columns** | Content-Aware Best Fit / Splitter Dbl-Click | ✅ Delivered | Font-metrics sampling for optimal column width calculation | **Delivered (Phase 21)** |
+| **Clipboard** | **Rectangular Range Copy/Paste**| Excel TSV Bidirectional Block Sync | ✅ Delivered | Multi-cell TSV parser with type validation & block range highlight | **Delivered (Phase 21)** |
+| **In-Place UI** | **Decoupled Repository Editors**| Per-Cell Dynamic Editor Registration | ✅ Delivered | Extensible `IRepositoryItem` registry & dynamic editor dispatch | **Delivered (Phase 22)** |
+| **Reporting** | **One-Click Print Preview** | Vector Paginated Print Engine | ✅ Delivered | Integrated vector paginated print preview with repeated headers | **Delivered (Phase 22)** |
+| **Layout Mode**| **Multi-Row Records (`AdvBanded`)**| Multi-Row Record Card Bands | ✅ Delivered | Sub-row cell matrix within single logical record (`BandRow`, `BandRowSpan`) | **Delivered (Phase 22)** |
+| **Data Fetch** | **Async Server Mode (Instant Feedback)**| Asynchronous Remote Streaming Source | ✅ Delivered | Non-blocking chunked paging with LRU cache & shimmer skeleton (`AsyncVirtualGridSource`) | **Delivered (Phase 22)** |
 
 ---
 

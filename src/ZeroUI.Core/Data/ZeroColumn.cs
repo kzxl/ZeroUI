@@ -32,6 +32,11 @@ namespace ZeroUI.Core.Data
         public SparklineType Sparkline { get; set; } = SparklineType.None;
         public bool AllowFiltering { get; set; } = true;
 
+        // Multi-Row Record & Repository Properties
+        public int BandRow { get; set; } = 0;
+        public int BandRowSpan { get; set; } = 1;
+        public object? ColumnEdit { get; set; }
+
         public ZeroColumn() { }
 
         public ZeroColumn(string headerText, int width = 100, CellAlignment alignment = CellAlignment.Left)

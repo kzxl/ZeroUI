@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Description("Modern anti-aliased flat RadioButton control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadioButton.bmp")]
-    public class ZeroRadioButton : Control
+    public class RadioButtonControl : Control
     {
         private bool _checked = false;
         private bool _autoCheck = true;
@@ -31,7 +31,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? CheckedChanged;
 
-        public ZeroRadioButton()
+        public RadioButtonControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -129,7 +129,7 @@ namespace ZeroUI.WinForms.Editors
 
             foreach (Control sibling in Parent.Controls)
             {
-                if (sibling != this && sibling is ZeroRadioButton rb)
+                if (sibling != this && sibling is RadioButtonControl rb)
                 {
                     bool matchGroup = string.IsNullOrEmpty(_groupName)
                         ? string.IsNullOrEmpty(rb.GroupName)
@@ -179,12 +179,12 @@ namespace ZeroUI.WinForms.Editors
         {
             if (Parent == null) return;
 
-            var siblings = new System.Collections.Generic.List<ZeroRadioButton>();
+            var siblings = new System.Collections.Generic.List<RadioButtonControl>();
             int currentIndex = -1;
 
             foreach (Control c in Parent.Controls)
             {
-                if (c is ZeroRadioButton rb && rb.Enabled && rb.Visible)
+                if (c is RadioButtonControl rb && rb.Enabled && rb.Visible)
                 {
                     bool matchGroup = string.IsNullOrEmpty(_groupName)
                         ? string.IsNullOrEmpty(rb.GroupName)
@@ -367,5 +367,14 @@ namespace ZeroUI.WinForms.Editors
                 TextRenderer.DrawText(g, Text, Font, textRect, textColor, flags);
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="RadioButtonControl"/>.
+    /// </summary>
+    [Obsolete("ZeroRadioButton is deprecated. Use RadioButtonControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroRadioButton : RadioButtonControl
+    {
     }
 }

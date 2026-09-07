@@ -11,7 +11,7 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-    public class ZeroLookupItem
+    public class LookUpItem
     {
         public string Key { get; set; } = "";
         public string DisplayText { get; set; } = "";
@@ -19,9 +19,9 @@ namespace ZeroUI.WinForms.Editors
         public string Category { get; set; } = "";
         public object? Tag { get; set; }
 
-        public ZeroLookupItem() { }
+        public LookUpItem() { }
 
-        public ZeroLookupItem(string key, string displayText, string subText = "", string category = "")
+        public LookUpItem(string key, string displayText, string subText = "", string category = "")
         {
             Key = key;
             DisplayText = displayText;
@@ -30,6 +30,14 @@ namespace ZeroUI.WinForms.Editors
         }
 
         public override string ToString() => DisplayText;
+    }
+
+    [Obsolete("ZeroLookupItem is deprecated. Use LookUpItem instead.")]
+    public class ZeroLookupItem : LookUpItem
+    {
+        public ZeroLookupItem() { }
+        public ZeroLookupItem(string key, string displayText, string subText = "", string category = "")
+            : base(key, displayText, subText, category) { }
     }
 
     /// <summary>
@@ -43,12 +51,12 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedItem")]
     [Description("Searchable autocomplete dropdown & lookup box for large datasets")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroLookup.bmp")]
-    public class ZeroLookup : Control, IZeroEditor
+    public class LookUpEdit : Control, IZeroEditor
     {
-        private readonly List<ZeroLookupItem> _items = new List<ZeroLookupItem>();
-        private readonly List<ZeroLookupItem> _filteredItems = new List<ZeroLookupItem>();
+        private readonly List<LookUpItem> _items = new List<LookUpItem>();
+        private readonly List<LookUpItem> _filteredItems = new List<LookUpItem>();
 
-        private ZeroLookupItem? _selectedItem;
+        private LookUpItem? _selectedItem;
         private string _placeholder = "Search items...";
         private bool _isHovered = false;
         private bool _isFocused = false;
@@ -93,7 +101,7 @@ namespace ZeroUI.WinForms.Editors
                 {
                     SelectedItem = null;
                 }
-                else if (value is ZeroLookupItem item)
+                else if (value is LookUpItem item)
                 {
                     SelectedItem = item;
                 }
@@ -113,7 +121,7 @@ namespace ZeroUI.WinForms.Editors
 
         public void Clear() => Reset();
 
-        public ZeroLookup()
+        public LookUpEdit()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -169,7 +177,7 @@ namespace ZeroUI.WinForms.Editors
         }
 
         [Browsable(false)]
-        public List<ZeroLookupItem> Items => _items;
+        public List<LookUpItem> Items => _items;
 
         [Category("Appearance")]
         [DefaultValue("Search items...")]
@@ -184,7 +192,7 @@ namespace ZeroUI.WinForms.Editors
         }
 
         [Browsable(false)]
-        public ZeroLookupItem? SelectedItem
+        public LookUpItem? SelectedItem
         {
             get => _selectedItem;
             set
@@ -210,7 +218,7 @@ namespace ZeroUI.WinForms.Editors
         [Browsable(false)]
         public string? SelectedKey => _selectedItem?.Key;
 
-        public void SetItems(IEnumerable<ZeroLookupItem> items)
+        public void SetItems(IEnumerable<LookUpItem> items)
         {
             _items.Clear();
             if (items != null)
@@ -291,7 +299,7 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        internal void CommitItem(ZeroLookupItem item)
+        internal void CommitItem(LookUpItem item)
         {
             _selectedItem = item;
             _searchTextBox.Text = item.DisplayText;
@@ -430,8 +438,8 @@ namespace ZeroUI.WinForms.Editors
         /// </summary>
         private class LookupListControl : Control
         {
-            private readonly ZeroLookup _owner;
-            private List<ZeroLookupItem> _items = new List<ZeroLookupItem>();
+            private readonly LookUpEdit _owner;
+            private List<LookUpItem> _items = new List<LookUpItem>();
             private string _highlightQuery = "";
             private int _selectedIndex = 0;
             private int _hoveredIndex = -1;
@@ -439,7 +447,7 @@ namespace ZeroUI.WinForms.Editors
             private int _itemHeight = 36;
             private readonly VScrollBar _vScrollBar;
 
-            public LookupListControl(ZeroLookup owner)
+            public LookupListControl(LookUpEdit owner)
             {
                 _owner = owner;
                 SetStyle(
@@ -478,7 +486,7 @@ namespace ZeroUI.WinForms.Editors
                 };
             }
 
-            public void UpdateFilteredList(List<ZeroLookupItem> items, string query)
+            public void UpdateFilteredList(List<LookUpItem> items, string query)
             {
                 _items = items;
                 _highlightQuery = query;
@@ -668,5 +676,14 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="LookUpEdit"/>.
+    /// </summary>
+    [Obsolete("ZeroLookup is deprecated. Use LookUpEdit instead.")]
+    [ToolboxItem(false)]
+    public class ZeroLookup : LookUpEdit
+    {
     }
 }

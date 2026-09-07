@@ -30,7 +30,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("StartDate")]
     [Description("Enterprise dual-date range selector with 1-click presets and calendar popup")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDateRangePicker.bmp")]
-    public class ZeroDateRangePicker : Control
+    public class DateRangePicker : Control
     {
         private DateTime _startDate = DateTime.Today.AddDays(-6);
         private DateTime _endDate = DateTime.Today;
@@ -45,7 +45,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? DateRangeChanged;
 
-        public ZeroDateRangePicker()
+        public DateRangePicker()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -335,7 +335,7 @@ namespace ZeroUI.WinForms.Editors
         /// </summary>
         private class DateRangePopupControl : Control
         {
-            private readonly ZeroDateRangePicker _picker;
+            private readonly DateRangePicker _picker;
             private DateTime _tempStart;
             private DateTime _tempEnd;
             private DateTime _hoverDate;
@@ -359,7 +359,7 @@ namespace ZeroUI.WinForms.Editors
             };
             private int _hoveredPreset = -1;
 
-            public DateRangePopupControl(ZeroDateRangePicker picker)
+            public DateRangePopupControl(DateRangePicker picker)
             {
                 _picker = picker;
                 SetStyle(
@@ -708,4 +708,11 @@ namespace ZeroUI.WinForms.Editors
             }
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="DateRangePicker"/>.
+    /// </summary>
+    [Obsolete("ZeroDateRangePicker is deprecated. Use DateRangePicker instead.")]
+    [ToolboxItem(false)]
+    public class ZeroDateRangePicker : DateRangePicker { }
 }

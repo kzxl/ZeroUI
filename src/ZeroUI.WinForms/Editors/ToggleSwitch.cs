@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Category("ZeroUI - Editors")]
     [Description("Smooth sliding animated toggle switch")]
-    public class ZeroSwitch : Control
+    public class ToggleSwitch : Control
     {
         private bool _checked = false;
         private string? _checkedText = "ON";
@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.Editors
 
         public event EventHandler? CheckedChanged;
 
-        public ZeroSwitch()
+        public ToggleSwitch()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -231,5 +231,14 @@ namespace ZeroUI.WinForms.Editors
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ToggleSwitch"/>.
+    /// </summary>
+    [Obsolete("ZeroSwitch is deprecated. Use ToggleSwitch instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSwitch : ToggleSwitch
+    {
     }
 }

@@ -26,13 +26,13 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Text")]
     [Description("Lightweight status tag badge with clean border and status typography")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTag.bmp")]
-    public class ZeroTag : Control
+    public class TagControl : Control
     {
 
         private ZeroTagType _tagType = ZeroTagType.Default;
         private int _borderRadius = 4;
 
-        public ZeroTag()
+        public TagControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -117,5 +117,14 @@ namespace ZeroUI.WinForms.Editors
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="TagControl"/>.
+    /// </summary>
+    [Obsolete("ZeroTag is deprecated. Use TagControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTag : TagControl
+    {
     }
 }

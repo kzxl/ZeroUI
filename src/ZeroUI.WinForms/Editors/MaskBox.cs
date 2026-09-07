@@ -20,13 +20,13 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern anti-aliased masked text box")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroMaskedTextBox.bmp")]
-    public class ZeroMaskedTextBox : Control
+    public class MaskBox : Control
     {
         private readonly MaskedTextBox _innerBox;
         private bool _isFocused = false;
         private bool _isHovered = false;
 
-        public ZeroMaskedTextBox()
+        public MaskBox()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -282,4 +282,11 @@ namespace ZeroUI.WinForms.Editors
             }
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="MaskBox"/>.
+    /// </summary>
+    [Obsolete("ZeroMaskedTextBox is deprecated. Use MaskBox instead.")]
+    [ToolboxItem(false)]
+    public class ZeroMaskedTextBox : MaskBox { }
 }

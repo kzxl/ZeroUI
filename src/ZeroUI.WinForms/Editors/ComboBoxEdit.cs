@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Input;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
@@ -30,7 +31,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Modern anti-aliased ComboBox dropdown control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroComboBox.bmp")]
-    public class ZeroComboBox : ZeroControlBase
+    public class ComboBoxEdit : ZeroControlBase, IZeroEditor
     {
         private readonly List<object> _items = new List<object>();
         private readonly SelectionModel<object> _selection = new SelectionModel<object>();
@@ -99,7 +100,7 @@ namespace ZeroUI.WinForms.Editors
             IsModified = false;
         }
 
-        public ZeroComboBox()
+        public ComboBoxEdit()
         {
             SetStyle(ControlStyles.Selectable, true);
 
@@ -444,7 +445,7 @@ namespace ZeroUI.WinForms.Editors
         /// </summary>
         private class ComboListControl : Control
         {
-            private readonly ZeroComboBox _owner;
+            private readonly ComboBoxEdit _owner;
             private int _hoveredIndex = -1;
             private int _scrollOffset = 0;
             private int _itemHeight = 32;
@@ -456,7 +457,7 @@ namespace ZeroUI.WinForms.Editors
                 set => _itemHeight = value;
             }
 
-            public ComboListControl(ZeroComboBox owner)
+            public ComboListControl(ComboBoxEdit owner)
             {
                 _owner = owner;
                 SetStyle(
@@ -648,5 +649,14 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ComboBoxEdit"/>.
+    /// </summary>
+    [Obsolete("ZeroComboBox is deprecated. Use ComboBoxEdit instead.")]
+    [ToolboxItem(false)]
+    public class ZeroComboBox : ComboBoxEdit
+    {
     }
 }

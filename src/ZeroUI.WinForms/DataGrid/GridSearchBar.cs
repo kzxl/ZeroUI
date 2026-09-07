@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.DataGrid
     {
 
         private GridControl? _grid;
-        private readonly ZeroSearchBox _searchBox;
+        private readonly SearchControl _searchBox;
         private readonly Label _lblMatchCount;
         private readonly SimpleButton _btnDensity;
         private readonly SimpleButton _btnExport;
@@ -34,7 +34,7 @@ namespace ZeroUI.WinForms.DataGrid
             BackColor = ZeroTheme.Colors.Surface;
             Padding = new Padding(12, 7, 12, 7);
 
-            _searchBox = new ZeroSearchBox
+            _searchBox = new SearchControl
             {
                 PlaceholderText = "🔍 Search all columns (live filter)...",
                 Location = new Point(12, 7),
