@@ -20,3 +20,5 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://schemas.zeroui.net/winfx/xaml", "ZeroUI.Wpf.Validation")]
 [assembly: XmlnsDefinition("http://schemas.zeroui.net/winfx/xaml", "ZeroUI.Wpf.PivotGrid")]
 [assembly: XmlnsDefinition("http://schemas.zeroui.net/winfx/xaml", "ZeroUI.Wpf.Range")]
+[assembly: XmlnsDefinition("http://schemas.zeroui.net/winfx/xaml", "ZeroUI.Wpf.Layout")]
+[assembly: XmlnsDefinition("http://schemas.zeroui.net/winfx/xaml", "ZeroUI.Wpf.Network")]
