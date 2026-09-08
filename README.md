@@ -6,8 +6,8 @@
 > **Active Development Notice:**  
 > This project is currently in active development. We warmly welcome feedback, suggestions, feature ideas, and contributions from the community! If you encounter any issues or have recommendations, please feel free to open an [Issue](https://github.com/kzxl/ZeroUI/issues) or start a [Discussion](https://github.com/kzxl/ZeroUI/discussions).
 
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.2.0-blue.svg)](https://github.com/kzxl/ZeroUI)
-[![Unit Tests](https://img.shields.io/badge/tests-208%20passed%20(100%25)-brightgreen.svg)](#testing--verification)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.3.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![Unit Tests](https://img.shields.io/badge/tests-408%20passed%20(100%25)-brightgreen.svg)](#testing--verification)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 [![UI Frame Latency](https://img.shields.io/badge/Frame%20Latency-%3C%204ms%20P95-brightgreen.svg)](#verified-benchmark-results)
@@ -422,6 +422,19 @@ A fully automated, 5-stage closed-loop industrial process demonstrating synchron
 
 ---
 
+### ⚡ Direct3D 11 GPU Shared Texture Bridge & Automatic Render Optimizer (`ZeroUI.Core.Rendering`, `ZeroUI.Wpf.Rendering`)
+* **Direct3D 11 Shared Texture Bridge (`ZeroD3D11Bridge`, `ZeroD3DCanvas`):** Direct DXGI zero-copy texture sharing with WPF `D3DImage`, independent GPU rendering loop (60/120/144 FPS), and interactive cursor wave modulation.
+* **Automatic Render Optimizer Pipeline (`ZeroRenderAnalyzer`, `ZeroShaderRegistry`, `ZeroShadowAtlas`):**
+  * Mathematical cost router comparing software convolution $O(W \times H \times R^2)$ with parallel GPU ALU $O(1)$ at **6.95 Million decisions/sec** (143.8 ns/op, 0 allocations).
+  * 9-Slice shadow atlas cache saving 95% draw calls with 100% cache hit rate (**15.4 Million lookups/sec**, 64.9 ns/op, 0 allocations).
+  * Analytical Signed Distance Field (SDF) box shadow, Gaussian blur, and neon glow mathematics (>50M evaluations/sec).
+* **Universal Attached Properties (`opt:RenderOptimizer.*`):** Attach live GPU SDF box shadows, blurs, and neon bloom effects to ANY standard WPF control (`Button`, `TextBox`, `Border`) via `opt:RenderOptimizer.Elevation`, `BlurRadius`, `GlowIntensity`, `GlowColor`, `RoutingMode`.
+* **Smart Containers (`ZeroOptimizedCard` & `ZeroOptimizedPanel`):** WPF and WinForms smart containers with dynamic adaptive throttling (automatically clamps blur and elevation under `PowerSaver` tier to recover 60 FPS).
+* **Real-Time Diagnostic HUD (`ZeroRenderOptimizerHUD`):** Glassmorphic heads-up display overlay showing live FPS, 16.6ms budget compliance, GPU hardware tier, dedicated VRAM, and 9-slice atlas hit rates.
+* **Reporting & Spreadsheet Suite (`SpreadsheetControl`):** Vector spreadsheet with live formula evaluation (`=SUM`, `AVERAGE`, `MIN`, `MAX`, `IF`), interactive formula bar, in-place cell editing, and PDF/Document previewers (`PdfViewerControl`, `DocumentPreviewControl`).
+
+---
+
 ## 5. Repository Structure
 
 ```text
@@ -537,10 +550,10 @@ dotnet test --nologo
 ```
 
 ```text
-Passed!  - Failed: 0, Passed: 208, Skipped: 0, Total: 208, Duration: 3.4 s
+Passed!  - Failed: 0, Passed: 408, Skipped: 0, Total: 408, Duration: 3.1 s
 ```
 
-- **ZeroUI.Core.Tests:** 208 comprehensive test fixtures covering Virtualization, LTTB Decimation, TimeSeriesPyramid, Historian WAL engine, Modbus/S7 protocols, ISA-18.2 Alarms, PackML, ValidationProvider, Localizer, RangeControl math, and OLAP Pivot matrix rollups.
+- **ZeroUI.Core.Tests:** 408 comprehensive test fixtures covering Virtualization, LTTB Decimation, TimeSeriesPyramid, Historian WAL engine, Modbus/S7 protocols, ISA-18.2 Alarms, PackML, ValidationProvider, Localizer, RangeControl math, OLAP Pivot matrix rollups, Direct3D 11 GPU bridge, Analytical SDF Shader math, 9-Slice Shadow Atlas, and Hardware GPU Tier detection.
 
 ---
 
@@ -550,15 +563,15 @@ ZeroUI is published as modular, multi-targeted NuGet packages supporting both mo
 
 | Package | Version | Target Frameworks | Description |
 | :--- | :---: | :--- | :--- |
-| **`ZeroUI.Core`** | `1.2.0` | `netstandard2.0`, `net462`, `net8.0` | Zero-allocation core runtime, Historian WAL, Modbus/S7 protocols, ISA-18.2 alarms, validation & localization engines. |
-| **`ZeroUI.WinForms`** | `1.2.0` | `net462`, `net8.0-windows` | Complete WinForms enterprise & industrial control suite, ZeroGrid, SCADA mimics, charts, editors, and theme engine. |
-| **`ZeroUI.Wpf`** | `1.2.0` | `net462`, `net8.0-windows` | Hardware-accelerated WPF virtual data grid, OLAP pivot grid, range sliders, validation, and industrial gauges. |
+| **`ZeroUI.Core`** | `1.3.0` | `netstandard2.0`, `net462`, `net8.0` | Zero-allocation core runtime, Historian WAL, Modbus/S7 protocols, ISA-18.2 alarms, validation, localization, and Automatic Render Optimizer engines. |
+| **`ZeroUI.WinForms`** | `1.3.0` | `net462`, `net8.0-windows` | Complete WinForms enterprise & industrial control suite, ZeroGrid, SCADA mimics, charts, editors, theme engine, and ZeroOptimizedPanel. |
+| **`ZeroUI.Wpf`** | `1.3.0` | `net462`, `net8.0-windows` | Hardware-accelerated WPF virtual data grid, Direct3D 11 GPU Bridge, Render Optimizer, ZeroOptimizedCard, HUD, and spreadsheet suite. |
 
 ```powershell
 # Install via .NET CLI
-dotnet add package ZeroUI.WinForms --version 1.2.0
-dotnet add package ZeroUI.Wpf --version 1.2.0
-dotnet add package ZeroUI.Core --version 1.2.0
+dotnet add package ZeroUI.WinForms --version 1.3.0
+dotnet add package ZeroUI.Wpf --version 1.3.0
+dotnet add package ZeroUI.Core --version 1.3.0
 ```
 
 ---

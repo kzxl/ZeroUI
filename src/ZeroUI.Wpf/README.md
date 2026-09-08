@@ -5,13 +5,19 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 > [!NOTE]
 > **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
 
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.2.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.3.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
 ---
 
 ## 🌟 Key Features
+
+### ⚡ Direct3D 11 GPU Bridge & Automatic Render Optimizer
+* **Native D3D11 Shared Texture Bridge (`ZeroD3D11Bridge`, `ZeroD3DCanvas`):** Direct DXGI zero-copy texture sharing with WPF `D3DImage`, independent GPU rendering loop (60/120/144 FPS), and interactive cursor wave modulation.
+* **Universal Attached Properties (`opt:RenderOptimizer.*`):** Attach live GPU SDF box shadows, blurs, and neon bloom effects to ANY standard WPF control (`Button`, `TextBox`, `Border`) via `opt:RenderOptimizer.Elevation`, `BlurRadius`, `GlowIntensity`, `GlowColor`, `RoutingMode`.
+* **Smart Card Container (`ZeroOptimizedCard`):** Automated cost-based rendering routing (CPU ClearType foreground + GPU SDF shadow backdrop) with dynamic adaptive throttling (recovers 60 FPS under heavy load).
+* **Real-Time Diagnostic HUD (`ZeroRenderOptimizerHUD`):** Glassmorphic heads-up display overlay showing live FPS, 16.6ms budget compliance, GPU hardware tier, dedicated VRAM, and 9-slice atlas hit rates.
 
 ### 🚀 WPF Virtual Data Grid & OLAP Matrix
 * **WPF Virtual Data Grid (`ZeroUI.Wpf.DataGrid`):**
@@ -35,7 +41,7 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 * **`ZeroWizard`:** Multi-step process workflow wizard with validation and step progress indicator.
 * **`ZeroSideNav` & `ZeroAccordion`:** Collapsible vertical sidebar navigation with category groups and badges.
 * **`ZeroDockManager`:** Multi-region docking layout system with detachable floating windows and auto-hide tabs.
-* **`ZeroPrintPreview`:** Vector document print previewer with high-DPI paper canvas and zoom.
+* **`SpreadsheetControl` & Reporting:** Vector spreadsheet with live formula evaluation (`=SUM`, `AVERAGE`, `MIN`, `MAX`, `IF`), interactive formula bar, in-place cell editing, and PDF/Document previewers (`PdfViewerControl`, `DocumentPreviewControl`).
 
 ### 🏭 Industrial Gauges & Theme Engine
 * **SCADA Gauges:** Circular `ZeroGauge`, `ZeroLinearGauge`, `ZeroHeatmap`, `ZeroLedTower`, `ZeroSignalScope`.
@@ -46,7 +52,7 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.Wpf --version 1.2.0
+dotnet add package ZeroUI.Wpf --version 1.3.0
 ```
 
 ---

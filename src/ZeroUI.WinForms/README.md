@@ -5,13 +5,16 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 > [!NOTE]
 > **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
 
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.2.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.3.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
 ---
 
 ## 🌟 Key Features
+
+### ⚡ Optimized Smart Containers (`ZeroOptimizedPanel`)
+* **9-Slice Cached Shadow Panel (`ZeroOptimizedPanel`):** High-performance smart card container leveraging the 9-slice cached shadow atlas, completely eliminating GDI+ software convolution lag on card drop shadows while keeping 100% native GDI+ text clarity.
 
 ### 🚀 ZeroGrid Big Data Virtual Engine & OLAP Matrix
 * **ZeroGrid Virtual DataGrid (`ZeroGridControl`):**
@@ -60,7 +63,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.WinForms --version 1.2.0
+dotnet add package ZeroUI.WinForms --version 1.3.0
 ```
 
 ---
