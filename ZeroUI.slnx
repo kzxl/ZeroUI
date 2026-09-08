@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/ZeroUI.Core/ZeroUI.Core.csproj" />
+    <Project Path="src/ZeroUI.Graphics.Direct2D/ZeroUI.Graphics.Direct2D.csproj" />
     <Project Path="src/ZeroUI.Graphics.DirectX/ZeroUI.Graphics.DirectX.csproj" />
+    <Project Path="src/ZeroUI.Graphics.Waveform/ZeroUI.Graphics.Waveform.csproj" />
     <Project Path="src/ZeroUI.Samples.BenchmarkDemo/ZeroUI.Samples.BenchmarkDemo.csproj" />
     <Project Path="src/ZeroUI.Samples.WpfDemo/ZeroUI.Samples.WpfDemo.csproj" />
     <Project Path="src/ZeroUI.WinForms/ZeroUI.WinForms.csproj" />
@@ -11,6 +13,8 @@
     <Project Path="tests/ZeroUI.Benchmarks/ZeroUI.Benchmarks.csproj" />
     <Project Path="tests/ZeroUI.Core.Benchmarks/ZeroUI.Core.Benchmarks.csproj" />
     <Project Path="tests/ZeroUI.Core.Tests/ZeroUI.Core.Tests.csproj" />
+    <Project Path="tests/ZeroUI.Graphics.Direct2D.Tests/ZeroUI.Graphics.Direct2D.Tests.csproj" />
     <Project Path="tests/ZeroUI.Graphics.DirectX.Tests/ZeroUI.Graphics.DirectX.Tests.csproj" />
+    <Project Path="tests/ZeroUI.Graphics.Waveform.Tests/ZeroUI.Graphics.Waveform.Tests.csproj" />
   </Folder>
 </Solution>

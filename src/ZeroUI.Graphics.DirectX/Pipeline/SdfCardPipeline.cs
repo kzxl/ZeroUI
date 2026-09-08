@@ -32,6 +32,39 @@ namespace ZeroUI.Graphics.DirectX.Pipeline
         public float GlowIntensity, ViewportWidth, ViewportHeight, Padding;
     }
 
+    public struct SdfCardData
+    {
+        public float X, Y, Width, Height;
+        public float CornerRadius;
+        public float BorderWidth;
+        public float BlurRadius;
+        public float Elevation;
+        public float GlowIntensity;
+        public Color CardColor;
+        public Color BorderColor;
+        public Color ShadowColor;
+        public Color GlowColor;
+
+        public SdfCardData(
+            float x, float y, float width, float height,
+            float cornerRadius = 8f, float borderWidth = 1f, float blurRadius = 12f,
+            float elevation = 6f, float glowIntensity = 0f,
+            Color? cardColor = null, Color? borderColor = null,
+            Color? shadowColor = null, Color? glowColor = null)
+        {
+            X = x; Y = y; Width = width; Height = height;
+            CornerRadius = cornerRadius;
+            BorderWidth = borderWidth;
+            BlurRadius = blurRadius;
+            Elevation = elevation;
+            GlowIntensity = glowIntensity;
+            CardColor = cardColor ?? Color.FromArgb(22, 27, 38);
+            BorderColor = borderColor ?? Color.FromArgb(42, 51, 71);
+            ShadowColor = shadowColor ?? Color.FromArgb(120, 0, 0, 0);
+            GlowColor = glowColor ?? Color.FromArgb(0, 229, 255);
+        }
+    }
+
     /// <summary>
     /// Hardware-accelerated pipeline for rendering analytical Signed Distance Field (SDF) cards,
     /// rounded corners, anti-aliased borders, soft drop shadows, and neon glow effects via Direct3D 11.
@@ -253,6 +286,89 @@ namespace ZeroUI.Graphics.DirectX.Pipeline
 
             // 3. Draw Quad
             _context.Draw(6, 0);
+        }
+
+        public unsafe void RenderCards(
+            D3D11RenderTargetView rtv,
+            int viewportWidth,
+            int viewportHeight,
+            ReadOnlySpan<SdfCardData> cards)
+        {
+            if (_disposed || rtv == null || !rtv.IsValid || _vertexBuffer == null || _constantBuffer == null || cards.IsEmpty)
+                return;
+
+            // 1. Set Pipeline State ONCE for entire batch
+            _context.OMSetRenderTargets(rtv);
+            _context.RSSetViewports(new D3D11_VIEWPORT(0, 0, viewportWidth, viewportHeight));
+            _context.RSSetState(_rasterizerState);
+            _context.OMSetBlendState(_blendState);
+
+            _context.IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY.D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            if (_inputLayout != null) _context.IASetInputLayout(_inputLayout);
+            _context.IASetVertexBuffers(0, _vertexBuffer, (uint)sizeof(SdfVertex), 0);
+
+            if (_vertexShader != null) _context.VSSetShader(_vertexShader);
+            _context.VSSetConstantBuffers(0, _constantBuffer);
+
+            if (_pixelShader != null) _context.PSSetShader(_pixelShader);
+            _context.PSSetConstantBuffers(0, _constantBuffer);
+
+            // 2. Stream Constant Buffers in tight loop
+            for (int i = 0; i < cards.Length; i++)
+            {
+                ref readonly SdfCardData c = ref cards[i];
+
+                SdfCardConstants cb = new SdfCardConstants
+                {
+                    CardX = c.X,
+                    CardY = c.Y,
+                    CardWidth = c.Width,
+                    CardHeight = c.Height,
+
+                    CardR = c.CardColor.R / 255.0f,
+                    CardG = c.CardColor.G / 255.0f,
+                    CardB = c.CardColor.B / 255.0f,
+                    CardA = c.CardColor.A / 255.0f,
+
+                    BorderR = c.BorderColor.R / 255.0f,
+                    BorderG = c.BorderColor.G / 255.0f,
+                    BorderB = c.BorderColor.B / 255.0f,
+                    BorderA = c.BorderColor.A / 255.0f,
+
+                    ShadowR = c.ShadowColor.R / 255.0f,
+                    ShadowG = c.ShadowColor.G / 255.0f,
+                    ShadowB = c.ShadowColor.B / 255.0f,
+                    ShadowA = c.ShadowColor.A / 255.0f,
+
+                    GlowR = c.GlowColor.R / 255.0f,
+                    GlowG = c.GlowColor.G / 255.0f,
+                    GlowB = c.GlowColor.B / 255.0f,
+                    GlowA = c.GlowColor.A / 255.0f,
+
+                    CornerRadius = c.CornerRadius,
+                    BorderWidth = c.BorderWidth,
+                    BlurRadius = c.BlurRadius,
+                    Elevation = c.Elevation,
+
+                    GlowIntensity = c.GlowIntensity,
+                    ViewportWidth = viewportWidth,
+                    ViewportHeight = viewportHeight,
+                    Padding = 0.0f
+                };
+
+                _context.UpdateSubresource(_constantBuffer, ref cb);
+                _context.Draw(6, 0);
+            }
+        }
+
+        public void RenderCards(
+            D3D11RenderTargetView rtv,
+            int viewportWidth,
+            int viewportHeight,
+            SdfCardData[] cards)
+        {
+            if (cards == null) return;
+            RenderCards(rtv, viewportWidth, viewportHeight, new ReadOnlySpan<SdfCardData>(cards));
         }
 
         public void Dispose()
