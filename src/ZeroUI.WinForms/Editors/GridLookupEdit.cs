@@ -30,6 +30,8 @@ namespace ZeroUI.WinForms.Editors
         private readonly Panel _popupContainer;
         private readonly TextBox _searchBox;
         private readonly GridControl _grid;
+        private readonly Panel _footerPanel;
+        private readonly Button _btnAddNew;
 
         private string _placeholder = "Click to search and select...";
         private string _displayMember = "Name";
@@ -41,11 +43,48 @@ namespace ZeroUI.WinForms.Editors
         private bool _isHovered = false;
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
+        private bool _showAddNewButton = false;
+        private string _addNewButtonText = "+ Add New Record";
 
         public event EventHandler? SelectionChanged;
         public event EventHandler? DropDownOpened;
         public event EventHandler? DropDownClosed;
         public event EventHandler? EditValueChanged;
+
+        /// <summary>
+        /// Occurs when the user requests to add a new record or enters an unlisted search value.
+        /// </summary>
+        public event EventHandler<ProcessNewValueEventArgs>? ProcessNewValue;
+
+        [Category("ZeroUI - Behavior")]
+        [Description("Determines whether the '+ Add New Record' footer action button is visible.")]
+        [DefaultValue(false)]
+        public bool ShowAddNewButton
+        {
+            get => _showAddNewButton;
+            set
+            {
+                if (_showAddNewButton != value)
+                {
+                    _showAddNewButton = value;
+                    if (_btnAddNew != null) _btnAddNew.Visible = value;
+                    if (_footerPanel != null) _footerPanel.Visible = value;
+                }
+            }
+        }
+
+        [Category("ZeroUI - Appearance")]
+        [Description("Text caption displayed on the add new record footer action button.")]
+        [DefaultValue("+ Add New Record")]
+        public string AddNewButtonText
+        {
+            get => _addNewButtonText;
+            set
+            {
+                _addNewButtonText = value ?? "+ Add New Record";
+                if (_btnAddNew != null) _btnAddNew.Text = _addNewButtonText;
+            }
+        }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -208,6 +247,36 @@ namespace ZeroUI.WinForms.Editors
             searchPanel.Controls.Add(_searchBox);
             _popupContainer.Controls.Add(searchPanel);
 
+            // Footer Panel with + Add New Record Button
+            _btnAddNew = new Button
+            {
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                Text = _addNewButtonText,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                BackColor = Color.Transparent,
+                ForeColor = ZeroTheme.Colors.Primary,
+                Visible = _showAddNewButton
+            };
+            if (_btnAddNew.FlatAppearance != null)
+            {
+                _btnAddNew.FlatAppearance.BorderSize = 0;
+            }
+            _btnAddNew.Click += (s, e) => HandleAddNewRecord();
+
+            _footerPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 32,
+                Padding = new Padding(10, 4, 10, 4),
+                BackColor = ZeroTheme.IsDark ? Color.FromArgb(30, 30, 35) : Color.FromArgb(245, 246, 248),
+                Visible = _showAddNewButton
+            };
+            _footerPanel.Controls.Add(_btnAddNew);
+            _popupContainer.Controls.Add(_footerPanel);
+
             _grid.DoubleClick += (s, e) => CommitSelection();
             _grid.KeyDown += (s, e) =>
             {
@@ -240,6 +309,20 @@ namespace ZeroUI.WinForms.Editors
         public void SetDataSource<T>(IList<T> items)
         {
             _grid.SetDataSource(items);
+        }
+
+        private void HandleAddNewRecord()
+        {
+            var args = new ProcessNewValueEventArgs(_searchBox.Text);
+            ProcessNewValue?.Invoke(this, args);
+            if (args.Handled)
+            {
+                if (args.NewValue != null)
+                {
+                    SelectedValue = args.NewValue;
+                }
+                _dropdown.Close();
+            }
         }
 
         private void CommitSelection()
@@ -283,6 +366,14 @@ namespace ZeroUI.WinForms.Editors
             {
                 _searchBox.BackColor = palette.Surface;
                 _searchBox.ForeColor = palette.TextPrimary;
+            }
+            if (_footerPanel != null)
+            {
+                _footerPanel.BackColor = ZeroTheme.IsDark ? Color.FromArgb(30, 30, 35) : Color.FromArgb(245, 246, 248);
+            }
+            if (_btnAddNew != null)
+            {
+                _btnAddNew.ForeColor = palette.Primary;
             }
             Invalidate();
         }

@@ -47,10 +47,36 @@ namespace ZeroUI.WinForms.Editors
         private int _tokenSpacing = 6;
         private int _hoveredCloseIndex = -1;
 
+        private IEnumerable<string>? _autocompleteSource;
+        private readonly List<string> _cachedSource = new List<string>();
+        private readonly ZeroDropDownHost _dropdown;
+        private readonly TokenSuggestionPopupControl _popupControl;
+
         public event EventHandler<TokenEventArgs>? TokenAdded;
         public event EventHandler<TokenEventArgs>? TokenRemoved;
         public event EventHandler? TokensChanged;
         public event EventHandler? EditValueChanged;
+
+        [Category("ZeroUI - Data")]
+        [Description("Optional collection of predefined suggestion strings for token autocomplete.")]
+        [DefaultValue(null)]
+        public IEnumerable<string>? AutocompleteSource
+        {
+            get => _autocompleteSource;
+            set
+            {
+                _autocompleteSource = value;
+                _cachedSource.Clear();
+                if (value != null)
+                {
+                    foreach (var item in value)
+                    {
+                        if (!string.IsNullOrWhiteSpace(item))
+                            _cachedSource.Add(item.Trim());
+                    }
+                }
+            }
+        }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -144,8 +170,14 @@ namespace ZeroUI.WinForms.Editors
                 ForeColor = ZeroTheme.Colors.TextPrimary
             };
             _inputBox.KeyDown += InputBox_KeyDown;
-            _inputBox.TextChanged += (s, e) => Relayout();
+            _inputBox.TextChanged += InputBox_TextChanged;
             Controls.Add(_inputBox);
+
+            _popupControl = new TokenSuggestionPopupControl(this);
+            _dropdown = new ZeroDropDownHost
+            {
+                Content = _popupControl
+            };
 
             Size = new Size(300, 40);
         }
@@ -201,8 +233,104 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        private void InputBox_TextChanged(object? sender, EventArgs e)
+        {
+            Relayout();
+            if (_cachedSource.Count > 0)
+            {
+                string query = _inputBox.Text.Trim();
+                if (!string.IsNullOrEmpty(query))
+                {
+                    var matches = new List<string>();
+                    for (int i = 0; i < _cachedSource.Count; i++)
+                    {
+                        string s = _cachedSource[i];
+                        bool alreadyAdded = false;
+                        for (int t = 0; t < _tokens.Count; t++)
+                        {
+                            if (string.Equals(_tokens[t], s, StringComparison.OrdinalIgnoreCase))
+                            {
+                                alreadyAdded = true;
+                                break;
+                            }
+                        }
+                        if (!alreadyAdded && s.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            matches.Add(s);
+                            if (matches.Count >= 20) break;
+                        }
+                    }
+
+                    if (matches.Count > 0)
+                    {
+                        _popupControl.SetSuggestions(matches);
+                        ShowSuggestions();
+                    }
+                    else
+                    {
+                        _dropdown.Close();
+                    }
+                }
+                else
+                {
+                    _dropdown.Close();
+                }
+            }
+        }
+
+        private void ShowSuggestions()
+        {
+            if (ReadOnly || !Enabled) return;
+            int popW = Math.Max(Width, 220);
+            int popH = _popupControl.PreferredHeight;
+            _popupControl.Size = new Size(popW, popH);
+            _dropdown.ShowDropDown(this, popW, popH);
+        }
+
+        internal void SelectSuggestion(string suggestion)
+        {
+            AddToken(suggestion);
+            _inputBox.Text = string.Empty;
+            _dropdown.Close();
+            _inputBox.Focus();
+        }
+
         private void InputBox_KeyDown(object? sender, KeyEventArgs e)
         {
+            if (_dropdown.Visible)
+            {
+                if (e.KeyCode == Keys.Down)
+                {
+                    _popupControl.SelectNext();
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+                if (e.KeyCode == Keys.Up)
+                {
+                    _popupControl.SelectPrevious();
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+                if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Tab)
+                {
+                    if (_popupControl.SelectedItem != null)
+                    {
+                        SelectSuggestion(_popupControl.SelectedItem);
+                        e.Handled = true;
+                        e.SuppressKeyPress = true;
+                        return;
+                    }
+                }
+                if (e.KeyCode == Keys.Escape)
+                {
+                    _dropdown.Close();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Oemcomma)
             {
                 e.SuppressKeyPress = true;
@@ -383,6 +511,167 @@ namespace ZeroUI.WinForms.Editors
             path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
             path.CloseFigure();
             return path;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _dropdown.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        private class TokenSuggestionPopupControl : Control
+        {
+            private readonly TokenEdit _owner;
+            private readonly List<string> _suggestions = new List<string>();
+            private int _selectedIndex = -1;
+            private int _hoveredIndex = -1;
+            private const int ItemHeight = 28;
+
+            public string? SelectedItem => (_selectedIndex >= 0 && _selectedIndex < _suggestions.Count)
+                ? _suggestions[_selectedIndex]
+                : null;
+
+            public int PreferredHeight => Math.Min(220, Math.Max(32, _suggestions.Count * ItemHeight + 4));
+
+            public TokenSuggestionPopupControl(TokenEdit owner)
+            {
+                _owner = owner;
+                SetStyle(
+                    ControlStyles.UserPaint |
+                    ControlStyles.AllPaintingInWmPaint |
+                    ControlStyles.OptimizedDoubleBuffer |
+                    ControlStyles.ResizeRedraw, true);
+                DoubleBuffered = true;
+                Cursor = Cursors.Hand;
+            }
+
+            public void SetSuggestions(List<string> items)
+            {
+                _suggestions.Clear();
+                _suggestions.AddRange(items);
+                _selectedIndex = items.Count > 0 ? 0 : -1;
+                _hoveredIndex = -1;
+                Invalidate();
+            }
+
+            public void SelectNext()
+            {
+                if (_suggestions.Count == 0) return;
+                _selectedIndex = (_selectedIndex + 1) % _suggestions.Count;
+                Invalidate();
+            }
+
+            public void SelectPrevious()
+            {
+                if (_suggestions.Count == 0) return;
+                _selectedIndex = (_selectedIndex - 1 + _suggestions.Count) % _suggestions.Count;
+                Invalidate();
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+                var g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                var colors = _owner.CurrentPalette;
+                g.Clear(colors.Surface);
+
+                using (var borderPen = new Pen(colors.Border, 1f))
+                {
+                    g.DrawRectangle(borderPen, 0, 0, Width - 1, Height - 1);
+                }
+
+                for (int i = 0; i < _suggestions.Count; i++)
+                {
+                    int itemY = 2 + i * ItemHeight;
+                    if (itemY >= Height) break;
+
+                    var itemRect = new Rectangle(3, itemY, Width - 6, ItemHeight);
+                    bool isSelected = (i == _selectedIndex);
+                    bool isHovered = (i == _hoveredIndex);
+
+                    if (isSelected || isHovered)
+                    {
+                        Color highlightBg = isSelected
+                            ? Color.FromArgb(35, colors.Primary)
+                            : Color.FromArgb(18, colors.Primary);
+
+                        using (var hPath = CreateRoundedRectanglePath(itemRect, 4))
+                        {
+                            using (var hBrush = new SolidBrush(highlightBg))
+                            {
+                                g.FillPath(hBrush, hPath);
+                            }
+                            if (isSelected)
+                            {
+                                using (var hPen = new Pen(Color.FromArgb(90, colors.Primary), 1f))
+                                {
+                                    g.DrawPath(hPen, hPath);
+                                }
+                            }
+                        }
+                    }
+
+                    Color textColor = isSelected ? colors.Primary : colors.TextPrimary;
+                    using (var textBrush = new SolidBrush(textColor))
+                    {
+                        var textRect = new Rectangle(itemRect.X + 8, itemRect.Y, itemRect.Width - 16, itemRect.Height);
+                        var sf = new StringFormat
+                        {
+                            LineAlignment = StringAlignment.Center,
+                            Trimming = StringTrimming.EllipsisCharacter
+                        };
+                        g.DrawString(_suggestions[i], _owner.Font, textBrush, textRect, sf);
+                    }
+                }
+            }
+
+            protected override void OnMouseMove(MouseEventArgs e)
+            {
+                base.OnMouseMove(e);
+                int idx = (e.Y - 2) / ItemHeight;
+                if (idx >= 0 && idx < _suggestions.Count)
+                {
+                    if (_hoveredIndex != idx)
+                    {
+                        _hoveredIndex = idx;
+                        Invalidate();
+                    }
+                }
+                else if (_hoveredIndex != -1)
+                {
+                    _hoveredIndex = -1;
+                    Invalidate();
+                }
+            }
+
+            protected override void OnMouseLeave(EventArgs e)
+            {
+                base.OnMouseLeave(e);
+                if (_hoveredIndex != -1)
+                {
+                    _hoveredIndex = -1;
+                    Invalidate();
+                }
+            }
+
+            protected override void OnMouseDown(MouseEventArgs e)
+            {
+                base.OnMouseDown(e);
+                if (e.Button == MouseButtons.Left)
+                {
+                    int idx = (e.Y - 2) / ItemHeight;
+                    if (idx >= 0 && idx < _suggestions.Count)
+                    {
+                        _selectedIndex = idx;
+                        _owner.SelectSuggestion(_suggestions[idx]);
+                    }
+                }
+            }
         }
     }
 

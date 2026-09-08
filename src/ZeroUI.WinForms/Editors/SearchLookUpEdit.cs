@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
 using ZeroUI.Core.Theme;
@@ -36,6 +37,7 @@ namespace ZeroUI.WinForms.Editors
         private readonly Button _btnClear;
         private readonly Label _lblStatus;
         private readonly Button _btnAddNew;
+        private readonly Button _btnApply;
         private readonly GridControl _grid;
         private readonly Timer _debounceTimer;
         private readonly SearchFilterEngine _filterEngine = new SearchFilterEngine();
@@ -46,6 +48,20 @@ namespace ZeroUI.WinForms.Editors
         private string _selectedText = string.Empty;
         private object? _selectedValue = null;
         private object? _selectedItem = null;
+
+        private bool _multiSelect = false;
+        private bool _showTokens = false;
+        private readonly List<object> _selectedValues = new List<object>();
+        private readonly List<string> _selectedTexts = new List<string>();
+
+        private int _tokenHeight = 22;
+        private int _tokenSpacing = 4;
+        private readonly List<Rectangle> _tokenBounds = new List<Rectangle>();
+        private readonly List<Rectangle> _closeBounds = new List<Rectangle>();
+        private Rectangle _overflowBounds = Rectangle.Empty;
+        private int _overflowCount = 0;
+        private int _hoveredCloseIndex = -1;
+        private bool _isHoveredOverflow = false;
 
         private bool _isHovered = false;
         private bool _isFocused = false;
@@ -67,6 +83,47 @@ namespace ZeroUI.WinForms.Editors
         public event EventHandler<ProcessNewValueEventArgs>? ProcessNewValue;
 
         #region Properties
+
+        [Category("ZeroUI - Behavior")]
+        [Description("Enables multi-item selection with checkbox column and persistent selected items.")]
+        [DefaultValue(false)]
+        public bool MultiSelect
+        {
+            get => _multiSelect;
+            set
+            {
+                if (_multiSelect != value)
+                {
+                    _multiSelect = value;
+                    _grid.SelectionMode = _multiSelect ? ZeroGridSelectionMode.MultiRow : ZeroGridSelectionMode.SingleRow;
+                    _grid.ShowCheckBoxSelectorColumn = _multiSelect;
+                    if (_btnApply != null) _btnApply.Visible = _multiSelect;
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("ZeroUI - Appearance")]
+        [Description("Displays selected items as interactive vector chips/tokens with dismiss icons when MultiSelect is true.")]
+        [DefaultValue(false)]
+        public bool ShowTokens
+        {
+            get => _showTokens;
+            set
+            {
+                if (_showTokens != value)
+                {
+                    _showTokens = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public IReadOnlyList<object> SelectedValues => _selectedValues;
+
+        [Browsable(false)]
+        public IReadOnlyList<string> SelectedTexts => _selectedTexts;
 
         [Category("ZeroUI - Behavior")]
         [Description("Determines whether the '+ Add New Record' footer action button is visible.")]
@@ -200,8 +257,39 @@ namespace ZeroUI.WinForms.Editors
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object? EditValue
         {
-            get => SelectedValue;
-            set => SelectedValue = value;
+            get => _multiSelect ? (object)_selectedValues.ToArray() : SelectedValue;
+            set
+            {
+                if (_multiSelect)
+                {
+                    _selectedValues.Clear();
+                    _selectedTexts.Clear();
+                    if (value is System.Collections.IEnumerable enumerable && !(value is string))
+                    {
+                        foreach (var item in enumerable)
+                        {
+                            if (item != null)
+                            {
+                                _selectedValues.Add(item);
+                                _selectedTexts.Add(item.ToString() ?? string.Empty);
+                            }
+                        }
+                    }
+                    else if (value != null)
+                    {
+                        _selectedValues.Add(value);
+                        _selectedTexts.Add(value.ToString() ?? string.Empty);
+                    }
+                    _isModified = true;
+                    Invalidate();
+                    SelectionChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
+                }
+                else
+                {
+                    SelectedValue = value;
+                }
+            }
         }
 
         [Category("ZeroUI - Behavior")]
@@ -225,6 +313,8 @@ namespace ZeroUI.WinForms.Editors
             _selectedValue = null;
             _selectedItem = null;
             _selectedText = string.Empty;
+            _selectedValues.Clear();
+            _selectedTexts.Clear();
             _isModified = false;
             Invalidate();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -313,6 +403,28 @@ namespace ZeroUI.WinForms.Editors
             }
             _btnAddNew.Click += (s, e) => HandleAddNewRecord();
 
+            _btnApply = new Button
+            {
+                Dock = DockStyle.Right,
+                Width = 60,
+                Text = "Done",
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                BackColor = ZeroTheme.Colors.Primary,
+                ForeColor = Color.White,
+                Visible = _multiSelect
+            };
+            if (_btnApply.FlatAppearance != null)
+            {
+                _btnApply.FlatAppearance.BorderSize = 0;
+            }
+            _btnApply.Click += (s, e) =>
+            {
+                SyncMultiSelection();
+                _dropdown?.Close();
+            };
+
             _lblStatus = new Label
             {
                 Dock = DockStyle.Fill,
@@ -342,6 +454,7 @@ namespace ZeroUI.WinForms.Editors
             };
             footerPanel.Controls.Add(_lblStatus);
             footerPanel.Controls.Add(_btnAddNew);
+            footerPanel.Controls.Add(_btnApply);
 
             _popupContainer = new Panel
             {
@@ -380,6 +493,14 @@ namespace ZeroUI.WinForms.Editors
             {
                 _debounceTimer.Stop();
                 ExecuteSearch();
+            };
+
+            _grid.SelectionChanged += (s, e) =>
+            {
+                if (_multiSelect)
+                {
+                    SyncMultiSelection();
+                }
             };
 
             _grid.DoubleClick += (s, e) => CommitSelection();
@@ -522,6 +643,13 @@ namespace ZeroUI.WinForms.Editors
 
         private void CommitSelection()
         {
+            if (_multiSelect)
+            {
+                SyncMultiSelection();
+                _dropdown.Close();
+                return;
+            }
+
             int visualRow = _grid.SelectedVisualRow;
             if (visualRow < 0) return;
 
@@ -531,15 +659,7 @@ namespace ZeroUI.WinForms.Editors
 
             // Extract display value from column matching DisplayMember or first visible column
             CellValueBuffer buf = new CellValueBuffer();
-            int displayCol = 0;
-            for (int i = 0; i < _grid.Columns.Count; i++)
-            {
-                if (string.Equals(_grid.Columns[i].FieldName, _displayMember, StringComparison.OrdinalIgnoreCase))
-                {
-                    displayCol = i;
-                    break;
-                }
-            }
+            int displayCol = GetDisplayColumnIndex();
 
             src.GetCellValue(modelRow, displayCol, ref buf);
             _selectedText = buf.Text.ToString();
@@ -547,6 +667,48 @@ namespace ZeroUI.WinForms.Editors
             _isModified = true;
 
             _dropdown.Close();
+            Invalidate();
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private int GetDisplayColumnIndex()
+        {
+            for (int i = 0; i < _grid.Columns.Count; i++)
+            {
+                if (string.Equals(_grid.Columns[i].FieldName, _displayMember, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        private void SyncMultiSelection()
+        {
+            if (!_multiSelect) return;
+            var src = _grid.DataSource;
+            if (src == null) return;
+
+            _selectedValues.Clear();
+            _selectedTexts.Clear();
+
+            int displayCol = GetDisplayColumnIndex();
+            CellValueBuffer buf = new CellValueBuffer();
+
+            foreach (int vRow in _grid.SelectedVisualRows)
+            {
+                int mRow = _grid.GetModelRowIndex(vRow);
+                if (mRow >= 0)
+                {
+                    buf.Reset();
+                    src.GetCellValue(mRow, displayCol, ref buf);
+                    _selectedValues.Add(mRow);
+                    _selectedTexts.Add(buf.Text.ToString());
+                }
+            }
+
+            _isModified = true;
             Invalidate();
             SelectionChanged?.Invoke(this, EventArgs.Empty);
             EditValueChanged?.Invoke(this, EventArgs.Empty);
@@ -586,7 +748,62 @@ namespace ZeroUI.WinForms.Editors
         {
             base.OnMouseLeave(e);
             _isHovered = false;
+            _hoveredCloseIndex = -1;
+            _isHoveredOverflow = false;
             Invalidate();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            if (_multiSelect && _showTokens)
+            {
+                int prevHover = _hoveredCloseIndex;
+                bool prevPillHover = _isHoveredOverflow;
+
+                _hoveredCloseIndex = -1;
+                _isHoveredOverflow = false;
+
+                for (int i = 0; i < _closeBounds.Count; i++)
+                {
+                    if (_closeBounds[i].Contains(e.Location))
+                    {
+                        _hoveredCloseIndex = i;
+                        break;
+                    }
+                }
+
+                if (_hoveredCloseIndex == -1 && !_overflowBounds.IsEmpty && _overflowBounds.Contains(e.Location))
+                {
+                    _isHoveredOverflow = true;
+                }
+
+                if (prevHover != _hoveredCloseIndex || prevPillHover != _isHoveredOverflow)
+                {
+                    Invalidate();
+                }
+            }
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            if (e.Button == MouseButtons.Left && _multiSelect && _showTokens)
+            {
+                for (int i = 0; i < _closeBounds.Count; i++)
+                {
+                    if (_closeBounds[i].Contains(e.Location))
+                    {
+                        _selectedValues.RemoveAt(i);
+                        _selectedTexts.RemoveAt(i);
+                        _isModified = true;
+                        Invalidate();
+                        SelectionChanged?.Invoke(this, EventArgs.Empty);
+                        EditValueChanged?.Invoke(this, EventArgs.Empty);
+                        return;
+                    }
+                }
+            }
         }
 
         protected override void OnGotFocus(EventArgs e)
@@ -658,7 +875,23 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
 
-            // Draw Display Text or Placeholder
+            // Draw Display Text, Summary, or Tokens
+            if (_multiSelect && _showTokens)
+            {
+                DrawTokens(g, colors);
+            }
+            else if (_multiSelect)
+            {
+                DrawMultiTextSummary(g, colors);
+            }
+            else
+            {
+                DrawSingleText(g, colors);
+            }
+        }
+
+        private void DrawSingleText(Graphics g, ZeroThemePalette colors)
+        {
             int textX = 30;
             int textW = Width - textX - 30;
             var textRect = new Rectangle(textX, 0, textW, Height);
@@ -673,6 +906,151 @@ namespace ZeroUI.WinForms.Editors
                 textRect,
                 textColor,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        private void DrawMultiTextSummary(Graphics g, ZeroThemePalette colors)
+        {
+            int textX = 30;
+            int textW = Width - textX - 30;
+            var textRect = new Rectangle(textX, 0, textW, Height);
+
+            string textToDraw;
+            Color textColor;
+
+            if (_selectedTexts.Count == 0)
+            {
+                textToDraw = _placeholder;
+                textColor = colors.TextSecondary;
+            }
+            else if (_selectedTexts.Count <= 2)
+            {
+                textToDraw = string.Join(", ", _selectedTexts);
+                textColor = colors.TextPrimary;
+            }
+            else
+            {
+                textToDraw = string.Format("{0} items selected", _selectedTexts.Count);
+                textColor = colors.TextPrimary;
+            }
+
+            TextRenderer.DrawText(
+                g,
+                textToDraw,
+                Font,
+                textRect,
+                textColor,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        private void DrawTokens(Graphics g, ZeroThemePalette colors)
+        {
+            _tokenBounds.Clear();
+            _closeBounds.Clear();
+            _overflowBounds = Rectangle.Empty;
+            _overflowCount = 0;
+
+            if (_selectedTexts.Count == 0)
+            {
+                DrawSingleText(g, colors);
+                return;
+            }
+
+            int curX = 30; // After magnifier icon
+            int curY = (Height - _tokenHeight) / 2;
+            int maxAvailableWidth = Width - 32; // Leave room for chevron
+
+            for (int k = 0; k < _selectedTexts.Count; k++)
+            {
+                string itemText = _selectedTexts[k];
+                var size = g.MeasureString(itemText, Font);
+                int tokenW = (int)Math.Ceiling(size.Width) + 24;
+                int remainingItems = _selectedTexts.Count - k;
+
+                if (curX + tokenW > maxAvailableWidth)
+                {
+                    _overflowCount = remainingItems;
+                    string overflowText = $"+{_overflowCount} more";
+                    var pillSize = g.MeasureString(overflowText, Font);
+                    int pillW = (int)Math.Ceiling(pillSize.Width) + 12;
+
+                    if (curX + pillW > maxAvailableWidth && _tokenBounds.Count > 0)
+                    {
+                        pillW = Math.Max(24, maxAvailableWidth - curX);
+                    }
+
+                    var pillRect = new Rectangle(curX, curY, pillW, _tokenHeight);
+                    _overflowBounds = pillRect;
+
+                    using (var pillPath = CreateRoundedRectanglePath(pillRect, 4))
+                    {
+                        Color pillBg = _isHoveredOverflow ? Color.FromArgb(60, colors.Primary) : Color.FromArgb(30, colors.Primary);
+                        using (var pillBrush = new SolidBrush(pillBg))
+                        {
+                            g.FillPath(pillBrush, pillPath);
+                        }
+                        using (var pillPen = new Pen(colors.Primary, 1f))
+                        {
+                            g.DrawPath(pillPen, pillPath);
+                        }
+                    }
+
+                    using (var pillTextBrush = new SolidBrush(colors.Primary))
+                    {
+                        var sf = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center,
+                            Trimming = StringTrimming.EllipsisCharacter
+                        };
+                        g.DrawString(overflowText, Font, pillTextBrush, pillRect, sf);
+                    }
+
+                    break;
+                }
+
+                var tokenRect = new Rectangle(curX, curY, tokenW, _tokenHeight);
+                var closeRect = new Rectangle(curX + tokenW - 16, curY + (_tokenHeight - 10) / 2, 10, 10);
+
+                _tokenBounds.Add(tokenRect);
+                _closeBounds.Add(closeRect);
+
+                // Chip background & border
+                using (var tPath = CreateRoundedRectanglePath(tokenRect, 4))
+                {
+                    using (var tBrush = new SolidBrush(Color.FromArgb(28, colors.Primary)))
+                    {
+                        g.FillPath(tBrush, tPath);
+                    }
+                    using (var tPen = new Pen(Color.FromArgb(90, colors.Primary), 1f))
+                    {
+                        g.DrawPath(tPen, tPath);
+                    }
+                }
+
+                // Chip Text
+                using (var brush = new SolidBrush(colors.TextPrimary))
+                {
+                    var textRect = new Rectangle(tokenRect.X + 6, tokenRect.Y, tokenRect.Width - 22, tokenRect.Height);
+                    var sf = new StringFormat
+                    {
+                        Alignment = StringAlignment.Near,
+                        LineAlignment = StringAlignment.Center,
+                        Trimming = StringTrimming.EllipsisCharacter
+                    };
+                    g.DrawString(itemText, Font, brush, textRect, sf);
+                }
+
+                // Close '✕'
+                bool isCloseHovered = (_tokenBounds.Count - 1) == _hoveredCloseIndex;
+                Color xColor = isCloseHovered ? colors.Danger : colors.TextSecondary;
+                using (var pen = new Pen(xColor, 1.4f))
+                {
+                    g.DrawLine(pen, closeRect.X + 1, closeRect.Y + 1, closeRect.Right - 1, closeRect.Bottom - 1);
+                    g.DrawLine(pen, closeRect.Right - 1, closeRect.Y + 1, closeRect.X + 1, closeRect.Bottom - 1);
+                }
+
+                curX += tokenW + _tokenSpacing;
+            }
         }
 
         private static GraphicsPath CreateRoundedRectanglePath(Rectangle bounds, int radius)
@@ -720,6 +1098,7 @@ namespace ZeroUI.WinForms.Editors
             if (_btnClear != null) _btnClear.ForeColor = palette.TextSecondary;
             if (_lblStatus != null) _lblStatus.ForeColor = palette.TextSecondary;
             if (_btnAddNew != null) _btnAddNew.ForeColor = palette.Primary;
+            if (_btnApply != null) _btnApply.BackColor = palette.Primary;
             Invalidate();
         }
 

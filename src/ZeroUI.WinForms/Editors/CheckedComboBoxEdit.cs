@@ -27,10 +27,16 @@ namespace ZeroUI.WinForms.Editors
         }
     }
 
+    public enum CheckedComboDisplayMode
+    {
+        Text,
+        Tokens
+    }
+
     /// <summary>
     /// Modern anti-aliased Multi-Select CheckedComboBox for ZeroUI WinForms.
     /// Supports checkboxes per item, Select-All toggle, instant search filtering,
-    /// and dynamic summary display formatting.
+    /// dynamic summary display formatting, and discrete token/chip badges.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
@@ -60,6 +66,17 @@ namespace ZeroUI.WinForms.Editors
         private string? _summaryFormat;
         private int _itemHeight = 30;
 
+        private CheckedComboDisplayMode _displayMode = CheckedComboDisplayMode.Text;
+        private int _tokenHeight = 22;
+        private int _tokenSpacing = 4;
+        private readonly List<Rectangle> _tokenBounds = new List<Rectangle>();
+        private readonly List<Rectangle> _closeBounds = new List<Rectangle>();
+        private readonly List<int> _tokenItemIndices = new List<int>();
+        private Rectangle _overflowBounds = Rectangle.Empty;
+        private int _overflowCount = 0;
+        private int _hoveredCloseIndex = -1;
+        private bool _isHoveredOverflow = false;
+
         private bool _isHovered = false;
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
@@ -70,6 +87,31 @@ namespace ZeroUI.WinForms.Editors
         public event EventHandler<ItemCheckEventArgs>? ItemCheck;
         public event EventHandler? CheckedChanged;
         public event EventHandler? EditValueChanged;
+
+        [Category("Appearance")]
+        [DefaultValue(CheckedComboDisplayMode.Text)]
+        [Description("Specifies whether selected items are displayed as a summary text or discrete chips/tokens.")]
+        public CheckedComboDisplayMode DisplayMode
+        {
+            get => _displayMode;
+            set
+            {
+                if (_displayMode != value)
+                {
+                    _displayMode = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(false)]
+        [Description("Convenience property to switch display to discrete chips/tokens with dismiss buttons.")]
+        public bool ShowTokens
+        {
+            get => _displayMode == CheckedComboDisplayMode.Tokens;
+            set => DisplayMode = value ? CheckedComboDisplayMode.Tokens : CheckedComboDisplayMode.Text;
+        }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -296,7 +338,19 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
 
-            // Draw Display Text
+            // Draw Display Text or Tokens
+            if (_displayMode == CheckedComboDisplayMode.Tokens)
+            {
+                DrawTokens(g, colors);
+            }
+            else
+            {
+                DrawTextSummary(g, colors);
+            }
+        }
+
+        private void DrawTextSummary(Graphics g, ZeroThemePalette colors)
+        {
             string text = GetDisplayText();
             bool isMuted = text == _placeholder;
             using (var brush = new SolidBrush(isMuted ? colors.TextSecondary : colors.TextPrimary))
@@ -312,11 +366,201 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        private void DrawTokens(Graphics g, ZeroThemePalette colors)
+        {
+            _tokenBounds.Clear();
+            _closeBounds.Clear();
+            _tokenItemIndices.Clear();
+            _overflowBounds = Rectangle.Empty;
+            _overflowCount = 0;
+
+            var checkedIndices = CheckedIndices;
+            if (checkedIndices.Count == 0)
+            {
+                using (var brush = new SolidBrush(colors.TextSecondary))
+                {
+                    var sf = new StringFormat
+                    {
+                        Alignment = StringAlignment.Near,
+                        LineAlignment = StringAlignment.Center,
+                        Trimming = StringTrimming.EllipsisCharacter
+                    };
+                    var textRect = new Rectangle(12, 0, Width - 42, Height);
+                    g.DrawString(Placeholder, Font, brush, textRect, sf);
+                }
+                return;
+            }
+
+            int curX = 8;
+            int curY = (Height - _tokenHeight) / 2;
+            int maxAvailableWidth = Width - 32;
+
+            for (int k = 0; k < checkedIndices.Count; k++)
+            {
+                int itemIdx = checkedIndices[k];
+                string itemText = _items[itemIdx].DisplayText;
+                var size = g.MeasureString(itemText, Font);
+                int tokenW = (int)Math.Ceiling(size.Width) + 24;
+                int remainingItems = checkedIndices.Count - k;
+
+                if (curX + tokenW > maxAvailableWidth)
+                {
+                    _overflowCount = remainingItems;
+                    string overflowText = $"+{_overflowCount} more";
+                    var pillSize = g.MeasureString(overflowText, Font);
+                    int pillW = (int)Math.Ceiling(pillSize.Width) + 12;
+
+                    if (curX + pillW > maxAvailableWidth && _tokenBounds.Count > 0)
+                    {
+                        pillW = Math.Max(24, maxAvailableWidth - curX);
+                    }
+
+                    var pillRect = new Rectangle(curX, curY, pillW, _tokenHeight);
+                    _overflowBounds = pillRect;
+
+                    using (var pillPath = CreateRoundedRectanglePath(pillRect, 4))
+                    {
+                        Color pillBg = _isHoveredOverflow ? Color.FromArgb(60, colors.Primary) : Color.FromArgb(30, colors.Primary);
+                        using (var pillBrush = new SolidBrush(pillBg))
+                        {
+                            g.FillPath(pillBrush, pillPath);
+                        }
+                        using (var pillPen = new Pen(colors.Primary, 1f))
+                        {
+                            g.DrawPath(pillPen, pillPath);
+                        }
+                    }
+
+                    using (var pillTextBrush = new SolidBrush(colors.Primary))
+                    {
+                        var sf = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center,
+                            Trimming = StringTrimming.EllipsisCharacter
+                        };
+                        g.DrawString(overflowText, Font, pillTextBrush, pillRect, sf);
+                    }
+
+                    break;
+                }
+
+                var tokenRect = new Rectangle(curX, curY, tokenW, _tokenHeight);
+                var closeRect = new Rectangle(curX + tokenW - 16, curY + (_tokenHeight - 10) / 2, 10, 10);
+
+                _tokenBounds.Add(tokenRect);
+                _closeBounds.Add(closeRect);
+                _tokenItemIndices.Add(itemIdx);
+
+                // Chip background & border
+                using (var tPath = CreateRoundedRectanglePath(tokenRect, 4))
+                {
+                    using (var tBrush = new SolidBrush(Color.FromArgb(28, colors.Primary)))
+                    {
+                        g.FillPath(tBrush, tPath);
+                    }
+                    using (var tPen = new Pen(Color.FromArgb(90, colors.Primary), 1f))
+                    {
+                        g.DrawPath(tPen, tPath);
+                    }
+                }
+
+                // Chip Text
+                using (var brush = new SolidBrush(colors.TextPrimary))
+                {
+                    var textRect = new Rectangle(tokenRect.X + 6, tokenRect.Y, tokenRect.Width - 22, tokenRect.Height);
+                    var sf = new StringFormat
+                    {
+                        Alignment = StringAlignment.Near,
+                        LineAlignment = StringAlignment.Center,
+                        Trimming = StringTrimming.EllipsisCharacter
+                    };
+                    g.DrawString(itemText, Font, brush, textRect, sf);
+                }
+
+                // Close '✕'
+                bool isCloseHovered = (_tokenBounds.Count - 1) == _hoveredCloseIndex;
+                Color xColor = isCloseHovered ? colors.Danger : colors.TextSecondary;
+                using (var pen = new Pen(xColor, 1.4f))
+                {
+                    g.DrawLine(pen, closeRect.X + 1, closeRect.Y + 1, closeRect.Right - 1, closeRect.Bottom - 1);
+                    g.DrawLine(pen, closeRect.Right - 1, closeRect.Y + 1, closeRect.X + 1, closeRect.Bottom - 1);
+                }
+
+                curX += tokenW + _tokenSpacing;
+            }
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _isHovered = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _isHovered = false;
+            _hoveredCloseIndex = -1;
+            _isHoveredOverflow = false;
+            Cursor = Cursors.Hand;
+            Invalidate();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            if (_displayMode == CheckedComboDisplayMode.Tokens)
+            {
+                int prevHover = _hoveredCloseIndex;
+                bool prevPillHover = _isHoveredOverflow;
+
+                _hoveredCloseIndex = -1;
+                _isHoveredOverflow = false;
+
+                for (int i = 0; i < _closeBounds.Count; i++)
+                {
+                    if (_closeBounds[i].Contains(e.Location))
+                    {
+                        _hoveredCloseIndex = i;
+                        break;
+                    }
+                }
+
+                if (_hoveredCloseIndex == -1 && !_overflowBounds.IsEmpty && _overflowBounds.Contains(e.Location))
+                {
+                    _isHoveredOverflow = true;
+                }
+
+                if (prevHover != _hoveredCloseIndex || prevPillHover != _isHoveredOverflow)
+                {
+                    Invalidate();
+                }
+            }
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            Focus();
-            ToggleDropDown();
+            if (e.Button == MouseButtons.Left)
+            {
+                if (_displayMode == CheckedComboDisplayMode.Tokens)
+                {
+                    for (int i = 0; i < _closeBounds.Count; i++)
+                    {
+                        if (_closeBounds[i].Contains(e.Location))
+                        {
+                            int itemIndex = _tokenItemIndices[i];
+                            SetItemChecked(itemIndex, false);
+                            return;
+                        }
+                    }
+                }
+
+                Focus();
+                ToggleDropDown();
+            }
         }
 
         public void ToggleDropDown()
