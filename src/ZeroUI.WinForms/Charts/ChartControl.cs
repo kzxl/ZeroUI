@@ -7,6 +7,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.Core.Analytics;
 using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
@@ -30,6 +31,26 @@ namespace ZeroUI.WinForms.Charts
         private bool _showGridLines = true;
         private bool _showTooltips = true;
         private bool _showCrosshair = true;
+        private CrosshairMode _crosshairMode = CrosshairMode.Both;
+        private bool _crosshairSnapToPoint = true;
+        private bool _showCrosshairBadges = true;
+        private Color? _crosshairColor;
+
+        // SPC / Quality Control Belts
+        private bool _enableSpcBelts = false;
+        private bool _autoCalculate3Sigma = true;
+        private SpcBeltStyle _spcBeltStyle = SpcBeltStyle.TrafficLight;
+        private double? _upperControlLimit;
+        private double? _lowerControlLimit;
+        private double? _upperSpecLimit;
+        private double? _lowerSpecLimit;
+        private double? _nominalTarget;
+        private SpcControlLimits? _lastCalculatedSpcLimits;
+
+        // Visible Range Slicing
+        private int? _visibleStartIndex;
+        private int? _visibleEndIndex;
+
         private bool _showDataLabels = false;
         private string? _valuePrefix;
         private string? _valueSuffix;
@@ -42,6 +63,7 @@ namespace ZeroUI.WinForms.Charts
         private int _hoveredCategoryIndex = -1;
         private int _hoveredPieSliceIndex = -1;
         private readonly List<RectangleF> _legendHitBoxes = new List<RectangleF>();
+
 
         public List<ZeroChartSeries> Series { get; } = new List<ZeroChartSeries>();
 
@@ -99,6 +121,119 @@ namespace ZeroUI.WinForms.Charts
         {
             get => _showCrosshair;
             set { _showCrosshair = value; Invalidate(); }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(CrosshairMode.Both)]
+        public CrosshairMode CrosshairMode
+        {
+            get => _crosshairMode;
+            set { _crosshairMode = value; Invalidate(); }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        public bool CrosshairSnapToPoint
+        {
+            get => _crosshairSnapToPoint;
+            set { _crosshairSnapToPoint = value; Invalidate(); }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        public bool ShowCrosshairBadges
+        {
+            get => _showCrosshairBadges;
+            set { _showCrosshairBadges = value; Invalidate(); }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(null)]
+        public Color? CrosshairColor
+        {
+            get => _crosshairColor;
+            set { _crosshairColor = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(false)]
+        public bool EnableSpcBelts
+        {
+            get => _enableSpcBelts;
+            set { _enableSpcBelts = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(true)]
+        public bool AutoCalculate3Sigma
+        {
+            get => _autoCalculate3Sigma;
+            set { _autoCalculate3Sigma = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(SpcBeltStyle.TrafficLight)]
+        public SpcBeltStyle SpcBeltStyle
+        {
+            get => _spcBeltStyle;
+            set { _spcBeltStyle = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(null)]
+        public double? UpperControlLimit
+        {
+            get => _upperControlLimit;
+            set { _upperControlLimit = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(null)]
+        public double? LowerControlLimit
+        {
+            get => _lowerControlLimit;
+            set { _lowerControlLimit = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(null)]
+        public double? UpperSpecLimit
+        {
+            get => _upperSpecLimit;
+            set { _upperSpecLimit = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(null)]
+        public double? LowerSpecLimit
+        {
+            get => _lowerSpecLimit;
+            set { _lowerSpecLimit = value; Invalidate(); }
+        }
+
+        [Category("SPC / Quality Analytics")]
+        [DefaultValue(null)]
+        public double? NominalTarget
+        {
+            get => _nominalTarget;
+            set { _nominalTarget = value; Invalidate(); }
+        }
+
+        [Browsable(false)]
+        public SpcControlLimits? LastCalculatedSpcLimits => _lastCalculatedSpcLimits;
+
+        [Browsable(false)]
+        public int? VisibleStartIndex
+        {
+            get => _visibleStartIndex;
+            set { _visibleStartIndex = value; Invalidate(); }
+        }
+
+        [Browsable(false)]
+        public int? VisibleEndIndex
+        {
+            get => _visibleEndIndex;
+            set { _visibleEndIndex = value; Invalidate(); }
         }
 
         [Category("Behavior")]
@@ -327,6 +462,17 @@ namespace ZeroUI.WinForms.Charts
 
             if (categories.Count == 0) return;
 
+            // Apply Visible Range windowing (if bound to RangeControl or manually configured)
+            if (_visibleStartIndex.HasValue || _visibleEndIndex.HasValue)
+            {
+                int startIdx = Math.Max(0, _visibleStartIndex ?? 0);
+                int endIdx = Math.Min(categories.Count - 1, _visibleEndIndex ?? (categories.Count - 1));
+                if (startIdx <= endIdx && (startIdx > 0 || endIdx < categories.Count - 1))
+                {
+                    categories = categories.GetRange(startIdx, endIdx - startIdx + 1);
+                }
+            }
+
             // Compute Y-Axis Range
             double minY = 0;
             double maxY = 10;
@@ -368,7 +514,13 @@ namespace ZeroUI.WinForms.Charts
 
             if (plot.Width < 20 || plot.Height < 20) return;
 
-            // 1. Draw Grid Lines and Y-Axis Ticks
+            // 1. Render SPC / Out-of-Spec Warning Belts (if enabled)
+            if (_enableSpcBelts)
+            {
+                RenderSpcBelts(g, plot, visibleSeries, niceMin, yRange, isDark);
+            }
+
+            // 1.1. Draw Grid Lines and Y-Axis Ticks
             int tickCount = 5;
             using var gridPen = new Pen(isDark ? Color.FromArgb(40, 51, 65) : Color.FromArgb(241, 245, 249), 1f)
             {
@@ -407,7 +559,7 @@ namespace ZeroUI.WinForms.Charts
                 if (_hoveredCategoryIndex >= categories.Count) _hoveredCategoryIndex = categories.Count - 1;
             }
 
-            // Draw Category Labels & Vertical Crosshair
+            // Draw Category Labels
             for (int i = 0; i < categories.Count; i++)
             {
                 float slotCenter = plot.Left + (i * slotWidth) + (slotWidth / 2f);
@@ -419,17 +571,55 @@ namespace ZeroUI.WinForms.Charts
                 {
                     g.DrawString(categories[i], Font, axisTextBrush, new RectangleF(slotCenter - 35, plot.Bottom + 6, 70, 20), sfCenter);
                 }
+            }
+
+            // 2.5. Full Cartesian Crosshair HUD (Vertical + Horizontal lines + Badges + Snap Halos)
+            if (_showCrosshair && _crosshairMode != CrosshairMode.None && _hoveredCategoryIndex >= 0 && _hoveredCategoryIndex < categories.Count)
+            {
+                float hoveredSlotCenter = plot.Left + (_hoveredCategoryIndex * slotWidth) + (slotWidth / 2f);
 
                 // Crosshair column highlight
-                if (_showCrosshair && i == _hoveredCategoryIndex)
-                {
-                    using var crosshairBrush = new SolidBrush(isDark ? Color.FromArgb(20, 255, 255, 255) : Color.FromArgb(18, 79, 70, 229));
-                    g.FillRectangle(crosshairBrush, plot.Left + (i * slotWidth), plot.Top, slotWidth, plot.Height);
+                using var crosshairBrush = new SolidBrush(isDark ? Color.FromArgb(20, 255, 255, 255) : Color.FromArgb(18, 79, 70, 229));
+                g.FillRectangle(crosshairBrush, plot.Left + (_hoveredCategoryIndex * slotWidth), plot.Top, slotWidth, plot.Height);
 
-                    using var crosshairPen = new Pen(isDark ? Color.FromArgb(100, 148, 163, 184) : Color.FromArgb(120, 79, 70, 229), 1f) { DashStyle = DashStyle.Dot };
-                    g.DrawLine(crosshairPen, slotCenter, plot.Top, slotCenter, plot.Bottom);
+                Color penColor = _crosshairColor ?? (isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(99, 102, 241));
+                using var crosshairPen = new Pen(penColor, 1.2f) { DashStyle = DashStyle.Dash };
+
+                // Vertical crosshair
+                if (_crosshairMode == CrosshairMode.VerticalOnly || _crosshairMode == CrosshairMode.Both)
+                {
+                    g.DrawLine(crosshairPen, hoveredSlotCenter, plot.Top, hoveredSlotCenter, plot.Bottom);
+                }
+
+                // Horizontal crosshair
+                if ((_crosshairMode == CrosshairMode.HorizontalOnly || _crosshairMode == CrosshairMode.Both) &&
+                    _mousePos.Y >= plot.Top && _mousePos.Y <= plot.Bottom)
+                {
+                    g.DrawLine(crosshairPen, plot.Left, _mousePos.Y, plot.Right, _mousePos.Y);
+                }
+
+                // Snap halos on active series
+                DrawCrosshairSnapHalos(g, plot, visibleSeries, categories[_hoveredCategoryIndex], hoveredSlotCenter, niceMin, yRange);
+
+                // Readout badges
+                if (_showCrosshairBadges)
+                {
+                    // X-Axis Category Badge
+                    if (_crosshairMode == CrosshairMode.VerticalOnly || _crosshairMode == CrosshairMode.Both)
+                    {
+                        DrawCrosshairXBadge(g, hoveredSlotCenter, plot.Bottom + 3, categories[_hoveredCategoryIndex], isDark);
+                    }
+
+                    // Y-Axis Value Badge
+                    if ((_crosshairMode == CrosshairMode.HorizontalOnly || _crosshairMode == CrosshairMode.Both) &&
+                        _mousePos.Y >= plot.Top && _mousePos.Y <= plot.Bottom)
+                    {
+                        double cursorYVal = niceMin + ((plot.Bottom - _mousePos.Y) / (double)plot.Height * yRange);
+                        DrawCrosshairYBadge(g, bounds.Left + 2, _mousePos.Y, yAxisWidth - 4, cursorYVal, isDark);
+                    }
                 }
             }
+
 
             // 3. Render Visualizations per Series
             foreach (var series in visibleSeries)
@@ -894,6 +1084,216 @@ namespace ZeroUI.WinForms.Charts
             return $"{prefix}{val:0.#}";
         }
 
+        private void RenderSpcBelts(Graphics g, Rectangle plot, List<ZeroChartSeries> visibleSeries, double niceMin, double yRange, bool isDark)
+        {
+            double ucl, lcl, target;
+            double? usl = _upperSpecLimit;
+            double? lsl = _lowerSpecLimit;
+
+            if (_upperControlLimit.HasValue && _lowerControlLimit.HasValue)
+            {
+                ucl = _upperControlLimit.Value;
+                lcl = _lowerControlLimit.Value;
+                target = _nominalTarget ?? ((ucl + lcl) / 2.0);
+            }
+            else if (_autoCalculate3Sigma)
+            {
+                int totalPoints = 0;
+                foreach (var s in visibleSeries) totalPoints += s.Points.Count;
+                if (totalPoints == 0) return;
+
+                var values = new double[totalPoints];
+                int idx = 0;
+                foreach (var s in visibleSeries)
+                {
+                    for (int i = 0; i < s.Points.Count; i++)
+                    {
+                        values[idx++] = s.Points[i].Value;
+                    }
+                }
+
+                _lastCalculatedSpcLimits = SpcStatisticsCalculator.Calculate(values, usl, lsl, _nominalTarget);
+                ucl = _lastCalculatedSpcLimits.Value.Ucl;
+                lcl = _lastCalculatedSpcLimits.Value.Lcl;
+                target = _lastCalculatedSpcLimits.Value.Target;
+            }
+            else
+            {
+                return;
+            }
+
+            float ToY(double val)
+            {
+                float y = plot.Bottom - (float)((val - niceMin) / yRange * plot.Height);
+                return Math.Max(plot.Top, Math.Min(plot.Bottom, y));
+            }
+
+            float yUcl = ToY(ucl);
+            float yLcl = ToY(lcl);
+            float yTarget = ToY(target);
+
+            // Shading styles
+            if (_spcBeltStyle != SpcBeltStyle.LinesOnly)
+            {
+                // 1. Normal Zone (Safe: between UCL and LCL)
+                float topNormal = Math.Min(yUcl, yLcl);
+                float hNormal = Math.Abs(yLcl - yUcl);
+                if (hNormal > 1f)
+                {
+                    Color normalColor = _spcBeltStyle == SpcBeltStyle.TrafficLight
+                        ? Color.FromArgb(24, 16, 185, 129)
+                        : Color.FromArgb(16, 148, 163, 184);
+                    using var brushNormal = new SolidBrush(normalColor);
+                    g.FillRectangle(brushNormal, plot.Left, topNormal, plot.Width, hNormal);
+                }
+
+                // 2. Warning Zones (between UCL and USL, and between LCL and LSL)
+                if (usl.HasValue && usl.Value > ucl)
+                {
+                    float yUsl = ToY(usl.Value);
+                    float topWarn = Math.Min(yUsl, yUcl);
+                    float hWarn = Math.Abs(yUcl - yUsl);
+                    if (hWarn > 1f)
+                    {
+                        using var brushWarn = new SolidBrush(Color.FromArgb(28, 245, 158, 11));
+                        g.FillRectangle(brushWarn, plot.Left, topWarn, plot.Width, hWarn);
+                    }
+                }
+
+                if (lsl.HasValue && lsl.Value < lcl)
+                {
+                    float yLsl = ToY(lsl.Value);
+                    float topWarn = Math.Min(yLcl, yLsl);
+                    float hWarn = Math.Abs(yLsl - yLcl);
+                    if (hWarn > 1f)
+                    {
+                        using var brushWarn = new SolidBrush(Color.FromArgb(28, 245, 158, 11));
+                        g.FillRectangle(brushWarn, plot.Left, topWarn, plot.Width, hWarn);
+                    }
+                }
+
+                // 3. Alarm Zones (Beyond USL or LSL)
+                if (usl.HasValue)
+                {
+                    float yUsl = ToY(usl.Value);
+                    if (yUsl > plot.Top)
+                    {
+                        using var brushAlarm = new SolidBrush(Color.FromArgb(28, 239, 68, 68));
+                        g.FillRectangle(brushAlarm, plot.Left, plot.Top, plot.Width, yUsl - plot.Top);
+                    }
+                }
+
+                if (lsl.HasValue)
+                {
+                    float yLsl = ToY(lsl.Value);
+                    if (yLsl < plot.Bottom)
+                    {
+                        using var brushAlarm = new SolidBrush(Color.FromArgb(28, 239, 68, 68));
+                        g.FillRectangle(brushAlarm, plot.Left, yLsl, plot.Width, plot.Bottom - yLsl);
+                    }
+                }
+            }
+
+            // Reference Lines
+            using var penUcl = new Pen(Color.FromArgb(245, 158, 11), 1.2f) { DashStyle = DashStyle.Dash };
+            using var penLcl = new Pen(Color.FromArgb(245, 158, 11), 1.2f) { DashStyle = DashStyle.Dash };
+            using var penTarget = new Pen(Color.FromArgb(16, 185, 129), 1.2f) { DashStyle = DashStyle.DashDot };
+
+            g.DrawLine(penUcl, plot.Left, yUcl, plot.Right, yUcl);
+            g.DrawLine(penLcl, plot.Left, yLcl, plot.Right, yLcl);
+            g.DrawLine(penTarget, plot.Left, yTarget, plot.Right, yTarget);
+
+            if (usl.HasValue)
+            {
+                float yUsl = ToY(usl.Value);
+                using var penUsl = new Pen(Color.FromArgb(239, 68, 68), 1.5f);
+                g.DrawLine(penUsl, plot.Left, yUsl, plot.Right, yUsl);
+                DrawSpcTag(g, plot.Right - 56, yUsl - 8, $"USL: {usl.Value:0.##}", Color.FromArgb(239, 68, 68));
+            }
+
+            if (lsl.HasValue)
+            {
+                float yLsl = ToY(lsl.Value);
+                using var penLsl = new Pen(Color.FromArgb(239, 68, 68), 1.5f);
+                g.DrawLine(penLsl, plot.Left, yLsl, plot.Right, yLsl);
+                DrawSpcTag(g, plot.Right - 56, yLsl - 8, $"LSL: {lsl.Value:0.##}", Color.FromArgb(239, 68, 68));
+            }
+
+            // Reference Line Tags
+            DrawSpcTag(g, plot.Right - 56, yUcl - 8, $"UCL: {ucl:0.##}", Color.FromArgb(245, 158, 11));
+            DrawSpcTag(g, plot.Right - 56, yTarget - 8, $"CL: {target:0.##}", Color.FromArgb(16, 185, 129));
+            DrawSpcTag(g, plot.Right - 56, yLcl - 8, $"LCL: {lcl:0.##}", Color.FromArgb(245, 158, 11));
+        }
+
+        private static void DrawSpcTag(Graphics g, float x, float y, string text, Color color)
+        {
+            var rect = new RectangleF(x, y, 54, 15);
+            using var bgBrush = new SolidBrush(Color.FromArgb(210, 15, 23, 42));
+            using var borderPen = new Pen(color, 1f);
+            using var textBrush = new SolidBrush(Color.White);
+            using var font = new Font("Segoe UI", 6.5f, FontStyle.Bold);
+
+            g.FillRectangle(bgBrush, rect);
+            g.DrawRectangle(borderPen, rect.X, rect.Y, rect.Width, rect.Height);
+
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            g.DrawString(text, font, textBrush, rect, sf);
+        }
+
+        private void DrawCrosshairYBadge(Graphics g, float x, float y, float w, double val, bool isDark)
+        {
+            var badgeRect = new RectangleF(x, y - 9, w, 18);
+            using var bgBrush = new SolidBrush(isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(15, 23, 42));
+            using var borderPen = new Pen(isDark ? Color.FromArgb(99, 102, 241) : Color.FromArgb(79, 70, 229), 1.2f);
+            using var textBrush = new SolidBrush(Color.White);
+            using var font = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
+
+            g.FillRectangle(bgBrush, badgeRect);
+            g.DrawRectangle(borderPen, badgeRect.X, badgeRect.Y, badgeRect.Width, badgeRect.Height);
+
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            g.DrawString(FormatValueShort(val), font, textBrush, badgeRect, sf);
+        }
+
+        private void DrawCrosshairXBadge(Graphics g, float centerX, float topY, string category, bool isDark)
+        {
+            float badgeW = Math.Max(50f, category.Length * 7.5f + 12f);
+            var badgeRect = new RectangleF(centerX - (badgeW / 2f), topY, badgeW, 18);
+            using var bgBrush = new SolidBrush(isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(15, 23, 42));
+            using var borderPen = new Pen(isDark ? Color.FromArgb(99, 102, 241) : Color.FromArgb(79, 70, 229), 1.2f);
+            using var textBrush = new SolidBrush(Color.White);
+            using var font = new Font(Font.FontFamily, 7.5f, FontStyle.Bold);
+
+            g.FillRectangle(bgBrush, badgeRect);
+            g.DrawRectangle(borderPen, badgeRect.X, badgeRect.Y, badgeRect.Width, badgeRect.Height);
+
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            g.DrawString(category, font, textBrush, badgeRect, sf);
+        }
+
+        private void DrawCrosshairSnapHalos(Graphics g, Rectangle plot, List<ZeroChartSeries> visibleSeries, string category, float slotCenter, double niceMin, double yRange)
+        {
+            foreach (var series in visibleSeries)
+            {
+                var pt = series.Points.FirstOrDefault(p => p.Label == category);
+                if (pt == null) continue;
+
+                float y = plot.Bottom - (float)((pt.Value - niceMin) / yRange * plot.Height);
+                if (y < plot.Top || y > plot.Bottom) continue;
+
+                // Outer halo
+                using var haloBrush = new SolidBrush(Color.FromArgb(80, series.Color));
+                g.FillEllipse(haloBrush, slotCenter - 8, y - 8, 16, 16);
+
+                // Core dot
+                using var coreBrush = new SolidBrush(series.Color);
+                using var borderPen = new Pen(Color.White, 1.5f);
+                g.FillEllipse(coreBrush, slotCenter - 4, y - 4, 8, 8);
+                g.DrawEllipse(borderPen, slotCenter - 4, y - 4, 8, 8);
+            }
+        }
+
         #endregion
+
     }
 }

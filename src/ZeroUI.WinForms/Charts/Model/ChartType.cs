@@ -60,4 +60,29 @@ namespace ZeroUI.WinForms.Charts.Model
         Bottom,
         Right
     }
+
+    /// <summary>
+    /// Interactive Crosshair HUD operating modes for ZeroChart.
+    /// </summary>
+    public enum CrosshairMode
+    {
+        None,
+        VerticalOnly,
+        HorizontalOnly,
+        Both
+    }
+
+    /// <summary>
+    /// Visual styling for Statistical Process Control (SPC) limit belts.
+    /// </summary>
+    public enum SpcBeltStyle
+    {
+        /// <summary>Translucent traffic-light zones (Green = Normal, Amber = Warning, Red = Alarm).</summary>
+        TrafficLight,
+        /// <summary>Monochrome subtle banded shading.</summary>
+        Subtle,
+        /// <summary>Boundary lines only without solid area fill.</summary>
+        LinesOnly
+    }
 }
+

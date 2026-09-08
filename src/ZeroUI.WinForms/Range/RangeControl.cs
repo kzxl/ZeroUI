@@ -243,6 +243,17 @@ namespace ZeroUI.WinForms.Range
 
         #region Data and Client Binding
 
+        /// <summary>
+        /// Gets or sets the bound client providing data and receiving range updates (e.g. Chart, DataGrid).
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IRangeControlClient? Client
+        {
+            get => _client;
+            set => AttachClient(value!);
+        }
+
         public void SetDataPoints(IEnumerable<RangeDataPoint> points)
         {
             _model.DataPoints.Clear();
