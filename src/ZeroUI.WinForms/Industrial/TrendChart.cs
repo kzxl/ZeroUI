@@ -7,6 +7,8 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
+using ZeroGraphics.Core.Data;
+
 
 namespace ZeroUI.WinForms.Industrial
 {
@@ -139,6 +141,17 @@ namespace ZeroUI.WinForms.Industrial
         {
             get => _showCursor;
             set { _showCursor = value; Invalidate(); }
+        }
+
+        private bool _useHardwareDecimation = true;
+
+        [Category("ZeroUI - Performance")]
+        [DefaultValue(true)]
+        [Description("Uses ZeroGraphics high-performance MinMax peak-preserving decimation for high-frequency signal streams.")]
+        public bool UseHardwareDecimation
+        {
+            get => _useHardwareDecimation;
+            set { _useHardwareDecimation = value; Invalidate(); }
         }
 
         [Browsable(false)]
@@ -297,20 +310,47 @@ namespace ZeroUI.WinForms.Industrial
                 float range = ch.MaxValue - ch.MinValue;
                 if (range <= 0) range = 1f;
 
-                PointF[] points = new PointF[ch.Count];
+                PointF[] points;
                 float stepX = (float)plotW / (ch.Buffer.Length - 1);
-
                 int startDrawX = plotX + (int)((ch.Buffer.Length - ch.Count) * stepX);
 
-                for (int i = 0; i < ch.Count; i++)
+                if (_useHardwareDecimation && ch.Count > plotW * 2)
                 {
-                    float val = ch.GetPoint(i);
-                    float normY = 1f - ((val - ch.MinValue) / range);
-                    normY = Math.Max(0f, Math.Min(1f, normY));
+                    // Use ZeroGraphics MinMax (Peak-Preserving) decimation for ultra-fast GDI+ curve rendering
+                    int targetCount = Math.Min(ch.Count, Math.Max(128, plotW * 2));
+                    var rawData = new TimePoint[ch.Count];
+                    for (int i = 0; i < ch.Count; i++)
+                    {
+                        rawData[i] = new TimePoint(i, ch.GetPoint(i));
+                    }
+                    var decimated = new TimePoint[targetCount];
+                    int written = MinMaxDecimation.Downsample(rawData, decimated, targetCount);
 
-                    float px = startDrawX + (i * stepX);
-                    float py = plotY + (normY * plotH);
-                    points[i] = new PointF(px, py);
+                    points = new PointF[written];
+                    for (int i = 0; i < written; i++)
+                    {
+                        float val = (float)decimated[i].Y;
+                        float normY = 1f - ((val - ch.MinValue) / range);
+                        normY = Math.Max(0f, Math.Min(1f, normY));
+
+                        float px = startDrawX + (float)(decimated[i].X * stepX);
+                        float py = plotY + (normY * plotH);
+                        points[i] = new PointF(px, py);
+                    }
+                }
+                else
+                {
+                    points = new PointF[ch.Count];
+                    for (int i = 0; i < ch.Count; i++)
+                    {
+                        float val = ch.GetPoint(i);
+                        float normY = 1f - ((val - ch.MinValue) / range);
+                        normY = Math.Max(0f, Math.Min(1f, normY));
+
+                        float px = startDrawX + (i * stepX);
+                        float py = plotY + (normY * plotH);
+                        points[i] = new PointF(px, py);
+                    }
                 }
 
                 // Fill underneath primary channel
