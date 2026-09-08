@@ -1859,6 +1859,219 @@ namespace ZeroUI.Samples.WpfDemo
             ZeroToast.Success(this, "Direct3D 11 GPU frame rendered & composited via D3DImage.");
         }
 
+        #region Automatic Render Optimizer Handlers
+
+        private void CmbOptimizerMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (PrimaryCard == null) return;
+            UpdateOptimizerState();
+        }
+
+        private void SliderElevation_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (TxtValElevation != null) TxtValElevation.Text = $"{SliderElevation.Value:F0} px";
+            UpdateOptimizerState();
+        }
+
+        private void SliderBlur_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (TxtValBlur != null) TxtValBlur.Text = $"{SliderBlur.Value:F0} px";
+            UpdateOptimizerState();
+        }
+
+        private void SliderGlow_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (TxtValGlow != null) TxtValGlow.Text = $"{SliderGlow.Value:F1}";
+            UpdateOptimizerState();
+        }
+
+        private void CmbBatchCount_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (PanelOptimizerCards == null) return;
+            UpdateOptimizerState();
+        }
+
+        private void BtnPresetFlat_Click(object sender, RoutedEventArgs e)
+        {
+            SliderElevation.Value = 0;
+            SliderBlur.Value = 0;
+            SliderGlow.Value = 0;
+            CmbBatchCount.SelectedIndex = 0;
+            CmbOptimizerMode.SelectedIndex = 0;
+            ZeroToast.Info(this, "Preset applied: Flat UI (Labels + Buttons). Routed to pure CPU DirectWrite!");
+        }
+
+        private void BtnPresetElevated_Click(object sender, RoutedEventArgs e)
+        {
+            SliderElevation.Value = 12;
+            SliderBlur.Value = 20;
+            SliderGlow.Value = 0;
+            CmbBatchCount.SelectedIndex = 0;
+            CmbOptimizerMode.SelectedIndex = 0;
+            ZeroToast.Success(this, "Preset applied: Elevated Glass Card. Routed to Hybrid (GPU SDF Shadow + CPU subpixel text)!");
+        }
+
+        private void BtnPresetNeon_Click(object sender, RoutedEventArgs e)
+        {
+            SliderElevation.Value = 10;
+            SliderBlur.Value = 16;
+            SliderGlow.Value = 1.0;
+            CmbBatchCount.SelectedIndex = 0;
+            CmbOptimizerMode.SelectedIndex = 0;
+            ZeroToast.Success(this, "Preset applied: Cyberpunk Neon Bloom. Routed to Live GPU NeonGlowSdf shader!");
+        }
+
+        private void BtnPresetBatch_Click(object sender, RoutedEventArgs e)
+        {
+            SliderElevation.Value = 8;
+            SliderBlur.Value = 14;
+            SliderGlow.Value = 0;
+            CmbBatchCount.SelectedIndex = 3; // 32 Cards
+            CmbOptimizerMode.SelectedIndex = 0;
+            ZeroToast.Success(this, "Preset applied: 32x Batched Cards. Routed to 9-Slice Atlas (95% draw calls saved)!");
+        }
+
+        private void BtnFlushAtlas_Click(object sender, RoutedEventArgs e)
+        {
+            ZeroUI.Core.Rendering.Optimizer.ZeroShadowAtlas.Clear();
+            UpdateAtlasTelemetry();
+            ZeroToast.Info(this, "9-Slice Shadow Atlas cache cleared.");
+        }
+
+        private void UpdateOptimizerState()
+        {
+            if (PrimaryCard == null || SecondaryCard == null) return;
+
+            int batchCount = 1;
+            if (CmbBatchCount != null)
+            {
+                switch (CmbBatchCount.SelectedIndex)
+                {
+                    case 1: batchCount = 4; break;
+                    case 2: batchCount = 12; break;
+                    case 3: batchCount = 32; break;
+                    default: batchCount = 1; break;
+                }
+            }
+
+            var mode = ZeroUI.Wpf.Rendering.Optimizer.OptimizerRoutingMode.Auto;
+            if (CmbOptimizerMode != null)
+            {
+                switch (CmbOptimizerMode.SelectedIndex)
+                {
+                    case 1: mode = ZeroUI.Wpf.Rendering.Optimizer.OptimizerRoutingMode.ForceCpu; break;
+                    case 2: mode = ZeroUI.Wpf.Rendering.Optimizer.OptimizerRoutingMode.ForceGpuShader; break;
+                    case 3: mode = ZeroUI.Wpf.Rendering.Optimizer.OptimizerRoutingMode.ForceGpuAtlas; break;
+                    default: mode = ZeroUI.Wpf.Rendering.Optimizer.OptimizerRoutingMode.Auto; break;
+                }
+            }
+
+            double elev = SliderElevation?.Value ?? 8.0;
+            double blur = SliderBlur?.Value ?? 14.0;
+            double glow = SliderGlow?.Value ?? 0.0;
+
+            PrimaryCard.Elevation = elev;
+            PrimaryCard.BlurRadius = blur;
+            PrimaryCard.GlowIntensity = glow;
+            PrimaryCard.OptimizationMode = mode;
+            PrimaryCard.BatchCount = batchCount;
+
+            SecondaryCard.Elevation = elev;
+            SecondaryCard.BlurRadius = blur;
+            SecondaryCard.GlowIntensity = glow;
+            SecondaryCard.OptimizationMode = mode;
+            SecondaryCard.BatchCount = batchCount;
+
+            // Generate additional sample cards when batchCount > 1
+            SyncBatchCards(batchCount, elev, blur, glow, mode);
+
+            // Trigger visual update
+            PrimaryCard.InvalidateVisual();
+            SecondaryCard.InvalidateVisual();
+
+            // Telemetry
+            UpdateAtlasTelemetry();
+            UpdateDecisionDisplay();
+        }
+
+        private void SyncBatchCards(int count, double elev, double blur, double glow, ZeroUI.Wpf.Rendering.Optimizer.OptimizerRoutingMode mode)
+        {
+            if (PanelOptimizerCards == null) return;
+
+            // Keep PrimaryCard (index 0) and SecondaryCard (index 1)
+            while (PanelOptimizerCards.Children.Count > 2)
+            {
+                PanelOptimizerCards.Children.RemoveAt(PanelOptimizerCards.Children.Count - 1);
+            }
+
+            int extra = Math.Min(count - 2, 30);
+            for (int i = 0; i < extra; i++)
+            {
+                var card = new ZeroUI.Wpf.Rendering.Optimizer.ZeroOptimizedCard
+                {
+                    Width = 260,
+                    Height = 140,
+                    Margin = new Thickness(0, 0, 16, 16),
+                    Elevation = elev,
+                    BlurRadius = blur,
+                    GlowIntensity = glow,
+                    OptimizationMode = mode,
+                    BatchCount = count,
+                    Padding = new Thickness(14)
+                };
+
+                var sp = new StackPanel();
+                sp.Children.Add(new TextBlock { Text = $"📦 Batched Card #{i + 3}", FontWeight = FontWeights.Bold, FontSize = 12.5, Foreground = (Brush)FindResource("ZeroUI.TextPrimary") });
+                sp.Children.Add(new TextBlock { Text = "9-Slice Atlas Cache Instance", FontSize = 11, Foreground = (Brush)FindResource("ZeroUI.TextSecondary"), Margin = new Thickness(0, 4, 0, 8) });
+                sp.Children.Add(new TextBlock { Text = "Zero VRAM Re-allocation", FontSize = 10, Foreground = (Brush)FindResource("ZeroUI.Success"), FontWeight = FontWeights.SemiBold });
+
+                card.Child = sp;
+                PanelOptimizerCards.Children.Add(card);
+            }
+        }
+
+        private void UpdateDecisionDisplay()
+        {
+            if (PrimaryCard == null) return;
+
+            var pipeline = PrimaryCard.AssignedPipeline;
+            TxtTelemetryPipeline.Text = $"PIPELINE: {pipeline.ToString().ToUpperInvariant()}";
+            TxtTelemetryShader.Text = $"Shader: {PrimaryCard.ActiveShader}";
+            TxtTelemetrySpeedup.Text = $"Speedup: {PrimaryCard.EstimatedSpeedupFactor:F1}x";
+            TxtTelemetryReason.Text = PrimaryCard.DecisionReason;
+
+            switch (pipeline)
+            {
+                case ZeroUI.Core.Rendering.Optimizer.RenderPipelineTarget.Cpu:
+                    BadgePipeline.Background = new SolidColorBrush(Color.FromRgb(100, 116, 139)); // Slate
+                    break;
+                case ZeroUI.Core.Rendering.Optimizer.RenderPipelineTarget.GpuAtlas:
+                    BadgePipeline.Background = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald
+                    break;
+                case ZeroUI.Core.Rendering.Optimizer.RenderPipelineTarget.GpuShader:
+                    BadgePipeline.Background = new SolidColorBrush(Color.FromRgb(245, 158, 11)); // Amber
+                    break;
+                default: // Hybrid
+                    BadgePipeline.Background = new SolidColorBrush(Color.FromRgb(2, 132, 199)); // Sky blue
+                    break;
+            }
+
+            var monitor = ZeroUI.Wpf.Rendering.Optimizer.ZeroWpfRenderMonitor.Instance;
+            TxtFidelityBadge.Text = $"TIER: {monitor.CurrentFidelity.ToString().ToUpperInvariant()} ({(monitor.CurrentFidelity == ZeroUI.Core.Rendering.Optimizer.RenderFidelityTier.Ultra ? "144 FPS" : "60 FPS")})";
+            TxtMonitorFps.Text = $"FPS: {monitor.CurrentFps:F1} | {monitor.RollingAverageFrameTimeMs:F1}ms";
+        }
+
+        private void UpdateAtlasTelemetry()
+        {
+            if (TxtAtlasPatches == null) return;
+            TxtAtlasPatches.Text = $"{ZeroUI.Core.Rendering.Optimizer.ZeroShadowAtlas.CachedPatchCount} Patches";
+            TxtAtlasHitRate.Text = $"{ZeroUI.Core.Rendering.Optimizer.ZeroShadowAtlas.HitRatePercentage:F1}%";
+            long hits = ZeroUI.Core.Rendering.Optimizer.ZeroShadowAtlas.CacheHits;
+            TxtAtlasSavedCalls.Text = hits > 0 ? $"{hits} Calls Saved" : "95% Reduction";
+        }
+
+        #endregion
+
         private void BtnShowModalConfirm_Click(object sender, RoutedEventArgs e)
         {
             bool confirmed = ZeroModal.Confirm(this,

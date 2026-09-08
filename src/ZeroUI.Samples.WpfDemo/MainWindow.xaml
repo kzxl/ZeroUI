@@ -25,6 +25,7 @@
         xmlns:log="clr-namespace:ZeroUI.Wpf.Logistics;assembly=ZeroUI.Wpf"
         xmlns:net="clr-namespace:ZeroUI.Wpf.Network;assembly=ZeroUI.Wpf"
         xmlns:rend="clr-namespace:ZeroUI.Wpf.Rendering;assembly=ZeroUI.Wpf"
+        xmlns:opt="clr-namespace:ZeroUI.Wpf.Rendering.Optimizer;assembly=ZeroUI.Wpf"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="920" Width="1440"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -1051,6 +1052,187 @@
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" Background="#0B0F19" ClipToBounds="True">
                                     <rend:ZeroD3DCanvas x:Name="DemoD3DCanvas" />
                                 </Border>
+                            </Grid>
+                        </TabItem>
+
+                        <!-- Sub-Tab 6.6: Automatic Render Optimizer (Cost-Driven GPU/CPU Pipeline) -->
+                        <TabItem Header="⚡ Render Optimizer">
+                            <Grid Margin="16">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Top Optimizer Control & Telemetry Bar -->
+                                <Border Grid.Row="0" Margin="0,0,0,14" Background="{DynamicResource ZeroUI.BgCard}" Padding="16,14,16,14" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Header Row -->
+                                        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,12">
+                                            <StackPanel DockPanel.Dock="Left">
+                                                <TextBlock Text="⚡ ZeroUI Automatic Render Optimizer (Cost-Driven GPU Pipeline)" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" />
+                                                <TextBlock Text="Intelligent real-time pipeline router: Keeps text &amp; flat fills on CPU (ClearType subpixel), while routing heavy shadows, blurs &amp; glows to GPU Shaders or 9-Slice Atlas." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                                <Border Background="#1E293B" CornerRadius="4" Padding="8,4,8,4" Margin="0,0,8,0">
+                                                    <TextBlock x:Name="TxtFidelityBadge" Text="TIER: ULTRA (144 FPS)" FontWeight="Bold" FontSize="11" Foreground="#38BDF8" />
+                                                </Border>
+                                                <Border Background="#1E293B" CornerRadius="4" Padding="8,4,8,4">
+                                                    <TextBlock x:Name="TxtMonitorFps" Text="FPS: 60.0 | 8.0ms" FontWeight="Bold" FontSize="11" Foreground="#4ADE80" />
+                                                </Border>
+                                            </StackPanel>
+                                        </DockPanel>
+
+                                        <!-- Interactive Controls Row -->
+                                        <WrapPanel Grid.Row="1" Margin="0,0,0,12" VerticalAlignment="Center">
+                                            <StackPanel Margin="0,0,16,8">
+                                                <TextBlock Text="Routing Mode" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <ComboBox x:Name="CmbOptimizerMode" SelectionChanged="CmbOptimizerMode_SelectionChanged" Width="190" Height="28" SelectedIndex="0">
+                                                    <ComboBoxItem Content="Auto (Cost-Driven)" />
+                                                    <ComboBoxItem Content="Force CPU (ClearType Only)" />
+                                                    <ComboBoxItem Content="Force GPU Shader (Live SDF)" />
+                                                    <ComboBoxItem Content="Force 9-Slice Atlas (Batch)" />
+                                                </ComboBox>
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,0,16,8">
+                                                <DockPanel Width="150" Margin="0,0,0,4">
+                                                    <TextBlock Text="Elevation" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" DockPanel.Dock="Left" />
+                                                    <TextBlock x:Name="TxtValElevation" Text="8 px" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" DockPanel.Dock="Right" TextAlignment="Right" />
+                                                </DockPanel>
+                                                <Slider x:Name="SliderElevation" Value="8" Minimum="0" Maximum="32" SmallChange="1" LargeChange="4" Width="150" ValueChanged="SliderElevation_ValueChanged" />
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,0,16,8">
+                                                <DockPanel Width="150" Margin="0,0,0,4">
+                                                    <TextBlock Text="Blur Radius" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" DockPanel.Dock="Left" />
+                                                    <TextBlock x:Name="TxtValBlur" Text="14 px" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" DockPanel.Dock="Right" TextAlignment="Right" />
+                                                </DockPanel>
+                                                <Slider x:Name="SliderBlur" Value="14" Minimum="0" Maximum="48" SmallChange="1" LargeChange="4" Width="150" ValueChanged="SliderBlur_ValueChanged" />
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,0,16,8">
+                                                <DockPanel Width="150" Margin="0,0,0,4">
+                                                    <TextBlock Text="Glow Intensity" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" DockPanel.Dock="Left" />
+                                                    <TextBlock x:Name="TxtValGlow" Text="0.0" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" DockPanel.Dock="Right" TextAlignment="Right" />
+                                                </DockPanel>
+                                                <Slider x:Name="SliderGlow" Value="0.0" Minimum="0.0" Maximum="1.5" SmallChange="0.1" LargeChange="0.25" Width="150" ValueChanged="SliderGlow_ValueChanged" />
+                                            </StackPanel>
+
+                                            <StackPanel Margin="0,0,16,8">
+                                                <TextBlock Text="Batch Multiplier" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <ComboBox x:Name="CmbBatchCount" SelectionChanged="CmbBatchCount_SelectionChanged" Width="120" Height="28" SelectedIndex="0">
+                                                    <ComboBoxItem Content="1 Card" />
+                                                    <ComboBoxItem Content="4 Cards (Batch)" />
+                                                    <ComboBoxItem Content="12 Cards" />
+                                                    <ComboBoxItem Content="32 Cards (Big Data)" />
+                                                </ComboBox>
+                                            </StackPanel>
+
+                                            <!-- Presets -->
+                                            <StackPanel Margin="0,0,0,8">
+                                                <TextBlock Text="Quick Presets" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button x:Name="BtnPresetFlat" Click="BtnPresetFlat_Click" Content="📄 Flat Text" Height="28" Padding="8,0,8,0" Margin="0,0,6,0" Cursor="Hand" />
+                                                    <Button x:Name="BtnPresetElevated" Click="BtnPresetElevated_Click" Content="🪟 Glass Card" Height="28" Padding="8,0,8,0" Margin="0,0,6,0" Cursor="Hand" />
+                                                    <Button x:Name="BtnPresetNeon" Click="BtnPresetNeon_Click" Content="✨ Neon Glow" Height="28" Padding="8,0,8,0" Margin="0,0,6,0" Cursor="Hand" />
+                                                    <Button x:Name="BtnPresetBatch" Click="BtnPresetBatch_Click" Content="📦 32x Atlas" Height="28" Padding="8,0,8,0" Cursor="Hand" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </WrapPanel>
+
+                                        <!-- Live Decision Telemetry Card -->
+                                        <Border Grid.Row="2" Background="#0F172A" CornerRadius="6" Padding="12,10,12,10" BorderThickness="1" BorderBrush="#334155">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                                                    <Border x:Name="BadgePipeline" Background="#0284C7" CornerRadius="4" Padding="10,4,10,4" Margin="0,0,12,0">
+                                                        <TextBlock x:Name="TxtTelemetryPipeline" Text="PIPELINE: HYBRID" FontWeight="Bold" FontSize="11" Foreground="White" />
+                                                    </Border>
+                                                    <TextBlock x:Name="TxtTelemetryShader" Text="Shader: AnalyticalSdfBoxShadow" FontWeight="SemiBold" FontSize="12" Foreground="#E2E8F0" VerticalAlignment="Center" Margin="0,0,14,0" />
+                                                    <TextBlock x:Name="TxtTelemetrySpeedup" Text="Speedup: 16.4x" FontWeight="Bold" FontSize="12" Foreground="#34D399" VerticalAlignment="Center" />
+                                                </StackPanel>
+
+                                                <TextBlock x:Name="TxtTelemetryReason" Grid.Column="1" Text="Heavy analytical convolution routed to GPU; subpixel ClearType text routed to CPU DrawingContext." FontSize="11.5" Foreground="#94A3B8" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Live Render Cards Canvas -->
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <WrapPanel x:Name="PanelOptimizerCards" Margin="4">
+                                        <!-- Primary Showcase Card -->
+                                        <opt:ZeroOptimizedCard x:Name="PrimaryCard" Width="380" Height="230" Margin="0,0,20,20"
+                                                              Elevation="8" BlurRadius="14" GlowIntensity="0.0" CornerRadius="10" Padding="18">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                                                    <TextBlock Text="🚀 Sub-Pixel ClearType Foreground" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
+                                                    <Border Background="#22C55E" CornerRadius="3" Padding="6,2,6,2" HorizontalAlignment="Right">
+                                                        <TextBlock Text="ACTIVE" FontSize="9.5" FontWeight="Bold" Foreground="Black" />
+                                                    </Border>
+                                                </DockPanel>
+
+                                                <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="The background shadow &amp; glow are rendered via GPU Shader / 9-Slice Atlas, while this text and buttons below are rendered with native WPF subpixel DirectWrite." FontSize="12" Foreground="{DynamicResource ZeroUI.TextSecondary}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                                                    <ProgressBar Value="72" Maximum="100" Height="6" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" Background="#1E293B" BorderThickness="0" Margin="0,0,0,8" />
+                                                    <TextBlock Text="GPU Fill Rate Efficiency: 96.4%" FontSize="10.5" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" FontWeight="SemiBold" />
+                                                </StackPanel>
+
+                                                <DockPanel Grid.Row="2" LastChildFill="False">
+                                                    <Button Content="Primary Action" Height="28" Padding="12,0,12,0" DockPanel.Dock="Left" Cursor="Hand" />
+                                                    <TextBlock x:Name="TxtCardBadge" Text="0.0 µs CPU overhead" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextMuted}" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                                                </DockPanel>
+                                            </Grid>
+                                        </opt:ZeroOptimizedCard>
+
+                                        <!-- Secondary Telemetry Card -->
+                                        <opt:ZeroOptimizedCard x:Name="SecondaryCard" Width="380" Height="230" Margin="0,0,20,20"
+                                                              Elevation="8" BlurRadius="14" GlowIntensity="0.0" CornerRadius="10" Padding="18">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Text="📊 Atlas Caching Telemetry" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+
+                                                <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="Atlas Cached Patches:" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" />
+                                                        <TextBlock x:Name="TxtAtlasPatches" Text="1 Patch" FontWeight="Bold" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextPrimary}" HorizontalAlignment="Right" />
+                                                    </DockPanel>
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="Cache Hit Rate:" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" />
+                                                        <TextBlock x:Name="TxtAtlasHitRate" Text="100.0%" FontWeight="Bold" FontSize="11.5" Foreground="#4ADE80" HorizontalAlignment="Right" />
+                                                    </DockPanel>
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="Draw Calls Saved:" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" />
+                                                        <TextBlock x:Name="TxtAtlasSavedCalls" Text="95% Saved" FontWeight="Bold" FontSize="11.5" Foreground="#38BDF8" HorizontalAlignment="Right" />
+                                                    </DockPanel>
+                                                </StackPanel>
+
+                                                <Button Grid.Row="2" Content="🔄 Flush Atlas Cache" Click="BtnFlushAtlas_Click" Height="28" Cursor="Hand" />
+                                            </Grid>
+                                        </opt:ZeroOptimizedCard>
+                                    </WrapPanel>
+                                </ScrollViewer>
                             </Grid>
                         </TabItem>
                     </TabControl>
