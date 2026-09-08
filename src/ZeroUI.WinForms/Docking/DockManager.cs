@@ -1,10 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Layout;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 
@@ -51,6 +52,17 @@ namespace ZeroUI.WinForms.Docking
         public event EventHandler? FloatRequested;
         public event EventHandler<Point>? HeaderDragged;
         public event EventHandler<Point>? HeaderDragEnded;
+
+        private string _panelKey = string.Empty;
+
+        [Category("Design")]
+        [Description("Unique key identifier for layout persistence.")]
+        [DefaultValue("")]
+        public string PanelKey
+        {
+            get => string.IsNullOrEmpty(_panelKey) ? _title : _panelKey;
+            set => _panelKey = value ?? string.Empty;
+        }
 
         [Category("Appearance")]
         [DefaultValue("Panel")]
@@ -369,7 +381,7 @@ namespace ZeroUI.WinForms.Docking
 
         public ZeroDockPanel DockPanel => _panel;
 
-        public ZeroFloatingWindow(ZeroDockManager dockManager, ZeroDockPanel panel)
+        public ZeroFloatingWindow(ZeroDockManager dockManager, ZeroDockPanel panel, Rectangle? initialBounds = null)
         {
             _dockManager = dockManager ?? throw new ArgumentNullException(nameof(dockManager));
             _panel = panel ?? throw new ArgumentNullException(nameof(panel));
@@ -378,7 +390,14 @@ namespace ZeroUI.WinForms.Docking
             StartPosition = FormStartPosition.Manual;
             ShowInTaskbar = false;
             Text = panel.Title;
-            Size = new Size(320, 420);
+            if (initialBounds.HasValue && initialBounds.Value.Width > 80 && initialBounds.Value.Height > 80)
+            {
+                Bounds = initialBounds.Value;
+            }
+            else
+            {
+                Size = new Size(320, 420);
+            }
             BackColor = ZeroTheme.Colors.Surface;
 
             Controls.Add(panel);
@@ -386,6 +405,11 @@ namespace ZeroUI.WinForms.Docking
 
             panel.CloseRequested += (s, e) => Close();
             panel.FloatRequested += (s, e) => RedockToManager(ZeroDockPosition.Document);
+        }
+
+        public ZeroFloatingWindow(ZeroDockManager dockManager, ZeroDockPanel panel)
+            : this(dockManager, panel, null)
+        {
         }
 
         public void RedockToManager(ZeroDockPosition targetPosition)
@@ -652,7 +676,9 @@ namespace ZeroUI.WinForms.Docking
             }
         }
 
-        public void FloatPanel(ZeroDockPanel panel)
+        public void FloatPanel(ZeroDockPanel panel) => FloatPanel(panel, null);
+
+        public void FloatPanel(ZeroDockPanel panel, Rectangle? initialBounds)
         {
             if (panel == null) return;
             if (panel.Parent != null)
@@ -661,7 +687,7 @@ namespace ZeroUI.WinForms.Docking
             }
 
             panel.DockPosition = ZeroDockPosition.Float;
-            var floatWin = new ZeroFloatingWindow(this, panel);
+            var floatWin = new ZeroFloatingWindow(this, panel, initialBounds);
             _floatingWindows.Add(floatWin);
             floatWin.FormClosed += (s, e) => _floatingWindows.Remove(floatWin);
             floatWin.Show(this);
@@ -904,5 +930,246 @@ namespace ZeroUI.WinForms.Docking
             _rightAutoHideBar.Invalidate();
             Invalidate(true);
         }
+
+        #region Dock Layout Serialization & Persistence
+
+        /// <summary>
+        /// Captures the complete current docking layout state (containers, split ratios, panel positions, auto-hide tabs, floating coordinates).
+        /// </summary>
+        public WorkspaceLayoutState SaveLayout()
+        {
+            var state = new WorkspaceLayoutState
+            {
+                Version = "1.1",
+                SavedAt = DateTime.UtcNow,
+                Containers = new DockContainerLayoutState
+                {
+                    LeftWidth = _leftContainer.Width,
+                    RightWidth = _rightContainer.Width,
+                    TopHeight = _topContainer.Height,
+                    BottomHeight = _bottomContainer.Height,
+                    ActiveDocumentTitle = _documentTabControl.SelectedTab?.Text ?? string.Empty
+                }
+            };
+
+            for (int i = 0; i < _panels.Count; i++)
+            {
+                var p = _panels[i];
+                var pState = new DockPanelLayoutState
+                {
+                    Name = p.PanelKey,
+                    Title = p.Title,
+                    DockPosition = p.DockPosition.ToString(),
+                    IsPinned = p.IsPinned,
+                    AutoHide = p.AutoHide,
+                    Closable = p.Closable,
+                    Floatable = p.Floatable,
+                    Width = p.Width,
+                    Height = p.Height,
+                    OrderIndex = i
+                };
+
+                if (p.DockPosition == ZeroDockPosition.Float)
+                {
+                    var win = _floatingWindows.Find(f => f.DockPanel == p);
+                    if (win != null && !win.IsDisposed)
+                    {
+                        pState.FloatX = win.Location.X;
+                        pState.FloatY = win.Location.Y;
+                        pState.FloatWidth = win.Width;
+                        pState.FloatHeight = win.Height;
+                    }
+                }
+
+                state.DockPanels.Add(pState);
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Restores docking layout from a saved WorkspaceLayoutState.
+        /// Rebuilds split containers, document tabs, auto-hide sidebars, and floating windows safely.
+        /// </summary>
+        public void RestoreLayout(WorkspaceLayoutState state)
+        {
+            if (state == null) return;
+
+            SuspendLayout();
+            try
+            {
+                // 1. Restore container dimensions
+                if (state.Containers != null)
+                {
+                    if (state.Containers.LeftWidth > 0) _leftContainer.Width = state.Containers.LeftWidth;
+                    if (state.Containers.RightWidth > 0) _rightContainer.Width = state.Containers.RightWidth;
+                    if (state.Containers.TopHeight > 0) _topContainer.Height = state.Containers.TopHeight;
+                    if (state.Containers.BottomHeight > 0) _bottomContainer.Height = state.Containers.BottomHeight;
+                }
+
+                // 2. Build lookup map of registered panels by key and title
+                var panelLookup = new Dictionary<string, ZeroDockPanel>(StringComparer.OrdinalIgnoreCase);
+                foreach (var p in _panels)
+                {
+                    string key = p.PanelKey;
+                    panelLookup[key] = p;
+                    if (!panelLookup.ContainsKey(p.Title))
+                    {
+                        panelLookup[p.Title] = p;
+                    }
+                }
+
+                // 3. Clear existing attachments from containers and tabs
+                _leftContainer.Controls.Clear();
+                _rightContainer.Controls.Clear();
+                _topContainer.Controls.Clear();
+                _bottomContainer.Controls.Clear();
+                _documentTabControl.TabPages.Clear();
+                _drawerOverlay.Controls.Clear();
+                _drawerOverlay.Visible = false;
+                _activeDrawerPanel = null;
+
+                var oldFloats = new List<ZeroFloatingWindow>(_floatingWindows);
+                foreach (var fw in oldFloats)
+                {
+                    try { fw.Close(); } catch { }
+                }
+                _floatingWindows.Clear();
+
+                // 4. Re-dock panels according to saved layout
+                var appliedPanels = new HashSet<ZeroDockPanel>();
+
+                foreach (var pState in state.DockPanels)
+                {
+                    string key = !string.IsNullOrEmpty(pState.Name) ? pState.Name : pState.Title;
+                    if (panelLookup.TryGetValue(key, out var panel) && appliedPanels.Add(panel))
+                    {
+                        if (Enum.TryParse<ZeroDockPosition>(pState.DockPosition, true, out var pos))
+                        {
+                            panel.DockPosition = pos;
+                        }
+                        else
+                        {
+                            panel.DockPosition = ZeroDockPosition.Document;
+                        }
+
+                        panel.IsPinned = pState.IsPinned;
+                        panel.AutoHide = pState.AutoHide;
+                        panel.Closable = pState.Closable;
+                        panel.Floatable = pState.Floatable;
+                        if (pState.Width > 0) panel.Width = pState.Width;
+                        if (pState.Height > 0) panel.Height = pState.Height;
+
+                        if (panel.DockPosition == ZeroDockPosition.Float)
+                        {
+                            FloatPanel(panel, new Rectangle(pState.FloatX, pState.FloatY, pState.FloatWidth, pState.FloatHeight));
+                        }
+                        else if (!panel.IsPinned && (panel.DockPosition == ZeroDockPosition.Left || panel.DockPosition == ZeroDockPosition.Right))
+                        {
+                            // Unpinned auto-hide panel lives in sidebar until clicked
+                        }
+                        else
+                        {
+                            ArrangePanel(panel);
+                        }
+                    }
+                }
+
+                // 5. Arrange any panels not explicitly saved in layout
+                foreach (var p in _panels)
+                {
+                    if (!appliedPanels.Contains(p))
+                    {
+                        ArrangePanel(p);
+                    }
+                }
+
+                // 6. Restore active document tab
+                if (state.Containers != null && !string.IsNullOrEmpty(state.Containers.ActiveDocumentTitle))
+                {
+                    for (int i = 0; i < _documentTabControl.TabPages.Count; i++)
+                    {
+                        if (string.Equals(_documentTabControl.TabPages[i].Text, state.Containers.ActiveDocumentTitle, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _documentTabControl.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                RebuildLayout();
+            }
+            finally
+            {
+                ResumeLayout(true);
+            }
+        }
+
+        /// <summary>
+        /// Serializes the current docking layout state directly to a formatted JSON string.
+        /// </summary>
+        public string SaveLayoutToJson()
+        {
+            var state = SaveLayout();
+            return ZeroWorkspaceSerializer.Serialize(state);
+        }
+
+        /// <summary>
+        /// Restores docking layout directly from a JSON string.
+        /// </summary>
+        public void RestoreLayoutFromJson(string json)
+        {
+            var state = ZeroWorkspaceSerializer.Deserialize(json);
+            RestoreLayout(state);
+        }
+
+        /// <summary>
+        /// Saves the current layout to a JSON file on disk.
+        /// </summary>
+        public void SaveLayout(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
+            string json = SaveLayoutToJson();
+            System.IO.File.WriteAllText(filePath, json, System.Text.Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// Restores the docking layout from a JSON file on disk if it exists.
+        /// </summary>
+        public void RestoreLayout(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
+            if (System.IO.File.Exists(filePath))
+            {
+                string json = System.IO.File.ReadAllText(filePath, System.Text.Encoding.UTF8);
+                RestoreLayoutFromJson(json);
+            }
+        }
+
+        /// <summary>
+        /// Writes the serialized layout to a stream.
+        /// </summary>
+        public void SaveLayoutToStream(System.IO.Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            string json = SaveLayoutToJson();
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        /// <summary>
+        /// Restores the layout by reading from an input stream.
+        /// </summary>
+        public void RestoreLayoutFromStream(System.IO.Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using (var reader = new System.IO.StreamReader(stream, System.Text.Encoding.UTF8, true, 1024, true))
+            {
+                string json = reader.ReadToEnd();
+                RestoreLayoutFromJson(json);
+            }
+        }
+
+        #endregion
     }
 }
