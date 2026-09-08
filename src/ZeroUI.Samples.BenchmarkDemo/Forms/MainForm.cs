@@ -42,6 +42,7 @@ using ZeroUI.Core.Range;
 using ZeroUI.Core.Pdf;
 using ZeroUI.Core.Spreadsheet;
 using ZeroUI.Core.Scada.Safety;
+using ZeroUI.Core.Notification;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
@@ -155,6 +156,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             ZeroAnimationClock.SetSynchronizationContext(syncContext);
 
             InitializeComponents();
+
+            // Register Windows OS Action Center notification bridge
+            WindowsNotificationBridge.RegisterMainForm(this);
 
             // Synchronize application shell with central ZeroSkinManager
             ZeroSkinManager.SkinChanged += skin =>
@@ -1363,11 +1367,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(stat1);
             leftPanel.Controls.Add(stat2);
 
-            // Section 7: ZeroToast (Floating Toasts)
+            // Section 7: ZeroToast & Windows Action Center Bridge
             int toastY = statY + 105;
             var lblToastTitle = new Label
             {
-                Text = "7. ZeroToast (Non-blocking Floating Toasts)",
+                Text = "7. ZeroToast & Windows Action Center Bridge",
                 Font = new Font("Segoe UI", 11f, FontStyle.Bold),
                 ForeColor = colors.TextPrimary,
                 AutoSize = true,
@@ -1376,18 +1380,101 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             leftPanel.Controls.Add(lblToastTitle);
 
             toastY += 30;
-            var btnToastSuccess = new ZeroButton { Text = "Toast Success", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(16, toastY), Size = new Size(125, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            var btnToastSuccess = new ZeroButton { Text = "Success", ButtonStyle = ZeroButtonStyle.Success, Location = new Point(16, toastY), Size = new Size(95, 30), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
             btnToastSuccess.Click += (s, e) => ZeroToast.Success(this, "10 million rows synchronized into RAM successfully!");
 
-            var btnToastWarn = new ZeroButton { Text = "Toast Warning", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(148, toastY), Size = new Size(120, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            var btnToastWarn = new ZeroButton { Text = "Warning", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(118, toastY), Size = new Size(95, 30), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
             btnToastWarn.Click += (s, e) => ZeroToast.Warning(this, "System detected rapid memory bandwidth consumption.");
 
-            var btnToastError = new ZeroButton { Text = "Toast Error", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(275, toastY), Size = new Size(115, 32), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            var btnToastError = new ZeroButton { Text = "Error", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(220, toastY), Size = new Size(90, 30), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
             btnToastError.Click += (s, e) => ZeroToast.Error(this, "Database server connection timeout!");
+
+            var btnToastAlarm = new ZeroButton { Text = "⚡ Alarm", ButtonStyle = ZeroButtonStyle.Danger, Location = new Point(317, toastY), Size = new Size(95, 30), Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
+            btnToastAlarm.Click += (s, e) => ZeroToast.Alarm(this, "Critical: High-temperature limit exceeded on Reactor RX-401 (94.8°C)!");
 
             leftPanel.Controls.Add(btnToastSuccess);
             leftPanel.Controls.Add(btnToastWarn);
             leftPanel.Controls.Add(btnToastError);
+            leftPanel.Controls.Add(btnToastAlarm);
+
+            toastY += 38;
+            var lblDeliveryMode = new Label
+            {
+                Text = "Mode:",
+                Font = new Font("Segoe UI", 8.5f),
+                ForeColor = colors.TextSecondary,
+                AutoSize = true,
+                Location = new Point(16, toastY + 4)
+            };
+            var cmbDeliveryMode = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Location = new Point(62, toastY),
+                Size = new Size(130, 26),
+                Font = new Font("Segoe UI", 8.5f)
+            };
+            cmbDeliveryMode.Items.AddRange(new object[] {
+                ZeroNotificationDeliveryMode.Auto,
+                ZeroNotificationDeliveryMode.InAppOnly,
+                ZeroNotificationDeliveryMode.SystemOnly,
+                ZeroNotificationDeliveryMode.Dual
+            });
+            cmbDeliveryMode.SelectedItem = ZeroToastStackManager.DeliveryMode;
+            cmbDeliveryMode.SelectedIndexChanged += (s, e) =>
+            {
+                if (cmbDeliveryMode.SelectedItem is ZeroNotificationDeliveryMode mode)
+                {
+                    ZeroToastStackManager.DeliveryMode = mode;
+                    ZeroToast.Info(this, $"Delivery mode: {mode}");
+                }
+            };
+
+            var chkRouteAlarms = new ZeroCheckBox
+            {
+                Location = new Point(200, toastY + 2),
+                Size = new Size(210, 24),
+                Text = "Route Alarms to OS",
+                Checked = ZeroToastStackManager.RouteAlarmsToSystem
+            };
+            chkRouteAlarms.CheckedChanged += (s, e) =>
+            {
+                ZeroToastStackManager.RouteAlarmsToSystem = chkRouteAlarms.Checked;
+            };
+
+            leftPanel.Controls.Add(lblDeliveryMode);
+            leftPanel.Controls.Add(cmbDeliveryMode);
+            leftPanel.Controls.Add(chkRouteAlarms);
+
+            toastY += 34;
+            var btnWindowsToast = new ZeroButton
+            {
+                Text = "🔔 Test Windows OS Notification",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Location = new Point(16, toastY),
+                Size = new Size(240, 30),
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold)
+            };
+            btnWindowsToast.Click += (s, e) =>
+            {
+                WindowsNotificationBridge.ShowNotification(
+                    "ZeroUI Industrial Alert",
+                    "Reactor RX-401 pressure threshold exceeded (4.8 Bar). Click to inspect.",
+                    ZeroToastType.Alarm,
+                    onClick: () => ZeroToast.Info(this, "Application focused via Windows Action Center notification.")
+                );
+            };
+
+            var lblBridgeTip = new Label
+            {
+                Text = "(Minimize app to test Auto mode)",
+                Font = new Font("Segoe UI", 8f),
+                ForeColor = colors.TextSecondary,
+                AutoSize = true,
+                Location = new Point(262, toastY + 7)
+            };
+
+            leftPanel.Controls.Add(btnWindowsToast);
+            leftPanel.Controls.Add(lblBridgeTip);
 
             // Section 8: ZeroTextBox (Modern Enterprise Text Input)
             int txtY = toastY + 44;

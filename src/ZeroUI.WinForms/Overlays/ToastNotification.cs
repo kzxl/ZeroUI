@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
+using ZeroUI.Core.Notification;
 
 namespace ZeroUI.WinForms.Overlays
 {
@@ -418,6 +419,8 @@ namespace ZeroUI.WinForms.Overlays
         public static int MarginY { get; set; } = 24;
         public static int Gap { get; set; } = 10;
         public static ZeroToastPosition DefaultPosition { get; set; } = ZeroToastPosition.TopRight;
+        public static ZeroNotificationDeliveryMode DeliveryMode { get; set; } = ZeroNotificationDeliveryMode.Auto;
+        public static bool RouteAlarmsToSystem { get; set; } = true;
 
         public static IReadOnlyList<ZeroToast> ActiveToasts
         {
@@ -458,19 +461,38 @@ namespace ZeroUI.WinForms.Overlays
                 return;
             }
 
+            WindowsNotificationBridge.RegisterMainForm(parent);
+
+            bool isAppForeground = Form.ActiveForm == parent || (parent != null && parent.ContainsFocus && parent.WindowState != FormWindowState.Minimized);
+            bool shouldShowInApp = DeliveryMode == ZeroNotificationDeliveryMode.InAppOnly ||
+                                   DeliveryMode == ZeroNotificationDeliveryMode.Dual ||
+                                   (DeliveryMode == ZeroNotificationDeliveryMode.Auto && isAppForeground);
+
+            bool shouldShowSystem = DeliveryMode == ZeroNotificationDeliveryMode.SystemOnly ||
+                                    DeliveryMode == ZeroNotificationDeliveryMode.Dual ||
+                                    (DeliveryMode == ZeroNotificationDeliveryMode.Auto && !isAppForeground) ||
+                                    (RouteAlarmsToSystem && type == ZeroToastType.Alarm);
+
+            if (shouldShowSystem)
+            {
+                WindowsNotificationBridge.ShowNotification(title, message, type, durationMs, onClick);
+            }
+
+            if (!shouldShowInApp) return;
+
             var pos = position ?? DefaultPosition;
 
             lock (_syncLock)
             {
                 if (_activeToasts.Count < MaxVisibleToasts)
                 {
-                    SpawnToast(parent, message, title, type, durationMs, onClick, pos);
+                    SpawnToast(parent!, message, title, type, durationMs, onClick, pos);
                 }
                 else
                 {
                     _pendingQueue.Enqueue(new PendingToastInfo
                     {
-                        Owner = parent,
+                        Owner = parent!,
                         Message = message,
                         Title = title,
                         Type = type,

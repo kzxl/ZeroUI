@@ -33,6 +33,7 @@ using ZeroUI.Wpf.Theme;
 using ZeroUI.Core.Scada.Safety;
 using ZeroUI.Core.Editors;
 using ZeroUI.Core.Scada;
+using ZeroUI.Core.Notification;
 
 namespace ZeroUI.Samples.WpfDemo
 {
@@ -186,6 +187,12 @@ namespace ZeroUI.Samples.WpfDemo
                 new Point(680, 85),
                 new Point(920, 85)
             });
+
+            // Register Windows Action Center Notification Bridge
+            WindowsNotificationBridge.RegisterMainWindow(this);
+            ComboDeliveryMode.ItemsSource = Enum.GetValues(typeof(ZeroNotificationDeliveryMode));
+            ComboDeliveryMode.SelectedItem = ToastStackManager.DeliveryMode;
+            ChkRouteAlarmsToSystem.IsChecked = ToastStackManager.RouteAlarmsToSystem;
         }
 
         private void RefreshSkinSelector()
@@ -1799,6 +1806,32 @@ namespace ZeroUI.Samples.WpfDemo
         private void BtnToastAlarm_Click(object sender, RoutedEventArgs e)
         {
             ZeroToast.Alarm(this, "Critical: High-temperature limit exceeded on Exothermic Reactor RX-401 (94.8°C)!", 4000);
+        }
+
+        private void ComboDeliveryMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ComboDeliveryMode.SelectedItem is ZeroNotificationDeliveryMode mode)
+            {
+                ToastStackManager.DeliveryMode = mode;
+                ZeroToast.Info(this, $"Notification delivery mode switched to: {mode}");
+            }
+        }
+
+        private void ChkRouteAlarmsToSystem_Click(object sender, RoutedEventArgs e)
+        {
+            ToastStackManager.RouteAlarmsToSystem = ChkRouteAlarmsToSystem.IsChecked == true;
+        }
+
+        private void BtnToastSystem_Click(object sender, RoutedEventArgs e)
+        {
+            WindowsNotificationBridge.ShowNotification(
+                "ZeroUI SCADA Event",
+                "PLC Alert: Reactor RX-401 pressure threshold exceeded (4.8 Bar). Click to inspect.",
+                ToastType.Alarm,
+                onClick: () =>
+                {
+                    ZeroToast.Info(this, "Operator activated window via Windows Action Center notification.");
+                });
         }
 
         private void BtnShowModalConfirm_Click(object sender, RoutedEventArgs e)

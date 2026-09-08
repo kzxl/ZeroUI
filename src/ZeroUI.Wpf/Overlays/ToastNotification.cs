@@ -7,6 +7,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using ZeroUI.Core.Overlays;
 using ZeroUI.Wpf.Theme;
+using ZeroUI.Core.Notification;
 
 namespace ZeroUI.Wpf.Overlays
 {
@@ -318,6 +319,8 @@ namespace ZeroUI.Wpf.Overlays
         public static int MarginY { get; set; } = 24;
         public static int Gap { get; set; } = 10;
         public static ToastStackPosition DefaultPosition { get; set; } = ToastStackPosition.TopRight;
+        public static ZeroNotificationDeliveryMode DeliveryMode { get; set; } = ZeroNotificationDeliveryMode.Auto;
+        public static bool RouteAlarmsToSystem { get; set; } = true;
 
         public static IReadOnlyList<ToastNotification> ActiveToasts
         {
@@ -358,6 +361,28 @@ namespace ZeroUI.Wpf.Overlays
                 dispatcher.BeginInvoke(new Action(() => Show(targetOwner, message, title, type, durationMs, onClick, position)));
                 return;
             }
+
+            if (targetOwner != null)
+            {
+                WindowsNotificationBridge.RegisterMainWindow(targetOwner);
+            }
+
+            bool isAppForeground = targetOwner != null && targetOwner.IsActive && targetOwner.WindowState != WindowState.Minimized;
+            bool shouldShowInApp = DeliveryMode == ZeroNotificationDeliveryMode.InAppOnly ||
+                                   DeliveryMode == ZeroNotificationDeliveryMode.Dual ||
+                                   (DeliveryMode == ZeroNotificationDeliveryMode.Auto && isAppForeground);
+
+            bool shouldShowSystem = DeliveryMode == ZeroNotificationDeliveryMode.SystemOnly ||
+                                    DeliveryMode == ZeroNotificationDeliveryMode.Dual ||
+                                    (DeliveryMode == ZeroNotificationDeliveryMode.Auto && !isAppForeground) ||
+                                    (RouteAlarmsToSystem && type == ToastType.Alarm);
+
+            if (shouldShowSystem)
+            {
+                WindowsNotificationBridge.ShowNotification(title, message, type, durationMs, onClick);
+            }
+
+            if (!shouldShowInApp) return;
 
             var pos = position ?? DefaultPosition;
 

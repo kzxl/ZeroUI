@@ -1348,6 +1348,14 @@
                                                 <Button x:Name="BtnToastAlarm" Click="BtnToastAlarm_Click" Content="⚡ Alarm Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                                             </WrapPanel>
 
+                                            <TextBlock Text="Windows OS Action Center &amp; Native Bridge Delivery Mode:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,4,0,8" />
+                                            <WrapPanel Margin="0,0,0,14" VerticalAlignment="Center">
+                                                <TextBlock Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" />
+                                                <ComboBox x:Name="ComboDeliveryMode" Width="130" Height="28" Margin="0,0,12,0" SelectionChanged="ComboDeliveryMode_SelectionChanged" />
+                                                <CheckBox x:Name="ChkRouteAlarmsToSystem" Content="Route Alarms to OS" Margin="0,0,12,0" VerticalAlignment="Center" IsChecked="True" Checked="ChkRouteAlarmsToSystem_Click" Unchecked="ChkRouteAlarmsToSystem_Click" />
+                                                <Button x:Name="BtnToastSystem" Click="BtnToastSystem_Click" Content="🔔 Test Windows OS Notification" Height="30" Padding="12,0,12,0" Cursor="Hand" FontWeight="SemiBold" />
+                                            </WrapPanel>
+
                                             <TextBlock Text="Backdrop-Dimmed Dialog Suite:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
                                             <WrapPanel>
                                                 <Button x:Name="BtnShowModalConfirm" Click="BtnShowModalConfirm_Click" Content="💬 Show Production Order Modal" Height="32" Padding="16,0,16,0" Cursor="Hand" FontWeight="SemiBold" />
