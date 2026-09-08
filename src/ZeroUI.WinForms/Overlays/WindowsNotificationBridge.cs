@@ -42,10 +42,16 @@ namespace ZeroUI.WinForms.Overlays
             {
                 if (_notifyIcon != null) return;
 
+                string trayText = _registeredMainForm?.Text ?? "ZeroUI Enterprise Suite";
+                if (trayText.Length >= 64)
+                {
+                    trayText = trayText.Substring(0, 60) + "...";
+                }
+
                 _notifyIcon = new NotifyIcon
                 {
                     Icon = _registeredMainForm?.Icon ?? SystemIcons.Application,
-                    Text = _registeredMainForm?.Text ?? "ZeroUI Enterprise Suite",
+                    Text = trayText,
                     Visible = true
                 };
 
@@ -126,7 +132,16 @@ namespace ZeroUI.WinForms.Overlays
                 };
 
                 string displayTitle = string.IsNullOrEmpty(title) ? "ZeroUI Notification" : title;
-                _notifyIcon.ShowBalloonTip(timeoutMs, displayTitle, message, tipIcon);
+                if (displayTitle.Length >= 64)
+                {
+                    displayTitle = displayTitle.Substring(0, 60) + "...";
+                }
+                string displayMsg = message ?? string.Empty;
+                if (displayMsg.Length >= 256)
+                {
+                    displayMsg = displayMsg.Substring(0, 252) + "...";
+                }
+                _notifyIcon.ShowBalloonTip(timeoutMs, displayTitle, displayMsg, tipIcon);
             }
             catch
             {

@@ -195,8 +195,19 @@ namespace ZeroUI.Wpf.Overlays
                     nid.uCallbackMessage = WM_TRAYICON;
                     nid.hIcon = LoadIcon(IntPtr.Zero, IDI_APPLICATION);
                     nid.szTip = "ZeroUI Notification";
-                    nid.szInfoTitle = string.IsNullOrEmpty(title) ? "ZeroUI Notification" : title;
-                    nid.szInfo = message ?? string.Empty;
+                    string safeTitle = string.IsNullOrEmpty(title) ? "ZeroUI Notification" : title;
+                    if (safeTitle.Length >= 64)
+                    {
+                        safeTitle = safeTitle.Substring(0, 60) + "...";
+                    }
+                    string safeMsg = message ?? string.Empty;
+                    if (safeMsg.Length >= 256)
+                    {
+                        safeMsg = safeMsg.Substring(0, 252) + "...";
+                    }
+
+                    nid.szInfoTitle = safeTitle;
+                    nid.szInfo = safeMsg;
                     nid.dwInfoFlags = infoFlag | NIIF_LARGE_ICON;
                     nid.uTimeoutOrVersion = timeoutMs;
 

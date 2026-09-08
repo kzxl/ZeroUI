@@ -1813,13 +1813,19 @@ namespace ZeroUI.Samples.WpfDemo
             if (ComboDeliveryMode.SelectedItem is ZeroNotificationDeliveryMode mode)
             {
                 ToastStackManager.DeliveryMode = mode;
-                ZeroToast.Info(this, $"Notification delivery mode switched to: {mode}");
+                if (IsLoaded)
+                {
+                    ZeroToast.Info(this, $"Notification delivery mode switched to: {mode}");
+                }
             }
         }
 
         private void ChkRouteAlarmsToSystem_Click(object sender, RoutedEventArgs e)
         {
-            ToastStackManager.RouteAlarmsToSystem = ChkRouteAlarmsToSystem.IsChecked == true;
+            if (sender is CheckBox chk)
+            {
+                ToastStackManager.RouteAlarmsToSystem = chk.IsChecked == true;
+            }
         }
 
         private void BtnToastSystem_Click(object sender, RoutedEventArgs e)
