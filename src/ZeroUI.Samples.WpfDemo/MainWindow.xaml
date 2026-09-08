@@ -24,6 +24,7 @@
         xmlns:life="clr-namespace:ZeroUI.Wpf.LifeSciences;assembly=ZeroUI.Wpf"
         xmlns:log="clr-namespace:ZeroUI.Wpf.Logistics;assembly=ZeroUI.Wpf"
         xmlns:net="clr-namespace:ZeroUI.Wpf.Network;assembly=ZeroUI.Wpf"
+        xmlns:rend="clr-namespace:ZeroUI.Wpf.Rendering;assembly=ZeroUI.Wpf"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="920" Width="1440"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -1021,6 +1022,34 @@
 
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
                                     <ind:ZeroHexInspector x:Name="DemoHexInspector" />
+                                </Border>
+                            </Grid>
+                        </TabItem>
+
+                        <!-- Sub-Tab 6.5: DirectX 11 GPU Canvas (D3DImage Shared Surface) -->
+                        <TabItem Header="🚀 DirectX 11 GPU Canvas">
+                            <Grid Margin="16">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Border Grid.Row="0" Margin="0,0,0,12" Background="{DynamicResource ZeroUI.BgCard}" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
+                                    <DockPanel LastChildFill="False">
+                                        <StackPanel DockPanel.Dock="Left">
+                                            <TextBlock Text="🚀 Direct3D 11 to D3D9Ex Shared Texture Bridge (ZeroD3DCanvas)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" />
+                                            <TextBlock Text="Zero-copy GPU hardware compositing via D3DImage &amp; DXGI shared handle. Sub-millisecond presentation, 60–144 FPS VSync." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtD3DFps" Text="FPS: 60.0" VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.Success}" Margin="0,0,14,0" FontSize="12" />
+                                            <Button x:Name="BtnToggleD3D" Click="BtnToggleD3D_Click" Content="⏸️ Pause GPU" Height="28" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                                            <Button x:Name="BtnTriggerD3DFrame" Click="BtnTriggerD3DFrame_Click" Content="⚡ Step GPU Frame" Height="28" Padding="12,0,12,0" Cursor="Hand" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+
+                                <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" Background="#0B0F19" ClipToBounds="True">
+                                    <rend:ZeroD3DCanvas x:Name="DemoD3DCanvas" />
                                 </Border>
                             </Grid>
                         </TabItem>

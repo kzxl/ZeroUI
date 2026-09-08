@@ -34,6 +34,7 @@ using ZeroUI.Core.Scada.Safety;
 using ZeroUI.Core.Editors;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Notification;
+using ZeroUI.Wpf.Rendering;
 
 namespace ZeroUI.Samples.WpfDemo
 {
@@ -458,6 +459,11 @@ namespace ZeroUI.Samples.WpfDemo
                 _currentFps = (_frameCount * 1000.0) / _fpsStopwatch.ElapsedMilliseconds;
                 _frameCount = 0;
                 _fpsStopwatch.Restart();
+
+                if (DemoD3DCanvas != null && DemoD3DCanvas.IsRenderingActive && TxtD3DFps != null)
+                {
+                    TxtD3DFps.Text = $"FPS: {DemoD3DCanvas.CurrentFps:F1}";
+                }
             }
         }
 
@@ -1838,6 +1844,19 @@ namespace ZeroUI.Samples.WpfDemo
                 {
                     ZeroToast.Info(this, "Operator activated window via Windows Action Center notification.");
                 });
+        }
+
+        private void BtnToggleD3D_Click(object sender, RoutedEventArgs e)
+        {
+            DemoD3DCanvas.IsRenderingActive = !DemoD3DCanvas.IsRenderingActive;
+            BtnToggleD3D.Content = DemoD3DCanvas.IsRenderingActive ? "⏸️ Pause GPU" : "▶️ Resume GPU";
+            ZeroToast.Info(this, DemoD3DCanvas.IsRenderingActive ? "DirectX 11 GPU rendering active (60-144 FPS)." : "DirectX 11 GPU rendering paused.");
+        }
+
+        private void BtnTriggerD3DFrame_Click(object sender, RoutedEventArgs e)
+        {
+            DemoD3DCanvas.RenderCurrentFrame();
+            ZeroToast.Success(this, "Direct3D 11 GPU frame rendered & composited via D3DImage.");
         }
 
         private void BtnShowModalConfirm_Click(object sender, RoutedEventArgs e)
