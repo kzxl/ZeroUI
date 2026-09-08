@@ -33,6 +33,6 @@ namespace ZeroUI.Core.Rendering.Optimizer
         }
 
         public override string ToString() =>
-            $"[{Pipeline}] Shader: {RecommendedShader}, Speedup: {EstimatedSpeedupFactor}x (CPU: {EstimatedCpuCostUs:F1}µs vs GPU: {EstimatedGpuCostUs:F1}µs) - {Reason}";
+            $"[{Pipeline}] Shader: {RecommendedShader}, Speedup: {EstimatedSpeedupFactor:F1}x (CPU: {EstimatedCpuCostUs:F1}µs vs GPU: {EstimatedGpuCostUs:F1}µs) - {Reason}";
     }
 }

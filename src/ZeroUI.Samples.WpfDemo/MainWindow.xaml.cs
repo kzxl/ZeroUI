@@ -1998,13 +1998,13 @@ namespace ZeroUI.Samples.WpfDemo
         {
             if (PanelOptimizerCards == null) return;
 
-            // Keep PrimaryCard (index 0) and SecondaryCard (index 1)
-            while (PanelOptimizerCards.Children.Count > 2)
+            // Keep the 3 permanent showcase cards
+            while (PanelOptimizerCards.Children.Count > 3)
             {
                 PanelOptimizerCards.Children.RemoveAt(PanelOptimizerCards.Children.Count - 1);
             }
 
-            int extra = Math.Min(count - 2, 30);
+            int extra = Math.Min(count - 1, 30);
             for (int i = 0; i < extra; i++)
             {
                 var card = new ZeroUI.Wpf.Rendering.Optimizer.ZeroOptimizedCard

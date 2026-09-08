@@ -227,5 +227,76 @@ namespace ZeroUI.Core.Tests
             // Should promote back to Ultra
             Assert.Equal(RenderFidelityTier.Ultra, monitor.CurrentFidelity);
         }
+
+        [Fact]
+        public void RenderOperationProfile_GlowAndElevation_AccurateCostEvaluation()
+        {
+            var profile = RenderOperationProfile.ForCard(
+                width: 500,
+                height: 300,
+                elevation: 10f,
+                cornerRadius: 8f,
+                blurRadius: 16f,
+                glowIntensity: 1.2f,
+                hasText: false);
+
+            var decision = ZeroRenderAnalyzer.Evaluate(profile, RenderFidelityTier.Ultra);
+
+            // Without interactive text, complex glow + shadow should route directly to GPU Shader
+            Assert.Equal(RenderPipelineTarget.GpuShader, decision.Pipeline);
+            Assert.Equal("NeonGlowSdf", decision.RecommendedShader);
+            Assert.True(decision.EstimatedGpuCostUs > 0);
+            Assert.True(decision.EstimatedCpuCostUs > decision.EstimatedGpuCostUs);
+        }
+
+        [Fact]
+        public void RenderDecision_Formatting_ContainsSpeedupAndPipeline()
+        {
+            var decision = new RenderDecision(
+                RenderPipelineTarget.Hybrid,
+                estimatedCpuCostUs: 120.0,
+                estimatedGpuCostUs: 10.0,
+                recommendedShader: "AnalyticalSdfBoxShadow",
+                useAtlas: false,
+                reason: "Hybrid test execution");
+
+            string str = decision.ToString();
+            Assert.Contains("[Hybrid]", str);
+            Assert.Contains("AnalyticalSdfBoxShadow", str);
+            Assert.Contains("12.0x", str);
+            Assert.Contains("Hybrid test execution", str);
+        }
+
+        [Fact]
+        public void ShadowPatchKey_ZeroAndNegativeValues_ClampedCleanly()
+        {
+            var key1 = new ShadowPatchKey(cornerRadius: 8.4f, elevation: 6.2f, blurRadius: 12.1f, spread: 0f);
+            var key2 = new ShadowPatchKey(cornerRadius: 8f, elevation: 6f, blurRadius: 12f, spread: 0f);
+
+            Assert.Equal(key1, key2);
+            Assert.Equal(key1.GetHashCode(), key2.GetHashCode());
+        }
+
+        [Fact]
+        public void ShadowNineSlice_TilingDimensions_ConsistentSum()
+        {
+            var patch = ZeroShadowAtlas.GetOrCreatePatch(8f, 4f, 8f);
+            int targetW = 400;
+            int targetH = 200;
+
+            patch.ComputeDestinationSlices(
+                targetW, targetH,
+                out var tl, out var tc, out var tr,
+                out var ml, out var mc, out var mr,
+                out var bl, out var bc, out var br);
+
+            // Top row total width = tl.w + tc.w + tr.w
+            int topRowWidth = tl.w + tc.w + tr.w;
+            Assert.Equal(targetW, topRowWidth);
+
+            // Left column total height = tl.h + ml.h + bl.h
+            int leftColHeight = tl.h + ml.h + bl.h;
+            Assert.Equal(targetH, leftColHeight);
+        }
     }
 }

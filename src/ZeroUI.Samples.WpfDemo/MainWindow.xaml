@@ -1231,6 +1231,42 @@
                                                 <Button Grid.Row="2" Content="🔄 Flush Atlas Cache" Click="BtnFlushAtlas_Click" Height="28" Cursor="Hand" />
                                             </Grid>
                                         </opt:ZeroOptimizedCard>
+
+                                        <!-- Attached Properties Showcase Card -->
+                                        <Border Width="380" Height="230" Margin="0,0,20,20" Background="{DynamicResource ZeroUI.BgCard}" CornerRadius="10" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" Padding="18">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Grid.Row="0" Text="🔗 Universal Attached Properties" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,12" />
+
+                                                <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="Attach opt:RenderOptimizer to ANY standard WPF control without replacing containers:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                    <!-- Standard WPF Button with attached Elevation & Glow -->
+                                                    <Button Content="⚡ Glowing Elevated WPF Button" Height="34" Margin="0,0,0,14"
+                                                            opt:RenderOptimizer.Elevation="10"
+                                                            opt:RenderOptimizer.BlurRadius="16"
+                                                            opt:RenderOptimizer.GlowIntensity="0.85"
+                                                            opt:RenderOptimizer.GlowColor="#00E5FF"
+                                                            Cursor="Hand" />
+
+                                                    <!-- Standard WPF Border with attached Elevation -->
+                                                    <Border Height="36" Background="#0F172A" CornerRadius="6" Padding="10,0,10,0"
+                                                            opt:RenderOptimizer.Elevation="8"
+                                                            opt:RenderOptimizer.BlurRadius="12"
+                                                            opt:RenderOptimizer.GlowIntensity="0.5"
+                                                            opt:RenderOptimizer.GlowColor="#34D399">
+                                                        <DockPanel VerticalAlignment="Center">
+                                                            <TextBlock Text="🛡️ Protected Enclave" FontSize="11.5" FontWeight="Bold" Foreground="#34D399" DockPanel.Dock="Left" />
+                                                            <TextBlock Text="Adorner GPU SDF" FontSize="10" Foreground="{DynamicResource ZeroUI.TextMuted}" HorizontalAlignment="Right" />
+                                                        </DockPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
                                     </WrapPanel>
                                 </ScrollViewer>
                             </Grid>
