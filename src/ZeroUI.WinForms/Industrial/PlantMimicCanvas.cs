@@ -562,12 +562,18 @@ namespace ZeroUI.WinForms.Industrial
             }
             else if (node.IsHovered)
             {
-                using (var hovPen = new Pen(Color.FromArgb(59, 130, 246), 1.5f))
-                {
-                    g.DrawRectangle(hovPen, x - 2, y - 2, w + 4, h + 4);
-                }
+                using var hovPen = new Pen(Color.FromArgb(59, 130, 246), 1.5f);
+                g.DrawRectangle(hovPen, x - 2, y - 2, w + 4, h + 4);
+            }
+
+            // Status & Safety Badges (LOTO, Tagout, Interlock, Fault)
+            if (node.StatusFlags != ZeroUI.Core.Scada.Safety.DeviceStatusFlags.None)
+            {
+                var nodeRect = new Rectangle((int)x, (int)y, (int)w, (int)h);
+                ZeroDeviceBadgeRenderer.DrawBadges(g, nodeRect, node.StatusFlags, isDark);
             }
         }
+
 
         private void DrawGrid(Graphics g, bool isDark)
         {

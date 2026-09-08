@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
+using ZeroUI.Core.Scada.Safety;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
@@ -37,6 +38,7 @@ namespace ZeroUI.WinForms.Industrial
     {
         private ZeroMotorState _state = ZeroMotorState.Running;
         private ZeroMotorDirection _direction = ZeroMotorDirection.Forward;
+        private DeviceStatusFlags _statusFlags = DeviceStatusFlags.None;
         private double _speedRpm = 1450.0;
         private double _ratedRpm = 1500.0;
         private double _currentAmps = 14.2;
@@ -48,6 +50,15 @@ namespace ZeroUI.WinForms.Industrial
         [Category("SCADA Telemetry")]
         [Description("SCADA tag path to bind for dynamic motor telemetry")]
         public string? BoundTagPath { get; set; }
+
+        [Category("Safety & Interlocks")]
+        [DefaultValue(DeviceStatusFlags.None)]
+        [Description("Active OSHA LOTO, safety interlock, and maintenance status flags")]
+        public DeviceStatusFlags StatusFlags
+        {
+            get => _statusFlags;
+            set { _statusFlags = value; Invalidate(); }
+        }
 
         [Category("Process Dynamics")]
         [DefaultValue(ZeroMotorState.Running)]
@@ -279,6 +290,13 @@ namespace ZeroUI.WinForms.Industrial
                 var stateSize = g.MeasureString(stateText, dataFont);
                 g.DrawString(stateText, dataFont, stateBrush, Width - stateSize.Width - 10f, padY - 2f);
             }
+
+            // 8. Safety & Interlock Badges
+            if (_statusFlags != DeviceStatusFlags.None)
+            {
+                ZeroDeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
+            }
         }
     }
 }
+

@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
+using ZeroUI.Core.Scada.Safety;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
@@ -40,6 +41,7 @@ namespace ZeroUI.WinForms.Industrial
     {
         private ZeroValveType _valveType = ZeroValveType.TwoWaySolenoid;
         private ZeroValveState _state = ZeroValveState.Open;
+        private DeviceStatusFlags _statusFlags = DeviceStatusFlags.None;
         private double _positionPercent = 100.0; // 0 = closed, 100 = fully open
         private string _tagLabel = "XV-101";
         private bool _isHovered;
@@ -48,6 +50,15 @@ namespace ZeroUI.WinForms.Industrial
 
         [Category("SCADA Telemetry")]
         public string? BoundTagPath { get; set; }
+
+        [Category("Safety & Interlocks")]
+        [DefaultValue(DeviceStatusFlags.None)]
+        [Description("Active OSHA LOTO, safety interlock, and maintenance status flags")]
+        public DeviceStatusFlags StatusFlags
+        {
+            get => _statusFlags;
+            set { _statusFlags = value; Invalidate(); }
+        }
 
         [Category("Appearance")]
         [DefaultValue(ZeroValveType.TwoWaySolenoid)]
@@ -301,6 +312,12 @@ namespace ZeroUI.WinForms.Industrial
                 using var brushLabel = new SolidBrush(palette.TextPrimary);
                 var sfTag = new StringFormat { Alignment = StringAlignment.Center };
                 g.DrawString(_tagLabel, fontTag, brushLabel, cx, bodyY + bodyH + 2, sfTag);
+            }
+
+            // 4. Safety & Interlock Badges (LOTO, Tagout, Interlock, Fault)
+            if (_statusFlags != DeviceStatusFlags.None)
+            {
+                ZeroDeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
             }
         }
 

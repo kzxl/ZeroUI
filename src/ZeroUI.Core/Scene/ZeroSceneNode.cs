@@ -1,5 +1,6 @@
 using System;
 using ZeroUI.Core.Scada;
+using ZeroUI.Core.Scada.Safety;
 
 namespace ZeroUI.Core.Scene
 {
@@ -24,6 +25,7 @@ namespace ZeroUI.Core.Scene
     public class ZeroSceneNode : SceneNode
     {
         public IndustrialNodeType NodeType { get; set; } = IndustrialNodeType.Generic;
+        public DeviceStatusFlags StatusFlags { get; set; } = DeviceStatusFlags.None;
         public int BoundTagId => TagId;
 
         public ZeroSceneNode(string id, string label = "", IndustrialNodeType nodeType = IndustrialNodeType.Generic)

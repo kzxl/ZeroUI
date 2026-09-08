@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
+using ZeroUI.Core.Scada.Safety;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
@@ -29,6 +30,7 @@ namespace ZeroUI.WinForms.Industrial
     public class ZeroIndustrialPump : Control, IScadaBindable
     {
         private ZeroPumpState _state = ZeroPumpState.Running;
+        private DeviceStatusFlags _statusFlags = DeviceStatusFlags.None;
         private double _speedRpm = 2950.0;
         private double _powerKw = 18.5;
         private string _tagLabel = "P-101A";
@@ -38,6 +40,15 @@ namespace ZeroUI.WinForms.Industrial
 
         [Category("SCADA Telemetry")]
         public string? BoundTagPath { get; set; }
+
+        [Category("Safety & Interlocks")]
+        [DefaultValue(DeviceStatusFlags.None)]
+        [Description("Active OSHA LOTO, safety interlock, and maintenance status flags")]
+        public DeviceStatusFlags StatusFlags
+        {
+            get => _statusFlags;
+            set { _statusFlags = value; Invalidate(); }
+        }
 
         [Category("Process Dynamics")]
         [DefaultValue(ZeroPumpState.Running)]
@@ -266,7 +277,14 @@ namespace ZeroUI.WinForms.Industrial
 
             string infoStr = _state == ZeroPumpState.Running ? $"{_speedRpm:0} RPM" : (_state == ZeroPumpState.Trip ? "TRIP!" : "STOPPED");
             g.DrawString(infoStr, fontRpm, (_state == ZeroPumpState.Trip) ? new SolidBrush(palette.Danger) : brushMuted, cx, cy + radius + 17, sf);
+
+            // 6. Safety & Interlock Badges
+            if (_statusFlags != DeviceStatusFlags.None)
+            {
+                ZeroDeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
+            }
         }
+
 
         protected override void Dispose(bool disposing)
         {

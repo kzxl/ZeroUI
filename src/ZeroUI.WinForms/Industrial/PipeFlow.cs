@@ -29,7 +29,10 @@ namespace ZeroUI.WinForms.Industrial
         Gas,
         Oil,
         Steam,
-        Chemical
+        Chemical,
+        Acid,
+        Slurry,
+        CoolingWater
     }
 
     /// <summary>
@@ -47,6 +50,8 @@ namespace ZeroUI.WinForms.Industrial
         private bool _reverseFlow = false;
         private int _pipeDiameter = 18;
         private float _pulseOffset = 0f;
+        private bool _useSharedClockPhase = true;
+        private bool _showFlowArrows = false;
         private IDisposable? _clockToken;
 
         [Category("SCADA Telemetry")]
@@ -92,6 +97,24 @@ namespace ZeroUI.WinForms.Industrial
             set { _reverseFlow = value; Invalidate(); }
         }
 
+        [Category("Process Dynamics")]
+        [DefaultValue(true)]
+        [Description("Uses centralized ZeroAnimationClock phase directly for zero-alloc multi-pipe synchronization")]
+        public bool UseSharedClockPhase
+        {
+            get => _useSharedClockPhase;
+            set { _useSharedClockPhase = value; Invalidate(); }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(false)]
+        [Description("Draws directional flow chevron arrows along the fluid channel")]
+        public bool ShowFlowArrows
+        {
+            get => _showFlowArrows;
+            set { _showFlowArrows = value; Invalidate(); }
+        }
+
         [Category("Appearance")]
         [DefaultValue(18)]
         public int PipeDiameter
@@ -99,6 +122,7 @@ namespace ZeroUI.WinForms.Industrial
             get => _pipeDiameter;
             set { _pipeDiameter = Math.Max(8, Math.Min(60, value)); Invalidate(); }
         }
+
 
         public ZeroPipeFlow()
         {
@@ -182,6 +206,9 @@ namespace ZeroUI.WinForms.Industrial
                 ZeroFluidType.Oil => Color.FromArgb(245, 158, 11),      // Amber
                 ZeroFluidType.Steam => Color.FromArgb(226, 232, 240),   // Light Gray
                 ZeroFluidType.Chemical => Color.FromArgb(236, 72, 153), // Magenta
+                ZeroFluidType.Acid => Color.FromArgb(234, 179, 8),      // Yellow
+                ZeroFluidType.Slurry => Color.FromArgb(180, 83, 9),     // Earth Brown
+                ZeroFluidType.CoolingWater => Color.FromArgb(16, 185, 129), // Emerald
                 _ => Color.FromArgb(6, 182, 212)
             };
         }
@@ -200,6 +227,10 @@ namespace ZeroUI.WinForms.Industrial
 
             int d = _pipeDiameter;
             int halfD = d / 2;
+
+            float effectiveOffset = _useSharedClockPhase
+                ? (float)(_reverseFlow ? -(ZeroAnimationClock.TotalElapsedTime * _flowVelocity * 30.0 % 1000.0) : (ZeroAnimationClock.TotalElapsedTime * _flowVelocity * 30.0 % 1000.0))
+                : _pulseOffset;
 
             if (_shape == ZeroPipeShape.Horizontal)
             {
@@ -229,8 +260,26 @@ namespace ZeroUI.WinForms.Industrial
                     using var penPulse = new Pen(Color.FromArgb(220, Color.White), 2f);
                     penPulse.DashStyle = DashStyle.Dash;
                     penPulse.DashPattern = new[] { 6f, 8f };
-                    penPulse.DashOffset = _pulseOffset;
+                    penPulse.DashOffset = effectiveOffset;
                     g.DrawLine(penPulse, 0, fluidY + fluidH / 2, Width, fluidY + fluidH / 2);
+                }
+
+                // Directional Flow Arrows
+                if (_showFlowArrows && _isFlowing)
+                {
+                    using var arrowBrush = new SolidBrush(Color.FromArgb(190, Color.White));
+                    int arrowY = fluidY + fluidH / 2;
+                    int dir = _reverseFlow ? -1 : 1;
+                    for (int ax = 24; ax < Width - 24; ax += 36)
+                    {
+                        PointF[] arrowPts = new PointF[]
+                        {
+                            new PointF(ax - (4 * dir), arrowY - 3),
+                            new PointF(ax + (4 * dir), arrowY),
+                            new PointF(ax - (4 * dir), arrowY + 3)
+                        };
+                        g.FillPolygon(arrowBrush, arrowPts);
+                    }
                 }
 
                 // Flange Joints
@@ -262,13 +311,32 @@ namespace ZeroUI.WinForms.Industrial
                     using var penPulse = new Pen(Color.FromArgb(220, Color.White), 2f);
                     penPulse.DashStyle = DashStyle.Dash;
                     penPulse.DashPattern = new[] { 6f, 8f };
-                    penPulse.DashOffset = _pulseOffset;
+                    penPulse.DashOffset = effectiveOffset;
                     g.DrawLine(penPulse, fluidX + fluidW / 2, 0, fluidX + fluidW / 2, Height);
+                }
+
+                // Directional Flow Arrows
+                if (_showFlowArrows && _isFlowing)
+                {
+                    using var arrowBrush = new SolidBrush(Color.FromArgb(190, Color.White));
+                    int arrowX = fluidX + fluidW / 2;
+                    int dir = _reverseFlow ? -1 : 1;
+                    for (int ay = 24; ay < Height - 24; ay += 36)
+                    {
+                        PointF[] arrowPts = new PointF[]
+                        {
+                            new PointF(arrowX - 3, ay - (4 * dir)),
+                            new PointF(arrowX, ay + (4 * dir)),
+                            new PointF(arrowX + 3, ay - (4 * dir))
+                        };
+                        g.FillPolygon(arrowBrush, arrowPts);
+                    }
                 }
 
                 DrawFlange(g, x, 0, d, false, isDark);
                 DrawFlange(g, x, Height - 6, d, false, isDark);
             }
+
             else
             {
                 // Curved Elbow / Tee fallback rendering
