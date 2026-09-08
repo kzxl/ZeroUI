@@ -155,6 +155,9 @@ namespace ZeroUI.Wpf.Theme
                     res["ZeroUI.SuccessAccent"] = SuccessAccent;
                     res["ZeroUI.DangerAccent"] = DangerAccent;
                     res["ZeroUI.WarningAccent"] = WarningAccent;
+                    res["ZeroUI.Success"] = SuccessAccent;
+                    res["ZeroUI.Danger"] = DangerAccent;
+                    res["ZeroUI.Warning"] = WarningAccent;
                     res["ZeroUI.InfoAccent"] = InfoAccent;
                     res["ZeroUI.SelectionBackground"] = SelectionBackground;
                     res["ZeroUI.SelectionForeground"] = SelectionForeground;

@@ -83,6 +83,9 @@ namespace ZeroUI.Wpf.Theme
             AddFrozenBrush(dict, "ZeroUI.SuccessAccent", tokens.Success);
             AddFrozenBrush(dict, "ZeroUI.WarningAccent", tokens.Warning);
             AddFrozenBrush(dict, "ZeroUI.DangerAccent", tokens.Danger);
+            AddFrozenBrush(dict, "ZeroUI.Success", tokens.Success);
+            AddFrozenBrush(dict, "ZeroUI.Warning", tokens.Warning);
+            AddFrozenBrush(dict, "ZeroUI.Danger", tokens.Danger);
             AddFrozenBrush(dict, "ZeroUI.InfoAccent", string.IsNullOrEmpty(tokens.Info) ? tokens.PrimaryAccent : tokens.Info);
 
             AddFrozenBrush(dict, "ZeroUI.SelectionBackground", tokens.SelectionBackground);

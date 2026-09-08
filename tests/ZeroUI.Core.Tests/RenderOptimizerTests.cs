@@ -337,5 +337,17 @@ namespace ZeroUI.Core.Tests
             Assert.True(decisionTier2.EstimatedGpuCostUs < decisionTier0.EstimatedGpuCostUs);
             Assert.True(decisionTier2.EstimatedSpeedupFactor > decisionTier0.EstimatedSpeedupFactor);
         }
+
+        [Fact]
+        public void RenderAnalyzer_BatchOf32Cards_RoutesToAtlasWithMassiveSpeedup()
+        {
+            var profile = RenderOperationProfile.ForCard(260, 140, elevation: 8f, cornerRadius: 10f, blurRadius: 14f, batchCount: 32);
+            var decision = ZeroRenderAnalyzer.Evaluate(profile, RenderFidelityTier.Balanced);
+
+            Assert.Equal(RenderPipelineTarget.GpuAtlas, decision.Pipeline);
+            Assert.True(decision.UseAtlas);
+            Assert.Equal("SdfBoxShadowAtlas", decision.RecommendedShader);
+            Assert.True(decision.EstimatedSpeedupFactor >= 10.0);
+        }
     }
 }

@@ -2021,9 +2021,9 @@ namespace ZeroUI.Samples.WpfDemo
                 };
 
                 var sp = new StackPanel();
-                sp.Children.Add(new TextBlock { Text = $"📦 Batched Card #{i + 3}", FontWeight = FontWeights.Bold, FontSize = 12.5, Foreground = (Brush)FindResource("ZeroUI.TextPrimary") });
-                sp.Children.Add(new TextBlock { Text = "9-Slice Atlas Cache Instance", FontSize = 11, Foreground = (Brush)FindResource("ZeroUI.TextSecondary"), Margin = new Thickness(0, 4, 0, 8) });
-                sp.Children.Add(new TextBlock { Text = "Zero VRAM Re-allocation", FontSize = 10, Foreground = (Brush)FindResource("ZeroUI.Success"), FontWeight = FontWeights.SemiBold });
+                sp.Children.Add(new TextBlock { Text = $"📦 Batched Card #{i + 3}", FontWeight = FontWeights.Bold, FontSize = 12.5, Foreground = ZeroWpfTheme.TextPrimary });
+                sp.Children.Add(new TextBlock { Text = "9-Slice Atlas Cache Instance", FontSize = 11, Foreground = ZeroWpfTheme.TextSecondary, Margin = new Thickness(0, 4, 0, 8) });
+                sp.Children.Add(new TextBlock { Text = "Zero VRAM Re-allocation", FontSize = 10, Foreground = ZeroWpfTheme.SuccessAccent, FontWeight = FontWeights.SemiBold });
 
                 card.Child = sp;
                 PanelOptimizerCards.Children.Add(card);
