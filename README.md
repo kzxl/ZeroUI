@@ -6,7 +6,8 @@
 > **Active Development Notice:**  
 > This project is currently in active development. We warmly welcome feedback, suggestions, feature ideas, and contributions from the community! If you encounter any issues or have recommendations, please feel free to open an [Issue](https://github.com/kzxl/ZeroUI/issues) or start a [Discussion](https://github.com/kzxl/ZeroUI/discussions).
 
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.3.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.4.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
 [![Unit Tests](https://img.shields.io/badge/tests-408%20passed%20(100%25)-brightgreen.svg)](#testing--verification)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
@@ -46,6 +47,8 @@ Standard Windows desktop controls (such as standard `DataGridView`, WinForms `To
 * **Enterprise Dual-Runtime Support:** Full native compatibility with legacy **.NET Framework 4.6.2** as well as modern **.NET 8.0 / 9.0**.
 * **Unified Theme Engine:** Built-in **Clean Light Mode** and **Obsidian Dark Mode** with instant reactive switching across all controls.
 * **Global Typography & Corner Radius Engine:** Fluent Windows 11 style rounded corners (60 FPS ease-out transition) or classic sharp industrial corners configurable at application scope.
+* **GPU Hardware Acceleration (ZeroGraphics Integration):** Direct3D 11 & Direct2D hardware acceleration with Modern Flip Model (`FLIP_DISCARD`), sub-4ms frame latency (`SetMaximumFrameLatency = 1`), `ZeroOscilloscope` streaming multi-million point sensor series @ 144+ FPS, and `ZeroHardwareCard` with SDF analytical drop shadows and neon alarm glows.
+
 
 ---
 
