@@ -36,12 +36,6 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
             set => SetValue(IsExpandedProperty, value);
         }
 
-        static ZeroRenderOptimizerHUD()
-        {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroRenderOptimizerHUD),
-                new FrameworkPropertyMetadata(typeof(ZeroRenderOptimizerHUD)));
-        }
-
         public ZeroRenderOptimizerHUD()
         {
             SnapsToDevicePixels = true;
@@ -61,7 +55,10 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            BuildVisualTree();
+            if (_rootBorder == null)
+            {
+                BuildVisualTree();
+            }
             _telemetryTimer.Start();
         }
 
@@ -72,6 +69,8 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
 
         private void BuildVisualTree()
         {
+            if (_rootBorder != null) return;
+
             var root = new Border
             {
                 Background = new SolidColorBrush(Color.FromArgb(220, 11, 15, 25)), // Translucent dark glass
@@ -197,6 +196,7 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
 
             mainStack.Children.Add(detailsStack);
             root.Child = mainStack;
+            AddLogicalChild(root);
             AddVisualChild(root);
         }
 
@@ -247,6 +247,15 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
                 long hits = ZeroShadowAtlas.CacheHits;
                 double rate = ZeroShadowAtlas.HitRatePercentage;
                 _txtAtlas.Text = $"Atlas: {rate:F1}% Hit | {ZeroShadowAtlas.CachedPatchCount} Patches | {hits} Calls Saved";
+            }
+        }
+
+        protected override System.Collections.IEnumerator LogicalChildren
+        {
+            get
+            {
+                if (_rootBorder != null)
+                    yield return _rootBorder;
             }
         }
 

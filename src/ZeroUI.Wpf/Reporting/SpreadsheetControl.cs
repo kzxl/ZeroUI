@@ -124,6 +124,7 @@ namespace ZeroUI.Wpf.Reporting
             var rootGrid = new Grid();
             _rootGrid = rootGrid;
             AddLogicalChild(rootGrid);
+            AddVisualChild(rootGrid);
 
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // 0: Toolbar
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // 1: Grid
@@ -240,9 +241,6 @@ namespace ZeroUI.Wpf.Reporting
             viewportGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // VScrollBar
 
             _canvas = new SpreadsheetCanvas(this);
-            Grid.SetRow(_canvas, 0);
-            Grid.SetColumn(_canvas, 0);
-            viewportGrid.Children.Add(_canvas);
 
             _vScrollBar = new ScrollBar
             {
