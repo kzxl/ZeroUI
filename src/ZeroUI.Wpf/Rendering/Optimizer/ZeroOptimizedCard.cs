@@ -174,6 +174,13 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
         {
             SnapsToDevicePixels = true;
             ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += (s, e) => ZeroWpfRenderMonitor.Instance.CoreMonitor.FidelityTierChanged += OnFidelityTierChanged;
+            Unloaded += (s, e) => ZeroWpfRenderMonitor.Instance.CoreMonitor.FidelityTierChanged -= OnFidelityTierChanged;
+        }
+
+        private void OnFidelityTierChanged(RenderFidelityTier newTier)
+        {
+            Dispatcher.BeginInvoke(new Action(() => InvalidateVisual()));
         }
 
         protected override Size MeasureOverride(Size constraint)
@@ -264,22 +271,38 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
             double radiusX = CornerRadius.TopLeft;
             double radiusY = CornerRadius.TopLeft;
 
-            // Neon Glow pass
-            if (GlowIntensity > 0.01)
+            // Modulate parameters based on adaptive fidelity tier
+            double effectiveBlur = BlurRadius;
+            double effectiveElev = Elevation;
+            double effectiveGlow = GlowIntensity;
+
+            if (monitor.CurrentFidelity == RenderFidelityTier.PowerSaver)
             {
-                DrawGlowPass(dc, w, h, radiusX, radiusY);
+                effectiveBlur = Math.Min(effectiveBlur, 8.0);
+                effectiveElev = Math.Min(effectiveElev, 4.0);
+                effectiveGlow = Math.Min(effectiveGlow, 0.4);
+            }
+            else if (monitor.CurrentFidelity == RenderFidelityTier.Balanced)
+            {
+                effectiveBlur = Math.Min(effectiveBlur, 24.0);
+            }
+
+            // Neon Glow pass
+            if (effectiveGlow > 0.01)
+            {
+                DrawGlowPass(dc, w, h, radiusX, radiusY, effectiveGlow, effectiveBlur, effectiveElev);
             }
 
             // Drop Shadow pass
-            if (Elevation > 0.1)
+            if (effectiveElev > 0.1)
             {
                 if (pipeline == RenderPipelineTarget.GpuAtlas)
                 {
-                    DrawAtlasShadowPass(dc, w, h, radiusX, radiusY);
+                    DrawAtlasShadowPass(dc, w, h, radiusX, radiusY, effectiveElev, effectiveBlur);
                 }
                 else
                 {
-                    DrawSdfShadowPass(dc, w, h, radiusX, radiusY, pipeline == RenderPipelineTarget.Cpu);
+                    DrawSdfShadowPass(dc, w, h, radiusX, radiusY, pipeline == RenderPipelineTarget.Cpu, effectiveElev, effectiveBlur);
                 }
             }
 
@@ -296,10 +319,10 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
             // Child content is arranged and rendered on top automatically with subpixel ClearType!
         }
 
-        private void DrawGlowPass(DrawingContext dc, double w, double h, double rx, double ry)
+        private void DrawGlowPass(DrawingContext dc, double w, double h, double rx, double ry, double glowIntensity, double blurRadius, double elevation)
         {
-            float intensity = (float)Math.Min(2.0, GlowIntensity);
-            double glowSpread = Math.Max(2.0, (BlurRadius + Elevation) * 0.75);
+            float intensity = (float)Math.Min(2.0, glowIntensity);
+            double glowSpread = Math.Max(2.0, (blurRadius + elevation) * 0.75);
             var color = GlowColor;
 
             // Multi-tier gradient rings approximating exponential glow falloff
@@ -324,16 +347,16 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
             }
         }
 
-        private void DrawAtlasShadowPass(DrawingContext dc, double w, double h, double rx, double ry)
+        private void DrawAtlasShadowPass(DrawingContext dc, double w, double h, double rx, double ry, double elevation, double blurRadius)
         {
             // Leverages ZeroShadowAtlas 9-slice cached geometry
-            var patch = ZeroShadowAtlas.GetOrCreatePatch((float)rx, (float)Elevation, (float)BlurRadius);
-            double offsetY = Elevation * 0.65;
+            var patch = ZeroShadowAtlas.GetOrCreatePatch((float)rx, (float)elevation, (float)blurRadius);
+            double offsetY = elevation * 0.65;
 
             int steps = 3;
             for (int i = steps; i >= 1; i--)
             {
-                double spread = (steps - i + 1) * (BlurRadius / 4.0);
+                double spread = (steps - i + 1) * (blurRadius / 4.0);
                 byte alpha = (byte)(28 + (i * 18));
                 var shadowBrush = new SolidColorBrush(Color.FromArgb(alpha, 0, 0, 0));
                 shadowBrush.Freeze();
@@ -343,11 +366,11 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
             }
         }
 
-        private void DrawSdfShadowPass(DrawingContext dc, double w, double h, double rx, double ry, bool isSoftware)
+        private void DrawSdfShadowPass(DrawingContext dc, double w, double h, double rx, double ry, bool isSoftware, double elevation, double blurRadius)
         {
-            double offsetY = Elevation * 0.8;
+            double offsetY = elevation * 0.8;
             int passes = isSoftware ? 2 : 4; // Constrain passes on CPU to save rasterizer cycles
-            double maxSpread = Math.Max(2.0, BlurRadius * 0.8);
+            double maxSpread = Math.Max(2.0, blurRadius * 0.8);
 
             for (int i = passes; i >= 1; i--)
             {

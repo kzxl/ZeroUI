@@ -2059,6 +2059,18 @@ namespace ZeroUI.Samples.WpfDemo
             var monitor = ZeroUI.Wpf.Rendering.Optimizer.ZeroWpfRenderMonitor.Instance;
             TxtFidelityBadge.Text = $"TIER: {monitor.CurrentFidelity.ToString().ToUpperInvariant()} ({(monitor.CurrentFidelity == ZeroUI.Core.Rendering.Optimizer.RenderFidelityTier.Ultra ? "144 FPS" : "60 FPS")})";
             TxtMonitorFps.Text = $"FPS: {monitor.CurrentFps:F1} | {monitor.RollingAverageFrameTimeMs:F1}ms";
+
+            if (TxtGpuAdapterBadge != null)
+            {
+                var tier = ZeroUI.Core.Rendering.Optimizer.ZeroGpuCapabilities.CurrentTier;
+                string tierName = tier switch
+                {
+                    ZeroUI.Core.Rendering.Optimizer.HardwareGpuTier.Tier2_Discrete => "Discrete",
+                    ZeroUI.Core.Rendering.Optimizer.HardwareGpuTier.Tier1_Integrated => "Integrated",
+                    _ => "Software"
+                };
+                TxtGpuAdapterBadge.Text = $"GPU: {ZeroUI.Core.Rendering.Optimizer.ZeroGpuCapabilities.AdapterName} ({tierName} | {ZeroUI.Core.Rendering.Optimizer.ZeroGpuCapabilities.DedicatedVramMb:F0}MB)";
+            }
         }
 
         private void UpdateAtlasTelemetry()

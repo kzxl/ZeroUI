@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using ZeroUI.Core.Rendering.Optimizer;
 
 namespace ZeroUI.Wpf.Rendering
 {
@@ -153,6 +154,8 @@ namespace ZeroUI.Wpf.Rendering
                     throw new InvalidOperationException($"D3D11CreateDevice failed with HRESULT 0x{hr:X8}");
                 }
             }
+
+            QueryGpuCapabilities();
         }
 
         /// <summary>
@@ -303,6 +306,74 @@ namespace ZeroUI.Wpf.Rendering
             D3DNative.SafeRelease(ref _pD3D9Surface);
             D3DNative.SafeRelease(ref _pD3D9Texture);
             _sharedHandle = IntPtr.Zero;
+        }
+
+        private void QueryGpuCapabilities()
+        {
+            if (_pD3D11Device == IntPtr.Zero) return;
+
+            try
+            {
+                var queryInterface = D3DNative.GetVTableDelegate<D3DNative.IUnknown_QueryInterface>(_pD3D11Device, 0);
+                Guid iidDxgiDevice = D3DNative.IID_IDXGIDevice;
+                int hr = queryInterface(_pD3D11Device, ref iidDxgiDevice, out IntPtr pDxgiDevice);
+                if (hr == 0 && pDxgiDevice != IntPtr.Zero)
+                {
+                    try
+                    {
+                        var getAdapter = D3DNative.GetVTableDelegate<D3DNative.IDXGIDevice_GetAdapter>(pDxgiDevice, 7);
+                        hr = getAdapter(pDxgiDevice, out IntPtr pAdapter);
+                        if (hr == 0 && pAdapter != IntPtr.Zero)
+                        {
+                            try
+                            {
+                                var getDesc = D3DNative.GetVTableDelegate<D3DNative.IDXGIAdapter_GetDesc>(pAdapter, 8);
+                                hr = getDesc(pAdapter, out var desc);
+                                if (hr == 0)
+                                {
+                                    ulong vramBytes = desc.DedicatedVideoMemory.ToUInt64();
+                                    ulong sharedBytes = desc.SharedSystemMemory.ToUInt64();
+                                    double vramMb = vramBytes / (1024.0 * 1024.0);
+                                    double sharedMb = sharedBytes / (1024.0 * 1024.0);
+
+                                    var tier = HardwareGpuTier.Tier1_Integrated;
+                                    string descStr = desc.Description ?? string.Empty;
+
+                                    if (descStr.IndexOf("Basic Render", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                        descStr.IndexOf("WARP", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                        vramBytes == 0)
+                                    {
+                                        tier = HardwareGpuTier.Tier0_Software;
+                                    }
+                                    else if (vramMb >= 900.0) // 1GB+ dedicated VRAM
+                                    {
+                                        tier = HardwareGpuTier.Tier2_Discrete;
+                                    }
+
+                                    ZeroGpuCapabilities.Configure(
+                                        descStr,
+                                        tier,
+                                        vramMb,
+                                        sharedMb,
+                                        desc.VendorId);
+                                }
+                            }
+                            finally
+                            {
+                                D3DNative.SafeRelease(ref pAdapter);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        D3DNative.SafeRelease(ref pDxgiDevice);
+                    }
+                }
+            }
+            catch
+            {
+                // Graceful fallback to default capabilities
+            }
         }
 
         public void Dispose()

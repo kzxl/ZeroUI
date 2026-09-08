@@ -298,5 +298,44 @@ namespace ZeroUI.Core.Tests
             int leftColHeight = tl.h + ml.h + bl.h;
             Assert.Equal(targetH, leftColHeight);
         }
+
+        [Fact]
+        public void GpuCapabilities_ConfigureAndReset_MaintainsTelemetry()
+        {
+            ZeroGpuCapabilities.Reset();
+            Assert.Equal(HardwareGpuTier.Tier2_Discrete, ZeroGpuCapabilities.CurrentTier);
+            Assert.True(ZeroGpuCapabilities.IsHardwareAccelerated);
+
+            ZeroGpuCapabilities.Configure("Intel Iris Xe Graphics", HardwareGpuTier.Tier1_Integrated, 128.0, 4096.0, 0x8086);
+            Assert.Equal("Intel Iris Xe Graphics", ZeroGpuCapabilities.AdapterName);
+            Assert.Equal(HardwareGpuTier.Tier1_Integrated, ZeroGpuCapabilities.CurrentTier);
+            Assert.Equal(128.0, ZeroGpuCapabilities.DedicatedVramMb);
+            Assert.Equal(0x8086u, ZeroGpuCapabilities.VendorId);
+
+            ZeroGpuCapabilities.Reset();
+            Assert.Equal(HardwareGpuTier.Tier2_Discrete, ZeroGpuCapabilities.CurrentTier);
+        }
+
+        [Fact]
+        public void RenderAnalyzer_Tier0Software_LowersAtlasThreshold()
+        {
+            // On Tier 0 (WARP software rasterizer), batch size of 2 already routes to Atlas to avoid software pixel shaders
+            var profile = RenderOperationProfile.ForCard(350, 200, elevation: 8f, blurRadius: 14f, batchCount: 2);
+            var decision = ZeroRenderAnalyzer.Evaluate(profile, RenderFidelityTier.Balanced, overrideGpuTier: HardwareGpuTier.Tier0_Software);
+
+            Assert.Equal(RenderPipelineTarget.GpuAtlas, decision.Pipeline);
+            Assert.True(decision.UseAtlas);
+        }
+
+        [Fact]
+        public void RenderAnalyzer_Tier2Discrete_LowerGpuCostThanTier0()
+        {
+            var profile = RenderOperationProfile.ForCard(800, 600, elevation: 16f, blurRadius: 24f, batchCount: 1);
+            var decisionTier0 = ZeroRenderAnalyzer.Evaluate(profile, RenderFidelityTier.Ultra, overrideGpuTier: HardwareGpuTier.Tier0_Software);
+            var decisionTier2 = ZeroRenderAnalyzer.Evaluate(profile, RenderFidelityTier.Ultra, overrideGpuTier: HardwareGpuTier.Tier2_Discrete);
+
+            Assert.True(decisionTier2.EstimatedGpuCostUs < decisionTier0.EstimatedGpuCostUs);
+            Assert.True(decisionTier2.EstimatedSpeedupFactor > decisionTier0.EstimatedSpeedupFactor);
+        }
     }
 }

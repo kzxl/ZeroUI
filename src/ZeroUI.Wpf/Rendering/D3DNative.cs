@@ -47,6 +47,8 @@ namespace ZeroUI.Wpf.Rendering
         public static readonly Guid IID_IUnknown = new Guid("00000000-0000-0000-C000-000000000046");
         public static readonly Guid IID_IDXGIResource = new Guid("035f3ab4-482e-4e50-b41f-8a7f8bd8960b");
         public static readonly Guid IID_ID3D11Texture2D = new Guid("6f15aaf2-d208-4e89-9ab4-489535d34f9c");
+        public static readonly Guid IID_IDXGIDevice = new Guid("54ec77fa-1377-44e6-8c32-88fd5f44c84c");
+        public static readonly Guid IID_IDXGIAdapter = new Guid("2411e6e1-12ac-4ccf-bd14-9798e8534d7f");
 
         #endregion
 
@@ -91,6 +93,21 @@ namespace ZeroUI.Wpf.Rendering
             public uint BindFlags;
             public uint CPUAccessFlags;
             public uint MiscFlags;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct DXGI_ADAPTER_DESC
+        {
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string Description;
+            public uint VendorId;
+            public uint DeviceId;
+            public uint SubSysId;
+            public uint Revision;
+            public UIntPtr DedicatedVideoMemory;
+            public UIntPtr DedicatedSystemMemory;
+            public UIntPtr SharedSystemMemory;
+            public long AdapterLuid;
         }
 
         #endregion
@@ -183,6 +200,16 @@ namespace ZeroUI.Wpf.Rendering
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void D3D11DeviceContext_Flush(
             IntPtr pContext);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int IDXGIDevice_GetAdapter(
+            IntPtr pDevice,
+            out IntPtr ppAdapter);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int IDXGIAdapter_GetDesc(
+            IntPtr pAdapter,
+            out DXGI_ADAPTER_DESC pDesc);
 
         #endregion
 

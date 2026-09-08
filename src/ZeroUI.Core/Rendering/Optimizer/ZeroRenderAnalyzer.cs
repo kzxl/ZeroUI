@@ -29,12 +29,15 @@ namespace ZeroUI.Core.Rendering.Optimizer
         /// <param name="profile">The visual profile and dimensions of the control.</param>
         /// <param name="fidelity">Current adaptive fidelity tier (Ultra, Balanced, PowerSaver).</param>
         /// <param name="currentFrameTimeMs">Current rolling average frame time in milliseconds.</param>
+        /// <param name="overrideGpuTier">Optional hardware GPU tier override (Tier0_Software, Tier1_Integrated, Tier2_Discrete).</param>
         /// <returns>A <see cref="RenderDecision"/> containing the chosen pipeline and cost breakdown.</returns>
         public static RenderDecision Evaluate(
             in RenderOperationProfile profile,
             RenderFidelityTier fidelity = RenderFidelityTier.Balanced,
-            double currentFrameTimeMs = 8.0)
+            double currentFrameTimeMs = 8.0,
+            HardwareGpuTier? overrideGpuTier = null)
         {
+            var gpuTier = overrideGpuTier ?? ZeroGpuCapabilities.CurrentTier;
             double kiloPixels = (profile.Width * profile.Height) / 1000.0;
             if (kiloPixels < 0.01) kiloPixels = 0.01;
 
@@ -69,14 +72,31 @@ namespace ZeroUI.Core.Rendering.Optimizer
 
             cpuCost *= profile.BatchCount;
 
-            // 2. Estimate GPU Cost
+            // 2. Estimate GPU Cost with Hardware Tier Modulation
+            double dispatchOverhead = gpuTier switch
+            {
+                HardwareGpuTier.Tier0_Software => 22.0, // High WARP CPU overhead
+                HardwareGpuTier.Tier1_Integrated => 10.5,
+                _ => GpuContextDispatchOverheadUs
+            };
+
+            double sdfPerKiloPixel = gpuTier switch
+            {
+                HardwareGpuTier.Tier0_Software => GpuSdfPerKiloPixelUs * 2.8,
+                HardwareGpuTier.Tier1_Integrated => GpuSdfPerKiloPixelUs * 1.2,
+                _ => GpuSdfPerKiloPixelUs * 0.75 // High-throughput Discrete GPU
+            };
+
             double gpuCost;
             bool recommendAtlas = false;
             string recommendedShader = "None";
 
             if (hasComplexEffects)
             {
-                if (profile.BatchCount >= 4 && !profile.IsAnimated && fidelity != RenderFidelityTier.Ultra)
+                // On Tier 0 (Software), prefer 9-slice atlas even for batch size >= 2
+                int atlasBatchThreshold = gpuTier == HardwareGpuTier.Tier0_Software ? 2 : 4;
+
+                if (profile.BatchCount >= atlasBatchThreshold && !profile.IsAnimated && fidelity != RenderFidelityTier.Ultra)
                 {
                     // Batched cards with recurring elevation: Route to 9-Slice Atlas
                     recommendAtlas = true;
@@ -86,7 +106,7 @@ namespace ZeroUI.Core.Rendering.Optimizer
                 else
                 {
                     // Live GPU Shader
-                    gpuCost = GpuContextDispatchOverheadUs + (kiloPixels * GpuSdfPerKiloPixelUs * profile.BatchCount);
+                    gpuCost = dispatchOverhead + (kiloPixels * sdfPerKiloPixel * profile.BatchCount);
 
                     if (hasGlow)
                     {
@@ -105,7 +125,7 @@ namespace ZeroUI.Core.Rendering.Optimizer
             else
             {
                 // Pure flat/text rendering on GPU has context switch overhead
-                gpuCost = GpuContextDispatchOverheadUs + (kiloPixels * 0.1);
+                gpuCost = dispatchOverhead + (kiloPixels * 0.1);
             }
 
             // 3. Routing Decision Logic

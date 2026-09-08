@@ -1080,6 +1080,9 @@
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                                                 <Border Background="#1E293B" CornerRadius="4" Padding="8,4,8,4" Margin="0,0,8,0">
+                                                    <TextBlock x:Name="TxtGpuAdapterBadge" Text="GPU: NVIDIA RTX / 4GB VRAM" FontWeight="Bold" FontSize="11" Foreground="#A78BFA" />
+                                                </Border>
+                                                <Border Background="#1E293B" CornerRadius="4" Padding="8,4,8,4" Margin="0,0,8,0">
                                                     <TextBlock x:Name="TxtFidelityBadge" Text="TIER: ULTRA (144 FPS)" FontWeight="Bold" FontSize="11" Foreground="#38BDF8" />
                                                 </Border>
                                                 <Border Background="#1E293B" CornerRadius="4" Padding="8,4,8,4">
