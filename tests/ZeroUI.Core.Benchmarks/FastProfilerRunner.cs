@@ -29,6 +29,7 @@ namespace ZeroUI.Core.Benchmarks
             ProfileZeroRuntime();
             ProfileZeroAnimationClock();
             HistorianMultiDimensionalBenchmark.RunAsync().GetAwaiter().GetResult();
+            RenderOptimizerBenchmarks.RunDiagnosticProfiler();
 
             Console.WriteLine();
             Console.WriteLine("==================================================================================");

@@ -19,6 +19,9 @@ namespace ZeroUI.Wpf.Rendering
         private readonly Stopwatch _fpsStopwatch = new Stopwatch();
         private int _frameCount;
         private double _animPhase = 0.0;
+        private double _mouseX;
+        private double _mouseY;
+        private bool _isMouseOver;
         private bool _isDisposed;
 
         public static readonly DependencyProperty IsRenderingActiveProperty =
@@ -69,6 +72,10 @@ namespace ZeroUI.Wpf.Rendering
             Unloaded += OnUnloaded;
             SizeChanged += OnSizeChanged;
             _d3dImage.IsFrontBufferAvailableChanged += OnIsFrontBufferAvailableChanged;
+
+            MouseMove += (s, e) => { var p = e.GetPosition(this); _mouseX = p.X; _mouseY = p.Y; };
+            MouseEnter += (s, e) => _isMouseOver = true;
+            MouseLeave += (s, e) => _isMouseOver = false;
         }
 
         private static void OnIsRenderingActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -166,11 +173,14 @@ namespace ZeroUI.Wpf.Rendering
             }
             else if (EnableWaveformDemo)
             {
-                // Built-in GPU gradient pulse demo
+                // Built-in interactive GPU gradient & bloom wave
                 _animPhase += 0.035;
-                float r = (float)(0.08 + 0.05 * Math.Sin(_animPhase));
-                float g = (float)(0.12 + 0.08 * Math.Sin(_animPhase + 2.0));
-                float b = (float)(0.22 + 0.12 * Math.Sin(_animPhase + 4.0));
+                float mx = _isMouseOver && ActualWidth > 0 ? (float)(_mouseX / ActualWidth) : 0.5f;
+                float my = _isMouseOver && ActualHeight > 0 ? (float)(_mouseY / ActualHeight) : 0.5f;
+
+                float r = (float)(0.06 + 0.05 * Math.Sin(_animPhase) + (0.04 * mx));
+                float g = (float)(0.10 + 0.07 * Math.Sin(_animPhase + 2.0) + (0.06 * (1.0f - my)));
+                float b = (float)(0.20 + 0.10 * Math.Sin(_animPhase + 4.0) + (0.08 * mx));
 
                 _bridge.Clear(r, g, b, 1.0f);
             }

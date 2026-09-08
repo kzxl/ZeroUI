@@ -45,6 +45,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBlock Text="🎨 Skin:" VerticalAlignment="Center" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,6,0" FontSize="12.5" FontWeight="SemiBold" />
                     <ComboBox x:Name="ComboSkinSelector" Width="175" Height="30" Margin="0,0,10,0" SelectionChanged="ComboSkinSelector_SelectionChanged" />
+                    <Button x:Name="BtnToggleHUD" Click="BtnToggleHUD_Click" Content="⚡ HUD" Height="30" Padding="10,0,10,0" Margin="0,0,8,0" Cursor="Hand" FontWeight="SemiBold" ToolTip="Toggle Render Optimizer Diagnostics HUD" />
                     <Button x:Name="BtnDetailDrawer" Click="BtnDetailDrawer_Click" Content="📋 Detail Drawer" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" FontWeight="SemiBold" />
                     <Button x:Name="BtnSkinStudio" Click="BtnSkinStudio_Click" Content="🎨 Skin Studio" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" FontWeight="SemiBold" />
                     <Button x:Name="BtnAbout" Click="BtnAbout_Click" Content="ℹ️ Architecture" Height="30" Padding="12,0,12,0" Cursor="Hand" />
@@ -58,6 +59,9 @@
                 <ColumnDefinition Width="Auto" /> <!-- Left Rail Nav -->
                 <ColumnDefinition Width="*" />    <!-- Cluster Content Workspace -->
             </Grid.ColumnDefinitions>
+
+            <!-- Floating Render Optimizer Diagnostics HUD -->
+            <opt:ZeroRenderOptimizerHUD x:Name="MasterHUD" Grid.ColumnSpan="2" Panel.ZIndex="999" IsExpanded="True" Margin="0,16,24,0" Visibility="Collapsed" />
 
             <!-- Left Navigation Rail: 7 Primary Clusters -->
             <nav:SideNav x:Name="MainNavRail" Grid.Column="0"

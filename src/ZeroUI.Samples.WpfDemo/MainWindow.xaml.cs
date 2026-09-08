@@ -2082,6 +2082,13 @@ namespace ZeroUI.Samples.WpfDemo
             TxtAtlasSavedCalls.Text = hits > 0 ? $"{hits} Calls Saved" : "95% Reduction";
         }
 
+        private void BtnToggleHUD_Click(object sender, RoutedEventArgs e)
+        {
+            if (MasterHUD == null) return;
+            MasterHUD.Visibility = MasterHUD.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            BtnToggleHUD.Content = MasterHUD.Visibility == Visibility.Visible ? "⚡ HUD [ON]" : "⚡ HUD";
+        }
+
         #endregion
 
         private void BtnShowModalConfirm_Click(object sender, RoutedEventArgs e)
