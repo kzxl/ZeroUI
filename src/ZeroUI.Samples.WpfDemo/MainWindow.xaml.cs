@@ -30,6 +30,9 @@ using ZeroUI.Wpf.Overlays;
 using ZeroUI.Wpf.Reporting;
 using ZeroUI.Wpf.Feedback;
 using ZeroUI.Wpf.Theme;
+using ZeroUI.Core.Scada.Safety;
+using ZeroUI.Core.Editors;
+using ZeroUI.Core.Scada;
 
 namespace ZeroUI.Samples.WpfDemo
 {
@@ -169,6 +172,20 @@ namespace ZeroUI.Samples.WpfDemo
             plantScene.AddNode(pt2);
 
             PlantCanvas.Scene = plantScene;
+
+            // Setup Recirculation Header Polyline Pipeline
+            RecircPipeFlow.FluidType = ZeroFluidType.CoolingWater;
+            RecircPipeFlow.SetPoints(new[]
+            {
+                new Point(30, 20),
+                new Point(220, 20),
+                new Point(220, 75),
+                new Point(450, 75),
+                new Point(450, 25),
+                new Point(680, 25),
+                new Point(680, 85),
+                new Point(920, 85)
+            });
         }
 
         private void RefreshSkinSelector()
@@ -1139,7 +1156,7 @@ namespace ZeroUI.Samples.WpfDemo
         private void SetupDockAndDiagram()
         {
             // Left Toolbox Panel
-            var leftPanel = new ZeroDockPanel { Title = "Toolbox & Asset Library", DockPosition = DockPosition.Left };
+            var leftPanel = new ZeroDockPanel { Title = "Toolbox & Asset Library", DockPosition = DockPosition.Left, PanelKey = "ToolboxPanel" };
             var toolboxStack = new StackPanel { Margin = new Thickness(12) };
             toolboxStack.Children.Add(new TextBlock { Text = "📐 Process Library", FontWeight = FontWeights.Bold, Foreground = ZeroWpfTheme.TextPrimary, Margin = new Thickness(0, 0, 0, 8) });
             toolboxStack.Children.Add(new TextBlock { Text = "• Primary Buffer Tank (TK-101)\n• Centrifugal Feed Pump (P-201)\n• Proportional Control Valve (XV-301)\n• Exothermic Reactor Vessel (RX-401)\n• RTD Temperature Sensor (TE-501)", Foreground = ZeroWpfTheme.TextSecondary, LineHeight = 20 });
@@ -1147,13 +1164,13 @@ namespace ZeroUI.Samples.WpfDemo
             DemoDockManager.AddPanel(leftPanel);
 
             // Center Document: ZeroDiagramCanvas
-            var centerDoc = new ZeroDockPanel { Title = "P&ID Process Diagram Loop", DockPosition = DockPosition.Document };
+            var centerDoc = new ZeroDockPanel { Title = "P&ID Process Diagram Loop", DockPosition = DockPosition.Document, PanelKey = "DiagramDoc" };
             _diagramCanvas = new ZeroDiagramCanvas();
             centerDoc.Content = _diagramCanvas;
             DemoDockManager.AddPanel(centerDoc);
 
             // Bottom Output Panel
-            var bottomPanel = new ZeroDockPanel { Title = "Output & Fieldbus Telemetry", DockPosition = DockPosition.Bottom };
+            var bottomPanel = new ZeroDockPanel { Title = "Output & Fieldbus Telemetry", DockPosition = DockPosition.Bottom, PanelKey = "OutputPanel" };
             var outputBox = new TextBox
             {
                 IsReadOnly = true,
@@ -1168,7 +1185,7 @@ namespace ZeroUI.Samples.WpfDemo
             DemoDockManager.AddPanel(bottomPanel);
 
             // Right Properties Panel
-            var rightPanel = new ZeroDockPanel { Title = "Node Inspector", DockPosition = DockPosition.Right };
+            var rightPanel = new ZeroDockPanel { Title = "Node Inspector", DockPosition = DockPosition.Right, PanelKey = "InspectorPanel" };
             var rightStack = new StackPanel { Margin = new Thickness(12) };
             var lblInspector = new TextBlock { Text = "Select a diagram node to inspect parameters", TextWrapping = TextWrapping.Wrap, Foreground = ZeroWpfTheme.TextMuted };
             rightStack.Children.Add(lblInspector);
@@ -1226,6 +1243,27 @@ namespace ZeroUI.Samples.WpfDemo
         private void BtnResetDiagram_Click(object sender, RoutedEventArgs e)
         {
             ResetDiagramContent();
+        }
+
+        private string? _savedWpfDockLayout;
+
+        private void BtnSaveDockLayout_Click(object sender, RoutedEventArgs e)
+        {
+            _savedWpfDockLayout = DemoDockManager.SaveLayoutToJson();
+            ZeroToast.Success(this, "Dock layout configuration saved to JSON.", 3000);
+        }
+
+        private void BtnRestoreDockLayout_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_savedWpfDockLayout))
+            {
+                DemoDockManager.RestoreLayoutFromJson(_savedWpfDockLayout);
+                ZeroToast.Success(this, "Dock layout restored from JSON configuration.", 3000);
+            }
+            else
+            {
+                ZeroToast.Warning(this, "No saved layout state found. Please click 'Save Layout' first.", 3500);
+            }
         }
 
         #endregion
@@ -1498,6 +1536,23 @@ namespace ZeroUI.Samples.WpfDemo
             DemoGridLookup.DisplayMember = "Name";
             DemoGridLookup.ValueMember = "Code";
             DemoGridLookup.SetDataSource(sampleMaterials);
+            DemoGridLookup.ProcessNewValue += (s, e) =>
+            {
+                ZeroToast.Success(this, $"Quick Add requested for new material: {e.DisplayText}");
+                e.Handled = true;
+            };
+
+            // 1b. Setup High-Capacity SearchLookUpEdit
+            DemoSearchLookup.DisplayMember = "Name";
+            DemoSearchLookup.ValueMember = "Code";
+            DemoSearchLookup.SetDataSource(sampleMaterials);
+            DemoSearchLookup.SelectionChanged += (s, e) =>
+            {
+                if (DemoSearchLookup.EditValue is DemoProduct prod)
+                {
+                    ZeroToast.Info(this, $"SearchLookUpEdit selected: {prod.Name} ({prod.Code})");
+                }
+            };
 
             // 2. Setup ZeroCheckedComboBox
             DemoCheckedCombo.Items.Add(new CheckedComboItem("ZoneA", "Zone A: SMT Cleanroom (Class 10k)", true));
@@ -1741,6 +1796,11 @@ namespace ZeroUI.Samples.WpfDemo
             ZeroToast.Error(this, "Emergency Stop circuit tripped on Conveyor CV-401!");
         }
 
+        private void BtnToastAlarm_Click(object sender, RoutedEventArgs e)
+        {
+            ZeroToast.Alarm(this, "Critical: High-temperature limit exceeded on Exothermic Reactor RX-401 (94.8°C)!", 4000);
+        }
+
         private void BtnShowModalConfirm_Click(object sender, RoutedEventArgs e)
         {
             bool confirmed = ZeroModal.Confirm(this,
@@ -1757,6 +1817,59 @@ namespace ZeroUI.Samples.WpfDemo
             {
                 ZeroToast.Warning(this, "Dispatch cancelled by operator.");
             }
+        }
+
+        private bool _isLotoActive = false;
+
+        private void BtnToggleLoto_Click(object sender, RoutedEventArgs e)
+        {
+            _isLotoActive = !_isLotoActive;
+            var flag = _isLotoActive ? DeviceStatusFlags.LockedOut : DeviceStatusFlags.None;
+            if (PlantCanvas.Scene != null)
+            {
+                foreach (var node in PlantCanvas.Scene.RootNodes)
+                {
+                    if (node is ZeroSceneNode zNode && (zNode.Id == "P-101A" || zNode.Id == "XV-101"))
+                    {
+                        zNode.StatusFlags = flag;
+                    }
+                }
+                PlantCanvas.InvalidateVisual();
+            }
+            BtnToggleLoto.Content = _isLotoActive ? "🔓 Release OSHA LOTO" : "🔒 Toggle OSHA LOTO";
+            if (_isLotoActive)
+            {
+                ZeroToast.Alarm(this, "OSHA LOTO Padlock applied to Pump P-101A and Valve XV-101!", 4000);
+            }
+            else
+            {
+                ZeroToast.Success(this, "OSHA LOTO Padlock removed. System clear for operation.");
+            }
+        }
+
+        private void BtnTunePid_Click(object sender, RoutedEventArgs e)
+        {
+            var screenPoint = PointToScreen(new Point(Math.Max(50, ActualWidth - 420), 100));
+            ZeroPidFlyout.ShowFlyout(this, screenPoint, "PIC-101", "Boiler Steam Header Pressure");
+            ZeroToast.Info(this, "PID Faceplate activated. Live 60 FPS loop tuning active.");
+        }
+
+        private void BtnToggleCrosshair_Click(object sender, RoutedEventArgs e)
+        {
+            AreaChart.CrosshairMode = AreaChart.CrosshairMode == CrosshairMode.Both ? CrosshairMode.None : CrosshairMode.Both;
+            AreaChart.InvalidateVisual();
+            BarChart.CrosshairMode = AreaChart.CrosshairMode;
+            BarChart.InvalidateVisual();
+            ZeroToast.Info(this, $"Crosshair HUD mode: {AreaChart.CrosshairMode}");
+        }
+
+        private void BtnToggleSpcBelts_Click(object sender, RoutedEventArgs e)
+        {
+            AreaChart.EnableSpcBelts = !AreaChart.EnableSpcBelts;
+            AreaChart.InvalidateVisual();
+            BarChart.EnableSpcBelts = AreaChart.EnableSpcBelts;
+            BarChart.InvalidateVisual();
+            ZeroToast.Info(this, AreaChart.EnableSpcBelts ? "SPC 3σ Limit Belts (UCL, CL, LCL) enabled." : "SPC 3σ Limit Belts hidden.");
         }
 
         #endregion

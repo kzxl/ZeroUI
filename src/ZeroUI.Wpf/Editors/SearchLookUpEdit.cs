@@ -65,6 +65,9 @@ namespace ZeroUI.Wpf.Editors
 
         public event EventHandler? EditValueChanged;
         public event EventHandler? SelectionChanged;
+        public event EventHandler<ProcessNewValueEventArgs>? ProcessNewValue;
+        public bool ShowAddNewButton { get; set; } = false;
+        public string AddNewButtonText { get; set; } = "+ Add New Record";
 
         public object? EditValue
         {
@@ -378,7 +381,8 @@ namespace ZeroUI.Wpf.Editors
             Grid.SetRow(_grid, 1);
             popupGrid.Children.Add(_grid);
 
-            // Status Footer
+            // Status & Quick-Add Footer
+            var footerPanel = new DockPanel { LastChildFill = false };
             _statusBlock = new TextBlock
             {
                 Text = "Ready",
@@ -387,8 +391,34 @@ namespace ZeroUI.Wpf.Editors
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(4, 0, 0, 0)
             };
-            Grid.SetRow(_statusBlock, 2);
-            popupGrid.Children.Add(_statusBlock);
+            DockPanel.SetDock(_statusBlock, Dock.Left);
+            footerPanel.Children.Add(_statusBlock);
+
+            if (ShowAddNewButton)
+            {
+                var btnAddNew = new SimpleButton
+                {
+                    Content = AddNewButtonText,
+                    Height = 22,
+                    Padding = new Thickness(8, 0, 8, 0),
+                    Margin = new Thickness(0, 0, 4, 0),
+                    Cursor = Cursors.Hand
+                };
+                btnAddNew.Click += (s, e) =>
+                {
+                    var args = new ProcessNewValueEventArgs(_searchBox?.Text ?? string.Empty);
+                    ProcessNewValue?.Invoke(this, args);
+                    if (args.Handled)
+                    {
+                        IsDropDownOpen = false;
+                    }
+                };
+                DockPanel.SetDock(btnAddNew, Dock.Right);
+                footerPanel.Children.Add(btnAddNew);
+            }
+
+            Grid.SetRow(footerPanel, 2);
+            popupGrid.Children.Add(footerPanel);
 
             _popupBorder.Child = popupGrid;
             _popup.Child = _popupBorder;

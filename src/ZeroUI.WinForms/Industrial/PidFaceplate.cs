@@ -9,12 +9,6 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
-    public enum ZeroPidMode
-    {
-        Auto,
-        Manual,
-        Cascade
-    }
 
     /// <summary>
     /// Industrial Single-Loop Process Controller Faceplate (PID Faceplate).

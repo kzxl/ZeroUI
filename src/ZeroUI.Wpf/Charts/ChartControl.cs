@@ -35,6 +35,14 @@ namespace ZeroUI.Wpf.Charts
         public string Subtitle { get; set; } = string.Empty;
         public bool ShowLegend { get; set; } = true;
         public bool ShowCrosshair { get; set; } = true;
+        public CrosshairMode CrosshairMode { get; set; } = CrosshairMode.Both;
+        public bool EnableSpcBelts { get; set; } = false;
+        public SpcBeltStyle SpcBeltStyle { get; set; } = SpcBeltStyle.TrafficLight;
+        public double? UpperControlLimit { get; set; }
+        public double? LowerControlLimit { get; set; }
+        public double? NominalTarget { get; set; }
+        public double? UpperSpecLimit { get; set; }
+        public double? LowerSpecLimit { get; set; }
 
         // Interaction state
         private Point? _mousePos;
@@ -177,6 +185,74 @@ namespace ZeroUI.Wpf.Charts
                 dc.DrawText(xFt, new Point(xPos - xFt.Width / 2.0, plot.Bottom + 6));
             }
 
+            // Render SPC Limit Belts (Six Sigma UCL, Nominal, LCL)
+            if (EnableSpcBelts && Series.Count > 0 && Series[0].Points.Count > 0)
+            {
+                double sum = 0;
+                var pts = Series[0].Points;
+                foreach (var pt in pts) sum += pt.Value;
+                double mean = sum / pts.Count;
+
+                double varSum = 0;
+                foreach (var pt in pts) varSum += Math.Pow(pt.Value - mean, 2);
+                double sigma = Math.Sqrt(varSum / Math.Max(1, pts.Count - 1));
+
+                double ucl = UpperControlLimit ?? (mean + 3 * sigma);
+                double lcl = LowerControlLimit ?? (mean - 3 * sigma);
+                double cl = NominalTarget ?? mean;
+
+                double uclRatio = (ucl - minY) / (maxY - minY);
+                double lclRatio = (lcl - minY) / (maxY - minY);
+                double clRatio = (cl - minY) / (maxY - minY);
+
+                double uclY = plot.Bottom - Math.Max(0, Math.Min(1, uclRatio)) * plot.Height;
+                double lclY = plot.Bottom - Math.Max(0, Math.Min(1, lclRatio)) * plot.Height;
+                double clY = plot.Bottom - Math.Max(0, Math.Min(1, clRatio)) * plot.Height;
+
+                if (SpcBeltStyle == SpcBeltStyle.TrafficLight || SpcBeltStyle == SpcBeltStyle.Subtle)
+                {
+                    // Green Zone (Normal: within 1 sigma)
+                    double sig1TopRatio = ((cl + sigma) - minY) / (maxY - minY);
+                    double sig1BotRatio = ((cl - sigma) - minY) / (maxY - minY);
+                    double sig1TopY = plot.Bottom - Math.Max(0, Math.Min(1, sig1TopRatio)) * plot.Height;
+                    double sig1BotY = plot.Bottom - Math.Max(0, Math.Min(1, sig1BotRatio)) * plot.Height;
+
+                    Brush greenZone = new SolidColorBrush(Color.FromArgb(28, 16, 185, 129));
+                    greenZone.Freeze();
+                    dc.DrawRectangle(greenZone, null, new Rect(plot.Left, sig1TopY, plot.Width, Math.Max(0, sig1BotY - sig1TopY)));
+
+                    // Amber Warning Zone (between 1-sigma and 3-sigma)
+                    Brush amberZone = new SolidColorBrush(Color.FromArgb(20, 245, 158, 11));
+                    amberZone.Freeze();
+                    dc.DrawRectangle(amberZone, null, new Rect(plot.Left, uclY, plot.Width, Math.Max(0, sig1TopY - uclY)));
+                    dc.DrawRectangle(amberZone, null, new Rect(plot.Left, sig1BotY, plot.Width, Math.Max(0, lclY - sig1BotY)));
+                }
+
+                // UCL & LCL boundary lines (Crimson Red dashed)
+                var spcLinePen = new Pen(new SolidColorBrush(Color.FromRgb(239, 68, 68)), 1.2)
+                {
+                    DashStyle = new DashStyle(new double[] { 4.0, 3.0 }, 0)
+                };
+                spcLinePen.Freeze();
+                dc.DrawLine(spcLinePen, new Point(plot.Left, uclY), new Point(plot.Right, uclY));
+                dc.DrawLine(spcLinePen, new Point(plot.Left, lclY), new Point(plot.Right, lclY));
+
+                // CL Center Line (Emerald Green solid)
+                var clPen = new Pen(new SolidColorBrush(Color.FromRgb(16, 185, 129)), 1.2);
+                clPen.Freeze();
+                dc.DrawLine(clPen, new Point(plot.Left, clY), new Point(plot.Right, clY));
+
+                // Belt Right Badges
+                var uclBadge = CreateFormattedText($"UCL {ucl:F1}", ZeroWpfTheme.BoldTypeface, 8.5, new SolidColorBrush(Color.FromRgb(239, 68, 68)), dpi);
+                dc.DrawText(uclBadge, new Point(plot.Right - uclBadge.Width - 4, uclY - uclBadge.Height - 1));
+
+                var clBadge = CreateFormattedText($"CL {cl:F1}", ZeroWpfTheme.BoldTypeface, 8.5, new SolidColorBrush(Color.FromRgb(16, 185, 129)), dpi);
+                dc.DrawText(clBadge, new Point(plot.Right - clBadge.Width - 4, clY - clBadge.Height - 1));
+
+                var lclBadge = CreateFormattedText($"LCL {lcl:F1}", ZeroWpfTheme.BoldTypeface, 8.5, new SolidColorBrush(Color.FromRgb(239, 68, 68)), dpi);
+                dc.DrawText(lclBadge, new Point(plot.Right - lclBadge.Width - 4, lclY + 1));
+            }
+
             // Render Series
             foreach (var s in Series)
             {
@@ -249,27 +325,78 @@ namespace ZeroUI.Wpf.Charts
                 }
             }
 
-            // Crosshair & Tooltip
-            if (ShowCrosshair && _mousePos.HasValue && plot.Contains(_mousePos.Value))
+            // Crosshair & Tooltip HUD
+            if (ShowCrosshair && _mousePos.HasValue && plot.Contains(_mousePos.Value) && CrosshairMode != CrosshairMode.None)
             {
                 double mx = _mousePos.Value.X;
                 int hoveredIdx = (int)((mx - plot.Left) / stepX);
                 if (hoveredIdx >= 0 && hoveredIdx < maxPoints)
                 {
                     double cx = plot.Left + hoveredIdx * stepX + stepX / 2.0;
-                    dc.DrawLine(ZeroWpfTheme.AccentPen, new Point(cx, plot.Top), new Point(cx, plot.Bottom));
+                    double hoveredVal = Series[0].Points[hoveredIdx].Value;
+                    double pRatio = (hoveredVal - minY) / (maxY - minY);
+                    double cy = plot.Bottom - Math.Max(0, Math.Min(1, pRatio)) * plot.Height;
 
-                    // Tooltip Bubble
-                    string tooltipText = $"{Series[0].Points[hoveredIdx].Label}: {Series[0].Points[hoveredIdx].Value:N0}";
-                    var ttFt = CreateFormattedText(tooltipText, ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextPrimary, dpi);
+                    var crossPen = new Pen(new SolidColorBrush(Color.FromArgb(180, 129, 140, 248)), 1.2)
+                    {
+                        DashStyle = new DashStyle(new double[] { 3.0, 3.0 }, 0)
+                    };
+                    crossPen.Freeze();
 
-                    double tipW = ttFt.Width + 16;
-                    double tipH = ttFt.Height + 8;
-                    double tipX = Math.Min(plot.Right - tipW, Math.Max(plot.Left, cx - tipW / 2.0));
-                    double tipY = Math.Max(plot.Top + 4, _mousePos.Value.Y - tipH - 8);
+                    // Vertical Crosshair line
+                    if (CrosshairMode == CrosshairMode.VerticalOnly || CrosshairMode == CrosshairMode.Both)
+                    {
+                        dc.DrawLine(crossPen, new Point(cx, plot.Top), new Point(cx, plot.Bottom));
 
-                    dc.DrawRoundedRectangle(ZeroWpfTheme.BgInput, ZeroWpfTheme.BorderPen, new Rect(tipX, tipY, tipW, tipH), 4, 4);
-                    dc.DrawText(ttFt, new Point(tipX + 8, tipY + 4));
+                        // X-axis pill tag
+                        var xTagText = CreateFormattedText(Series[0].Points[hoveredIdx].Label, ZeroWpfTheme.BoldTypeface, 9.5, Brushes.White, dpi);
+                        double tagW = xTagText.Width + 10;
+                        double tagH = xTagText.Height + 4;
+                        double tagX = cx - tagW / 2.0;
+                        var tagBg = new SolidColorBrush(Color.FromRgb(30, 41, 59));
+                        tagBg.Freeze();
+                        dc.DrawRoundedRectangle(tagBg, null, new Rect(tagX, plot.Bottom + 1, tagW, tagH), 3, 3);
+                        dc.DrawText(xTagText, new Point(tagX + 5, plot.Bottom + 3));
+                    }
+
+                    // Horizontal Crosshair line
+                    if (CrosshairMode == CrosshairMode.HorizontalOnly || CrosshairMode == CrosshairMode.Both)
+                    {
+                        dc.DrawLine(crossPen, new Point(plot.Left, cy), new Point(plot.Right, cy));
+
+                        // Y-axis pill tag
+                        var yTagText = CreateFormattedText($"{hoveredVal:F1}", ZeroWpfTheme.BoldTypeface, 9.5, Brushes.White, dpi);
+                        double yTagW = yTagText.Width + 8;
+                        double yTagH = yTagText.Height + 4;
+                        var yTagBg = new SolidColorBrush(Color.FromRgb(30, 41, 59));
+                        yTagBg.Freeze();
+                        dc.DrawRoundedRectangle(yTagBg, null, new Rect(plot.Left - yTagW - 2, cy - yTagH / 2.0, yTagW, yTagH), 3, 3);
+                        dc.DrawText(yTagText, new Point(plot.Left - yTagW + 2, cy - yTagH / 2.0 + 2));
+                    }
+
+                    // Snapped Point Circle
+                    dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(129, 140, 248)), null, new Point(cx, cy), 5.5, 5.5);
+                    dc.DrawEllipse(Brushes.White, null, new Point(cx, cy), 2.5, 2.5);
+
+                    // Crosshair Floating HUD Card (Top-Right of plot)
+                    string hudTitle = $"🎯 POINT: {Series[0].Points[hoveredIdx].Label}";
+                    string hudValue = $"VALUE: {hoveredVal:N1} {(EnableSpcBelts ? "• SPC: NORMAL" : "")}";
+                    var hudTitleFt = CreateFormattedText(hudTitle, ZeroWpfTheme.BoldTypeface, 10.5, ZeroWpfTheme.TextPrimary, dpi);
+                    var hudValFt = CreateFormattedText(hudValue, ZeroWpfTheme.RegularTypeface, 10.0, new SolidColorBrush(Color.FromRgb(16, 185, 129)), dpi);
+
+                    double hudW = Math.Max(hudTitleFt.Width, hudValFt.Width) + 16;
+                    double hudH = hudTitleFt.Height + hudValFt.Height + 10;
+                    double hudX = plot.Right - hudW - 8;
+                    double hudY = plot.Top + 8;
+
+                    var hudBg = new SolidColorBrush(Color.FromArgb(235, 15, 23, 42));
+                    var hudBorder = new Pen(new SolidColorBrush(Color.FromArgb(160, 59, 130, 246)), 1.2);
+                    hudBg.Freeze();
+                    hudBorder.Freeze();
+
+                    dc.DrawRoundedRectangle(hudBg, hudBorder, new Rect(hudX, hudY, hudW, hudH), 5, 5);
+                    dc.DrawText(hudTitleFt, new Point(hudX + 8, hudY + 4));
+                    dc.DrawText(hudValFt, new Point(hudX + 8, hudY + 6 + hudTitleFt.Height));
                 }
             }
         }

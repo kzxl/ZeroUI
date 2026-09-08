@@ -33,6 +33,27 @@ namespace ZeroUI.Wpf.Charts.Model
         Donut = ChartType.Donut
     }
 
+    /// <summary>
+    /// Interactive Crosshair HUD operating modes for ZeroChart.
+    /// </summary>
+    public enum CrosshairMode
+    {
+        None,
+        VerticalOnly,
+        HorizontalOnly,
+        Both
+    }
+
+    /// <summary>
+    /// Visual styling for Statistical Process Control (SPC) limit belts.
+    /// </summary>
+    public enum SpcBeltStyle
+    {
+        TrafficLight,
+        Subtle,
+        LinesOnly
+    }
+
     public class ChartPoint
     {
         public string Label { get; set; } = string.Empty;

@@ -444,6 +444,12 @@ namespace ZeroUI.Wpf.Industrial
                     dc.DrawText(genLabel, new Point(x + 6, y + 6));
                     break;
             }
+
+            // Status & Safety Badges (LOTO, Tagout, Interlock, Fault)
+            if (node.StatusFlags != ZeroUI.Core.Scada.Safety.DeviceStatusFlags.None)
+            {
+                ZeroDeviceBadgeRenderer.DrawBadges(dc, nodeRect, node.StatusFlags, dpi);
+            }
         }
 
         #endregion

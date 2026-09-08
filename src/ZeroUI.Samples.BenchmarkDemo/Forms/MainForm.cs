@@ -36,6 +36,12 @@ using ZeroUI.Core.Historian;
 using ZeroUI.Core.Scene;
 using ZeroUI.Core.Network;
 using ZeroUI.WinForms.Network;
+using ZeroUI.WinForms.Docking;
+using ZeroUI.WinForms.Range;
+using ZeroUI.Core.Range;
+using ZeroUI.Core.Pdf;
+using ZeroUI.Core.Spreadsheet;
+using ZeroUI.Core.Scada.Safety;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
@@ -89,6 +95,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _tabWms = null!;
         private ZeroTabPage _tabAdvanced = null!;
         private ZeroTabPage _tabCommercial = null!;
+        private ZeroTabPage _tabOfficeDocs = null!;
         private ZeroTabPage _tabCharts = null!;
         private ZeroTabPage _tabLayout = null!;
 
@@ -489,10 +496,12 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             _tabControls = new ZeroTabPage("Core Input Controls", "🎛️");
             _tabCommercial = new ZeroTabPage("Enterprise Commercial Suite", "🏢");
+            _tabOfficeDocs = new ZeroTabPage("Office & Technical Documents", "📄");
             _tabAdvanced = new ZeroTabPage("Data Hierarchy & BOM", "🌳");
             _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐");
             subTabsComponents.AddTab(_tabControls);
             subTabsComponents.AddTab(_tabCommercial);
+            subTabsComponents.AddTab(_tabOfficeDocs);
             subTabsComponents.AddTab(_tabAdvanced);
             subTabsComponents.AddTab(_tabLayout);
             _clusterComponents.Controls.Add(subTabsComponents);
@@ -537,6 +546,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeScadaHub();
             InitializeWmsCenter();
             InitializeCommercialSuite();
+            InitializeOfficeDocsSuite(_tabOfficeDocs);
             InitializeAdvancedSuite();
             InitializeChartsDashboard();
             InitializeWarehouseWorkstation();
@@ -3191,8 +3201,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
-            // SECTION 1: Visual Query Builder & Enterprise Form Editors (Height = 330)
-            var sec1 = new Panel { Dock = DockStyle.Top, Height = 330, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+            // SECTION 1: Visual Query Builder & Enterprise Form Editors (Height = 420)
+            var sec1 = new Panel { Dock = DockStyle.Top, Height = 420, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Left Card: ZeroFilterControl
             var cardFilter = new ZeroCard
@@ -3274,15 +3284,17 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var pnlEditors = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12, 8, 12, 8), AutoScroll = true };
 
-            // Editor 1: ZeroGridLookup
-            var lblGridLookup = new Label { Text = "Multi-Column GridLookup (ZeroGridLookup):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 8) };
-            var gridLookup = new ZeroGridLookup
+            // Editor 1: GridLookupEdit with Quick-Create Footer
+            var lblGridLookup = new Label { Text = "Multi-Column GridLookup (GridLookupEdit with +Add New):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 8) };
+            var gridLookup = new GridLookupEdit
             {
                 Location = new Point(8, 28),
                 Width = 480,
                 Height = 34,
                 Placeholder = "Search & select industrial component (50 items)...",
-                DisplayMember = "ItemName"
+                DisplayMember = "ItemName",
+                ShowAddNewButton = true,
+                AddNewButtonText = "➕ Quick Add Material"
             };
             var lookupSampleItems = new List<InventoryItem>(50);
             string[] lookupCats = new[] { "Microcontroller", "Memory IC", "Transceiver", "Power MOSFET", "Optocoupler" };
@@ -3299,6 +3311,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ));
             }
             gridLookup.SetDataSource(lookupSampleItems);
+            gridLookup.ProcessNewValue += (s, e) =>
+            {
+                ZeroToast.Success(this, $"Quick Add requested for new material: {e.DisplayText}");
+                e.Handled = true;
+            };
             gridLookup.SelectionChanged += (s, e) =>
             {
                 if (!string.IsNullOrEmpty(gridLookup.SelectedText))
@@ -3307,34 +3324,57 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 }
             };
 
-            // Editor 2: ZeroCheckedComboBox
-            var lblCheckedCombo = new Label { Text = "Multi-Select CheckedComboBox (ZeroCheckedComboBox):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 70) };
-            var checkedCombo = new ZeroCheckedComboBox
+            // Editor 2: SearchLookUpEdit with Multi-Select & Tokens
+            var lblSearchLookup = new Label { Text = "High-Capacity Search Lookup (SearchLookUpEdit with Multi-Select):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 70) };
+            var searchLookup = new SearchLookUpEdit
             {
                 Location = new Point(8, 90),
                 Width = 480,
                 Height = 34,
-                Placeholder = "Select manufacturing processes..."
+                Placeholder = "Multi-select catalog items (50,000+ items)...",
+                DisplayMember = "ItemName",
+                MultiSelect = true,
+                ShowTokens = true
             };
-            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("SMT", "SMT Surface Mount Line 01", true));
-            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("THT", "Through-Hole Soldering Wave", false));
-            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("AOI", "AOI Automated Optical Inspection", true));
-            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("XRAY", "3D X-Ray Inspection (BGA)", false));
-            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("ICT", "In-Circuit Testing (ICT Fluke)", false));
-            checkedCombo.Items.Add(new ZeroCheckedComboBox.CheckedItem("BURN", "48h Thermal Burn-In Chamber", false));
+            searchLookup.SetDataSource(lookupSampleItems);
+            searchLookup.SelectionChanged += (s, e) =>
+            {
+                if (searchLookup.SelectedValues.Count > 0)
+                {
+                    ZeroToast.Info(this, $"SearchLookUp: {searchLookup.SelectedValues.Count} items selected.");
+                }
+            };
+
+            // Editor 3: CheckedComboBoxEdit with Token badges
+            var lblCheckedCombo = new Label { Text = "Multi-Select CheckedComboBox (CheckedComboBoxEdit with Token badges):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 132) };
+            var checkedCombo = new CheckedComboBoxEdit
+            {
+                Location = new Point(8, 152),
+                Width = 480,
+                Height = 34,
+                Placeholder = "Select manufacturing processes...",
+                DisplayMode = CheckedComboDisplayMode.Tokens
+            };
+            checkedCombo.Items.Add(new CheckedComboBoxEdit.CheckedItem("SMT", "SMT Surface Mount Line 01", true));
+            checkedCombo.Items.Add(new CheckedComboBoxEdit.CheckedItem("THT", "Through-Hole Soldering Wave", false));
+            checkedCombo.Items.Add(new CheckedComboBoxEdit.CheckedItem("AOI", "AOI Automated Optical Inspection", true));
+            checkedCombo.Items.Add(new CheckedComboBoxEdit.CheckedItem("XRAY", "3D X-Ray Inspection (BGA)", false));
+            checkedCombo.Items.Add(new CheckedComboBoxEdit.CheckedItem("ICT", "In-Circuit Testing (ICT Fluke)", false));
+            checkedCombo.Items.Add(new CheckedComboBoxEdit.CheckedItem("BURN", "48h Thermal Burn-In Chamber", false));
             checkedCombo.ItemCheck += (s, e) =>
             {
                 ZeroToast.Info(this, $"Process {(e.NewValue ? "enabled" : "disabled")}: {e.Item}");
             };
 
-            // Editor 3: ZeroTokenEdit
-            var lblTokenEdit = new Label { Text = "Tag & Chip Editor (ZeroTokenEdit):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 132) };
-            var tokenEdit = new ZeroTokenEdit
+            // Editor 4: TokenEdit with Auto-Complete
+            var lblTokenEdit = new Label { Text = "Tag & Chip Editor (TokenEdit with Auto-Complete):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 194) };
+            var tokenEdit = new TokenEdit
             {
-                Location = new Point(8, 152),
+                Location = new Point(8, 214),
                 Width = 480,
                 Height = 34,
-                Placeholder = "Type tag name and press Enter..."
+                Placeholder = "Type tag name or select suggestions...",
+                AutocompleteSource = new[] { "ISO-9001:2015", "RoHS-3", "AEC-Q200", "Class-3 Medical", "UL-94V0", "CE-Mark", "ITAR-Compliant", "Mil-Spec-810H" }
             };
             tokenEdit.AddToken("ISO-9001:2015");
             tokenEdit.AddToken("RoHS-3");
@@ -3343,11 +3383,11 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             tokenEdit.TokenAdded += (s, e) => ZeroToast.Success(this, $"Added tag: {e.Token}");
             tokenEdit.TokenRemoved += (s, e) => ZeroToast.Warning(this, $"Removed tag: {e.Token}");
 
-            // Editor 4: ZeroColorPicker
-            var lblColorPicker = new Label { Text = "Color Swatch & Palette Picker (ZeroColorPicker):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 194) };
+            // Editor 5: ZeroColorPicker
+            var lblColorPicker = new Label { Text = "Color Swatch & Palette Picker (ZeroColorPicker):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 256) };
             var colorPicker = new ZeroColorPicker
             {
-                Location = new Point(8, 214),
+                Location = new Point(8, 276),
                 Width = 220,
                 Height = 34,
                 SelectedColor = Color.FromArgb(79, 70, 229)
@@ -3359,6 +3399,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             pnlEditors.Controls.Add(lblGridLookup);
             pnlEditors.Controls.Add(gridLookup);
+            pnlEditors.Controls.Add(lblSearchLookup);
+            pnlEditors.Controls.Add(searchLookup);
             pnlEditors.Controls.Add(lblCheckedCombo);
             pnlEditors.Controls.Add(checkedCombo);
             pnlEditors.Controls.Add(lblTokenEdit);
@@ -3579,6 +3621,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             var btnToastError = new ZeroButton { Text = "✕ Error Toast", ButtonStyle = ZeroButtonStyle.Danger, Width = 120, Height = 34 };
             btnToastError.Click += (s, e) => ZeroToast.Error(this, "Emergency Stop circuit tripped on Conveyor CV-401!");
 
+            var btnToastAlarm = new ZeroButton { Text = "⚡ Alarm Toast", ButtonStyle = ZeroButtonStyle.Danger, Width = 130, Height = 34 };
+            btnToastAlarm.Click += (s, e) => ZeroToast.Alarm(this, "Critical: Thermal threshold exceeded on Exothermic Reactor RX-401 (94.8°C)!", "SCADA Safety Alarm");
+
             var btnModalConfirm = new ZeroButton { Text = "💬 Confirm Modal Dialog", ButtonStyle = ZeroButtonStyle.Primary, Width = 190, Height = 34 };
             btnModalConfirm.Click += (s, e) =>
             {
@@ -3596,6 +3641,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             toastFlow.Controls.Add(btnToastInfo);
             toastFlow.Controls.Add(btnToastWarning);
             toastFlow.Controls.Add(btnToastError);
+            toastFlow.Controls.Add(btnToastAlarm);
             toastFlow.Controls.Add(btnModalConfirm);
             pnlOverlays.Controls.Add(toastFlow);
 
@@ -3619,6 +3665,81 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             sec3.BringToFront();
 
             _tabCommercial.Controls.Add(mainContainer);
+        }
+
+        private void InitializeOfficeDocsSuite(ZeroTabPage parent)
+        {
+            var colors = ZeroTheme.Colors;
+            parent.BackColor = colors.Background;
+
+            var mainContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(12),
+                BackColor = Color.Transparent
+            };
+
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "📄 OFFICE & TECHNICAL DOCUMENTS SUITE (VECTOR PDF & SPREADSHEET ENGINE)",
+                Message = "Vector CAD schematics, SOP instructions, continuous zoom (25%–400%), full-text search, live spreadsheet sparse matrix, interactive Formula Bar, =SUM/AVERAGE/IF calculations, freeze panes & costing BOM.",
+                Height = 62
+            };
+
+            var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            var splitDocs = new ZeroSplitContainer
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Vertical,
+                SplitterDistance = 640,
+                SplitterWidth = 8,
+                MinSizePanel1 = 300,
+                MinSizePanel2 = 300
+            };
+
+            // Left: Vector PDF Document & CAD Schematic Reader
+            var cardPdf = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Vector PDF & CAD Schematic Reader (PdfViewerControl)",
+                Subtitle = "Continuous vector scroll, outline bookmarks, full-text search & zoom (25%–400%)",
+                StepNumber = 1
+            };
+            var pdfViewer = new PdfViewerControl
+            {
+                Dock = DockStyle.Fill,
+                ShowBookmarksSidebar = true
+            };
+            cardPdf.ContentPanel.Controls.Add(pdfViewer);
+            splitDocs.Panel1.Controls.Add(cardPdf);
+
+            // Right: Vector Spreadsheet & Formula Engine
+            var cardSheet = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Vector Spreadsheet & Formula Engine (SpreadsheetControl)",
+                Subtitle = "Sparse matrix, interactive Formula Bar, live =SUM/AVERAGE/IF calculations, freeze panes & costing BOM",
+                StepNumber = 2
+            };
+            var spreadsheet = new SpreadsheetControl
+            {
+                Dock = DockStyle.Fill
+            };
+            cardSheet.ContentPanel.Controls.Add(spreadsheet);
+            splitDocs.Panel2.Controls.Add(cardSheet);
+
+            mainContainer.Controls.Add(splitDocs);
+            mainContainer.Controls.Add(bannerSpacer);
+            mainContainer.Controls.Add(banner);
+
+            banner.BringToFront();
+            bannerSpacer.BringToFront();
+            splitDocs.BringToFront();
+
+            parent.Controls.Add(mainContainer);
         }
 
         private void InitializeAdvancedSuite()
@@ -4599,7 +4720,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Dock = DockStyle.Fill,
                 ChartType = ZeroChartType.Spline,
                 ValueSuffix = "%",
-                LegendPosition = ZeroChartLegendPosition.Top
+                LegendPosition = ZeroChartLegendPosition.Top,
+                CrosshairMode = CrosshairMode.Both,
+                EnableSpcBelts = true,
+                SpcBeltStyle = SpcBeltStyle.TrafficLight
             };
 
             var dynSeries = dynamicChart.AddSeries("OEE Equipment Efficiency", Color.FromArgb(139, 92, 246));
@@ -4607,27 +4731,67 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             double[] oeeVals = new[] { 88.2, 91.5, 89.0, 94.2, 92.8, 95.1, 93.4, 96.0, 94.7 };
             dynSeries.AddPoints(oeeVals, shifts);
 
+            var rangeControl = new RangeControl
+            {
+                Dock = DockStyle.Bottom,
+                Height = 54,
+                Client = dynamicChart.AsRangeClient(),
+                ShowBackgroundGraph = true,
+                BackgroundGraphType = RangeGraphType.Area
+            };
+
             var ctrlToolbar = new Panel { Dock = DockStyle.Bottom, Height = 36, BackColor = Color.FromArgb(15, 23, 42), Padding = new Padding(6, 4, 6, 4) };
             var btnRand = new ZeroButton
             {
                 Text = "🎲 Randomize Series",
                 ButtonStyle = ZeroButtonStyle.Primary,
                 Dock = DockStyle.Left,
-                Width = 160
+                Width = 150
             };
             var btnToggleType = new ZeroButton
             {
                 Text = "📊 Switch to Column",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Dock = DockStyle.Left,
-                Width = 160
+                Width = 150
             };
             var btnAddPoint = new ZeroButton
             {
-                Text = "⚡ Add Realtime Sample",
+                Text = "⚡ Add Sample",
                 ButtonStyle = ZeroButtonStyle.Success,
                 Dock = DockStyle.Left,
-                Width = 170
+                Width = 130
+            };
+            var btnToggleSpc = new ZeroButton
+            {
+                Text = "🎯 SPC Belts",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Left,
+                Width = 120
+            };
+            btnToggleSpc.Click += (s, e) =>
+            {
+                dynamicChart.EnableSpcBelts = !dynamicChart.EnableSpcBelts;
+                ZeroToast.Info(this, $"SPC Warning Belts: {(dynamicChart.EnableSpcBelts ? "Enabled (UCL, CL, LCL)" : "Disabled")}");
+            };
+
+            var btnToggleCrosshair = new ZeroButton
+            {
+                Text = "➕ Crosshair HUD",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Left,
+                Width = 130
+            };
+            btnToggleCrosshair.Click += (s, e) =>
+            {
+                dynamicChart.CrosshairMode = dynamicChart.CrosshairMode switch
+                {
+                    CrosshairMode.Both => CrosshairMode.VerticalOnly,
+                    CrosshairMode.VerticalOnly => CrosshairMode.HorizontalOnly,
+                    CrosshairMode.HorizontalOnly => CrosshairMode.None,
+                    _ => CrosshairMode.Both
+                };
+                ZeroToast.Info(this, $"Crosshair HUD Mode: {dynamicChart.CrosshairMode}");
             };
 
             var rnd = new Random();
@@ -4661,13 +4825,18 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ZeroToast.Info(this, $"Pushed telemetry point: {val:F1}% at {nextTime}");
             };
 
+            ctrlToolbar.Controls.Add(btnToggleCrosshair);
+            ctrlToolbar.Controls.Add(btnToggleSpc);
             ctrlToolbar.Controls.Add(btnAddPoint);
             ctrlToolbar.Controls.Add(btnToggleType);
             ctrlToolbar.Controls.Add(btnRand);
 
             cardInteractive.ContentPanel.Controls.Add(dynamicChart);
+            cardInteractive.ContentPanel.Controls.Add(rangeControl);
             cardInteractive.ContentPanel.Controls.Add(ctrlToolbar);
             ctrlToolbar.SendToBack();
+            rangeControl.BringToFront();
+            dynamicChart.BringToFront();
 
             row2.Controls.Add(cardInteractive);
             row2.Controls.Add(split2);
@@ -5085,6 +5254,143 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             cardSplash.ContentPanel.Controls.Add(splashContainer);
             rightStack.Controls.Add(cardSplash);
 
+            // Section 4: ZeroDockManager Layout Persistence Card
+            var cardDock = new ZeroCard
+            {
+                StepNumber = 4,
+                Title = "ZeroDockManager (Visual Studio-Style Docking & Layout Persistence)",
+                Subtitle = "Diamond HUD docking guide, floating overlays, splitter sizing, and pure JSON Save/Restore layout engine",
+                Height = 360
+            };
+
+            var dockContainer = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8) };
+            var dockToolbar = new Panel { Dock = DockStyle.Top, Height = 38, BackColor = Color.Transparent };
+
+            var dockManager = new ZeroDockManager { Dock = DockStyle.Fill };
+
+            var pnlLeft = new ZeroDockPanel { Title = "Solution Explorer", DockPosition = ZeroDockPosition.Left, PanelKey = "SolutionExplorer", Width = 220 };
+            var treeMock = new TreeView { Dock = DockStyle.Fill, BackColor = ZeroTheme.Colors.Surface, ForeColor = ZeroTheme.Colors.TextPrimary, BorderStyle = BorderStyle.None };
+            treeMock.Nodes.Add("📁 ZeroUI.Core");
+            treeMock.Nodes.Add("📁 ZeroUI.WinForms");
+            treeMock.Nodes.Add("📁 ZeroUI.Wpf");
+            pnlLeft.Controls.Add(treeMock);
+            dockManager.AddPanel(pnlLeft);
+
+            var pnlDoc = new ZeroDockPanel { Title = "ProcessController.cs", DockPosition = ZeroDockPosition.Document, PanelKey = "CodeEditor" };
+            var txtCodeMock = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                Multiline = true,
+                ReadOnly = true,
+                BackColor = ZeroTheme.Colors.Surface,
+                ForeColor = ZeroTheme.Colors.TextPrimary,
+                Font = new Font("Consolas", 9.5f),
+                BorderStyle = BorderStyle.None,
+                Text = "// ZeroUI Process Automation Controller\r\npublic void ProcessTelemetry(Span<byte> packet)\r\n{\r\n    var header = MemoryMarshal.Read<Header>(packet);\r\n    Log(header.SequenceNumber);\r\n}"
+            };
+            pnlDoc.Controls.Add(txtCodeMock);
+            dockManager.AddPanel(pnlDoc);
+
+            var pnlRight = new ZeroDockPanel { Title = "Properties & Telemetry", DockPosition = ZeroDockPosition.Right, PanelKey = "PropertiesInspector", Width = 220 };
+            var descMock = new ZeroDescriptions { Dock = DockStyle.Fill, Columns = 1, RowHeight = 28 };
+            descMock.Add("Engine", "Hardware Accelerated");
+            descMock.Add("Allocations", "0 bytes GC Gen0");
+            descMock.Add("FPS", "60 Hz VSync");
+            pnlRight.Controls.Add(descMock);
+            dockManager.AddPanel(pnlRight);
+
+            string? savedDockLayout = null;
+
+            var btnSaveDock = new ZeroButton
+            {
+                Text = "💾 Save Dock Layout (JSON)",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Location = new Point(4, 3),
+                Size = new Size(210, 32)
+            };
+            btnSaveDock.Click += (s, e) =>
+            {
+                savedDockLayout = dockManager.SaveLayoutToJson();
+                ZeroToast.Success(this, "Dock layout configuration saved to JSON.", "Layout Persisted");
+            };
+
+            var btnRestoreDock = new ZeroButton
+            {
+                Text = "📂 Restore Dock Layout (JSON)",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(222, 3),
+                Size = new Size(220, 32)
+            };
+            btnRestoreDock.Click += (s, e) =>
+            {
+                if (!string.IsNullOrEmpty(savedDockLayout))
+                {
+                    dockManager.RestoreLayoutFromJson(savedDockLayout);
+                    ZeroToast.Success(this, "Dock layout restored successfully from JSON!", "Layout Restored");
+                }
+                else
+                {
+                    ZeroToast.Warning(this, "No saved layout found. Click 'Save Dock Layout' first.", "No Layout Saved");
+                }
+            };
+
+            dockToolbar.Controls.Add(btnSaveDock);
+            dockToolbar.Controls.Add(btnRestoreDock);
+
+            dockContainer.Controls.Add(dockManager);
+            dockContainer.Controls.Add(dockToolbar);
+            dockManager.BringToFront();
+            cardDock.ContentPanel.Controls.Add(dockContainer);
+            rightStack.Controls.Add(cardDock);
+
+            // Section 5: Multi-Toast Stacking & Overlay Queue
+            var cardToast = new ZeroCard
+            {
+                StepNumber = 5,
+                Title = "ZeroToastStackManager (Multi-Toast Stacking & Glide Relocation)",
+                Subtitle = "Non-blocking floating notifications with multi-corner anchor, glide repositioning, FIFO queue, and pause on hover",
+                Height = 130
+            };
+
+            var toastFlow = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(12),
+                AutoScroll = true
+            };
+
+            var btnToastSuccess = new ZeroButton { Text = "✔ Success Toast", ButtonStyle = ZeroButtonStyle.Success, Size = new Size(150, 34) };
+            btnToastSuccess.Click += (s, e) => ZeroToast.Success(this, "Batch #8091 successfully released to shopfloor.", "Production Order");
+
+            var btnToastInfo = new ZeroButton { Text = "ℹ️ Info Toast", ButtonStyle = ZeroButtonStyle.Primary, Size = new Size(140, 34) };
+            btnToastInfo.Click += (s, e) => ZeroToast.Info(this, "OPC-UA server synchronized at 10 ms cycle.", "Fieldbus Status");
+
+            var btnToastWarning = new ZeroButton { Text = "⚠ Warning Toast", ButtonStyle = ZeroButtonStyle.Secondary, Size = new Size(150, 34) };
+            btnToastWarning.Click += (s, e) => ZeroToast.Warning(this, "Thermal threshold approaching USL warning limit (82.5°C).", "Thermal Warning");
+
+            var btnToastError = new ZeroButton { Text = "✕ Error Toast", ButtonStyle = ZeroButtonStyle.Danger, Size = new Size(140, 34) };
+            btnToastError.Click += (s, e) => ZeroToast.Error(this, "Emergency Stop circuit tripped on Conveyor CV-401!", "E-STOP Fault");
+
+            var btnToastAlarm = new ZeroButton { Text = "⚡ Alarm Toast", ButtonStyle = ZeroButtonStyle.Danger, Size = new Size(140, 34) };
+            btnToastAlarm.Click += (s, e) => ZeroToast.Alarm(this, "CRITICAL: Exothermic Reactor RX-401 overpressure surge (94.8 PSI)!", "Safety Alarm");
+
+            var btnToastClear = new ZeroButton { Text = "🗑 Clear All", ButtonStyle = ZeroButtonStyle.Secondary, Size = new Size(120, 34) };
+            btnToastClear.Click += (s, e) =>
+            {
+                ZeroToastStackManager.Clear();
+                ZeroToast.Info(this, "All active and queued toast notifications cleared.");
+            };
+
+            toastFlow.Controls.Add(btnToastSuccess);
+            toastFlow.Controls.Add(btnToastInfo);
+            toastFlow.Controls.Add(btnToastWarning);
+            toastFlow.Controls.Add(btnToastError);
+            toastFlow.Controls.Add(btnToastAlarm);
+            toastFlow.Controls.Add(btnToastClear);
+
+            cardToast.ContentPanel.Controls.Add(toastFlow);
+            rightStack.Controls.Add(cardToast);
+
             splitRoot.Panel2.Controls.Add(rightStack);
             parent.Controls.Add(splitRoot);
         }
@@ -5335,6 +5641,25 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
+            // Pre-declare pump and valve for quickBar interaction & OSHA LOTO interlocking
+            var pump = new ZeroIndustrialPump
+            {
+                Location = new Point(255, 130),
+                Size = new Size(84, 88),
+                TagLabel = "P-101A",
+                SpeedRpm = 2950,
+                PowerKw = 22.0,
+                BoundTagPath = "Line1.Pump.Running"
+            };
+
+            var valve = new ZeroIndustrialValve
+            {
+                Location = new Point(410, 140),
+                Size = new Size(56, 64),
+                TagLabel = "XV-101",
+                BoundTagPath = "Line1.Valve.Open"
+            };
+
             // 2. Interactive Quick Command Bar
             var quickBar = new Panel { Dock = DockStyle.Top, Height = 42, BackColor = Color.Transparent, Padding = new Padding(0, 4, 0, 4) };
 
@@ -5366,10 +5691,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var btnSpike = new ZeroButton
             {
-                Text = "⚡ Inject Pressure Surge (+50 PSI)",
+                Text = "⚡ Inject Surge (+50 PSI)",
                 ButtonStyle = ZeroButtonStyle.Secondary,
                 Location = new Point(405, 4),
-                Size = new Size(220, 32)
+                Size = new Size(175, 32)
             };
             btnSpike.Click += (s, e) =>
             {
@@ -5379,10 +5704,10 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             var btnEStop = new ZeroButton
             {
-                Text = "🚨 Emergency Stop (E-STOP)",
+                Text = "🚨 E-STOP",
                 ButtonStyle = ZeroButtonStyle.Danger,
-                Location = new Point(625, 4),
-                Size = new Size(195, 32)
+                Location = new Point(590, 4),
+                Size = new Size(110, 32)
             };
             btnEStop.Click += (s, e) =>
             {
@@ -5390,10 +5715,58 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 ZeroToast.Error(this, SimulatedPlcDriver.EmergencyStop ? "E-STOP ACTIVATED: All pumps and valves tripped offline!" : "E-STOP RESET.");
             };
 
+            var btnPidFlyout = new ZeroButton
+            {
+                Text = "🎛️ Tune Loop (ZeroPidFlyout)",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Location = new Point(710, 4),
+                Size = new Size(205, 32)
+            };
+            btnPidFlyout.Click += (s, e) =>
+            {
+                var flyout = new ZeroPidFlyout
+                {
+                    LoopTag = "PIC-101",
+                    LoopDescription = "Primary Supply Pressure Loop",
+                    ProcessVariable = 48.2,
+                    SetPoint = 50.0,
+                    ManipulatedVariable = 62.0
+                };
+                flyout.Show(this);
+                ZeroToast.Info(this, "Opened 60 FPS PID Loop Tuning Flyout.");
+            };
+
+            bool isLotoActive = false;
+            var btnToggleLoto = new ZeroButton
+            {
+                Text = "🔒 Toggle OSHA LOTO",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Location = new Point(925, 4),
+                Size = new Size(175, 32)
+            };
+            btnToggleLoto.Click += (s, e) =>
+            {
+                isLotoActive = !isLotoActive;
+                var flag = isLotoActive ? DeviceStatusFlags.LockedOut : DeviceStatusFlags.None;
+                valve.StatusFlags = flag;
+                pump.StatusFlags = flag;
+                btnToggleLoto.Text = isLotoActive ? "🔓 Release OSHA LOTO" : "🔒 Toggle OSHA LOTO";
+                if (isLotoActive)
+                {
+                    ZeroToast.Alarm(this, "OSHA LOTO Padlock applied to Pump P-101A and Valve XV-101!", "Safety Interlock Engaged");
+                }
+                else
+                {
+                    ZeroToast.Success(this, "OSHA LOTO Padlock removed. System clear for operation.", "Safety Interlock Cleared");
+                }
+            };
+
             quickBar.Controls.Add(btnTogglePump);
             quickBar.Controls.Add(btnToggleValve);
             quickBar.Controls.Add(btnSpike);
             quickBar.Controls.Add(btnEStop);
+            quickBar.Controls.Add(btnPidFlyout);
+            quickBar.Controls.Add(btnToggleLoto);
 
             var spacer2 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
@@ -5429,17 +5802,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 BoundTagPath = "Line1.Flow.Velocity"
             };
 
-            // Pump P-101A
-            var pump = new ZeroIndustrialPump
-            {
-                Location = new Point(255, 130),
-                Size = new Size(84, 88),
-                TagLabel = "P-101A",
-                SpeedRpm = 2950,
-                PowerKw = 22.0,
-                BoundTagPath = "Line1.Pump.Running"
-            };
-
             // Pipe 2 (Pump to Valve)
             var pipe2 = new ZeroPipeFlow
             {
@@ -5448,15 +5810,6 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 PipeDiameter = 18,
                 FluidType = ZeroFluidType.Water,
                 BoundTagPath = "Line1.Flow.Velocity"
-            };
-
-            // Valve XV-101
-            var valve = new ZeroIndustrialValve
-            {
-                Location = new Point(410, 140),
-                Size = new Size(56, 64),
-                TagLabel = "XV-101",
-                BoundTagPath = "Line1.Valve.Open"
             };
 
             // Pipe 3 (Valve to Gauge)
@@ -5500,6 +5853,24 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 FluidColor = Color.FromArgb(16, 185, 129)
             };
 
+            // Orthogonal Multi-Segment Recirculation Loop (ZeroPolylinePipeFlow)
+            var returnPolyPipe = new ZeroPolylinePipeFlow
+            {
+                Location = new Point(90, 245),
+                Size = new Size(730, 45),
+                PipeDiameter = 16,
+                FluidType = ZeroFluidType.Water,
+                FlowVelocity = 2.0,
+                IsFlowing = true
+            };
+            returnPolyPipe.Points.AddRange(new[]
+            {
+                new Point(720, 5),
+                new Point(720, 35),
+                new Point(10, 35),
+                new Point(10, 5)
+            });
+
             pidCanvas.Controls.Add(tank1);
             pidCanvas.Controls.Add(pipe1);
             pidCanvas.Controls.Add(pump);
@@ -5509,6 +5880,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             pidCanvas.Controls.Add(gauge);
             pidCanvas.Controls.Add(pipe4);
             pidCanvas.Controls.Add(tank2);
+            pidCanvas.Controls.Add(returnPolyPipe);
 
             cardPid.ContentPanel.Controls.Add(pidCanvas);
 

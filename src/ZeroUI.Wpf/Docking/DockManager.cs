@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ZeroUI.Core.Layout;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Docking
@@ -41,6 +42,8 @@ namespace ZeroUI.Wpf.Docking
         public static readonly DependencyProperty IsPinnedProperty =
             DependencyProperty.Register(nameof(IsPinned), typeof(bool), typeof(DockPanelControl), new PropertyMetadata(true));
 
+        public string PanelKey { get; set; } = string.Empty;
+
         public string Title
         {
             get => (string)GetValue(TitleProperty);
@@ -77,7 +80,7 @@ namespace ZeroUI.Wpf.Docking
 
     /// <summary>
     /// Visual Studio-style multi-region dock manager hosting Left, Right, Top, Bottom,
-    /// and Document tab panels with interactive splitters and pin toggles.
+    /// and Document tab panels with interactive splitters, pin toggles, and layout serialization.
     /// </summary>
     public class DockManager : Grid
     {
@@ -86,6 +89,7 @@ namespace ZeroUI.Wpf.Docking
         private readonly ContentControl _leftHost;
         private readonly ContentControl _rightHost;
         private readonly ContentControl _bottomHost;
+        private readonly Grid _centerGrid;
 
         public ObservableCollection<DockPanelControl> Panels => _panels;
 
@@ -101,10 +105,10 @@ namespace ZeroUI.Wpf.Docking
             ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(260, GridUnitType.Pixel), MinWidth = 120 });
 
             // Center area has Document Tabs (Row 0), Splitter (Row 1), Bottom (Row 2)
-            var centerGrid = new Grid();
-            centerGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            centerGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4, GridUnitType.Pixel) });
-            centerGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(160, GridUnitType.Pixel), MinHeight = 80 });
+            _centerGrid = new Grid();
+            _centerGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            _centerGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4, GridUnitType.Pixel) });
+            _centerGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(160, GridUnitType.Pixel), MinHeight = 80 });
 
             _documentTabs = new TabControl
             {
@@ -113,7 +117,7 @@ namespace ZeroUI.Wpf.Docking
                 BorderThickness = new Thickness(1)
             };
             Grid.SetRow(_documentTabs, 0);
-            centerGrid.Children.Add(_documentTabs);
+            _centerGrid.Children.Add(_documentTabs);
 
             var hSplitter = new GridSplitter
             {
@@ -123,14 +127,14 @@ namespace ZeroUI.Wpf.Docking
                 Background = ZeroWpfTheme.BorderDefault
             };
             Grid.SetRow(hSplitter, 1);
-            centerGrid.Children.Add(hSplitter);
+            _centerGrid.Children.Add(hSplitter);
 
             _bottomHost = new ContentControl { Background = ZeroWpfTheme.BgCard };
             Grid.SetRow(_bottomHost, 2);
-            centerGrid.Children.Add(_bottomHost);
+            _centerGrid.Children.Add(_bottomHost);
 
-            Grid.SetColumn(centerGrid, 2);
-            Children.Add(centerGrid);
+            Grid.SetColumn(_centerGrid, 2);
+            Children.Add(_centerGrid);
 
             // Left Host & Splitter
             _leftHost = new ContentControl { Background = ZeroWpfTheme.BgCard };
@@ -165,9 +169,14 @@ namespace ZeroUI.Wpf.Docking
             _panels.CollectionChanged += (s, e) => RebuildLayout();
         }
 
-        public void AddPanel(ZeroDockPanel panel)
+        public void AddPanel(DockPanelControl panel)
         {
             _panels.Add(panel);
+        }
+
+        public void AddPanel(ZeroDockPanel panel)
+        {
+            AddPanel((DockPanelControl)panel);
         }
 
         private static void DisconnectElement(object? content)
@@ -189,60 +198,66 @@ namespace ZeroUI.Wpf.Docking
             }
         }
 
-        private void RebuildLayout()
+        public void RebuildLayout()
         {
             _documentTabs.Items.Clear();
             _leftHost.Content = null;
             _rightHost.Content = null;
             _bottomHost.Content = null;
 
-            for (int i = 0; i < _panels.Count; i++)
+            foreach (var panel in _panels)
             {
-                var p = _panels[i];
-                DisconnectElement(p.Content);
+                DisconnectElement(panel.Content);
 
-                switch (p.DockPosition)
+                switch (panel.DockPosition)
                 {
                     case DockPosition.Document:
                         var tabItem = new TabItem
                         {
-                            Header = p.Title,
-                            Content = p.Content
+                            Header = panel.Title,
+                            Content = panel.Content
                         };
                         _documentTabs.Items.Add(tabItem);
                         break;
 
                     case DockPosition.Left:
-                        _leftHost.Content = CreateDockWrapper(p);
+                        if (_leftHost.Content == null)
+                        {
+                            _leftHost.Content = CreatePanelWrapper(panel);
+                        }
                         break;
 
                     case DockPosition.Right:
-                        _rightHost.Content = CreateDockWrapper(p);
+                        if (_rightHost.Content == null)
+                        {
+                            _rightHost.Content = CreatePanelWrapper(panel);
+                        }
                         break;
 
                     case DockPosition.Bottom:
-                        _bottomHost.Content = CreateDockWrapper(p);
+                        if (_bottomHost.Content == null)
+                        {
+                            _bottomHost.Content = CreatePanelWrapper(panel);
+                        }
                         break;
                 }
             }
 
-            if (_documentTabs.Items.Count > 0 && _documentTabs.SelectedIndex < 0)
+            if (_documentTabs.Items.Count > 0 && _documentTabs.SelectedIndex == -1)
             {
                 _documentTabs.SelectedIndex = 0;
             }
         }
 
-        private static Border CreateDockWrapper(DockPanelControl panel)
+        private UIElement CreatePanelWrapper(DockPanelControl panel)
         {
-            DisconnectElement(panel.Content);
-
             var headerGrid = new Grid
             {
                 Background = ZeroWpfTheme.BgCard,
                 Height = 28
             };
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32, GridUnitType.Pixel) });
 
             var titleBlock = new TextBlock
             {
@@ -288,6 +303,105 @@ namespace ZeroUI.Wpf.Docking
                 Child = mainPanel
             };
         }
+
+        #region Dock Layout Serialization & Persistence
+
+        /// <summary>
+        /// Captures the complete current WPF docking layout state to a WorkspaceLayoutState.
+        /// </summary>
+        public WorkspaceLayoutState SaveLayout()
+        {
+            var state = new WorkspaceLayoutState
+            {
+                Version = "1.1",
+                SavedAt = DateTime.UtcNow,
+                Containers = new DockContainerLayoutState
+                {
+                    LeftWidth = (int)ColumnDefinitions[0].Width.Value,
+                    RightWidth = (int)ColumnDefinitions[4].Width.Value,
+                    BottomHeight = _centerGrid != null ? (int)_centerGrid.RowDefinitions[2].Height.Value : 160,
+                    ActiveDocumentTitle = (_documentTabs.SelectedItem as TabItem)?.Header?.ToString() ?? string.Empty
+                }
+            };
+
+            for (int i = 0; i < _panels.Count; i++)
+            {
+                var p = _panels[i];
+                state.DockPanels.Add(new DockPanelLayoutState
+                {
+                    Name = !string.IsNullOrEmpty(p.PanelKey) ? p.PanelKey : p.Title,
+                    Title = p.Title,
+                    DockPosition = p.DockPosition.ToString(),
+                    IsPinned = p.IsPinned,
+                    OrderIndex = i
+                });
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Restores docking layout from a saved WorkspaceLayoutState.
+        /// </summary>
+        public void RestoreLayout(WorkspaceLayoutState state)
+        {
+            if (state == null) return;
+
+            if (state.Containers != null)
+            {
+                if (state.Containers.LeftWidth > 0)
+                    ColumnDefinitions[0].Width = new GridLength(state.Containers.LeftWidth, GridUnitType.Pixel);
+                if (state.Containers.RightWidth > 0)
+                    ColumnDefinitions[4].Width = new GridLength(state.Containers.RightWidth, GridUnitType.Pixel);
+                if (_centerGrid != null && state.Containers.BottomHeight > 0)
+                    _centerGrid.RowDefinitions[2].Height = new GridLength(state.Containers.BottomHeight, GridUnitType.Pixel);
+            }
+
+            var map = new Dictionary<string, DockPanelControl>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in _panels)
+            {
+                string key = !string.IsNullOrEmpty(p.PanelKey) ? p.PanelKey : p.Title;
+                map[key] = p;
+            }
+
+            foreach (var pState in state.DockPanels)
+            {
+                string key = !string.IsNullOrEmpty(pState.Name) ? pState.Name : pState.Title;
+                if (map.TryGetValue(key, out var p))
+                {
+                    if (Enum.TryParse<DockPosition>(pState.DockPosition, true, out var pos))
+                    {
+                        p.DockPosition = pos;
+                    }
+                    p.IsPinned = pState.IsPinned;
+                }
+            }
+
+            RebuildLayout();
+
+            if (state.Containers != null && !string.IsNullOrEmpty(state.Containers.ActiveDocumentTitle))
+            {
+                foreach (TabItem item in _documentTabs.Items)
+                {
+                    if (string.Equals(item.Header?.ToString(), state.Containers.ActiveDocumentTitle, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _documentTabs.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+        }
+
+        public string SaveLayoutToJson() => ZeroWorkspaceSerializer.Serialize(SaveLayout());
+        public void RestoreLayoutFromJson(string json) => RestoreLayout(ZeroWorkspaceSerializer.Deserialize(json));
+        public void SaveLayout(string filePath) => System.IO.File.WriteAllText(filePath, SaveLayoutToJson(), System.Text.Encoding.UTF8);
+        public void RestoreLayout(string filePath)
+        {
+            if (System.IO.File.Exists(filePath))
+                RestoreLayoutFromJson(System.IO.File.ReadAllText(filePath, System.Text.Encoding.UTF8));
+        }
+
+        #endregion
     }
 
     /// <summary>

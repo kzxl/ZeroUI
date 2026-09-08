@@ -624,8 +624,34 @@
                         <!-- Sub-Tab 3.2: Plant Mimic Synoptic -->
                         <TabItem Header="🗺️ Plant Mimic Synoptic">
                             <Grid Margin="18">
-                                <ind:ZeroCard HeaderText="Interactive Plant Mimic Canvas (ZeroPlantMimicCanvas)" SubtitleText="Single-Visual DrawingContext vector diagram (Pan: Right-Drag / Space+Drag, Zoom: Wheel, Click: Select Node)">
-                                    <ind:ZeroPlantMimicCanvas x:Name="PlantCanvas" Margin="0,6,0,0" />
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="1*" />
+                                    <RowDefinition Height="130" />
+                                </Grid.RowDefinitions>
+
+                                <!-- SCADA Action Bar -->
+                                <Border Grid.Row="0" Margin="0,0,0,10" Background="{DynamicResource ZeroUI.BgCard}" Padding="12,8,12,8" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
+                                    <DockPanel LastChildFill="False">
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                            <TextBlock Text="⚡ SCADA Live Telemetry" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" VerticalAlignment="Center" Margin="0,0,14,0" />
+                                            <TextBlock Text="Pan: Right-Drag / Space+Drag  |  Zoom: Wheel  |  Click: Select Node" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                            <Button x:Name="BtnToggleLoto" Click="BtnToggleLoto_Click" Content="🔒 Toggle OSHA LOTO" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" FontWeight="SemiBold" />
+                                            <Button x:Name="BtnTunePid" Click="BtnTunePid_Click" Content="🎛️ Tune Loop (ZeroPidFlyout)" Height="30" Padding="12,0,12,0" Cursor="Hand" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- Interactive Plant Mimic Canvas -->
+                                <ind:ZeroCard Grid.Row="1" HeaderText="Interactive Plant Mimic Canvas (ZeroPlantMimicCanvas)" SubtitleText="Zero-allocation DrawingContext vector mimic with OSHA LOTO safety padlocks and interlock badges" Margin="0,0,0,10">
+                                    <ind:ZeroPlantMimicCanvas x:Name="PlantCanvas" Margin="0,4,0,0" />
+                                </ind:ZeroCard>
+
+                                <!-- Industrial Multi-Segment Piping Flow Network -->
+                                <ind:ZeroCard Grid.Row="2" HeaderText="Continuous Polyline Fluid Piping &amp; Recirculation Header (PolylinePipeFlow)" SubtitleText="Subpixel animated fluid dynamics with automated elbow transitions, pulsation chevrons, and flange collars">
+                                    <ind:PolylinePipeFlow x:Name="RecircPipeFlow" Margin="0,4,0,0" PipeDiameter="16" FlowVelocity="2.5" />
                                 </ind:ZeroCard>
                             </Grid>
                         </TabItem>
@@ -646,7 +672,9 @@
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                                             <Button x:Name="BtnAddNode" Click="BtnAddNode_Click" Content="➕ Add Station Node" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
-                                            <Button x:Name="BtnResetDiagram" Click="BtnResetDiagram_Click" Content="🔄 Reset Layout" Height="28" Padding="10,0,10,0" Cursor="Hand" />
+                                            <Button x:Name="BtnResetDiagram" Click="BtnResetDiagram_Click" Content="🔄 Reset Layout" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnSaveDockLayout" Click="BtnSaveDockLayout_Click" Content="💾 Save Layout" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnRestoreDockLayout" Click="BtnRestoreDockLayout_Click" Content="📂 Restore Layout" Height="28" Padding="10,0,10,0" Cursor="Hand" />
                                         </StackPanel>
                                     </DockPanel>
                                 </Border>
@@ -872,6 +900,10 @@
                                     <StackPanel DockPanel.Dock="Left">
                                         <TextBlock Text="Interactive Vector Business Analytics" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
                                         <TextBlock Text="Native WPF vector charting engine: Spline area, bar charts, financial candlestick OHLC, and donut." FontSize="12.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                        <Button x:Name="BtnToggleCrosshair" Click="BtnToggleCrosshair_Click" Content="🎯 Crosshair HUD (Both Axes)" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" FontWeight="SemiBold" />
+                                        <Button x:Name="BtnToggleSpcBelts" Click="BtnToggleSpcBelts_Click" Content="🛡️ SPC 3σ Limit Belts" Height="30" Padding="12,0,12,0" Cursor="Hand" FontWeight="SemiBold" />
                                     </StackPanel>
                                 </DockPanel>
 
@@ -1170,16 +1202,20 @@
                                     <ind:ZeroCard Grid.Column="1" HeaderText="Advanced Enterprise Form Editors" SubtitleText="ZeroGridLookup, ZeroCheckedComboBox, ZeroTokenEdit &amp; ZeroColorPicker">
                                         <StackPanel Margin="0,8,0,0">
                                             <!-- 1. ZeroGridLookup -->
-                                            <TextBlock Text="Material &amp; Asset Lookup (Embedded Virtual DataGrid + Live Search)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroGridLookup x:Name="DemoGridLookup" Height="34" Margin="0,0,0,12" Placeholder="Select material or component..." />
+                                            <TextBlock Text="Material &amp; Asset Lookup (Embedded Virtual DataGrid + Quick-Create Footer)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                            <edit:ZeroGridLookup x:Name="DemoGridLookup" Height="34" Margin="0,0,0,10" Placeholder="Select material or component..." ShowAddNewButton="True" AddNewButtonText="➕ Quick Add Material" />
+
+                                            <!-- 1b. High-Capacity SearchLookUpEdit -->
+                                            <TextBlock Text="High-Capacity Search Lookup (SearchLookUpEdit with Paginated Search)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                            <edit:SearchLookUpEdit x:Name="DemoSearchLookup" Height="34" Margin="0,0,0,10" Placeholder="Search 5,000 industrial assets..." />
 
                                             <!-- 2. ZeroCheckedComboBox -->
                                             <TextBlock Text="Assigned Access Roles &amp; Factory Zones (Multi-Select Checkboxes)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroCheckedComboBox x:Name="DemoCheckedCombo" Height="34" Margin="0,0,0,12" Placeholder="Select authorized zones..." />
+                                            <edit:ZeroCheckedComboBox x:Name="DemoCheckedCombo" Height="34" Margin="0,0,0,10" Placeholder="Select authorized zones..." />
 
                                             <!-- 3. ZeroTokenEdit -->
                                             <TextBlock Text="Defect Classification Tags (Type tag and press Enter / Comma)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroTokenEdit x:Name="DemoTokenEdit" Height="34" Margin="0,0,0,12" Placeholder="Add tag (e.g. Solder, Thermal, AOI)..." />
+                                            <edit:ZeroTokenEdit x:Name="DemoTokenEdit" Height="34" Margin="0,0,0,10" Placeholder="Add tag (e.g. Solder, Thermal, AOI)..." />
 
                                             <!-- 4. ZeroColorPicker -->
                                             <TextBlock Text="Status Marker &amp; Palette Swatch Selector" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
@@ -1309,6 +1345,7 @@
                                                 <Button x:Name="BtnToastInfo" Click="BtnToastInfo_Click" Content="ℹ️ Info Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                                                 <Button x:Name="BtnToastWarning" Click="BtnToastWarning_Click" Content="⚠ Warning Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                                                 <Button x:Name="BtnToastError" Click="BtnToastError_Click" Content="✖ Error Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
+                                                <Button x:Name="BtnToastAlarm" Click="BtnToastAlarm_Click" Content="⚡ Alarm Toast" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" Cursor="Hand" />
                                             </WrapPanel>
 
                                             <TextBlock Text="Backdrop-Dimmed Dialog Suite:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />

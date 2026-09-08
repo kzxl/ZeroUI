@@ -23,17 +23,6 @@ namespace ZeroUI.WinForms.Industrial
         FourWayCross
     }
 
-    public enum ZeroFluidType
-    {
-        Water,
-        Gas,
-        Oil,
-        Steam,
-        Chemical,
-        Acid,
-        Slurry,
-        CoolingWater
-    }
 
     /// <summary>
     /// High-performance industrial vector piping component with subpixel animated fluid flow pulses.
