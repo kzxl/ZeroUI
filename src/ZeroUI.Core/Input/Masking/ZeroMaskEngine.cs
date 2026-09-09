@@ -114,6 +114,17 @@ namespace ZeroUI.Core.Input.Masking
         }
 
         /// <summary>
+        /// Populates the engine with raw unmasked input string.
+        /// </summary>
+        public void SetRawText(string? raw)
+        {
+            if (raw != null)
+            {
+                SetRawText(raw.AsSpan());
+            }
+        }
+
+        /// <summary>
         /// Populates the engine with raw unmasked input.
         /// </summary>
         public void SetRawText(ReadOnlySpan<char> raw)

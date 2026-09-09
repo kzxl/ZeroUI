@@ -63,6 +63,17 @@ namespace ZeroUI.Core.Data
         }
 
         /// <summary>
+        /// Parses a TSV string into row and column cell spans.
+        /// </summary>
+        public static void ParseTsv(string? tsv, TsvCellSpanCallback cellCallback)
+        {
+            if (!string.IsNullOrEmpty(tsv) && cellCallback != null)
+            {
+                ParseTsv(tsv.AsSpan(), cellCallback);
+            }
+        }
+
+        /// <summary>
         /// Parses a TSV text stream into row and column cell spans without string allocations.
         /// </summary>
         /// <param name="tsv">The raw TSV text as a span of characters.</param>

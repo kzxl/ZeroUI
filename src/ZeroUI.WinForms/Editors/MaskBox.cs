@@ -120,12 +120,13 @@ namespace ZeroUI.WinForms.Editors
                 if (_maskDefinition != null)
                 {
                     Span<char> raw = stackalloc char[_maskDefinition.EditableCount];
-                    if (_maskDefinition.TryExtractRaw(_innerBox.Text, raw, out int written, _innerBox.PromptChar))
+                    string text = _innerBox.Text ?? string.Empty;
+                    if (_maskDefinition.TryExtractRaw(text.AsSpan(), raw, out int written, _innerBox.PromptChar))
                     {
                         return new string(raw.Slice(0, written).ToArray());
                     }
                 }
-                return _innerBox.Text;
+                return _innerBox.Text ?? string.Empty;
             }
         }
 

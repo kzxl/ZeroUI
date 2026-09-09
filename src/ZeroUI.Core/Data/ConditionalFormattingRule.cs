@@ -115,6 +115,17 @@ namespace ZeroUI.Core.Data
             return false;
         }
 
+        public bool EvaluateText(string? text, out uint appliedBackColor, out uint appliedTextColor)
+        {
+            if (text == null)
+            {
+                appliedBackColor = 0;
+                appliedTextColor = 0;
+                return false;
+            }
+            return EvaluateText(text.AsSpan(), out appliedBackColor, out appliedTextColor);
+        }
+
         public bool EvaluateText(ReadOnlySpan<char> text, out uint appliedBackColor, out uint appliedTextColor)
         {
             appliedBackColor = 0;

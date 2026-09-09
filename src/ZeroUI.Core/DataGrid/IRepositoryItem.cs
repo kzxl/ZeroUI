@@ -24,4 +24,23 @@ namespace ZeroUI.Core.DataGrid
         /// </summary>
         bool ParseEditValue(ReadOnlySpan<char> text, out object? parsedValue);
     }
+
+    /// <summary>
+    /// Helper extension methods for <see cref="IRepositoryItem"/>.
+    /// </summary>
+    public static class RepositoryItemExtensions
+    {
+        /// <summary>
+        /// Parses user-edited string back into the target data type.
+        /// </summary>
+        public static bool ParseEditValue(this IRepositoryItem item, string? text, out object? parsedValue)
+        {
+            if (item == null || text == null)
+            {
+                parsedValue = null;
+                return false;
+            }
+            return item.ParseEditValue(text.AsSpan(), out parsedValue);
+        }
+    }
 }

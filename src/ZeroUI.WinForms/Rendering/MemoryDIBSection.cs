@@ -113,6 +113,14 @@ namespace ZeroUI.WinForms.Rendering
         }
 
 
+        public void DrawText(string? text, ref RECT rect, uint textColor, CellAlignment alignment, int textHeight)
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                DrawText(text.AsSpan(), ref rect, textColor, alignment, textHeight);
+            }
+        }
+
         public void DrawText(ReadOnlySpan<char> text, ref RECT rect, uint textColor, CellAlignment alignment, int textHeight)
         {
             if (_hMemDC == IntPtr.Zero || text.IsEmpty || rect.Width <= 0 || rect.Height <= 0) return;

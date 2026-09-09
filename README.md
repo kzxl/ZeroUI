@@ -9,7 +9,7 @@
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
 [![NuGet Version](https://img.shields.io/badge/nuget-v1.4.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
-[![Unit Tests](https://img.shields.io/badge/tests-408%20passed%20(100%25)-brightgreen.svg)](#7-testing--quality-assurance)
+[![Unit Tests](https://img.shields.io/badge/tests-409%20passed%20(100%25)-brightgreen.svg)](#7-testing--quality-assurance)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 [![UI Frame Latency](https://img.shields.io/badge/Frame%20Latency-%3C%204ms%20P95-brightgreen.svg)](#verified-benchmark-results)
@@ -554,10 +554,10 @@ dotnet test --nologo
 ```
 
 ```text
-Passed!  - Failed: 0, Passed: 408, Skipped: 0, Total: 408, Duration: 3.1 s
+Passed!  - Failed: 0, Passed: 409, Skipped: 0, Total: 409, Duration: 3.1 s
 ```
 
-- **ZeroUI.Core.Tests:** 408 comprehensive test fixtures covering Virtualization, LTTB Decimation, TimeSeriesPyramid, Historian WAL engine, Modbus/S7 protocols, ISA-18.2 Alarms, PackML, ValidationProvider, Localizer, RangeControl math, OLAP Pivot matrix rollups, Direct3D 11 GPU bridge, Analytical SDF Shader math, 9-Slice Shadow Atlas, and Hardware GPU Tier detection.
+- **ZeroUI.Core.Tests:** 409 comprehensive test fixtures covering Virtualization, LTTB Decimation, TimeSeriesPyramid, Historian WAL engine, Modbus/S7 protocols, ISA-18.2 Alarms, PackML, ValidationProvider, Localizer, RangeControl math, OLAP Pivot matrix rollups, Direct3D 11 GPU bridge, Analytical SDF Shader math, 9-Slice Shadow Atlas, and Hardware GPU Tier detection.
 
 ---
 

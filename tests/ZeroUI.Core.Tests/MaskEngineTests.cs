@@ -50,10 +50,29 @@ namespace ZeroUI.Core.Tests
             var def = MaskDefinition.MacAddress; // "HH:HH:HH:HH:HH:HH"
             Span<char> raw = stackalloc char[12];
 
-            bool success = def.TryExtractRaw("AA:BB:CC:DD:EE:FF", raw, out int charsWritten);
+            // Tests string overload
+            string masked = "AA:BB:CC:DD:EE:FF";
+            bool success = def.TryExtractRaw(masked, raw, out int charsWritten);
             Assert.True(success);
             Assert.Equal(12, charsWritten);
             Assert.Equal("AABBCCDDEEFF", new string(raw.ToArray()));
+
+            // Tests ReadOnlySpan overload
+            bool successSpan = def.TryExtractRaw(masked.AsSpan(), raw, out int charsWrittenSpan);
+            Assert.True(successSpan);
+            Assert.Equal(12, charsWrittenSpan);
+        }
+
+        [Fact]
+        public void ZeroMaskEngine_SetRawText_StringOverload_Works()
+        {
+            var engine = new ZeroMaskEngine(MaskDefinition.MacAddress);
+            string rawInput = "AABBCCDDEEFF";
+            engine.SetRawText(rawInput);
+
+            Assert.Equal("AA:BB:CC:DD:EE:FF", engine.GetFormattedText());
+            Assert.Equal("AABBCCDDEEFF", engine.GetRawText());
+            Assert.True(engine.IsComplete);
         }
 
         [Fact]

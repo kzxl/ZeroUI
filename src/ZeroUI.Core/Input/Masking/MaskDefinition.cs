@@ -119,6 +119,19 @@ namespace ZeroUI.Core.Input.Masking
         }
 
         /// <summary>
+        /// Formats raw unmasked string into the destination buffer according to this mask.
+        /// </summary>
+        public bool TryFormat(string? rawChars, Span<char> destination, out int charsWritten, char prompt = '_')
+        {
+            if (rawChars == null)
+            {
+                charsWritten = 0;
+                return false;
+            }
+            return TryFormat(rawChars.AsSpan(), destination, out charsWritten, prompt);
+        }
+
+        /// <summary>
         /// Formats raw unmasked characters into the destination buffer according to this mask.
         /// </summary>
         public bool TryFormat(ReadOnlySpan<char> rawChars, Span<char> destination, out int charsWritten, char prompt = '_')
@@ -156,6 +169,19 @@ namespace ZeroUI.Core.Input.Masking
 
             charsWritten = _tokens.Length;
             return true;
+        }
+
+        /// <summary>
+        /// Extracts raw characters out of a masked text string, skipping literals and prompt characters.
+        /// </summary>
+        public bool TryExtractRaw(string? maskedText, Span<char> destination, out int charsWritten, char prompt = '_')
+        {
+            if (maskedText == null)
+            {
+                charsWritten = 0;
+                return false;
+            }
+            return TryExtractRaw(maskedText.AsSpan(), destination, out charsWritten, prompt);
         }
 
         /// <summary>
