@@ -5,7 +5,8 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 > [!NOTE]
 > **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
 
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.3.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.4.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
@@ -63,7 +64,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.WinForms --version 1.3.0
+dotnet add package ZeroUI.WinForms --version 1.4.0
 ```
 
 ---

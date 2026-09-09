@@ -6,9 +6,10 @@
 > **Active Development Notice:**  
 > This project is currently in active development. We warmly welcome feedback, suggestions, feature ideas, and contributions from the community! If you encounter any issues or have recommendations, please feel free to open an [Issue](https://github.com/kzxl/ZeroUI/issues) or start a [Discussion](https://github.com/kzxl/ZeroUI/discussions).
 
+[![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
 [![NuGet Version](https://img.shields.io/badge/nuget-v1.4.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
-[![Unit Tests](https://img.shields.io/badge/tests-408%20passed%20(100%25)-brightgreen.svg)](#testing--verification)
+[![Unit Tests](https://img.shields.io/badge/tests-408%20passed%20(100%25)-brightgreen.svg)](#7-testing--quality-assurance)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#architecture)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 [![UI Frame Latency](https://img.shields.io/badge/Frame%20Latency-%3C%204ms%20P95-brightgreen.svg)](#verified-benchmark-results)
@@ -566,18 +567,39 @@ ZeroUI is published as modular, multi-targeted NuGet packages supporting both mo
 
 | Package | Version | Target Frameworks | Description |
 | :--- | :---: | :--- | :--- |
-| **`ZeroUI.Core`** | `1.3.0` | `netstandard2.0`, `net462`, `net8.0` | Zero-allocation core runtime, Historian WAL, Modbus/S7 protocols, ISA-18.2 alarms, validation, localization, and Automatic Render Optimizer engines. |
-| **`ZeroUI.WinForms`** | `1.3.0` | `net462`, `net8.0-windows` | Complete WinForms enterprise & industrial control suite, ZeroGrid, SCADA mimics, charts, editors, theme engine, and ZeroOptimizedPanel. |
-| **`ZeroUI.Wpf`** | `1.3.0` | `net462`, `net8.0-windows` | Hardware-accelerated WPF virtual data grid, Direct3D 11 GPU Bridge, Render Optimizer, ZeroOptimizedCard, HUD, and spreadsheet suite. |
+| **`ZeroUI.Core`** | `1.4.0` | `netstandard2.0`, `net462`, `net8.0` | Zero-allocation core runtime, Historian WAL, Modbus/S7 protocols, ISA-18.2 alarms, validation, localization, and Automatic Render Optimizer engines. |
+| **`ZeroUI.WinForms`** | `1.4.0` | `net462`, `net8.0-windows` | Complete WinForms enterprise & industrial control suite, ZeroGrid, SCADA mimics, charts, editors, theme engine, and ZeroOptimizedPanel. |
+| **`ZeroUI.Wpf`** | `1.4.0` | `net462`, `net8.0-windows` | Hardware-accelerated WPF virtual data grid, Direct3D 11 GPU Bridge, Render Optimizer, ZeroOptimizedCard, HUD, and spreadsheet suite. |
 
 ```powershell
 # Install via .NET CLI
-dotnet add package ZeroUI.WinForms --version 1.3.0
-dotnet add package ZeroUI.Wpf --version 1.3.0
-dotnet add package ZeroUI.Core --version 1.3.0
+dotnet add package ZeroUI.WinForms --version 1.4.0
+dotnet add package ZeroUI.Wpf --version 1.4.0
+dotnet add package ZeroUI.Core --version 1.4.0
 ```
 
 ---
 
-## 9. License
+## 9. The ZeroPlatform Ecosystem
+
+ZeroUI is the primary user interface and SCADA visualization tier of the **[ZeroPlatform](https://github.com/kzxl/ZeroPlatform)** ecosystem — a unified suite of zero-external-dependency industrial automation and computing libraries:
+
+| Subsystem | NuGet Package | Focus Area |
+| :--- | :--- | :--- |
+| **[ZeroUI](https://github.com/kzxl/ZeroUI)** | `ZeroUI.*` | 10M+ rows virtual grid, single-HWND controls, SCADA mimics, Obsidian dark theme |
+| **[ZeroGraphics](https://github.com/kzxl/ZeroGraphics)** | `ZeroGraphics.*` | Direct3D 11 / Direct2D GPU acceleration, 144Hz waveforms, machine vision, metrology |
+| **[ZeroComm](https://github.com/kzxl/ZeroComm)** | `ZeroComm.*` | Industrial PLC communications (Modbus TCP/RTU, Mitsubishi MELSEC MC, Omron FINS) |
+| **[ZeroPipeline](https://github.com/kzxl/ZeroPipeline)** | `ZeroPipeline.*` | Industrial DAG workflow execution, inspection pipelines, JSON recipes, node canvas |
+| **[ZeroStorage](https://github.com/kzxl/ZeroStorage)** | `ZeroStorage` | Embedded TSDB, WAL persistence, Facebook Gorilla XOR float compression |
+| **[ZeroSignal](https://github.com/kzxl/ZeroSignal)** | `ZeroSignal` | DSP, FFT, STFT, zero-phase FiltFilt, FIR/IIR filters, Extended Kalman Filter (EKF) |
+| **[ZeroData](https://github.com/kzxl/ZeroData)** | `ZeroData` | Columnar DataFrame, relational hash joins, temporal resampling, Apache Arrow IPC |
+| **[ZeroTensor](https://github.com/kzxl/ZeroTensor)** | `ZeroTensor` | Strided multidimensional tensors, zero-copy slicing, cache-blocked Level-3 BLAS, SVD/QR |
+| **[ZeroCompute](https://github.com/kzxl/ZeroCompute)** | `ZeroCompute` | Direct3D 11 Compute Shader GPGPU dispatching & CPU SIMD vectorized kernels |
+| **[ZeroInference](https://github.com/kzxl/ZeroInference)** | `ZeroInference` | Pure C# ONNX parser, deep learning inference runtime, Int8 quantization |
+| **[ZeroNeural](https://github.com/kzxl/ZeroNeural)** | `ZeroNeural` | Reverse-mode automatic differentiation (Autograd DAG), neural network layers |
+| **[ZeroGeometry](https://github.com/kzxl/ZeroGeometry)** | `ZeroGeometry` | 2D/3D computational geometry, KdTree/RTree spatial search, ICP point cloud registration |
+
+---
+
+## 10. License
 MIT License. Free for commercial, industrial, enterprise, and open-source use.
