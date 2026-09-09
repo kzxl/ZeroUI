@@ -85,6 +85,7 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateTheme()
         {
+            if (_innerBox == null) return;
             var p = CurrentPalette;
             _innerBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
             _innerBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
@@ -100,7 +101,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _maskDefinition = value;
-                if (value != null)
+                if (_innerBox != null && value != null)
                 {
                     _innerBox.Mask = value.Pattern;
                 }
@@ -117,7 +118,7 @@ namespace ZeroUI.WinForms.Editors
         {
             get
             {
-                if (_maskDefinition != null)
+                if (_maskDefinition != null && _innerBox != null)
                 {
                     Span<char> raw = stackalloc char[_maskDefinition.EditableCount];
                     string text = _innerBox.Text ?? string.Empty;
@@ -126,21 +127,21 @@ namespace ZeroUI.WinForms.Editors
                         return new string(raw.Slice(0, written).ToArray());
                     }
                 }
-                return _innerBox.Text ?? string.Empty;
+                return _innerBox?.Text ?? string.Empty;
             }
         }
 
         [Browsable(false)]
-        public bool IsComplete => _innerBox.MaskCompleted;
+        public bool IsComplete => _innerBox?.MaskCompleted ?? false;
 
         [Category("Behavior")]
         [DefaultValue("")]
         public string Mask
         {
-            get => _innerBox.Mask;
+            get => _innerBox?.Mask ?? "";
             set
             {
-                _innerBox.Mask = value ?? "";
+                if (_innerBox != null) _innerBox.Mask = value ?? "";
                 _maskDefinition = !string.IsNullOrEmpty(value) ? new MaskDefinition(value!) : null;
                 Invalidate();
             }
@@ -151,10 +152,10 @@ namespace ZeroUI.WinForms.Editors
 #pragma warning disable CS8765, CS8764
         public override string Text
         {
-            get => _innerBox.Text;
+            get => _innerBox?.Text ?? "";
             set
             {
-                if (_innerBox.Text != value)
+                if (_innerBox != null && _innerBox.Text != value)
                 {
                     _innerBox.Text = value ?? "";
                     Invalidate();
@@ -167,10 +168,10 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue('_')]
         public char PromptChar
         {
-            get => _innerBox.PromptChar;
+            get => _innerBox?.PromptChar ?? '_';
             set
             {
-                _innerBox.PromptChar = value;
+                if (_innerBox != null) _innerBox.PromptChar = value;
                 Invalidate();
             }
         }
@@ -179,11 +180,14 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(false)]
         public bool ReadOnly
         {
-            get => _innerBox.ReadOnly;
+            get => _innerBox?.ReadOnly ?? false;
             set
             {
-                _innerBox.ReadOnly = value;
-                UpdateTheme();
+                if (_innerBox != null)
+                {
+                    _innerBox.ReadOnly = value;
+                    UpdateTheme();
+                }
             }
         }
 
@@ -191,12 +195,15 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(true)]
         public bool BeepOnError
         {
-            get => _innerBox.BeepOnError;
-            set => _innerBox.BeepOnError = value;
+            get => _innerBox?.BeepOnError ?? true;
+            set
+            {
+                if (_innerBox != null) _innerBox.BeepOnError = value;
+            }
         }
 
-        public void SelectAll() => _innerBox.SelectAll();
-        public void Clear() => _innerBox.Clear();
+        public void SelectAll() => _innerBox?.SelectAll();
+        public void Clear() => _innerBox?.Clear();
 
         protected override void OnResize(EventArgs e)
         {

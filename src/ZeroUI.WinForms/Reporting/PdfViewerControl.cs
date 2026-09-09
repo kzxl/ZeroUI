@@ -211,7 +211,6 @@ namespace ZeroUI.WinForms.Reporting
                 ControlStyles.ResizeRedraw, true);
             DoubleBuffered = true;
             BackColor = ZeroTheme.Colors.Background;
-            Size = new Size(820, 600);
 
             // Default sample industrial document
             _document = PdfSampleGenerator.CreateIndustrialCadAndSopDocument();
@@ -452,6 +451,7 @@ namespace ZeroUI.WinForms.Reporting
             };
 
             PopulateBookmarksTree();
+            Size = new Size(820, 600);
             RefreshDocumentLayout();
             UpdatePageInfo();
         }
@@ -459,6 +459,7 @@ namespace ZeroUI.WinForms.Reporting
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
+            if (_canvasHost == null) return;
             RefreshDocumentLayout();
             _canvasHost.Invalidate();
         }

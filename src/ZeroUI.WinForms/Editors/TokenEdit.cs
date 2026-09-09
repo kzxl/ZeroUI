@@ -125,11 +125,14 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(false)]
         public bool ReadOnly
         {
-            get => _inputBox.ReadOnly;
+            get => _inputBox?.ReadOnly ?? false;
             set
             {
-                _inputBox.ReadOnly = value;
-                Invalidate();
+                if (_inputBox != null)
+                {
+                    _inputBox.ReadOnly = value;
+                    Invalidate();
+                }
             }
         }
 
@@ -185,6 +188,7 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnThemeChanged(ZeroSkin skin)
         {
             base.OnThemeChanged(skin);
+            if (_inputBox == null) return;
             _inputBox.BackColor = CurrentPalette.Surface;
             _inputBox.ForeColor = CurrentPalette.TextPrimary;
             Invalidate();

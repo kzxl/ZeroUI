@@ -139,11 +139,14 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(false)]
         public bool ReadOnly
         {
-            get => _innerBox.ReadOnly;
+            get => _innerBox?.ReadOnly ?? false;
             set
             {
-                _innerBox.ReadOnly = value;
-                UpdateTheme();
+                if (_innerBox != null)
+                {
+                    _innerBox.ReadOnly = value;
+                    UpdateTheme();
+                }
             }
         }
 
@@ -151,16 +154,22 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(true)]
         public bool WordWrap
         {
-            get => _innerBox.WordWrap;
-            set => _innerBox.WordWrap = value;
+            get => _innerBox?.WordWrap ?? true;
+            set
+            {
+                if (_innerBox != null) _innerBox.WordWrap = value;
+            }
         }
 
         [Category("Behavior")]
         [DefaultValue(ScrollBars.Vertical)]
         public ScrollBars ScrollBars
         {
-            get => _innerBox.ScrollBars;
-            set => _innerBox.ScrollBars = value;
+            get => _innerBox?.ScrollBars ?? ScrollBars.Vertical;
+            set
+            {
+                if (_innerBox != null) _innerBox.ScrollBars = value;
+            }
         }
 
         [Category("Behavior")]

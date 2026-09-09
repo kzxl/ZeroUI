@@ -239,7 +239,6 @@ namespace ZeroUI.WinForms.Reporting
                 ControlStyles.ResizeRedraw, true);
             DoubleBuffered = true;
             BackColor = ZeroTheme.Colors.Background;
-            Size = new Size(880, 560);
 
             // Default model: Factory Costing BOM
             _worksheet = SpreadsheetSampleGenerator.CreateFactoryCostingWorksheet();
@@ -436,6 +435,7 @@ namespace ZeroUI.WinForms.Reporting
             // Reactive Theme
             ZeroTheme.ThemeChanged += OnThemeChanged;
 
+            Size = new Size(880, 560);
             UpdateFormulaBar();
             UpdateScrollBars();
         }
@@ -443,17 +443,29 @@ namespace ZeroUI.WinForms.Reporting
         private void OnThemeChanged(object? sender, EventArgs e)
         {
             BackColor = ZeroTheme.Colors.Background;
-            _toolbarPanel.BackColor = ZeroTheme.Colors.Surface;
-            _lblActiveCell.ForeColor = ZeroTheme.Colors.Primary;
-            _lblActiveCell.BackColor = ZeroTheme.Colors.HeaderBackground;
-            _lblFx.ForeColor = ZeroTheme.Colors.TextSecondary;
-            _txtFormulaBar.BackColor = ZeroTheme.Colors.Surface;
-            _txtFormulaBar.ForeColor = ZeroTheme.Colors.TextPrimary;
-            _inPlaceEditor.BackColor = ZeroTheme.Colors.Surface;
-            _inPlaceEditor.ForeColor = ZeroTheme.Colors.TextPrimary;
-            _canvas.BackColor = ZeroTheme.Colors.Background;
-            _toolbarPanel.Invalidate();
-            _canvas.Invalidate();
+            if (_toolbarPanel != null) _toolbarPanel.BackColor = ZeroTheme.Colors.Surface;
+            if (_lblActiveCell != null)
+            {
+                _lblActiveCell.ForeColor = ZeroTheme.Colors.Primary;
+                _lblActiveCell.BackColor = ZeroTheme.Colors.HeaderBackground;
+            }
+            if (_lblFx != null) _lblFx.ForeColor = ZeroTheme.Colors.TextSecondary;
+            if (_txtFormulaBar != null)
+            {
+                _txtFormulaBar.BackColor = ZeroTheme.Colors.Surface;
+                _txtFormulaBar.ForeColor = ZeroTheme.Colors.TextPrimary;
+            }
+            if (_inPlaceEditor != null)
+            {
+                _inPlaceEditor.BackColor = ZeroTheme.Colors.Surface;
+                _inPlaceEditor.ForeColor = ZeroTheme.Colors.TextPrimary;
+            }
+            if (_canvas != null)
+            {
+                _canvas.BackColor = ZeroTheme.Colors.Background;
+                _canvas.Invalidate();
+            }
+            _toolbarPanel?.Invalidate();
         }
 
         protected override void Dispose(bool disposing)
@@ -473,6 +485,7 @@ namespace ZeroUI.WinForms.Reporting
 
         private void UpdateScrollBars()
         {
+            if (_vScrollBar == null || _hScrollBar == null || _worksheet == null) return;
             int fRows = Math.Max(0, _frozenRows);
             int fCols = Math.Max(0, _frozenColumns);
 

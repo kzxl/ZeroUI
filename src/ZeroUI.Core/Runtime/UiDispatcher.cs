@@ -64,8 +64,16 @@ namespace ZeroUI.Core.Runtime
 
             if (_syncContext != null)
             {
-                _syncContext.Post(_ => action(), null);
-                return;
+                try
+                {
+                    _syncContext.Post(_ => action(), null);
+                    return;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Window handle might not be created yet, or form is disposing
+                    return;
+                }
             }
 
             // Fallback: If no dispatcher initialized, execute in threadpool
@@ -88,8 +96,15 @@ namespace ZeroUI.Core.Runtime
 
             if (_syncContext != null)
             {
-                _syncContext.Send(_ => action(), null);
-                return;
+                try
+                {
+                    _syncContext.Send(_ => action(), null);
+                    return;
+                }
+                catch (InvalidOperationException)
+                {
+                    return;
+                }
             }
 
             if (_customInvoker != null)

@@ -79,6 +79,7 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateTheme()
         {
+            if (_textBox == null) return;
             var palette = CurrentPalette;
             _textBox.BackColor = palette.Surface;
             _textBox.ForeColor = palette.TextPrimary;
@@ -97,7 +98,7 @@ namespace ZeroUI.WinForms.Editors
         public int DebounceIntervalMs
         {
             get => _debounceMs;
-            set { _debounceMs = Math.Max(50, value); _debounceTimer.Interval = _debounceMs; }
+            set { _debounceMs = Math.Max(50, value); if (_debounceTimer != null) _debounceTimer.Interval = _debounceMs; }
         }
 
         [Browsable(false)]
@@ -106,8 +107,8 @@ namespace ZeroUI.WinForms.Editors
 #endif
         public override string Text
         {
-            get => _textBox.Text;
-            set => _textBox.Text = value ?? string.Empty;
+            get => _textBox?.Text ?? string.Empty;
+            set { if (_textBox != null) _textBox.Text = value ?? string.Empty; }
         }
 
 
