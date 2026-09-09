@@ -24,10 +24,10 @@
     <ProjectReference Include="..\..\..\ZeroGraphics\src\ZeroGraphics.Waveform\ZeroGraphics.Waveform.csproj" />
   </ItemGroup>
   <ItemGroup Condition="!Exists('..\..\..\ZeroGraphics\src\ZeroGraphics.Core\ZeroGraphics.Core.csproj')">
-    <PackageReference Include="ZeroGraphics.Core" Version="1.0.0" />
-    <PackageReference Include="ZeroGraphics.DirectX" Version="1.0.0" />
-    <PackageReference Include="ZeroGraphics.Direct2D" Version="1.0.0" />
-    <PackageReference Include="ZeroGraphics.Waveform" Version="1.0.0" />
+    <PackageReference Include="ZeroGraphics.Core" Version="1.0.1" />
+    <PackageReference Include="ZeroGraphics.DirectX" Version="1.0.1" />
+    <PackageReference Include="ZeroGraphics.Direct2D" Version="1.0.1" />
+    <PackageReference Include="ZeroGraphics.Waveform" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup>
