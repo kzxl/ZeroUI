@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
@@ -20,13 +21,37 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern anti-aliased multi-line text editor")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroMemoEdit.bmp")]
-    public class MemoEdit : ZeroControlBase
+    public class MemoEdit : ZeroControlBase, IZeroEditor
     {
         private readonly TextBox _innerBox;
         private string _placeholderText = "";
         private bool _isFocused = false;
         private bool _isHovered = false;
         private bool _showCharacterCount = false;
+        private bool _isModified = false;
+
+        [Browsable(false)]
+        public object? EditValue
+        {
+            get => Text;
+            set => Text = value?.ToString() ?? string.Empty;
+        }
+
+        [Browsable(false)]
+        public bool IsModified
+        {
+            get => _isModified;
+            set => _isModified = value;
+        }
+
+        public event EventHandler? EditValueChanged;
+
+        public void Reset()
+        {
+            Text = string.Empty;
+            _isModified = false;
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
+        }
 
         public MemoEdit()
         {
@@ -48,7 +73,9 @@ namespace ZeroUI.WinForms.Editors
 
             _innerBox.TextChanged += (s, e) =>
             {
+                _isModified = true;
                 OnTextChanged(e);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
             };
             _innerBox.GotFocus += (s, e) =>
@@ -214,7 +241,7 @@ namespace ZeroUI.WinForms.Editors
         }
 
         public void SelectAll() => _innerBox.SelectAll();
-        public void Clear() => _innerBox.Clear();
+        public void Clear() => Reset();
 
         protected override void OnResize(EventArgs e)
         {

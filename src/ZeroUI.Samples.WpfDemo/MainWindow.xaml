@@ -1558,6 +1558,56 @@
                                             </StackPanel>
                                         </Border>
                                     </Grid>
+
+                                    <!-- 10. Duration, Hyperlink & Memo Multiline Editors -->
+                                    <TextBlock Text="10. Duration, Hyperlink &amp; Multiline Memo Editors (TimeSpanEdit, HyperlinkEdit, MemoEdit)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                                    
+                                    <Grid Margin="0,0,0,24">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Card 1: TimeSpanEdit Showcase -->
+                                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,10,0">
+                                            <StackPanel>
+                                                <TextBlock Text="TimeSpanEdit (Duration &amp; Cycle Time)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Industrial duration input with keyboard segment stepping, spinner buttons, and auto-clamping." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Batch Recipe Duration (HH:mm:ss):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:TimeSpanEdit Value="02:45:30" Margin="0,0,0,10" />
+
+                                                <TextBlock Text="Cycle Timeout Limit (Days &amp; Time):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:TimeSpanEdit Value="1.04:15:00" ShowDays="True" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Card 2: HyperlinkEdit Showcase -->
+                                        <Border Grid.Column="1" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="5,0,5,0">
+                                            <StackPanel>
+                                                <TextBlock Text="HyperlinkEdit (Interactive Link &amp; Launcher)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Direct navigation with confirmation guard, editable URL mode, and inline launch button." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Interactive Document Link:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:HyperlinkEdit DisplayText="ZeroUI Architecture Guide (GitHub)" TargetUrl="https://github.com" Margin="0,0,0,10" />
+
+                                                <TextBlock Text="Editable Endpoint URL with Action Launch:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:HyperlinkEdit IsEditable="True" TargetUrl="https://api.zeroui.io/v1/telemetry" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Card 3: MemoEdit Showcase -->
+                                        <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="10,0,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="MemoEdit (Multiline Text with Counter)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Multi-line memo with word wrap, placeholder, character counter badge, and IZeroEditor compliance." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Operator Shift Notes:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:MemoEdit Height="85" Placeholder="Type operator handover remarks or maintenance observations..." ShowCharacterCount="True" MaxLength="300" Text="Line 4 automated calibration completed. All pressure sensors verified within 0.05 bar tolerance." />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>

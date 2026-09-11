@@ -248,5 +248,87 @@ namespace ZeroUI.Core.Tests
             Assert.Contains("#10B981", ColorPalette.IndustrialStatusPalette); // Running / Normal
             Assert.Contains("#EF4444", ColorPalette.IndustrialStatusPalette); // Alarm / Critical
         }
+
+        [Fact]
+        public void TimeSpanModel_SteppingAndClamping_WorkCorrectly()
+        {
+            var model = new TimeSpanModel(TimeSpan.FromHours(2))
+            {
+                Minimum = TimeSpan.Zero,
+                Maximum = TimeSpan.FromDays(5)
+            };
+
+            Assert.Equal(TimeSpan.FromHours(2), model.Value);
+
+            // Step Hours
+            model.FocusedPart = TimeSpanPart.Hours;
+            model.StepUp();
+            Assert.Equal(TimeSpan.FromHours(3), model.Value);
+
+            model.StepDown();
+            Assert.Equal(TimeSpan.FromHours(2), model.Value);
+
+            // Step Minutes
+            model.FocusedPart = TimeSpanPart.Minutes;
+            model.StepUp();
+            Assert.Equal(new TimeSpan(2, 1, 0), model.Value);
+
+            // Bounds clamping
+            model.Value = TimeSpan.FromDays(10);
+            Assert.Equal(TimeSpan.FromDays(5), model.Value); // Clamped to maximum
+
+            model.Value = TimeSpan.FromDays(-1);
+            Assert.Equal(TimeSpan.Zero, model.Value); // Clamped to minimum
+        }
+
+        [Fact]
+        public void TimeSpanModel_FormattingAndParsing_WorkCorrectly()
+        {
+            var ts = new TimeSpan(1, 2, 30, 45); // 1d 02:30:45
+            string clock = TimeSpanModel.FormatTimeSpan(ts, TimeSpanFormatMode.Clock, showDays: true);
+            Assert.Contains("1d", clock);
+            Assert.Contains("02:30:45", clock);
+
+            string verbose = TimeSpanModel.FormatTimeSpan(ts, TimeSpanFormatMode.Verbose, showDays: true);
+            Assert.Contains("1d", verbose);
+            Assert.Contains("2h", verbose);
+            Assert.Contains("30m", verbose);
+            Assert.Contains("45s", verbose);
+
+            // Parsing shorthand
+            Assert.True(TimeSpanModel.TryParse("90s", out var parsedSec));
+            Assert.Equal(TimeSpan.FromSeconds(90), parsedSec);
+
+            Assert.True(TimeSpanModel.TryParse("15m", out var parsedMin));
+            Assert.Equal(TimeSpan.FromMinutes(15), parsedMin);
+
+            Assert.True(TimeSpanModel.TryParse("2h", out var parsedHr));
+            Assert.Equal(TimeSpan.FromHours(2), parsedHr);
+
+            Assert.True(TimeSpanModel.TryParse("3d", out var parsedDay));
+            Assert.Equal(TimeSpan.FromDays(3), parsedDay);
+
+            Assert.True(TimeSpanModel.TryParse("01:15:30", out var parsedClock));
+            Assert.Equal(new TimeSpan(1, 15, 30), parsedClock);
+        }
+
+        [Fact]
+        public void HyperlinkModel_DetectKindAndArgs_WorkCorrectly()
+        {
+            Assert.Equal(HyperlinkEditKind.Web, HyperlinkHelper.DetectKind("https://zeroui.io"));
+            Assert.Equal(HyperlinkEditKind.Email, HyperlinkHelper.DetectKind("support@zeroui.io"));
+            Assert.Equal(HyperlinkEditKind.Email, HyperlinkHelper.DetectKind("mailto:admin@zeroui.io"));
+            Assert.Equal(HyperlinkEditKind.File, HyperlinkHelper.DetectKind("C:\\ZeroPlatform\\Config.json"));
+
+            Assert.True(HyperlinkHelper.TryCreateUri("zeroui.io", out var uri));
+            Assert.NotNull(uri);
+            Assert.Equal("https", uri!.Scheme);
+
+            var args = new HyperlinkNavigateEventArgs("https://zeroui.io", uri);
+            Assert.False(args.Cancel);
+            Assert.False(args.Handled);
+            args.Cancel = true;
+            Assert.True(args.Cancel);
+        }
     }
 }

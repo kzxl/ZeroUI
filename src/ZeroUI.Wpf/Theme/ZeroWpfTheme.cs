@@ -25,6 +25,7 @@ namespace ZeroUI.Wpf.Theme
         public static SolidColorBrush BorderFocus { get; private set; } = null!;
         public static SolidColorBrush PrimaryAccent { get; private set; } = null!;
         public static SolidColorBrush PrimaryAccentDark { get; private set; } = null!;
+        public static SolidColorBrush PrimaryAccentHover => PrimaryAccentDark;
         public static SolidColorBrush SecondaryAccent { get; private set; } = null!;
         public static SolidColorBrush TextPrimary { get; private set; } = null!;
         public static SolidColorBrush TextSecondary { get; private set; } = null!;

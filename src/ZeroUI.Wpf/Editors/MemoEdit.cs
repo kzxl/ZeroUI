@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
@@ -10,7 +11,7 @@ namespace ZeroUI.Wpf.Editors
     /// Modern anti-aliased multi-line text editor (Memo / Text Area) for ZeroUI in WPF.
     /// Provides smooth scrolling, word wrap, placeholder, character counter, and theme synchronization.
     /// </summary>
-    public class MemoEdit : TextBox
+    public class MemoEdit : TextBox, IZeroEditor
     {
         #region Dependency Properties
 
@@ -25,6 +26,18 @@ namespace ZeroUI.Wpf.Editors
         public static readonly DependencyProperty CornerRadiusProperty =
             DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(MemoEdit),
                 new FrameworkPropertyMetadata(new CornerRadius(5)));
+
+        public static readonly DependencyProperty EditValueProperty =
+            DependencyProperty.Register(nameof(EditValue), typeof(object), typeof(MemoEdit),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
+
+        public static readonly DependencyProperty IsModifiedProperty =
+            DependencyProperty.Register(nameof(IsModified), typeof(bool), typeof(MemoEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty ReadOnlyProperty =
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(MemoEdit),
+                new PropertyMetadata(false, (d, e) => ((MemoEdit)d).IsReadOnly = (bool)e.NewValue));
 
         #endregion
 
@@ -48,13 +61,52 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(CornerRadiusProperty, value);
         }
 
+        public object? EditValue
+        {
+            get => GetValue(EditValueProperty);
+            set => SetValue(EditValueProperty, value);
+        }
+
+        public bool IsModified
+        {
+            get => (bool)GetValue(IsModifiedProperty);
+            set => SetValue(IsModifiedProperty, value);
+        }
+
+        public bool ReadOnly
+        {
+            get => (bool)GetValue(ReadOnlyProperty);
+            set => SetValue(ReadOnlyProperty, value);
+        }
+
+        public event EventHandler? EditValueChanged;
+
         #endregion
+
+        private bool _isInternalEditValueSync;
 
         static MemoEdit()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(MemoEdit),
                 new FrameworkPropertyMetadata(typeof(TextEdit)));
         }
+
+        private static void OnEditValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is MemoEdit memo && !memo._isInternalEditValueSync)
+            {
+                memo.Text = e.NewValue?.ToString() ?? string.Empty;
+                memo.EditValueChanged?.Invoke(memo, EventArgs.Empty);
+            }
+        }
+
+        public void Reset()
+        {
+            Text = string.Empty;
+            IsModified = false;
+        }
+
+        public new void Clear() => Reset();
 
         public MemoEdit()
         {
@@ -74,6 +126,12 @@ namespace ZeroUI.Wpf.Editors
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
             base.OnTextChanged(e);
+            _isInternalEditValueSync = true;
+            EditValue = Text;
+            IsModified = true;
+            _isInternalEditValueSync = false;
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
+
             if (ShowCharacterCount || !string.IsNullOrEmpty(Placeholder))
             {
                 InvalidateVisual();

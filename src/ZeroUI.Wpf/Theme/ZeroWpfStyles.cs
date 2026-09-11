@@ -2626,6 +2626,25 @@ namespace ZeroUI.Wpf.Theme
         </Setter>
     </Style>
 
+    <!-- 43. TIMESPANEDIT STYLE -->
+    <Style TargetType=""{x:Type editors:TimeSpanEdit}"">
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgInput}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+        <Setter Property=""FontSize"" Value=""13"" />
+        <Setter Property=""Height"" Value=""32"" />
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+    </Style>
+
+    <!-- 44. HYPERLINKEDIT STYLE -->
+    <Style TargetType=""{x:Type editors:HyperlinkEdit}"">
+        <Setter Property=""Background"" Value=""Transparent"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+        <Setter Property=""FontSize"" Value=""13"" />
+        <Setter Property=""Height"" Value=""32"" />
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+    </Style>
+
 </ResourceDictionary>";
 
             return (ResourceDictionary)XamlReader.Parse(xaml);
