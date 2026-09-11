@@ -67,6 +67,10 @@ namespace ZeroUI.Wpf.Editors
             DependencyProperty.Register(nameof(ThousandsSeparator), typeof(bool), typeof(SpinEdit),
                 new PropertyMetadata(true, OnFormattingChanged));
 
+        public static readonly DependencyProperty EnableMathEvaluationProperty =
+            DependencyProperty.Register(nameof(EnableMathEvaluation), typeof(bool), typeof(SpinEdit),
+                new PropertyMetadata(true));
+
         public static readonly DependencyProperty TextAlignmentProperty =
             DependencyProperty.Register(nameof(TextAlignment), typeof(TextAlignment), typeof(SpinEdit),
                 new PropertyMetadata(TextAlignment.Right));
@@ -107,6 +111,12 @@ namespace ZeroUI.Wpf.Editors
         {
             get => IsReadOnly;
             set => IsReadOnly = value;
+        }
+
+        public bool EnableMathEvaluation
+        {
+            get => (bool)GetValue(EnableMathEvaluationProperty);
+            set => SetValue(EnableMathEvaluationProperty, value);
         }
 
         public void Reset()
@@ -343,15 +353,19 @@ namespace ZeroUI.Wpf.Editors
 
         private void OnTextBoxPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            // Allow digits, minus sign, and decimal separator
+            // Allow digits, minus sign, decimal separator, and arithmetic operators if math evaluation is enabled
             string decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
             foreach (char c in e.Text)
             {
-                if (!char.IsDigit(c) && c != '-' && c.ToString() != decimalSeparator)
+                if (char.IsDigit(c) || c == '-' || c.ToString() == decimalSeparator) continue;
+
+                if (EnableMathEvaluation && (c == '+' || c == '*' || c == '/' || c == '(' || c == ')' || c == '^' || c == '%' || char.IsWhiteSpace(c)))
                 {
-                    e.Handled = true;
-                    return;
+                    continue;
                 }
+
+                e.Handled = true;
+                return;
             }
         }
 
@@ -424,7 +438,12 @@ namespace ZeroUI.Wpf.Editors
         {
             if (_textBox == null) return;
             string raw = CleanNumericString(_textBox.Text);
-            if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.CurrentCulture, out decimal parsed))
+
+            if (EnableMathEvaluation && MathExpressionParser.TryEvaluate(raw, out decimal mathResult))
+            {
+                Value = Math.Max(MinValue, Math.Min(MaxValue, mathResult));
+            }
+            else if (decimal.TryParse(raw, NumberStyles.Any, CultureInfo.CurrentCulture, out decimal parsed))
             {
                 Value = Math.Max(MinValue, Math.Min(MaxValue, parsed));
             }

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
@@ -20,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Category("ZeroUI - Editors")]
     [Description("Smooth sliding animated toggle switch")]
-    public class ToggleSwitch : ZeroControlBase
+    public class ToggleSwitch : ZeroControlBase, IZeroEditor
     {
         private bool _checked = false;
         private string? _checkedText = "ON";
@@ -34,8 +35,52 @@ namespace ZeroUI.WinForms.Editors
         private IDisposable? _animSub;
 
         private float _thumbPosition = 0f; // 0.0 (left) to 1.0 (right)
+        private bool _isModified = false;
+        private bool _readOnly = false;
 
         public event EventHandler? CheckedChanged;
+        public event EventHandler? EditValueChanged;
+
+        [Browsable(false)]
+        public object? EditValue
+        {
+            get => _checked;
+            set
+            {
+                if (value is bool b)
+                {
+                    Checked = b;
+                }
+                else if (bool.TryParse(value?.ToString(), out bool parsed))
+                {
+                    Checked = parsed;
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public bool IsModified
+        {
+            get => _isModified;
+            set => _isModified = value;
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool ReadOnly
+        {
+            get => _readOnly;
+            set => _readOnly = value;
+        }
+
+        public void Reset()
+        {
+            Checked = false;
+            _isModified = false;
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void Clear() => Reset();
 
         public ToggleSwitch()
         {
@@ -62,6 +107,7 @@ namespace ZeroUI.WinForms.Editors
                 if (_checked != value)
                 {
                     _checked = value;
+                    _isModified = true;
                     if (!ZeroDesignHelper.IsInDesignMode(this) && IsHandleCreated)
                     {
                         _animSub ??= ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
@@ -72,6 +118,7 @@ namespace ZeroUI.WinForms.Editors
                         Invalidate();
                     }
                     CheckedChanged?.Invoke(this, EventArgs.Empty);
+                    EditValueChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -133,6 +180,7 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
+            if (_readOnly || !Enabled) return;
             Focus();
             Checked = !Checked;
         }
@@ -140,7 +188,7 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
-            if (e.KeyCode == Keys.Space || e.KeyCode == Keys.Enter)
+            if ((e.KeyCode == Keys.Space || e.KeyCode == Keys.Enter) && !_readOnly && Enabled)
             {
                 Checked = !Checked;
                 e.Handled = true;

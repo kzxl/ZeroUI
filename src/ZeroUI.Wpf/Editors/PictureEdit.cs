@@ -9,22 +9,6 @@ using ZeroUI.Core.Editors;
 
 namespace ZeroUI.Wpf.Editors
 {
-    public enum ImageScaleMode
-    {
-        Cover,
-        Contain,
-        Center,
-        Stretch
-    }
-
-    public enum AvatarStatus
-    {
-        None,
-        Online,
-        Busy,
-        Away,
-        Offline
-    }
 
     /// <summary>
     /// Modern anti-aliased image and avatar control for ZeroUI.Wpf.
@@ -73,7 +57,23 @@ namespace ZeroUI.Wpf.Editors
                 nameof(FallbackText),
                 typeof(string),
                 typeof(PictureEdit),
-                new PropertyMetadata(null));
+                new PropertyMetadata(null, OnFallbackTextChanged));
+
+        private static void OnFallbackTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is PictureEdit pe && e.NewValue is string text && !string.IsNullOrWhiteSpace(text))
+            {
+                if (pe.FallbackBackground == null)
+                {
+                    try
+                    {
+                        string colorHex = AvatarHelper.GetDeterministicColorHex(text);
+                        pe.SetCurrentValue(FallbackBackgroundProperty, (Brush)new BrushConverter().ConvertFromString(colorHex)!);
+                    }
+                    catch { }
+                }
+            }
+        }
 
         public static readonly DependencyProperty FallbackBackgroundProperty =
             DependencyProperty.Register(

@@ -12,35 +12,6 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-    public class LookUpItem
-    {
-        public string Key { get; set; } = "";
-        public string DisplayText { get; set; } = "";
-        public string SubText { get; set; } = "";
-        public string Category { get; set; } = "";
-        public object? Tag { get; set; }
-
-        public LookUpItem() { }
-
-        public LookUpItem(string key, string displayText, string subText = "", string category = "")
-        {
-            Key = key;
-            DisplayText = displayText;
-            SubText = subText;
-            Category = category;
-        }
-
-        public override string ToString() => DisplayText;
-    }
-
-    [Obsolete("ZeroLookupItem is deprecated. Use LookUpItem instead.")]
-    public class ZeroLookupItem : LookUpItem
-    {
-        public ZeroLookupItem() { }
-        public ZeroLookupItem(string key, string displayText, string subText = "", string category = "")
-            : base(key, displayText, subText, category) { }
-    }
-
     /// <summary>
     /// Virtualized, high-performance searchable autocomplete dropdown & lookup box for enterprise ERP catalog datasets.
     /// Features instant debounced filtering across 10,000+ items, multi-property item display,
@@ -270,27 +241,8 @@ namespace ZeroUI.WinForms.Editors
         private void FilterItems(string query)
         {
             _filteredItems.Clear();
-            var q = query.Trim();
-
-            if (string.IsNullOrEmpty(q))
-            {
-                _filteredItems.AddRange(_items);
-            }
-            else
-            {
-                foreach (var item in _items)
-                {
-                    if (item.DisplayText.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        item.Key.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        item.SubText.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        item.Category.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        _filteredItems.Add(item);
-                    }
-                }
-            }
-
-            _listControl.UpdateFilteredList(_filteredItems, q);
+            _filteredItems.AddRange(LookUpFilterHelper.Filter(_items, query));
+            _listControl.UpdateFilteredList(_filteredItems, query?.Trim() ?? string.Empty);
         }
 
         private void ShowPopup()

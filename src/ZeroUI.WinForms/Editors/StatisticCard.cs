@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
@@ -10,13 +11,6 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-    public enum ZeroTrendDirection
-    {
-        None,
-        Up,
-        Down
-    }
-
     /// <summary>
     /// Modern KPI Metric Card component for ZeroUI executive dashboards and analytical summaries.
     /// </summary>
@@ -31,7 +25,7 @@ namespace ZeroUI.WinForms.Editors
         private string _value = "0";
         private string? _prefix;
         private string? _suffix;
-        private ZeroTrendDirection _trend = ZeroTrendDirection.None;
+        private TrendDirection _trend = TrendDirection.None;
         private string? _trendText;
 
         private Color _valueColor = Color.Empty;
@@ -84,11 +78,19 @@ namespace ZeroUI.WinForms.Editors
         }
 
         [Category("Data")]
-        [DefaultValue(ZeroTrendDirection.None)]
-        public ZeroTrendDirection Trend
+        [DefaultValue(TrendDirection.None)]
+        public TrendDirection Trend
         {
             get => _trend;
             set { _trend = value; Invalidate(); }
+        }
+
+        [Obsolete("ZeroTrend is deprecated. Use Trend instead.")]
+        [Browsable(false)]
+        public ZeroTrendDirection ZeroTrend
+        {
+            get => (ZeroTrendDirection)_trend;
+            set => Trend = (TrendDirection)value;
         }
 
         [Category("Data")]
@@ -149,9 +151,9 @@ namespace ZeroUI.WinForms.Editors
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
             // 4. Trend Indicator (Optional footer note)
-            if (_trend != ZeroTrendDirection.None && !string.IsNullOrEmpty(_trendText))
+            if (_trend != TrendDirection.None && !string.IsNullOrEmpty(_trendText))
             {
-                var (trendChar, trendColor) = _trend == ZeroTrendDirection.Up
+                var (trendChar, trendColor) = _trend == TrendDirection.Up
                     ? ("▲", palette.Success)
                     : ("▼", palette.Danger);
 

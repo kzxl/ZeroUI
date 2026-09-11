@@ -8,31 +8,11 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
 {
-    public class LookUpItem
-    {
-        public string Key { get; set; } = string.Empty;
-        public string DisplayText { get; set; } = string.Empty;
-        public string SubText { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public object? Tag { get; set; }
-
-        public LookUpItem() { }
-
-        public LookUpItem(string key, string displayText, string subText = "", string category = "")
-        {
-            Key = key;
-            DisplayText = displayText;
-            SubText = subText;
-            Category = category;
-        }
-
-        public override string ToString() => DisplayText;
-    }
-
     /// <summary>
     /// Virtualized, high-performance searchable autocomplete dropdown & lookup box for WPF.
     /// Features instant debounced filtering across large datasets, multi-property item layout,
@@ -268,25 +248,7 @@ namespace ZeroUI.Wpf.Editors
         private void PerformFilter(string query)
         {
             _filteredItems.Clear();
-            if (string.IsNullOrWhiteSpace(query))
-            {
-                _filteredItems.AddRange(_allItems.Take(100));
-            }
-            else
-            {
-                string lower = query.Trim().ToLowerInvariant();
-                foreach (var item in _allItems)
-                {
-                    if (item.DisplayText.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        item.Key.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        item.SubText.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        item.Category.IndexOf(lower, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        _filteredItems.Add(item);
-                        if (_filteredItems.Count >= 100) break;
-                    }
-                }
-            }
+            _filteredItems.AddRange(LookUpFilterHelper.Filter(_allItems, query, 100));
 
             _resultsListBox.ItemsSource = null;
             _resultsListBox.ItemsSource = _filteredItems;
@@ -454,17 +416,6 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Backward-compatibility alias for <see cref="LookUpItem"/>.
-    /// </summary>
-    [Obsolete("ZeroLookupItem is deprecated. Use LookUpItem instead.")]
-    public class ZeroLookupItem : LookUpItem
-    {
-        public ZeroLookupItem() { }
-        public ZeroLookupItem(string key, string displayText, string subText = "", string category = "")
-            : base(key, displayText, subText, category) { }
     }
 
     /// <summary>

@@ -516,5 +516,121 @@ namespace ZeroUI.Core.Tests
             Assert.Equal(new DateTime(2026, 1, 1), ytd.Start);
             Assert.Equal(baseDate, ytd.End);
         }
+
+        [Fact]
+        public void PictureScaleMath_Calculations_AreAccurate()
+        {
+            // Target: 200x100, Image: 100x100
+            PictureScaleMath.CalculateDestination(0, 0, 200, 100, 100, 100, ImageScaleMode.Stretch,
+                out double sx, out double sy, out double sw, out double sh);
+            Assert.Equal(0, sx);
+            Assert.Equal(0, sy);
+            Assert.Equal(200, sw);
+            Assert.Equal(100, sh);
+
+            // Center
+            PictureScaleMath.CalculateDestination(0, 0, 200, 100, 100, 100, ImageScaleMode.Center,
+                out double cx, out double cy, out double cw, out double ch);
+            Assert.Equal(50, cx);
+            Assert.Equal(0, cy);
+            Assert.Equal(100, cw);
+            Assert.Equal(100, ch);
+
+            // Contain: fits inside 100x100 at center (x: 50)
+            PictureScaleMath.CalculateDestination(0, 0, 200, 100, 100, 100, ImageScaleMode.Contain,
+                out double fitX, out double fitY, out double fitW, out double fitH);
+            Assert.Equal(50, fitX);
+            Assert.Equal(0, fitY);
+            Assert.Equal(100, fitW);
+            Assert.Equal(100, fitH);
+
+            // Cover: covers entire 200x100 -> scale 2.0 -> 200x200, centered vertically (y: -50)
+            PictureScaleMath.CalculateDestination(0, 0, 200, 100, 100, 100, ImageScaleMode.Cover,
+                out double covX, out double covY, out double covW, out double covH);
+            Assert.Equal(0, covX);
+            Assert.Equal(-50, covY);
+            Assert.Equal(200, covW);
+            Assert.Equal(200, covH);
+        }
+
+        [Fact]
+        public void AvatarHelper_InitialsAndColors_WorkProperly()
+        {
+            Assert.Equal("JD", AvatarHelper.ExtractInitials("John Doe"));
+            Assert.Equal("AD", AvatarHelper.ExtractInitials("Admin"));
+            Assert.Equal("A", AvatarHelper.ExtractInitials("A"));
+            Assert.Equal("AM", AvatarHelper.ExtractInitials("Anna-Marie"));
+            Assert.Equal("AS", AvatarHelper.ExtractInitials("Anna_Smith"));
+            Assert.Equal(string.Empty, AvatarHelper.ExtractInitials(""));
+            Assert.Equal(string.Empty, AvatarHelper.ExtractInitials(null));
+
+            string hex = AvatarHelper.GetDeterministicColorHex("op-001");
+            Assert.StartsWith("#", hex);
+            Assert.Equal(7, hex.Length);
+
+            Assert.Equal("#10B981", AvatarHelper.GetStatusColorHex(AvatarStatus.Online));
+            Assert.Equal("#EF4444", AvatarHelper.GetStatusColorHex(AvatarStatus.Busy));
+            Assert.Equal("#F59E0B", AvatarHelper.GetStatusColorHex(AvatarStatus.Away));
+            Assert.Equal("#64748B", AvatarHelper.GetStatusColorHex(AvatarStatus.Offline));
+        }
+
+        [Fact]
+        public void LookUpFilterHelper_FilteringAndMatching_WorksProperly()
+        {
+            var item = new LookUpItem("ITEM-01", "Ball Bearing 6205", "Mechanical Parts", "Bearings");
+
+            Assert.True(LookUpFilterHelper.Matches(item, "bearing"));
+            Assert.True(LookUpFilterHelper.Matches(item, "ITEM-01"));
+            Assert.True(LookUpFilterHelper.Matches(item, "mechanical"));
+            Assert.True(LookUpFilterHelper.Matches(item, "bearings"));
+            Assert.False(LookUpFilterHelper.Matches(item, "Electronics"));
+
+            var list = new List<LookUpItem>
+            {
+                new LookUpItem("1", "Motor 5kW"),
+                new LookUpItem("2", "Motor 10kW"),
+                new LookUpItem("3", "Pump 2kW")
+            };
+
+            var motors = LookUpFilterHelper.Filter(list, "motor");
+            Assert.Equal(2, motors.Count);
+
+            var top1 = LookUpFilterHelper.Filter(list, "motor", 1);
+            Assert.Single(top1);
+        }
+
+        [Fact]
+        public void CheckedComboHelper_FormattingAndSelectAll_AreAccurate()
+        {
+            // Display text
+            Assert.Equal("Select...", CheckedComboHelper.FormatDisplayText(Array.Empty<string>(), "Select...", "{0} selected"));
+            Assert.Equal("Apple", CheckedComboHelper.FormatDisplayText(new[] { "Apple" }, "Select...", "{0} selected"));
+            Assert.Equal("Apple, Banana", CheckedComboHelper.FormatDisplayText(new[] { "Apple", "Banana" }, "Select...", "{0} selected"));
+            Assert.Equal("3 items selected", CheckedComboHelper.FormatDisplayText(new[] { "Apple", "Banana", "Cherry" }, "Select...", "{0} items selected"));
+
+            // Select all tri-state
+            Assert.Equal(false, CheckedComboHelper.CalculateSelectAllState(0, 5));
+            Assert.Equal(false, CheckedComboHelper.CalculateSelectAllState(0, 0));
+            Assert.Equal(true, CheckedComboHelper.CalculateSelectAllState(5, 5));
+            Assert.Null(CheckedComboHelper.CalculateSelectAllState(2, 5));
+        }
+
+        [Fact]
+        public void TextCounterHelper_FormattingAndWordCounting_WorksProperly()
+        {
+            Assert.Equal("12 / 500", TextCounterHelper.FormatCharacterCount(12, 500, false));
+            Assert.Equal("12 / 500", TextCounterHelper.FormatCharacterCount(12, 500, true));
+            Assert.Equal("12", TextCounterHelper.FormatCharacterCount(12, 0, false));
+            Assert.Equal("12 chars", TextCounterHelper.FormatCharacterCount(12, 0, true));
+            Assert.Equal("12", TextCounterHelper.FormatCharacterCount(12, 32767, false));
+
+            Assert.Equal(4, TextCounterHelper.CountWords("Hello world from ZeroUI"));
+            Assert.Equal(0, TextCounterHelper.CountWords("   "));
+            Assert.Equal(0, TextCounterHelper.CountWords(null));
+
+            Assert.Equal(3, TextCounterHelper.CountLines("Line 1\nLine 2\nLine 3"));
+            Assert.Equal(1, TextCounterHelper.CountLines("Single line"));
+            Assert.Equal(0, TextCounterHelper.CountLines(""));
+        }
     }
 }

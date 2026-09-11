@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
@@ -11,22 +12,6 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-    public enum ImageScaleMode
-    {
-        Cover,
-        Contain,
-        Center,
-        Stretch
-    }
-
-    public enum AvatarStatus
-    {
-        None,
-        Online,
-        Busy,
-        Away,
-        Offline
-    }
 
     /// <summary>
     /// Modern anti-aliased image and avatar control for ZeroUI.
@@ -300,49 +285,27 @@ namespace ZeroUI.WinForms.Editors
 
         private void DrawScaledImage(Graphics g, Image img, Rectangle targetRect, ImageScaleMode mode)
         {
-            switch (mode)
-            {
-                case ImageScaleMode.Stretch:
-                    g.DrawImage(img, targetRect);
-                    break;
+            PictureScaleMath.CalculateDestination(
+                targetRect.X, targetRect.Y, targetRect.Width, targetRect.Height,
+                img.Width, img.Height, mode,
+                out double destX, out double destY, out double destW, out double destH);
 
-                case ImageScaleMode.Center:
-                    int cx = targetRect.X + (targetRect.Width - img.Width) / 2;
-                    int cy = targetRect.Y + (targetRect.Height - img.Height) / 2;
-                    g.DrawImage(img, new Rectangle(cx, cy, img.Width, img.Height));
-                    break;
-
-                case ImageScaleMode.Contain:
-                    float ratioContain = Math.Min((float)targetRect.Width / img.Width, (float)targetRect.Height / img.Height);
-                    int destW = (int)(img.Width * ratioContain);
-                    int destH = (int)(img.Height * ratioContain);
-                    int destX = targetRect.X + (targetRect.Width - destW) / 2;
-                    int destY = targetRect.Y + (targetRect.Height - destH) / 2;
-                    g.DrawImage(img, new Rectangle(destX, destY, destW, destH));
-                    break;
-
-                case ImageScaleMode.Cover:
-                default:
-                    float ratioCover = Math.Max((float)targetRect.Width / img.Width, (float)targetRect.Height / img.Height);
-                    int coverW = (int)(img.Width * ratioCover);
-                    int coverH = (int)(img.Height * ratioCover);
-                    int coverX = targetRect.X + (targetRect.Width - coverW) / 2;
-                    int coverY = targetRect.Y + (targetRect.Height - coverH) / 2;
-                    g.DrawImage(img, new Rectangle(coverX, coverY, coverW, coverH));
-                    break;
-            }
+            g.DrawImage(img, new Rectangle((int)destX, (int)destY, (int)destW, (int)destH));
         }
 
         private void DrawFallbackInitials(Graphics g, Rectangle rect, ZeroThemePalette palette)
         {
             // Background fill with deterministic or custom fallback color
-            Color bgColor = _fallbackColor ?? (string.IsNullOrEmpty(_fallbackText) ? palette.Primary : GetDeterministicColor(_fallbackText!));
+            Color bgColor = _fallbackColor ?? (string.IsNullOrEmpty(_fallbackText)
+                ? palette.Primary
+                : ColorTranslator.FromHtml(AvatarHelper.GetDeterministicColorHex(_fallbackText!)));
+
             using (var brushBg = new SolidBrush(bgColor))
             {
                 g.FillRectangle(brushBg, rect);
             }
 
-            string initials = ExtractInitials(_fallbackText);
+            string initials = AvatarHelper.ExtractInitials(_fallbackText);
             if (!string.IsNullOrEmpty(initials))
             {
                 float fontSize = Math.Min(rect.Width, rect.Height) * 0.38f;
@@ -403,34 +366,6 @@ namespace ZeroUI.WinForms.Editors
 
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
             return ZeroUIConfig.CreateRoundedRectangle(r, effRadius);
-        }
-
-        private static string ExtractInitials(string? text)
-        {
-            if (text == null || string.IsNullOrWhiteSpace(text)) return "";
-            var words = text.Trim().Split(new[] { ' ', '-', '_' }, StringSplitOptions.RemoveEmptyEntries);
-            if (words.Length == 0) return "";
-            if (words.Length == 1)
-            {
-                return words[0].Length >= 2 ? words[0].Substring(0, 2).ToUpper() : words[0].ToUpper();
-            }
-            return (words[0].Substring(0, 1) + words[words.Length - 1].Substring(0, 1)).ToUpper();
-        }
-
-        private static Color GetDeterministicColor(string seed)
-        {
-            int hash = Math.Abs(seed.GetHashCode());
-            Color[] colors = new[]
-            {
-                Color.FromArgb(79, 70, 229),   // Indigo
-                Color.FromArgb(16, 185, 129),  // Emerald
-                Color.FromArgb(14, 165, 233),  // Sky
-                Color.FromArgb(245, 158, 11),  // Amber
-                Color.FromArgb(236, 72, 153),  // Pink
-                Color.FromArgb(139, 92, 246),  // Purple
-                Color.FromArgb(6, 182, 212)    // Cyan
-            };
-            return colors[hash % colors.Length];
         }
 
         /// <summary>

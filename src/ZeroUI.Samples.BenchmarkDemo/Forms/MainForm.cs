@@ -9,6 +9,7 @@ using System.Windows.Forms;
 
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Editors;
 using ZeroUI.Core.Input.Date;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Runtime;
@@ -1328,13 +1329,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             tagY += 30;
             var swDemo = new ZeroSwitch { Location = new Point(16, tagY), Checked = true };
-            var tag1 = new ZeroTag { Location = new Point(78, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Success, Text = "Active" };
-            var tag2 = new ZeroTag { Location = new Point(156, tagY), Size = new Size(80, 26), TagType = ZeroTagType.Processing, Text = "Processing" };
-            var tag3 = new ZeroTag { Location = new Point(242, tagY), Size = new Size(72, 26), TagType = ZeroTagType.Warning, Text = "Warning" };
-            var tag4 = new ZeroTag { Location = new Point(320, tagY), Size = new Size(60, 26), TagType = ZeroTagType.Error, Text = "Error" };
+            var tag1 = new ZeroTag { Location = new Point(78, tagY), Size = new Size(72, 26), TagType = TagType.Success, Text = "Active" };
+            var tag2 = new ZeroTag { Location = new Point(156, tagY), Size = new Size(80, 26), TagType = TagType.Processing, Text = "Processing" };
+            var tag3 = new ZeroTag { Location = new Point(242, tagY), Size = new Size(72, 26), TagType = TagType.Warning, Text = "Warning" };
+            var tag4 = new ZeroTag { Location = new Point(320, tagY), Size = new Size(60, 26), TagType = TagType.Error, Text = "Error" };
             swDemo.CheckedChanged += (s, e) =>
             {
-                tag1.TagType = swDemo.Checked ? ZeroTagType.Success : ZeroTagType.Default;
+                tag1.TagType = swDemo.Checked ? TagType.Success : TagType.Default;
                 tag1.Text = swDemo.Checked ? "Active" : "Disabled";
             };
             leftPanel.Controls.Add(swDemo);
@@ -1388,7 +1389,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Title = "TOTAL INVENTORY",
                 Value = "1,248,500",
                 Suffix = "pcs",
-                Trend = ZeroTrendDirection.Up,
+                Trend = TrendDirection.Up,
                 TrendText = "+12.4% vs last month"
             };
             var stat2 = new ZeroStatistic
@@ -1399,7 +1400,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Value = "3.85",
                 Prefix = "$",
                 Suffix = "B",
-                Trend = ZeroTrendDirection.Down,
+                Trend = TrendDirection.Down,
                 TrendText = "-2.1% cycle"
             };
             leftPanel.Controls.Add(stat1);
@@ -4666,7 +4667,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Subtitle = "Dynamically updates across all active controls in real time"
             };
             var previewBtn = new ZeroButton { Location = new Point(14, 14), Size = new Size(130, 36), Text = "Sample Button", ButtonStyle = ZeroButtonStyle.Primary };
-            var previewTag = new ZeroTag { Location = new Point(156, 19), Size = new Size(80, 26), Text = "Active", TagType = ZeroTagType.Success };
+            var previewTag = new ZeroTag { Location = new Point(156, 19), Size = new Size(80, 26), Text = "Active", TagType = TagType.Success };
             var previewSearch = new ZeroSearchBox { Location = new Point(248, 14), Size = new Size(240, 36), PlaceholderText = "Search preview..." };
 
             pnlPreview.ContentPanel.Controls.Add(previewBtn);
@@ -6210,7 +6211,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Title = "ACTIVE SCADA TAGS",
                 Value = "14",
                 Suffix = "tags",
-                Trend = ZeroTrendDirection.Up,
+                Trend = TrendDirection.Up,
                 TrendText = "100% Live In-Memory"
             };
 
@@ -6221,7 +6222,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Title = "PLC SCAN FREQUENCY",
                 Value = "20",
                 Suffix = "Hz (50ms)",
-                Trend = ZeroTrendDirection.None,
+                Trend = TrendDirection.None,
                 TrendText = "Zero-Jitter Loop"
             };
 
@@ -6232,7 +6233,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Title = "DEADBAND NOISE FILTER",
                 Value = "0.25",
                 Suffix = "delta",
-                Trend = ZeroTrendDirection.None,
+                Trend = TrendDirection.None,
                 TrendText = "Jitter Suppression Active"
             };
 
@@ -6243,7 +6244,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Title = "COMMUNICATION QUALITY",
                 Value = "100.0",
                 Suffix = "%",
-                Trend = ZeroTrendDirection.Up,
+                Trend = TrendDirection.Up,
                 TrendText = "Quality: GOOD (OPC/Modbus)"
             };
 

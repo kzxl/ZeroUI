@@ -3,29 +3,11 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
 {
-    public enum TagType
-    {
-        Default,
-        Success,
-        Processing,
-        Warning,
-        Error
-    }
-
-    [Obsolete("ZeroTagType is deprecated. Use TagType instead.")]
-    public enum ZeroTagType
-    {
-        Default,
-        Success,
-        Processing,
-        Warning,
-        Error
-    }
-
     /// <summary>
     /// Lightweight status tag / badge component for ZeroUI in WPF with soft backgrounds,
     /// crisp borders, semantic colors, and optional close action.

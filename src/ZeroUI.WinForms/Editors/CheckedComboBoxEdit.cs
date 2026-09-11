@@ -27,12 +27,6 @@ namespace ZeroUI.WinForms.Editors
         }
     }
 
-    public enum CheckedComboDisplayMode
-    {
-        Text,
-        Tokens
-    }
-
     /// <summary>
     /// Modern anti-aliased Multi-Select CheckedComboBox for ZeroUI WinForms.
     /// Supports checkboxes per item, Select-All toggle, instant search filtering,
@@ -287,9 +281,7 @@ namespace ZeroUI.WinForms.Editors
                 if (_items[i].IsChecked) checkedList.Add(_items[i].DisplayText);
             }
 
-            if (checkedList.Count == 0) return Placeholder;
-            if (checkedList.Count <= 2) return string.Join(", ", checkedList);
-            return string.Format(SummaryFormat, checkedList.Count);
+            return CheckedComboHelper.FormatDisplayText(checkedList, Placeholder, SummaryFormat, 2);
         }
 
         protected override void OnPaint(PaintEventArgs e)

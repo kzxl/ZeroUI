@@ -165,7 +165,7 @@ namespace ZeroUI.Wpf.Editors
             if (ShowCharacterCount)
             {
                 int currentLen = Text?.Length ?? 0;
-                string counterText = MaxLength > 0 ? $"{currentLen} / {MaxLength}" : $"{currentLen} chars";
+                string counterText = TextCounterHelper.FormatCharacterCount(currentLen, MaxLength, true);
 
                 var ft = new FormattedText(
                     counterText,

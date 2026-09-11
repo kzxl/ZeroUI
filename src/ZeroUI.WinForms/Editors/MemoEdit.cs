@@ -340,9 +340,7 @@ namespace ZeroUI.WinForms.Editors
             // Character count in bottom right
             if (_showCharacterCount)
             {
-                string countText = MaxLength < 32767
-                    ? $"{_innerBox.TextLength} / {MaxLength}"
-                    : $"{_innerBox.TextLength}";
+                string countText = TextCounterHelper.FormatCharacterCount(_innerBox.TextLength, MaxLength, false);
 
                 Color countColor = isDark ? Color.FromArgb(120, 125, 135) : Color.FromArgb(150, 155, 165);
                 using var countFont = new Font("Segoe UI", 7.5f);

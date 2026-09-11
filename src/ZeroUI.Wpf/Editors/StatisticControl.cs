@@ -2,25 +2,11 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
 {
-    public enum TrendDirection
-    {
-        None,
-        Up,
-        Down
-    }
-
-    [Obsolete("ZeroTrendDirection is deprecated. Use TrendDirection instead.")]
-    public enum ZeroTrendDirection
-    {
-        None,
-        Up,
-        Down
-    }
-
     /// <summary>
     /// Modern KPI Metric Card component for ZeroUI executive dashboards and analytical summaries in WPF.
     /// Features title, large formatted metric, prefix/suffix units, and trend direction indicators.

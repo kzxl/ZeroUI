@@ -440,9 +440,7 @@ namespace ZeroUI.Wpf.Editors
             _isUpdatingSelectAll = true;
 
             int count = _items.Count(i => i.IsChecked);
-            if (count == 0) _selectAllBox.IsChecked = false;
-            else if (count == _items.Count) _selectAllBox.IsChecked = true;
-            else _selectAllBox.IsChecked = null; // Indeterminate
+            _selectAllBox.IsChecked = CheckedComboHelper.CalculateSelectAllState(count, _items.Count);
 
             _isUpdatingSelectAll = false;
         }
@@ -465,21 +463,8 @@ namespace ZeroUI.Wpf.Editors
             if (_displayTextBlock == null) return;
 
             var checkedList = _items.Where(i => i.IsChecked).Select(i => i.Text).ToList();
-            if (checkedList.Count == 0)
-            {
-                _displayTextBlock.Text = Placeholder;
-                _displayTextBlock.Foreground = ZeroWpfTheme.TextMuted;
-            }
-            else if (checkedList.Count <= 2)
-            {
-                _displayTextBlock.Text = string.Join(", ", checkedList);
-                _displayTextBlock.Foreground = ZeroWpfTheme.TextPrimary;
-            }
-            else
-            {
-                _displayTextBlock.Text = string.Format(SummaryFormat, checkedList.Count);
-                _displayTextBlock.Foreground = ZeroWpfTheme.TextPrimary;
-            }
+            _displayTextBlock.Text = CheckedComboHelper.FormatDisplayText(checkedList, Placeholder, SummaryFormat, 2);
+            _displayTextBlock.Foreground = checkedList.Count == 0 ? ZeroWpfTheme.TextMuted : ZeroWpfTheme.TextPrimary;
         }
 
         public void AddItem(object value, string text, bool isChecked = false)
