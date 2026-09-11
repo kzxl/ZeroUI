@@ -86,7 +86,20 @@ namespace ZeroUI.Wpf.Editors
                 typeof(TokenEdit),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
 
-        public ObservableCollection<TokenItem> Tokens { get; } = new ObservableCollection<TokenItem>();
+        private static readonly DependencyPropertyKey TokensPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(Tokens),
+                typeof(ObservableCollection<TokenItem>),
+                typeof(TokenEdit),
+                new FrameworkPropertyMetadata(null));
+
+        public static readonly DependencyProperty TokensProperty = TokensPropertyKey.DependencyProperty;
+
+        public ObservableCollection<TokenItem> Tokens
+        {
+            get => (ObservableCollection<TokenItem>)GetValue(TokensProperty);
+            private set => SetValue(TokensPropertyKey, value);
+        }
 
         public IEnumerable? TokensSource
         {
@@ -98,12 +111,6 @@ namespace ZeroUI.Wpf.Editors
         {
             get => (IEnumerable?)GetValue(AvailableTokensProperty);
             set => SetValue(AvailableTokensProperty, value);
-        }
-
-        public IEnumerable? AutocompleteSource
-        {
-            get => AvailableTokens;
-            set => AvailableTokens = value;
         }
 
         public bool AllowDuplicates
@@ -168,7 +175,9 @@ namespace ZeroUI.Wpf.Editors
 
         public TokenEdit()
         {
-            Tokens.CollectionChanged += OnTokensCollectionChanged;
+            var tokens = new ObservableCollection<TokenItem>();
+            SetValue(TokensPropertyKey, tokens);
+            tokens.CollectionChanged += OnTokensCollectionChanged;
             MouseLeftButtonDown += (s, e) =>
             {
                 if (!ReadOnly && _input != null)

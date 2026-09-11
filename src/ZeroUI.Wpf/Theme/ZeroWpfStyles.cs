@@ -2560,7 +2560,7 @@ namespace ZeroUI.Wpf.Theme
                                 SnapsToDevicePixels=""True"">
                             <WrapPanel Orientation=""Horizontal"">
                                 <!-- Tokens List -->
-                                <ItemsControl ItemsSource=""{TemplateBinding Tokens}"">
+                                <ItemsControl ItemsSource=""{Binding Tokens, RelativeSource={RelativeSource TemplatedParent}}"">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <WrapPanel Orientation=""Horizontal"" />
