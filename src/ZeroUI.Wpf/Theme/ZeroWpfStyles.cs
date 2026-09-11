@@ -56,6 +56,8 @@ namespace ZeroUI.Wpf.Theme
         public static Style ButtonEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.ButtonEdit)];
         public static Style PictureEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.PictureEdit)];
         public static Style IPAddressEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.IPAddressEdit)];
+        public static Style RangeSliderStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.RangeSlider)];
+        public static Style TokenEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.TokenEdit)];
 
         public static void ApplyStyles(Application? app = null)
         {
@@ -2455,6 +2457,168 @@ namespace ZeroUI.Wpf.Theme
                         </Trigger>
                         <Trigger Property=""IsEnabled"" Value=""False"">
                             <Setter TargetName=""ipBorder"" Property=""Opacity"" Value=""0.6"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 36. RANGESLIDER STYLE -->
+    <Style TargetType=""{x:Type edit:RangeSlider}"">
+        <Setter Property=""Height"" Value=""32"" />
+        <Setter Property=""Focusable"" Value=""True"" />
+        <Setter Property=""ActiveRangeBrush"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:RangeSlider}"">
+                    <Grid VerticalAlignment=""Center"">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height=""Auto"" />
+                            <RowDefinition Height=""20"" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Range Info Text -->
+                        <TextBlock Grid.Row=""0""
+                                   HorizontalAlignment=""Right""
+                                   FontSize=""11""
+                                   Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                   Margin=""0,0,0,4""
+                                   Text=""{Binding FormattedRangeText, RelativeSource={RelativeSource TemplatedParent}}"" />
+
+                        <!-- Slider Track & Thumbs Area -->
+                        <Canvas x:Name=""PART_Track"" Grid.Row=""1"" Height=""20"" Background=""Transparent"">
+                            <!-- Background Groove -->
+                            <Border Canvas.Top=""8"" Height=""4"" Width=""{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Canvas}}""
+                                    Background=""{DynamicResource ZeroUI.BorderDefault}"" CornerRadius=""2"" />
+
+                            <!-- Active Span Bar -->
+                            <Border x:Name=""PART_ActiveRange"" Canvas.Top=""7"" Height=""6""
+                                    Background=""{TemplateBinding ActiveRangeBrush}"" CornerRadius=""3""
+                                    Cursor=""SizeWE"" />
+
+                            <!-- Lower Thumb -->
+                            <Thumb x:Name=""PART_LowerThumb"" Canvas.Top=""2"" Width=""16"" Height=""16"" Cursor=""Hand"">
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType=""{x:Type Thumb}"">
+                                        <Ellipse Fill=""{DynamicResource ZeroUI.BgCard}""
+                                                 Stroke=""{DynamicResource ZeroUI.PrimaryAccent}""
+                                                 StrokeThickness=""2.5"" />
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+
+                            <!-- Upper Thumb -->
+                            <Thumb x:Name=""PART_UpperThumb"" Canvas.Top=""2"" Width=""16"" Height=""16"" Cursor=""Hand"">
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType=""{x:Type Thumb}"">
+                                        <Ellipse Fill=""{DynamicResource ZeroUI.BgCard}""
+                                                 Stroke=""{DynamicResource ZeroUI.PrimaryAccent}""
+                                                 StrokeThickness=""2.5"" />
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Canvas>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 37. TOKENEDIT STYLE -->
+    <Style TargetType=""{x:Type edit:TokenEdit}"">
+        <Setter Property=""MinHeight"" Value=""32"" />
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgInput}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""BorderThickness"" Value=""1"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+        <Setter Property=""FontSize"" Value=""12"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:TokenEdit}"">
+                    <Grid>
+                        <Border x:Name=""tokenBorder""
+                                Background=""{TemplateBinding Background}""
+                                BorderBrush=""{TemplateBinding BorderBrush}""
+                                BorderThickness=""{TemplateBinding BorderThickness}""
+                                CornerRadius=""{TemplateBinding CornerRadius}""
+                                Padding=""4,3,4,3""
+                                SnapsToDevicePixels=""True"">
+                            <WrapPanel Orientation=""Horizontal"">
+                                <!-- Tokens List -->
+                                <ItemsControl ItemsSource=""{TemplateBinding Tokens}"">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel Orientation=""Horizontal"" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background=""{DynamicResource ZeroUI.BgCard}""
+                                                    BorderBrush=""{DynamicResource ZeroUI.BorderDefault}""
+                                                    BorderThickness=""1""
+                                                    CornerRadius=""12""
+                                                    Padding=""8,2,6,2""
+                                                    Margin=""0,0,6,3"">
+                                                <StackPanel Orientation=""Horizontal"" VerticalAlignment=""Center"">
+                                                    <TextBlock Text=""{Binding Text}""
+                                                               Foreground=""{DynamicResource ZeroUI.TextPrimary}""
+                                                               FontSize=""11.5""
+                                                               VerticalAlignment=""Center"" />
+                                                    <Button Content=""×""
+                                                            CommandParameter=""{Binding}""
+                                                            Margin=""5,-1,0,0""
+                                                            Padding=""0""
+                                                            Width=""14"" Height=""14""
+                                                            FontSize=""12""
+                                                            FontWeight=""Bold""
+                                                            Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                                            Background=""Transparent""
+                                                            BorderThickness=""0""
+                                                            Cursor=""Hand"" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Inline Input TextBox -->
+                                <TextBox x:Name=""PART_Input""
+                                         MinWidth=""80""
+                                         Height=""24""
+                                         Background=""Transparent""
+                                         BorderThickness=""0""
+                                         Foreground=""{TemplateBinding Foreground}""
+                                         FontSize=""{TemplateBinding FontSize}""
+                                         VerticalContentAlignment=""Center""
+                                         CaretBrush=""{DynamicResource ZeroUI.PrimaryAccent}""
+                                         Margin=""2,0,0,0"" />
+                            </WrapPanel>
+                        </Border>
+
+                        <!-- Suggestions Popup -->
+                        <Popup x:Name=""PART_Popup""
+                               StaysOpen=""False""
+                               AllowsTransparency=""True""
+                               PopupAnimation=""Fade""
+                               Placement=""Bottom"">
+                            <Border Background=""{DynamicResource ZeroUI.BgCard}""
+                                    BorderBrush=""{DynamicResource ZeroUI.BorderDefault}""
+                                    BorderThickness=""1""
+                                    CornerRadius=""6""
+                                    Padding=""4""
+                                    MinWidth=""160""
+                                    MaxHeight=""180"">
+                                <ListBox x:Name=""PART_SuggestionsList""
+                                         Background=""Transparent""
+                                         BorderThickness=""0"" />
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""IsKeyboardFocusWithin"" Value=""True"">
+                            <Setter TargetName=""tokenBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.FocusBorder}"" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

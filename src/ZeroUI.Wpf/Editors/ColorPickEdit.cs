@@ -387,6 +387,18 @@ namespace ZeroUI.Wpf.Editors
 
         private static string GetHex(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
 
+        public Color Color
+        {
+            get => SelectedColor;
+            set => SelectedColor = value;
+        }
+
+        public string HexCode
+        {
+            get => GetHex(SelectedColor);
+            set => TryApplyHex(value);
+        }
+
         public void Reset()
         {
             SelectedColor = Color.FromRgb(79, 70, 229);
@@ -405,6 +417,13 @@ namespace ZeroUI.Wpf.Editors
     /// </summary>
     [Obsolete("ZeroColorPicker is deprecated. Use ColorPickEdit instead.")]
     public class ZeroColorPicker : ColorPickEdit
+    {
+    }
+
+    /// <summary>
+    /// Modern alias for <see cref="ColorPickEdit"/>.
+    /// </summary>
+    public class ColorPickerEdit : ColorPickEdit
     {
     }
 }

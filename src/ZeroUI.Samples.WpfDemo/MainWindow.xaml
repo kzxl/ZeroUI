@@ -1505,6 +1505,59 @@
                                             </StackPanel>
                                         </Border>
                                     </Grid>
+
+                                    <!-- 9. Dual-Thumb Range, Palette Color & Token Tag Editors -->
+                                    <TextBlock Text="9. Range Slider, Palette Color &amp; Multi-Tag Editors (RangeSlider, ColorPickerEdit, TokenEdit)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                                    
+                                    <Grid Margin="0,0,0,24">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Card 1: RangeSlider Showcase -->
+                                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,10,0">
+                                            <StackPanel>
+                                                <TextBlock Text="RangeSlider (Dual-Thumb Span Selector)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Continuous range selection with independent thumb dragging and middle span translation." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Thermal Operating Window (°C):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:RangeSlider Minimum="0" Maximum="120" LowerValue="25" UpperValue="85" Step="5" Suffix=" °C" Margin="0,0,0,14" />
+
+                                                <TextBlock Text="Pressure Setpoint Band (bar):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:RangeSlider Minimum="0" Maximum="50" LowerValue="12" UpperValue="38" Step="1" Suffix=" bar" Margin="0,0,0,4" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Card 2: ColorPickerEdit Showcase -->
+                                        <Border Grid.Column="1" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="5,0,5,0">
+                                            <StackPanel>
+                                                <TextBlock Text="ColorPickerEdit (Swatch &amp; Palette Popover)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Inline color swatch with hex editing, auto contrast text, and interactive quick-palette grid." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Primary SCADA State Color:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:ColorPickerEdit HexCode="#10B981" Margin="0,0,0,10" />
+
+                                                <TextBlock Text="Threshold Alert Accent:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:ColorPickerEdit HexCode="#EF4444" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Card 3: TokenEdit Showcase -->
+                                        <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="10,0,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="TokenEdit (Multi-Tag Chip Editor)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Interactive badge tokens with keyboard delimiters, backspace deletion, and autocomplete." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Active Node Tags (Enter / Comma to add):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:TokenEdit x:Name="DemoNodeTokenEdit" EditValue="PLC-01, HighPriority, LineA" Margin="0,0,0,10" />
+
+                                                <TextBlock Text="Inspection Categories:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:TokenEdit EditValue="ISO-9001, OQC-Passed" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>

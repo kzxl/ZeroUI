@@ -131,6 +131,13 @@ namespace ZeroUI.Samples.WpfDemo
             }
             DemoAssetLookup.SetItems(lookupItems);
 
+            // Populate TokenEdit autocomplete suggestions
+            DemoNodeTokenEdit.AvailableTokens = new[]
+            {
+                "PLC-01", "PLC-02", "Modbus-Gateway", "HighPriority", "LowLatency",
+                "OPC-UA", "SCADA-Master", "LineA", "LineB", "SafetyInterlock", "ISA-95"
+            };
+
             // Setup SCADA Plant Mimic Scene
             var plantScene = new ZeroScene();
             var tk1 = ZeroSceneNode.CreateTank("TK-101", "Raw Chemical TK-101", 60, 50, 95, 140);

@@ -197,5 +197,56 @@ namespace ZeroUI.Core.Tests
             args.Handled = true;
             Assert.True(args.Handled);
         }
+
+        [Fact]
+        public void TokenItem_ConstructorsAndEquality_WorkCorrectly()
+        {
+            var t1 = new TokenItem("Sensor-A1");
+            var t2 = new TokenItem("sensor-a1", 101, "📡", "#10B981");
+            var t3 = new TokenItem("Sensor-B2");
+
+            Assert.Equal("Sensor-A1", t1.Text);
+            Assert.Equal("Sensor-A1", t1.ToString());
+            Assert.Equal(101, t2.Value);
+            Assert.Equal("📡", t2.Glyph);
+            Assert.Equal("#10B981", t2.ColorHex);
+
+            // Case-insensitive token equality
+            Assert.True(t1.Equals(t2));
+            Assert.True(t1 == t2);
+            Assert.False(t1 == t3);
+            Assert.Equal(t1.GetHashCode(), t2.GetHashCode());
+        }
+
+        [Fact]
+        public void TokenChangedEventArgs_InitializedCorrectly()
+        {
+            var token = new TokenItem("Priority-Hot");
+            var args = new TokenChangedEventArgs(TokenChangeAction.Added, token);
+
+            Assert.Equal(TokenChangeAction.Added, args.Action);
+            Assert.Equal(token, args.Item);
+        }
+
+        [Fact]
+        public void ColorPalette_StandardPalette_ContainsValidHexColors()
+        {
+            Assert.NotEmpty(ColorPalette.StandardPalette);
+            Assert.True(ColorPalette.StandardPalette.Count >= 20);
+
+            foreach (var hex in ColorPalette.StandardPalette)
+            {
+                Assert.StartsWith("#", hex);
+                Assert.True(hex.Length == 7 || hex.Length == 9);
+            }
+        }
+
+        [Fact]
+        public void ColorPalette_IndustrialStatusPalette_ContainsExpectedColors()
+        {
+            Assert.NotEmpty(ColorPalette.IndustrialStatusPalette);
+            Assert.Contains("#10B981", ColorPalette.IndustrialStatusPalette); // Running / Normal
+            Assert.Contains("#EF4444", ColorPalette.IndustrialStatusPalette); // Alarm / Critical
+        }
     }
 }

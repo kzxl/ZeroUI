@@ -1,52 +1,133 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Editors;
-using ZeroUI.Core.Localization;
-using ZeroUI.Wpf.Base;
-using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
 {
-    public class WpfTokenEventArgs : EventArgs
-    {
-        public string Token { get; }
-        public int Index { get; }
-
-        public WpfTokenEventArgs(string token, int index)
-        {
-            Token = token;
-            Index = index;
-        }
-    }
-
     /// <summary>
-    /// Modern anti-aliased Tag/Token/Chip input editor for ZeroUI WPF.
-    /// Displays discrete tag badges with dismiss buttons, inline keyboard typing,
-    /// backspace deletion, and theme synchronization. Implements <see cref="IZeroEditor"/>.
+    /// Modern multi-tag / chip editor supporting inline badge tokens, keyboard separation,
+    /// backspace deletion, autocomplete suggestions, and clipboard support.
     /// </summary>
-    public class TokenEdit : ZeroWpfControlBase, IZeroEditor
+    [TemplatePart(Name = "PART_TokensPanel", Type = typeof(Panel))]
+    [TemplatePart(Name = "PART_Input", Type = typeof(TextBox))]
+    [TemplatePart(Name = "PART_Popup", Type = typeof(Popup))]
+    [TemplatePart(Name = "PART_SuggestionsList", Type = typeof(ListBox))]
+    public class TokenEdit : Control, IZeroEditor
     {
-        private readonly ObservableCollection<string> _tokens = new ObservableCollection<string>();
-        private Border? _border;
-        private WrapPanel? _wrapPanel;
-        private TextBox? _inputBox;
+        public static readonly DependencyProperty TokensSourceProperty =
+            DependencyProperty.Register(
+                nameof(TokensSource),
+                typeof(IEnumerable),
+                typeof(TokenEdit),
+                new PropertyMetadata(null, OnTokensSourceChanged));
+
+        public static readonly DependencyProperty AvailableTokensProperty =
+            DependencyProperty.Register(
+                nameof(AvailableTokens),
+                typeof(IEnumerable),
+                typeof(TokenEdit),
+                new PropertyMetadata(null));
+
+        public static readonly DependencyProperty AllowDuplicatesProperty =
+            DependencyProperty.Register(
+                nameof(AllowDuplicates),
+                typeof(bool),
+                typeof(TokenEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty MaxTokensProperty =
+            DependencyProperty.Register(
+                nameof(MaxTokens),
+                typeof(int),
+                typeof(TokenEdit),
+                new PropertyMetadata(0));
 
         public static readonly DependencyProperty PlaceholderProperty =
-            DependencyProperty.Register(nameof(Placeholder), typeof(string), typeof(TokenEdit), new PropertyMetadata(null));
+            DependencyProperty.Register(
+                nameof(Placeholder),
+                typeof(string),
+                typeof(TokenEdit),
+                new PropertyMetadata("Add tag..."));
+
+        public static readonly DependencyProperty CornerRadiusProperty =
+            DependencyProperty.Register(
+                nameof(CornerRadius),
+                typeof(CornerRadius),
+                typeof(TokenEdit),
+                new PropertyMetadata(new CornerRadius(6)));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(TokenEdit), new PropertyMetadata(false));
+            DependencyProperty.Register(
+                nameof(ReadOnly),
+                typeof(bool),
+                typeof(TokenEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty IsModifiedProperty =
+            DependencyProperty.Register(
+                nameof(IsModified),
+                typeof(bool),
+                typeof(TokenEdit),
+                new PropertyMetadata(false));
+
+        public static readonly DependencyProperty EditValueProperty =
+            DependencyProperty.Register(
+                nameof(EditValue),
+                typeof(object),
+                typeof(TokenEdit),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
+
+        public ObservableCollection<TokenItem> Tokens { get; } = new ObservableCollection<TokenItem>();
+
+        public IEnumerable? TokensSource
+        {
+            get => (IEnumerable?)GetValue(TokensSourceProperty);
+            set => SetValue(TokensSourceProperty, value);
+        }
+
+        public IEnumerable? AvailableTokens
+        {
+            get => (IEnumerable?)GetValue(AvailableTokensProperty);
+            set => SetValue(AvailableTokensProperty, value);
+        }
+
+        public IEnumerable? AutocompleteSource
+        {
+            get => AvailableTokens;
+            set => AvailableTokens = value;
+        }
+
+        public bool AllowDuplicates
+        {
+            get => (bool)GetValue(AllowDuplicatesProperty);
+            set => SetValue(AllowDuplicatesProperty, value);
+        }
+
+        public int MaxTokens
+        {
+            get => (int)GetValue(MaxTokensProperty);
+            set => SetValue(MaxTokensProperty, value);
+        }
 
         public string Placeholder
         {
-            get => (string?)GetValue(PlaceholderProperty) ?? ZeroLocalizer.GetString(ZeroStringId.TokenEditPlaceholder);
+            get => (string)GetValue(PlaceholderProperty);
             set => SetValue(PlaceholderProperty, value);
+        }
+
+        public CornerRadius CornerRadius
+        {
+            get => (CornerRadius)GetValue(CornerRadiusProperty);
+            set => SetValue(CornerRadiusProperty, value);
         }
 
         public bool ReadOnly
@@ -55,39 +136,27 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(ReadOnlyProperty, value);
         }
 
-        public ObservableCollection<string> Tokens => _tokens;
+        public bool IsModified
+        {
+            get => (bool)GetValue(IsModifiedProperty);
+            set => SetValue(IsModifiedProperty, value);
+        }
 
         public object? EditValue
         {
-            get => _tokens.ToList();
-            set
-            {
-                _tokens.Clear();
-                if (value is IEnumerable<string> list)
-                {
-                    foreach (var item in list)
-                    {
-                        if (!string.IsNullOrWhiteSpace(item)) _tokens.Add(item.Trim());
-                    }
-                }
-                else if (value is string s && !string.IsNullOrWhiteSpace(s))
-                {
-                    foreach (var item in s.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        _tokens.Add(item.Trim());
-                    }
-                }
-                IsModified = true;
-                EditValueChanged?.Invoke(this, EventArgs.Empty);
-            }
+            get => GetValue(EditValueProperty);
+            set => SetValue(EditValueProperty, value);
         }
 
-        public bool IsModified { get; set; }
-
-        public event EventHandler<WpfTokenEventArgs>? TokenAdded;
-        public event EventHandler<WpfTokenEventArgs>? TokenRemoved;
+        public event EventHandler<TokenItem>? TokenAdded;
+        public event EventHandler<TokenItem>? TokenRemoved;
         public event EventHandler? TokensChanged;
         public event EventHandler? EditValueChanged;
+
+        private TextBox? _input;
+        private Popup? _popup;
+        private ListBox? _suggestionsList;
+        private bool _isUpdating;
 
         static TokenEdit()
         {
@@ -96,223 +165,298 @@ namespace ZeroUI.Wpf.Editors
 
         public TokenEdit()
         {
-            Background = ZeroWpfTheme.BgInput;
-            BorderBrush = ZeroWpfTheme.BorderDefault;
-            BorderThickness = new Thickness(1);
-            MinHeight = 36;
-            FontSize = 13.0;
-            Cursor = Cursors.IBeam;
-
-            _tokens.CollectionChanged += (s, e) =>
+            Tokens.CollectionChanged += OnTokensCollectionChanged;
+            MouseLeftButtonDown += (s, e) =>
             {
-                RebuildTokensUI();
-                IsModified = true;
-                TokensChanged?.Invoke(this, EventArgs.Empty);
-                EditValueChanged?.Invoke(this, EventArgs.Empty);
-            };
-
-            BuildVisualTemplate();
-        }
-
-        protected override void OnThemeChanged()
-        {
-            base.OnThemeChanged();
-            Background = ZeroWpfTheme.BgInput;
-            BorderBrush = ZeroWpfTheme.BorderDefault;
-            if (_border != null)
-            {
-                _border.Background = ZeroWpfTheme.BgInput;
-                _border.BorderBrush = ZeroWpfTheme.BorderDefault;
-            }
-            if (_inputBox != null)
-            {
-                _inputBox.Foreground = ZeroWpfTheme.TextPrimary;
-            }
-            RebuildTokensUI();
-        }
-
-        private void BuildVisualTemplate()
-        {
-            _border = new Border
-            {
-                Background = Background,
-                BorderBrush = BorderBrush,
-                BorderThickness = BorderThickness,
-                CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(6, 4, 6, 4)
-            };
-
-            _wrapPanel = new WrapPanel
-            {
-                Orientation = Orientation.Horizontal,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            _inputBox = new TextBox
-            {
-                MinWidth = 80,
-                Height = 26,
-                Background = Brushes.Transparent,
-                Foreground = ZeroWpfTheme.TextPrimary,
-                BorderThickness = new Thickness(0),
-                VerticalContentAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(2)
-            };
-            _inputBox.KeyDown += InputBox_KeyDown;
-
-            _border.Child = _wrapPanel;
-            AddVisualChild(_border);
-            AddLogicalChild(_border);
-
-            RebuildTokensUI();
-        }
-
-        protected override int VisualChildrenCount => _border != null ? 1 : 0;
-        protected override Visual GetVisualChild(int index) => _border ?? throw new ArgumentOutOfRangeException(nameof(index));
-
-        protected override Size MeasureOverride(Size constraint)
-        {
-            if (_border != null)
-            {
-                _border.Measure(constraint);
-                return _border.DesiredSize;
-            }
-            return base.MeasureOverride(constraint);
-        }
-
-        protected override Size ArrangeOverride(Size arrangeBounds)
-        {
-            _border?.Arrange(new Rect(arrangeBounds));
-            return arrangeBounds;
-        }
-
-        private void RebuildTokensUI()
-        {
-            if (_wrapPanel == null || _inputBox == null) return;
-            _wrapPanel.Children.Clear();
-
-            for (int i = 0; i < _tokens.Count; i++)
-            {
-                int index = i;
-                string token = _tokens[i];
-
-                var badgeBorder = new Border
+                if (!ReadOnly && _input != null)
                 {
-                    Background = ZeroWpfTheme.BgCard,
-                    BorderBrush = ZeroWpfTheme.BorderDefault,
-                    BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(4),
-                    Padding = new Thickness(8, 2, 6, 2),
-                    Margin = new Thickness(2, 2, 4, 2),
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-
-                var sp = new StackPanel { Orientation = Orientation.Horizontal };
-                var textBlock = new TextBlock
-                {
-                    Text = token,
-                    Foreground = ZeroWpfTheme.TextPrimary,
-                    FontSize = 12.0,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                sp.Children.Add(textBlock);
-
-                if (!ReadOnly)
-                {
-                    var closeBtn = new TextBlock
-                    {
-                        Text = " ✕",
-                        Foreground = ZeroWpfTheme.TextMuted,
-                        FontSize = 10.0,
-                        Cursor = Cursors.Hand,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Margin = new Thickness(4, 0, 0, 0)
-                    };
-                    closeBtn.MouseEnter += (s, e) => closeBtn.Foreground = ZeroWpfTheme.DangerAccent;
-                    closeBtn.MouseLeave += (s, e) => closeBtn.Foreground = ZeroWpfTheme.TextMuted;
-                    closeBtn.MouseDown += (s, e) =>
-                    {
-                        e.Handled = true;
-                        RemoveToken(index);
-                    };
-                    sp.Children.Add(closeBtn);
+                    _input.Focus();
                 }
-
-                badgeBorder.Child = sp;
-                _wrapPanel.Children.Add(badgeBorder);
-            }
-
-            if (!ReadOnly)
+            };
+            AddHandler(Button.ClickEvent, new RoutedEventHandler((s, e) =>
             {
-                _wrapPanel.Children.Add(_inputBox);
-            }
+                if (e.OriginalSource is Button btn && btn.CommandParameter is TokenItem token)
+                {
+                    RemoveToken(token);
+                    e.Handled = true;
+                }
+            }));
         }
 
-        public void AddToken(string token)
+        public override void OnApplyTemplate()
         {
-            if (ReadOnly || string.IsNullOrWhiteSpace(token)) return;
-            string clean = token.Trim();
-            if (!_tokens.Contains(clean))
+            base.OnApplyTemplate();
+
+            _input = GetTemplateChild("PART_Input") as TextBox;
+            _popup = GetTemplateChild("PART_Popup") as Popup;
+            _suggestionsList = GetTemplateChild("PART_SuggestionsList") as ListBox;
+
+            if (_input != null)
             {
-                _tokens.Add(clean);
-                TokenAdded?.Invoke(this, new WpfTokenEventArgs(clean, _tokens.Count - 1));
+                _input.PreviewKeyDown += OnInputPreviewKeyDown;
+                _input.TextChanged += OnInputTextChanged;
+                _input.LostFocus += (s, e) => CommitCurrentInput();
+            }
+
+            if (_suggestionsList != null)
+            {
+                _suggestionsList.SelectionChanged += OnSuggestionSelected;
             }
         }
 
-        public void RemoveToken(int index)
-        {
-            if (ReadOnly || index < 0 || index >= _tokens.Count) return;
-            string token = _tokens[index];
-            _tokens.RemoveAt(index);
-            TokenRemoved?.Invoke(this, new WpfTokenEventArgs(token, index));
-        }
-
-        private void InputBox_KeyDown(object sender, KeyEventArgs e)
+        private void OnInputPreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (ReadOnly) return;
 
-            if (e.Key == Key.Enter || e.Key == Key.OemComma)
+            if (e.Key == Key.Enter || e.Key == Key.Tab)
             {
-                e.Handled = true;
-                string text = _inputBox?.Text.Trim().TrimEnd(',') ?? string.Empty;
-                if (!string.IsNullOrEmpty(text))
+                if (_popup != null && _popup.IsOpen && _suggestionsList?.SelectedItem != null)
                 {
-                    AddToken(text);
-                    if (_inputBox != null) _inputBox.Text = string.Empty;
+                    SelectCurrentSuggestion();
+                    e.Handled = true;
+                }
+                else if (!string.IsNullOrWhiteSpace(_input?.Text))
+                {
+                    CommitCurrentInput();
+                    e.Handled = true;
                 }
             }
-            else if (e.Key == Key.Back && string.IsNullOrEmpty(_inputBox?.Text) && _tokens.Count > 0)
+            else if (e.Key == Key.Back)
             {
-                RemoveToken(_tokens.Count - 1);
+                if (_input != null && string.IsNullOrEmpty(_input.Text) && Tokens.Count > 0)
+                {
+                    RemoveToken(Tokens[Tokens.Count - 1]);
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Down)
+            {
+                if (_popup != null && _popup.IsOpen && _suggestionsList != null)
+                {
+                    if (_suggestionsList.SelectedIndex < _suggestionsList.Items.Count - 1)
+                    {
+                        _suggestionsList.SelectedIndex++;
+                    }
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Up)
+            {
+                if (_popup != null && _popup.IsOpen && _suggestionsList != null)
+                {
+                    if (_suggestionsList.SelectedIndex > 0)
+                    {
+                        _suggestionsList.SelectedIndex--;
+                    }
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Escape)
+            {
+                if (_popup != null) _popup.IsOpen = false;
+                e.Handled = true;
             }
         }
 
-        protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+        private void OnInputTextChanged(object sender, TextChangedEventArgs e)
         {
-            base.OnPreviewMouseDown(e);
-            if (!ReadOnly)
+            if (ReadOnly || _input == null) return;
+
+            string text = _input.Text;
+            if (text.Contains(",") || text.Contains(";"))
             {
-                _inputBox?.Focus();
+                var parts = text.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var part in parts)
+                {
+                    AddToken(part.Trim());
+                }
+                _input.Text = string.Empty;
+                if (_popup != null) _popup.IsOpen = false;
+                return;
+            }
+
+            UpdateSuggestions(text);
+        }
+
+        private void UpdateSuggestions(string query)
+        {
+            if (_popup == null || _suggestionsList == null || AvailableTokens == null) return;
+
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                _popup.IsOpen = false;
+                return;
+            }
+
+            var matches = new List<object>();
+            foreach (var item in AvailableTokens)
+            {
+                if (item == null) continue;
+                string itemText = item is TokenItem t ? t.Text : item.ToString() ?? string.Empty;
+                if (itemText.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    if (AllowDuplicates || !Tokens.Any(tok => string.Equals(tok.Text, itemText, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        matches.Add(item);
+                    }
+                }
+            }
+
+            if (matches.Count > 0)
+            {
+                _suggestionsList.ItemsSource = matches;
+                _suggestionsList.SelectedIndex = 0;
+                _popup.IsOpen = true;
+            }
+            else
+            {
+                _popup.IsOpen = false;
+            }
+        }
+
+        private void OnSuggestionSelected(object sender, SelectionChangedEventArgs e)
+        {
+            // selection handled explicitly on Enter / Click
+        }
+
+        private void SelectCurrentSuggestion()
+        {
+            if (_suggestionsList?.SelectedItem != null)
+            {
+                var sel = _suggestionsList.SelectedItem;
+                if (sel is TokenItem t)
+                {
+                    AddToken(t);
+                }
+                else
+                {
+                    AddToken(sel.ToString() ?? string.Empty);
+                }
+
+                if (_input != null) _input.Text = string.Empty;
+                if (_popup != null) _popup.IsOpen = false;
+            }
+        }
+
+        public void CommitCurrentInput()
+        {
+            if (_input == null || string.IsNullOrWhiteSpace(_input.Text)) return;
+            string val = _input.Text.Trim();
+            AddToken(val);
+            _input.Text = string.Empty;
+            if (_popup != null) _popup.IsOpen = false;
+        }
+
+        public bool AddToken(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            return AddToken(new TokenItem(text.Trim()));
+        }
+
+        public bool AddToken(TokenItem token)
+        {
+            if (ReadOnly) return false;
+            if (MaxTokens > 0 && Tokens.Count >= MaxTokens) return false;
+
+            if (!AllowDuplicates && Tokens.Any(t => string.Equals(t.Text, token.Text, StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            Tokens.Add(token);
+            IsModified = true;
+            TokenAdded?.Invoke(this, token);
+            return true;
+        }
+
+        public bool RemoveToken(TokenItem token)
+        {
+            if (ReadOnly) return false;
+            bool removed = Tokens.Remove(token);
+            if (removed)
+            {
+                IsModified = true;
+                TokenRemoved?.Invoke(this, token);
+            }
+            return removed;
+        }
+
+        public void ClearTokens()
+        {
+            if (ReadOnly) return;
+            Tokens.Clear();
+            IsModified = true;
+        }
+
+        private void OnTokensCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (_isUpdating) return;
+
+            _isUpdating = true;
+            try
+            {
+                EditValue = string.Join(", ", Tokens.Select(t => t.Text));
+                TokensChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
+        }
+
+        private static void OnTokensSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TokenEdit edit && !edit._isUpdating && e.NewValue is IEnumerable source)
+            {
+                edit.Tokens.Clear();
+                foreach (var item in source)
+                {
+                    if (item is TokenItem t) edit.Tokens.Add(t);
+                    else if (item != null) edit.Tokens.Add(new TokenItem(item.ToString() ?? string.Empty));
+                }
+            }
+        }
+
+        private static void OnEditValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TokenEdit edit && !edit._isUpdating && e.NewValue is string s)
+            {
+                edit._isUpdating = true;
+                try
+                {
+                    edit.Tokens.Clear();
+                    if (!string.IsNullOrWhiteSpace(s))
+                    {
+                        var parts = s.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var part in parts)
+                        {
+                            edit.Tokens.Add(new TokenItem(part.Trim()));
+                        }
+                    }
+                }
+                finally
+                {
+                    edit._isUpdating = false;
+                }
             }
         }
 
         public void Reset()
         {
-            _tokens.Clear();
+            ClearTokens();
             IsModified = false;
-            EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void Clear()
         {
-            Reset();
+            ClearTokens();
         }
     }
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="TokenEdit"/>.
     /// </summary>
-    [Obsolete("ZeroTokenEdit is deprecated. Use TokenEdit instead.")]
     public class ZeroTokenEdit : TokenEdit
     {
     }

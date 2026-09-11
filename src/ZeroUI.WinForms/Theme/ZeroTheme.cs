@@ -26,6 +26,13 @@ namespace ZeroUI.WinForms.Theme
         public Color Info { get; set; }
         public Color Hover { get; set; }
         public Color HeaderBackground { get; set; }
+
+        // Token aliases aligned with Core/WPF design token names
+        public Color PrimaryAccent => Primary;
+        public Color PrimaryAccentDark => PrimaryHover;
+        public Color BorderDefault => Border;
+        public Color BgCard => CardBackground;
+        public Color BgInput => Surface;
     }
 
     /// <summary>
