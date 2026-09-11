@@ -1483,7 +1483,7 @@
                                                     <edit:PictureEdit Width="54" Height="54" IsCircle="True" FallbackText="AI" Status="Offline" ToolTip="Autonomous Agent (Offline)" Margin="0,0,12,0" />
                                                 </WrapPanel>
 
-                                                <TextBlock Text="Asset Inspection Lightbox Frame:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,4" />
+                                                <TextBlock Text="Asset Inspection Lightbox Frame:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
                                                 <edit:PictureEdit Width="160" Height="80" ScaleMode="Zoom" EnableZoomPreview="True" AllowDrop="True" Status="Away" ToolTip="Click to zoom in Lightbox" HorizontalAlignment="Left" />
                                             </StackPanel>
                                         </Border>

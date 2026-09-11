@@ -7,10 +7,13 @@ namespace ZeroUI.Core.Editors
     /// </summary>
     public enum ImageScaleMode
     {
-        Cover,
-        Contain,
-        Center,
-        Stretch
+        Cover = 0,
+        Contain = 1,
+        Center = 2,
+        Stretch = 3,
+        Zoom = 1,
+        Clip = 2,
+        Squeeze = 3
     }
 
     /// <summary>

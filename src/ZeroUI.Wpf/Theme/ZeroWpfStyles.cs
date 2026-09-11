@@ -79,6 +79,7 @@ namespace ZeroUI.Wpf.Theme
 <ResourceDictionary xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
                     xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
                     xmlns:edit=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf""
+                    xmlns:editors=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf""
                     xmlns:ind=""clr-namespace:ZeroUI.Wpf.Industrial;assembly=ZeroUI.Wpf""
                     xmlns:layout=""clr-namespace:ZeroUI.Wpf.Layout;assembly=ZeroUI.Wpf""
                     xmlns:feed=""clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf""
@@ -1633,7 +1634,7 @@ namespace ZeroUI.Wpf.Theme
                         <Trigger Property=""IsMouseOver"" Value=""True"">
                             <Setter TargetName=""monthBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgHover}"" />
                         </Trigger>
-                        <Trigger Property=""IsSelected"" Value=""True"">
+                        <Trigger Property=""IsPressed"" Value=""True"">
                             <Setter TargetName=""monthBorder"" Property=""Background"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
                             <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.SelectionForeground}"" />
                         </Trigger>
@@ -2185,7 +2186,19 @@ namespace ZeroUI.Wpf.Theme
     </Style>
 
     <!-- 33. BUTTONEDIT STYLE -->
-    <Style TargetType=""{x:Type edit:ButtonEdit}"" BasedOn=""{StaticResource {x:Type edit:ZeroTextBox}}"">
+    <Style TargetType=""{x:Type edit:ButtonEdit}"">
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgInput}"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""BorderThickness"" Value=""1"" />
+        <Setter Property=""Padding"" Value=""10,0,10,0"" />
+        <Setter Property=""VerticalContentAlignment"" Value=""Center"" />
+        <Setter Property=""FontSize"" Value=""12.5"" />
+        <Setter Property=""CaretBrush"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+        <Setter Property=""SelectionBrush"" Value=""{DynamicResource ZeroUI.SelectionBackground}"" />
+        <Setter Property=""SelectionOpacity"" Value=""0.6"" />
+        <Setter Property=""Height"" Value=""32"" />
         <Setter Property=""Template"">
             <Setter.Value>
                 <ControlTemplate TargetType=""{x:Type edit:ButtonEdit}"">
