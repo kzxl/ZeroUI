@@ -19,14 +19,7 @@
     <ProjectReference Include="..\ZeroUI.Core\ZeroUI.Core.csproj" />
   </ItemGroup>
 
-  <!-- Dual-mode resolution: ProjectReference for local monorepo, PackageReference for standalone CI / NuGet consumers -->
-  <ItemGroup Condition="Exists('..\..\..\ZeroGraphics\src\ZeroGraphics.Core\ZeroGraphics.Core.csproj')">
-    <ProjectReference Include="..\..\..\ZeroGraphics\src\ZeroGraphics.Core\ZeroGraphics.Core.csproj" />
-    <ProjectReference Include="..\..\..\ZeroGraphics\src\ZeroGraphics.DirectX\ZeroGraphics.DirectX.csproj" />
-    <ProjectReference Include="..\..\..\ZeroGraphics\src\ZeroGraphics.Direct2D\ZeroGraphics.Direct2D.csproj" />
-    <ProjectReference Include="..\..\..\ZeroGraphics\src\ZeroGraphics.Waveform\ZeroGraphics.Waveform.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition="!Exists('..\..\..\ZeroGraphics\src\ZeroGraphics.Core\ZeroGraphics.Core.csproj')">
+  <ItemGroup>
     <PackageReference Include="ZeroGraphics.Core" Version="1.0.1" />
     <PackageReference Include="ZeroGraphics.DirectX" Version="1.0.1" />
     <PackageReference Include="ZeroGraphics.Direct2D" Version="1.0.1" />
