@@ -38,6 +38,26 @@ namespace ZeroUI.Core.Signal
 
         public SignalRingBuffer Buffer { get; }
 
+        private long _lastMetricsTicks;
+        private float _cachedMin;
+        private float _cachedMax;
+        private float _cachedP2P;
+        private float _cachedRms;
+
+        public void GetOrComputeMetrics(out float min, out float max, out float p2p, out float rms)
+        {
+            long now = System.Diagnostics.Stopwatch.GetTimestamp();
+            if (_lastMetricsTicks == 0 || (now - _lastMetricsTicks) * 1000 / System.Diagnostics.Stopwatch.Frequency >= 200)
+            {
+                Buffer.ComputeMetrics(out _cachedMin, out _cachedMax, out _cachedP2P, out _cachedRms);
+                _lastMetricsTicks = now;
+            }
+            min = _cachedMin;
+            max = _cachedMax;
+            p2p = _cachedP2P;
+            rms = _cachedRms;
+        }
+
         public ScopeChannel(int id, string name, ScopeChannelType type = ScopeChannelType.Analog, uint color = 0xFFFACC15, int bufferCapacity = 65536)
         {
             Id = id;

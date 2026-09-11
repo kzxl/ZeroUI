@@ -96,23 +96,99 @@ namespace ZeroUI.Wpf.Industrial
             }
         }
 
+        // Static frozen graphic assets for zero-alloc drawing
+        private static readonly Brush BgBrush;
+        private static readonly Pen GridPen;
+        private static readonly Pen CenterPen;
+        private static readonly Pen CursorPen;
+        private static readonly Brush BadgeBgBrush;
+        private static readonly Pen BadgeBorderPen;
+        private static readonly Brush HudBgBrush;
+        private static readonly Pen HudTopBorderPen;
+
+        static SignalScope()
+        {
+            var bg = new SolidColorBrush(Color.FromRgb(8, 12, 20));
+            bg.Freeze();
+            BgBrush = bg;
+
+            var gp = new Pen(new SolidColorBrush(Color.FromArgb(50, 56, 189, 248)), 0.8);
+            gp.Freeze();
+            GridPen = gp;
+
+            var cp = new Pen(new SolidColorBrush(Color.FromArgb(90, 56, 189, 248)), 1.2);
+            cp.Freeze();
+            CenterPen = cp;
+
+            var curP = new Pen(new SolidColorBrush(Color.FromArgb(180, 245, 158, 11)), 1.2)
+            {
+                DashStyle = DashStyles.Dash
+            };
+            curP.Freeze();
+            CursorPen = curP;
+
+            var bbg = new SolidColorBrush(Color.FromArgb(220, 15, 23, 42));
+            bbg.Freeze();
+            BadgeBgBrush = bbg;
+
+            var bpen = new Pen(new SolidColorBrush(Color.FromArgb(120, 100, 116, 139)), 1);
+            bpen.Freeze();
+            BadgeBorderPen = bpen;
+
+            var hbg = new SolidColorBrush(Color.FromArgb(235, 11, 17, 33));
+            hbg.Freeze();
+            HudBgBrush = hbg;
+
+            var hpen = new Pen(new SolidColorBrush(Color.FromArgb(90, 56, 189, 248)), 1);
+            hpen.Freeze();
+            HudTopBorderPen = hpen;
+        }
+
+        private readonly System.Collections.Generic.Dictionary<uint, (Pen pen, Brush fill, Brush textBrush)> _chanGraphicCache =
+            new System.Collections.Generic.Dictionary<uint, (Pen, Brush, Brush)>();
+
+        private readonly System.Collections.Generic.Dictionary<int, (string text, FormattedText ft)> _hudChanTextCache =
+            new System.Collections.Generic.Dictionary<int, (string, FormattedText)>();
+
+        private double _cachedTimebaseSec = -1;
+        private FormattedText? _cachedTimebaseFt;
+
+        private string? _cachedCursorText;
+        private FormattedText? _cachedCursorFt;
+
+        private (Pen pen, Brush fill, Brush textBrush) GetChannelGraphics(uint argb)
+        {
+            if (!_chanGraphicCache.TryGetValue(argb, out var tuple))
+            {
+                var chanColor = Color.FromArgb(
+                    (byte)((argb >> 24) & 0xFF),
+                    (byte)((argb >> 16) & 0xFF),
+                    (byte)((argb >> 8) & 0xFF),
+                    (byte)(argb & 0xFF));
+
+                var brush = new SolidColorBrush(chanColor);
+                brush.Freeze();
+                var pen = new Pen(brush, 1.8);
+                pen.Freeze();
+
+                var fill = new SolidColorBrush(Color.FromArgb(45, chanColor.R, chanColor.G, chanColor.B));
+                fill.Freeze();
+
+                tuple = (pen, fill, brush);
+                _chanGraphicCache[argb] = tuple;
+            }
+            return tuple;
+        }
+
         private void DrawGrid(DrawingContext dc, double w, double h)
         {
             // CRT Dark Background
-            var bgBrush = new SolidColorBrush(Color.FromRgb(8, 12, 20));
-            bgBrush.Freeze();
-            dc.DrawRectangle(bgBrush, null, new Rect(0, 0, w, h));
+            dc.DrawRectangle(BgBrush, null, new Rect(0, 0, w, h));
 
             if (!_showGrid) return;
 
             double dx = w / _horizontalDivs;
             double dy = h / _verticalDivs;
-
-            var gridPen = new Pen(new SolidColorBrush(Color.FromArgb(50, 56, 189, 248)), 0.8);
-            gridPen.Freeze();
-
-            var centerPen = new Pen(new SolidColorBrush(Color.FromArgb(90, 56, 189, 248)), 1.2);
-            centerPen.Freeze();
 
             int midX = _horizontalDivs / 2;
             int midY = _verticalDivs / 2;
@@ -121,18 +197,18 @@ namespace ZeroUI.Wpf.Industrial
             for (int i = 0; i <= _horizontalDivs; i++)
             {
                 double x = i * dx;
-                dc.DrawLine(i == midX ? centerPen : gridPen, new Point(x, 0), new Point(x, h));
+                dc.DrawLine(i == midX ? CenterPen : GridPen, new Point(x, 0), new Point(x, h));
             }
 
             // Horizontal Div Lines
             for (int j = 0; j <= _verticalDivs; j++)
             {
                 double y = j * dy;
-                dc.DrawLine(j == midY ? centerPen : gridPen, new Point(0, y), new Point(w, y));
+                dc.DrawLine(j == midY ? CenterPen : GridPen, new Point(0, y), new Point(w, y));
             }
 
             // Outer border
-            dc.DrawRectangle(null, centerPen, new Rect(0, 0, w, h));
+            dc.DrawRectangle(null, CenterPen, new Rect(0, 0, w, h));
         }
 
         private void DrawWaveforms(DrawingContext dc, double w, double h)
@@ -142,7 +218,7 @@ namespace ZeroUI.Wpf.Industrial
 
             // Compute trigger index on trigger source channel if enabled
             int triggerOffset = -1;
-            if (_trigger.Mode != TriggerMode.Auto && _channels.Count > 0)
+            if (_channels.Count > 0)
             {
                 var trigChan = _channels[0];
                 for (int c = 0; c < _channels.Count; c++)
@@ -153,23 +229,14 @@ namespace ZeroUI.Wpf.Industrial
                         break;
                     }
                 }
-                triggerOffset = trigChan.Buffer.FindTriggerIndex(_trigger.Threshold, _trigger.Slope == TriggerSlope.RisingEdge, 2000);
+                triggerOffset = trigChan.Buffer.FindTriggerIndex(_trigger.Threshold, _trigger.Slope == TriggerSlope.RisingEdge, 1000);
             }
 
             foreach (var ch in _channels)
             {
                 if (!ch.IsVisible || ch.Buffer.Count < 2) continue;
 
-                var chanColor = Color.FromArgb(
-                    (byte)((ch.ColorArgb >> 24) & 0xFF),
-                    (byte)((ch.ColorArgb >> 16) & 0xFF),
-                    (byte)((ch.ColorArgb >> 8) & 0xFF),
-                    (byte)(ch.ColorArgb & 0xFF));
-
-                var brush = new SolidColorBrush(chanColor);
-                brush.Freeze();
-                var pen = new Pen(brush, 1.8);
-                pen.Freeze();
+                var (pen, fillBrush, _) = GetChannelGraphics(ch.ColorArgb);
 
                 int sampleCount = ch.Buffer.Count;
                 int visibleSamples = Math.Min(sampleCount, (int)w);
@@ -208,9 +275,6 @@ namespace ZeroUI.Wpf.Industrial
                     double highY = trackCenterY - 14;
                     double lowY = trackCenterY + 14;
 
-                    var fillBrush = new SolidColorBrush(Color.FromArgb(45, chanColor.R, chanColor.G, chanColor.B));
-                    fillBrush.Freeze();
-
                     var geo = new StreamGeometry();
                     using (var ctx = geo.Open())
                     {
@@ -246,22 +310,18 @@ namespace ZeroUI.Wpf.Industrial
 
         private void DrawCursors(DrawingContext dc, double w, double h)
         {
-            var cursorPen = new Pen(new SolidColorBrush(Color.FromArgb(180, 245, 158, 11)), 1.2);
-            cursorPen.DashStyle = DashStyles.Dash;
-            cursorPen.Freeze();
-
             double x1 = _cursor.X1 * w;
             double x2 = _cursor.X2 * w;
             double y1 = _cursor.Y1 * h;
             double y2 = _cursor.Y2 * h;
 
             // X Cursors (Time)
-            dc.DrawLine(cursorPen, new Point(x1, 0), new Point(x1, h));
-            dc.DrawLine(cursorPen, new Point(x2, 0), new Point(x2, h));
+            dc.DrawLine(CursorPen, new Point(x1, 0), new Point(x1, h));
+            dc.DrawLine(CursorPen, new Point(x2, 0), new Point(x2, h));
 
             // Y Cursors (Voltage)
-            dc.DrawLine(cursorPen, new Point(0, y1), new Point(w, y1));
-            dc.DrawLine(cursorPen, new Point(0, y2), new Point(w, y2));
+            dc.DrawLine(CursorPen, new Point(0, y1), new Point(w, y1));
+            dc.DrawLine(CursorPen, new Point(0, y2), new Point(w, y2));
 
             // Cursor Measurement Badge
             double totalTime = _timePerDiv * _horizontalDivs;
@@ -270,16 +330,19 @@ namespace ZeroUI.Wpf.Industrial
             double dyDiv = (_cursor.DeltaY * _verticalDivs);
 
             string text = $"Δt: {FormatTime(dt)} | Freq: {FormatFrequency(freq)} | ΔV (Div): {dyDiv:0.00}";
-            var ft = new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                ZeroWpfTheme.BoldTypeface, 11, new SolidColorBrush(Color.FromRgb(245, 158, 11)), 1.0);
+            if (_cachedCursorFt == null || _cachedCursorText != text)
+            {
+                _cachedCursorText = text;
+                _cachedCursorFt = new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                    ZeroWpfTheme.BoldTypeface, 11, CursorPen.Brush, 1.0);
+            }
 
+            var ft = _cachedCursorFt;
             double badgeW = ft.Width + 16;
             double badgeH = ft.Height + 8;
             Rect badgeRect = new Rect(Math.Min(x1, x2) + 6, Math.Min(y1, y2) + 6, badgeW, badgeH);
 
-            var badgeBg = new SolidColorBrush(Color.FromArgb(220, 15, 23, 42));
-            badgeBg.Freeze();
-            dc.DrawRoundedRectangle(badgeBg, new Pen(ZeroWpfTheme.BorderDefault, 1), badgeRect, 4, 4);
+            dc.DrawRoundedRectangle(BadgeBgBrush, BadgeBorderPen, badgeRect, 4, 4);
             dc.DrawText(ft, new Point(badgeRect.Left + 8, badgeRect.Top + 4));
         }
 
@@ -288,39 +351,43 @@ namespace ZeroUI.Wpf.Industrial
             // Bottom HUD Bar
             double barH = 26;
             Rect barRect = new Rect(0, h - barH, w, barH);
-            var hudBg = new SolidColorBrush(Color.FromArgb(235, 11, 17, 33));
-            hudBg.Freeze();
-            dc.DrawRectangle(hudBg, null, barRect);
-            dc.DrawLine(new Pen(ZeroWpfTheme.BorderDefault, 1), new Point(0, h - barH), new Point(w, h - barH));
+            dc.DrawRectangle(HudBgBrush, null, barRect);
+            dc.DrawLine(HudTopBorderPen, new Point(0, h - barH), new Point(w, h - barH));
 
             double curX = 14;
 
             // 1. Timebase
-            string timebase = $"⏱ Time: {FormatTime(_timePerDiv)}/Div";
-            var tbFt = new FormattedText(timebase, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                ZeroWpfTheme.BoldTypeface, 11, ZeroWpfTheme.TextPrimary, 1.0);
-            dc.DrawText(tbFt, new Point(curX, h - barH + 5));
-            curX += tbFt.Width + 24;
+            if (_cachedTimebaseFt == null || Math.Abs(_cachedTimebaseSec - _timePerDiv) > 1e-7)
+            {
+                _cachedTimebaseSec = _timePerDiv;
+                string timebase = $"⏱ Time: {FormatTime(_timePerDiv)}/Div";
+                _cachedTimebaseFt = new FormattedText(timebase, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                    ZeroWpfTheme.BoldTypeface, 11, ZeroWpfTheme.TextPrimary, 1.0);
+            }
+            dc.DrawText(_cachedTimebaseFt, new Point(curX, h - barH + 5));
+            curX += _cachedTimebaseFt.Width + 24;
 
             // 2. Channel Badges
             foreach (var ch in _channels)
             {
                 if (!ch.IsVisible) continue;
 
-                var chanColor = Color.FromArgb(
-                    (byte)((ch.ColorArgb >> 24) & 0xFF),
-                    (byte)((ch.ColorArgb >> 16) & 0xFF),
-                    (byte)((ch.ColorArgb >> 8) & 0xFF),
-                    (byte)(ch.ColorArgb & 0xFF));
+                var (_, _, textBrush) = GetChannelGraphics(ch.ColorArgb);
 
-                ch.Buffer.ComputeMetrics(out float min, out float max, out float p2p, out float rms);
+                ch.GetOrComputeMetrics(out float min, out float max, out float p2p, out float rms);
 
                 string chText = $"{ch.Name}: {ch.VoltsPerDiv:0.#}{ch.Unit}/Div | Vpp: {p2p:0.00}{ch.Unit}";
-                var chFt = new FormattedText(chText, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                    ZeroWpfTheme.BoldTypeface, 11, new SolidColorBrush(chanColor), 1.0);
 
-                dc.DrawText(chFt, new Point(curX, h - barH + 5));
-                curX += chFt.Width + 20;
+                if (!_hudChanTextCache.TryGetValue(ch.Id, out var cached) || cached.text != chText)
+                {
+                    var chFt = new FormattedText(chText, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                        ZeroWpfTheme.BoldTypeface, 11, textBrush, 1.0);
+                    cached = (chText, chFt);
+                    _hudChanTextCache[ch.Id] = cached;
+                }
+
+                dc.DrawText(cached.ft, new Point(curX, h - barH + 5));
+                curX += cached.ft.Width + 20;
             }
         }
 

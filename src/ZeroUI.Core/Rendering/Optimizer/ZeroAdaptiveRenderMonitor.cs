@@ -77,8 +77,8 @@ namespace ZeroUI.Core.Rendering.Optimizer
             _historyIndex = (_historyIndex + 1) % HistoryBufferSize;
             RollingAverageFrameTimeMs = _historySum / _historyCount;
 
-            // Evaluate budget violation
-            bool isViolating = frameTimeMs > _targetFrameBudgetMs;
+            // Evaluate budget violation with VSync jitter tolerance (+15%)
+            bool isViolating = frameTimeMs > (_targetFrameBudgetMs * 1.15);
             if (isViolating)
             {
                 TotalViolations++;
@@ -95,8 +95,8 @@ namespace ZeroUI.Core.Rendering.Optimizer
             else
             {
                 _consecutiveViolations = 0;
-                // Headroom condition: Frame time is less than 70% of budget
-                if (frameTimeMs < _targetFrameBudgetMs * 0.70)
+                // Headroom condition: Frame time is less than 85% of budget
+                if (frameTimeMs < _targetFrameBudgetMs * 0.85)
                 {
                     _consecutiveHeadroom++;
                     // Promote tier if 45 consecutive frames maintain healthy headroom

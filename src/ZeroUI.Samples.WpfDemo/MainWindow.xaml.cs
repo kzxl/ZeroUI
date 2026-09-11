@@ -459,6 +459,8 @@ namespace ZeroUI.Samples.WpfDemo
             _telemetryTimer.Start();
         }
 
+        private int _scopeStep = 0;
+
         private void OnCompositionRendering(object? sender, EventArgs e)
         {
             _frameCount++;
@@ -473,12 +475,32 @@ namespace ZeroUI.Samples.WpfDemo
                     TxtD3DFps.Text = $"FPS: {DemoD3DCanvas.CurrentFps:F1}";
                 }
             }
+
+            // High-Speed Real-Time Oscilloscope Streaming (60 - 144 FPS)
+            if (DemoSignalScope != null && DemoSignalScope.IsVisible && DemoSignalScope.Channels.Count >= 4 && !_isScopePaused)
+            {
+                for (int s = 0; s < 40; s++)
+                {
+                    _scopeAngle += 0.04;
+                    float ch1 = (float)(Math.Sin(_scopeAngle) * 3.3 + (Random.Shared.NextDouble() - 0.5) * 0.15);
+                    float ch2 = (float)(Math.Sin(_scopeAngle * 2.8) * 1.8 + Math.Cos(_scopeAngle * 6.5) * 0.6);
+                    float ch3 = (_scopeStep % 160 < 80) ? 1.0f : 0.0f;
+                    float ch4 = (_scopeStep % 60 < 30) ? 1.0f : 0.0f;
+                    _scopeStep++;
+
+                    DemoSignalScope.Channels[0].Buffer.Write(ch1);
+                    DemoSignalScope.Channels[1].Buffer.Write(ch2);
+                    DemoSignalScope.Channels[2].Buffer.Write(ch3);
+                    DemoSignalScope.Channels[3].Buffer.Write(ch4);
+                }
+                DemoSignalScope.InvalidateVisual();
+            }
         }
 
         private void SetupScadaSimulation()
         {
             var rand = new Random();
-            _scadaSimTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(80) };
+            _scadaSimTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(33) };
             _scadaSimTimer.Tick += (s, e) =>
             {
                 if (!_isSimulating) return;
@@ -519,22 +541,6 @@ namespace ZeroUI.Samples.WpfDemo
                 {
                     AndonTower.YellowOn = false;
                     AndonTower.RedBlink = false;
-                }
-
-                // Stream real-time oscilloscope samples
-                if (DemoSignalScope != null && DemoSignalScope.Channels.Count >= 4 && !_isScopePaused)
-                {
-                    _scopeAngle += 0.25;
-                    float ch1 = (float)(Math.Sin(_scopeAngle) * 3.3 + (rand.NextDouble() - 0.5) * 0.15);
-                    float ch2 = (float)(Math.Sin(_scopeAngle * 2.8) * 1.8 + Math.Cos(_scopeAngle * 6.5) * 0.6);
-                    float ch3 = (_simCycles % 16 < 8) ? 1.0f : 0.0f;
-                    float ch4 = (_simCycles % 6 < 3) ? 1.0f : 0.0f;
-
-                    DemoSignalScope.Channels[0].Buffer.Write(ch1);
-                    DemoSignalScope.Channels[1].Buffer.Write(ch2);
-                    DemoSignalScope.Channels[2].Buffer.Write(ch3);
-                    DemoSignalScope.Channels[3].Buffer.Write(ch4);
-                    DemoSignalScope.InvalidateVisual();
                 }
             };
             _scadaSimTimer.Start();

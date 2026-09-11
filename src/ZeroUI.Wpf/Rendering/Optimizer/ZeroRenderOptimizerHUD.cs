@@ -217,8 +217,8 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
 
             if (_txtFrameTime != null)
             {
-                _txtFrameTime.Text = $"{ms:F1} ms ({(ms <= 16.67 ? "OK" : "OVER")})";
-                _txtFrameTime.Foreground = ms <= 16.67
+                _txtFrameTime.Text = $"{ms:F1} ms ({(ms <= 18.0 ? "OK" : "OVER")})";
+                _txtFrameTime.Foreground = ms <= 18.0
                     ? new SolidColorBrush(Color.FromRgb(226, 232, 240))
                     : new SolidColorBrush(Color.FromRgb(239, 68, 68));
             }
