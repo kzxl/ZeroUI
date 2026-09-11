@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Input;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -16,11 +17,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty(nameof(LowerValue))]
     public class RangeSlider : Control, IZeroEditor
     {
-        private double _minimum = 0.0;
-        private double _maximum = 100.0;
-        private double _lowerValue = 20.0;
-        private double _upperValue = 80.0;
-        private double _step = 1.0;
+        private readonly RangeSpanModel _model = new RangeSpanModel(0f, 100f, 20f, 80f, 1f, 0f);
         private string _prefix = string.Empty;
         private string _suffix = string.Empty;
         private bool _showRangeText = true;
@@ -34,37 +31,35 @@ namespace ZeroUI.WinForms.Editors
         private double _dragStartUpper;
         private DragMode _hoverMode = DragMode.None;
 
+        public RangeSpanModel Model => _model;
+
         [Category("Range")]
         [DefaultValue(0.0)]
         public double Minimum
         {
-            get => _minimum;
-            set { _minimum = value; Invalidate(); }
+            get => _model.Minimum;
+            set { _model.Minimum = (float)value; Invalidate(); }
         }
 
         [Category("Range")]
         [DefaultValue(100.0)]
         public double Maximum
         {
-            get => _maximum;
-            set { _maximum = value; Invalidate(); }
+            get => _model.Maximum;
+            set { _model.Maximum = (float)value; Invalidate(); }
         }
 
         [Category("Range")]
         [DefaultValue(20.0)]
         public double LowerValue
         {
-            get => _lowerValue;
+            get => _model.LowerValue;
             set
             {
-                double snapped = SnapToStep(Math.Max(_minimum, Math.Min(_upperValue, value)));
-                if (Math.Abs(snapped - _lowerValue) > 0.0001)
-                {
-                    _lowerValue = snapped;
-                    _isModified = true;
-                    OnRangeChanged();
-                    Invalidate();
-                }
+                _model.SetLower((float)value);
+                _isModified = true;
+                OnRangeChanged();
+                Invalidate();
             }
         }
 
@@ -72,17 +67,13 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(80.0)]
         public double UpperValue
         {
-            get => _upperValue;
+            get => _model.UpperValue;
             set
             {
-                double snapped = SnapToStep(Math.Min(_maximum, Math.Max(_lowerValue, value)));
-                if (Math.Abs(snapped - _upperValue) > 0.0001)
-                {
-                    _upperValue = snapped;
-                    _isModified = true;
-                    OnRangeChanged();
-                    Invalidate();
-                }
+                _model.SetUpper((float)value);
+                _isModified = true;
+                OnRangeChanged();
+                Invalidate();
             }
         }
 
@@ -90,8 +81,8 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(1.0)]
         public double Step
         {
-            get => _step;
-            set => _step = Math.Max(0.0001, value);
+            get => _model.Step;
+            set => _model.Step = (float)value;
         }
 
         [Category("Appearance")]
@@ -136,7 +127,7 @@ namespace ZeroUI.WinForms.Editors
         [Browsable(false)]
         public object? EditValue
         {
-            get => (_lowerValue, _upperValue);
+            get => ((double)_model.LowerValue, (double)_model.UpperValue);
             set
             {
                 if (value is ValueTuple<double, double> tuple)
@@ -169,8 +160,7 @@ namespace ZeroUI.WinForms.Editors
 
         public void SetRange(double lower, double upper)
         {
-            _lowerValue = SnapToStep(Math.Max(_minimum, Math.Min(_maximum, lower)));
-            _upperValue = SnapToStep(Math.Max(_lowerValue, Math.Min(_maximum, upper)));
+            _model.SetValues((float)lower, (float)upper);
             _isModified = true;
             OnRangeChanged();
             Invalidate();
@@ -178,8 +168,8 @@ namespace ZeroUI.WinForms.Editors
 
         public void Reset()
         {
-            _lowerValue = _minimum;
-            _upperValue = _maximum;
+            _model.LowerValue = _model.Minimum;
+            _model.UpperValue = _model.Maximum;
             _isModified = false;
             OnRangeChanged();
             Invalidate();
@@ -192,14 +182,12 @@ namespace ZeroUI.WinForms.Editors
 
         private double SnapToStep(double val)
         {
-            if (_step <= 0) return val;
-            double snapped = Math.Round(val / _step) * _step;
-            return Math.Max(_minimum, Math.Min(_maximum, snapped));
+            return RangeMath.SnapToStep((float)val, _model.Minimum, _model.Maximum, _model.Step);
         }
 
         private void OnRangeChanged()
         {
-            RangeChanged?.Invoke(this, (_lowerValue, _upperValue));
+            RangeChanged?.Invoke(this, (_model.LowerValue, _model.UpperValue));
             EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -213,11 +201,8 @@ namespace ZeroUI.WinForms.Editors
 
             var trackRect = new Rectangle(margin, top, trackWidth, trackHeight);
 
-            double span = _maximum - _minimum;
-            if (span <= 0) span = 1.0;
-
-            double lowerPct = Math.Max(0.0, Math.Min(1.0, (_lowerValue - _minimum) / span));
-            double upperPct = Math.Max(0.0, Math.Min(1.0, (_upperValue - _minimum) / span));
+            double lowerPct = _model.LowerFraction;
+            double upperPct = _model.UpperFraction;
 
             int lowerX = margin + (int)(lowerPct * trackWidth);
             int upperX = margin + (int)(upperPct * trackWidth);
@@ -240,7 +225,7 @@ namespace ZeroUI.WinForms.Editors
             // Background text
             if (_showRangeText)
             {
-                string text = $"{_prefix}{_lowerValue:F0}{_suffix} — {_prefix}{_upperValue:F0}{_suffix}";
+                string text = $"{_prefix}{_model.LowerValue:F0}{_suffix} — {_prefix}{_model.UpperValue:F0}{_suffix}";
                 using var font = new Font("Segoe UI", 8.5f, FontStyle.Regular);
                 using var brush = new SolidBrush(ZeroTheme.Colors.TextSecondary);
                 g.DrawString(text, font, brush, Width - 8, 1, new StringFormat { Alignment = StringAlignment.Far });
@@ -297,8 +282,8 @@ namespace ZeroUI.WinForms.Editors
             var (_, activeRect, lowerThumb, upperThumb) = ComputeLayout();
 
             _dragStartPoint = e.Location;
-            _dragStartLower = _lowerValue;
-            _dragStartUpper = _upperValue;
+            _dragStartLower = _model.LowerValue;
+            _dragStartUpper = _model.UpperValue;
 
             if (lowerThumb.Contains(e.Location))
             {
@@ -323,37 +308,28 @@ namespace ZeroUI.WinForms.Editors
 
             if (_dragMode != DragMode.None && !_readOnly)
             {
-                double span = _maximum - _minimum;
+                double span = _model.Maximum - _model.Minimum;
                 int deltaPixels = e.X - _dragStartPoint.X;
                 double deltaVal = ((double)deltaPixels / trackRect.Width) * span;
 
                 if (_dragMode == DragMode.Lower)
                 {
-                    LowerValue = SnapToStep(_dragStartLower + deltaVal);
+                    _model.SetLower((float)(_dragStartLower + deltaVal));
+                    _isModified = true;
+                    OnRangeChanged();
+                    Invalidate();
                 }
                 else if (_dragMode == DragMode.Upper)
                 {
-                    UpperValue = SnapToStep(_dragStartUpper + deltaVal);
+                    _model.SetUpper((float)(_dragStartUpper + deltaVal));
+                    _isModified = true;
+                    OnRangeChanged();
+                    Invalidate();
                 }
                 else if (_dragMode == DragMode.RangeBar)
                 {
-                    double length = _dragStartUpper - _dragStartLower;
-                    double newLower = _dragStartLower + deltaVal;
-                    double newUpper = _dragStartUpper + deltaVal;
-
-                    if (newLower < _minimum)
-                    {
-                        newLower = _minimum;
-                        newUpper = _minimum + length;
-                    }
-                    else if (newUpper > _maximum)
-                    {
-                        newUpper = _maximum;
-                        newLower = _maximum - length;
-                    }
-
-                    _lowerValue = SnapToStep(newLower);
-                    _upperValue = SnapToStep(newUpper);
+                    _model.SetValues((float)_dragStartLower, (float)_dragStartUpper);
+                    _model.TranslateSpan((float)deltaVal);
                     _isModified = true;
                     OnRangeChanged();
                     Invalidate();

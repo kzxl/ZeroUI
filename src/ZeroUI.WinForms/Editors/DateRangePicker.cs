@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Input.Date;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
@@ -10,18 +11,6 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
 {
-    public enum DateRangePreset
-    {
-        Custom,
-        Today,
-        Yesterday,
-        Last7Days,
-        Last30Days,
-        ThisMonth,
-        LastMonth,
-        YearToDate
-    }
-
     /// <summary>
     /// Enterprise Dual-Date Range Selector (From Date -> To Date) with connected range ribbon,
     /// 1-click quick preset filters, interactive hover range preview, and calendar popup.
@@ -152,43 +141,11 @@ namespace ZeroUI.WinForms.Editors
         public void ApplyPreset(DateRangePreset preset)
         {
             _preset = preset;
-            DateTime today = DateTime.Today;
+            if (preset == DateRangePreset.Custom) return;
 
-            switch (preset)
-            {
-                case DateRangePreset.Today:
-                    _startDate = today;
-                    _endDate = today;
-                    break;
-                case DateRangePreset.Yesterday:
-                    _startDate = today.AddDays(-1);
-                    _endDate = today.AddDays(-1);
-                    break;
-                case DateRangePreset.Last7Days:
-                    _startDate = today.AddDays(-6);
-                    _endDate = today;
-                    break;
-                case DateRangePreset.Last30Days:
-                    _startDate = today.AddDays(-29);
-                    _endDate = today;
-                    break;
-                case DateRangePreset.ThisMonth:
-                    _startDate = new DateTime(today.Year, today.Month, 1);
-                    _endDate = _startDate.AddMonths(1).AddDays(-1);
-                    break;
-                case DateRangePreset.LastMonth:
-                    var firstLastMonth = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
-                    _startDate = firstLastMonth;
-                    _endDate = firstLastMonth.AddMonths(1).AddDays(-1);
-                    break;
-                case DateRangePreset.YearToDate:
-                    _startDate = new DateTime(today.Year, 1, 1);
-                    _endDate = today;
-                    break;
-                case DateRangePreset.Custom:
-                default:
-                    return;
-            }
+            var (start, end) = DateRangePresetHelper.CalculateRange(preset, fullMonthForThisMonth: true);
+            _startDate = start;
+            _endDate = end;
 
             Invalidate();
             DateRangeChanged?.Invoke(this, EventArgs.Empty);

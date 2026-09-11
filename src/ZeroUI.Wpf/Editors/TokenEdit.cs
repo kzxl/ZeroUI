@@ -153,10 +153,13 @@ namespace ZeroUI.Wpf.Editors
         public event EventHandler? TokensChanged;
         public event EventHandler? EditValueChanged;
 
+        private readonly TokenModel _model = new TokenModel();
         private TextBox? _input;
         private Popup? _popup;
         private ListBox? _suggestionsList;
         private bool _isUpdating;
+
+        public TokenModel Model => _model;
 
         static TokenEdit()
         {
@@ -288,19 +291,16 @@ namespace ZeroUI.Wpf.Editors
                 return;
             }
 
-            var matches = new List<object>();
+            _model.AllowDuplicates = AllowDuplicates;
+            var availableList = new List<TokenItem>();
             foreach (var item in AvailableTokens)
             {
-                if (item == null) continue;
-                string itemText = item is TokenItem t ? t.Text : item.ToString() ?? string.Empty;
-                if (itemText.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    if (AllowDuplicates || !Tokens.Any(tok => string.Equals(tok.Text, itemText, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        matches.Add(item);
-                    }
-                }
+                if (item is TokenItem t) availableList.Add(t);
+                else if (item != null) availableList.Add(new TokenItem(item.ToString() ?? string.Empty));
             }
+            _model.AvailableTokens = availableList;
+
+            var matches = _model.FilterSuggestions(query);
 
             if (matches.Count > 0)
             {
@@ -356,14 +356,19 @@ namespace ZeroUI.Wpf.Editors
         public bool AddToken(TokenItem token)
         {
             if (ReadOnly) return false;
-            if (MaxTokens > 0 && Tokens.Count >= MaxTokens) return false;
+            _model.AllowDuplicates = AllowDuplicates;
+            _model.MaxTokens = MaxTokens;
 
-            if (!AllowDuplicates && Tokens.Any(t => string.Equals(t.Text, token.Text, StringComparison.OrdinalIgnoreCase)))
+            if (!_model.Add(token))
             {
                 return false;
             }
 
-            Tokens.Add(token);
+            if (!Tokens.Contains(token))
+            {
+                Tokens.Add(token);
+            }
+
             IsModified = true;
             TokenAdded?.Invoke(this, token);
             return true;
@@ -372,6 +377,7 @@ namespace ZeroUI.Wpf.Editors
         public bool RemoveToken(TokenItem token)
         {
             if (ReadOnly) return false;
+            _model.Remove(token);
             bool removed = Tokens.Remove(token);
             if (removed)
             {
@@ -384,6 +390,7 @@ namespace ZeroUI.Wpf.Editors
         public void ClearTokens()
         {
             if (ReadOnly) return;
+            _model.Clear();
             Tokens.Clear();
             IsModified = true;
         }
@@ -395,7 +402,7 @@ namespace ZeroUI.Wpf.Editors
             _isUpdating = true;
             try
             {
-                EditValue = string.Join(", ", Tokens.Select(t => t.Text));
+                EditValue = _model.ToDelimitedString();
                 TokensChanged?.Invoke(this, EventArgs.Empty);
                 EditValueChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -409,11 +416,21 @@ namespace ZeroUI.Wpf.Editors
         {
             if (d is TokenEdit edit && !edit._isUpdating && e.NewValue is IEnumerable source)
             {
+                edit._model.Clear();
                 edit.Tokens.Clear();
                 foreach (var item in source)
                 {
-                    if (item is TokenItem t) edit.Tokens.Add(t);
-                    else if (item != null) edit.Tokens.Add(new TokenItem(item.ToString() ?? string.Empty));
+                    if (item is TokenItem t)
+                    {
+                        edit._model.Add(t);
+                        edit.Tokens.Add(t);
+                    }
+                    else if (item != null)
+                    {
+                        var tok = new TokenItem(item.ToString() ?? string.Empty);
+                        edit._model.Add(tok);
+                        edit.Tokens.Add(tok);
+                    }
                 }
             }
         }
@@ -425,14 +442,11 @@ namespace ZeroUI.Wpf.Editors
                 edit._isUpdating = true;
                 try
                 {
+                    edit._model.SetFromDelimitedString(s);
                     edit.Tokens.Clear();
-                    if (!string.IsNullOrWhiteSpace(s))
+                    foreach (var t in edit._model.Tokens)
                     {
-                        var parts = s.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var part in parts)
-                        {
-                            edit.Tokens.Add(new TokenItem(part.Trim()));
-                        }
+                        edit.Tokens.Add(t);
                     }
                 }
                 finally

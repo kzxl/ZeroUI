@@ -10,18 +10,6 @@ using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Editors
 {
-    public enum DateRangePreset
-    {
-        Custom,
-        Today,
-        Yesterday,
-        Last7Days,
-        Last30Days,
-        ThisMonth,
-        LastMonth,
-        YearToDate
-    }
-
     /// <summary>
     /// Enterprise dual-date range selector (From Date -> To Date) for WPF with connected range ribbon,
     /// 1-click quick preset filters, interactive hover range preview, and calendar popup powered by CalendarModel.
@@ -412,33 +400,9 @@ namespace ZeroUI.Wpf.Editors
 
             private void ApplyPreset(DateRangePreset preset)
             {
-                DateTime today = DateTime.Today;
-                switch (preset)
-                {
-                    case DateRangePreset.Today:
-                        _owner.SetRange(today, today);
-                        break;
-                    case DateRangePreset.Yesterday:
-                        _owner.SetRange(today.AddDays(-1), today.AddDays(-1));
-                        break;
-                    case DateRangePreset.Last7Days:
-                        _owner.SetRange(today.AddDays(-6), today);
-                        break;
-                    case DateRangePreset.Last30Days:
-                        _owner.SetRange(today.AddDays(-29), today);
-                        break;
-                    case DateRangePreset.ThisMonth:
-                        _owner.SetRange(new DateTime(today.Year, today.Month, 1), today);
-                        break;
-                    case DateRangePreset.LastMonth:
-                        var lastMonth = today.AddMonths(-1);
-                        int daysInLastMonth = DateTime.DaysInMonth(lastMonth.Year, lastMonth.Month);
-                        _owner.SetRange(new DateTime(lastMonth.Year, lastMonth.Month, 1), new DateTime(lastMonth.Year, lastMonth.Month, daysInLastMonth));
-                        break;
-                    case DateRangePreset.YearToDate:
-                        _owner.SetRange(new DateTime(today.Year, 1, 1), today);
-                        break;
-                }
+                if (preset == DateRangePreset.Custom) return;
+                var (start, end) = DateRangePresetHelper.CalculateRange(preset);
+                _owner.SetRange(start, end);
             }
 
             protected override void OnRender(DrawingContext dc)

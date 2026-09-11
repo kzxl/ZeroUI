@@ -6,6 +6,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Input;
 
 namespace ZeroUI.Wpf.Editors
 {
@@ -220,6 +221,7 @@ namespace ZeroUI.Wpf.Editors
         public event EventHandler<(double Lower, double Upper)>? RangeChanged;
         public event EventHandler? EditValueChanged;
 
+        private readonly RangeSpanModel _model = new RangeSpanModel();
         private FrameworkElement? _track;
         private FrameworkElement? _activeRange;
         private Thumb? _lowerThumb;
@@ -228,6 +230,8 @@ namespace ZeroUI.Wpf.Editors
         private Point _rangeDragStart;
         private double _dragStartLower;
         private double _dragStartUpper;
+
+        public RangeSpanModel Model => _model;
 
         static RangeSlider()
         {
@@ -269,6 +273,15 @@ namespace ZeroUI.Wpf.Editors
             UpdateLayoutPositions();
         }
 
+        private void SyncModelBounds()
+        {
+            _model.Minimum = (float)Minimum;
+            _model.Maximum = (float)Maximum;
+            _model.Step = (float)Step;
+            _model.MinRangeSpan = (float)MinRange;
+            _model.SetValues((float)LowerValue, (float)UpperValue);
+        }
+
         private void OnLowerThumbDragDelta(object sender, DragDeltaEventArgs e)
         {
             if (ReadOnly || _track == null || _track.ActualWidth <= 0) return;
@@ -276,8 +289,10 @@ namespace ZeroUI.Wpf.Editors
             double span = Maximum - Minimum;
             if (span <= 0) return;
 
+            SyncModelBounds();
             double deltaVal = (e.HorizontalChange / _track.ActualWidth) * span;
-            double newVal = SnapToStep(Math.Max(Minimum, Math.Min(UpperValue - MinRange, LowerValue + deltaVal)));
+            _model.SetLower((float)(LowerValue + deltaVal));
+            double newVal = _model.LowerValue;
             if (Math.Abs(newVal - LowerValue) > 0.0001)
             {
                 LowerValue = newVal;
@@ -292,8 +307,10 @@ namespace ZeroUI.Wpf.Editors
             double span = Maximum - Minimum;
             if (span <= 0) return;
 
+            SyncModelBounds();
             double deltaVal = (e.HorizontalChange / _track.ActualWidth) * span;
-            double newVal = SnapToStep(Math.Min(Maximum, Math.Max(LowerValue + MinRange, UpperValue + deltaVal)));
+            _model.SetUpper((float)(UpperValue + deltaVal));
+            double newVal = _model.UpperValue;
             if (Math.Abs(newVal - UpperValue) > 0.0001)
             {
                 UpperValue = newVal;
@@ -324,23 +341,12 @@ namespace ZeroUI.Wpf.Editors
             double deltaPixels = current.X - _rangeDragStart.X;
             double deltaVal = (deltaPixels / _track.ActualWidth) * span;
 
-            double rangeLength = _dragStartUpper - _dragStartLower;
-            double newLower = _dragStartLower + deltaVal;
-            double newUpper = _dragStartUpper + deltaVal;
+            SyncModelBounds();
+            _model.SetValues((float)_dragStartLower, (float)_dragStartUpper);
+            _model.TranslateSpan((float)deltaVal);
 
-            if (newLower < Minimum)
-            {
-                newLower = Minimum;
-                newUpper = Minimum + rangeLength;
-            }
-            else if (newUpper > Maximum)
-            {
-                newUpper = Maximum;
-                newLower = Maximum - rangeLength;
-            }
-
-            newLower = SnapToStep(newLower);
-            newUpper = SnapToStep(newUpper);
+            double newLower = _model.LowerValue;
+            double newUpper = _model.UpperValue;
 
             if (Math.Abs(newLower - LowerValue) > 0.0001 || Math.Abs(newUpper - UpperValue) > 0.0001)
             {
@@ -371,9 +377,7 @@ namespace ZeroUI.Wpf.Editors
 
         private double SnapToStep(double val)
         {
-            if (Step <= 0) return val;
-            double snapped = Math.Round(val / Step) * Step;
-            return Math.Max(Minimum, Math.Min(Maximum, snapped));
+            return RangeMath.SnapToStep((float)val, (float)Minimum, (float)Maximum, (float)Step);
         }
 
         public void UpdateLayoutPositions()
@@ -383,11 +387,10 @@ namespace ZeroUI.Wpf.Editors
             double trackWidth = _track.ActualWidth;
             if (trackWidth <= 0) return;
 
-            double span = Maximum - Minimum;
-            if (span <= 0) span = 1.0;
+            SyncModelBounds();
 
-            double lowerPct = Math.Max(0.0, Math.Min(1.0, (LowerValue - Minimum) / span));
-            double upperPct = Math.Max(0.0, Math.Min(1.0, (UpperValue - Minimum) / span));
+            double lowerPct = _model.LowerFraction;
+            double upperPct = _model.UpperFraction;
 
             double thumbHalfWidth = _lowerThumb.ActualWidth > 0 ? _lowerThumb.ActualWidth / 2.0 : 8.0;
             double usableWidth = Math.Max(0, trackWidth - (thumbHalfWidth * 2));

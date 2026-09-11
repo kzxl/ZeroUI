@@ -9,6 +9,7 @@ using System.Windows.Forms;
 
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
+using ZeroUI.Core.Input.Date;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
@@ -616,6 +617,43 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         public void LoadDatasetPublic(int count) => LoadDataset(count);
 
         public void ToggleThemePublic() => ZeroTheme.ToggleTheme();
+
+        public void ScrollGridToRowPublic(int rowIndex)
+        {
+            try
+            {
+                if (_zeroGrid != null && rowIndex >= 0)
+                {
+                    _zeroGrid.ScrollToRow(rowIndex);
+                }
+            }
+            catch { }
+        }
+
+        public void SelectSubTabByIndex(int masterIndex, int subIndex)
+        {
+            SelectTabByIndex(masterIndex);
+            if (_mainNav != null && masterIndex >= 0 && masterIndex < _mainNav.TabPages.Count)
+            {
+                var page = _mainNav.TabPages[masterIndex];
+                SetChildTab(page, subIndex);
+            }
+        }
+
+        private static bool SetChildTab(Control parent, int index)
+        {
+            foreach (Control c in parent.Controls)
+            {
+                if (c is ZeroTabControl tc && index >= 0 && index < tc.TabPages.Count)
+                {
+                    tc.SelectedIndex = index;
+                    return true;
+                }
+                if (c.HasChildren && SetChildTab(c, index))
+                    return true;
+            }
+            return false;
+        }
 
         private void ShowSkinGalleryMenu()
         {

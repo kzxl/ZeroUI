@@ -371,21 +371,13 @@ namespace ZeroUI.Wpf.Editors
 
         private void TryApplyHex(string hex)
         {
-            try
+            if (ZeroColor.TryParseHex(hex, out var zc))
             {
-                hex = hex.Trim().TrimStart('#');
-                if (hex.Length == 6)
-                {
-                    byte r = Convert.ToByte(hex.Substring(0, 2), 16);
-                    byte g = Convert.ToByte(hex.Substring(2, 2), 16);
-                    byte b = Convert.ToByte(hex.Substring(4, 2), 16);
-                    SelectedColor = Color.FromRgb(r, g, b);
-                }
+                SelectedColor = Color.FromArgb(zc.A, zc.R, zc.G, zc.B);
             }
-            catch { }
         }
 
-        private static string GetHex(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+        private static string GetHex(Color c) => new ZeroColor(c.R, c.G, c.B, c.A).ToHex();
 
         public Color Color
         {

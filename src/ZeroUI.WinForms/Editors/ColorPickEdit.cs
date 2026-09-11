@@ -297,20 +297,12 @@ namespace ZeroUI.WinForms.Editors
 
             private void TryApplyHex(string hex)
             {
-                try
+                if (ZeroColor.TryParseHex(hex, out var zc))
                 {
-                    hex = hex.Trim().TrimStart('#');
-                    if (hex.Length == 6)
-                    {
-                        int r = Convert.ToInt32(hex.Substring(0, 2), 16);
-                        int g = Convert.ToInt32(hex.Substring(2, 2), 16);
-                        int b = Convert.ToInt32(hex.Substring(4, 2), 16);
-                        _currentColor = Color.FromArgb(r, g, b);
-                        _owner.SelectedColor = _currentColor;
-                        _owner._dropdown.Close();
-                    }
+                    _currentColor = Color.FromArgb(zc.A, zc.R, zc.G, zc.B);
+                    _owner.SelectedColor = _currentColor;
+                    _owner._dropdown.Close();
                 }
-                catch { }
             }
 
             private void StartEyedropper()

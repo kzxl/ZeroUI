@@ -108,11 +108,14 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(IsModifiedProperty, value);
         }
 
+        private readonly IPAddressModel _model = new IPAddressModel();
         private TextBox? _txtOctet1;
         private TextBox? _txtOctet2;
         private TextBox? _txtOctet3;
         private TextBox? _txtOctet4;
         private bool _isUpdating;
+
+        public IPAddressModel Model => _model;
 
         static IPAddressEdit()
         {
@@ -128,15 +131,15 @@ namespace ZeroUI.Wpf.Editors
             _txtOctet3 = GetTemplateChild("PART_Octet3") as TextBox;
             _txtOctet4 = GetTemplateChild("PART_Octet4") as TextBox;
 
-            SetupOctetBox(_txtOctet1, null, _txtOctet2);
-            SetupOctetBox(_txtOctet2, _txtOctet1, _txtOctet3);
-            SetupOctetBox(_txtOctet3, _txtOctet2, _txtOctet4);
-            SetupOctetBox(_txtOctet4, _txtOctet3, null);
+            SetupOctetBox(_txtOctet1, null, _txtOctet2, 0);
+            SetupOctetBox(_txtOctet2, _txtOctet1, _txtOctet3, 1);
+            SetupOctetBox(_txtOctet3, _txtOctet2, _txtOctet4, 2);
+            SetupOctetBox(_txtOctet4, _txtOctet3, null, 3);
 
             UpdateOctetBoxesFromText(Text);
         }
 
-        private void SetupOctetBox(TextBox? box, TextBox? prev, TextBox? next)
+        private void SetupOctetBox(TextBox? box, TextBox? prev, TextBox? next, int octetIndex)
         {
             if (box == null) return;
 
@@ -196,9 +199,9 @@ namespace ZeroUI.Wpf.Editors
             {
                 if (_isUpdating) return;
 
-                // Value clamping between 0 and 255
                 if (int.TryParse(box.Text, out int val))
                 {
+                    _model.SetOctet(octetIndex, val);
                     if (val > 255)
                     {
                         box.Text = "255";
@@ -231,10 +234,12 @@ namespace ZeroUI.Wpf.Editors
                 if (e.DataObject.GetDataPresent(DataFormats.Text))
                 {
                     string pasteText = (string)e.DataObject.GetData(DataFormats.Text);
-                    if (IPAddress.TryParse(pasteText.Trim(), out IPAddress? parsed))
+                    if (_model.TrySetFromText(pasteText.Trim()))
                     {
                         e.CancelCommand();
-                        SetIPAddress(parsed);
+                        UpdateBoxesFromModel();
+                        IsModified = true;
+                        EditValueChanged?.Invoke(this, EventArgs.Empty);
                     }
                 }
             });
@@ -244,26 +249,13 @@ namespace ZeroUI.Wpf.Editors
         {
             if (_isUpdating) return;
 
-            string o1 = string.IsNullOrEmpty(_txtOctet1?.Text) ? "0" : _txtOctet1!.Text;
-            string o2 = string.IsNullOrEmpty(_txtOctet2?.Text) ? "0" : _txtOctet2!.Text;
-            string o3 = string.IsNullOrEmpty(_txtOctet3?.Text) ? "0" : _txtOctet3!.Text;
-            string o4 = string.IsNullOrEmpty(_txtOctet4?.Text) ? "0" : _txtOctet4!.Text;
-
-            string combined = $"{o1}.{o2}.{o3}.{o4}";
             _isUpdating = true;
             try
             {
-                Text = combined;
-                Value = combined;
-                if (IPAddress.TryParse(combined, out var ip))
-                {
-                    Address = ip;
-                    EditValue = ip;
-                }
-                else
-                {
-                    EditValue = combined;
-                }
+                Text = _model.Text;
+                Value = _model.Text;
+                Address = _model.Address;
+                EditValue = _model.Address;
                 IsModified = true;
                 EditValueChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -275,15 +267,23 @@ namespace ZeroUI.Wpf.Editors
 
         private void UpdateOctetBoxesFromText(string text)
         {
-            if (string.IsNullOrEmpty(text)) text = "0.0.0.0";
-            var parts = text.Split('.');
+            _model.TrySetFromText(string.IsNullOrEmpty(text) ? "0.0.0.0" : text);
+            UpdateBoxesFromModel();
+        }
+
+        private void UpdateBoxesFromModel()
+        {
             _isUpdating = true;
             try
             {
-                if (_txtOctet1 != null) _txtOctet1.Text = parts.Length > 0 ? parts[0] : "0";
-                if (_txtOctet2 != null) _txtOctet2.Text = parts.Length > 1 ? parts[1] : "0";
-                if (_txtOctet3 != null) _txtOctet3.Text = parts.Length > 2 ? parts[2] : "0";
-                if (_txtOctet4 != null) _txtOctet4.Text = parts.Length > 3 ? parts[3] : "0";
+                if (_txtOctet1 != null) _txtOctet1.Text = _model[0].ToString();
+                if (_txtOctet2 != null) _txtOctet2.Text = _model[1].ToString();
+                if (_txtOctet3 != null) _txtOctet3.Text = _model[2].ToString();
+                if (_txtOctet4 != null) _txtOctet4.Text = _model[3].ToString();
+                Text = _model.Text;
+                Value = Text;
+                Address = _model.Address;
+                EditValue = Address;
             }
             finally
             {
@@ -293,26 +293,8 @@ namespace ZeroUI.Wpf.Editors
 
         public void SetIPAddress(IPAddress address)
         {
-            Address = address;
-            var bytes = address.GetAddressBytes();
-            if (bytes.Length == 4)
-            {
-                _isUpdating = true;
-                try
-                {
-                    if (_txtOctet1 != null) _txtOctet1.Text = bytes[0].ToString();
-                    if (_txtOctet2 != null) _txtOctet2.Text = bytes[1].ToString();
-                    if (_txtOctet3 != null) _txtOctet3.Text = bytes[2].ToString();
-                    if (_txtOctet4 != null) _txtOctet4.Text = bytes[3].ToString();
-                    Text = address.ToString();
-                    Value = Text;
-                    EditValue = address;
-                }
-                finally
-                {
-                    _isUpdating = false;
-                }
-            }
+            _model.Address = address;
+            UpdateBoxesFromModel();
         }
 
         private static void OnAddressChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

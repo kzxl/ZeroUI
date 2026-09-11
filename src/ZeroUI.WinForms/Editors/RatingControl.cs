@@ -12,17 +12,6 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.Editors
 {
     /// <summary>
-    /// Supported glyph shapes for RatingControl.
-    /// </summary>
-    public enum RatingShape
-    {
-        Star,
-        Diamond,
-        Heart,
-        Shield
-    }
-
-    /// <summary>
     /// Precision rating editor supporting half-star increments (0.5), custom vector glyphs,
     /// smooth hover previews, and bidirectional IZeroEditor data binding.
     /// </summary>
@@ -34,9 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [ToolboxBitmap(typeof(ZeroIcons), "RatingControl.bmp")]
     public class RatingControl : ZeroControlBase, IZeroEditor
     {
-        private decimal _value = 0m;
-        private int _maxRating = 5;
-        private bool _allowHalf = true;
+        private readonly RatingModel _model = new RatingModel();
         private RatingShape _shape = RatingShape.Star;
         private int _itemSize = 22;
         private int _itemSpacing = 6;
@@ -47,6 +34,8 @@ namespace ZeroUI.WinForms.Editors
         private bool _isReadOnly = false;
         private bool _isModified = false;
         private decimal? _hoverValue = null;
+
+        public RatingModel Model => _model;
 
         public event EventHandler? ValueChanged;
         public event EventHandler? EditValueChanged;
@@ -71,22 +60,13 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(typeof(decimal), "0")]
         public decimal Value
         {
-            get => _value;
+            get => _model.Value;
             set
             {
-                decimal clamped = Math.Max(0m, Math.Min(_maxRating, value));
-                if (!_allowHalf)
+                decimal clamped = _model.ClampValue(value);
+                if (_model.Value != clamped)
                 {
-                    clamped = Math.Round(clamped);
-                }
-                else
-                {
-                    clamped = Math.Round(clamped * 2m) / 2m;
-                }
-
-                if (_value != clamped)
-                {
-                    _value = clamped;
+                    _model.Value = clamped;
                     Invalidate();
                     ValueChanged?.Invoke(this, EventArgs.Empty);
                     EditValueChanged?.Invoke(this, EventArgs.Empty);
@@ -99,14 +79,12 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(5)]
         public int MaxRating
         {
-            get => _maxRating;
+            get => _model.MaxRating;
             set
             {
-                if (value < 1) value = 1;
-                if (_maxRating != value)
+                if (_model.MaxRating != value)
                 {
-                    _maxRating = value;
-                    if (_value > _maxRating) _value = _maxRating;
+                    _model.MaxRating = value;
                     Invalidate();
                 }
             }
@@ -117,10 +95,10 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(true)]
         public bool AllowHalf
         {
-            get => _allowHalf;
+            get => _model.AllowHalf;
             set
             {
-                _allowHalf = value;
+                _model.AllowHalf = value;
                 Invalidate();
             }
         }
@@ -278,45 +256,16 @@ namespace ZeroUI.WinForms.Editors
             if (_isReadOnly || e.Button != MouseButtons.Left) return;
 
             decimal newScore = CalculateScoreFromPoint(e.Location);
-            // Toggle off if clicking the exact current score
-            if (newScore == _value && newScore == 1m)
-            {
-                Value = 0m;
-            }
-            else
-            {
-                Value = newScore;
-            }
+            _model.ToggleOrSet(newScore);
             _isModified = true;
+            Invalidate();
+            ValueChanged?.Invoke(this, EventArgs.Empty);
+            EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private decimal CalculateScoreFromPoint(Point pt)
         {
-            int startX = Padding.Left + 2;
-            int totalItemSpan = _itemSize + _itemSpacing;
-
-            for (int i = 0; i < _maxRating; i++)
-            {
-                int itemLeft = startX + (i * totalItemSpan);
-                int itemRight = itemLeft + _itemSize;
-
-                if (pt.X < itemLeft)
-                {
-                    return i;
-                }
-
-                if (pt.X <= itemRight)
-                {
-                    if (_allowHalf)
-                    {
-                        float mid = itemLeft + (_itemSize / 2f);
-                        return pt.X < mid ? (i + 0.5m) : (i + 1.0m);
-                    }
-                    return i + 1;
-                }
-            }
-
-            return _maxRating;
+            return _model.CalculateScoreFromPosition(pt.X, Padding.Left + 2, _itemSize, _itemSpacing);
         }
 
         #endregion
@@ -329,7 +278,7 @@ namespace ZeroUI.WinForms.Editors
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-            decimal displayScore = _hoverValue ?? _value;
+            decimal displayScore = _hoverValue ?? _model.Value;
             Color activeColor = (_hoverValue != null && !_isReadOnly) ? _hoverColor : _ratedColor;
             Color inactiveColor = EffectiveSkin.IsDark ? Color.FromArgb(71, 85, 105) : _unratedColor;
 
@@ -337,7 +286,7 @@ namespace ZeroUI.WinForms.Editors
             int startY = (Height - _itemSize) / 2;
             int totalItemSpan = _itemSize + _itemSpacing;
 
-            for (int i = 0; i < _maxRating; i++)
+            for (int i = 0; i < _model.MaxRating; i++)
             {
                 var itemRect = new Rectangle(startX + (i * totalItemSpan), startY, _itemSize, _itemSize);
                 decimal itemThreshold = i + 1m;

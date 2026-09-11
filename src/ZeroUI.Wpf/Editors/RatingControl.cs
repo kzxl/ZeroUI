@@ -8,24 +8,16 @@ using ZeroUI.Wpf.Theme;
 namespace ZeroUI.Wpf.Editors
 {
     /// <summary>
-    /// Supported glyph shapes for RatingControl.
-    /// </summary>
-    public enum RatingShape
-    {
-        Star,
-        Diamond,
-        Heart,
-        Shield
-    }
-
-    /// <summary>
     /// Precision rating editor for WPF supporting half-star increments (0.5), custom vector glyphs,
     /// smooth hover previews, and bidirectional IZeroEditor data binding.
     /// </summary>
     public class RatingControl : FrameworkElement, IZeroEditor
     {
+        private readonly RatingModel _model = new RatingModel();
         private decimal? _hoverValue;
         private bool _isModified;
+
+        public RatingModel Model => _model;
 
         #region Dependency Properties
 
@@ -35,11 +27,11 @@ namespace ZeroUI.Wpf.Editors
 
         public static readonly DependencyProperty MaxRatingProperty =
             DependencyProperty.Register(nameof(MaxRating), typeof(int), typeof(RatingControl),
-                new FrameworkPropertyMetadata(5, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+                new FrameworkPropertyMetadata(5, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, OnMaxRatingChanged));
 
         public static readonly DependencyProperty AllowHalfProperty =
             DependencyProperty.Register(nameof(AllowHalf), typeof(bool), typeof(RatingControl),
-                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender, OnAllowHalfChanged));
 
         public static readonly DependencyProperty ShapeProperty =
             DependencyProperty.Register(nameof(Shape), typeof(RatingShape), typeof(RatingControl),
@@ -103,12 +95,11 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(ReadOnlyProperty, value);
         }
 
-        public event EventHandler? ValueChanged;
-        public event EventHandler? EditValueChanged;
-
-        #endregion
-
-        #region IZeroEditor Implementation
+        public bool IsModified
+        {
+            get => _isModified;
+            set => _isModified = value;
+        }
 
         public object? EditValue
         {
@@ -116,17 +107,12 @@ namespace ZeroUI.Wpf.Editors
             set
             {
                 if (value is decimal d) Value = d;
-                else if (value is double db) Value = (decimal)db;
+                else if (value is double dbl) Value = (decimal)dbl;
+                else if (value is float flt) Value = (decimal)flt;
                 else if (value is int i) Value = i;
-                else if (decimal.TryParse(value?.ToString(), out decimal parsed)) Value = parsed;
+                else if (value != null && decimal.TryParse(value.ToString(), out var parsed)) Value = parsed;
                 else Value = 0m;
             }
-        }
-
-        public bool IsModified
-        {
-            get => _isModified;
-            set => _isModified = value;
         }
 
         public void Reset()
@@ -141,6 +127,9 @@ namespace ZeroUI.Wpf.Editors
             _isModified = false;
         }
 
+        public event EventHandler<decimal>? ValueChanged;
+        public event EventHandler? EditValueChanged;
+
         #endregion
 
         public RatingControl()
@@ -148,6 +137,7 @@ namespace ZeroUI.Wpf.Editors
             Cursor = Cursors.Hand;
             Focusable = true;
             Height = 32;
+            Loaded += (s, e) => InvalidateMeasure();
 
             ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
@@ -156,15 +146,32 @@ namespace ZeroUI.Wpf.Editors
         {
             if (d is RatingControl rc)
             {
-                rc.ValueChanged?.Invoke(rc, EventArgs.Empty);
+                var val = (decimal)e.NewValue;
+                rc._model.Value = val;
+                rc.ValueChanged?.Invoke(rc, val);
                 rc.EditValueChanged?.Invoke(rc, EventArgs.Empty);
+            }
+        }
+
+        private static void OnMaxRatingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is RatingControl rc)
+            {
+                rc._model.MaxRating = (int)e.NewValue;
+            }
+        }
+
+        private static void OnAllowHalfChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is RatingControl rc)
+            {
+                rc._model.AllowHalf = (bool)e.NewValue;
             }
         }
 
         private decimal ClampValue(decimal val)
         {
-            decimal clamped = Math.Max(0m, Math.Min(MaxRating, val));
-            return AllowHalf ? (Math.Round(clamped * 2m) / 2m) : Math.Round(clamped);
+            return _model.ClampValue(val);
         }
 
         #region Measure & Input
@@ -221,16 +228,17 @@ namespace ZeroUI.Wpf.Editors
             base.OnKeyDown(e);
             if (ReadOnly || !IsEnabled) return;
 
-            decimal step = AllowHalf ? 0.5m : 1.0m;
             if (e.Key == Key.Left || e.Key == Key.Down)
             {
-                Value = Math.Max(0m, Value - step);
+                _model.StepDown();
+                Value = _model.Value;
                 IsModified = true;
                 e.Handled = true;
             }
             else if (e.Key == Key.Right || e.Key == Key.Up)
             {
-                Value = Math.Min(MaxRating, Value + step);
+                _model.StepUp();
+                Value = _model.Value;
                 IsModified = true;
                 e.Handled = true;
             }
@@ -238,31 +246,7 @@ namespace ZeroUI.Wpf.Editors
 
         private decimal CalculateValueFromPoint(double x)
         {
-            double startX = 4;
-            int count = Math.Max(1, MaxRating);
-
-            for (int i = 0; i < count; i++)
-            {
-                double itemLeft = startX + (i * (ItemSize + ItemSpacing));
-                double itemRight = itemLeft + ItemSize;
-
-                if (x < itemLeft)
-                {
-                    return i; // Before this star
-                }
-
-                if (x <= itemRight)
-                {
-                    if (AllowHalf)
-                    {
-                        double mid = itemLeft + (ItemSize / 2.0);
-                        return x < mid ? (i + 0.5m) : (i + 1.0m);
-                    }
-                    return i + 1.0m;
-                }
-            }
-
-            return count;
+            return _model.CalculateScoreFromPosition(x, 4, ItemSize, ItemSpacing);
         }
 
         #endregion

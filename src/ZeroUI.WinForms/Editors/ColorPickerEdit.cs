@@ -238,36 +238,14 @@ namespace ZeroUI.WinForms.Editors
             _dropDown.Show(this, 0, Height);
         }
 
-        public static bool TryParseHex(string hex, out Color color)
+        public static bool TryParseHex(string? hex, out Color color)
         {
+            if (ZeroColor.TryParseHex(hex, out var zc))
+            {
+                color = Color.FromArgb(zc.A, zc.R, zc.G, zc.B);
+                return true;
+            }
             color = Color.Transparent;
-            if (string.IsNullOrWhiteSpace(hex)) return false;
-
-            string clean = hex.Trim().TrimStart('#');
-            try
-            {
-                if (clean.Length == 6)
-                {
-                    byte r = byte.Parse(clean.Substring(0, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    byte g = byte.Parse(clean.Substring(2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    byte b = byte.Parse(clean.Substring(4, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    color = Color.FromArgb(r, g, b);
-                    return true;
-                }
-                if (clean.Length == 8)
-                {
-                    byte a = byte.Parse(clean.Substring(0, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    byte r = byte.Parse(clean.Substring(2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    byte g = byte.Parse(clean.Substring(4, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    byte b = byte.Parse(clean.Substring(6, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                    color = Color.FromArgb(a, r, g, b);
-                    return true;
-                }
-            }
-            catch
-            {
-                return false;
-            }
             return false;
         }
 

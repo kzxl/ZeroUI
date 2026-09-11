@@ -17,14 +17,12 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent(nameof(TokensChanged))]
     public class TokenEdit : Control, IZeroEditor
     {
-        private readonly List<TokenItem> _tokens = new List<TokenItem>();
+        private readonly TokenModel _model = new TokenModel();
         private readonly List<(Rectangle chipRect, Rectangle closeRect, TokenItem item)> _chipLayouts =
             new List<(Rectangle, Rectangle, TokenItem)>();
         private readonly TextBox _inputBox;
         private bool _readOnly;
         private bool _isModified;
-        private bool _allowDuplicates;
-        private int _maxTokens;
         private bool _isHovered;
         private string _placeholder = "Add tag...";
         private IEnumerable<string>? _autocompleteSource;
@@ -57,16 +55,16 @@ namespace ZeroUI.WinForms.Editors
         [DefaultValue(false)]
         public bool AllowDuplicates
         {
-            get => _allowDuplicates;
-            set => _allowDuplicates = value;
+            get => _model.AllowDuplicates;
+            set => _model.AllowDuplicates = value;
         }
 
         [Category("Behavior")]
         [DefaultValue(0)]
         public int MaxTokens
         {
-            get => _maxTokens;
-            set => _maxTokens = value;
+            get => _model.MaxTokens;
+            set => _model.MaxTokens = value;
         }
 
         [Category("Behavior")]
@@ -89,22 +87,17 @@ namespace ZeroUI.WinForms.Editors
         }
 
         [Browsable(false)]
-        public IReadOnlyList<TokenItem> Tokens => _tokens;
+        public IReadOnlyList<TokenItem> Tokens => _model.Tokens;
 
         [Browsable(false)]
         public object? EditValue
         {
-            get => string.Join(", ", _tokens.Select(t => t.Text));
+            get => _model.ToDelimitedString();
             set
             {
-                ClearTokens();
-                if (value is string s && !string.IsNullOrWhiteSpace(s))
+                if (!_readOnly)
                 {
-                    var parts = s.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var part in parts)
-                    {
-                        AddToken(part.Trim());
-                    }
+                    _model.SetFromDelimitedString(value as string);
                 }
             }
         }
@@ -123,6 +116,26 @@ namespace ZeroUI.WinForms.Editors
 
             Height = 34;
             Width = 240;
+
+            _model.TokenAdded += (s, item) =>
+            {
+                _isModified = true;
+                UpdateLayoutPositions();
+                TokenAdded?.Invoke(this, item);
+                TokensChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
+                Invalidate();
+            };
+
+            _model.TokenRemoved += (s, item) =>
+            {
+                _isModified = true;
+                UpdateLayoutPositions();
+                TokenRemoved?.Invoke(this, item);
+                TokensChanged?.Invoke(this, EventArgs.Empty);
+                EditValueChanged?.Invoke(this, EventArgs.Empty);
+                Invalidate();
+            };
 
             _inputBox = new TextBox
             {
@@ -156,47 +169,26 @@ namespace ZeroUI.WinForms.Editors
 
         public bool AddToken(string text)
         {
-            if (string.IsNullOrWhiteSpace(text)) return false;
-            return AddToken(new TokenItem(text.Trim()));
+            if (_readOnly) return false;
+            return _model.Add(text);
         }
 
         public bool AddToken(TokenItem token)
         {
             if (_readOnly) return false;
-            if (_maxTokens > 0 && _tokens.Count >= _maxTokens) return false;
-            if (!_allowDuplicates && _tokens.Any(t => string.Equals(t.Text, token.Text, StringComparison.OrdinalIgnoreCase)))
-                return false;
-
-            _tokens.Add(token);
-            _isModified = true;
-            UpdateLayoutPositions();
-            TokenAdded?.Invoke(this, token);
-            TokensChanged?.Invoke(this, EventArgs.Empty);
-            EditValueChanged?.Invoke(this, EventArgs.Empty);
-            Invalidate();
-            return true;
+            return _model.Add(token);
         }
 
         public bool RemoveToken(TokenItem token)
         {
             if (_readOnly) return false;
-            bool removed = _tokens.Remove(token);
-            if (removed)
-            {
-                _isModified = true;
-                UpdateLayoutPositions();
-                TokenRemoved?.Invoke(this, token);
-                TokensChanged?.Invoke(this, EventArgs.Empty);
-                EditValueChanged?.Invoke(this, EventArgs.Empty);
-                Invalidate();
-            }
-            return removed;
+            return _model.Remove(token);
         }
 
         public void ClearTokens()
         {
             if (_readOnly) return;
-            _tokens.Clear();
+            _model.Clear();
             _isModified = true;
             UpdateLayoutPositions();
             TokensChanged?.Invoke(this, EventArgs.Empty);
@@ -214,9 +206,9 @@ namespace ZeroUI.WinForms.Editors
                 e.Handled = true;
                 e.SuppressKeyPress = true;
             }
-            else if (e.KeyCode == Keys.Back && _inputBox.Text.Length == 0 && _tokens.Count > 0)
+            else if (e.KeyCode == Keys.Back && _inputBox.Text.Length == 0 && _model.Count > 0)
             {
-                RemoveToken(_tokens[_tokens.Count - 1]);
+                _model.RemoveLast();
                 e.Handled = true;
             }
         }
@@ -280,7 +272,7 @@ namespace ZeroUI.WinForms.Editors
 
             using var font = new Font("Segoe UI", 8.5f);
 
-            foreach (var token in _tokens)
+            foreach (var token in _model.Tokens)
             {
                 var size = TextRenderer.MeasureText(token.Text, font);
                 int chipWidth = size.Width + 24; // text + padding + 'x' button
@@ -367,7 +359,7 @@ namespace ZeroUI.WinForms.Editors
             }
 
             // Draw Placeholder
-            if (_tokens.Count == 0 && string.IsNullOrEmpty(_inputBox.Text) && !string.IsNullOrEmpty(_placeholder) && !_inputBox.Focused)
+            if (_model.Count == 0 && string.IsNullOrEmpty(_inputBox.Text) && !string.IsNullOrEmpty(_placeholder) && !_inputBox.Focused)
             {
                 using var placeholderBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary);
                 g.DrawString(_placeholder, font, placeholderBrush, 8, 7);

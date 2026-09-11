@@ -24,18 +24,19 @@ namespace ZeroUI.WinForms.Editors
     [ToolboxBitmap(typeof(ZeroIcons), "TextEdit.bmp")]
     public class IPAddressEdit : ZeroControlBase, IZeroEditor
     {
+        private readonly IPAddressModel _model = new IPAddressModel();
         private readonly TextBox[] _octets = new TextBox[4];
         private bool _isUpdating;
-        private IPAddress? _address;
+
+        public IPAddressModel Model => _model;
 
         [Category("Data")]
         [Description("The typed IPAddress value of the control.")]
         public IPAddress? Address
         {
-            get => _address;
+            get => _model.Address;
             set
             {
-                _address = value;
                 if (!_isUpdating && value != null)
                 {
                     SetIPAddress(value);
@@ -48,7 +49,7 @@ namespace ZeroUI.WinForms.Editors
 #pragma warning disable CS8765, CS8764
         public override string Text
         {
-            get => $"{_octets[0].Text}.{_octets[1].Text}.{_octets[2].Text}.{_octets[3].Text}";
+            get => _model.Text;
             set
             {
                 if (!_isUpdating)
@@ -70,7 +71,7 @@ namespace ZeroUI.WinForms.Editors
         [Browsable(false)]
         public object? EditValue
         {
-            get => _address ?? (object)Text;
+            get => _model.Address;
             set
             {
                 if (value is IPAddress ip) Address = ip;
@@ -169,6 +170,7 @@ namespace ZeroUI.WinForms.Editors
 
                     if (int.TryParse(box.Text, out int val))
                     {
+                        _model.SetOctet(index, val);
                         if (val > 255)
                         {
                             box.Text = "255";
@@ -237,29 +239,18 @@ namespace ZeroUI.WinForms.Editors
         private void SyncValues()
         {
             if (_isUpdating) return;
-
-            string ipStr = $"{_octets[0].Text}.{_octets[1].Text}.{_octets[2].Text}.{_octets[3].Text}";
-            if (IPAddress.TryParse(ipStr, out var parsed))
-            {
-                _address = parsed;
-            }
             IsModified = true;
             EditValueChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void UpdateOctetsFromText(string text)
+        private void UpdateBoxesFromModel()
         {
-            var parts = text.Split('.');
             _isUpdating = true;
             try
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    _octets[i].Text = (i < parts.Length) ? parts[i] : "0";
-                }
-                if (IPAddress.TryParse(text, out var parsed))
-                {
-                    _address = parsed;
+                    _octets[i].Text = _model[i].ToString();
                 }
             }
             finally
@@ -268,25 +259,18 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        private void UpdateOctetsFromText(string text)
+        {
+            _model.TrySetFromText(text);
+            UpdateBoxesFromModel();
+            SyncValues();
+        }
+
         public void SetIPAddress(IPAddress address)
         {
-            _address = address;
-            var bytes = address.GetAddressBytes();
-            if (bytes.Length == 4)
-            {
-                _isUpdating = true;
-                try
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        _octets[i].Text = bytes[i].ToString();
-                    }
-                }
-                finally
-                {
-                    _isUpdating = false;
-                }
-            }
+            _model.Address = address;
+            UpdateBoxesFromModel();
+            SyncValues();
         }
 
         public void Clear()
