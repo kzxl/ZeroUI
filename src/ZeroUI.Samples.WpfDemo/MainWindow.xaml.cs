@@ -35,6 +35,7 @@ using ZeroUI.Core.Editors;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Notification;
 using ZeroUI.Wpf.Rendering;
+using ZeroUI.Wpf.Layout;
 
 namespace ZeroUI.Samples.WpfDemo
 {
@@ -2238,6 +2239,81 @@ namespace ZeroUI.Samples.WpfDemo
 
             bool isPassed = status.IndexOf("Pass", StringComparison.OrdinalIgnoreCase) >= 0;
             DrawerStatus.Foreground = isPassed ? new SolidColorBrush(Color.FromRgb(16, 185, 129)) : new SolidColorBrush(Color.FromRgb(245, 158, 11));
+        }
+
+        #endregion
+
+        #region Issue #2 Audit & Modern UI Handlers
+
+        private void OnOpenFlyoutClicked(object sender, RoutedEventArgs e)
+        {
+            if (AuditDemoFlyout != null)
+            {
+                AuditDemoFlyout.Show(DemoFlyoutTargetBtn);
+            }
+        }
+
+        private void OnApplyFlyoutFilterClicked(object sender, RoutedEventArgs e)
+        {
+            if (AuditDemoFlyout != null)
+            {
+                AuditDemoFlyout.Hide();
+            }
+        }
+
+        private void OnLaunchZeroWindowClicked(object sender, RoutedEventArgs e)
+        {
+            var win = new ZeroWindow
+            {
+                Title = "ZeroWindow ⚡ Frameless Chrome Demo",
+                Width = 640,
+                Height = 420,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this
+            };
+
+            var titleBar = new ZeroTitleBar
+            {
+                Title = "ZeroWindow ⚡ Frameless Demo"
+            };
+
+            var rootGrid = new Grid();
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            Grid.SetRow(titleBar, 0);
+            rootGrid.Children.Add(titleBar);
+
+            var contentPanel = new StackPanel { Margin = new Thickness(24) };
+            contentPanel.Children.Add(new TextBlock
+            {
+                Text = "Modern Frameless ZeroWindow Architecture",
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 8)
+            });
+            contentPanel.Children.Add(new TextBlock
+            {
+                Text = "Integrated WindowChrome, custom dark title bar, draggable client frame, double-click maximize, and ZeroUI dynamic skin synchronization.",
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 16)
+            });
+
+            var closeBtn = new Button
+            {
+                Content = "Close Demo Window",
+                Height = 32,
+                Padding = new Thickness(16, 0, 16, 0),
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            closeBtn.Click += (s, args) => win.Close();
+            contentPanel.Children.Add(closeBtn);
+
+            Grid.SetRow(contentPanel, 1);
+            rootGrid.Children.Add(contentPanel);
+
+            win.Content = rootGrid;
+            win.ShowDialog();
         }
 
         #endregion

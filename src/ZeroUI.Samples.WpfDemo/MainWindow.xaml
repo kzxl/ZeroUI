@@ -13,6 +13,7 @@
         xmlns:diag="clr-namespace:ZeroUI.Wpf.Diagram;assembly=ZeroUI.Wpf"
         xmlns:feed="clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf"
         xmlns:overlay="clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf"
+        xmlns:layout="clr-namespace:ZeroUI.Wpf.Layout;assembly=ZeroUI.Wpf"
         xmlns:report="clr-namespace:ZeroUI.Wpf.Reporting;assembly=ZeroUI.Wpf"
         xmlns:pivot="clr-namespace:ZeroUI.Wpf.PivotGrid;assembly=ZeroUI.Wpf"
         xmlns:range="clr-namespace:ZeroUI.Wpf.Range;assembly=ZeroUI.Wpf"
@@ -1642,6 +1643,249 @@
                                     </Border>
                                 </ind:ZeroCard>
                             </Grid>
+                        </TabItem>
+
+                        <!-- Sub-Tab 7.6: Standard Controls & Modern UI Components (Issue #2 Audit) -->
+                        <TabItem Header="🏛️ Standard Controls &amp; Modern UI (Issue #2)">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="28" MaxWidth="1100" HorizontalAlignment="Left">
+                                    <TextBlock Text="Standard WPF Controls (Implicit Theme Coverage) &amp; Modern Components" FontSize="19" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,6" />
+                                    <TextBlock Text="Comprehensive implicit styling in ZeroWpfStyles for native WPF controls, plus WinUI 3-aligned modern desktop components." FontSize="13" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,24" />
+
+                                    <!-- SECTION 1: Standard Input & Selection Controls -->
+                                    <TextBlock Text="1. Standard Native Input &amp; Selection Controls" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,12" />
+                                    <WrapPanel Margin="0,0,0,20">
+                                        <!-- PasswordBox -->
+                                        <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,16,16" Width="320">
+                                            <StackPanel>
+                                                <TextBlock Text="PasswordBox" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Implicitly styled with dark input background, brand caret &amp; focus ring" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                                <PasswordBox Password="EncryptedSecretToken#2026" Height="32" Margin="0,0,0,10" />
+                                                <PasswordBox Password="DisabledField" IsEnabled="False" Height="32" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- DatePicker & Calendar -->
+                                        <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,16,16" Width="320">
+                                            <StackPanel>
+                                                <TextBlock Text="DatePicker &amp; Themed Calendar" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Native DatePicker with dark popout Calendar and accent day highlights" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                                <DatePicker Height="32" Margin="0,0,0,10" />
+                                                <DatePicker Height="32" IsEnabled="False" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Sliders & ProgressBars -->
+                                        <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,16,16" Width="320">
+                                            <StackPanel>
+                                                <TextBlock Text="Slider &amp; ProgressBar (Native Tags)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Native WPF tags styled automatically without requiring custom control classes" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                                <TextBlock Text="Determinate Progress (68%):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <ProgressBar Value="68" Height="6" Margin="0,0,0,10" />
+                                                <TextBlock Text="Indeterminate Progress Shimmer:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <ProgressBar IsIndeterminate="True" Height="6" Margin="0,0,0,12" />
+                                                <TextBlock Text="Native Slider:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <Slider Value="45" Minimum="0" Maximum="100" />
+                                            </StackPanel>
+                                        </Border>
+                                    </WrapPanel>
+
+                                    <!-- SECTION 2: Hierarchical & Collection Controls -->
+                                    <TextBlock Text="2. Collection, Tree &amp; Layout Controls (ListBox, ListView, TreeView, Expander, GroupBox)" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,12" />
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- ListBox -->
+                                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,12,0">
+                                            <StackPanel>
+                                                <TextBlock Text="ListBox &amp; ListBoxItem" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Card surface with hover and selected row indicators" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" />
+                                                <ListBox Height="160">
+                                                    <ListBoxItem Content="⚡ Power Grid Substation Alpha" IsSelected="True" />
+                                                    <ListBoxItem Content="💧 Water Reservoir Monitoring" />
+                                                    <ListBoxItem Content="🛢️ Petrochemical Cracking Unit #2" />
+                                                    <ListBoxItem Content="🤖 Intralogistics Autonomous AGV" />
+                                                    <ListBoxItem Content="🔒 Security Perimeter System" IsEnabled="False" />
+                                                </ListBox>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- TreeView -->
+                                        <Border Grid.Column="1" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="6,0,6,0">
+                                            <StackPanel>
+                                                <TextBlock Text="TreeView &amp; TreeViewItem" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Dark tree node hierarchy with chevron expanders" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" />
+                                                <TreeView Height="160">
+                                                    <TreeViewItem Header="🏭 Plant 01 - North Facility" IsExpanded="True">
+                                                        <TreeViewItem Header="⚡ Energy Substation A" IsSelected="True" />
+                                                        <TreeViewItem Header="📦 Line 1 Assembly Robot" />
+                                                        <TreeViewItem Header="❄️ HVAC Main Chiller" />
+                                                    </TreeViewItem>
+                                                    <TreeViewItem Header="🏭 Plant 02 - South Facility">
+                                                        <TreeViewItem Header="💧 Waste Treatment Node" />
+                                                        <TreeViewItem Header="🔋 Solar Photovoltaic Farm" />
+                                                    </TreeViewItem>
+                                                </TreeView>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- ListView / GridView -->
+                                        <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="12,0,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="ListView (GridView Column Headers)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Clean headers, resizable column grippers, zebra rows" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" />
+                                                <ListView Height="160">
+                                                    <ListView.View>
+                                                        <GridView>
+                                                            <GridViewColumn Header="Node ID" Width="80" DisplayMemberBinding="{Binding Id}" />
+                                                            <GridViewColumn Header="Status" Width="85" DisplayMemberBinding="{Binding Status}" />
+                                                            <GridViewColumn Header="Latency" Width="80" DisplayMemberBinding="{Binding Latency}" />
+                                                        </GridView>
+                                                    </ListView.View>
+                                                    <ListViewItem Content="Node-01   ONLINE   1.2ms" />
+                                                    <ListViewItem Content="Node-02   ONLINE   1.8ms" IsSelected="True" />
+                                                    <ListViewItem Content="Node-03   BUSY     4.5ms" />
+                                                    <ListViewItem Content="Node-04   OFFLINE  ---" />
+                                                </ListView>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Expander & GroupBox -->
+                                    <Grid Margin="0,0,0,24">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Expander -->
+                                        <Expander Grid.Column="0" Header="Expander (Card Container &amp; Animated Chevron)" IsExpanded="True" Margin="0,0,10,0">
+                                            <StackPanel>
+                                                <TextBlock Text="Expanded collapsible section with card surface and subtitle." Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" />
+                                                <WrapPanel>
+                                                    <Button Content="Quick Action A" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" />
+                                                    <Button Content="Quick Action B" Height="30" Padding="12,0,12,0" Margin="0,0,8,6" />
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </Expander>
+
+                                        <!-- GroupBox -->
+                                        <GroupBox Grid.Column="1" Header="GroupBox (Card Border &amp; Header Rule)" Margin="10,0,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="Card styling replacing default OS broken frame with clean subtitle and separator." Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" />
+                                                <CheckBox Content="Enable ISA-95 Audit Trail Logging" IsChecked="True" Margin="0,0,0,6" />
+                                                <CheckBox Content="Synchronize with Central MQTT Broker" IsChecked="True" />
+                                            </StackPanel>
+                                        </GroupBox>
+                                    </Grid>
+
+                                    <!-- SECTION 3: Modern UI Components -->
+                                    <TextBlock Text="3. Modern Enterprise Components (ZeroInfoBar, ZeroBadge, ZeroFlyout, ZeroWindow)" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,12" />
+
+                                    <!-- ZeroInfoBar Showcase -->
+                                    <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,0,16">
+                                        <StackPanel>
+                                            <TextBlock Text="ZeroInfoBar (In-Window Alerts &amp; Banners)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                            <TextBlock Text="Non-intrusive alert bars with Info, Success, Warning, Error severities and dismiss buttons." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" />
+
+                                            <feed:ZeroInfoBar Severity="Info" Title="System Initialization" Message="ZeroWpfStyles implicit dictionary loaded with full theme synchronization." Margin="0,0,0,8" />
+                                            <feed:ZeroInfoBar Severity="Success" Title="Telemetry Stream Active" Message="Direct2D GPU acceleration online at 120 FPS. Zero memory leak detected." Margin="0,0,0,8" />
+                                            <feed:ZeroInfoBar Severity="Warning" Title="Threshold Warning" Message="Ring buffer capacity at 82%. Automated page compaction scheduled in 10s." Margin="0,0,0,8" />
+                                            <feed:ZeroInfoBar Severity="Error" Title="Fieldbus Alert" Message="Safety interlock triggered on Crane Gantry #3. Motor drive held in safe state." Margin="0,0,0,0" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- ZeroBadge & ZeroFlyout Showcase -->
+                                    <Grid Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- ZeroBadge -->
+                                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,10,0">
+                                            <StackPanel>
+                                                <TextBlock Text="ZeroBadge (Counters, Status Pills &amp; Pulse)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Status indicators and adorner badges wrapping buttons or avatars." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" />
+
+                                                <TextBlock Text="Standalone Status Pills:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
+                                                <WrapPanel Margin="0,0,0,16">
+                                                    <feed:ZeroBadge Status="Online" BadgeText="ONLINE" Margin="0,0,8,6" />
+                                                    <feed:ZeroBadge Status="Busy" BadgeText="BUSY (94%)" Margin="0,0,8,6" />
+                                                    <feed:ZeroBadge Status="Idle" BadgeText="STANDBY" Margin="0,0,8,6" />
+                                                    <feed:ZeroBadge Status="Offline" BadgeText="DISCONNECTED" Margin="0,0,8,6" />
+                                                </WrapPanel>
+
+                                                <TextBlock Text="Adorning Host Buttons (Numeric &amp; Dot Badges):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
+                                                <WrapPanel>
+                                                    <feed:ZeroBadge Count="5" Margin="0,0,20,10">
+                                                        <Button Content="Active Alerts" Height="34" Padding="12,0,12,0" />
+                                                    </feed:ZeroBadge>
+                                                    <feed:ZeroBadge Count="128" MaxCount="99" Margin="0,0,20,10">
+                                                        <Button Content="Messages" Height="34" Padding="12,0,12,0" />
+                                                    </feed:ZeroBadge>
+                                                    <feed:ZeroBadge IsDot="True" Status="Online" Margin="0,0,20,10">
+                                                        <edit:ZeroButton Content="PLC Live Feed" />
+                                                    </feed:ZeroBadge>
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- ZeroFlyout & ZeroWindow -->
+                                        <Border Grid.Column="1" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="10,0,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="ZeroFlyout &amp; Frameless ZeroWindow" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Lightweight anchored popups and modern frameless window with custom title bar." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" />
+
+                                                <TextBlock Text="Anchored Popover:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
+                                                <Grid Margin="0,0,0,20">
+                                                    <Button x:Name="DemoFlyoutTargetBtn" Content="⚡ Open Filter Flyout" Width="170" Height="34" HorizontalAlignment="Left" Click="OnOpenFlyoutClicked" />
+                                                    <overlay:ZeroFlyout x:Name="AuditDemoFlyout" Title="Telemetry Filters" Target="{Binding ElementName=DemoFlyoutTargetBtn}">
+                                                        <overlay:ZeroFlyout.FlyoutContent>
+                                                            <StackPanel Width="220">
+                                                                <TextBlock Text="Select target telemetry channels:" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
+                                                                <CheckBox Content="DirectX GPU Canvas" IsChecked="True" Margin="0,0,0,4" />
+                                                                <CheckBox Content="Modbus TCP / RTU" IsChecked="True" Margin="0,0,0,4" />
+                                                                <CheckBox Content="OPC UA Server Line 1" IsChecked="False" Margin="0,0,0,8" />
+                                                                <Button Content="Apply Filter" Height="28" Click="OnApplyFlyoutFilterClicked" />
+                                                            </StackPanel>
+                                                        </overlay:ZeroFlyout.FlyoutContent>
+                                                    </overlay:ZeroFlyout>
+                                                </Grid>
+
+                                                <TextBlock Text="Frameless Window Demo:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
+                                                <Button Content="🚀 Launch Frameless ZeroWindow Demo" Height="34" HorizontalAlignment="Left" Padding="14,0,14,0" Click="OnLaunchZeroWindowClicked" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- StatusBar & Separator Showcase -->
+                                    <TextBlock Text="4. StatusBar &amp; Separator" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,12" />
+                                    <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16">
+                                        <StackPanel>
+                                            <TextBlock Text="Standard WPF StatusBar with dynamic theme colors and subtle top border:" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" />
+                                            <StatusBar>
+                                                <StatusBarItem>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="●" Foreground="{DynamicResource ZeroUI.SuccessAccent}" Margin="0,0,6,0" />
+                                                        <TextBlock Text="System Operational" />
+                                                    </StackPanel>
+                                                </StatusBarItem>
+                                                <Separator />
+                                                <StatusBarItem Content="Active Nodes: 128 / 128" />
+                                                <Separator />
+                                                <StatusBarItem Content="Throughput: 10.4 MB/s" />
+                                                <Separator />
+                                                <StatusBarItem HorizontalAlignment="Right" Content="WPF .NET 8 / 4.6.2 Engine" />
+                                            </StatusBar>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
                         </TabItem>
                     </TabControl>
                 </TabItem>
