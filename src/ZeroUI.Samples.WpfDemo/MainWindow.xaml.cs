@@ -495,6 +495,12 @@ namespace ZeroUI.Samples.WpfDemo
                 }
                 DemoSignalScope.InvalidateVisual();
             }
+
+            // Enterprise Switch Faceplate 60-144 FPS LED Animation
+            if (DemoSwitchFaceplate != null && DemoSwitchFaceplate.IsVisible)
+            {
+                DemoSwitchFaceplate.InvalidateVisual();
+            }
         }
 
         private void SetupScadaSimulation()
@@ -541,6 +547,25 @@ namespace ZeroUI.Samples.WpfDemo
                 {
                     AndonTower.YellowOn = false;
                     AndonTower.RedBlink = false;
+                }
+
+                // Dynamic packet burst traffic fluctuations for switch faceplate
+                if (DemoSwitchFaceplate != null && DemoSwitchFaceplate.IsVisible)
+                {
+                    var ports = DemoSwitchFaceplate.Layout.Ports;
+                    if (ports.Count > 0)
+                    {
+                        for (int k = 0; k < 3; k++)
+                        {
+                            int pIdx = rand.Next(0, ports.Count);
+                            var p = ports[pIdx];
+                            if (p.IsLinkUp)
+                            {
+                                p.RxBytesPerSec = rand.NextDouble() > 0.15 ? rand.Next(1024 * 10, 1024 * 1024 * 80) : 0;
+                                p.TxBytesPerSec = rand.NextDouble() > 0.20 ? rand.Next(1024 * 5, 1024 * 1024 * 40) : 0;
+                            }
+                        }
+                    }
                 }
             };
             _scadaSimTimer.Start();
