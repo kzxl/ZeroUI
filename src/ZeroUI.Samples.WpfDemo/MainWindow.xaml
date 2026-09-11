@@ -1048,8 +1048,11 @@
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                                             <TextBlock x:Name="TxtD3DFps" Text="FPS: 60.0" VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.Success}" Margin="0,0,14,0" FontSize="12" />
-                                            <Button x:Name="BtnToggleD3D" Click="BtnToggleD3D_Click" Content="⏸️ Pause GPU" Height="28" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
-                                            <Button x:Name="BtnTriggerD3DFrame" Click="BtnTriggerD3DFrame_Click" Content="⚡ Step GPU Frame" Height="28" Padding="12,0,12,0" Cursor="Hand" />
+                                            <Button x:Name="BtnD3DOscilloscope" Click="BtnD3DOscilloscope_Click" Content="🌊 Oscilloscope" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnD3DStream1M" Click="BtnD3DStream1M_Click" Content="⚡ 1M Pts (MinMax)" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnD3DStream100kLttb" Click="BtnD3DStream100kLttb_Click" Content="📈 100k Pts (LTTB)" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnToggleD3D" Click="BtnToggleD3D_Click" Content="⏸️ Pause GPU" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnTriggerD3DFrame" Click="BtnTriggerD3DFrame_Click" Content="⚡ Step" Height="28" Padding="10,0,10,0" Cursor="Hand" />
                                         </StackPanel>
                                     </DockPanel>
                                 </Border>

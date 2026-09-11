@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using ZeroGraphics.DirectX.Core;
 using ZeroUI.Core.Rendering.Optimizer;
 
 namespace ZeroUI.Wpf.Rendering
@@ -10,6 +11,7 @@ namespace ZeroUI.Wpf.Rendering
     /// Direct3D 11 to Direct3D 9Ex Shared Surface Bridge for WPF.
     /// Provides zero-copy GPU texture compositing directly into WPF's D3DImage (milcore pipeline),
     /// eliminating CPU roundtrips and achieving maximum framerate rendering.
+    /// Consolidated with ZeroGraphics D3D11DeviceManager for shared process-wide GPU device management.
     /// </summary>
     public sealed class ZeroD3D11Bridge : IDisposable
     {
@@ -21,11 +23,12 @@ namespace ZeroUI.Wpf.Rendering
         private IntPtr _pD3D9Texture = IntPtr.Zero;
         private IntPtr _pD3D9Surface = IntPtr.Zero;
 
-        // D3D11 pointers
+        // D3D11 pointers & typed wrappers
         private IntPtr _pD3D11Device = IntPtr.Zero;
         private IntPtr _pD3D11Context = IntPtr.Zero;
         private IntPtr _pD3D11Texture = IntPtr.Zero;
         private IntPtr _pD3D11RTV = IntPtr.Zero;
+        private D3D11RenderTargetView? _gpuRtv;
 
         private IntPtr _sharedHandle = IntPtr.Zero;
         private int _pixelWidth;
@@ -41,6 +44,21 @@ namespace ZeroUI.Wpf.Rendering
         public IntPtr D3D11Texture => _pD3D11Texture;
         public IntPtr D3D11RenderTargetView => _pD3D11RTV;
         public IntPtr D3D9Surface => _pD3D9Surface;
+
+        /// <summary>
+        /// Gets the typed ZeroGraphics Direct3D 11 device.
+        /// </summary>
+        public D3D11Device GpuDevice => D3D11DeviceManager.Device;
+
+        /// <summary>
+        /// Gets the typed ZeroGraphics Direct3D 11 immediate device context.
+        /// </summary>
+        public D3D11DeviceContext GpuContext => D3D11DeviceManager.Context;
+
+        /// <summary>
+        /// Gets the typed ZeroGraphics Direct3D 11 Render Target View for the current back buffer.
+        /// </summary>
+        public D3D11RenderTargetView? GpuRenderTargetView => _gpuRtv;
 
         public ZeroD3D11Bridge()
         {
@@ -112,50 +130,41 @@ namespace ZeroUI.Wpf.Rendering
 
         private void InitD3D11()
         {
-            uint creationFlags = D3DNative.D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+            D3D11DeviceManager.EnsureInitialized();
+            _pD3D11Device = D3D11DeviceManager.Device.Handle;
+            _pD3D11Context = D3D11DeviceManager.Context.Handle;
 
-            int[] featureLevels = new int[]
+            D3D11DeviceManager.DeviceRestored -= OnDeviceRestored;
+            D3D11DeviceManager.DeviceRestored += OnDeviceRestored;
+
+            SyncGpuCapabilities();
+        }
+
+        private void OnDeviceRestored()
+        {
+            lock (_syncLock)
             {
-                0xb000, // D3D_FEATURE_LEVEL_11_0
-                0xa100, // D3D_FEATURE_LEVEL_10_1
-                0xa000, // D3D_FEATURE_LEVEL_10_0
-                0x9300  // D3D_FEATURE_LEVEL_9_3
-            };
-
-            int hr = D3DNative.D3D11CreateDevice(
-                IntPtr.Zero,
-                D3DNative.D3D_DRIVER_TYPE_HARDWARE,
-                IntPtr.Zero,
-                creationFlags,
-                featureLevels,
-                (uint)featureLevels.Length,
-                D3DNative.D3D11_SDK_VERSION,
-                out _pD3D11Device,
-                out _,
-                out _pD3D11Context);
-
-            if (hr != 0 || _pD3D11Device == IntPtr.Zero)
-            {
-                // Fallback to WARP software rasterizer if hardware GPU is unavailable
-                hr = D3DNative.D3D11CreateDevice(
-                    IntPtr.Zero,
-                    D3DNative.D3D_DRIVER_TYPE_WARP,
-                    IntPtr.Zero,
-                    creationFlags,
-                    featureLevels,
-                    (uint)featureLevels.Length,
-                    D3DNative.D3D11_SDK_VERSION,
-                    out _pD3D11Device,
-                    out _,
-                    out _pD3D11Context);
-
-                if (hr != 0 || _pD3D11Device == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException($"D3D11CreateDevice failed with HRESULT 0x{hr:X8}");
-                }
+                _pD3D11Device = D3D11DeviceManager.Device.Handle;
+                _pD3D11Context = D3D11DeviceManager.Context.Handle;
+                ReleaseSurfaceResources();
             }
+        }
 
-            QueryGpuCapabilities();
+        private void SyncGpuCapabilities()
+        {
+            try
+            {
+                ZeroGpuCapabilities.Configure(
+                    ZeroGraphics.Core.Telemetry.GpuCapabilities.AdapterName,
+                    (ZeroUI.Core.Rendering.Optimizer.HardwareGpuTier)ZeroGraphics.Core.Telemetry.GpuCapabilities.CurrentTier,
+                    ZeroGraphics.Core.Telemetry.GpuCapabilities.DedicatedVramMb,
+                    ZeroGraphics.Core.Telemetry.GpuCapabilities.SharedSystemMemoryMb,
+                    ZeroGraphics.Core.Telemetry.GpuCapabilities.VendorId);
+            }
+            catch
+            {
+                // Graceful fallback
+            }
         }
 
         /// <summary>
@@ -246,13 +255,9 @@ namespace ZeroUI.Wpf.Rendering
                     throw new InvalidOperationException($"D3D9 GetSurfaceLevel failed with HRESULT 0x{hr:X8}");
                 }
 
-                // 5. Create D3D11 Render Target View for direct GPU drawing
-                var createRTV = D3DNative.GetVTableDelegate<D3DNative.D3D11Device_CreateRenderTargetView>(_pD3D11Device, 9);
-                hr = createRTV(_pD3D11Device, _pD3D11Texture, IntPtr.Zero, out _pD3D11RTV);
-                if (hr != 0 || _pD3D11RTV == IntPtr.Zero)
-                {
-                    throw new InvalidOperationException($"D3D11 CreateRenderTargetView failed with HRESULT 0x{hr:X8}");
-                }
+                // 5. Create D3D11 Render Target View for direct GPU drawing via ZeroGraphics
+                _gpuRtv = D3D11DeviceManager.Device.CreateRenderTargetView(_pD3D11Texture);
+                _pD3D11RTV = _gpuRtv.Handle;
             }
         }
 
@@ -261,10 +266,15 @@ namespace ZeroUI.Wpf.Rendering
         /// </summary>
         public void Clear(float r, float g, float b, float a = 1.0f)
         {
-            if (_pD3D11Context == IntPtr.Zero || _pD3D11RTV == IntPtr.Zero) return;
-
-            var clearRTV = D3DNative.GetVTableDelegate<D3DNative.D3D11DeviceContext_ClearRenderTargetView>(_pD3D11Context, 33);
-            clearRTV(_pD3D11Context, _pD3D11RTV, new float[] { r, g, b, a });
+            if (_gpuRtv != null && _gpuRtv.IsValid)
+            {
+                D3D11DeviceManager.Context.ClearRenderTargetView(_gpuRtv, new[] { r, g, b, a });
+            }
+            else if (_pD3D11Context != IntPtr.Zero && _pD3D11RTV != IntPtr.Zero)
+            {
+                var clearRTV = D3DNative.GetVTableDelegate<D3DNative.D3D11DeviceContext_ClearRenderTargetView>(_pD3D11Context, 33);
+                clearRTV(_pD3D11Context, _pD3D11RTV, new float[] { r, g, b, a });
+            }
         }
 
         /// <summary>
@@ -272,10 +282,15 @@ namespace ZeroUI.Wpf.Rendering
         /// </summary>
         public void Flush()
         {
-            if (_pD3D11Context == IntPtr.Zero) return;
-
-            var flush = D3DNative.GetVTableDelegate<D3DNative.D3D11DeviceContext_Flush>(_pD3D11Context, 111);
-            flush(_pD3D11Context);
+            if (D3D11DeviceManager.IsInitialized)
+            {
+                D3D11DeviceManager.Context.Flush();
+            }
+            else if (_pD3D11Context != IntPtr.Zero)
+            {
+                var flush = D3DNative.GetVTableDelegate<D3DNative.D3D11DeviceContext_Flush>(_pD3D11Context, 111);
+                flush(_pD3D11Context);
+            }
         }
 
         /// <summary>
@@ -301,79 +316,16 @@ namespace ZeroUI.Wpf.Rendering
 
         private void ReleaseSurfaceResources()
         {
-            D3DNative.SafeRelease(ref _pD3D11RTV);
+            if (_gpuRtv != null)
+            {
+                _gpuRtv.Dispose();
+                _gpuRtv = null;
+            }
+            _pD3D11RTV = IntPtr.Zero;
             D3DNative.SafeRelease(ref _pD3D11Texture);
             D3DNative.SafeRelease(ref _pD3D9Surface);
             D3DNative.SafeRelease(ref _pD3D9Texture);
             _sharedHandle = IntPtr.Zero;
-        }
-
-        private void QueryGpuCapabilities()
-        {
-            if (_pD3D11Device == IntPtr.Zero) return;
-
-            try
-            {
-                var queryInterface = D3DNative.GetVTableDelegate<D3DNative.IUnknown_QueryInterface>(_pD3D11Device, 0);
-                Guid iidDxgiDevice = D3DNative.IID_IDXGIDevice;
-                int hr = queryInterface(_pD3D11Device, ref iidDxgiDevice, out IntPtr pDxgiDevice);
-                if (hr == 0 && pDxgiDevice != IntPtr.Zero)
-                {
-                    try
-                    {
-                        var getAdapter = D3DNative.GetVTableDelegate<D3DNative.IDXGIDevice_GetAdapter>(pDxgiDevice, 7);
-                        hr = getAdapter(pDxgiDevice, out IntPtr pAdapter);
-                        if (hr == 0 && pAdapter != IntPtr.Zero)
-                        {
-                            try
-                            {
-                                var getDesc = D3DNative.GetVTableDelegate<D3DNative.IDXGIAdapter_GetDesc>(pAdapter, 8);
-                                hr = getDesc(pAdapter, out var desc);
-                                if (hr == 0)
-                                {
-                                    ulong vramBytes = desc.DedicatedVideoMemory.ToUInt64();
-                                    ulong sharedBytes = desc.SharedSystemMemory.ToUInt64();
-                                    double vramMb = vramBytes / (1024.0 * 1024.0);
-                                    double sharedMb = sharedBytes / (1024.0 * 1024.0);
-
-                                    var tier = HardwareGpuTier.Tier1_Integrated;
-                                    string descStr = desc.Description ?? string.Empty;
-
-                                    if (descStr.IndexOf("Basic Render", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                        descStr.IndexOf("WARP", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                        vramBytes == 0)
-                                    {
-                                        tier = HardwareGpuTier.Tier0_Software;
-                                    }
-                                    else if (vramMb >= 900.0) // 1GB+ dedicated VRAM
-                                    {
-                                        tier = HardwareGpuTier.Tier2_Discrete;
-                                    }
-
-                                    ZeroGpuCapabilities.Configure(
-                                        descStr,
-                                        tier,
-                                        vramMb,
-                                        sharedMb,
-                                        desc.VendorId);
-                                }
-                            }
-                            finally
-                            {
-                                D3DNative.SafeRelease(ref pAdapter);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        D3DNative.SafeRelease(ref pDxgiDevice);
-                    }
-                }
-            }
-            catch
-            {
-                // Graceful fallback to default capabilities
-            }
         }
 
         public void Dispose()
@@ -383,12 +335,12 @@ namespace ZeroUI.Wpf.Rendering
 
             lock (_syncLock)
             {
+                D3D11DeviceManager.DeviceRestored -= OnDeviceRestored;
                 ReleaseSurfaceResources();
 
-                D3DNative.SafeRelease(ref _pD3D11RTV);
-                D3DNative.SafeRelease(ref _pD3D11Texture);
-                D3DNative.SafeRelease(ref _pD3D11Context);
-                D3DNative.SafeRelease(ref _pD3D11Device);
+                _pD3D11RTV = IntPtr.Zero;
+                _pD3D11Context = IntPtr.Zero;
+                _pD3D11Device = IntPtr.Zero;
 
                 D3DNative.SafeRelease(ref _pD3D9Surface);
                 D3DNative.SafeRelease(ref _pD3D9Texture);

@@ -1860,6 +1860,60 @@ namespace ZeroUI.Samples.WpfDemo
             ZeroToast.Success(this, "Direct3D 11 GPU frame rendered & composited via D3DImage.");
         }
 
+        private void BtnD3DStream1M_Click(object sender, RoutedEventArgs e)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            const int count = 1_000_000;
+            float[] data = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                float t = (float)i / count;
+                data[i] = (float)(Math.Sin(t * 120.0) * Math.Cos(t * 3.0) + 0.15 * Math.Sin(t * 5000.0));
+            }
+            // Add narrow spikes to prove MinMax decimation preserves critical peaks
+            data[count / 4] = 2.8f;
+            data[count / 2] = -2.8f;
+            data[count * 3 / 4] = 2.5f;
+
+            DemoD3DCanvas.EnableWaveformDemo = false;
+            DemoD3DCanvas.DecimationMode = ZeroGraphics.Waveform.Pipeline.WaveformDecimationMode.MinMax;
+            DemoD3DCanvas.TraceColor = System.Windows.Media.Color.FromRgb(0x00, 0xFF, 0x88); // Neon emerald
+            DemoD3DCanvas.AutoScale = true;
+            DemoD3DCanvas.SetData(data);
+            sw.Stop();
+
+            ZeroToast.Success(this, $"Streamed 1,000,000 points to GPU with MinMax Decimation in {sw.ElapsedMilliseconds} ms.");
+        }
+
+        private void BtnD3DStream100kLttb_Click(object sender, RoutedEventArgs e)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            const int count = 100_000;
+            float[] data = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                float t = (float)i / count;
+                data[i] = (float)(Math.Sin(t * 40.0) + 0.5 * Math.Sin(t * 120.0) + 0.25 * Math.Sin(t * 300.0));
+            }
+
+            DemoD3DCanvas.EnableWaveformDemo = false;
+            DemoD3DCanvas.DecimationMode = ZeroGraphics.Waveform.Pipeline.WaveformDecimationMode.Lttb;
+            DemoD3DCanvas.TraceColor = System.Windows.Media.Color.FromRgb(0xFF, 0xB7, 0x03); // Amber/gold
+            DemoD3DCanvas.AutoScale = true;
+            DemoD3DCanvas.SetData(data);
+            sw.Stop();
+
+            ZeroToast.Success(this, $"Streamed 100,000 points to GPU with LTTB Decimation in {sw.ElapsedMilliseconds} ms.");
+        }
+
+        private void BtnD3DOscilloscope_Click(object sender, RoutedEventArgs e)
+        {
+            DemoD3DCanvas.SetData((float[]?)null);
+            DemoD3DCanvas.EnableWaveformDemo = true;
+            DemoD3DCanvas.TraceColor = System.Windows.Media.Color.FromRgb(0x00, 0xE5, 0xFF); // Neon cyan
+            ZeroToast.Info(this, "Switched to interactive animated multi-frequency oscilloscope demo.");
+        }
+
         #region Automatic Render Optimizer Handlers
 
         private void CmbOptimizerMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
