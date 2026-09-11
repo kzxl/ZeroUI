@@ -1424,6 +1424,87 @@
                                         <edit:RatingControl Value="4" MaxRating="5" Margin="0,0,16,10" VerticalAlignment="Center" />
                                         <edit:ZeroProgressBar Value="65" Width="180" Height="8" Margin="0,0,16,10" VerticalAlignment="Center" />
                                     </WrapPanel>
+
+                                    <!-- 8. Specialized Action Slot, Avatar & Network Editors -->
+                                    <TextBlock Text="8. Specialized Industrial Editors (ButtonEdit, PictureEdit, IPAddressEdit)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
+                                    
+                                    <!-- Card Grid for Editors -->
+                                    <Grid Margin="0,0,0,24">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="1*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Card 1: ButtonEdit Showcase -->
+                                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="0,0,10,0">
+                                            <StackPanel>
+                                                <TextBlock Text="ButtonEdit (Embedded Action Slots)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Text field with custom prefix/suffix buttons (file pickers, search, clear, clipboard)." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="File Selector with Browse &amp; Clear:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:ButtonEdit x:Name="DemoFilePicker" Text="C:\Configs\station_gateway.json" FileFilter="Configuration Files (*.json;*.xml)|*.json;*.xml|All Files (*.*)|*.*" Height="32" Margin="0,0,0,10">
+                                                    <edit:ButtonEdit.RightButtons>
+                                                        <edit:EditorButton Kind="Clear" ToolTip="Clear input" />
+                                                        <edit:EditorButton Kind="BrowseFile" ToolTip="Browse configuration file..." />
+                                                    </edit:ButtonEdit.RightButtons>
+                                                </edit:ButtonEdit>
+
+                                                <TextBlock Text="Folder Directory Selector:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:ButtonEdit Text="E:\PlantData\Archive\2026\Q3" Height="32" Margin="0,0,0,10">
+                                                    <edit:ButtonEdit.RightButtons>
+                                                        <edit:EditorButton Kind="BrowseFolder" ToolTip="Choose telemetry archive folder..." />
+                                                    </edit:ButtonEdit.RightButtons>
+                                                </edit:ButtonEdit>
+
+                                                <TextBlock Text="Action Slot with Custom Buttons:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:ButtonEdit Text="MODBUS-TCP-GW-04" Height="32">
+                                                    <edit:ButtonEdit.LeftButtons>
+                                                        <edit:EditorButton Kind="Custom" Glyph="📡" Width="26" ToolTip="Ping Gateway" />
+                                                    </edit:ButtonEdit.LeftButtons>
+                                                    <edit:ButtonEdit.RightButtons>
+                                                        <edit:EditorButton Kind="Copy" ToolTip="Copy Device Identifier" />
+                                                        <edit:EditorButton Kind="Search" ToolTip="Search Network Matrix" />
+                                                    </edit:ButtonEdit.RightButtons>
+                                                </edit:ButtonEdit>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Card 2: PictureEdit Showcase -->
+                                        <Border Grid.Column="1" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="5,0,5,0">
+                                            <StackPanel>
+                                                <TextBlock Text="PictureEdit (Avatar, Badge &amp; Lightbox)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Modern image editor with initial fallback, online status ring, drag-drop &amp; modal lightbox." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Round Avatar with Fallback &amp; Status:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
+                                                <WrapPanel Margin="0,0,0,12">
+                                                    <edit:PictureEdit Width="54" Height="54" IsCircle="True" FallbackText="JD" Status="Online" ToolTip="Operator: John Doe (Online)" Margin="0,0,12,0" />
+                                                    <edit:PictureEdit Width="54" Height="54" IsCircle="True" FallbackText="MK" Status="Busy" ToolTip="Lead Engineer: Mary King (Busy)" Margin="0,0,12,0" />
+                                                    <edit:PictureEdit Width="54" Height="54" IsCircle="True" FallbackText="AI" Status="Offline" ToolTip="Autonomous Agent (Offline)" Margin="0,0,12,0" />
+                                                </WrapPanel>
+
+                                                <TextBlock Text="Asset Inspection Lightbox Frame:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,4" />
+                                                <edit:PictureEdit Width="160" Height="80" ScaleMode="Zoom" EnableZoomPreview="True" AllowDrop="True" Status="Away" ToolTip="Click to zoom in Lightbox" HorizontalAlignment="Left" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Card 3: IPAddressEdit Showcase -->
+                                        <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgCard}" Padding="16" Margin="10,0,0,0">
+                                            <StackPanel>
+                                                <TextBlock Text="IPAddressEdit (Industrial 4-Octet Segmented)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Specialized network IP address input with dot auto-advance, backspace bridging &amp; 0-255 clamping." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                                                <TextBlock Text="Primary PLC Controller IP:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:IPAddressEdit Value="192.168.10.150" Height="32" Margin="0,0,0,10" />
+
+                                                <TextBlock Text="Subnet Mask (/24):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:IPAddressEdit Value="255.255.255.0" Height="32" Margin="0,0,0,10" />
+
+                                                <TextBlock Text="Industrial OT Gateway:" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <edit:IPAddressEdit Value="10.0.0.1" Height="32" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>

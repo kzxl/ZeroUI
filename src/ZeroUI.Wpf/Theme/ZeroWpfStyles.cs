@@ -53,6 +53,9 @@ namespace ZeroUI.Wpf.Theme
         public static Style ZeroInfoBarStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Feedback.ZeroInfoBar)];
         public static Style ZeroBadgeStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Feedback.ZeroBadge)];
         public static Style ZeroFlyoutStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Overlays.ZeroFlyout)];
+        public static Style ButtonEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.ButtonEdit)];
+        public static Style PictureEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.PictureEdit)];
+        public static Style IPAddressEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.IPAddressEdit)];
 
         public static void ApplyStyles(Application? app = null)
         {
@@ -2132,6 +2135,326 @@ namespace ZeroUI.Wpf.Theme
                         </Trigger>
                         <Trigger Property=""Title"" Value="""">
                             <Setter TargetName=""PART_CloseButton"" Property=""DockPanel.Dock"" Value=""Right"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+ 
+    <!-- 32. EDITORBUTTON STYLE -->
+    <Style TargetType=""{x:Type edit:EditorButton}"">
+        <Setter Property=""Background"" Value=""Transparent"" />
+        <Setter Property=""BorderThickness"" Value=""0"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextSecondary}"" />
+        <Setter Property=""Width"" Value=""26"" />
+        <Setter Property=""Height"" Value=""26"" />
+        <Setter Property=""Margin"" Value=""2,0,2,0"" />
+        <Setter Property=""Padding"" Value=""4"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:EditorButton}"">
+                    <Border x:Name=""bd"" Background=""{TemplateBinding Background}"" CornerRadius=""4"">
+                        <Grid>
+                            <Path x:Name=""glyphPath""
+                                  Data=""{Binding GlyphData, RelativeSource={RelativeSource TemplatedParent}}""
+                                  Fill=""{TemplateBinding Foreground}""
+                                  Stretch=""Uniform""
+                                  Width=""13"" Height=""13""
+                                  HorizontalAlignment=""Center"" VerticalAlignment=""Center"" />
+                            <ContentPresenter HorizontalAlignment=""Center"" VerticalAlignment=""Center"" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                            <Setter TargetName=""bd"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgHover}"" />
+                            <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+                        </Trigger>
+                        <Trigger Property=""IsPressed"" Value=""True"">
+                            <Setter TargetName=""bd"" Property=""Background"" Value=""{DynamicResource ZeroUI.BgCard}"" />
+                        </Trigger>
+                        <Trigger Property=""IsEnabled"" Value=""False"">
+                            <Setter Property=""Opacity"" Value=""0.4"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 33. BUTTONEDIT STYLE -->
+    <Style TargetType=""{x:Type edit:ButtonEdit}"" BasedOn=""{StaticResource {x:Type edit:ZeroTextBox}}"">
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:ButtonEdit}"">
+                    <Border x:Name=""txtBorder""
+                            Background=""{TemplateBinding Background}""
+                            BorderBrush=""{TemplateBinding BorderBrush}""
+                            BorderThickness=""{TemplateBinding BorderThickness}""
+                            CornerRadius=""{TemplateBinding CornerRadius}""
+                            SnapsToDevicePixels=""True"">
+                        <Grid Margin=""{TemplateBinding Padding}"">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""*"" />
+                                <ColumnDefinition Width=""Auto"" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Left embedded buttons -->
+                            <ItemsControl Grid.Column=""0"" ItemsSource=""{Binding LeftButtons, RelativeSource={RelativeSource TemplatedParent}}"" VerticalAlignment=""Center"">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation=""Horizontal"" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+
+                            <!-- Leading Text -->
+                            <TextBlock x:Name=""PART_Leading""
+                                       Grid.Column=""1""
+                                       Text=""{TemplateBinding LeadingText}""
+                                       Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                       VerticalAlignment=""Center""
+                                       Margin=""0,0,6,0""
+                                       Visibility=""Collapsed"" />
+
+                            <!-- Main Input & Placeholder -->
+                            <Grid Grid.Column=""2"">
+                                <TextBlock x:Name=""PART_Placeholder""
+                                           Text=""{TemplateBinding Placeholder}""
+                                           Foreground=""{DynamicResource ZeroUI.TextPlaceholder}""
+                                           VerticalAlignment=""Center""
+                                           IsHitTestVisible=""False""
+                                           Visibility=""Collapsed"" />
+
+                                <ScrollViewer x:Name=""PART_ContentHost""
+                                              VerticalAlignment=""Center""
+                                              VerticalContentAlignment=""Center""
+                                              Focusable=""False""
+                                              HorizontalScrollBarVisibility=""Hidden""
+                                              VerticalScrollBarVisibility=""Hidden"" />
+                            </Grid>
+
+                            <!-- Right embedded buttons -->
+                            <ItemsControl Grid.Column=""3"" ItemsSource=""{Binding RightButtons, RelativeSource={RelativeSource TemplatedParent}}"" VerticalAlignment=""Center"">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation=""Horizontal"" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""Text"" Value="""">
+                            <Setter TargetName=""PART_Placeholder"" Property=""Visibility"" Value=""Visible"" />
+                        </Trigger>
+                        <Trigger Property=""IsKeyboardFocused"" Value=""True"">
+                            <Setter TargetName=""txtBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.FocusBorder}"" />
+                        </Trigger>
+                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                            <Setter TargetName=""txtBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderHover}"" />
+                        </Trigger>
+                        <Trigger Property=""IsEnabled"" Value=""False"">
+                            <Setter TargetName=""txtBorder"" Property=""Opacity"" Value=""0.5"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 34. PICTUREEDIT STYLE -->
+    <Style TargetType=""{x:Type edit:PictureEdit}"">
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+        <Setter Property=""Width"" Value=""64"" />
+        <Setter Property=""Height"" Value=""64"" />
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgCard}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""BorderThickness"" Value=""1"" />
+        <Setter Property=""CornerRadius"" Value=""8"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:PictureEdit}"">
+                    <Grid>
+                        <Border x:Name=""mainBorder""
+                                Background=""{TemplateBinding Background}""
+                                BorderBrush=""{TemplateBinding BorderBrush}""
+                                BorderThickness=""{TemplateBinding BorderThickness}""
+                                CornerRadius=""{TemplateBinding CornerRadius}""
+                                ClipToBounds=""True"">
+                            <Grid>
+                                <!-- Fallback Initials -->
+                                <Border x:Name=""fallbackBorder""
+                                        Background=""{TemplateBinding FallbackBackground}""
+                                        Visibility=""Collapsed"">
+                                    <TextBlock Text=""{TemplateBinding FallbackText}""
+                                               Foreground=""{DynamicResource ZeroUI.TextPrimary}""
+                                               FontWeight=""Bold""
+                                               FontSize=""16""
+                                               HorizontalAlignment=""Center""
+                                               VerticalAlignment=""Center"" />
+                                </Border>
+
+                                <!-- Actual Image -->
+                                <Image x:Name=""partImage""
+                                       Source=""{TemplateBinding ImageSource}""
+                                       Stretch=""UniformToFill"" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Status Indicator Dot -->
+                        <Border x:Name=""statusDot""
+                                Width=""12"" Height=""12""
+                                CornerRadius=""6""
+                                BorderBrush=""{DynamicResource ZeroUI.BgDarker}""
+                                BorderThickness=""2""
+                                HorizontalAlignment=""Right""
+                                VerticalAlignment=""Bottom""
+                                Margin=""0,0,1,1""
+                                Visibility=""Collapsed"" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""ImageSource"" Value=""{x:Null}"">
+                            <Setter TargetName=""partImage"" Property=""Visibility"" Value=""Collapsed"" />
+                            <Setter TargetName=""fallbackBorder"" Property=""Visibility"" Value=""Visible"" />
+                        </Trigger>
+                        <Trigger Property=""IsCircle"" Value=""True"">
+                            <Setter TargetName=""mainBorder"" Property=""CornerRadius"" Value=""999"" />
+                        </Trigger>
+                        <Trigger Property=""Status"" Value=""Online"">
+                            <Setter TargetName=""statusDot"" Property=""Visibility"" Value=""Visible"" />
+                            <Setter TargetName=""statusDot"" Property=""Background"" Value=""#10B981"" />
+                        </Trigger>
+                        <Trigger Property=""Status"" Value=""Busy"">
+                            <Setter TargetName=""statusDot"" Property=""Visibility"" Value=""Visible"" />
+                            <Setter TargetName=""statusDot"" Property=""Background"" Value=""#EF4444"" />
+                        </Trigger>
+                        <Trigger Property=""Status"" Value=""Away"">
+                            <Setter TargetName=""statusDot"" Property=""Visibility"" Value=""Visible"" />
+                            <Setter TargetName=""statusDot"" Property=""Background"" Value=""#F59E0B"" />
+                        </Trigger>
+                        <Trigger Property=""Status"" Value=""Offline"">
+                            <Setter TargetName=""statusDot"" Property=""Visibility"" Value=""Visible"" />
+                            <Setter TargetName=""statusDot"" Property=""Background"" Value=""#64748B"" />
+                        </Trigger>
+                        <Trigger Property=""ScaleMode"" Value=""Contain"">
+                            <Setter TargetName=""partImage"" Property=""Stretch"" Value=""Uniform"" />
+                        </Trigger>
+                        <Trigger Property=""ScaleMode"" Value=""Center"">
+                            <Setter TargetName=""partImage"" Property=""Stretch"" Value=""None"" />
+                        </Trigger>
+                        <Trigger Property=""ScaleMode"" Value=""Stretch"">
+                            <Setter TargetName=""partImage"" Property=""Stretch"" Value=""Fill"" />
+                        </Trigger>
+                        <Trigger Property=""IsMouseOver"" Value=""True"">
+                            <Setter TargetName=""mainBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 35. IPADDRESSEDIT STYLE -->
+    <Style TargetType=""{x:Type edit:IPAddressEdit}"">
+        <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
+        <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgInput}"" />
+        <Setter Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.BorderDefault}"" />
+        <Setter Property=""BorderThickness"" Value=""1"" />
+        <Setter Property=""CornerRadius"" Value=""5"" />
+        <Setter Property=""Height"" Value=""32"" />
+        <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
+        <Setter Property=""FontSize"" Value=""12.5"" />
+        <Setter Property=""Template"">
+            <Setter.Value>
+                <ControlTemplate TargetType=""{x:Type edit:IPAddressEdit}"">
+                    <Border x:Name=""ipBorder""
+                            Background=""{TemplateBinding Background}""
+                            BorderBrush=""{TemplateBinding BorderBrush}""
+                            BorderThickness=""{TemplateBinding BorderThickness}""
+                            CornerRadius=""{TemplateBinding CornerRadius}"">
+                        <Grid VerticalAlignment=""Center"" HorizontalAlignment=""Center"">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""Auto"" />
+                                <ColumnDefinition Width=""Auto"" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox x:Name=""PART_Octet1"" Grid.Column=""0""
+                                     Width=""34"" Height=""24""
+                                     MaxLength=""3""
+                                     TextAlignment=""Center""
+                                     Background=""Transparent""
+                                     BorderThickness=""0""
+                                     Foreground=""{TemplateBinding Foreground}""
+                                     FontSize=""{TemplateBinding FontSize}""
+                                     VerticalContentAlignment=""Center""
+                                     CaretBrush=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+
+                            <TextBlock Grid.Column=""1"" Text="".""
+                                       Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                       FontWeight=""Bold""
+                                       VerticalAlignment=""Center""
+                                       Margin=""2,0,2,0"" />
+
+                            <TextBox x:Name=""PART_Octet2"" Grid.Column=""2""
+                                     Width=""34"" Height=""24""
+                                     MaxLength=""3""
+                                     TextAlignment=""Center""
+                                     Background=""Transparent""
+                                     BorderThickness=""0""
+                                     Foreground=""{TemplateBinding Foreground}""
+                                     FontSize=""{TemplateBinding FontSize}""
+                                     VerticalContentAlignment=""Center""
+                                     CaretBrush=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+
+                            <TextBlock Grid.Column=""3"" Text="".""
+                                       Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                       FontWeight=""Bold""
+                                       VerticalAlignment=""Center""
+                                       Margin=""2,0,2,0"" />
+
+                            <TextBox x:Name=""PART_Octet3"" Grid.Column=""4""
+                                     Width=""34"" Height=""24""
+                                     MaxLength=""3""
+                                     TextAlignment=""Center""
+                                     Background=""Transparent""
+                                     BorderThickness=""0""
+                                     Foreground=""{TemplateBinding Foreground}""
+                                     FontSize=""{TemplateBinding FontSize}""
+                                     VerticalContentAlignment=""Center""
+                                     CaretBrush=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+
+                            <TextBlock Grid.Column=""5"" Text="".""
+                                       Foreground=""{DynamicResource ZeroUI.TextSecondary}""
+                                       FontWeight=""Bold""
+                                       VerticalAlignment=""Center""
+                                       Margin=""2,0,2,0"" />
+
+                            <TextBox x:Name=""PART_Octet4"" Grid.Column=""6""
+                                     Width=""34"" Height=""24""
+                                     MaxLength=""3""
+                                     TextAlignment=""Center""
+                                     Background=""Transparent""
+                                     BorderThickness=""0""
+                                     Foreground=""{TemplateBinding Foreground}""
+                                     FontSize=""{TemplateBinding FontSize}""
+                                     VerticalContentAlignment=""Center""
+                                     CaretBrush=""{DynamicResource ZeroUI.PrimaryAccent}"" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property=""IsKeyboardFocusWithin"" Value=""True"">
+                            <Setter TargetName=""ipBorder"" Property=""BorderBrush"" Value=""{DynamicResource ZeroUI.FocusBorder}"" />
+                        </Trigger>
+                        <Trigger Property=""IsEnabled"" Value=""False"">
+                            <Setter TargetName=""ipBorder"" Property=""Opacity"" Value=""0.6"" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

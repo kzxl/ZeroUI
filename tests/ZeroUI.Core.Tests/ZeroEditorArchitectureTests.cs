@@ -157,5 +157,45 @@ namespace ZeroUI.Core.Tests
             Assert.Equal((2, 0, "Val3"), parsed[4]);
             Assert.Equal((2, 1, "Val4"), parsed[5]);
         }
+
+        [Fact]
+        public void EditorButtonModel_DefaultProperties_InitializedCorrectly()
+        {
+            var btn = new EditorButtonModel(EditorButtonKind.BrowseFile);
+
+            Assert.Equal(EditorButtonKind.BrowseFile, btn.Kind);
+            Assert.True(btn.Visible);
+            Assert.True(btn.IsEnabled);
+            Assert.Equal("Browse file...", btn.ToolTip);
+        }
+
+        [Theory]
+        [InlineData(EditorButtonKind.BrowseFile, "Browse file...")]
+        [InlineData(EditorButtonKind.BrowseFolder, "Browse folder...")]
+        [InlineData(EditorButtonKind.Clear, "Clear input")]
+        [InlineData(EditorButtonKind.Copy, "Copy to clipboard")]
+        [InlineData(EditorButtonKind.Search, "Search")]
+        [InlineData(EditorButtonKind.DropDown, "Show options")]
+        [InlineData(EditorButtonKind.Undo, "Undo")]
+        [InlineData(EditorButtonKind.Redo, "Redo")]
+        [InlineData(EditorButtonKind.Custom, "")]
+        public void EditorButtonModel_GetDefaultToolTip_ReturnsExpectedText(EditorButtonKind kind, string expected)
+        {
+            string tooltip = EditorButtonModel.GetDefaultToolTip(kind);
+            Assert.Equal(expected, tooltip);
+        }
+
+        [Fact]
+        public void EditorButtonClickEventArgs_HandledFlag_CanBeSet()
+        {
+            var args = new EditorButtonClickEventArgs(EditorButtonKind.Clear, "tag_123");
+
+            Assert.Equal(EditorButtonKind.Clear, args.Kind);
+            Assert.Equal("tag_123", args.Tag);
+            Assert.False(args.Handled);
+
+            args.Handled = true;
+            Assert.True(args.Handled);
+        }
     }
 }
