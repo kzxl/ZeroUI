@@ -6,7 +6,7 @@ Ultra-high-performance, zero-allocation core runtime, analytical engines, and in
 > **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.4.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.5.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
@@ -55,7 +55,7 @@ Ultra-high-performance, zero-allocation core runtime, analytical engines, and in
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.Core --version 1.4.0
+dotnet add package ZeroUI.Core --version 1.5.0
 ```
 
 ---
