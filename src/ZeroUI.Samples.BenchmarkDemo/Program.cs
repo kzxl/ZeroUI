@@ -8,6 +8,7 @@ using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Runtime;
+using ZeroUI.Core.Scada;
 using ZeroUI.Core.Theme;
 using ZeroUI.Core.Virtualization;
 using ZeroUI.Samples.BenchmarkDemo.Data;
@@ -60,6 +61,11 @@ namespace ZeroUI.Samples.BenchmarkDemo
             if (args.Length > 0 && args[0].Equals("--test-all-tabs", StringComparison.OrdinalIgnoreCase))
             {
                 RunAllTabsDiagnostics();
+                return;
+            }
+            if (args.Length > 0 && args[0].Equals("--record-live-demo", StringComparison.OrdinalIgnoreCase))
+            {
+                RecordLiveDemoVideo();
                 return;
             }
 
@@ -1008,6 +1014,218 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 {
                     TestChildTabControls(c);
                 }
+            }
+        }
+
+        private static void RecordLiveDemoVideo()
+        {
+            try
+            {
+                Console.WriteLine("🎥 Recording Live In-Process ZeroUI Demo Showcase Video...");
+                string outputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "docs", "images");
+                outputDir = Path.GetFullPath(outputDir);
+                if (!Directory.Exists(outputDir)) Directory.CreateDirectory(outputDir);
+
+                string framesDir = Path.Combine(Path.GetTempPath(), "zeroui_live_frames");
+                if (Directory.Exists(framesDir)) Directory.Delete(framesDir, true);
+                Directory.CreateDirectory(framesDir);
+
+                Console.WriteLine($"   Frames Temp Directory: {framesDir}");
+
+                try { Application.SetHighDpiMode(HighDpiMode.PerMonitorV2); } catch { }
+                try { Application.EnableVisualStyles(); } catch { }
+                try { Application.SetCompatibleTextRenderingDefault(false); } catch { }
+
+                int totalFrames = 440;
+                int frameIndex = 0;
+
+                using (var form = new MainForm())
+                {
+                    form.StartPosition = FormStartPosition.Manual;
+                    form.Location = new Point(50, 50);
+                    form.Size = new Size(1366, 850);
+                    form.Show();
+                    form.LoadDatasetPublic(100_000);
+                    Application.DoEvents();
+                    Thread.Sleep(500);
+                    Application.DoEvents();
+
+                    for (int f = 0; f < totalFrames; f++)
+                    {
+                        // Autopilot actions based on frame timeline covering ALL tabs & subtabs
+                        if (f == 0)
+                        {
+                            form.SelectSubTabByIndex(0, 0); // ZeroGrid 100k
+                            Console.WriteLine("   -> [0.0s] 1. ZeroGrid Big Data 100k Virtual Scrolling");
+                        }
+                        else if (f < 25)
+                        {
+                            form.ScrollGridToRowPublic(f * 450);
+                        }
+                        else if (f == 25)
+                        {
+                            form.SelectSubTabByIndex(0, 1); // Standard DGV
+                            Console.WriteLine("   -> [1.7s] 2. Standard WinForms DataGridView Virtual Mode");
+                        }
+                        else if (f == 40)
+                        {
+                            form.SelectSubTabByIndex(1, 0); // Industrial Verticals - Water
+                            Console.WriteLine("   -> [2.7s] 3. Industrial Verticals: Water Treatment Plant");
+                        }
+                        else if (f == 60)
+                        {
+                            form.SelectSubTabByIndex(1, 1); // Industrial Verticals - Petrochem
+                            Console.WriteLine("   -> [4.0s] 4. Industrial Verticals: Petrochemical Refining");
+                        }
+                        else if (f == 80)
+                        {
+                            form.SelectSubTabByIndex(1, 2); // Industrial Verticals - Bioreactor
+                            Console.WriteLine("   -> [5.3s] 5. Industrial Verticals: Life Sciences Bioreactor");
+                        }
+                        else if (f == 100)
+                        {
+                            form.SelectSubTabByIndex(1, 3); // Industrial Verticals - BMS
+                            Console.WriteLine("   -> [6.7s] 6. Industrial Verticals: Smart Building BMS");
+                        }
+                        else if (f == 120)
+                        {
+                            form.SelectSubTabByIndex(1, 4); // Industrial Verticals - Energy
+                            Console.WriteLine("   -> [8.0s] 7. Industrial Verticals: Renewable Energy & BESS");
+                        }
+                        else if (f == 140)
+                        {
+                            form.SelectSubTabByIndex(2, 0); // SCADA Closed-Loop
+                            Console.WriteLine("   -> [9.3s] 8. SCADA Closed-Loop Batch Process (Pumps, Valves, Pipes, Tanks)");
+                        }
+                        else if (f == 160)
+                        {
+                            SimulatedPlcDriver.InjectPressureSpike(); // Dynamic spike
+                        }
+                        else if (f == 175)
+                        {
+                            form.SelectSubTabByIndex(2, 1); // SCADA P&ID Flow
+                            Console.WriteLine("   -> [11.7s] 9. SCADA P&ID Real-Time Process Flow");
+                        }
+                        else if (f == 195)
+                        {
+                            form.SelectSubTabByIndex(2, 2); // SCADA ISA-18.2 Alarms
+                            Console.WriteLine("   -> [13.0s] 10. SCADA ISA-18.2 Alarm Grid & PID Tuning Faceplate");
+                        }
+                        else if (f == 215)
+                        {
+                            form.SelectSubTabByIndex(2, 4); // Plant Overview & HMI
+                            Console.WriteLine("   -> [14.3s] 11. Plant Overview & HMI Mimics");
+                        }
+                        else if (f == 235)
+                        {
+                            form.SelectTabByIndex(3); // Network & Infrastructure
+                            Console.WriteLine("   -> [15.7s] 12. Network Topology & IT/OT Infrastructure");
+                        }
+                        else if (f == 255)
+                        {
+                            form.SelectSubTabByIndex(4, 0); // MES Production Dashboard
+                            Console.WriteLine("   -> [17.0s] 13. MES Smart Factory & Production Dashboard");
+                        }
+                        else if (f == 275)
+                        {
+                            form.SelectSubTabByIndex(4, 1); // Process Cards
+                            Console.WriteLine("   -> [18.3s] 14. MES Kanban Process Tracking Cards");
+                        }
+                        else if (f == 295)
+                        {
+                            form.SelectSubTabByIndex(5, 0); // WMS Barcode
+                            Console.WriteLine("   -> [19.7s] 15. WMS Receiving & Barcode Workstation");
+                        }
+                        else if (f == 315)
+                        {
+                            form.SelectSubTabByIndex(5, 2); // WMS Storage Racks
+                            Console.WriteLine("   -> [21.0s] 16. WMS Multi-Level Warehouse Storage Racks");
+                        }
+                        else if (f == 335)
+                        {
+                            form.SelectTabByIndex(6); // Analytics & Charts
+                            Console.WriteLine("   -> [22.3s] 17. Business Analytics, Donut KPI & SPC BoxPlot Charts");
+                        }
+                        else if (f == 355)
+                        {
+                            form.SelectSubTabByIndex(7, 0); // Component Catalog - Core Controls
+                            Console.WriteLine("   -> [23.7s] 18. UI Component Catalog: DatePicker Zoom, TokenEdit, Sliders");
+                        }
+                        else if (f == 375)
+                        {
+                            form.SelectSubTabByIndex(7, 1); // Commercial Suite
+                            Console.WriteLine("   -> [25.0s] 19. Enterprise Commercial Suite: GridLookup & Wizards");
+                        }
+                        else if (f == 395)
+                        {
+                            form.SelectSubTabByIndex(7, 3); // Data Hierarchy BOM
+                            Console.WriteLine("   -> [26.3s] 20. Data Hierarchy & Multi-Level BOM TreeList");
+                        }
+                        else if (f == 415)
+                        {
+                            form.ToggleThemePublic(); // Switch to Obsidian Dark
+                            form.SelectSubTabByIndex(2, 0); // SCADA in Dark Mode
+                            Console.WriteLine("   -> [27.7s] 21. Obsidian Dark Mode: SCADA Industrial Process Control Center");
+                        }
+
+                        Application.DoEvents();
+                        Thread.Sleep(30);
+                        Application.DoEvents();
+
+                        string framePath = Path.Combine(framesDir, $"frame_{frameIndex:D4}.png");
+                        using (var bmp = new Bitmap(form.Width, form.Height))
+                        {
+                            form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+                            bmp.Save(framePath, System.Drawing.Imaging.ImageFormat.Png);
+                        }
+                        frameIndex++;
+                    }
+
+                    form.Close();
+                }
+
+                Console.WriteLine($"   Captured {totalFrames} frames! Compiling video via ffmpeg...");
+
+                string mp4Output = Path.Combine(outputDir, "zeroui_live_recording.mp4");
+                string gifOutput = Path.Combine(outputDir, "zeroui_live_recording.gif");
+
+                // 1. Compile MP4
+                var psiMp4 = new ProcessStartInfo
+                {
+                    FileName = "ffmpeg",
+                    Arguments = $"-y -framerate 15 -i \"{framesDir}\\frame_%04d.png\" -c:v libx264 -pix_fmt yuv420p \"{mp4Output}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using (var p = Process.Start(psiMp4))
+                {
+                    p?.WaitForExit();
+                }
+                Console.WriteLine($"   [OK] Generated {mp4Output}");
+
+                // 2. Compile GIF
+                var psiGif = new ProcessStartInfo
+                {
+                    FileName = "ffmpeg",
+                    Arguments = $"-y -framerate 15 -i \"{framesDir}\\frame_%04d.png\" -vf \"fps=10,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer\" \"{gifOutput}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using (var p = Process.Start(psiGif))
+                {
+                    p?.WaitForExit();
+                }
+                Console.WriteLine($"   [OK] Generated {gifOutput}");
+
+                // Cleanup frames
+                try { Directory.Delete(framesDir, true); } catch { }
+
+                Console.WriteLine("\n🎉 LIVE VIDEO RECORDING GENERATED SUCCESSFULLY!");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"\n❌ RECORDING FAILED: {ex}");
+                Environment.Exit(1);
             }
         }
     }
