@@ -23,6 +23,8 @@ namespace ZeroUI.Wpf.Process
         private bool _isDesignMode = false;
         private bool _showGrid = true;
         private bool _autoExecuteAction = true;
+        private bool _wheelZoomRequiresCtrl = true;
+        private bool _enableWheelPan = true;
 
         private double _zoom = 1.0;
         private Point _panOffset = new Point(0, 0);
@@ -95,6 +97,18 @@ namespace ZeroUI.Wpf.Process
         {
             get => _autoExecuteAction;
             set => _autoExecuteAction = value;
+        }
+
+        public bool WheelZoomRequiresCtrl
+        {
+            get => _wheelZoomRequiresCtrl;
+            set => _wheelZoomRequiresCtrl = value;
+        }
+
+        public bool EnableWheelPan
+        {
+            get => _enableWheelPan;
+            set => _enableWheelPan = value;
         }
 
         public double ZoomFactor
@@ -928,6 +942,16 @@ namespace ZeroUI.Wpf.Process
                 return;
             }
 
+            if (e.ClickCount == 2 && e.ChangedButton == MouseButton.Left)
+            {
+                if (HitTestNode(worldPt) == null)
+                {
+                    ZoomToFit();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (e.ChangedButton == MouseButton.Left)
             {
                 var hit = HitTestNode(worldPt);
@@ -1025,11 +1049,35 @@ namespace ZeroUI.Wpf.Process
             }
         }
 
+
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             base.OnMouseWheel(e);
+
+            bool isCtrl = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+            bool isShift = (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
+
+            if (_wheelZoomRequiresCtrl && !isCtrl)
+            {
+                if (_enableWheelPan)
+                {
+                    double delta = e.Delta;
+                    if (isShift)
+                    {
+                        _panOffset = new Point(_panOffset.X + delta, _panOffset.Y);
+                    }
+                    else
+                    {
+                        _panOffset = new Point(_panOffset.X, _panOffset.Y + delta);
+                    }
+                    InvalidateVisual();
+                    e.Handled = true;
+                }
+                return;
+            }
+
             double oldZoom = _zoom;
-            double zoomDelta = e.Delta > 0 ? 1.1 : 0.9;
+            double zoomDelta = e.Delta > 0 ? 1.15 : 0.87;
             ZoomFactor = _zoom * zoomDelta;
 
             Point mouse = e.GetPosition(this);
@@ -1038,6 +1086,7 @@ namespace ZeroUI.Wpf.Process
                 mouse.Y - (mouse.Y - _panOffset.Y) * (_zoom / oldZoom)
             );
             InvalidateVisual();
+            e.Handled = true;
         }
 
         #endregion
@@ -1114,6 +1163,91 @@ namespace ZeroUI.Wpf.Process
             InvalidateVisual();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
             return conn;
+        }
+
+        public void ZoomToFit(double padding = 40)
+        {
+            if (_definition.Nodes.Count == 0)
+            {
+                _zoom = 1.0;
+                _panOffset = new Point(0, 0);
+                InvalidateVisual();
+                return;
+            }
+
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
+
+            foreach (var node in _definition.Nodes)
+            {
+                minX = Math.Min(minX, node.X);
+                minY = Math.Min(minY, node.Y);
+                maxX = Math.Max(maxX, node.X + node.Width);
+                maxY = Math.Max(maxY, node.Y + node.Height);
+            }
+
+            double contentWidth = maxX - minX;
+            double contentHeight = maxY - minY;
+
+            if (contentWidth <= 0 || contentHeight <= 0)
+            {
+                _zoom = 1.0;
+                _panOffset = new Point(0, 0);
+                InvalidateVisual();
+                return;
+            }
+
+            double availWidth = Math.Max(100, ActualWidth - padding * 2);
+            double availHeight = Math.Max(100, ActualHeight - padding * 2);
+
+            double targetZoom = Math.Min(availWidth / contentWidth, availHeight / contentHeight);
+            targetZoom = Math.Max(0.25, Math.Min(1.5, targetZoom));
+
+            _zoom = targetZoom;
+            _panOffset = new Point(
+                padding + (availWidth - contentWidth * _zoom) / 2.0 - minX * _zoom,
+                padding + (availHeight - contentHeight * _zoom) / 2.0 - minY * _zoom
+            );
+
+            InvalidateVisual();
+        }
+
+        public void ZoomIn(double factor = 1.15)
+        {
+            Point center = new Point(ActualWidth / 2.0, ActualHeight / 2.0);
+            double oldZoom = _zoom;
+            ZoomFactor = _zoom * factor;
+            _panOffset = new Point(
+                center.X - (center.X - _panOffset.X) * (_zoom / oldZoom),
+                center.Y - (center.Y - _panOffset.Y) * (_zoom / oldZoom)
+            );
+            InvalidateVisual();
+        }
+
+        public void ZoomOut(double factor = 0.87)
+        {
+            Point center = new Point(ActualWidth / 2.0, ActualHeight / 2.0);
+            double oldZoom = _zoom;
+            ZoomFactor = _zoom * factor;
+            _panOffset = new Point(
+                center.X - (center.X - _panOffset.X) * (_zoom / oldZoom),
+                center.Y - (center.Y - _panOffset.Y) * (_zoom / oldZoom)
+            );
+            InvalidateVisual();
+        }
+
+        public void ResetZoom()
+        {
+            Point center = new Point(ActualWidth / 2.0, ActualHeight / 2.0);
+            double oldZoom = _zoom;
+            ZoomFactor = 1.0;
+            _panOffset = new Point(
+                center.X - (center.X - _panOffset.X) * (_zoom / oldZoom),
+                center.Y - (center.Y - _panOffset.Y) * (_zoom / oldZoom)
+            );
+            InvalidateVisual();
         }
 
         public string ExportJson(bool indented = true)

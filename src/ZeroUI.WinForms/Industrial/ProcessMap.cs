@@ -53,6 +53,19 @@ namespace ZeroUI.WinForms.Industrial
         private ProcessFlowConnection? _selectedConnection;
         private ProcessFlowConnection? _hoveredConnection;
 
+        private enum ZoomHudButton
+        {
+            None,
+            ZoomOut,
+            ResetZoom,
+            ZoomIn,
+            Fit
+        }
+
+        private bool _wheelZoomRequiresCtrl = true;
+        private bool _enableWheelPan = true;
+        private ZoomHudButton _hoveredHudButton = ZoomHudButton.None;
+
         private ContextMenuStrip _contextMenu = null!;
         private ToolStripMenuItem _mnuEditTitle = null!;
         private ToolStripMenuItem _mnuConnectTo = null!;
@@ -219,6 +232,24 @@ namespace ZeroUI.WinForms.Industrial
         {
             get => _autoExecuteAction;
             set => _autoExecuteAction = value;
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("When true, zooming with mouse wheel requires holding Ctrl key (industry standard: Figma/Miro/VSCode), preventing accidental zoom while scrolling. When false, normal mouse wheel zooms directly.")]
+        public bool WheelZoomRequiresCtrl
+        {
+            get => _wheelZoomRequiresCtrl;
+            set => _wheelZoomRequiresCtrl = value;
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("When true, mouse wheel without Ctrl pans canvas vertically (or horizontally with Shift).")]
+        public bool EnableWheelPan
+        {
+            get => _enableWheelPan;
+            set => _enableWheelPan = value;
         }
 
         [Category("View")]
@@ -742,8 +773,8 @@ namespace ZeroUI.WinForms.Industrial
 
             // 2. Mode Badge (Bottom Left)
             string modeText = _isDesignMode 
-                ? "✏ DESIGN MODE (Drag ports to connect, Drag nodes to move, Right-click to edit)" 
-                : "▶ RUN MODE (Click step to navigate)";
+                ? "✏ DESIGN MODE  •  Kéo cổng nối  •  Phải chuột: Cấu hình/Xóa  •  Delete: Xóa" 
+                : "▶ RUN MODE  •  Ctrl + Cuộn: Zoom  •  Cuộn: Di chuyển  •  Double-click: Vừa khung";
             Color badgeBg = _isDesignMode ? Color.FromArgb(245, 158, 11) : Color.FromArgb(16, 185, 129);
 
             using (var font = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
@@ -760,13 +791,74 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
 
-            // 3. Zoom Info (Bottom Right)
-            string zoomText = $"{(_zoom * 100):0}%";
-            using (var font = new Font(Font.FontFamily, 8.0f, FontStyle.Regular))
-            using (var brush = new SolidBrush(ZeroTheme.Colors.TextSecondary))
+            // 3. Floating Interactive Zoom HUD (Bottom Right)
+            var hudRect = GetZoomHudRect();
+            using (var hudPath = GetRoundedRectPath(hudRect, 14))
+            using (var hudBg = new SolidBrush(Color.FromArgb(245, 255, 255, 255)))
+            using (var hudBorder = new Pen(Color.FromArgb(210, 220, 230), 1.0f))
+            using (var font = new Font(Font.FontFamily, 8.5f, FontStyle.Regular))
+            using (var textBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
+            using (var highlightBrush = new SolidBrush(Color.FromArgb(220, 235, 252)))
             {
-                g.DrawString(zoomText, font, brush, Width - 50, Height - 30);
+                g.FillPath(hudBg, hudPath);
+                g.DrawPath(hudBorder, hudPath);
+
+                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+
+                // [ - ] ZoomOut
+                var rZoomOut = new RectangleF(hudRect.X, hudRect.Y, 36, hudRect.Height);
+                if (_hoveredHudButton == ZoomHudButton.ZoomOut)
+                {
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomOut.X + 2, rZoomOut.Y + 2, rZoomOut.Width - 2, rZoomOut.Height - 4), 12))
+                        g.FillPath(highlightBrush, hPath);
+                }
+                g.DrawString("➖", font, textBrush, rZoomOut, sf);
+
+                // [ 100% ] Reset
+                var rReset = new RectangleF(hudRect.X + 36, hudRect.Y, 60, hudRect.Height);
+                if (_hoveredHudButton == ZoomHudButton.ResetZoom)
+                {
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rReset.X + 1, rReset.Y + 2, rReset.Width - 2, rReset.Height - 4), 4))
+                        g.FillPath(highlightBrush, hPath);
+                }
+                string zoomText = $"{(_zoom * 100):0}%";
+                g.DrawString(zoomText, font, textBrush, rReset, sf);
+
+                // [ + ] ZoomIn
+                var rZoomIn = new RectangleF(hudRect.X + 96, hudRect.Y, 36, hudRect.Height);
+                if (_hoveredHudButton == ZoomHudButton.ZoomIn)
+                {
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomIn.X + 1, rZoomIn.Y + 2, rZoomIn.Width - 2, rZoomIn.Height - 4), 4))
+                        g.FillPath(highlightBrush, hPath);
+                }
+                g.DrawString("➕", font, textBrush, rZoomIn, sf);
+
+                // [ ⛶ ] Fit
+                var rFit = new RectangleF(hudRect.X + 132, hudRect.Y, 38, hudRect.Height);
+                if (_hoveredHudButton == ZoomHudButton.Fit)
+                {
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rFit.X, rFit.Y + 2, rFit.Width - 2, rFit.Height - 4), 12))
+                        g.FillPath(highlightBrush, hPath);
+                }
+                g.DrawString("⛶", font, textBrush, rFit, sf);
             }
+        }
+
+        private RectangleF GetZoomHudRect()
+        {
+            return new RectangleF(Width - 186, Height - 38, 170, 30);
+        }
+
+        private ZoomHudButton HitTestZoomHud(PointF screenPt)
+        {
+            var hud = GetZoomHudRect();
+            if (!hud.Contains(screenPt)) return ZoomHudButton.None;
+
+            float relX = screenPt.X - hud.X;
+            if (relX < 36) return ZoomHudButton.ZoomOut;
+            if (relX < 96) return ZoomHudButton.ResetZoom;
+            if (relX < 132) return ZoomHudButton.ZoomIn;
+            return ZoomHudButton.Fit;
         }
 
         #endregion
@@ -959,6 +1051,29 @@ namespace ZeroUI.WinForms.Industrial
         {
             base.OnMouseDown(e);
             Focus();
+
+            // 0. Check Zoom HUD interaction
+            var hudBtn = HitTestZoomHud(e.Location);
+            if (hudBtn != ZoomHudButton.None)
+            {
+                switch (hudBtn)
+                {
+                    case ZoomHudButton.ZoomOut:
+                        ZoomOut();
+                        break;
+                    case ZoomHudButton.ResetZoom:
+                        ResetZoom();
+                        break;
+                    case ZoomHudButton.ZoomIn:
+                        ZoomIn();
+                        break;
+                    case ZoomHudButton.Fit:
+                        ZoomToFit();
+                        break;
+                }
+                return;
+            }
+
             PointF worldPt = ScreenToWorld(e.Location);
 
             if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right && _selectedNode == null && _selectedConnection == null))
@@ -1025,6 +1140,20 @@ namespace ZeroUI.WinForms.Industrial
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+
+            // Check Zoom HUD hover
+            var hudBtn = HitTestZoomHud(e.Location);
+            if (hudBtn != _hoveredHudButton)
+            {
+                _hoveredHudButton = hudBtn;
+                Invalidate();
+            }
+            if (hudBtn != ZoomHudButton.None)
+            {
+                Cursor = Cursors.Hand;
+                return;
+            }
+
             PointF worldPt = ScreenToWorld(e.Location);
 
             if (_isConnecting)
@@ -1207,15 +1336,56 @@ namespace ZeroUI.WinForms.Industrial
 
         private PointF _rightClickLocation;
 
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            if (_hoveredHudButton != ZoomHudButton.None)
+            {
+                _hoveredHudButton = ZoomHudButton.None;
+                Invalidate();
+            }
+        }
+
+        protected override void OnDoubleClick(EventArgs e)
+        {
+            base.OnDoubleClick(e);
+            if (_selectedNode == null && _selectedConnection == null)
+            {
+                ZoomToFit();
+            }
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
 
-            float oldZoom = _zoom;
-            float zoomDelta = e.Delta > 0 ? 1.1f : 0.9f;
-            ZoomFactor = _zoom * zoomDelta;
+            bool isCtrl = (ModifierKeys & Keys.Control) == Keys.Control;
+            bool isShift = (ModifierKeys & Keys.Shift) == Keys.Shift;
+
+            // When WheelZoomRequiresCtrl is true and Ctrl is not pressed, perform smooth panning
+            if (_wheelZoomRequiresCtrl && !isCtrl)
+            {
+                if (_enableWheelPan)
+                {
+                    float delta = e.Delta;
+                    if (isShift)
+                    {
+                        _panOffset = new PointF(_panOffset.X + delta, _panOffset.Y);
+                    }
+                    else
+                    {
+                        _panOffset = new PointF(_panOffset.X, _panOffset.Y + delta);
+                    }
+                    Invalidate();
+                }
+                return;
+            }
 
             // Zoom centering around mouse point
+            float oldZoom = _zoom;
+            float zoomDelta = e.Delta > 0 ? 1.15f : 0.87f;
+            ZoomFactor = _zoom * zoomDelta;
+
             PointF mouse = e.Location;
             _panOffset = new PointF(
                 mouse.X - (mouse.X - _panOffset.X) * (_zoom / oldZoom),
@@ -1528,6 +1698,107 @@ namespace ZeroUI.WinForms.Industrial
             Invalidate();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
             return conn;
+        }
+
+        #endregion
+
+        #region Zoom and Viewport Navigation API
+
+        /// <summary>
+        /// Automatically scales and centers the diagram to fit perfectly inside the viewport.
+        /// </summary>
+        public void ZoomToFit(int padding = 40)
+        {
+            if (_definition.Nodes.Count == 0)
+            {
+                _zoom = 1.0f;
+                _panOffset = new PointF(0, 0);
+                Invalidate();
+                return;
+            }
+
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+
+            foreach (var node in _definition.Nodes)
+            {
+                minX = Math.Min(minX, (float)node.X);
+                minY = Math.Min(minY, (float)node.Y);
+                maxX = Math.Max(maxX, (float)(node.X + node.Width));
+                maxY = Math.Max(maxY, (float)(node.Y + node.Height));
+            }
+
+            float contentWidth = maxX - minX;
+            float contentHeight = maxY - minY;
+
+            if (contentWidth <= 0 || contentHeight <= 0)
+            {
+                _zoom = 1.0f;
+                _panOffset = new PointF(0, 0);
+                Invalidate();
+                return;
+            }
+
+            float availWidth = Math.Max(100, Width - padding * 2);
+            float availHeight = Math.Max(100, Height - padding * 2);
+
+            float targetZoom = Math.Min(availWidth / contentWidth, availHeight / contentHeight);
+            targetZoom = Math.Max(0.25f, Math.Min(1.5f, targetZoom));
+
+            _zoom = targetZoom;
+            _panOffset = new PointF(
+                padding + (availWidth - contentWidth * _zoom) / 2f - minX * _zoom,
+                padding + (availHeight - contentHeight * _zoom) / 2f - minY * _zoom
+            );
+
+            Invalidate();
+        }
+
+        /// <summary>
+        /// Zooms in towards the center of the control viewport.
+        /// </summary>
+        public void ZoomIn(float factor = 1.15f)
+        {
+            PointF center = new PointF(Width / 2f, Height / 2f);
+            float oldZoom = _zoom;
+            ZoomFactor = _zoom * factor;
+            _panOffset = new PointF(
+                center.X - (center.X - _panOffset.X) * (_zoom / oldZoom),
+                center.Y - (center.Y - _panOffset.Y) * (_zoom / oldZoom)
+            );
+            Invalidate();
+        }
+
+        /// <summary>
+        /// Zooms out away from the center of the control viewport.
+        /// </summary>
+        public void ZoomOut(float factor = 0.87f)
+        {
+            PointF center = new PointF(Width / 2f, Height / 2f);
+            float oldZoom = _zoom;
+            ZoomFactor = _zoom * factor;
+            _panOffset = new PointF(
+                center.X - (center.X - _panOffset.X) * (_zoom / oldZoom),
+                center.Y - (center.Y - _panOffset.Y) * (_zoom / oldZoom)
+            );
+            Invalidate();
+        }
+
+        /// <summary>
+        /// Resets the zoom level to 100% (1.0x).
+        /// </summary>
+        public void ResetZoom()
+        {
+            PointF center = new PointF(Width / 2f, Height / 2f);
+            float oldZoom = _zoom;
+            ZoomFactor = 1.0f;
+            _panOffset = new PointF(
+                center.X - (center.X - _panOffset.X) * (_zoom / oldZoom),
+                center.Y - (center.Y - _panOffset.Y) * (_zoom / oldZoom)
+            );
+            Invalidate();
         }
 
         #endregion
