@@ -363,6 +363,17 @@ namespace ZeroUI.WinForms.Industrial
     [Obsolete("ZeroStepItem is deprecated. Please use StepItem instead.")]
     public class ZeroStepItem : StepItem
     {
+        public new ZeroStepStatus Status
+        {
+            get => (ZeroStepStatus)base.Status;
+            set => base.Status = (StepStatus)value;
+        }
+
+        public new ZeroStepGlyph Glyph
+        {
+            get => (ZeroStepGlyph)base.Glyph;
+            set => base.Glyph = (StepGlyph)value;
+        }
     }
 
     /// <summary>

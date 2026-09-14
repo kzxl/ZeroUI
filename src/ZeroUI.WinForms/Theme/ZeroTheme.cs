@@ -41,7 +41,7 @@ namespace ZeroUI.WinForms.Theme
     /// </summary>
     public static class ZeroTheme
     {
-        private static ZeroThemeMode _currentMode = ZeroThemeMode.Dark;
+        private static ZeroThemeMode _currentMode = ZeroThemeMode.Light;
         private static ZeroThemePalette _currentPalette;
 
         public static event EventHandler? ThemeChanged;
@@ -84,7 +84,7 @@ namespace ZeroUI.WinForms.Theme
 
         static ZeroTheme()
         {
-            _currentPalette = Dark;
+            _currentPalette = Light;
 
             // Automatically synchronize with central ZeroSkinManager
             ZeroSkinManager.SkinChanged += skin =>

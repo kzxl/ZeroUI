@@ -11,7 +11,7 @@ namespace ZeroUI.Core.Theme
     public static class ZeroSkinManager
     {
         private static readonly Dictionary<string, ZeroSkin> _skins = new Dictionary<string, ZeroSkin>(StringComparer.OrdinalIgnoreCase);
-        private static ZeroSkin _currentSkin = ZeroSkinDefaults.ObsidianDark;
+        private static ZeroSkin _currentSkin = ZeroSkinDefaults.CleanLight;
         private static readonly object _syncLock = new object();
 
         /// <summary>

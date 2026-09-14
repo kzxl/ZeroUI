@@ -53,7 +53,7 @@ namespace ZeroUI.Wpf.Theme
 
         static ZeroWpfTheme()
         {
-            ApplyPalette(ZeroUI.Core.Theme.ZeroSkinDefaults.ObsidianDark.Tokens, true);
+            ApplyPalette(ZeroUI.Core.Theme.ZeroSkinDefaults.CleanLight.Tokens, false);
 
             // Automatically synchronize with central ZeroSkinManager
             ZeroUI.Core.Theme.ZeroSkinManager.SkinChanged += skin =>
