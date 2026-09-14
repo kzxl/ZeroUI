@@ -82,6 +82,11 @@ namespace ZeroUI.Wpf.Editors
         }
 
         public int TotalPages => _model.TotalPages;
+        public void GoToPage(int page) => _model.GoToPage(page);
+        public void NextPage() => _model.NextPage();
+        public void PrevPage() => _model.PrevPage();
+        public void FirstPage() => _model.FirstPage();
+        public void LastPage() => _model.LastPage();
 
         #endregion
 

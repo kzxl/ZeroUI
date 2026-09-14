@@ -174,6 +174,16 @@ namespace ZeroUI.WinForms.Editors
 
         #endregion
 
+        #region Public Methods
+
+        public void GoToPage(int page) => _model.GoToPage(page);
+        public void NextPage() => _model.NextPage();
+        public void PrevPage() => _model.PrevPage();
+        public void FirstPage() => _model.FirstPage();
+        public void LastPage() => _model.LastPage();
+
+        #endregion
+
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
