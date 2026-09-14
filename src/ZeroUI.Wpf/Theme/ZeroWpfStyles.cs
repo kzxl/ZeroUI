@@ -54,16 +54,30 @@ namespace ZeroUI.Wpf.Theme
         public static Style BadgeStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Feedback.Badge)];
         public static Style FlyoutControlStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Overlays.FlyoutControl)];
 
-        public static Style ZeroTitleBarStyle => TitleBarStyle;
-        public static Style ZeroWindowStyle => ChromeWindowStyle;
-        public static Style ZeroInfoBarStyle => InfoBarStyle;
-        public static Style ZeroBadgeStyle => BadgeStyle;
-        public static Style ZeroFlyoutStyle => FlyoutControlStyle;
         public static Style ButtonEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.ButtonEdit)];
         public static Style PictureEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.PictureEdit)];
         public static Style IPAddressEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.IPAddressEdit)];
         public static Style RangeSliderStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.RangeSlider)];
         public static Style TokenEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.TokenEdit)];
+
+        #region Obsolete Styles
+
+        [Obsolete("Use TitleBarStyle instead.")]
+        public static Style ZeroTitleBarStyle => TitleBarStyle;
+
+        [Obsolete("Use ChromeWindowStyle instead.")]
+        public static Style ZeroWindowStyle => ChromeWindowStyle;
+
+        [Obsolete("Use InfoBarStyle instead.")]
+        public static Style ZeroInfoBarStyle => InfoBarStyle;
+
+        [Obsolete("Use BadgeStyle instead.")]
+        public static Style ZeroBadgeStyle => BadgeStyle;
+
+        [Obsolete("Use FlyoutControlStyle instead.")]
+        public static Style ZeroFlyoutStyle => FlyoutControlStyle;
+
+        #endregion
 
         public static void ApplyStyles(Application? app = null)
         {
