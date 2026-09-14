@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial safety interlock status indicator with diagnostic trip condition breakdown")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroInterlockIndicator.bmp")]
-    public class ZeroInterlockIndicator : Control, IScadaBindable
+    public class InterlockIndicator : Control, IScadaBindable
     {
         private bool _isBlocked = false;
         private string _tagLabel = "INTERLOCK";
@@ -56,7 +56,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public IReadOnlyList<string> ActiveInterlocks => _activeInterlocks.AsReadOnly();
 
-        public ZeroInterlockIndicator()
+        public InterlockIndicator()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -191,5 +191,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString(stateText, fontState, stateBrush, 28f, 22f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="InterlockIndicator"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroInterlockIndicator is deprecated. Please use InterlockIndicator instead.")]
+    [ToolboxItem(false)]
+    public class ZeroInterlockIndicator : InterlockIndicator
+    {
     }
 }

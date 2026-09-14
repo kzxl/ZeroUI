@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultProperty("Title")]
     [Description("Statistical Process Control (SPC) X-Bar chart with automated control limits")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSpcChart.bmp")]
-    public class ZeroSpcChart : Control
+    public class SpcChart : Control
     {
         private readonly List<SpcDataPoint> _points = new List<SpcDataPoint>();
         private string _title = "SPC X-Bar Chart — CNC Shaft Diameter (Target: 12.000 mm)";
@@ -52,7 +52,7 @@ namespace ZeroUI.WinForms.Industrial
         private float _lcl;
         private float _cpk = 1.33f;
 
-        public ZeroSpcChart()
+        public SpcChart()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -367,5 +367,15 @@ namespace ZeroUI.WinForms.Industrial
             var sz = g.MeasureString(text, font);
             g.DrawString(text, font, brush, plotX - sz.Width - 4, y - (sz.Height / 2));
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="SpcChart"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroSpcChart is deprecated. Please use SpcChart instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSpcChart : SpcChart
+    {
     }
 }

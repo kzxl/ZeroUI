@@ -9,7 +9,7 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
-    public enum ZeroTimelineStatus
+    public enum TimelineStatus
 
     {
         Completed,
@@ -18,17 +18,17 @@ namespace ZeroUI.WinForms.Industrial
         Error
     }
 
-    public class ZeroTimelineItem
+    public class TimelineItem
     {
         public string Title { get; set; } = "Process Node";
         public string Timestamp { get; set; } = "";
         public string? Description { get; set; }
-        public ZeroTimelineStatus Status { get; set; } = ZeroTimelineStatus.Completed;
+        public TimelineStatus Status { get; set; } = TimelineStatus.Completed;
         public object? Tag { get; set; }
 
-        public ZeroTimelineItem() { }
+        public TimelineItem() { }
 
-        public ZeroTimelineItem(string title, string timestamp, string? description = null, ZeroTimelineStatus status = ZeroTimelineStatus.Completed)
+        public TimelineItem(string title, string timestamp, string? description = null, TimelineStatus status = TimelineStatus.Completed)
         {
             Title = title;
             Timestamp = timestamp;
@@ -44,14 +44,14 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Vertical timeline control for lot tracking and manufacturing audit trails")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTimeline.bmp")]
-    public class ZeroTimeline : Control
+    public class Timeline : Control
     {
 
-        private readonly List<ZeroTimelineItem> _items = new List<ZeroTimelineItem>();
+        private readonly List<TimelineItem> _items = new List<TimelineItem>();
         private int _itemSpacing = 52;
         private int _nodeX = 24;
 
-        public ZeroTimeline()
+        public Timeline()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -68,7 +68,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Browsable(false)]
-        public List<ZeroTimelineItem> Items => _items;
+        public List<TimelineItem> Items => _items;
 
         [Category("Layout")]
         [DefaultValue(52)]
@@ -78,9 +78,9 @@ namespace ZeroUI.WinForms.Industrial
             set { _itemSpacing = Math.Max(36, value); Invalidate(); }
         }
 
-        public void Add(string title, string timestamp, string? description = null, ZeroTimelineStatus status = ZeroTimelineStatus.Completed)
+        public void Add(string title, string timestamp, string? description = null, TimelineStatus status = TimelineStatus.Completed)
         {
-            _items.Add(new ZeroTimelineItem(title, timestamp, description, status));
+            _items.Add(new TimelineItem(title, timestamp, description, status));
             Invalidate();
         }
 
@@ -165,12 +165,47 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        private static (Color node, Color ring) GetNodeColors(ZeroTimelineStatus status) => status switch
+        private static (Color node, Color ring) GetNodeColors(TimelineStatus status) => status switch
         {
-            ZeroTimelineStatus.Completed => (Color.FromArgb(16, 185, 129), Color.FromArgb(209, 250, 229)), // Emerald
-            ZeroTimelineStatus.InProgress => (Color.FromArgb(59, 130, 246), Color.FromArgb(219, 234, 254)), // Blue
-            ZeroTimelineStatus.Error => (Color.FromArgb(239, 68, 68), Color.FromArgb(254, 226, 226)),      // Red
+            TimelineStatus.Completed => (Color.FromArgb(16, 185, 129), Color.FromArgb(209, 250, 229)), // Emerald
+            TimelineStatus.InProgress => (Color.FromArgb(59, 130, 246), Color.FromArgb(219, 234, 254)), // Blue
+            TimelineStatus.Error => (Color.FromArgb(239, 68, 68), Color.FromArgb(254, 226, 226)),      // Red
             _ => (Color.FromArgb(156, 163, 175), Color.FromArgb(243, 244, 246))                            // Slate
         };
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="TimelineStatus"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroTimelineStatus is deprecated. Please use TimelineStatus instead.")]
+    public enum ZeroTimelineStatus
+    {
+        Completed = TimelineStatus.Completed,
+        InProgress = TimelineStatus.InProgress,
+        Pending = TimelineStatus.Pending,
+        Error = TimelineStatus.Error
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="TimelineItem"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroTimelineItem is deprecated. Please use TimelineItem instead.")]
+    public class ZeroTimelineItem : TimelineItem
+    {
+        public ZeroTimelineItem() : base() { }
+        public ZeroTimelineItem(string title, string timestamp, string? description = null, TimelineStatus status = TimelineStatus.Completed)
+            : base(title, timestamp, description, status) { }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Timeline"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroTimeline is deprecated. Please use Timeline instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTimeline : Timeline
+    {
     }
 }

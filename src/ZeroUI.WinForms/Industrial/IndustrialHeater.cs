@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial electric heater with thermal glow and temperature telemetry")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialHeater.bmp")]
-    public class ZeroIndustrialHeater : Control, IScadaBindable, IAnimationFrameListener
+    public class IndustrialHeater : Control, IScadaBindable, IAnimationFrameListener
     {
         private ZeroHeaterState _state = ZeroHeaterState.Heating;
         private double _temperatureC = 185.4;
@@ -81,7 +81,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroIndustrialHeater()
+        public IndustrialHeater()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -250,5 +250,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString(spStr, dataFont, valBrush, Width - spSize.Width - 8f, Height - 20f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="IndustrialHeater"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroIndustrialHeater is deprecated. Please use IndustrialHeater instead.")]
+    [ToolboxItem(false)]
+    public class ZeroIndustrialHeater : IndustrialHeater
+    {
     }
 }

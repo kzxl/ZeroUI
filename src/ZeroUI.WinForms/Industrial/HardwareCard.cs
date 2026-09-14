@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Hardware-accelerated Direct3D 11 card container with analytical drop shadows and neon bloom")]
-    public class ZeroHardwareCard : ZeroDirectXCanvas
+    public class HardwareCard : ZeroDirectXCanvas
     {
         private bool _alarmState;
 
@@ -44,7 +44,7 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        public ZeroHardwareCard()
+        public HardwareCard()
         {
             // Default to ZeroUI Obsidian Dark palette
             BackColor = Color.FromArgb(13, 17, 23);
@@ -57,5 +57,15 @@ namespace ZeroUI.WinForms.Industrial
             BlurRadius = 16f;
             BorderWidth = 1f;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="HardwareCard"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroHardwareCard is deprecated. Please use HardwareCard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroHardwareCard : HardwareCard
+    {
     }
 }

@@ -30,7 +30,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("OutputCoilChanged")]
     [Description("PLC Digital I/O 16-Bit Monitor with live LED bit registers")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPlcIoMonitor.bmp")]
-    public class ZeroPlcIoMonitor : Control
+    public class PlcIoMonitor : Control
     {
         private ushort _digitalInputs = 0x0055;  // Default sample bits
         private ushort _digitalOutputs = 0x0007; // Default sample bits
@@ -41,7 +41,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler<PlcCoilChangedEventArgs>? OutputCoilChanged;
 
-        public ZeroPlcIoMonitor()
+        public PlcIoMonitor()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -230,5 +230,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PlcIoMonitor"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPlcIoMonitor is deprecated. Please use PlcIoMonitor instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPlcIoMonitor : PlcIoMonitor
+    {
     }
 }

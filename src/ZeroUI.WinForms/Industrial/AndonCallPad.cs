@@ -39,7 +39,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("CallTriggered")]
     [Description("Shopfloor Touchscreen Andon Call Pad with live SLA response timers")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroAndonCallPad.bmp")]
-    public class ZeroAndonCallPad : Control
+    public class AndonCallPad : Control
     {
         private class CallTile
         {
@@ -60,7 +60,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler<AndonCallEventArgs>? CallTriggered;
 
-        public ZeroAndonCallPad()
+        public AndonCallPad()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -257,5 +257,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="AndonCallPad"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroAndonCallPad is deprecated. Please use AndonCallPad instead.")]
+    [ToolboxItem(false)]
+    public class ZeroAndonCallPad : AndonCallPad
+    {
     }
 }

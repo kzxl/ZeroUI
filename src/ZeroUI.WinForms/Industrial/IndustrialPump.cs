@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialPump.bmp")]
     [Category("ZeroUI - SCADA")]
-    public class ZeroIndustrialPump : Control, IScadaBindable
+    public class IndustrialPump : Control, IScadaBindable
     {
         private ZeroPumpState _state = ZeroPumpState.Running;
         private DeviceStatusFlags _statusFlags = DeviceStatusFlags.None;
@@ -84,7 +84,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler? PumpStateChanged;
 
-        public ZeroIndustrialPump()
+        public IndustrialPump()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -281,7 +281,7 @@ namespace ZeroUI.WinForms.Industrial
             // 6. Safety & Interlock Badges
             if (_statusFlags != DeviceStatusFlags.None)
             {
-                ZeroDeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
+                DeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
             }
         }
 
@@ -297,5 +297,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="IndustrialPump"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroIndustrialPump is deprecated. Please use IndustrialPump instead.")]
+    [ToolboxItem(false)]
+    public class ZeroIndustrialPump : IndustrialPump
+    {
     }
 }

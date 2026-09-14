@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial production counter scoreboard displaying Plan, Actual, NG, and Remaining")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroProductionCounter.bmp")]
-    public class ZeroProductionCounter : Control, IScadaBindable
+    public class ProductionCounter : Control, IScadaBindable
     {
         private int _plan = 2500;
         private int _actual = 2140;
@@ -64,7 +64,7 @@ namespace ZeroUI.WinForms.Industrial
         public int Remaining => Math.Max(0, _plan - _actual);
         public double CompletionPercent => Math.Min(100.0, (_actual / (double)_plan) * 100.0);
 
-        public ZeroProductionCounter()
+        public ProductionCounter()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -187,5 +187,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ProductionCounter"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroProductionCounter is deprecated. Please use ProductionCounter instead.")]
+    [ToolboxItem(false)]
+    public class ZeroProductionCounter : ProductionCounter
+    {
     }
 }

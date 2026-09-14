@@ -19,10 +19,10 @@ namespace ZeroUI.WinForms.Industrial
         public string Title { get; set; } = "Stage Title";
         public int Quantity { get; set; } = 0;
         public string? UpdatedTime { get; set; } = "--";
-        public ZeroStepStatus Status { get; set; } = ZeroStepStatus.Waiting;
-        public ZeroStepGlyph Glyph { get; set; } = ZeroStepGlyph.Gear;
+        public StepStatus Status { get; set; } = StepStatus.Waiting;
+        public StepGlyph Glyph { get; set; } = StepGlyph.Gear;
 
-        public WorkflowStage(string key, string title, int qty = 0, string? updated = "--", ZeroStepStatus status = ZeroStepStatus.Waiting, ZeroStepGlyph glyph = ZeroStepGlyph.Gear)
+        public WorkflowStage(string key, string title, int qty = 0, string? updated = "--", StepStatus status = StepStatus.Waiting, StepGlyph glyph = StepGlyph.Gear)
         {
             Key = key;
             Title = title;
@@ -52,7 +52,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroWorkflowCard.bmp")]
-    public class ZeroWorkflowCard : Control
+    public class WorkflowCard : Control
     {
         private readonly List<WorkflowStage> _stages = new List<WorkflowStage>();
         private readonly List<RectangleF> _stageBoxes = new List<RectangleF>();
@@ -72,7 +72,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler<WorkflowStageClickedEventArgs>? StageClicked;
 
-        public ZeroWorkflowCard()
+        public WorkflowCard()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -153,7 +153,7 @@ namespace ZeroUI.WinForms.Industrial
         [Browsable(false)]
         public List<WorkflowStage> Stages => _stages;
 
-        public WorkflowStage AddStage(string key, string title, int qty = 0, string? updated = "--", ZeroStepStatus status = ZeroStepStatus.Waiting, ZeroStepGlyph glyph = ZeroStepGlyph.Gear)
+        public WorkflowStage AddStage(string key, string title, int qty = 0, string? updated = "--", StepStatus status = StepStatus.Waiting, StepGlyph glyph = StepGlyph.Gear)
         {
             var stage = new WorkflowStage(key, title, qty, updated, status, glyph);
             _stages.Add(stage);
@@ -332,19 +332,19 @@ namespace ZeroUI.WinForms.Industrial
                 Color nodeBg, nodeBorder, iconBg, iconFg;
                 switch (stage.Status)
                 {
-                    case ZeroStepStatus.Completed:
+                    case StepStatus.Completed:
                         nodeBg = ZeroTheme.IsDark ? Color.FromArgb(20, 30, 45) : Color.FromArgb(250, 255, 252);
                         nodeBorder = Color.FromArgb(16, 185, 129); // Emerald
                         iconBg = Color.FromArgb(30, 16, 185, 129);
                         iconFg = Color.FromArgb(16, 185, 129);
                         break;
-                    case ZeroStepStatus.InProgress:
+                    case StepStatus.InProgress:
                         nodeBg = ZeroTheme.IsDark ? Color.FromArgb(25, 35, 60) : Color.FromArgb(248, 250, 255);
                         nodeBorder = Color.FromArgb(22, 119, 255); // Blue
                         iconBg = Color.FromArgb(30, 22, 119, 255);
                         iconFg = Color.FromArgb(22, 119, 255);
                         break;
-                    case ZeroStepStatus.Warning:
+                    case StepStatus.Warning:
                         nodeBg = ZeroTheme.IsDark ? Color.FromArgb(40, 35, 20) : Color.FromArgb(255, 251, 235);
                         nodeBorder = Color.FromArgb(245, 158, 11); // Amber
                         iconBg = Color.FromArgb(30, 245, 158, 11);
@@ -410,7 +410,7 @@ namespace ZeroUI.WinForms.Industrial
                     float arrowEndX = bX + boxW + gapW - 4f;
                     float arrowY = boxY + boxH / 2f;
 
-                    bool isCompleted = (stage.Status == ZeroStepStatus.Completed);
+                    bool isCompleted = (stage.Status == StepStatus.Completed);
                     Pen dotPen = isCompleted ? dotPenGreen : dotPenGray;
                     SolidBrush arrowBrush = isCompleted ? arrowBrushGreen : arrowBrushGray;
 
@@ -432,7 +432,7 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        private static void DrawStageGlyph(Graphics g, ZeroStepGlyph glyph, RectangleF rect, Color color)
+        private static void DrawStageGlyph(Graphics g, StepGlyph glyph, RectangleF rect, Color color)
         {
             float cx = rect.X + rect.Width / 2f;
             float cy = rect.Y + rect.Height / 2f;
@@ -442,7 +442,7 @@ namespace ZeroUI.WinForms.Industrial
 
             switch (glyph)
             {
-                case ZeroStepGlyph.Checkmark:
+                case StepGlyph.Checkmark:
                     // Checkmark
                     var p1 = new PointF(cx - 6f, cy);
                     var p2 = new PointF(cx - 2f, cy + 5f);
@@ -450,7 +450,7 @@ namespace ZeroUI.WinForms.Industrial
                     g.DrawLines(pen, new[] { p1, p2, p3 });
                     break;
 
-                case ZeroStepGlyph.Warehouse:
+                case StepGlyph.Warehouse:
                     // Warehouse roof & body
                     var r1 = new PointF(cx, cy - 6f);
                     var r2 = new PointF(cx - 7f, cy - 1f);
@@ -460,7 +460,7 @@ namespace ZeroUI.WinForms.Industrial
                     g.FillRectangle(brush, cx - 2f, cy + 2f, 4f, 5f);
                     break;
 
-                case ZeroStepGlyph.Truck:
+                case StepGlyph.Truck:
                     // Transport truck
                     g.DrawRectangle(pen, cx - 7f, cy - 4f, 9f, 8f);
                     g.DrawRectangle(pen, cx + 2f, cy - 1f, 5f, 5f);
@@ -497,5 +497,15 @@ namespace ZeroUI.WinForms.Industrial
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="WorkflowCard"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroWorkflowCard is deprecated. Please use WorkflowCard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroWorkflowCard : WorkflowCard
+    {
     }
 }

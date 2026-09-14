@@ -427,4 +427,14 @@ namespace ZeroUI.WinForms.Industrial
             base.Dispose(disposing);
         }
     }
+
+    /// <summary>
+    /// Legacy alias for <see cref="RadialGauge"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroRadialGauge is deprecated. Please use RadialGauge instead.")]
+    [ToolboxItem(false)]
+    public class ZeroRadialGauge : RadialGauge
+    {
+    }
 }

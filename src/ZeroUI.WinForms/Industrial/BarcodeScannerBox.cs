@@ -29,7 +29,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("BarcodeScanned")]
     [Description("Hardware barcode and QR code scanner input control for factory workstations")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroBarcodeBox.bmp")]
-    public class ZeroBarcodeBox : Control
+    public class BarcodeBox : Control
     {
 
         private readonly TextBox _textBox;
@@ -42,7 +42,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler<BarcodeScannedEventArgs>? BarcodeScanned;
 
-        public ZeroBarcodeBox()
+        public BarcodeBox()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -241,5 +241,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="BarcodeBox"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroBarcodeBox is deprecated. Please use BarcodeBox instead.")]
+    [ToolboxItem(false)]
+    public class ZeroBarcodeBox : BarcodeBox
+    {
     }
 }

@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial sensor element with dynamic detection LED and telemetry binding")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialSensor.bmp")]
-    public class ZeroIndustrialSensor : Control, IScadaBindable
+    public class IndustrialSensor : Control, IScadaBindable
     {
         private SensorType _sensorType = SensorType.Proximity;
         private SensorState _state = SensorState.Inactive;
@@ -67,7 +67,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroIndustrialSensor()
+        public IndustrialSensor()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -220,5 +220,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString(desc, stateFont, stateBrush, 6f, Height - 16f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="IndustrialSensor"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroIndustrialSensor is deprecated. Please use IndustrialSensor instead.")]
+    [ToolboxItem(false)]
+    public class ZeroIndustrialSensor : IndustrialSensor
+    {
     }
 }

@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Title")]
     [Description("Modern container card with rounded corners, optional Step Badge, and Title")]
-    public class ZeroCard : Panel
+    public class Card : Panel
     {
 
         private int? _stepNumber = 1;
@@ -34,7 +34,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler? ActionClicked;
 
-        public ZeroCard()
+        public Card()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -267,5 +267,15 @@ namespace ZeroUI.WinForms.Industrial
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Card"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroCard is deprecated. Please use Card instead.")]
+    [ToolboxItem(false)]
+    public class ZeroCard : Card
+    {
     }
 }

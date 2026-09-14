@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial digital telemetry readout indicator with alarm threshold coloring")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDigitalIndicator.bmp")]
-    public class ZeroDigitalIndicator : Control, IScadaBindable
+    public class DigitalIndicator : Control, IScadaBindable
     {
         private double _value = 48.7;
         private string _unit = "bar";
@@ -97,7 +97,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _highHighAlarm = value; Invalidate(); }
         }
 
-        public ZeroDigitalIndicator()
+        public DigitalIndicator()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -203,5 +203,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="DigitalIndicator"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroDigitalIndicator is deprecated. Please use DigitalIndicator instead.")]
+    [ToolboxItem(false)]
+    public class ZeroDigitalIndicator : DigitalIndicator
+    {
     }
 }

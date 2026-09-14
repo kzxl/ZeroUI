@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("Closed")]
     [Description("Dismissible alert banner for factory floor stoppages and system notifications")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroAlertBanner.bmp")]
-    public class ZeroAlertBanner : Control
+    public class AlertBanner : Control
     {
 
         private ZeroAlertSeverity _severity = ZeroAlertSeverity.Warning;
@@ -38,7 +38,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler? Closed;
 
-        public ZeroAlertBanner()
+        public AlertBanner()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -231,5 +231,15 @@ namespace ZeroUI.WinForms.Industrial
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="AlertBanner"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroAlertBanner is deprecated. Please use AlertBanner instead.")]
+    [ToolboxItem(false)]
+    public class ZeroAlertBanner : AlertBanner
+    {
     }
 }

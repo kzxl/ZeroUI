@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Industrial
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroNumericKeypad.bmp")]
-    public class ZeroNumericKeypad : Form
+    public class NumericKeypad : Form
     {
         private readonly Label _lblTitle;
         private readonly Label _lblDisplay;
@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Industrial
         public double MaxLimit { get; set; } = double.MaxValue;
         public string EngineeringUnit { get; set; } = "";
 
-        public ZeroNumericKeypad(string title, double initialValue, double minLimit = 0, double maxLimit = 100, string unit = "")
+        public NumericKeypad(string title, double initialValue, double minLimit = 0, double maxLimit = 100, string unit = "")
         {
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -188,6 +188,20 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             _lblDisplay.Text = $"{_currentBuffer} {EngineeringUnit}".Trim();
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="NumericKeypad"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroNumericKeypad is deprecated. Please use NumericKeypad instead.")]
+    [ToolboxItem(false)]
+    public class ZeroNumericKeypad : NumericKeypad
+    {
+        public ZeroNumericKeypad(string title, double initialValue, double minLimit = 0, double maxLimit = 100, string unit = "")
+            : base(title, initialValue, minLimit, maxLimit, unit)
+        {
         }
     }
 }

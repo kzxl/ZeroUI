@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Value")]
     [Description("Circular gauge meter for OEE, Yield, and equipment efficiency")]
-    public class ZeroGauge : Control
+    public class CircularGauge : Control
     {
 
         private float _value = 85f; // 0 to 100
@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Industrial
         private Color _gaugeColor = Color.FromArgb(16, 185, 129);  // Emerald
         private Color _trackColor = Color.FromArgb(229, 231, 235); // Gray track
 
-        public ZeroGauge()
+        public CircularGauge()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -143,5 +143,25 @@ namespace ZeroUI.WinForms.Industrial
                 TextRenderer.DrawText(g, _title, titleFont, titleRect, ZeroTheme.Colors.TextSecondary, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="CircularGauge"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroGauge is deprecated. Please use CircularGauge instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGauge : CircularGauge
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="CircularGauge"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroCircularGauge is deprecated. Please use CircularGauge instead.")]
+    [ToolboxItem(false)]
+    public class ZeroCircularGauge : CircularGauge
+    {
     }
 }

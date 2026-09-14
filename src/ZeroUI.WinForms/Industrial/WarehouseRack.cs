@@ -55,7 +55,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultProperty("RackTitle")]
     [DefaultEvent("BinClicked")]
     [Description("2D Smart Warehouse Storage Rack visualizer for WMS inventory management")]
-    public class ZeroWarehouseRack : Control
+    public class WarehouseRack : Control
     {
         private int _bays = 5;
         private int _levels = 4;
@@ -65,7 +65,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler<WarehouseBinClickedEventArgs>? BinClicked;
 
-        public ZeroWarehouseRack()
+        public WarehouseRack()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -475,5 +475,15 @@ namespace ZeroUI.WinForms.Industrial
             g.FillRectangle(brush, x, y + 2, 8, 8);
             g.DrawString(label, font, txtBrush, x + 12, y);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="WarehouseRack"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroWarehouseRack is deprecated. Please use WarehouseRack instead.")]
+    [ToolboxItem(false)]
+    public class ZeroWarehouseRack : WarehouseRack
+    {
     }
 }

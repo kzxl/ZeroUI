@@ -9,7 +9,7 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
-    public enum ZeroStepStatus
+    public enum StepStatus
 
     {
         Waiting,
@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Industrial
         Error
     }
 
-    public enum ZeroStepGlyph
+    public enum StepGlyph
     {
         Gear,
         Checkmark,
@@ -29,15 +29,15 @@ namespace ZeroUI.WinForms.Industrial
         Custom
     }
 
-    public class ZeroStepItem
+    public class StepItem
     {
         public string Key { get; set; } = "";
         public string Title { get; set; } = "Step Title";
         public int Quantity { get; set; } = 0;
         public int? TargetQuantity { get; set; }
         public string? Timestamp { get; set; } = "--";
-        public ZeroStepStatus Status { get; set; } = ZeroStepStatus.Waiting;
-        public ZeroStepGlyph Glyph { get; set; } = ZeroStepGlyph.Gear;
+        public StepStatus Status { get; set; } = StepStatus.Waiting;
+        public StepGlyph Glyph { get; set; } = StepGlyph.Gear;
         public string? CustomGlyphText { get; set; }
         public string QuantityPrefix { get; set; } = "Qty: ";
         public string TimestampPrefix { get; set; } = "Updated: ";
@@ -45,12 +45,12 @@ namespace ZeroUI.WinForms.Industrial
     }
 
 
-    public class ZeroStepClickedEventArgs : EventArgs
+    public class StepClickedEventArgs : EventArgs
     {
         public int StepIndex { get; }
-        public ZeroStepItem Step { get; }
+        public StepItem Step { get; }
 
-        public ZeroStepClickedEventArgs(int index, ZeroStepItem step)
+        public StepClickedEventArgs(int index, StepItem step)
         {
             StepIndex = index;
             Step = step;
@@ -65,16 +65,16 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("StepClicked")]
     [Description("Data-Driven Manufacturing Workflow Steps control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSteps.bmp")]
-    public class ZeroSteps : Control
+    public class StepsControl : Control
     {
 
-        private readonly List<ZeroStepItem> _steps = new List<ZeroStepItem>();
+        private readonly List<StepItem> _steps = new List<StepItem>();
         private readonly List<Rectangle> _stepRects = new List<Rectangle>();
         private int _hoveredIndex = -1;
 
-        public event EventHandler<ZeroStepClickedEventArgs>? StepClicked;
+        public event EventHandler<StepClickedEventArgs>? StepClicked;
 
-        public ZeroSteps()
+        public StepsControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -91,9 +91,9 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Browsable(false)]
-        public IReadOnlyList<ZeroStepItem> Steps => _steps;
+        public IReadOnlyList<StepItem> Steps => _steps;
 
-        public void SetSteps(IEnumerable<ZeroStepItem> steps)
+        public void SetSteps(IEnumerable<StepItem> steps)
         {
             _steps.Clear();
             if (steps != null)
@@ -103,7 +103,7 @@ namespace ZeroUI.WinForms.Industrial
             Invalidate();
         }
 
-        public void UpdateStep(string key, int quantity, string? timestamp = null, ZeroStepStatus? status = null)
+        public void UpdateStep(string key, int quantity, string? timestamp = null, StepStatus? status = null)
         {
             for (int i = 0; i < _steps.Count; i++)
             {
@@ -259,25 +259,25 @@ namespace ZeroUI.WinForms.Industrial
         }
 
 
-        private static (Color bg, Color border, Color icon, string glyph) GetStepColorsAndGlyph(ZeroStepItem step)
+        private static (Color bg, Color border, Color icon, string glyph) GetStepColorsAndGlyph(StepItem step)
         {
             string glyph = step.Glyph switch
             {
-                ZeroStepGlyph.Gear => "⚙",
-                ZeroStepGlyph.Checkmark => "✔",
-                ZeroStepGlyph.Warehouse => "🏠",
-                ZeroStepGlyph.Truck => "🚚",
-                ZeroStepGlyph.Alert => "⚠",
-                ZeroStepGlyph.Custom => step.CustomGlyphText ?? "•",
+                StepGlyph.Gear => "⚙",
+                StepGlyph.Checkmark => "✔",
+                StepGlyph.Warehouse => "🏠",
+                StepGlyph.Truck => "🚚",
+                StepGlyph.Alert => "⚠",
+                StepGlyph.Custom => step.CustomGlyphText ?? "•",
                 _ => "•"
             };
 
             return step.Status switch
             {
-                ZeroStepStatus.Completed => (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(82, 196, 26), step.Glyph == ZeroStepGlyph.Checkmark ? "✔" : glyph),
-                ZeroStepStatus.InProgress => (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(22, 119, 255), glyph),
-                ZeroStepStatus.Warning => (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(250, 173, 20), glyph),
-                ZeroStepStatus.Error => (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(255, 77, 79), "✖"),
+                StepStatus.Completed => (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(82, 196, 26), step.Glyph == StepGlyph.Checkmark ? "✔" : glyph),
+                StepStatus.InProgress => (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(22, 119, 255), glyph),
+                StepStatus.Warning => (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(250, 173, 20), glyph),
+                StepStatus.Error => (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(255, 77, 79), "✖"),
                 _ => (Color.FromArgb(243, 244, 246), Color.FromArgb(229, 231, 235), Color.FromArgb(156, 163, 175), glyph)
             };
         }
@@ -319,11 +319,79 @@ namespace ZeroUI.WinForms.Industrial
             base.OnMouseClick(e);
             if (e.Button == MouseButtons.Left && _hoveredIndex >= 0 && _hoveredIndex < _steps.Count)
             {
-                StepClicked?.Invoke(this, new ZeroStepClickedEventArgs(_hoveredIndex, _steps[_hoveredIndex]));
+                StepClicked?.Invoke(this, new StepClickedEventArgs(_hoveredIndex, _steps[_hoveredIndex]));
             }
         }
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StepStatus"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroStepStatus is deprecated. Please use StepStatus instead.")]
+    public enum ZeroStepStatus
+    {
+        Waiting = StepStatus.Waiting,
+        InProgress = StepStatus.InProgress,
+        Completed = StepStatus.Completed,
+        Warning = StepStatus.Warning,
+        Error = StepStatus.Error
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StepGlyph"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroStepGlyph is deprecated. Please use StepGlyph instead.")]
+    public enum ZeroStepGlyph
+    {
+        Gear = StepGlyph.Gear,
+        Checkmark = StepGlyph.Checkmark,
+        Warehouse = StepGlyph.Warehouse,
+        Truck = StepGlyph.Truck,
+        Alert = StepGlyph.Alert,
+        Custom = StepGlyph.Custom
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StepItem"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroStepItem is deprecated. Please use StepItem instead.")]
+    public class ZeroStepItem : StepItem
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StepClickedEventArgs"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroStepClickedEventArgs is deprecated. Please use StepClickedEventArgs instead.")]
+    public class ZeroStepClickedEventArgs : StepClickedEventArgs
+    {
+        public ZeroStepClickedEventArgs(int index, StepItem step) : base(index, step) { }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StepsControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroSteps is deprecated. Please use StepsControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSteps : StepsControl
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StepsControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroStepsControl is deprecated. Please use StepsControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroStepsControl : StepsControl
+    {
     }
 }

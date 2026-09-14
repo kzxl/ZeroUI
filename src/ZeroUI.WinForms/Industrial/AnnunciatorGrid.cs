@@ -45,7 +45,7 @@ namespace ZeroUI.WinForms.Industrial
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefaultControl.bmp")]
-    public class ZeroAnnunciatorGrid : Control, IScadaBindable
+    public class AnnunciatorGrid : Control, IScadaBindable
     {
         private readonly List<IsaAlarmTile> _tiles = new List<IsaAlarmTile>();
         private int _columns = 4;
@@ -93,7 +93,7 @@ namespace ZeroUI.WinForms.Industrial
         public event EventHandler? AlarmAcknowledged;
         public event EventHandler? AlarmReset;
 
-        public ZeroAnnunciatorGrid()
+        public AnnunciatorGrid()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -464,5 +464,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="AnnunciatorGrid"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroAnnunciatorGrid is deprecated. Please use AnnunciatorGrid instead.")]
+    [ToolboxItem(false)]
+    public class ZeroAnnunciatorGrid : AnnunciatorGrid
+    {
     }
 }

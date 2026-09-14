@@ -25,7 +25,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("CurrentLevelLiters")]
     [Description("Industrial 3D cylindrical fluid storage tank with animated liquid waves")]
-    public class ZeroTank3D : Control
+    public class Tank3D : Control
     {
         private float _capacityLiters = 10000f;
         private float _currentLevelLiters = 6850f;
@@ -39,7 +39,7 @@ namespace ZeroUI.WinForms.Industrial
         private float _wavePhase = 0f;
         private bool _blinkPhase = false;
 
-        public ZeroTank3D()
+        public Tank3D()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -328,5 +328,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Tank3D"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroTank3D is deprecated. Please use Tank3D instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTank3D : Tank3D
+    {
     }
 }

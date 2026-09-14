@@ -44,7 +44,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("CellClicked")]
     [Description("2D Matrix Heatmap for machine throughput, thermal maps, and load distribution")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroHeatmap.bmp")]
-    public class ZeroHeatmap : Control
+    public class Heatmap : Control
     {
         private string[] _xLabels = Array.Empty<string>();
         private string[] _yLabels = Array.Empty<string>();
@@ -68,7 +68,7 @@ namespace ZeroUI.WinForms.Industrial
         public event EventHandler<HeatmapCellEventArgs>? CellClicked;
         public event EventHandler<HeatmapCellEventArgs>? CellHovered;
 
-        public ZeroHeatmap()
+        public Heatmap()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -589,5 +589,15 @@ namespace ZeroUI.WinForms.Industrial
 
         private static GraphicsPath CreateRoundedRect(RectangleF r, int radius) =>
             ZeroUIConfig.CreateRoundedRectangleF(r, radius);
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Heatmap"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroHeatmap is deprecated. Please use Heatmap instead.")]
+    [ToolboxItem(false)]
+    public class ZeroHeatmap : Heatmap
+    {
     }
 }

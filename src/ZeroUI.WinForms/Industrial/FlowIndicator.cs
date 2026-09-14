@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Directional animated fluid flow indicator with moving chevron vectors")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroFlowIndicator.bmp")]
-    public class ZeroFlowIndicator : Control, IScadaBindable, IAnimationFrameListener
+    public class FlowIndicator : Control, IScadaBindable, IAnimationFrameListener
     {
         private FlowIndicatorDirection _direction = FlowIndicatorDirection.LeftToRight;
         private double _velocity = 1.5; // m/s
@@ -70,7 +70,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _flowColor = value; Invalidate(); }
         }
 
-        public ZeroFlowIndicator()
+        public FlowIndicator()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -202,5 +202,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="FlowIndicator"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroFlowIndicator is deprecated. Please use FlowIndicator instead.")]
+    [ToolboxItem(false)]
+    public class ZeroFlowIndicator : FlowIndicator
+    {
     }
 }

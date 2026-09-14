@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial setpoint input control with on-screen numeric keypad support")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSetpointInput.bmp")]
-    public class ZeroSetpointInput : Control, IScadaBindable
+    public class SetpointInput : Control, IScadaBindable
     {
         private double _setpointValue = 50.0;
         private double _minValue = 0.0;
@@ -81,7 +81,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroSetpointInput()
+        public SetpointInput()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -124,7 +124,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             base.OnClick(e);
 
-            using (var keypad = new ZeroNumericKeypad(_tagLabel, _setpointValue, _minValue, _maxValue, _unit))
+            using (var keypad = new NumericKeypad(_tagLabel, _setpointValue, _minValue, _maxValue, _unit))
             {
                 if (keypad.ShowDialog(FindForm()) == DialogResult.OK)
                 {
@@ -196,5 +196,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString("✎ TAP", iconFont, iconBrush, Width - 38f, Height - 18f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="SetpointInput"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroSetpointInput is deprecated. Please use SetpointInput instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSetpointInput : SetpointInput
+    {
     }
 }

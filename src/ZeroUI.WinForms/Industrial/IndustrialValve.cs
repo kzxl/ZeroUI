@@ -37,7 +37,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialValve.bmp")]
     [Category("ZeroUI - SCADA")]
-    public class ZeroIndustrialValve : Control, IScadaBindable
+    public class IndustrialValve : Control, IScadaBindable
     {
         private ZeroValveType _valveType = ZeroValveType.TwoWaySolenoid;
         private ZeroValveState _state = ZeroValveState.Open;
@@ -104,7 +104,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler? ValveStateChanged;
 
-        public ZeroIndustrialValve()
+        public IndustrialValve()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -317,7 +317,7 @@ namespace ZeroUI.WinForms.Industrial
             // 4. Safety & Interlock Badges (LOTO, Tagout, Interlock, Fault)
             if (_statusFlags != DeviceStatusFlags.None)
             {
-                ZeroDeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
+                DeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
             }
         }
 
@@ -332,5 +332,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="IndustrialValve"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroIndustrialValve is deprecated. Please use IndustrialValve instead.")]
+    [ToolboxItem(false)]
+    public class ZeroIndustrialValve : IndustrialValve
+    {
     }
 }

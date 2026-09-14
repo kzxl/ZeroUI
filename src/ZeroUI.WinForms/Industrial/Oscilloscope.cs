@@ -16,7 +16,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Hardware-accelerated Direct3D 11 oscilloscope powered by ZeroGraphics for streaming telemetry")]
-    public class ZeroOscilloscope : ZeroWaveformCanvas
+    public class Oscilloscope : ZeroWaveformCanvas
     {
         private readonly float[] _ringBuffer;
         private int _ringHead;
@@ -42,9 +42,9 @@ namespace ZeroUI.WinForms.Industrial
             set { _unit = value; Invalidate(); }
         }
 
-        public ZeroOscilloscope() : this(2048) { }
+        public Oscilloscope() : this(2048) { }
 
-        public ZeroOscilloscope(int bufferCapacity)
+        public Oscilloscope(int bufferCapacity)
         {
             int capacity = Math.Max(128, bufferCapacity);
             _ringBuffer = new float[capacity];
@@ -104,5 +104,17 @@ namespace ZeroUI.WinForms.Industrial
                 SetData(Array.Empty<float>());
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Oscilloscope"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroOscilloscope is deprecated. Please use Oscilloscope instead.")]
+    [ToolboxItem(false)]
+    public class ZeroOscilloscope : Oscilloscope
+    {
+        public ZeroOscilloscope() : base() { }
+        public ZeroOscilloscope(int bufferCapacity) : base(bufferCapacity) { }
     }
 }

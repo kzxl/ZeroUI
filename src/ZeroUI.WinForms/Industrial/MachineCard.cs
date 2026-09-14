@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial machine faceplate card with OEE gauge and status telemetry")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroMachineCard.bmp")]
-    public class ZeroMachineCard : Control, IScadaBindable
+    public class MachineCard : Control, IScadaBindable
     {
         private string _machineId = "CNC-04";
         private string _machineName = "5-Axis Milling Center";
@@ -108,7 +108,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _partCount = Math.Max(0, value); Invalidate(); }
         }
 
-        public ZeroMachineCard()
+        public MachineCard()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -292,5 +292,15 @@ namespace ZeroUI.WinForms.Industrial
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="MachineCard"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroMachineCard is deprecated. Please use MachineCard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroMachineCard : MachineCard
+    {
     }
 }

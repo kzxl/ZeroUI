@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("PropertyValueChanged")]
     [Description("Enterprise property inspector with categories, search filter, and in-place editors")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPropertyGrid.bmp")]
-    public class ZeroPropertyGrid : Control
+    public class PropertyGridControl : Control
     {
         private readonly ZeroPropertyModel _model = new ZeroPropertyModel();
         private readonly Panel _searchPanel;
@@ -50,7 +50,7 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        public ZeroPropertyGrid()
+        public PropertyGridControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -265,5 +265,15 @@ namespace ZeroUI.WinForms.Industrial
                 : item.Description;
             Invalidate(true);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PropertyGridControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPropertyGrid is deprecated. Please use PropertyGridControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPropertyGrid : PropertyGridControl
+    {
     }
 }

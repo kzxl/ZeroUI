@@ -34,7 +34,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialMotor.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial electric motor drive with cooling fins and dynamic telemetry status")]
-    public class ZeroIndustrialMotor : Control, IScadaBindable, IAnimationFrameListener
+    public class IndustrialMotor : Control, IScadaBindable, IAnimationFrameListener
     {
         private ZeroMotorState _state = ZeroMotorState.Running;
         private ZeroMotorDirection _direction = ZeroMotorDirection.Forward;
@@ -108,7 +108,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroIndustrialMotor()
+        public IndustrialMotor()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -294,9 +294,18 @@ namespace ZeroUI.WinForms.Industrial
             // 8. Safety & Interlock Badges
             if (_statusFlags != DeviceStatusFlags.None)
             {
-                ZeroDeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
+                DeviceBadgeRenderer.DrawBadges(g, ClientRectangle, _statusFlags, isDark);
             }
         }
     }
-}
 
+    /// <summary>
+    /// Legacy alias for <see cref="IndustrialMotor"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroIndustrialMotor is deprecated. Please use IndustrialMotor instead.")]
+    [ToolboxItem(false)]
+    public class ZeroIndustrialMotor : IndustrialMotor
+    {
+    }
+}

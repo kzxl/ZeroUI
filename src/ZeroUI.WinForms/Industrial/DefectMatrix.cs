@@ -47,7 +47,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("SlotClicked")]
     [Description("2D Defect Inspection Matrix for PCB panels, wafers, and QC carrier trays")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefectMatrix.bmp")]
-    public class ZeroDefectMatrix : Control
+    public class DefectMatrix : Control
     {
         private int _rows = 3;
         private int _columns = 6;
@@ -58,7 +58,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler<DefectSlotClickedEventArgs>? SlotClicked;
 
-        public ZeroDefectMatrix()
+        public DefectMatrix()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -337,5 +337,15 @@ namespace ZeroUI.WinForms.Industrial
             using var txtBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary);
             g.DrawString(label, font, txtBrush, x + 12, y);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="DefectMatrix"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroDefectMatrix is deprecated. Please use DefectMatrix instead.")]
+    [ToolboxItem(false)]
+    public class ZeroDefectMatrix : DefectMatrix
+    {
     }
 }

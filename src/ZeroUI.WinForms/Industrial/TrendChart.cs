@@ -60,7 +60,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTrendChart.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("High-performance real-time trend and oscilloscope chart for SCADA telemetry")]
-    public class ZeroTrendChart : Control
+    public class TrendChart : Control
     {
         private readonly List<TrendChannel> _channels = new List<TrendChannel>();
         private float? _upperLimit = 85f;
@@ -72,7 +72,7 @@ namespace ZeroUI.WinForms.Industrial
         private bool _showCursor = true;
         private float? _cursorX;
 
-        public ZeroTrendChart()
+        public TrendChart()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -429,5 +429,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="TrendChart"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroTrendChart is deprecated. Please use TrendChart instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTrendChart : TrendChart
+    {
     }
 }

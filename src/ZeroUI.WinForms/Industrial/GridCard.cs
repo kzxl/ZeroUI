@@ -50,7 +50,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroGridCard.bmp")]
-    public class ZeroGridCard : Control
+    public class GridCard : Control
     {
         private readonly List<GridCardColumn> _columns = new List<GridCardColumn>();
         private readonly List<GridCardRow> _rows = new List<GridCardRow>();
@@ -75,7 +75,7 @@ namespace ZeroUI.WinForms.Industrial
         public event EventHandler? FooterClicked;
         public event EventHandler<int>? RowClicked;
 
-        public ZeroGridCard()
+        public GridCard()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -572,5 +572,15 @@ namespace ZeroUI.WinForms.Industrial
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="GridCard"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroGridCard is deprecated. Please use GridCard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGridCard : GridCard
+    {
     }
 }

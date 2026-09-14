@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial pneumatic cylinder with animated piston rod and magnetic limit sensors")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPneumaticCylinder.bmp")]
-    public class ZeroPneumaticCylinder : Control, IScadaBindable, IAnimationFrameListener
+    public class PneumaticCylinder : Control, IScadaBindable, IAnimationFrameListener
     {
         private CylinderState _state = CylinderState.Extended;
         private double _extensionPercent = 100.0; // 0 = fully retracted, 100 = fully extended
@@ -69,7 +69,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroPneumaticCylinder()
+        public PneumaticCylinder()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -249,5 +249,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString(info, dataFont, valBrush, 8f, Height - 18f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PneumaticCylinder"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPneumaticCylinder is deprecated. Please use PneumaticCylinder instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPneumaticCylinder : PneumaticCylinder
+    {
     }
 }

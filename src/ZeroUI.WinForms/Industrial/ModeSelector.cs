@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial segmented control mode selector with lockout protection")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroModeSelector.bmp")]
-    public class ZeroModeSelector : Control, IScadaBindable
+    public class ModeSelector : Control, IScadaBindable
     {
         private MachineControlMode _selectedMode = MachineControlMode.Auto;
         private bool _isLocked = false;
@@ -70,7 +70,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroModeSelector()
+        public ModeSelector()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -221,5 +221,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ModeSelector"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroModeSelector is deprecated. Please use ModeSelector instead.")]
+    [ToolboxItem(false)]
+    public class ZeroModeSelector : ModeSelector
+    {
     }
 }

@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial material conveyor belt with animated kinematics and jam detection")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroConveyorBelt.bmp")]
-    public class ZeroConveyorBelt : Control, IScadaBindable, IAnimationFrameListener
+    public class ConveyorBelt : Control, IScadaBindable, IAnimationFrameListener
     {
         private ConveyorState _state = ConveyorState.Running;
         private ConveyorDirection _direction = ConveyorDirection.LeftToRight;
@@ -79,7 +79,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroConveyorBelt()
+        public ConveyorBelt()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -255,5 +255,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString(info, dataFont, valBrush, 8f, Height - 16f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ConveyorBelt"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroConveyorBelt is deprecated. Please use ConveyorBelt instead.")]
+    [ToolboxItem(false)]
+    public class ZeroConveyorBelt : ConveyorBelt
+    {
     }
 }

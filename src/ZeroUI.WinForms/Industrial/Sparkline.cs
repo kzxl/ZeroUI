@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Compact micro-trend sparkline graph for inline sensor telemetry")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSparkline.bmp")]
-    public class ZeroSparkline : Control, IScadaBindable
+    public class Sparkline : Control, IScadaBindable
     {
         private readonly float[] _buffer;
         private int _head = 0;
@@ -63,9 +63,9 @@ namespace ZeroUI.WinForms.Industrial
             set { _maxVal = Math.Max(value, _minVal + 0.001f); Invalidate(); }
         }
 
-        public ZeroSparkline() : this(40) { }
+        public Sparkline() : this(40) { }
 
-        public ZeroSparkline(int capacity)
+        public Sparkline(int capacity)
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -171,5 +171,17 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawEllipse(borderPen, lastPt.X - 3f, lastPt.Y - 3f, 6f, 6f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Sparkline"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroSparkline is deprecated. Please use Sparkline instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSparkline : Sparkline
+    {
+        public ZeroSparkline() : base() { }
+        public ZeroSparkline(int capacity) : base(capacity) { }
     }
 }

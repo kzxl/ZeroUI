@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPipeFlow.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Continuous multi-segment polyline pipeline with subpixel animated fluid dynamics")]
-    public class ZeroPolylinePipeFlow : Control, IScadaBindable
+    public class PolylinePipeFlow : Control, IScadaBindable
     {
         private readonly List<Point> _points = new List<Point>();
         private ZeroFluidType _fluidType = ZeroFluidType.Water;
@@ -87,7 +87,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _pipeDiameter = Math.Max(6, Math.Min(60, value)); Invalidate(); }
         }
 
-        public ZeroPolylinePipeFlow()
+        public PolylinePipeFlow()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -266,5 +266,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PolylinePipeFlow"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPolylinePipeFlow is deprecated. Please use PolylinePipeFlow instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPolylinePipeFlow : PolylinePipeFlow
+    {
     }
 }

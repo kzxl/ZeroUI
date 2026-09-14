@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Industrial
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPidFaceplate.bmp")]
-    public class ZeroPidFaceplate : Control, IScadaBindable
+    public class PidFaceplate : Control, IScadaBindable
     {
         private string _loopTag = "PIC-101";
         private string _loopDescription = "Boiler Steam Header Pressure";
@@ -104,7 +104,7 @@ namespace ZeroUI.WinForms.Industrial
         public event EventHandler? SetPointChanged;
         public event EventHandler? ModeChanged;
 
-        public ZeroPidFaceplate()
+        public PidFaceplate()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -395,5 +395,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PidFaceplate"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPidFaceplate is deprecated. Please use PidFaceplate instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPidFaceplate : PidFaceplate
+    {
     }
 }

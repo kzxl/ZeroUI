@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroAlarmGrid.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("High-performance ISA-18.2 compliant industrial alarm grid")]
-    public class ZeroAlarmGrid : Control
+    public class AlarmGrid : Control
     {
         private readonly List<ScadaAlarmRecord> _filteredAlarms = new List<ScadaAlarmRecord>();
         private AlarmFilterMode _filterMode = AlarmFilterMode.ActiveOnly;
@@ -58,7 +58,7 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        public ZeroAlarmGrid()
+        public AlarmGrid()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -347,5 +347,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="AlarmGrid"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroAlarmGrid is deprecated. Please use AlarmGrid instead.")]
+    [ToolboxItem(false)]
+    public class ZeroAlarmGrid : AlarmGrid
+    {
     }
 }

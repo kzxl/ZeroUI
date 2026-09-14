@@ -25,7 +25,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroLedTower.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial Andon Signal Tower Light with Red, Amber, Green, and Blue segments")]
-    public class ZeroLedTower : Control
+    public class LedTower : Control
     {
         private LedState _red = LedState.Off;
         private LedState _amber = LedState.Off;
@@ -35,7 +35,7 @@ namespace ZeroUI.WinForms.Industrial
         private IDisposable? _clockToken;
         private bool _lastBlink;
 
-        public ZeroLedTower()
+        public LedTower()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -245,5 +245,15 @@ namespace ZeroUI.WinForms.Industrial
             using var borderPen = new Pen(Color.FromArgb(40, 0, 0, 0), 1f);
             g.DrawRectangle(borderPen, rect);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="LedTower"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroLedTower is deprecated. Please use LedTower instead.")]
+    [ToolboxItem(false)]
+    public class ZeroLedTower : LedTower
+    {
     }
 }

@@ -30,7 +30,7 @@ namespace ZeroUI.WinForms.Industrial
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPipeFlow.bmp")]
-    public class ZeroPipeFlow : Control, IScadaBindable
+    public class PipeFlow : Control, IScadaBindable
     {
         private ZeroPipeShape _shape = ZeroPipeShape.Horizontal;
         private ZeroFluidType _fluidType = ZeroFluidType.Water;
@@ -113,7 +113,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
 
-        public ZeroPipeFlow()
+        public PipeFlow()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -393,5 +393,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PipeFlow"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPipeFlow is deprecated. Please use PipeFlow instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPipeFlow : PipeFlow
+    {
     }
 }

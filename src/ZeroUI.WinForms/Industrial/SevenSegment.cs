@@ -55,7 +55,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultProperty("Value")]
     [Description("Industrial 7-Segment Digital LED Display for SCADA & MES telemetry")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSevenSegment.bmp")]
-    public class ZeroSevenSegment : Control
+    public class SevenSegment : Control
     {
         private string _value = "1420";
         private Color _segmentColor = Color.FromArgb(52, 211, 153); // Emerald Neon Green
@@ -90,7 +90,7 @@ namespace ZeroUI.WinForms.Industrial
         // Bit 6 (0x40): Middle (G)
         private static readonly byte[] CharPatterns = new byte[128];
 
-        static ZeroSevenSegment()
+        static SevenSegment()
         {
             // Digits 0-9
             CharPatterns['0'] = 0x3F; // A B C D E F
@@ -141,7 +141,7 @@ namespace ZeroUI.WinForms.Industrial
             CharPatterns['Z'] = 0x5B; CharPatterns['z'] = 0x5B;
         }
 
-        public ZeroSevenSegment()
+        public SevenSegment()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -962,5 +962,15 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="SevenSegment"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroSevenSegment is deprecated. Please use SevenSegment instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSevenSegment : SevenSegment
+    {
     }
 }

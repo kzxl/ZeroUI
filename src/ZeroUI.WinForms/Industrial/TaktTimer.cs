@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("TaktCompleted")]
     [Description("Industrial Takt Time countdown ring and cycle timer for manufacturing lines")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTaktTimer.bmp")]
-    public class ZeroTaktTimer : Control
+    public class TaktTimer : Control
     {
         private float _targetTaktSeconds = 30f;
         private float _elapsedSeconds = 0f;
@@ -41,7 +41,7 @@ namespace ZeroUI.WinForms.Industrial
         public event EventHandler? TaktCompleted;
         public event EventHandler? TaktOverdue;
 
-        public ZeroTaktTimer()
+        public TaktTimer()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -248,5 +248,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="TaktTimer"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroTaktTimer is deprecated. Please use TaktTimer instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTaktTimer : TaktTimer
+    {
     }
 }

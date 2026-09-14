@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Single-HWND high-performance P&ID plant mimic canvas with ZeroScene graph engine and spatial culling")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPlantMimicCanvas.bmp")]
-    public class ZeroPlantMimicCanvas : Control
+    public class PlantMimicCanvas : Control
     {
         private ZeroScene _scene;
         private readonly List<SceneNode> _visibleNodesBuffer = new List<SceneNode>(256);
@@ -86,7 +86,7 @@ namespace ZeroUI.WinForms.Industrial
         [Browsable(false)]
         public List<IScadaDrawable> Elements => _elements;
 
-        public ZeroPlantMimicCanvas()
+        public PlantMimicCanvas()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -570,7 +570,7 @@ namespace ZeroUI.WinForms.Industrial
             if (node.StatusFlags != ZeroUI.Core.Scada.Safety.DeviceStatusFlags.None)
             {
                 var nodeRect = new Rectangle((int)x, (int)y, (int)w, (int)h);
-                ZeroDeviceBadgeRenderer.DrawBadges(g, nodeRect, node.StatusFlags, isDark);
+                DeviceBadgeRenderer.DrawBadges(g, nodeRect, node.StatusFlags, isDark);
             }
         }
 
@@ -604,5 +604,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PlantMimicCanvas"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPlantMimicCanvas is deprecated. Please use PlantMimicCanvas instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPlantMimicCanvas : PlantMimicCanvas
+    {
     }
 }

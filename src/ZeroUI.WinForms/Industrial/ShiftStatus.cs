@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial shift overview card with crew assignment and downtime tracker")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroShiftStatus.bmp")]
-    public class ZeroShiftStatus : Control, IScadaBindable
+    public class ShiftStatus : Control, IScadaBindable
     {
         private string _shiftName = "SHIFT A (DAY)";
         private string _shiftHours = "06:00 - 14:00";
@@ -69,7 +69,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _downtimeToday = value; Invalidate(); }
         }
 
-        public ZeroShiftStatus()
+        public ShiftStatus()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -158,5 +158,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ShiftStatus"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroShiftStatus is deprecated. Please use ShiftStatus instead.")]
+    [ToolboxItem(false)]
+    public class ZeroShiftStatus : ShiftStatus
+    {
     }
 }

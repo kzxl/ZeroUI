@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
@@ -15,7 +16,7 @@ namespace ZeroUI.WinForms.Industrial
     /// Features simultaneous PV/SP/MV comparative bargraphs, interactive loop mode switching (Auto/Man/Cas),
     /// a 60 FPS real-time 3-pen micro-trend chart, and interactive PID parameter tuning inputs (Kp, Ti, Td).
     /// </summary>
-    public class ZeroPidFlyout : Form, IScadaBindable, IAnimationFrameListener
+    public class PidFlyout : Form, IScadaBindable, IAnimationFrameListener
     {
         private string _loopTag = "PIC-101";
         private string _loopDescription = "Boiler Steam Header Pressure";
@@ -115,7 +116,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler? ParametersChanged;
 
-        public ZeroPidFlyout()
+        public PidFlyout()
         {
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
@@ -494,7 +495,7 @@ namespace ZeroUI.WinForms.Industrial
         /// <summary>
         /// Displays the PID faceplate flyout adjacent to the target control.
         /// </summary>
-        public static ZeroPidFlyout ShowFlyout(
+        public static PidFlyout ShowFlyout(
             Control owner,
             string loopTag,
             string description = "",
@@ -502,7 +503,7 @@ namespace ZeroUI.WinForms.Industrial
             double initialPv = 48.0,
             double initialMv = 60.0)
         {
-            var flyout = new ZeroPidFlyout
+            var flyout = new PidFlyout
             {
                 LoopTag = loopTag,
                 LoopDescription = description,
@@ -531,5 +532,15 @@ namespace ZeroUI.WinForms.Industrial
             base.Dispose(disposing);
         }
 
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PidFlyout"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroPidFlyout is deprecated. Please use PidFlyout instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPidFlyout : PidFlyout
+    {
     }
 }

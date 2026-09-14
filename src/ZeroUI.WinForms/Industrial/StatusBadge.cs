@@ -26,14 +26,14 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Real-time equipment status indicator with animated pulse ring")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroStatusBadge.bmp")]
-    public class ZeroStatusBadge : Control
+    public class StatusBadge : Control
     {
         private ZeroStatusType _status = ZeroStatusType.Running;
         private int _dotSize = 10;
         private bool _pulseEnabled = true;
         private IDisposable? _clockToken;
 
-        public ZeroStatusBadge()
+        public StatusBadge()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -181,5 +181,15 @@ namespace ZeroUI.WinForms.Industrial
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StatusBadge"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroStatusBadge is deprecated. Please use StatusBadge instead.")]
+    [ToolboxItem(false)]
+    public class ZeroStatusBadge : StatusBadge
+    {
     }
 }

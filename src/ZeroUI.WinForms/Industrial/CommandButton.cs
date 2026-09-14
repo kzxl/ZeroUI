@@ -32,7 +32,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Two-stage high-reliability SCADA command button with interlocks and hold confirmation")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroCommandButton.bmp")]
-    public class ZeroCommandButton : Control, IAnimationFrameListener
+    public class CommandButton : Control, IAnimationFrameListener
     {
         private CommandButtonAction _action = CommandButtonAction.Start;
         private string _commandText = "START";
@@ -106,7 +106,7 @@ namespace ZeroUI.WinForms.Industrial
             set => _targetTagPath = value;
         }
 
-        public ZeroCommandButton()
+        public CommandButton()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -314,5 +314,15 @@ namespace ZeroUI.WinForms.Industrial
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="CommandButton"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroCommandButton is deprecated. Please use CommandButton instead.")]
+    [ToolboxItem(false)]
+    public class ZeroCommandButton : CommandButton
+    {
     }
 }

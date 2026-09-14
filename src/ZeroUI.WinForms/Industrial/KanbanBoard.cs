@@ -65,7 +65,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("CardClicked")]
     [Description("Electronic Shopfloor Kanban Dispatching Board with WIP limits")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroKanbanBoard.bmp")]
-    public class ZeroKanbanBoard : Control
+    public class KanbanBoard : Control
     {
         private readonly List<KanbanColumn> _columns = new List<KanbanColumn>();
         private KanbanCard? _hoveredCard;
@@ -73,7 +73,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public event EventHandler<KanbanCardClickedEventArgs>? CardClicked;
 
-        public ZeroKanbanBoard()
+        public KanbanBoard()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -353,5 +353,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString($"👤 {card.OperatorName}", opFont, opBrush, r.X + 8, r.Y + 36);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="KanbanBoard"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroKanbanBoard is deprecated. Please use KanbanBoard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroKanbanBoard : KanbanBoard
+    {
     }
 }

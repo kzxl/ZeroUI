@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial Gantt chart for production scheduling, machine timelines, and maintenance")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroGanttChart.bmp")]
-    public class ZeroGanttChart : Control
+    public class GanttControl : Control
     {
         private readonly List<GanttTaskItem> _tasks = new List<GanttTaskItem>();
         private DateTime _projectStart = DateTime.Today.AddDays(-2);
@@ -69,7 +69,7 @@ namespace ZeroUI.WinForms.Industrial
         [Browsable(false)]
         public List<GanttTaskItem> Tasks => _tasks;
 
-        public ZeroGanttChart()
+        public GanttControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -311,5 +311,25 @@ namespace ZeroUI.WinForms.Industrial
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="GanttControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroGanttChart is deprecated. Please use GanttControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGanttChart : GanttControl
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="GanttControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroGanttControl is deprecated. Please use GanttControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGanttControl : GanttControl
+    {
     }
 }

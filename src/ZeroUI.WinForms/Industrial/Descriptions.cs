@@ -8,17 +8,16 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
-    public class ZeroDescriptionItem
-
+    public class DescriptionItem
     {
         public string Label { get; set; } = "";
         public string Value { get; set; } = "";
         public Color? ValueColor { get; set; }
         public bool IsHighlighted { get; set; }
 
-        public ZeroDescriptionItem() { }
+        public DescriptionItem() { }
 
-        public ZeroDescriptionItem(string label, string value, Color? valueColor = null, bool isHighlighted = false)
+        public DescriptionItem(string label, string value, Color? valueColor = null, bool isHighlighted = false)
         {
             Label = label;
             Value = value;
@@ -34,16 +33,16 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Key-Value metadata description grid component")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDescriptions.bmp")]
-    public class ZeroDescriptions : Control
+    public class Descriptions : Control
     {
 
-        private readonly List<ZeroDescriptionItem> _items = new List<ZeroDescriptionItem>();
+        private readonly List<DescriptionItem> _items = new List<DescriptionItem>();
         private int _columns = 2;
         private int _rowHeight = 28;
         private Color _labelColor = Color.FromArgb(107, 114, 128); // Muted gray
         private Color _valueColor = Color.FromArgb(17, 24, 39);     // Dark gray
 
-        public ZeroDescriptions()
+        public Descriptions()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -60,7 +59,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Browsable(false)]
-        public List<ZeroDescriptionItem> Items => _items;
+        public List<DescriptionItem> Items => _items;
 
         [Category("Layout")]
         [DefaultValue(2)]
@@ -94,7 +93,7 @@ namespace ZeroUI.WinForms.Industrial
 
         public void Add(string label, string value, Color? valueColor = null, bool isHighlighted = false)
         {
-            _items.Add(new ZeroDescriptionItem(label, value, valueColor, isHighlighted));
+            _items.Add(new DescriptionItem(label, value, valueColor, isHighlighted));
             Invalidate();
         }
 
@@ -178,5 +177,27 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="DescriptionItem"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroDescriptionItem is deprecated. Please use DescriptionItem instead.")]
+    public class ZeroDescriptionItem : DescriptionItem
+    {
+        public ZeroDescriptionItem() : base() { }
+        public ZeroDescriptionItem(string label, string value, Color? valueColor = null, bool isHighlighted = false)
+            : base(label, value, valueColor, isHighlighted) { }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Descriptions"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroDescriptions is deprecated. Please use Descriptions instead.")]
+    [ToolboxItem(false)]
+    public class ZeroDescriptions : Descriptions
+    {
     }
 }

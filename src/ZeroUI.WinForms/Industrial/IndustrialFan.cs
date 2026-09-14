@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial ventilation fan with animated rotating blades")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialFan.bmp")]
-    public class ZeroIndustrialFan : Control, IScadaBindable, IAnimationFrameListener
+    public class IndustrialFan : Control, IScadaBindable, IAnimationFrameListener
     {
         private ZeroFanState _state = ZeroFanState.Running;
         private double _speedRpm = 1200.0;
@@ -62,7 +62,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _tagLabel = value ?? ""; Invalidate(); }
         }
 
-        public ZeroIndustrialFan()
+        public IndustrialFan()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -218,5 +218,15 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString(info, dataFont, valBrush, cx - infoSize.Width * 0.5f, Height - 18f);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="IndustrialFan"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroIndustrialFan is deprecated. Please use IndustrialFan instead.")]
+    [ToolboxItem(false)]
+    public class ZeroIndustrialFan : IndustrialFan
+    {
     }
 }
