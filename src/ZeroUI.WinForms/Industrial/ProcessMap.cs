@@ -43,12 +43,28 @@ namespace ZeroUI.WinForms.Industrial
         private PointF _nodeDragStartMouse;
         private PointF _nodeDragStartPos;
 
+        private bool _isConnecting = false;
+        private ProcessFlowNode? _connectSourceNode;
+        private ProcessPortPosition _connectSourcePort;
+        private PointF _connectCurrentMouse;
+        private ProcessPortPosition? _hoveredPort;
+        private ProcessFlowNode? _hoveredPortNode;
+
+        private ProcessFlowConnection? _selectedConnection;
+        private ProcessFlowConnection? _hoveredConnection;
+
         private ContextMenuStrip _contextMenu = null!;
         private ToolStripMenuItem _mnuEditTitle = null!;
+        private ToolStripMenuItem _mnuConnectTo = null!;
         private ToolStripMenuItem _mnuAssignAction = null!;
         private ToolStripMenuItem _mnuChangeShape = null!;
         private ToolStripMenuItem _mnuDeleteNode = null!;
         private ToolStripMenuItem _mnuAddStep = null!;
+
+        private ContextMenuStrip _connContextMenu = null!;
+        private ToolStripMenuItem _mnuEditConnLabel = null!;
+        private ToolStripMenuItem _mnuDeleteConn = null!;
+        private ToolStripMenuItem _mnuChangeConnColor = null!;
 
         public event EventHandler<ProcessFlowNode>? NodeClicked;
         public event EventHandler<ProcessActionContext>? ActionTriggered;
@@ -77,6 +93,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             _contextMenu = new ContextMenuStrip();
             _mnuEditTitle = new ToolStripMenuItem("Edit Title & Subtitle...", null, OnEditTitleClicked);
+            _mnuConnectTo = new ToolStripMenuItem("🔗 Connect to Step...", null);
             _mnuAssignAction = new ToolStripMenuItem("Assign Navigation Action...", null);
             _mnuChangeShape = new ToolStripMenuItem("Change Shape", null);
 
@@ -92,6 +109,7 @@ namespace ZeroUI.WinForms.Industrial
             _contextMenu.Items.AddRange(new ToolStripItem[] {
                 _mnuAddStep,
                 new ToolStripSeparator(),
+                _mnuConnectTo,
                 _mnuEditTitle,
                 _mnuAssignAction,
                 _mnuChangeShape,
@@ -100,6 +118,54 @@ namespace ZeroUI.WinForms.Industrial
             });
 
             _contextMenu.Opening += OnContextMenuOpening;
+
+            // Connection context menu
+            _connContextMenu = new ContextMenuStrip();
+            _mnuEditConnLabel = new ToolStripMenuItem("✏ Edit Branch Label...", null, OnEditConnLabelClicked);
+            _mnuChangeConnColor = new ToolStripMenuItem("🎨 Change Line Color", null);
+
+            var colors = new (string Name, string Hex)[]
+            {
+                ("Sky Blue (Default)", "#0EA5E9"),
+                ("Emerald Green (Pass/Approve)", "#10B981"),
+                ("Rose Red (Reject/Fail)", "#EF4444"),
+                ("Amber Orange (Warning)", "#F59E0B"),
+                ("Purple (Alternative)", "#8B5CF6")
+            };
+            foreach (var c in colors)
+            {
+                string hex = c.Hex;
+                var itm = new ToolStripMenuItem(c.Name, null, (s, e) =>
+                {
+                    if (_selectedConnection != null)
+                    {
+                        _selectedConnection.StrokeColorHex = hex;
+                        Invalidate();
+                        DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                });
+                _mnuChangeConnColor.DropDownItems.Add(itm);
+            }
+
+            var mnuToggleDashed = new ToolStripMenuItem("➖ Toggle Dashed Style", null, (s, e) =>
+            {
+                if (_selectedConnection != null)
+                {
+                    _selectedConnection.IsDashed = !_selectedConnection.IsDashed;
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                }
+            });
+
+            _mnuDeleteConn = new ToolStripMenuItem("🗑 Delete Connection", null, OnDeleteConnClicked);
+
+            _connContextMenu.Items.AddRange(new ToolStripItem[] {
+                _mnuEditConnLabel,
+                _mnuChangeConnColor,
+                mnuToggleDashed,
+                new ToolStripSeparator(),
+                _mnuDeleteConn
+            });
         }
 
         #region Public Properties
@@ -252,13 +318,35 @@ namespace ZeroUI.WinForms.Industrial
             // 5. Connections (Orthogonal Lines & Branch Labels)
             foreach (var conn in _definition.Connections)
             {
-                DrawConnection(g, conn);
+                DrawConnection(g, conn, conn == _selectedConnection, conn == _hoveredConnection);
             }
 
             // 6. Nodes (Task Cards, Decision Diamonds, Terminals)
             foreach (var node in _definition.Nodes)
             {
                 DrawNode(g, node, node == _selectedNode, node == _hoveredNode);
+            }
+
+            // 6b. Ports & Rubberband Wire in Design Mode
+            if (_isDesignMode)
+            {
+                if (_hoveredNode != null)
+                {
+                    DrawPortDots(g, _hoveredNode, _hoveredNode == _hoveredPortNode ? _hoveredPort : null);
+                }
+                if (_selectedNode != null && _selectedNode != _hoveredNode)
+                {
+                    DrawPortDots(g, _selectedNode, _selectedNode == _hoveredPortNode ? _hoveredPort : null);
+                }
+
+                if (_isConnecting && _connectSourceNode != null)
+                {
+                    PointF p1 = GetPortLocation(_connectSourceNode, _connectSourcePort);
+                    PointF p2 = _connectCurrentMouse;
+                    using var rubberPen = new Pen(Color.FromArgb(245, 158, 11), 2.5f) { DashStyle = DashStyle.Dash };
+                    g.DrawLine(rubberPen, p1, p2);
+                    DrawArrowhead(g, rubberPen, p1, p2);
+                }
             }
 
             g.Restore(state);
@@ -318,7 +406,7 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        private void DrawConnection(Graphics g, ProcessFlowConnection conn)
+        private void DrawConnection(Graphics g, ProcessFlowConnection conn, bool isSelected = false, bool isHovered = false)
         {
             var srcNode = _definition.Nodes.FirstOrDefault(n => n.Id == conn.SourceNodeId);
             var tgtNode = _definition.Nodes.FirstOrDefault(n => n.Id == conn.TargetNodeId);
@@ -327,8 +415,10 @@ namespace ZeroUI.WinForms.Industrial
             PointF p1 = GetPortLocation(srcNode, conn.SourcePort);
             PointF p2 = GetPortLocation(tgtNode, conn.TargetPort);
 
-            Color stroke = ParseColor(conn.StrokeColorHex, Color.FromArgb(14, 165, 233));
-            float thick = (float)conn.StrokeThickness;
+            Color stroke = isSelected
+                ? Color.FromArgb(245, 158, 11)
+                : (isHovered ? Color.FromArgb(59, 130, 246) : ParseColor(conn.StrokeColorHex, Color.FromArgb(14, 165, 233)));
+            float thick = (float)conn.StrokeThickness + (isSelected || isHovered ? 1.5f : 0f);
 
             using (var pen = new Pen(stroke, thick))
             {
@@ -615,17 +705,20 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-        private void DrawPortDots(Graphics g, ProcessFlowNode node)
+        private void DrawPortDots(Graphics g, ProcessFlowNode node, ProcessPortPosition? activePort = null)
         {
             var ports = new ProcessPortPosition[] { ProcessPortPosition.Top, ProcessPortPosition.Bottom, ProcessPortPosition.Left, ProcessPortPosition.Right };
-            using (var fill = new SolidBrush(ZeroTheme.Colors.Primary))
+            using (var fillDefault = new SolidBrush(ZeroTheme.Colors.Primary))
+            using (var fillActive = new SolidBrush(Color.FromArgb(245, 158, 11)))
             using (var borderPen = new Pen(Color.White, 1.5f))
             {
                 foreach (var p in ports)
                 {
                     var pt = GetPortLocation(node, p);
-                    g.FillEllipse(fill, pt.X - 4, pt.Y - 4, 8, 8);
-                    g.DrawEllipse(borderPen, pt.X - 4, pt.Y - 4, 8, 8);
+                    bool isActive = (p == activePort);
+                    float r = isActive ? 6f : 4f;
+                    g.FillEllipse(isActive ? fillActive : fillDefault, pt.X - r, pt.Y - r, r * 2, r * 2);
+                    g.DrawEllipse(borderPen, pt.X - r, pt.Y - r, r * 2, r * 2);
                 }
             }
         }
@@ -648,7 +741,9 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 2. Mode Badge (Bottom Left)
-            string modeText = _isDesignMode ? "✏ DESIGN MODE (Drag to move, Right-click to edit)" : "▶ RUN MODE (Click step to navigate)";
+            string modeText = _isDesignMode 
+                ? "✏ DESIGN MODE (Drag ports to connect, Drag nodes to move, Right-click to edit)" 
+                : "▶ RUN MODE (Click step to navigate)";
             Color badgeBg = _isDesignMode ? Color.FromArgb(245, 158, 11) : Color.FromArgb(16, 185, 129);
 
             using (var font = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
@@ -758,13 +853,115 @@ namespace ZeroUI.WinForms.Industrial
             return null;
         }
 
+        public bool HitTestPort(PointF worldPt, out ProcessFlowNode? hitNode, out ProcessPortPosition hitPort)
+        {
+            hitNode = null;
+            hitPort = ProcessPortPosition.Center;
+            if (!_isDesignMode) return false;
+
+            float threshold = 12f / _zoom;
+            var ports = new[] { ProcessPortPosition.Top, ProcessPortPosition.Bottom, ProcessPortPosition.Left, ProcessPortPosition.Right };
+
+            var candidates = new List<ProcessFlowNode>();
+            if (_hoveredNode != null) candidates.Add(_hoveredNode);
+            if (_selectedNode != null && _selectedNode != _hoveredNode) candidates.Add(_selectedNode);
+            foreach (var n in _definition.Nodes)
+            {
+                if (!candidates.Contains(n)) candidates.Add(n);
+            }
+
+            foreach (var node in candidates)
+            {
+                foreach (var p in ports)
+                {
+                    var pt = GetPortLocation(node, p);
+                    float dx = worldPt.X - pt.X;
+                    float dy = worldPt.Y - pt.Y;
+                    if ((dx * dx + dy * dy) <= threshold * threshold)
+                    {
+                        hitNode = node;
+                        hitPort = p;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public ProcessFlowConnection? HitTestConnection(PointF worldPt)
+        {
+            float threshold = 8f / _zoom;
+            foreach (var conn in _definition.Connections)
+            {
+                var srcNode = _definition.Nodes.FirstOrDefault(n => n.Id == conn.SourceNodeId);
+                var tgtNode = _definition.Nodes.FirstOrDefault(n => n.Id == conn.TargetNodeId);
+                if (srcNode == null || tgtNode == null) continue;
+
+                PointF p1 = GetPortLocation(srcNode, conn.SourcePort);
+                PointF p2 = GetPortLocation(tgtNode, conn.TargetPort);
+                var points = CalculateOrthogonalRoute(p1, p2, conn.SourcePort, conn.TargetPort);
+                for (int i = 0; i < points.Length - 1; i++)
+                {
+                    if (DistanceToLineSegment(worldPt, points[i], points[i + 1]) <= threshold)
+                    {
+                        return conn;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private static float DistanceToLineSegment(PointF pt, PointF a, PointF b)
+        {
+            float dx = b.X - a.X;
+            float dy = b.Y - a.Y;
+            float lenSq = dx * dx + dy * dy;
+            if (lenSq < 0.0001f)
+            {
+                float ddx = pt.X - a.X;
+                float ddy = pt.Y - a.Y;
+                return (float)Math.Sqrt(ddx * ddx + ddy * ddy);
+            }
+            float t = Math.Max(0, Math.Min(1, ((pt.X - a.X) * dx + (pt.Y - a.Y) * dy) / lenSq));
+            PointF proj = new PointF(a.X + t * dx, a.Y + t * dy);
+            float px = pt.X - proj.X;
+            float py = pt.Y - proj.Y;
+            return (float)Math.Sqrt(px * px + py * py);
+        }
+
+        private static ProcessPortPosition GetBestSourcePort(ProcessFlowNode from, ProcessFlowNode to)
+        {
+            double dx = to.X - from.X;
+            double dy = to.Y - from.Y;
+            if (Math.Abs(dx) > Math.Abs(dy))
+            {
+                return dx > 0 ? ProcessPortPosition.Right : ProcessPortPosition.Left;
+            }
+            else
+            {
+                return dy > 0 ? ProcessPortPosition.Bottom : ProcessPortPosition.Top;
+            }
+        }
+
+        private static ProcessPortPosition GetBestTargetPort(ProcessFlowNode from, ProcessFlowNode to, ProcessPortPosition sp)
+        {
+            return sp switch
+            {
+                ProcessPortPosition.Right => ProcessPortPosition.Left,
+                ProcessPortPosition.Left => ProcessPortPosition.Right,
+                ProcessPortPosition.Bottom => ProcessPortPosition.Top,
+                ProcessPortPosition.Top => ProcessPortPosition.Bottom,
+                _ => ProcessPortPosition.Top
+            };
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
             Focus();
             PointF worldPt = ScreenToWorld(e.Location);
 
-            if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right && _selectedNode == null))
+            if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right && _selectedNode == null && _selectedConnection == null))
             {
                 _isPanning = true;
                 _panStartMouse = e.Location;
@@ -775,10 +972,24 @@ namespace ZeroUI.WinForms.Industrial
 
             if (e.Button == MouseButtons.Left)
             {
+                // 1. Check if starting connection drag from a port in design mode
+                if (_isDesignMode && HitTestPort(worldPt, out var pNode, out var pPort) && pNode != null)
+                {
+                    _isConnecting = true;
+                    _connectSourceNode = pNode;
+                    _connectSourcePort = pPort;
+                    _connectCurrentMouse = worldPt;
+                    Capture = true;
+                    Invalidate();
+                    return;
+                }
+
+                // 2. Check if clicking on node
                 var hit = HitTestNode(worldPt);
                 if (hit != null)
                 {
                     SelectedNode = hit;
+                    _selectedConnection = null;
                     if (_isDesignMode)
                     {
                         _isDraggingNode = true;
@@ -786,15 +997,28 @@ namespace ZeroUI.WinForms.Industrial
                         _nodeDragStartPos = new PointF((float)hit.X, (float)hit.Y);
                         Capture = true;
                     }
+                    Invalidate();
+                    return;
                 }
-                else
+
+                // 3. Check if clicking on connection line
+                var hitConn = HitTestConnection(worldPt);
+                if (hitConn != null)
                 {
+                    _selectedConnection = hitConn;
                     SelectedNode = null;
-                    _isPanning = true;
-                    _panStartMouse = e.Location;
-                    _panStartOffset = _panOffset;
-                    Capture = true;
+                    Invalidate();
+                    return;
                 }
+
+                // 4. Clicking on blank canvas
+                SelectedNode = null;
+                _selectedConnection = null;
+                _isPanning = true;
+                _panStartMouse = e.Location;
+                _panStartOffset = _panOffset;
+                Capture = true;
+                Invalidate();
             }
         }
 
@@ -802,6 +1026,16 @@ namespace ZeroUI.WinForms.Industrial
         {
             base.OnMouseMove(e);
             PointF worldPt = ScreenToWorld(e.Location);
+
+            if (_isConnecting)
+            {
+                _connectCurrentMouse = worldPt;
+                HitTestPort(worldPt, out _hoveredPortNode, out var hp);
+                _hoveredPort = hp;
+                Cursor = Cursors.Cross;
+                Invalidate();
+                return;
+            }
 
             if (_isPanning)
             {
@@ -823,7 +1057,37 @@ namespace ZeroUI.WinForms.Industrial
                 return;
             }
 
-            // Hover state
+            // Design mode port hovering
+            if (_isDesignMode)
+            {
+                if (HitTestPort(worldPt, out var pNode, out var pPort))
+                {
+                    Cursor = Cursors.Cross;
+                    if (_hoveredPortNode != pNode || _hoveredPort != pPort)
+                    {
+                        _hoveredPortNode = pNode;
+                        _hoveredPort = pPort;
+                        Invalidate();
+                    }
+                    return;
+                }
+                else if (_hoveredPortNode != null || _hoveredPort != null)
+                {
+                    _hoveredPortNode = null;
+                    _hoveredPort = null;
+                    Invalidate();
+                }
+            }
+
+            // Connection line hovering
+            var hoveredConn = HitTestConnection(worldPt);
+            if (hoveredConn != _hoveredConnection)
+            {
+                _hoveredConnection = hoveredConn;
+                Invalidate();
+            }
+
+            // Node hovering
             var hovered = HitTestNode(worldPt);
             if (hovered != _hoveredNode)
             {
@@ -831,6 +1095,10 @@ namespace ZeroUI.WinForms.Industrial
                 if (_hoveredNode != null)
                 {
                     Cursor = _isDesignMode ? Cursors.SizeAll : Cursors.Hand;
+                }
+                else if (_hoveredConnection != null)
+                {
+                    Cursor = Cursors.Hand;
                 }
                 else
                 {
@@ -845,19 +1113,44 @@ namespace ZeroUI.WinForms.Industrial
             base.OnMouseUp(e);
             Capture = false;
 
+            if (_isConnecting)
+            {
+                _isConnecting = false;
+                PointF worldPt = ScreenToWorld(e.Location);
+                var targetNode = HitTestNode(worldPt);
+                if (targetNode != null && _connectSourceNode != null && targetNode.Id != _connectSourceNode.Id)
+                {
+                    ProcessPortPosition targetPort;
+                    if (HitTestPort(worldPt, out var tNode, out var tPort) && tNode?.Id == targetNode.Id)
+                    {
+                        targetPort = tPort;
+                    }
+                    else
+                    {
+                        targetPort = GetBestTargetPort(_connectSourceNode, targetNode, _connectSourcePort);
+                    }
+
+                    AddConnection(_connectSourceNode.Id, targetNode.Id, "", "#0EA5E9", _connectSourcePort, targetPort);
+                }
+
+                _connectSourceNode = null;
+                _hoveredPort = null;
+                _hoveredPortNode = null;
+                Invalidate();
+                return;
+            }
+
             bool wasDragging = _isDraggingNode;
             _isPanning = false;
             _isDraggingNode = false;
 
-            PointF worldPt = ScreenToWorld(e.Location);
-            var hit = HitTestNode(worldPt);
+            PointF worldPtAfter = ScreenToWorld(e.Location);
+            var hit = HitTestNode(worldPtAfter);
 
             if (e.Button == MouseButtons.Left && !wasDragging && hit != null)
             {
-                // Trigger NodeClicked event
                 NodeClicked?.Invoke(this, hit);
 
-                // If AutoExecuteAction is enabled and node has ActionKey, execute it!
                 if (_autoExecuteAction && !string.IsNullOrWhiteSpace(hit.ActionKey) && !_isDesignMode)
                 {
                     var ctx = new ProcessActionContext(hit, this);
@@ -870,9 +1163,45 @@ namespace ZeroUI.WinForms.Industrial
             }
             else if (e.Button == MouseButtons.Right && _isDesignMode)
             {
-                _rightClickLocation = worldPt;
+                _rightClickLocation = worldPtAfter;
+
+                // Check connection right-click
+                var hitConn = HitTestConnection(worldPtAfter);
+                if (hitConn != null)
+                {
+                    _selectedConnection = hitConn;
+                    SelectedNode = null;
+                    Invalidate();
+                    _connContextMenu.Show(this, e.Location);
+                    return;
+                }
+
+                // Check node right-click or blank canvas
                 SelectedNode = hit;
+                _selectedConnection = null;
+                Invalidate();
                 _contextMenu.Show(this, e.Location);
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (_isDesignMode && e.KeyCode == Keys.Delete)
+            {
+                if (_selectedConnection != null)
+                {
+                    _definition.Connections.Remove(_selectedConnection);
+                    _selectedConnection = null;
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                    e.Handled = true;
+                }
+                else if (_selectedNode != null)
+                {
+                    OnDeleteNodeClicked(this, EventArgs.Empty);
+                    e.Handled = true;
+                }
             }
         }
 
@@ -903,14 +1232,40 @@ namespace ZeroUI.WinForms.Industrial
         {
             bool hasNode = _selectedNode != null;
             _mnuAddStep.Visible = !hasNode;
+            _mnuConnectTo.Visible = hasNode;
             _mnuEditTitle.Visible = hasNode;
             _mnuAssignAction.Visible = hasNode;
             _mnuChangeShape.Visible = hasNode;
             _mnuDeleteNode.Visible = hasNode;
 
-            if (!hasNode)
+            if (!hasNode || _selectedNode == null)
             {
                 return;
+            }
+
+            // Populate "Connect to Step..." submenu
+            _mnuConnectTo.DropDownItems.Clear();
+            var otherNodes = _definition.Nodes.Where(n => n.Id != _selectedNode.Id).ToList();
+            if (otherNodes.Count == 0)
+            {
+                _mnuConnectTo.DropDownItems.Add(new ToolStripMenuItem("(No other steps)") { Enabled = false });
+            }
+            else
+            {
+                foreach (var target in otherNodes)
+                {
+                    var tgt = target;
+                    var item = new ToolStripMenuItem($"➜ {tgt.Title}", null, (s, ev) =>
+                    {
+                        if (_selectedNode != null)
+                        {
+                            var sp = GetBestSourcePort(_selectedNode, tgt);
+                            var tp = GetBestTargetPort(_selectedNode, tgt, sp);
+                            AddConnection(_selectedNode.Id, tgt.Id, "", "#0EA5E9", sp, tp);
+                        }
+                    });
+                    _mnuConnectTo.DropDownItems.Add(item);
+                }
             }
 
             // Populate actions submenu from ProcessActionRegistry
@@ -1017,6 +1372,45 @@ namespace ZeroUI.WinForms.Industrial
             _definition.Nodes.Remove(_selectedNode);
             _definition.Connections.RemoveAll(c => c.SourceNodeId == id || c.TargetNodeId == id);
             _selectedNode = null;
+            Invalidate();
+            DefinitionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void OnEditConnLabelClicked(object? sender, EventArgs e)
+        {
+            if (_selectedConnection == null) return;
+            using (var dlg = new Form())
+            {
+                dlg.Text = "Configure Connection Label";
+                dlg.Size = new Size(380, 160);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+
+                var lbl = new Label { Text = "Branch Label (e.g. Approved, Rejected, In Stock):", Top = 16, Left = 16, Width = 340 };
+                var txtLabel = new TextBox { Text = _selectedConnection.Label, Top = 42, Left = 16, Width = 330 };
+                var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Top = 80, Left = 170, Width = 80 };
+                var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 80, Left = 266, Width = 80 };
+
+                dlg.Controls.AddRange(new Control[] { lbl, txtLabel, btnOk, btnCancel });
+                dlg.AcceptButton = btnOk;
+                dlg.CancelButton = btnCancel;
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    _selectedConnection.Label = txtLabel.Text.Trim();
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        private void OnDeleteConnClicked(object? sender, EventArgs e)
+        {
+            if (_selectedConnection == null) return;
+            _definition.Connections.Remove(_selectedConnection);
+            _selectedConnection = null;
             Invalidate();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
         }

@@ -187,6 +187,43 @@ namespace ZeroUI.Wpf.Process
                 return;
             }
 
+            // Connect to Step Submenu
+            var mnuConnect = new MenuItem { Header = "🔗 Connect to Step..." };
+            var otherNodes = _definition.Nodes.Where(n => n.Id != _selectedNode.Id).ToList();
+            if (otherNodes.Count == 0)
+            {
+                mnuConnect.Items.Add(new MenuItem { Header = "(No other steps)", IsEnabled = false });
+            }
+            else
+            {
+                foreach (var target in otherNodes)
+                {
+                    var tgt = target;
+                    var item = new MenuItem { Header = $"➜ {tgt.Title}" };
+                    item.Click += (s, ev) =>
+                    {
+                        if (_selectedNode != null)
+                        {
+                            var sp = ProcessPortPosition.Right;
+                            var tp = ProcessPortPosition.Left;
+                            if (_selectedNode.X > tgt.X)
+                            {
+                                sp = ProcessPortPosition.Left;
+                                tp = ProcessPortPosition.Right;
+                            }
+                            else if (Math.Abs(_selectedNode.X - tgt.X) < 100)
+                            {
+                                sp = _selectedNode.Y < tgt.Y ? ProcessPortPosition.Bottom : ProcessPortPosition.Top;
+                                tp = _selectedNode.Y < tgt.Y ? ProcessPortPosition.Top : ProcessPortPosition.Bottom;
+                            }
+                            AddConnection(_selectedNode.Id, tgt.Id, "", "#0EA5E9", sp, tp);
+                        }
+                    };
+                    mnuConnect.Items.Add(item);
+                }
+            }
+            _contextMenu.Items.Add(mnuConnect);
+
             // Node Context Menu
             var mnuEdit = new MenuItem { Header = "Edit Title & Subtitle..." };
             mnuEdit.Click += (s, ev) => ShowEditTitleDialog();
