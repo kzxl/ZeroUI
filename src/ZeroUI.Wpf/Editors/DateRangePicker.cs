@@ -44,6 +44,10 @@ namespace ZeroUI.Wpf.Editors
             DependencyProperty.Register(nameof(ShowPresets), typeof(bool), typeof(DateRangePicker),
                 new FrameworkPropertyMetadata(true, (d, e) => ((DateRangePicker)d)._popupContent.Refresh()));
 
+        public static readonly DependencyProperty ViewModeProperty =
+            DependencyProperty.Register(nameof(ViewMode), typeof(DateRangeViewMode), typeof(DateRangePicker),
+                new FrameworkPropertyMetadata(DateRangeViewMode.Day, OnViewModeChanged));
+
         #endregion
 
         #region Properties & Events
@@ -76,6 +80,12 @@ namespace ZeroUI.Wpf.Editors
         {
             get => (bool)GetValue(ShowPresetsProperty);
             set => SetValue(ShowPresetsProperty, value);
+        }
+
+        public DateRangeViewMode ViewMode
+        {
+            get => (DateRangeViewMode)GetValue(ViewModeProperty);
+            set => SetValue(ViewModeProperty, value);
         }
 
         public event EventHandler<(DateTime Start, DateTime End)>? DateRangeChanged;
@@ -165,6 +175,20 @@ namespace ZeroUI.Wpf.Editors
             }
         }
 
+        private static void OnViewModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DateRangePicker picker)
+            {
+                var mode = (DateRangeViewMode)e.NewValue;
+                picker.DateFormat = DateRangeViewModeHelper.GetDefaultFormat(mode);
+                var (s, eDate) = DateRangeViewModeHelper.NormalizeRange(mode, picker.StartDate, picker.EndDate);
+                picker.StartDate = s;
+                picker.EndDate = eDate;
+                picker.UpdateDisplayText();
+                picker._popupContent.Refresh();
+            }
+        }
+
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
@@ -192,13 +216,9 @@ namespace ZeroUI.Wpf.Editors
 
         public void SetRange(DateTime start, DateTime end)
         {
-            if (start > end)
-            {
-                (start, end) = (end, start);
-            }
-
-            StartDate = start.Date;
-            EndDate = end.Date;
+            var (s, e) = DateRangeViewModeHelper.NormalizeRange(ViewMode, start, end);
+            StartDate = s;
+            EndDate = e;
             UpdateDisplayText();
         }
 
@@ -261,18 +281,14 @@ namespace ZeroUI.Wpf.Editors
             private DateTime? _pendingStartDate;
             private int _hoveredCellIndex = -1;
             private int _hoveredPresetIndex = -1;
-            private bool _hoveredPrevMonth = false;
-            private bool _hoveredNextMonth = false;
+            private bool _hoveredPrevNav = false;
+            private bool _hoveredNextNav = false;
 
-            private static readonly (string Label, DateRangePreset Preset)[] Presets = new[]
+            private static readonly string[] MonthNames = new[]
             {
-                ("Today", DateRangePreset.Today),
-                ("Yesterday", DateRangePreset.Yesterday),
-                ("Last 7 Days", DateRangePreset.Last7Days),
-                ("Last 30 Days", DateRangePreset.Last30Days),
-                ("This Month", DateRangePreset.ThisMonth),
-                ("Last Month", DateRangePreset.LastMonth),
-                ("Year to Date", DateRangePreset.YearToDate)
+                "Jan", "Feb", "Mar", "Apr",
+                "May", "Jun", "Jul", "Aug",
+                "Sep", "Oct", "Nov", "Dec"
             };
 
             public DateRangePopupContent(DateRangePicker owner)
@@ -292,46 +308,175 @@ namespace ZeroUI.Wpf.Editors
                 InvalidateVisual();
             }
 
+            private string[] GetPresetLabels()
+            {
+                return _owner.ViewMode switch
+                {
+                    DateRangeViewMode.Month => new[]
+                    {
+                        "This Month", "Last Month", "This Quarter", "Last Quarter", "This Year", "Last Year"
+                    },
+                    DateRangeViewMode.Year => new[]
+                    {
+                        "This Year", "Last Year", "Last 3 Years", "Last 5 Years", "Last 10 Years"
+                    },
+                    _ => new[]
+                    {
+                        "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month", "Last Month", "Year to Date"
+                    }
+                };
+            }
+
+            private void ApplyPresetByIndex(int index)
+            {
+                DateTime today = DateTime.Today;
+                DateTime start, end;
+
+                switch (_owner.ViewMode)
+                {
+                    case DateRangeViewMode.Month:
+                        switch (index)
+                        {
+                            case 0:
+                                start = new DateTime(today.Year, today.Month, 1);
+                                end = new DateTime(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+                                break;
+                            case 1:
+                                var lm = today.AddMonths(-1);
+                                start = new DateTime(lm.Year, lm.Month, 1);
+                                end = new DateTime(lm.Year, lm.Month, DateTime.DaysInMonth(lm.Year, lm.Month));
+                                break;
+                            case 2:
+                                int qStart = ((today.Month - 1) / 3) * 3 + 1;
+                                start = new DateTime(today.Year, qStart, 1);
+                                end = new DateTime(today.Year, qStart + 2, DateTime.DaysInMonth(today.Year, qStart + 2));
+                                break;
+                            case 3:
+                                var lqDate = today.AddMonths(-3);
+                                int lqStart = ((lqDate.Month - 1) / 3) * 3 + 1;
+                                start = new DateTime(lqDate.Year, lqStart, 1);
+                                end = new DateTime(lqDate.Year, lqStart + 2, DateTime.DaysInMonth(lqDate.Year, lqStart + 2));
+                                break;
+                            case 4:
+                                start = new DateTime(today.Year, 1, 1);
+                                end = new DateTime(today.Year, 12, 31);
+                                break;
+                            case 5:
+                            default:
+                                start = new DateTime(today.Year - 1, 1, 1);
+                                end = new DateTime(today.Year - 1, 12, 31);
+                                break;
+                        }
+                        _owner.SetRange(start, end);
+                        _owner.ClosePopup();
+                        break;
+
+                    case DateRangeViewMode.Year:
+                        switch (index)
+                        {
+                            case 0:
+                                start = new DateTime(today.Year, 1, 1);
+                                end = new DateTime(today.Year, 12, 31);
+                                break;
+                            case 1:
+                                start = new DateTime(today.Year - 1, 1, 1);
+                                end = new DateTime(today.Year - 1, 12, 31);
+                                break;
+                            case 2:
+                                start = new DateTime(today.Year - 2, 1, 1);
+                                end = new DateTime(today.Year, 12, 31);
+                                break;
+                            case 3:
+                                start = new DateTime(today.Year - 4, 1, 1);
+                                end = new DateTime(today.Year, 12, 31);
+                                break;
+                            case 4:
+                            default:
+                                start = new DateTime(today.Year - 9, 1, 1);
+                                end = new DateTime(today.Year, 12, 31);
+                                break;
+                        }
+                        _owner.SetRange(start, end);
+                        _owner.ClosePopup();
+                        break;
+
+                    case DateRangeViewMode.Day:
+                    default:
+                        var dayPresets = new[]
+                        {
+                            DateRangePreset.Today, DateRangePreset.Yesterday, DateRangePreset.Last7Days,
+                            DateRangePreset.Last30Days, DateRangePreset.ThisMonth, DateRangePreset.LastMonth, DateRangePreset.YearToDate
+                        };
+                        if (index >= 0 && index < dayPresets.Length)
+                        {
+                            var (s, e) = DateRangePresetHelper.CalculateRange(dayPresets[index]);
+                            _owner.SetRange(s, e);
+                            _owner.ClosePopup();
+                        }
+                        break;
+                }
+            }
+
             protected override void OnMouseMove(MouseEventArgs e)
             {
                 base.OnMouseMove(e);
                 Point pt = e.GetPosition(this);
 
                 // Sidebar presets: X <= 100
+                string[] presets = GetPresetLabels();
                 int hovPreset = -1;
                 if (pt.X >= 8 && pt.X <= 96 && pt.Y >= 36)
                 {
                     int pIdx = (int)((pt.Y - 36) / 28);
-                    if (pIdx >= 0 && pIdx < Presets.Length) hovPreset = pIdx;
+                    if (pIdx >= 0 && pIdx < presets.Length) hovPreset = pIdx;
                 }
 
                 // Calendar navigation chevrons
                 bool hovPrev = pt.X >= 115 && pt.X <= 135 && pt.Y >= 10 && pt.Y <= 30;
                 bool hovNext = pt.X >= (ActualWidth - 30) && pt.X <= (ActualWidth - 10) && pt.Y >= 10 && pt.Y <= 30;
 
-                // Calendar 42-day matrix: X >= 106
                 int hovCell = -1;
                 double calLeft = 106;
-                double calTop = 64;
-                double cellW = (ActualWidth - calLeft - 10) / 7.0;
-                double cellH = 28;
 
-                if (pt.X >= calLeft && pt.X <= ActualWidth - 10 && pt.Y >= calTop && pt.Y < calTop + (6 * cellH))
+                if (_owner.ViewMode == DateRangeViewMode.Month || _owner.ViewMode == DateRangeViewMode.Year)
                 {
-                    int col = (int)((pt.X - calLeft) / cellW);
-                    int row = (int)((pt.Y - calTop) / cellH);
-                    if (col >= 0 && col < 7 && row >= 0 && row < 6)
+                    double calTop = 50;
+                    double cellW = (ActualWidth - calLeft - 10) / 4.0;
+                    double cellH = 65;
+
+                    if (pt.X >= calLeft && pt.X <= ActualWidth - 10 && pt.Y >= calTop && pt.Y < calTop + (3 * cellH))
                     {
-                        hovCell = (row * 7) + col;
+                        int col = (int)((pt.X - calLeft) / cellW);
+                        int row = (int)((pt.Y - calTop) / cellH);
+                        if (col >= 0 && col < 4 && row >= 0 && row < 3)
+                        {
+                            hovCell = (row * 4) + col;
+                        }
+                    }
+                }
+                else
+                {
+                    double calTop = 64;
+                    double cellW = (ActualWidth - calLeft - 10) / 7.0;
+                    double cellH = 28;
+
+                    if (pt.X >= calLeft && pt.X <= ActualWidth - 10 && pt.Y >= calTop && pt.Y < calTop + (6 * cellH))
+                    {
+                        int col = (int)((pt.X - calLeft) / cellW);
+                        int row = (int)((pt.Y - calTop) / cellH);
+                        if (col >= 0 && col < 7 && row >= 0 && row < 6)
+                        {
+                            hovCell = (row * 7) + col;
+                        }
                     }
                 }
 
-                if (_hoveredPresetIndex != hovPreset || _hoveredPrevMonth != hovPrev ||
-                    _hoveredNextMonth != hovNext || _hoveredCellIndex != hovCell)
+                if (_hoveredPresetIndex != hovPreset || _hoveredPrevNav != hovPrev ||
+                    _hoveredNextNav != hovNext || _hoveredCellIndex != hovCell)
                 {
                     _hoveredPresetIndex = hovPreset;
-                    _hoveredPrevMonth = hovPrev;
-                    _hoveredNextMonth = hovNext;
+                    _hoveredPrevNav = hovPrev;
+                    _hoveredNextNav = hovNext;
                     _hoveredCellIndex = hovCell;
                     InvalidateVisual();
                 }
@@ -341,8 +486,8 @@ namespace ZeroUI.Wpf.Editors
             {
                 base.OnMouseLeave(e);
                 _hoveredPresetIndex = -1;
-                _hoveredPrevMonth = false;
-                _hoveredNextMonth = false;
+                _hoveredPrevNav = false;
+                _hoveredNextNav = false;
                 _hoveredCellIndex = -1;
                 InvalidateVisual();
             }
@@ -350,21 +495,34 @@ namespace ZeroUI.Wpf.Editors
             protected override void OnMouseDown(MouseButtonEventArgs e)
             {
                 base.OnMouseDown(e);
-                Point pt = e.GetPosition(this);
 
-                if (_hoveredPrevMonth)
+                if (_hoveredPrevNav)
                 {
-                    _calendarModel.NavigatePreviousMonth();
-                    _calendarModel.FillDaysGrid(_cells);
+                    if (_owner.ViewMode == DateRangeViewMode.Year)
+                        _calendarModel.ViewDate = _calendarModel.ViewDate.AddYears(-10);
+                    else if (_owner.ViewMode == DateRangeViewMode.Month)
+                        _calendarModel.NavigatePreviousYear();
+                    else
+                    {
+                        _calendarModel.NavigatePreviousMonth();
+                        _calendarModel.FillDaysGrid(_cells);
+                    }
                     InvalidateVisual();
                     e.Handled = true;
                     return;
                 }
 
-                if (_hoveredNextMonth)
+                if (_hoveredNextNav)
                 {
-                    _calendarModel.NavigateNextMonth();
-                    _calendarModel.FillDaysGrid(_cells);
+                    if (_owner.ViewMode == DateRangeViewMode.Year)
+                        _calendarModel.ViewDate = _calendarModel.ViewDate.AddYears(10);
+                    else if (_owner.ViewMode == DateRangeViewMode.Month)
+                        _calendarModel.NavigateNextYear();
+                    else
+                    {
+                        _calendarModel.NavigateNextMonth();
+                        _calendarModel.FillDaysGrid(_cells);
+                    }
                     InvalidateVisual();
                     e.Handled = true;
                     return;
@@ -372,13 +530,57 @@ namespace ZeroUI.Wpf.Editors
 
                 if (_hoveredPresetIndex >= 0)
                 {
-                    ApplyPreset(Presets[_hoveredPresetIndex].Preset);
-                    _owner.ClosePopup();
+                    ApplyPresetByIndex(_hoveredPresetIndex);
                     e.Handled = true;
                     return;
                 }
 
-                if (_hoveredCellIndex >= 0 && _hoveredCellIndex < _cells.Length)
+                if (_owner.ViewMode == DateRangeViewMode.Month && _hoveredCellIndex >= 0 && _hoveredCellIndex < 12)
+                {
+                    int m = _hoveredCellIndex + 1;
+                    DateTime cellDate = new DateTime(_calendarModel.ViewDate.Year, m, 1);
+                    if (_pendingStartDate == null)
+                    {
+                        _pendingStartDate = cellDate;
+                        InvalidateVisual();
+                    }
+                    else
+                    {
+                        DateTime s = _pendingStartDate.Value < cellDate ? _pendingStartDate.Value : cellDate;
+                        DateTime endMonth = cellDate >= _pendingStartDate.Value ? cellDate : _pendingStartDate.Value;
+                        DateTime end = new DateTime(endMonth.Year, endMonth.Month, DateTime.DaysInMonth(endMonth.Year, endMonth.Month));
+                        _pendingStartDate = null;
+                        _owner.SetRange(s, end);
+                        _owner.ClosePopup();
+                    }
+                    e.Handled = true;
+                    return;
+                }
+
+                if (_owner.ViewMode == DateRangeViewMode.Year && _hoveredCellIndex >= 0 && _hoveredCellIndex < 12)
+                {
+                    int startDecade = (_calendarModel.ViewDate.Year / 10) * 10;
+                    int y = (startDecade - 1) + _hoveredCellIndex;
+                    DateTime cellDate = new DateTime(y, 1, 1);
+                    if (_pendingStartDate == null)
+                    {
+                        _pendingStartDate = cellDate;
+                        InvalidateVisual();
+                    }
+                    else
+                    {
+                        DateTime s = _pendingStartDate.Value < cellDate ? _pendingStartDate.Value : cellDate;
+                        DateTime endYear = cellDate >= _pendingStartDate.Value ? cellDate : _pendingStartDate.Value;
+                        DateTime end = new DateTime(endYear.Year, 12, 31);
+                        _pendingStartDate = null;
+                        _owner.SetRange(s, end);
+                        _owner.ClosePopup();
+                    }
+                    e.Handled = true;
+                    return;
+                }
+
+                if (_owner.ViewMode == DateRangeViewMode.Day && _hoveredCellIndex >= 0 && _hoveredCellIndex < _cells.Length)
                 {
                     DateTime clickedDate = _cells[_hoveredCellIndex].Date;
                     if (_pendingStartDate == null)
@@ -398,13 +600,6 @@ namespace ZeroUI.Wpf.Editors
                 }
             }
 
-            private void ApplyPreset(DateRangePreset preset)
-            {
-                if (preset == DateRangePreset.Custom) return;
-                var (start, end) = DateRangePresetHelper.CalculateRange(preset);
-                _owner.SetRange(start, end);
-            }
-
             protected override void OnRender(DrawingContext dc)
             {
                 base.OnRender(dc);
@@ -413,7 +608,6 @@ namespace ZeroUI.Wpf.Editors
                 double h = ActualHeight;
                 if (w <= 0 || h <= 0) return;
 
-                _calendarModel.FillDaysGrid(_cells);
                 double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 
                 // 1. Popup Background & Border
@@ -426,7 +620,8 @@ namespace ZeroUI.Wpf.Editors
                 var sidebarTitle = new FormattedText("Quick Filters", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextMuted, dpi);
                 dc.DrawText(sidebarTitle, new Point(12, 14));
 
-                for (int i = 0; i < Presets.Length; i++)
+                string[] presets = GetPresetLabels();
+                for (int i = 0; i < presets.Length; i++)
                 {
                     double py = 36 + (i * 28);
                     Rect pRect = new Rect(8, py, 88, 24);
@@ -438,7 +633,7 @@ namespace ZeroUI.Wpf.Editors
                     }
 
                     var pFt = new FormattedText(
-                        Presets[i].Label,
+                        presets[i],
                         CultureInfo.InvariantCulture,
                         FlowDirection.LeftToRight,
                         ZeroWpfTheme.MediumTypeface,
@@ -449,13 +644,20 @@ namespace ZeroUI.Wpf.Editors
                     dc.DrawText(pFt, new Point(14, py + 4));
                 }
 
-                // 3. Right Calendar Panel Header [< Month YYYY >]
+                // 3. Right Calendar Panel Header
                 double calLeft = 106;
                 double calRight = w - 10;
                 double calWidth = calRight - calLeft;
 
+                string headerText = _owner.ViewMode switch
+                {
+                    DateRangeViewMode.Month => _calendarModel.ViewDate.Year.ToString(),
+                    DateRangeViewMode.Year => $"{(_calendarModel.ViewDate.Year / 10) * 10} - {((_calendarModel.ViewDate.Year / 10) * 10) + 9}",
+                    _ => _calendarModel.ViewDate.ToString("MMMM yyyy", CultureInfo.InvariantCulture)
+                };
+
                 var headerFt = new FormattedText(
-                    _calendarModel.ViewDate.ToString("MMMM yyyy", CultureInfo.InvariantCulture),
+                    headerText,
                     CultureInfo.InvariantCulture,
                     FlowDirection.LeftToRight,
                     ZeroWpfTheme.BoldTypeface,
@@ -465,93 +667,214 @@ namespace ZeroUI.Wpf.Editors
 
                 dc.DrawText(headerFt, new Point(calLeft + (calWidth - headerFt.Width) / 2.0, 10));
 
-                Brush prevBrush = _hoveredPrevMonth ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.TextSecondary;
-                Brush nextBrush = _hoveredNextMonth ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.TextSecondary;
+                Brush prevBrush = _hoveredPrevNav ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.TextSecondary;
+                Brush nextBrush = _hoveredNextNav ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.TextSecondary;
                 var prevFt = new FormattedText("◀", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.RegularTypeface, 11.0, prevBrush, dpi);
                 var nextFt = new FormattedText("▶", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.RegularTypeface, 11.0, nextBrush, dpi);
                 dc.DrawText(prevFt, new Point(calLeft + 10, 11));
                 dc.DrawText(nextFt, new Point(calRight - 18, 11));
 
-                // 4. Day of Week Headers
-                string[] dows = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
-                double cellW = calWidth / 7.0;
-                double cellH = 28;
-                for (int i = 0; i < 7; i++)
-                {
-                    var dowFt = new FormattedText(dows[i], CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.MediumTypeface, 10.5, ZeroWpfTheme.TextMuted, dpi);
-                    dc.DrawText(dowFt, new Point(calLeft + (i * cellW) + (cellW - dowFt.Width) / 2.0, 42));
-                }
-
-                dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(calLeft, 60), new Point(calRight, 60));
-
-                // 5. 42-Day Range Rendering
-                double gridTop = 64;
-                DateTime startRange = _pendingStartDate ?? _owner.StartDate;
-                DateTime endRange = _pendingStartDate != null
-                    ? (_hoveredCellIndex >= 0 ? _cells[_hoveredCellIndex].Date : startRange)
-                    : _owner.EndDate;
-
-                if (startRange > endRange) (startRange, endRange) = (endRange, startRange);
-
                 Brush rangeBandBrush = new SolidColorBrush(ZeroWpfTheme.PrimaryAccent.Color) { Opacity = 0.22 };
                 rangeBandBrush.Freeze();
 
-                for (int i = 0; i < CalendarModel.TotalCells; i++)
+                if (_owner.ViewMode == DateRangeViewMode.Month)
                 {
-                    var cell = _cells[i];
-                    int row = i / 7;
-                    int col = i % 7;
-                    double cx = calLeft + (col * cellW);
-                    double cy = gridTop + (row * cellH);
-                    Rect cellRect = new Rect(cx, cy, cellW, cellH);
+                    double calTop = 50;
+                    double cellW = calWidth / 4.0;
+                    double cellH = 65;
 
-                    bool isStart = cell.Date.Date == startRange.Date;
-                    bool isEnd = cell.Date.Date == endRange.Date;
-                    bool inRange = cell.Date.Date >= startRange.Date && cell.Date.Date <= endRange.Date;
+                    DateTime startRange = _pendingStartDate ?? _owner.StartDate;
+                    DateTime endRange = _pendingStartDate != null
+                        ? (_hoveredCellIndex >= 0 ? new DateTime(_calendarModel.ViewDate.Year, _hoveredCellIndex + 1, 1) : startRange)
+                        : _owner.EndDate;
 
-                    // Draw range connection band
-                    if (inRange && startRange != endRange)
+                    if (startRange > endRange) (startRange, endRange) = (endRange, startRange);
+
+                    for (int m = 0; m < 12; m++)
                     {
-                        Rect bandRect = new Rect(
-                            isStart ? (cx + (cellW / 2.0)) : cx,
-                            cy + 3,
-                            isStart || isEnd ? (cellW / 2.0) : cellW,
-                            cellH - 6);
-                        dc.DrawRectangle(rangeBandBrush, null, bandRect);
+                        int row = m / 4;
+                        int col = m % 4;
+                        double cx = calLeft + (col * cellW);
+                        double cy = calTop + (row * cellH);
+
+                        DateTime mDate = new DateTime(_calendarModel.ViewDate.Year, m + 1, 1);
+                        bool isStart = mDate.Year == startRange.Year && mDate.Month == startRange.Month;
+                        bool isEnd = mDate.Year == endRange.Year && mDate.Month == endRange.Month;
+                        bool inRange = mDate >= new DateTime(startRange.Year, startRange.Month, 1) &&
+                                       mDate <= new DateTime(endRange.Year, endRange.Month, 1);
+
+                        if (inRange && (startRange.Year != endRange.Year || startRange.Month != endRange.Month))
+                        {
+                            Rect bandRect = new Rect(
+                                isStart ? (cx + (cellW / 2.0)) : cx,
+                                cy + 12,
+                                isStart || isEnd ? (cellW / 2.0) : cellW,
+                                cellH - 24);
+                            dc.DrawRectangle(rangeBandBrush, null, bandRect);
+                        }
+
+                        Rect pillRect = new Rect(cx + 6, cy + 12, cellW - 12, cellH - 24);
+                        if (isStart || isEnd)
+                        {
+                            dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, null, pillRect, 6, 6);
+                        }
+                        else if (m == _hoveredCellIndex)
+                        {
+                            dc.DrawRoundedRectangle(ZeroWpfTheme.BgHover, null, pillRect, 6, 6);
+                        }
+
+                        Brush textBrush = (isStart || isEnd) ? Brushes.White : ZeroWpfTheme.TextPrimary;
+                        var mFt = new FormattedText(
+                            MonthNames[m],
+                            CultureInfo.InvariantCulture,
+                            FlowDirection.LeftToRight,
+                            (isStart || isEnd) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.MediumTypeface,
+                            12.0,
+                            textBrush,
+                            dpi);
+
+                        dc.DrawText(mFt, new Point(cx + (cellW - mFt.Width) / 2.0, cy + (cellH - mFt.Height) / 2.0));
+                    }
+                }
+                else if (_owner.ViewMode == DateRangeViewMode.Year)
+                {
+                    double calTop = 50;
+                    double cellW = calWidth / 4.0;
+                    double cellH = 65;
+
+                    int startDecade = (_calendarModel.ViewDate.Year / 10) * 10;
+                    int startYear = _pendingStartDate?.Year ?? _owner.StartDate.Year;
+                    int endYear = _pendingStartDate != null
+                        ? (_hoveredCellIndex >= 0 ? (startDecade - 1) + _hoveredCellIndex : startYear)
+                        : _owner.EndDate.Year;
+
+                    if (startYear > endYear) (startYear, endYear) = (endYear, startYear);
+
+                    for (int i = 0; i < 12; i++)
+                    {
+                        int yr = (startDecade - 1) + i;
+                        int row = i / 4;
+                        int col = i % 4;
+                        double cx = calLeft + (col * cellW);
+                        double cy = calTop + (row * cellH);
+
+                        bool isStart = yr == startYear;
+                        bool isEnd = yr == endYear;
+                        bool inRange = yr >= startYear && yr <= endYear;
+                        bool isOutside = (yr < startDecade || yr > startDecade + 9);
+
+                        if (inRange && startYear != endYear)
+                        {
+                            Rect bandRect = new Rect(
+                                isStart ? (cx + (cellW / 2.0)) : cx,
+                                cy + 12,
+                                isStart || isEnd ? (cellW / 2.0) : cellW,
+                                cellH - 24);
+                            dc.DrawRectangle(rangeBandBrush, null, bandRect);
+                        }
+
+                        Rect pillRect = new Rect(cx + 6, cy + 12, cellW - 12, cellH - 24);
+                        if (isStart || isEnd)
+                        {
+                            dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, null, pillRect, 6, 6);
+                        }
+                        else if (i == _hoveredCellIndex)
+                        {
+                            dc.DrawRoundedRectangle(ZeroWpfTheme.BgHover, null, pillRect, 6, 6);
+                        }
+
+                        Brush textBrush = (isStart || isEnd) ? Brushes.White : (isOutside ? ZeroWpfTheme.TextMuted : ZeroWpfTheme.TextPrimary);
+                        var yFt = new FormattedText(
+                            yr.ToString(),
+                            CultureInfo.InvariantCulture,
+                            FlowDirection.LeftToRight,
+                            (isStart || isEnd) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.MediumTypeface,
+                            12.0,
+                            textBrush,
+                            dpi);
+
+                        dc.DrawText(yFt, new Point(cx + (cellW - yFt.Width) / 2.0, cy + (cellH - yFt.Height) / 2.0));
+                    }
+                }
+                else
+                {
+                    // 4. Day of Week Headers
+                    string[] dows = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
+                    double cellW = calWidth / 7.0;
+                    double cellH = 28;
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var dowFt = new FormattedText(dows[i], CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.MediumTypeface, 10.5, ZeroWpfTheme.TextMuted, dpi);
+                        dc.DrawText(dowFt, new Point(calLeft + (i * cellW) + (cellW - dowFt.Width) / 2.0, 42));
                     }
 
-                    // Draw endpoint pills
-                    Rect pillRect = new Rect(cx + 2, cy + 2, cellW - 4, cellH - 4);
-                    if (isStart || isEnd)
+                    dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(calLeft, 60), new Point(calRight, 60));
+
+                    // 5. 42-Day Range Rendering
+                    _calendarModel.FillDaysGrid(_cells);
+                    double gridTop = 64;
+                    DateTime startRange = _pendingStartDate ?? _owner.StartDate;
+                    DateTime endRange = _pendingStartDate != null
+                        ? (_hoveredCellIndex >= 0 ? _cells[_hoveredCellIndex].Date : startRange)
+                        : _owner.EndDate;
+
+                    if (startRange > endRange) (startRange, endRange) = (endRange, startRange);
+
+                    for (int i = 0; i < CalendarModel.TotalCells; i++)
                     {
-                        dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, null, pillRect, 4, 4);
+                        var cell = _cells[i];
+                        int row = i / 7;
+                        int col = i % 7;
+                        double cx = calLeft + (col * cellW);
+                        double cy = gridTop + (row * cellH);
+                        Rect cellRect = new Rect(cx, cy, cellW, cellH);
+
+                        bool isStart = cell.Date.Date == startRange.Date;
+                        bool isEnd = cell.Date.Date == endRange.Date;
+                        bool inRange = cell.Date.Date >= startRange.Date && cell.Date.Date <= endRange.Date;
+
+                        if (inRange && startRange != endRange)
+                        {
+                            Rect bandRect = new Rect(
+                                isStart ? (cx + (cellW / 2.0)) : cx,
+                                cy + 3,
+                                isStart || isEnd ? (cellW / 2.0) : cellW,
+                                cellH - 6);
+                            dc.DrawRectangle(rangeBandBrush, null, bandRect);
+                        }
+
+                        Rect pillRect = new Rect(cx + 2, cy + 2, cellW - 4, cellH - 4);
+                        if (isStart || isEnd)
+                        {
+                            dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, null, pillRect, 4, 4);
+                        }
+                        else if (i == _hoveredCellIndex)
+                        {
+                            dc.DrawRoundedRectangle(ZeroWpfTheme.BgHover, null, pillRect, 4, 4);
+                        }
+
+                        Brush textBrush;
+                        if (isStart || isEnd) textBrush = Brushes.White;
+                        else if (!cell.IsCurrentMonth) textBrush = ZeroWpfTheme.TextMuted;
+                        else textBrush = ZeroWpfTheme.TextPrimary;
+
+                        var dayFt = new FormattedText(
+                            cell.DayNumber.ToString(),
+                            CultureInfo.InvariantCulture,
+                            FlowDirection.LeftToRight,
+                            (isStart || isEnd) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface,
+                            11.5,
+                            textBrush,
+                            dpi);
+
+                        dc.DrawText(dayFt, new Point(cx + (cellW - dayFt.Width) / 2.0, cy + (cellH - dayFt.Height) / 2.0));
                     }
-                    else if (i == _hoveredCellIndex)
-                    {
-                        dc.DrawRoundedRectangle(ZeroWpfTheme.BgHover, null, pillRect, 4, 4);
-                    }
-
-                    Brush textBrush;
-                    if (isStart || isEnd) textBrush = Brushes.White;
-                    else if (!cell.IsCurrentMonth) textBrush = ZeroWpfTheme.TextMuted;
-                    else textBrush = ZeroWpfTheme.TextPrimary;
-
-                    var dayFt = new FormattedText(
-                        cell.DayNumber.ToString(),
-                        CultureInfo.InvariantCulture,
-                        FlowDirection.LeftToRight,
-                        (isStart || isEnd) ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface,
-                        11.5,
-                        textBrush,
-                        dpi);
-
-                    dc.DrawText(dayFt, new Point(cx + (cellW - dayFt.Width) / 2.0, cy + (cellH - dayFt.Height) / 2.0));
                 }
 
                 // Footer Prompt
                 string prompt = _pendingStartDate == null
-                    ? "Select start date..."
-                    : $"Start: {_pendingStartDate:MMM dd} — Select end date";
+                    ? (_owner.ViewMode == DateRangeViewMode.Month ? "Select start month..." : (_owner.ViewMode == DateRangeViewMode.Year ? "Select start year..." : "Select start date..."))
+                    : $"Start: {_pendingStartDate:yyyy-MM} — Select end date";
 
                 var promptFt = new FormattedText(prompt, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.MediumTypeface, 10.0, ZeroWpfTheme.TextSecondary, dpi);
                 dc.DrawText(promptFt, new Point(calLeft + 4, h - 20));
