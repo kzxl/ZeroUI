@@ -6,7 +6,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 > **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.5.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.6.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
@@ -44,6 +44,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 * **`ZeroDatePicker` & `ZeroDateRangePicker`:** Multi-tier zoom navigation calendar (Days &rarr; Months &rarr; Years) and dual-date range presets.
 
 ### 📐 Layout, Docking & Workflows
+* **`ZeroProcessMap`:** Interactive business process flowchart & workflow navigation map with customizable UserControl action triggers, orthogonal routing, and JSON serialization.
 * **`ZeroDockManager`:** Multi-zone docking system (Left/Right/Top/Bottom/Document) with splitters, auto-hide tabs, and `ZeroFloatingWindow` for detached multi-monitor workspaces.
 * **`ZeroWorkspaceSerializer`:** Pure zero-dependency JSON layout persistence engine capturing and restoring DockPanel and DataGrid column configurations.
 * **`ZeroWizard`:** Multi-step process workflow wizard with validation and step progress indicator.
@@ -64,7 +65,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.WinForms --version 1.5.0
+dotnet add package ZeroUI.WinForms --version 1.6.0
 ```
 
 ---

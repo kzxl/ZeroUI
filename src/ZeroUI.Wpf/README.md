@@ -6,7 +6,7 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 > **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.5.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.6.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
@@ -39,6 +39,7 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 * **`ZeroColorPicker` & `ZeroDateRangePicker`:** Enterprise swatch color picker and dual-date range presets.
 
 ### 📐 Navigation, Layout & Reporting
+* **`ZeroProcessMap`:** Interactive business process flowchart & workflow navigation map with customizable UserControl action triggers, orthogonal routing, and JSON serialization.
 * **`ZeroWizard`:** Multi-step process workflow wizard with validation and step progress indicator.
 * **`ZeroSideNav` & `ZeroAccordion`:** Collapsible vertical sidebar navigation with category groups and badges.
 * **`ZeroDockManager`:** Multi-region docking layout system with detachable floating windows and auto-hide tabs.
@@ -53,7 +54,7 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.Wpf --version 1.5.0
+dotnet add package ZeroUI.Wpf --version 1.6.0
 ```
 
 ---
