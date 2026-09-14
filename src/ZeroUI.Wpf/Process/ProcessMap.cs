@@ -834,7 +834,7 @@ namespace ZeroUI.Wpf.Process
             }
 
             // Mode Badge
-            string modeStr = _isDesignMode ? "✏ DESIGN MODE (Drag to move, Right-click to edit)" : "▶ RUN MODE (Click step to navigate)";
+            string modeStr = _isDesignMode ? "✏ DESIGN MODE  •  Drag ports to link  •  Right-click: Configure  •  Del: Remove" : "▶ RUN MODE  •  Ctrl+Wheel: Zoom  •  Wheel: Pan  •  Double-click: Fit view";
             Color badgeBg = _isDesignMode ? Color.FromRgb(245, 158, 11) : Color.FromRgb(16, 185, 129);
 
             var modeTypeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);

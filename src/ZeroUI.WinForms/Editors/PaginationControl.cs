@@ -214,9 +214,9 @@ namespace ZeroUI.WinForms.Editors
                 _buttons.Add(new PagerButton
                 {
                     Kind = PagerButtonKind.PageSizeSelector,
-                    Text = $"{_model.PageSize} / trang ▾",
+                    Text = $"{_model.PageSize} / page ▾",
                     Bounds = new Rectangle(currentRight, btnY, sizeBtnW, btnH),
-                    ToolTip = "Chọn số dòng hiển thị mỗi trang"
+                    ToolTip = "Select items per page"
                 });
                 currentRight -= 8; // margin
             }
@@ -230,7 +230,7 @@ namespace ZeroUI.WinForms.Editors
                 Kind = PagerButtonKind.Last,
                 Text = "⏭",
                 IsEnabled = _model.CanLast,
-                ToolTip = "Trang cuối"
+                ToolTip = "Last page"
             });
 
             // Next
@@ -239,7 +239,7 @@ namespace ZeroUI.WinForms.Editors
                 Kind = PagerButtonKind.Next,
                 Text = "▶",
                 IsEnabled = _model.CanNext,
-                ToolTip = "Trang kế tiếp"
+                ToolTip = "Next page"
             });
 
             // Page numbers
@@ -264,7 +264,7 @@ namespace ZeroUI.WinForms.Editors
                         PageNumber = p,
                         Text = p.ToString(),
                         IsActive = (p == _model.CurrentPage),
-                        ToolTip = $"Đi đến trang {p}"
+                        ToolTip = $"Go to page {p}"
                     });
                 }
             }
@@ -275,7 +275,7 @@ namespace ZeroUI.WinForms.Editors
                 Kind = PagerButtonKind.Prev,
                 Text = "◀",
                 IsEnabled = _model.CanPrev,
-                ToolTip = "Trang trước"
+                ToolTip = "Previous page"
             });
 
             // First
@@ -284,7 +284,7 @@ namespace ZeroUI.WinForms.Editors
                 Kind = PagerButtonKind.First,
                 Text = "⏮",
                 IsEnabled = _model.CanFirst,
-                ToolTip = "Trang đầu"
+                ToolTip = "First page"
             });
 
             // Measure & place cluster from right to left
@@ -411,7 +411,7 @@ namespace ZeroUI.WinForms.Editors
             foreach (int size in _pageSizes)
             {
                 int s = size;
-                var itm = new ToolStripMenuItem($"{s} dòng / trang", null, (sender, e) =>
+                var itm = new ToolStripMenuItem($"{s} rows / page", null, (sender, e) =>
                 {
                     _model.SetPageSize(s);
                 })
@@ -451,8 +451,8 @@ namespace ZeroUI.WinForms.Editors
             if (_showSummary)
             {
                 string summary = _model.TotalCount == 0
-                    ? "Không có dữ liệu"
-                    : $"Hiển thị {_model.StartItemIndex:N0} - {_model.EndItemIndex:N0} của {_model.TotalCount:N0} dòng";
+                    ? "No items"
+                    : $"Showing {_model.StartItemIndex:N0} - {_model.EndItemIndex:N0} of {_model.TotalCount:N0} items";
 
                 Rectangle textRect = new Rectangle(14, 0, 320, Height);
                 TextRenderer.DrawText(

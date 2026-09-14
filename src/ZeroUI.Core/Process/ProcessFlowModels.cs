@@ -224,17 +224,17 @@ namespace ZeroUI.Core.Process
             var def = new ProcessFlowDefinition
             {
                 Code = "IT_INVENTORY_WORKFLOW",
-                Title = "QUY TRÌNH NGHIỆP VỤ KHO IT",
-                Description = "Nhấn vào các bước trong sơ đồ để chuyển đến chức năng tương ứng"
+                Title = "IT EQUIPMENT INVENTORY & FULFILLMENT WORKFLOW",
+                Description = "Click process cards to navigate to corresponding operations"
             };
 
             // 1. Swimlanes
-            def.Lanes.Add(new ProcessFlowLane("lane_request", "YÊU CẦU & CUNG ỨNG", 20, 20, 960, 520)
+            def.Lanes.Add(new ProcessFlowLane("lane_request", "REQUISITION & PROCUREMENT", 20, 20, 960, 520)
             {
                 HeaderColorHex = "#64748B",
                 BackgroundColorHex = "#F8FAFC"
             });
-            def.Lanes.Add(new ProcessFlowLane("lane_warehouse", "NHẬP KHO & XUẤT KHO", 20, 560, 960, 320)
+            def.Lanes.Add(new ProcessFlowLane("lane_warehouse", "RECEIVING & INVENTORY INWARD", 20, 560, 960, 320)
             {
                 HeaderColorHex = "#0EA5E9",
                 BackgroundColorHex = "#F0F9FF"
@@ -242,7 +242,7 @@ namespace ZeroUI.Core.Process
 
             // 2. Nodes
             // Step 1: IT Requisition
-            def.Nodes.Add(new ProcessFlowNode("node_req", "1. PHIẾU YÊU CẦU IT", "Nhân viên lập phiếu yêu cầu cấp thiết bị", 370, 60, 220, 70)
+            def.Nodes.Add(new ProcessFlowNode("node_req", "1. REQUISITION TICKET", "User submits equipment requisition ticket", 370, 60, 220, 70)
             {
                 Shape = ProcessNodeShape.TaskCard,
                 HeaderColorHex = "#475569",
@@ -252,7 +252,7 @@ namespace ZeroUI.Core.Process
             });
 
             // Step 2: Inventory Stock Check (Decision Diamond)
-            def.Nodes.Add(new ProcessFlowNode("node_check", "2. KIỂM TRA TỒN KHO", "(Lọc máy còn trong kho IT)", 390, 180, 180, 80)
+            def.Nodes.Add(new ProcessFlowNode("node_check", "2. INVENTORY AUDIT", "(Verify stock in warehouse pool)", 390, 180, 180, 80)
             {
                 Shape = ProcessNodeShape.DecisionDiamond,
                 HeaderColorHex = "#0284C7",
@@ -263,7 +263,7 @@ namespace ZeroUI.Core.Process
             });
 
             // Step 3: Purchase Requisition
-            def.Nodes.Add(new ProcessFlowNode("node_pr", "3. YÊU CẦU MUA HÀNG", "• IT lập yêu cầu mua hàng (YCMH)\n• Trình duyệt theo phân cấp", 640, 290, 220, 75)
+            def.Nodes.Add(new ProcessFlowNode("node_pr", "3. PURCHASE REQUISITION", "• Create PR form\n• Submit for approval hierarchy", 640, 290, 220, 75)
             {
                 Shape = ProcessNodeShape.TaskCard,
                 HeaderColorHex = "#7C3AED",
@@ -274,7 +274,7 @@ namespace ZeroUI.Core.Process
             });
 
             // Step 4: Purchase Order (PO)
-            def.Nodes.Add(new ProcessFlowNode("node_po", "4. PHIẾU MUA HÀNG (PO)", "• Bộ phận Mua hàng lập phiếu\n• Đặt hàng nhà cung cấp", 640, 390, 220, 75)
+            def.Nodes.Add(new ProcessFlowNode("node_po", "4. PURCHASE ORDER (PO)", "• Procurement team creates PO\n• Transmit to vendor", 640, 390, 220, 75)
             {
                 Shape = ProcessNodeShape.TaskCard,
                 HeaderColorHex = "#7C3AED",
@@ -285,7 +285,7 @@ namespace ZeroUI.Core.Process
             });
 
             // Step 5: Goods Receipt Note
-            def.Nodes.Add(new ProcessFlowNode("node_grn", "5. PHIẾU NHẬN HÀNG", "• Thủ kho IT nhận hàng thực tế\n• Xác nhận đã nhận đủ trên phiếu", 640, 490, 220, 75)
+            def.Nodes.Add(new ProcessFlowNode("node_grn", "5. GOODS RECEIPT (GRN)", "• Warehouse manager verifies shipment\n• Sign receiving note", 640, 490, 220, 75)
             {
                 Shape = ProcessNodeShape.TaskCard,
                 HeaderColorHex = "#0284C7",
@@ -296,7 +296,7 @@ namespace ZeroUI.Core.Process
             });
 
             // Step 6: Warehouse Stock-In
-            def.Nodes.Add(new ProcessFlowNode("node_inward", "6. NHẬP KHO IT", "• Lập và duyệt phiếu nhập kho\n• Sinh mã tài sản (Asset Tag)", 640, 590, 220, 75)
+            def.Nodes.Add(new ProcessFlowNode("node_inward", "6. WAREHOUSE INWARD", "• Record stock-in entry\n• Generate Asset Tags", 640, 590, 220, 75)
             {
                 Shape = ProcessNodeShape.TaskCard,
                 HeaderColorHex = "#16A34A",
@@ -307,7 +307,7 @@ namespace ZeroUI.Core.Process
             });
 
             // Target Step: Warehouse Stock Pool
-            def.Nodes.Add(new ProcessFlowNode("node_stock", "TỒN KHO IT", "Thiết bị sẵn sàng cấp phát", 260, 680, 220, 70)
+            def.Nodes.Add(new ProcessFlowNode("node_stock", "AVAILABLE STOCK", "Hardware ready for deployment", 260, 680, 220, 70)
             {
                 Shape = ProcessNodeShape.TaskCard,
                 HeaderColorHex = "#0D9488",
@@ -327,7 +327,7 @@ namespace ZeroUI.Core.Process
             });
 
             // node_check -> node_pr (Out of Stock branch)
-            def.Connections.Add(new ProcessFlowConnection("node_check", "node_pr", "HẾT HÀNG -> ĐỀ XUẤT MUA", "#EF4444")
+            def.Connections.Add(new ProcessFlowConnection("node_check", "node_pr", "OUT OF STOCK -> REORDER", "#EF4444")
             {
                 SourcePort = ProcessPortPosition.Right,
                 TargetPort = ProcessPortPosition.Top,
@@ -335,7 +335,7 @@ namespace ZeroUI.Core.Process
             });
 
             // node_check -> node_stock (In Stock branch)
-            def.Connections.Add(new ProcessFlowConnection("node_check", "node_stock", "CÒN HÀNG SẴN", "#10B981")
+            def.Connections.Add(new ProcessFlowConnection("node_check", "node_stock", "IN STOCK AVAILABLE", "#10B981")
             {
                 SourcePort = ProcessPortPosition.Left,
                 TargetPort = ProcessPortPosition.Top,

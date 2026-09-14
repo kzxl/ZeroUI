@@ -299,8 +299,8 @@ namespace ZeroUI.Wpf.Editors
 
             // 2. Summary Text
             string summary = _model.TotalCount == 0
-                ? "Không có dữ liệu"
-                : $"Hiển thị {_model.StartItemIndex:N0} - {_model.EndItemIndex:N0} của {_model.TotalCount:N0} dòng";
+                ? "No items"
+                : $"Showing {_model.StartItemIndex:N0} - {_model.EndItemIndex:N0} of {_model.TotalCount:N0} items";
 
             var summaryText = new FormattedText(
                 summary,

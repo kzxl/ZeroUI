@@ -773,8 +773,8 @@ namespace ZeroUI.WinForms.Industrial
 
             // 2. Mode Badge (Bottom Left)
             string modeText = _isDesignMode 
-                ? "✏ DESIGN MODE  •  Kéo cổng nối  •  Phải chuột: Cấu hình/Xóa  •  Delete: Xóa" 
-                : "▶ RUN MODE  •  Ctrl + Cuộn: Zoom  •  Cuộn: Di chuyển  •  Double-click: Vừa khung";
+                ? "✏ DESIGN MODE  •  Drag ports to link  •  Right-click: Configure  •  Del: Remove" 
+                : "▶ RUN MODE  •  Ctrl+Wheel: Zoom  •  Wheel: Pan  •  Double-click: Fit view";
             Color badgeBg = _isDesignMode ? Color.FromArgb(245, 158, 11) : Color.FromArgb(16, 185, 129);
 
             using (var font = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
