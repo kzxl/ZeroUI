@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadarChart.bmp")]
-    public class ZeroRadarChart : Control
+    public class RadarChart : Control
     {
         private readonly List<string> _axes = new List<string>();
         private readonly List<RadarSeries> _series = new List<RadarSeries>();
@@ -49,7 +49,7 @@ namespace ZeroUI.WinForms.Charts
         private Point? _hoverPoint;
         private string? _hoverText;
 
-        public ZeroRadarChart()
+        public RadarChart()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -353,5 +353,15 @@ namespace ZeroUI.WinForms.Charts
                 g.DrawEllipse(ringPen, pt.X - 5, pt.Y - 5, 10, 10);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="RadarChart"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroRadarChart is deprecated. Please use RadarChart instead.")]
+    [ToolboxItem(false)]
+    public class ZeroRadarChart : RadarChart
+    {
     }
 }

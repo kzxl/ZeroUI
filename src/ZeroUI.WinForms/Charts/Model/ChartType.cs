@@ -5,7 +5,7 @@ namespace ZeroUI.WinForms.Charts.Model
     /// <summary>
     /// Supported visualization types for ZeroChart and specialized chart controls.
     /// </summary>
-    public enum ZeroChartType
+    public enum ChartType
     {
         /// <summary>Vertical grouped column chart.</summary>
         Column,
@@ -53,7 +53,7 @@ namespace ZeroUI.WinForms.Charts.Model
     /// <summary>
     /// Position of the chart legend.
     /// </summary>
-    public enum ZeroChartLegendPosition
+    public enum ChartLegendPosition
     {
         None,
         Top,
@@ -84,5 +84,40 @@ namespace ZeroUI.WinForms.Charts.Model
         /// <summary>Boundary lines only without solid area fill.</summary>
         LinesOnly
     }
-}
 
+    /// <summary>
+    /// Legacy alias for <see cref="ChartType"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroChartType is deprecated. Please use ChartType instead.")]
+    public enum ZeroChartType
+    {
+        Column = ChartType.Column,
+        StackedColumn = ChartType.StackedColumn,
+        Bar = ChartType.Bar,
+        StackedBar = ChartType.StackedBar,
+        Line = ChartType.Line,
+        Spline = ChartType.Spline,
+        Area = ChartType.Area,
+        SplineArea = ChartType.SplineArea,
+        Pie = ChartType.Pie,
+        Donut = ChartType.Donut,
+        Radar = ChartType.Radar,
+        Candlestick = ChartType.Candlestick,
+        Funnel = ChartType.Funnel,
+        Waterfall = ChartType.Waterfall
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ChartLegendPosition"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroChartLegendPosition is deprecated. Please use ChartLegendPosition instead.")]
+    public enum ZeroChartLegendPosition
+    {
+        None = ChartLegendPosition.None,
+        Top = ChartLegendPosition.Top,
+        Bottom = ChartLegendPosition.Bottom,
+        Right = ChartLegendPosition.Right
+    }
+}

@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Warehouse
     [DefaultEvent("BarcodeScanned")]
     [Description("Industrial Barcode & QR Code Workstation Scanner Control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroBarcodeScanControl.bmp")]
-    public class ZeroBarcodeScanControl : Control
+    public class BarcodeScanControl : Control
     {
         private readonly TextBox _txtBarcode;
         private readonly Button _btnScan;
@@ -58,7 +58,7 @@ namespace ZeroUI.WinForms.Warehouse
         /// </summary>
         public Func<string, BarcodeScanResult>? CustomParser { get; set; }
 
-        public ZeroBarcodeScanControl()
+        public BarcodeScanControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -486,5 +486,15 @@ namespace ZeroUI.WinForms.Warehouse
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="BarcodeScanControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroBarcodeScanControl is deprecated. Please use BarcodeScanControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroBarcodeScanControl : BarcodeScanControl
+    {
     }
 }

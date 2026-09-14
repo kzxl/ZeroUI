@@ -6,25 +6,25 @@ using ZeroUI.Core.Range;
 namespace ZeroUI.WinForms.Charts
 {
     /// <summary>
-    /// Connects a ZeroChart to a RangeControl, mapping category or time domain samples
+    /// Connects a ChartControl to a RangeControl, mapping category or time domain samples
     /// into background sparkline / distribution data points and synchronizing viewport scrubbing.
     /// </summary>
     public class ChartRangeControlClient : IRangeControlClient
     {
-        private readonly ZeroChart _chart;
+        private readonly ChartControl _chart;
         private readonly int _seriesIndex;
 
         /// <summary>
-        /// The bound ZeroChart instance.
+        /// The bound ChartControl instance.
         /// </summary>
-        public ZeroChart Chart => _chart;
+        public ChartControl Chart => _chart;
 
         /// <summary>
         /// The active data domain type (Numeric).
         /// </summary>
         public RangeDataType DataType => RangeDataType.Numeric;
 
-        public ChartRangeControlClient(ZeroChart chart, int seriesIndex = 0)
+        public ChartRangeControlClient(ChartControl chart, int seriesIndex = 0)
         {
             _chart = chart ?? throw new ArgumentNullException(nameof(chart));
             _seriesIndex = Math.Max(0, seriesIndex);
@@ -75,7 +75,7 @@ namespace ZeroUI.WinForms.Charts
             _chart.Invalidate();
         }
 
-        private Model.ZeroChartSeries? GetTargetSeries()
+        private Model.ChartSeries? GetTargetSeries()
         {
             if (_chart.Series.Count == 0) return null;
             if (_seriesIndex < _chart.Series.Count)
@@ -87,14 +87,14 @@ namespace ZeroUI.WinForms.Charts
     }
 
     /// <summary>
-    /// Extension methods for binding ZeroChart with RangeControl.
+    /// Extension methods for binding ChartControl with RangeControl.
     /// </summary>
-    public static class ZeroChartRangeExtensions
+    public static class ChartRangeExtensions
     {
         /// <summary>
         /// Creates an IRangeControlClient bridge for this chart to bind with a RangeControl.
         /// </summary>
-        public static ChartRangeControlClient AsRangeClient(this ZeroChart chart, int seriesIndex = 0)
+        public static ChartRangeControlClient AsRangeClient(this ChartControl chart, int seriesIndex = 0)
         {
             return new ChartRangeControlClient(chart, seriesIndex);
         }

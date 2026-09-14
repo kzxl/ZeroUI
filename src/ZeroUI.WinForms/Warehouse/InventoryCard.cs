@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Warehouse
     [DefaultProperty("ProductCode")]
     [Description("Industrial Inventory Stock Metric Card with allocation distribution")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroInventoryCard.bmp")]
-    public class ZeroInventoryCard : Control
+    public class InventoryCard : Control
     {
         private InventoryStockModel _data = new InventoryStockModel
         {
@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Warehouse
             UnitOfMeasure = "Pcs"
         };
 
-        public ZeroInventoryCard()
+        public InventoryCard()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -291,5 +291,15 @@ namespace ZeroUI.WinForms.Warehouse
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="InventoryCard"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroInventoryCard is deprecated. Please use InventoryCard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroInventoryCard : InventoryCard
+    {
     }
 }

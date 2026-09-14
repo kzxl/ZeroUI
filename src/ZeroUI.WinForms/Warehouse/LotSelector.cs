@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Warehouse
     [Category("ZeroUI - Warehouse & Logistics")]
     [Description("Industrial Lot Selector with automated FIFO / FEFO allocation logic")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroLotSelector.bmp")]
-    public class ZeroLotSelector : Control
+    public class LotSelector : Control
     {
         private string _productCode = "ABC-001";
         private string _productName = "Cylindrical Bushing φ32";
@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Warehouse
 
         public event EventHandler? SelectionChanged;
 
-        public ZeroLotSelector()
+        public LotSelector()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -537,5 +537,14 @@ namespace ZeroUI.WinForms.Warehouse
 
         #endregion
     }
-}
 
+    /// <summary>
+    /// Legacy alias for <see cref="LotSelector"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroLotSelector is deprecated. Please use LotSelector instead.")]
+    [ToolboxItem(false)]
+    public class ZeroLotSelector : LotSelector
+    {
+    }
+}

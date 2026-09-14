@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Warehouse
     [Category("ZeroUI - Warehouse & Logistics")]
     [Description("Industrial Stock Movement and Lot Traceability Timeline Tree")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroStockMovementTimeline.bmp")]
-    public class ZeroStockMovementTimeline : Control
+    public class StockMovementTimeline : Control
     {
         private StockMovementTraceModel _traceData = new StockMovementTraceModel
         {
@@ -28,7 +28,7 @@ namespace ZeroUI.WinForms.Warehouse
             WarehouseCode = "WH01"
         };
 
-        public ZeroStockMovementTimeline()
+        public StockMovementTimeline()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -310,5 +310,15 @@ namespace ZeroUI.WinForms.Warehouse
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="StockMovementTimeline"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroStockMovementTimeline is deprecated. Please use StockMovementTimeline instead.")]
+    [ToolboxItem(false)]
+    public class ZeroStockMovementTimeline : StockMovementTimeline
+    {
     }
 }

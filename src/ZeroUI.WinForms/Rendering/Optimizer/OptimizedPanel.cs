@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Rendering.Optimizer
     /// Preserves crisp ClearType typography for child controls while delivering modern elevated card aesthetics.
     /// </summary>
     [ToolboxItem(true)]
-    public class ZeroOptimizedPanel : Panel
+    public class OptimizedPanel : Panel
     {
         private float _elevation = 6f;
         private float _blurRadius = 12f;
@@ -88,7 +88,7 @@ namespace ZeroUI.WinForms.Rendering.Optimizer
         [Browsable(false)]
         public RenderDecision LastDecision { get; private set; }
 
-        public ZeroOptimizedPanel()
+        public OptimizedPanel()
         {
             SetStyle(
                 ControlStyles.AllPaintingInWmPaint |
@@ -216,5 +216,15 @@ namespace ZeroUI.WinForms.Rendering.Optimizer
             path.CloseFigure();
             return path;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="OptimizedPanel"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroOptimizedPanel is deprecated. Please use OptimizedPanel instead.")]
+    [ToolboxItem(false)]
+    public class ZeroOptimizedPanel : OptimizedPanel
+    {
     }
 }

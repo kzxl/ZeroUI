@@ -43,7 +43,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroWaterfallChart.bmp")]
-    public class ZeroWaterfallChart : Control
+    public class WaterfallChart : Control
     {
         private readonly List<WaterfallItem> _items = new List<WaterfallItem>();
 
@@ -56,7 +56,7 @@ namespace ZeroUI.WinForms.Charts
 
         private int _hoverIndex = -1;
 
-        public ZeroWaterfallChart()
+        public WaterfallChart()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -315,5 +315,15 @@ namespace ZeroUI.WinForms.Charts
                 g.DrawString(item.Label, xFont, xBrush, cx - xSz.Width / 2f, Height - padBottom + 6);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="WaterfallChart"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroWaterfallChart is deprecated. Please use WaterfallChart instead.")]
+    [ToolboxItem(false)]
+    public class ZeroWaterfallChart : WaterfallChart
+    {
     }
 }

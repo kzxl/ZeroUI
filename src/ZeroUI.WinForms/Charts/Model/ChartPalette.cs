@@ -6,7 +6,7 @@ namespace ZeroUI.WinForms.Charts.Model
     /// <summary>
     /// Color palettes and harmonious palette generators for ZeroUI charts.
     /// </summary>
-    public static class ZeroChartPalette
+    public static class ChartPalette
     {
         public static readonly Color[] ModernVibrant = new[]
         {
@@ -58,5 +58,19 @@ namespace ZeroUI.WinForms.Charts.Model
             var palette = isDark ? DarkVibrant : ModernVibrant;
             return palette[Math.Abs(index) % palette.Length];
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ChartPalette"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroChartPalette is deprecated. Please use ChartPalette instead.")]
+    public static class ZeroChartPalette
+    {
+        public static Color[] ModernVibrant => ChartPalette.ModernVibrant;
+        public static Color[] DarkVibrant => ChartPalette.DarkVibrant;
+        public static Color[] OceanTeal => ChartPalette.OceanTeal;
+        public static Color[] SunsetCoral => ChartPalette.SunsetCoral;
+        public static Color GetColor(int index, bool isDark = false) => ChartPalette.GetColor(index, isDark);
     }
 }

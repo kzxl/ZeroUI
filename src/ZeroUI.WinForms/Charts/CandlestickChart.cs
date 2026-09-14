@@ -41,7 +41,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroCandlestickChart.bmp")]
-    public class ZeroCandlestickChart : Control
+    public class CandlestickChart : Control
     {
         private readonly List<CandlestickItem> _items = new List<CandlestickItem>();
 
@@ -56,7 +56,7 @@ namespace ZeroUI.WinForms.Charts
         private Point? _crosshair;
         private int _hoverIndex = -1;
 
-        public ZeroCandlestickChart()
+        public CandlestickChart()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -374,5 +374,15 @@ namespace ZeroUI.WinForms.Charts
                 g.DrawString(hud, hudFont, hudTextBrush, hudX + 8, hudY + 5);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="CandlestickChart"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroCandlestickChart is deprecated. Please use CandlestickChart instead.")]
+    [ToolboxItem(false)]
+    public class ZeroCandlestickChart : CandlestickChart
+    {
     }
 }

@@ -7,38 +7,38 @@ namespace ZeroUI.WinForms.Charts.Model
     /// <summary>
     /// Represents a data series containing multiple data points, styling, and visibility state.
     /// </summary>
-    public class ZeroChartSeries
+    public class ChartSeries
     {
         public string Name { get; set; } = "Series";
-        public List<ZeroChartPoint> Points { get; } = new List<ZeroChartPoint>();
+        public List<ChartPoint> Points { get; } = new List<ChartPoint>();
         public Color Color { get; set; } = Color.FromArgb(79, 70, 229); // Default Indigo 600
         public float StrokeWidth { get; set; } = 2.5f;
         public float FillOpacity { get; set; } = 0.25f;
         public bool IsVisible { get; set; } = true;
-        public ZeroChartType? ChartTypeOverride { get; set; }
+        public ChartType? ChartTypeOverride { get; set; }
 
-        public ZeroChartSeries() { }
+        public ChartSeries() { }
 
-        public ZeroChartSeries(string name, Color color)
+        public ChartSeries(string name, Color color)
         {
             Name = name ?? "Series";
             Color = color;
         }
 
-        public ZeroChartSeries(string name, Color color, IEnumerable<double> values, IEnumerable<string>? labels = null)
+        public ChartSeries(string name, Color color, IEnumerable<double> values, IEnumerable<string>? labels = null)
         {
             Name = name ?? "Series";
             Color = color;
             AddPoints(values, labels);
         }
 
-        public ZeroChartSeries AddPoint(string label, double value, Color? colorOverride = null)
+        public ChartSeries AddPoint(string label, double value, Color? colorOverride = null)
         {
-            Points.Add(new ZeroChartPoint(label, value, colorOverride));
+            Points.Add(new ChartPoint(label, value, colorOverride));
             return this;
         }
 
-        public ZeroChartSeries AddPoints(IEnumerable<double> values, IEnumerable<string>? labels = null)
+        public ChartSeries AddPoints(IEnumerable<double> values, IEnumerable<string>? labels = null)
         {
             if (values == null) return this;
             using var valEnum = values.GetEnumerator();
@@ -48,12 +48,25 @@ namespace ZeroUI.WinForms.Charts.Model
             while (valEnum.MoveNext())
             {
                 string label = (lblEnum != null && lblEnum.MoveNext()) ? lblEnum.Current : $"Item {index}";
-                Points.Add(new ZeroChartPoint(label, valEnum.Current));
+                Points.Add(new ChartPoint(label, valEnum.Current));
                 index++;
             }
             return this;
         }
 
         public void Clear() => Points.Clear();
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ChartSeries"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroChartSeries is deprecated. Please use ChartSeries instead.")]
+    public class ZeroChartSeries : ChartSeries
+    {
+        public ZeroChartSeries() : base() { }
+        public ZeroChartSeries(string name, Color color) : base(name, color) { }
+        public ZeroChartSeries(string name, Color color, IEnumerable<double> values, IEnumerable<string>? labels = null)
+            : base(name, color, values, labels) { }
     }
 }

@@ -22,12 +22,12 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroChart.bmp")]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("High-performance universal chart control for modern desktop analytics and dashboards")]
-    public class ZeroChart : Control
+    public class ChartControl : Control
     {
         private string _title = string.Empty;
         private string _subtitle = string.Empty;
-        private ZeroChartType _chartType = ZeroChartType.Column;
-        private ZeroChartLegendPosition _legendPosition = ZeroChartLegendPosition.Top;
+        private ChartType _chartType = ChartType.Column;
+        private ChartLegendPosition _legendPosition = ChartLegendPosition.Top;
         private bool _showGridLines = true;
         private bool _showTooltips = true;
         private bool _showCrosshair = true;
@@ -65,7 +65,7 @@ namespace ZeroUI.WinForms.Charts
         private readonly List<RectangleF> _legendHitBoxes = new List<RectangleF>();
 
 
-        public List<ZeroChartSeries> Series { get; } = new List<ZeroChartSeries>();
+        public List<ChartSeries> Series { get; } = new List<ChartSeries>();
 
         [Category("Appearance")]
         [DefaultValue("")]
@@ -84,16 +84,16 @@ namespace ZeroUI.WinForms.Charts
         }
 
         [Category("Appearance")]
-        [DefaultValue(ZeroChartType.Column)]
-        public ZeroChartType ChartType
+        [DefaultValue(ChartType.Column)]
+        public ChartType ChartType
         {
             get => _chartType;
             set { _chartType = value; Invalidate(); }
         }
 
         [Category("Appearance")]
-        [DefaultValue(ZeroChartLegendPosition.Top)]
-        public ZeroChartLegendPosition LegendPosition
+        [DefaultValue(ChartLegendPosition.Top)]
+        public ChartLegendPosition LegendPosition
         {
             get => _legendPosition;
             set { _legendPosition = value; Invalidate(); }
@@ -284,7 +284,7 @@ namespace ZeroUI.WinForms.Charts
             set { _centerValue = value ?? string.Empty; Invalidate(); }
         }
 
-        public ZeroChart()
+        public ChartControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -300,10 +300,10 @@ namespace ZeroUI.WinForms.Charts
             ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
-        public ZeroChartSeries AddSeries(string name, Color? color = null)
+        public ChartSeries AddSeries(string name, Color? color = null)
         {
-            var assignedColor = color ?? ZeroChartPalette.GetColor(Series.Count, ZeroTheme.IsDark);
-            var series = new ZeroChartSeries(name, assignedColor);
+            var assignedColor = color ?? ChartPalette.GetColor(Series.Count, ZeroTheme.IsDark);
+            var series = new ChartSeries(name, assignedColor);
             Series.Add(series);
             Invalidate();
             return series;
@@ -394,14 +394,14 @@ namespace ZeroUI.WinForms.Charts
             // 2. Draw Legend
             _legendHitBoxes.Clear();
             int legendHeight = 0;
-            if (_legendPosition == ZeroChartLegendPosition.Top && Series.Count > 0)
+            if (_legendPosition == ChartLegendPosition.Top && Series.Count > 0)
             {
                 legendHeight = DrawLegend(g, new Rectangle(14, topOffset, bounds.Width - 28, 26), isDark);
                 topOffset += legendHeight + 6;
             }
 
             int bottomOffset = 14;
-            if (_legendPosition == ZeroChartLegendPosition.Bottom && Series.Count > 0)
+            if (_legendPosition == ChartLegendPosition.Bottom && Series.Count > 0)
             {
                 bottomOffset += 26;
             }
@@ -415,7 +415,7 @@ namespace ZeroUI.WinForms.Charts
             if (plotRect.Width < 40 || plotRect.Height < 40) return;
 
             // 3. Render Cartesian vs. Radial Charts
-            if (_chartType == ZeroChartType.Pie || _chartType == ZeroChartType.Donut)
+            if (_chartType == ChartType.Pie || _chartType == ChartType.Donut)
             {
                 RenderPieOrDonut(g, plotRect, isDark);
             }
@@ -425,7 +425,7 @@ namespace ZeroUI.WinForms.Charts
             }
 
             // Draw Bottom Legend if configured
-            if (_legendPosition == ZeroChartLegendPosition.Bottom && Series.Count > 0)
+            if (_legendPosition == ChartLegendPosition.Bottom && Series.Count > 0)
             {
                 DrawLegend(g, new Rectangle(14, bounds.Height - 32, bounds.Width - 28, 26), isDark);
             }
@@ -628,15 +628,15 @@ namespace ZeroUI.WinForms.Charts
 
                 switch (effectiveType)
                 {
-                    case ZeroChartType.Column:
-                    case ZeroChartType.StackedColumn:
+                    case ChartType.Column:
+                    case ChartType.StackedColumn:
                         RenderColumns(g, plot, visibleSeries, series, categories, niceMin, yRange, slotWidth, isDark);
                         break;
 
-                    case ZeroChartType.Line:
-                    case ZeroChartType.Spline:
-                    case ZeroChartType.Area:
-                    case ZeroChartType.SplineArea:
+                    case ChartType.Line:
+                    case ChartType.Spline:
+                    case ChartType.Area:
+                    case ChartType.SplineArea:
                         RenderLinesAndAreas(g, plot, series, categories, niceMin, yRange, slotWidth, effectiveType, isDark);
                         break;
                 }
@@ -650,7 +650,7 @@ namespace ZeroUI.WinForms.Charts
         }
 
         private void RenderColumns(
-            Graphics g, Rectangle plot, List<ZeroChartSeries> allSeries, ZeroChartSeries series,
+            Graphics g, Rectangle plot, List<ChartSeries> allSeries, ChartSeries series,
             List<string> categories, double niceMin, double yRange, float slotWidth, bool isDark)
         {
             int seriesIndex = allSeries.IndexOf(series);
@@ -694,8 +694,8 @@ namespace ZeroUI.WinForms.Charts
         }
 
         private void RenderLinesAndAreas(
-            Graphics g, Rectangle plot, ZeroChartSeries series, List<string> categories,
-            double niceMin, double yRange, float slotWidth, ZeroChartType type, bool isDark)
+            Graphics g, Rectangle plot, ChartSeries series, List<string> categories,
+            double niceMin, double yRange, float slotWidth, ChartType type, bool isDark)
         {
             var pts = new List<PointF>();
             for (int i = 0; i < categories.Count; i++)
@@ -711,8 +711,8 @@ namespace ZeroUI.WinForms.Charts
 
             if (pts.Count < 2) return;
 
-            bool isCurved = (type == ZeroChartType.Spline || type == ZeroChartType.SplineArea);
-            bool isArea = (type == ZeroChartType.Area || type == ZeroChartType.SplineArea);
+            bool isCurved = (type == ChartType.Spline || type == ChartType.SplineArea);
+            bool isArea = (type == ChartType.Area || type == ChartType.SplineArea);
 
             // 1. Draw Gradient Area Fill
             if (isArea)
@@ -810,7 +810,7 @@ namespace ZeroUI.WinForms.Charts
             float mouseDy = _mousePos.Y - cy;
             float mouseDist = (float)Math.Sqrt(mouseDx * mouseDx + mouseDy * mouseDy);
 
-            float holeRadius = (_chartType == ZeroChartType.Donut) ? radius * _donutHoleRatio : 0f;
+            float holeRadius = (_chartType == ChartType.Donut) ? radius * _donutHoleRatio : 0f;
 
             if (mouseDist <= radius + 10 && mouseDist >= holeRadius)
             {
@@ -838,7 +838,7 @@ namespace ZeroUI.WinForms.Charts
                 float sweep = (float)(pt.Value / total * 360.0);
                 if (sweep <= 0.1f) continue;
 
-                Color sliceColor = pt.ColorOverride ?? ZeroChartPalette.GetColor(i, isDark);
+                Color sliceColor = pt.ColorOverride ?? ChartPalette.GetColor(i, isDark);
                 bool isHovered = (i == _hoveredPieSliceIndex);
 
                 // Offset exploded slice on hover
@@ -865,7 +865,7 @@ namespace ZeroUI.WinForms.Charts
             }
 
             // Cut out Donut Hole
-            if (_chartType == ZeroChartType.Donut && holeRadius > 5)
+            if (_chartType == ChartType.Donut && holeRadius > 5)
             {
                 var holeRect = new RectangleF(cx - holeRadius, cy - holeRadius, holeRadius * 2, holeRadius * 2);
                 Color holeColor = isDark ? Color.FromArgb(15, 23, 42) : Color.White;
@@ -899,7 +899,7 @@ namespace ZeroUI.WinForms.Charts
 
         #region Tooltip & Legend Helpers
 
-        private void DrawCartesianTooltip(Graphics g, Rectangle plot, List<ZeroChartSeries> series, string category, int catIndex, bool isDark)
+        private void DrawCartesianTooltip(Graphics g, Rectangle plot, List<ChartSeries> series, string category, int catIndex, bool isDark)
         {
             var lines = new List<(Color Color, string Text)>();
             foreach (var s in series)
@@ -1084,7 +1084,7 @@ namespace ZeroUI.WinForms.Charts
             return $"{prefix}{val:0.#}";
         }
 
-        private void RenderSpcBelts(Graphics g, Rectangle plot, List<ZeroChartSeries> visibleSeries, double niceMin, double yRange, bool isDark)
+        private void RenderSpcBelts(Graphics g, Rectangle plot, List<ChartSeries> visibleSeries, double niceMin, double yRange, bool isDark)
         {
             double ucl, lcl, target;
             double? usl = _upperSpecLimit;
@@ -1271,7 +1271,7 @@ namespace ZeroUI.WinForms.Charts
             g.DrawString(category, font, textBrush, badgeRect, sf);
         }
 
-        private void DrawCrosshairSnapHalos(Graphics g, Rectangle plot, List<ZeroChartSeries> visibleSeries, string category, float slotCenter, double niceMin, double yRange)
+        private void DrawCrosshairSnapHalos(Graphics g, Rectangle plot, List<ChartSeries> visibleSeries, string category, float slotCenter, double niceMin, double yRange)
         {
             foreach (var series in visibleSeries)
             {
@@ -1295,5 +1295,25 @@ namespace ZeroUI.WinForms.Charts
 
         #endregion
 
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ChartControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroChart is deprecated. Please use ChartControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroChart : ChartControl
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ChartControl"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroChartControl is deprecated. Please use ChartControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroChartControl : ChartControl
+    {
     }
 }

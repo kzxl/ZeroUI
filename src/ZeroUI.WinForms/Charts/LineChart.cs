@@ -12,7 +12,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Line and Area trend chart")]
-    public class ZeroLineChart : ZeroChart
+    public class LineChart : ChartControl
     {
         private bool _isCurved = true;
         private bool _isArea = true;
@@ -41,29 +41,39 @@ namespace ZeroUI.WinForms.Charts
             }
         }
 
-        public ZeroLineChart()
+        public LineChart()
         {
-            ChartType = ZeroChartType.SplineArea;
+            ChartType = ChartType.SplineArea;
         }
 
         private void UpdateChartType()
         {
             if (_isArea)
             {
-                ChartType = _isCurved ? ZeroChartType.SplineArea : ZeroChartType.Area;
+                ChartType = _isCurved ? ChartType.SplineArea : ChartType.Area;
             }
             else
             {
-                ChartType = _isCurved ? ZeroChartType.Spline : ZeroChartType.Line;
+                ChartType = _isCurved ? ChartType.Spline : ChartType.Line;
             }
         }
 
-        public ZeroChartSeries AddTrendSeries(string name, IEnumerable<double> values, IEnumerable<string>? categories = null, Color? color = null)
+        public ChartSeries AddTrendSeries(string name, IEnumerable<double> values, IEnumerable<string>? categories = null, Color? color = null)
         {
             var series = AddSeries(name, color);
             series.AddPoints(values, categories);
             Invalidate();
             return series;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="LineChart"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroLineChart is deprecated. Please use LineChart instead.")]
+    [ToolboxItem(false)]
+    public class ZeroLineChart : LineChart
+    {
     }
 }

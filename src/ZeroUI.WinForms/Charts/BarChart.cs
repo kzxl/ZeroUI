@@ -12,7 +12,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Column and Bar comparison chart")]
-    public class ZeroBarChart : ZeroChart
+    public class BarChart : ChartControl
     {
         private bool _isHorizontal = false;
         private bool _isStacked = false;
@@ -41,29 +41,39 @@ namespace ZeroUI.WinForms.Charts
             }
         }
 
-        public ZeroBarChart()
+        public BarChart()
         {
-            ChartType = ZeroChartType.Column;
+            ChartType = ChartType.Column;
         }
 
         private void UpdateChartType()
         {
             if (_isHorizontal)
             {
-                ChartType = _isStacked ? ZeroChartType.StackedBar : ZeroChartType.Bar;
+                ChartType = _isStacked ? ChartType.StackedBar : ChartType.Bar;
             }
             else
             {
-                ChartType = _isStacked ? ZeroChartType.StackedColumn : ZeroChartType.Column;
+                ChartType = _isStacked ? ChartType.StackedColumn : ChartType.Column;
             }
         }
 
-        public ZeroChartSeries SetData(string seriesName, IEnumerable<string> categories, IEnumerable<double> values, Color? color = null)
+        public ChartSeries SetData(string seriesName, IEnumerable<string> categories, IEnumerable<double> values, Color? color = null)
         {
             var series = AddSeries(seriesName, color);
             series.AddPoints(values, categories);
             Invalidate();
             return series;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="BarChart"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroBarChart is deprecated. Please use BarChart instead.")]
+    [ToolboxItem(false)]
+    public class ZeroBarChart : BarChart
+    {
     }
 }
