@@ -20,6 +20,19 @@ namespace ZeroUI.Core.Editors
     }
 
     /// <summary>
+    /// Specifies how item widths are allocated inside a button group.
+    /// </summary>
+    public enum ButtonGroupSizeMode
+    {
+        /// <summary>Each button is sized according to its text, icon, and padding without artificial stretching.</summary>
+        AutoFit,
+        /// <summary>All buttons receive an equal fraction of the available width.</summary>
+        EqualWidth,
+        /// <summary>Buttons are stretched proportionally to fill the full available width of the container.</summary>
+        Fill
+    }
+
+    /// <summary>
     /// Specifies the visual style variant of a button in a group.
     /// </summary>
     public enum ButtonGroupItemStyle
@@ -59,6 +72,22 @@ namespace ZeroUI.Core.Editors
         public bool IsEnabled { get; set; } = true;
         public bool IsVisible { get; set; } = true;
         public string? BadgeText { get; set; }
+        /// <summary>Gets or sets whether to display a small indicator dot (e.g. for notifications or uncommitted changes).</summary>
+        public bool ShowBadgeDot { get; set; }
+        /// <summary>Gets or sets the custom hex color for badge pill or badge dot (e.g. "#EF4444").</summary>
+        public string? BadgeColorHex { get; set; }
+        /// <summary>Gets or sets the minimum width allocated for this button item.</summary>
+        public int MinWidth { get; set; }
+        /// <summary>Gets or sets custom horizontal padding for this specific item (overriding group-level padding when set).</summary>
+        public int? CustomPaddingHorizontal { get; set; }
+        /// <summary>Gets or sets a custom background hex color for this item (e.g. "#1E293B").</summary>
+        public string? CustomBackColorHex { get; set; }
+        /// <summary>Gets or sets a custom text/foreground hex color for this item (e.g. "#FFFFFF").</summary>
+        public string? CustomForeColorHex { get; set; }
+        /// <summary>Gets or sets an associated context menu or drop-down popup object (ContextMenuStrip in WinForms, ContextMenu in WPF).</summary>
+        public object? DropDownMenu { get; set; }
+        /// <summary>Gets or sets an optional raw image object (Bitmap/Image in WinForms, ImageSource in WPF).</summary>
+        public object? IconImage { get; set; }
         public object? Tag { get; set; }
         public Action<ButtonGroupItem>? Action { get; set; }
 
@@ -71,6 +100,12 @@ namespace ZeroUI.Core.Editors
             IconGlyph = iconGlyph;
             Type = type;
             Action = action;
+        }
+
+        public ButtonGroupItem(string id, string text, string? iconGlyph, ButtonGroupItemType type, Action<ButtonGroupItem>? action, object? dropDownMenu)
+            : this(id, text, iconGlyph, type, action)
+        {
+            DropDownMenu = dropDownMenu;
         }
     }
 
@@ -150,6 +185,53 @@ namespace ZeroUI.Core.Editors
         public ButtonGroupItem? FindById(string id)
         {
             return _items.FirstOrDefault(i => string.Equals(i.Id, id, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Sets the checked state of a toggle item by ID.
+        /// </summary>
+        public bool SetChecked(string id, bool isChecked)
+        {
+            var item = FindById(id);
+            if (item == null || item.Type != ButtonGroupItemType.Toggle) return false;
+
+            if (_selectionMode == ButtonGroupSelectionMode.SingleSelect && isChecked)
+            {
+                foreach (var itm in _items)
+                {
+                    if (itm.Type == ButtonGroupItemType.Toggle)
+                    {
+                        itm.IsChecked = ReferenceEquals(itm, item);
+                    }
+                }
+            }
+            else
+            {
+                item.IsChecked = isChecked;
+            }
+
+            SelectionChanged?.Invoke(this, item);
+            ItemsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        /// <summary>
+        /// Updates the badge text, dot visibility, and badge color of an item by ID.
+        /// </summary>
+        public bool SetBadge(string id, string? badgeText, bool showBadgeDot = false, string? badgeColorHex = null)
+        {
+            var item = FindById(id);
+            if (item == null) return false;
+
+            item.BadgeText = badgeText;
+            item.ShowBadgeDot = showBadgeDot;
+            if (!string.IsNullOrEmpty(badgeColorHex))
+            {
+                item.BadgeColorHex = badgeColorHex;
+            }
+
+            ItemsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
         }
 
         /// <summary>

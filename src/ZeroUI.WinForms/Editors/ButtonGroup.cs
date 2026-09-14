@@ -13,17 +13,6 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.Editors
 {
     /// <summary>
-    /// Specifies how item widths are allocated inside a <see cref="ButtonGroup"/>.
-    /// </summary>
-    public enum ButtonGroupSizeMode
-    {
-        /// <summary>Each button is sized according to its text, icon, and padding.</summary>
-        AutoFit,
-        /// <summary>All buttons receive an equal fraction of the available width.</summary>
-        EqualWidth
-    }
-
-    /// <summary>
     /// Modern connected button group (Action Cluster / Action Strip) with single-HWND rendering,
     /// seamless border geometry, toggle grouping, and theme reactivity.
     /// </summary>
@@ -58,6 +47,10 @@ namespace ZeroUI.WinForms.Editors
             _model.SelectionChanged += (s, item) => SelectionChanged?.Invoke(this, item);
             _model.ItemsChanged += (s, e) =>
             {
+                if (AutoSize)
+                {
+                    Size = GetPreferredSize(Size.Empty);
+                }
                 RecalculateLayout();
                 Invalidate();
             };
@@ -70,6 +63,10 @@ namespace ZeroUI.WinForms.Editors
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9f, FontStyle.Regular);
+                if (AutoSize)
+                {
+                    Size = GetPreferredSize(Size.Empty);
+                }
                 RecalculateLayout();
                 UpdateRegion();
                 Invalidate();
@@ -77,6 +74,23 @@ namespace ZeroUI.WinForms.Editors
         }
 
         #region Properties
+
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        [DefaultValue(false)]
+        public override bool AutoSize
+        {
+            get => base.AutoSize;
+            set
+            {
+                base.AutoSize = value;
+                if (value)
+                {
+                    Size = GetPreferredSize(Size.Empty);
+                }
+            }
+        }
 
         [Browsable(false)]
         public ButtonGroupModel Model => _model;
@@ -133,6 +147,10 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _itemPaddingHorizontal = Math.Max(4, value);
+                if (AutoSize)
+                {
+                    Size = GetPreferredSize(Size.Empty);
+                }
                 RecalculateLayout();
                 Invalidate();
             }
@@ -143,6 +161,76 @@ namespace ZeroUI.WinForms.Editors
 
         [Browsable(false)]
         public ButtonGroupItem? SelectedItem => _model.SelectedItem;
+
+        #endregion
+
+        #region Sizing
+
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            if (_model.Count == 0)
+            {
+                return new Size(64, Height > 0 ? Height : 36);
+            }
+
+            using var bmp = new Bitmap(1, 1);
+            using var g = Graphics.FromImage(bmp);
+
+            int totalW = 0;
+            for (int i = 0; i < _model.Count; i++)
+            {
+                var item = _model[i];
+                if (!item.IsVisible) continue;
+                totalW += MeasureItemWidth(g, item);
+            }
+
+            int h = Height > 0 ? Height : 36;
+            return new Size(Math.Max(32, totalW + 2), h);
+        }
+
+        private int MeasureItemWidth(Graphics g, ButtonGroupItem item)
+        {
+            if (item.Type == ButtonGroupItemType.Separator)
+            {
+                return 6;
+            }
+
+            string displayText = string.IsNullOrEmpty(item.IconGlyph)
+                ? item.Text
+                : $"{item.IconGlyph} {item.Text}".Trim();
+
+            int pad = item.CustomPaddingHorizontal ?? _itemPaddingHorizontal;
+            int textW = 0;
+            if (!string.IsNullOrEmpty(displayText))
+            {
+                Size size = TextRenderer.MeasureText(g, displayText, Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoClipping);
+                textW = size.Width + 4; // ClearType grid safety padding
+            }
+
+            int w = textW + (pad * 2);
+
+            if (item.IconImage != null)
+            {
+                w += 20; // 16px icon + 4px spacing
+            }
+
+            if (!string.IsNullOrEmpty(item.BadgeText))
+            {
+                Size badgeSize = TextRenderer.MeasureText(g, item.BadgeText, new Font("Segoe UI", 7.5f, FontStyle.Bold));
+                w += Math.Max(18, badgeSize.Width + 8) + 6;
+            }
+            else if (item.ShowBadgeDot)
+            {
+                w += 10;
+            }
+
+            if (item.Type == ButtonGroupItemType.DropDown)
+            {
+                w += 14;
+            }
+
+            return Math.Max(item.MinWidth > 0 ? item.MinWidth : 32, w);
+        }
 
         #endregion
 
@@ -172,6 +260,13 @@ namespace ZeroUI.WinForms.Editors
         public ButtonGroupItem AddDropDown(string id, string text, string? iconGlyph = null, Action<ButtonGroupItem>? action = null)
         {
             var item = new ButtonGroupItem(id, text, iconGlyph, ButtonGroupItemType.DropDown, action);
+            _model.Add(item);
+            return item;
+        }
+
+        public ButtonGroupItem AddDropDown(string id, string text, string? iconGlyph, object? dropDownMenu, Action<ButtonGroupItem>? action = null)
+        {
+            var item = new ButtonGroupItem(id, text, iconGlyph, ButtonGroupItemType.DropDown, action, dropDownMenu);
             _model.Add(item);
             return item;
         }
@@ -236,7 +331,7 @@ namespace ZeroUI.WinForms.Editors
 
             if (_sizeMode == ButtonGroupSizeMode.EqualWidth)
             {
-                int itemW = totalAvailableWidth / visibleCount;
+                int itemW = Math.Max(1, totalAvailableWidth / visibleCount);
                 for (int i = 0; i < _model.Count; i++)
                 {
                     var item = _model[i];
@@ -246,14 +341,14 @@ namespace ZeroUI.WinForms.Editors
                         continue;
                     }
 
-                    int w = (i == _model.Count - 1) ? (totalAvailableWidth - currentX) : itemW;
+                    int w = (i == _model.Count - 1) ? Math.Max(1, totalAvailableWidth - currentX) : itemW;
                     _itemBounds.Add(new Rectangle(currentX, 0, Math.Max(1, w), Height - 1));
-                    currentX += itemW;
+                    currentX += w;
                 }
             }
             else
             {
-                // AutoFit based on text measurement
+                // AutoFit or Fill
                 using var bmp = new Bitmap(1, 1);
                 using var g = Graphics.FromImage(bmp);
 
@@ -269,55 +364,49 @@ namespace ZeroUI.WinForms.Editors
                         continue;
                     }
 
-                    if (item.Type == ButtonGroupItemType.Separator)
-                    {
-                        measuredWidths[i] = 6;
-                    }
-                    else
-                    {
-                        string displayText = string.IsNullOrEmpty(item.IconGlyph)
-                            ? item.Text
-                            : $"{item.IconGlyph} {item.Text}".Trim();
-
-                        Size size = TextRenderer.MeasureText(g, displayText, Font);
-                        int w = size.Width + (_itemPaddingHorizontal * 2);
-
-                        if (!string.IsNullOrEmpty(item.BadgeText))
-                        {
-                            w += 24;
-                        }
-                        if (item.Type == ButtonGroupItemType.DropDown)
-                        {
-                            w += 14;
-                        }
-
-                        measuredWidths[i] = Math.Max(32, w);
-                    }
+                    measuredWidths[i] = MeasureItemWidth(g, item);
                     totalMeasuredWidth += measuredWidths[i];
                 }
 
-                // If total measured width is smaller than control Width, distribute extra space proportionally
-                float scaleFactor = totalMeasuredWidth > 0 && totalMeasuredWidth < totalAvailableWidth
-                    ? (float)totalAvailableWidth / totalMeasuredWidth
-                    : 1.0f;
-
-                for (int i = 0; i < _model.Count; i++)
+                if (_sizeMode == ButtonGroupSizeMode.Fill && totalMeasuredWidth > 0 && totalMeasuredWidth < totalAvailableWidth)
                 {
-                    var item = _model[i];
-                    if (!item.IsVisible)
+                    // Stretch proportionally to fill available width
+                    float scaleFactor = (float)totalAvailableWidth / totalMeasuredWidth;
+                    for (int i = 0; i < _model.Count; i++)
                     {
-                        _itemBounds.Add(Rectangle.Empty);
-                        continue;
-                    }
+                        var item = _model[i];
+                        if (!item.IsVisible)
+                        {
+                            _itemBounds.Add(Rectangle.Empty);
+                            continue;
+                        }
 
-                    int w = (int)(measuredWidths[i] * scaleFactor);
-                    if (i == _model.Count - 1)
+                        int w = (int)(measuredWidths[i] * scaleFactor);
+                        if (i == _model.Count - 1)
+                        {
+                            w = Math.Max(1, totalAvailableWidth - currentX);
+                        }
+
+                        _itemBounds.Add(new Rectangle(currentX, 0, Math.Max(1, w), Height - 1));
+                        currentX += w;
+                    }
+                }
+                else
+                {
+                    // AutoFit: keep exact natural content width without artificial inflation
+                    for (int i = 0; i < _model.Count; i++)
                     {
-                        w = Math.Max(1, totalAvailableWidth - currentX);
-                    }
+                        var item = _model[i];
+                        if (!item.IsVisible)
+                        {
+                            _itemBounds.Add(Rectangle.Empty);
+                            continue;
+                        }
 
-                    _itemBounds.Add(new Rectangle(currentX, 0, Math.Max(1, w), Height - 1));
-                    currentX += w;
+                        int w = measuredWidths[i];
+                        _itemBounds.Add(new Rectangle(currentX, 0, Math.Max(1, w), Height - 1));
+                        currentX += w;
+                    }
                 }
             }
         }
@@ -399,6 +488,13 @@ namespace ZeroUI.WinForms.Editors
                 int releasedIndex = HitTest(e.X, e.Y);
                 if (releasedIndex == _pressedIndex)
                 {
+                    var item = _model[releasedIndex];
+                    if (item.Type == ButtonGroupItemType.DropDown && item.DropDownMenu is ContextMenuStrip cms)
+                    {
+                        var bounds = _itemBounds[releasedIndex];
+                        cms.Show(this, new Point(bounds.Left, bounds.Bottom));
+                    }
+
                     _model.TriggerClick(releasedIndex);
                 }
                 _pressedIndex = -1;
@@ -480,7 +576,23 @@ namespace ZeroUI.WinForms.Editors
                         g.FillRectangle(itemBrush, bounds);
                     }
 
-                    // Draw Content: Glyph + Text
+                    // Draw Content: IconImage + Glyph + Text
+                    int contentLeft = bounds.X + 4;
+                    int contentWidth = bounds.Width - 8;
+
+                    if (!string.IsNullOrEmpty(item.BadgeText))
+                    {
+                        contentWidth -= 24;
+                    }
+
+                    if (item.IconImage is Image img)
+                    {
+                        int imgY = bounds.Y + (bounds.Height - 16) / 2;
+                        g.DrawImage(img, new Rectangle(contentLeft, imgY, 16, 16));
+                        contentLeft += 20;
+                        contentWidth = Math.Max(0, contentWidth - 20);
+                    }
+
                     string textToDraw = string.IsNullOrEmpty(item.IconGlyph)
                         ? item.Text
                         : $"{item.IconGlyph}  {item.Text}".Trim();
@@ -490,11 +602,7 @@ namespace ZeroUI.WinForms.Editors
                         textToDraw += " ▾";
                     }
 
-                    Rectangle textRect = new Rectangle(bounds.X + 4, bounds.Y, bounds.Width - 8, bounds.Height);
-                    if (!string.IsNullOrEmpty(item.BadgeText))
-                    {
-                        textRect.Width -= 22;
-                    }
+                    Rectangle textRect = new Rectangle(contentLeft, bounds.Y, contentWidth, bounds.Height);
 
                     TextRenderer.DrawText(
                         g,
@@ -504,16 +612,33 @@ namespace ZeroUI.WinForms.Editors
                         itemFg,
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
 
-                    // Draw Optional Badge
+                    // Draw Optional Badge Dot (small notification/dirty indicator)
+                    if (item.ShowBadgeDot)
+                    {
+                        Color dotColor = ParseHexColor(item.BadgeColorHex, Color.FromArgb(239, 68, 68));
+                        int dotSize = 7;
+                        int dotX = bounds.Right - 10;
+                        int dotY = bounds.Y + 5;
+
+                        // Subtle outer ring to separate from background
+                        using var ringPen = new Pen(palette.Surface, 1.2f);
+                        g.DrawEllipse(ringPen, dotX - 0.5f, dotY - 0.5f, dotSize + 1, dotSize + 1);
+
+                        using var dotBrush = new SolidBrush(dotColor);
+                        g.FillEllipse(dotBrush, dotX, dotY, dotSize, dotSize);
+                    }
+
+                    // Draw Optional Badge Pill with Text
                     if (!string.IsNullOrEmpty(item.BadgeText))
                     {
-                        Size badgeSize = TextRenderer.MeasureText(item.BadgeText, Font);
-                        int badgeW = Math.Max(18, badgeSize.Width + 6);
+                        Color badgeBgColor = ParseHexColor(item.BadgeColorHex, Color.FromArgb(220, 38, 38));
+                        Size badgeSize = TextRenderer.MeasureText(item.BadgeText, new Font("Segoe UI", 7.5f, FontStyle.Bold));
+                        int badgeW = Math.Max(18, badgeSize.Width + 8);
                         int badgeH = 16;
                         Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 6, (bounds.Height - badgeH) / 2, badgeW, badgeH);
 
                         using var badgePath = CreateRoundedRectangle(badgeRect, 8, 8, 8, 8);
-                        using var badgeBg = new SolidBrush(Color.FromArgb(220, 38, 38));
+                        using var badgeBg = new SolidBrush(badgeBgColor);
                         g.FillPath(badgeBg, badgePath);
 
                         TextRenderer.DrawText(
@@ -541,6 +666,19 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        private static Color ParseHexColor(string? hex, Color fallback)
+        {
+            if (string.IsNullOrWhiteSpace(hex)) return fallback;
+            try
+            {
+                return ColorTranslator.FromHtml(hex);
+            }
+            catch
+            {
+                return fallback;
+            }
+        }
+
         private (Color bg, Color fg) GetItemColors(ButtonGroupItem item, bool isHovered, bool isPressed, ZeroThemePalette palette)
         {
             if (!item.IsEnabled || !Enabled)
@@ -564,8 +702,17 @@ namespace ZeroUI.WinForms.Editors
                 return (palette.Hover, palette.TextPrimary);
             }
 
+            // Check custom colors if set
+            Color? customBg = !string.IsNullOrEmpty(item.CustomBackColorHex) ? ParseHexColor(item.CustomBackColorHex, Color.Empty) : null;
+            Color? customFg = !string.IsNullOrEmpty(item.CustomForeColorHex) ? ParseHexColor(item.CustomForeColorHex, Color.Empty) : null;
+
+            if (customBg.HasValue && customBg.Value != Color.Empty)
+            {
+                return (customBg.Value, customFg ?? palette.TextPrimary);
+            }
+
             // Normal idle state based on item.Style
-            return item.Style switch
+            var (baseBg, baseFg) = item.Style switch
             {
                 ButtonGroupItemStyle.Primary => (palette.Primary, Color.White),
                 ButtonGroupItemStyle.Success => (palette.Success, Color.White),
@@ -573,6 +720,13 @@ namespace ZeroUI.WinForms.Editors
                 ButtonGroupItemStyle.Ghost => (Color.Transparent, palette.TextPrimary),
                 _ => (Color.Transparent, palette.TextPrimary)
             };
+
+            if (customFg.HasValue && customFg.Value != Color.Empty)
+            {
+                baseFg = customFg.Value;
+            }
+
+            return (baseBg, baseFg);
         }
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int topLeft, int topRight, int bottomRight, int bottomLeft)

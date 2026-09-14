@@ -30,6 +30,14 @@ namespace ZeroUI.Wpf.Editors
             DependencyProperty.Register(nameof(SelectionMode), typeof(ButtonGroupSelectionMode), typeof(ButtonGroup),
                 new FrameworkPropertyMetadata(ButtonGroupSelectionMode.None, OnSelectionModeChanged));
 
+        public static readonly DependencyProperty SizeModeProperty =
+            DependencyProperty.Register(nameof(SizeMode), typeof(ButtonGroupSizeMode), typeof(ButtonGroup),
+                new FrameworkPropertyMetadata(ButtonGroupSizeMode.AutoFit, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ItemPaddingHorizontalProperty =
+            DependencyProperty.Register(nameof(ItemPaddingHorizontal), typeof(double), typeof(ButtonGroup),
+                new FrameworkPropertyMetadata(16.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
+
         #endregion
 
         #region Events & Properties
@@ -49,6 +57,18 @@ namespace ZeroUI.Wpf.Editors
         {
             get => (ButtonGroupSelectionMode)GetValue(SelectionModeProperty);
             set => SetValue(SelectionModeProperty, value);
+        }
+
+        public ButtonGroupSizeMode SizeMode
+        {
+            get => (ButtonGroupSizeMode)GetValue(SizeModeProperty);
+            set => SetValue(SizeModeProperty, value);
+        }
+
+        public double ItemPaddingHorizontal
+        {
+            get => (double)GetValue(ItemPaddingHorizontalProperty);
+            set => SetValue(ItemPaddingHorizontalProperty, value);
         }
 
         public IReadOnlyList<ButtonGroupItem> Items => _model.Items;
@@ -112,6 +132,13 @@ namespace ZeroUI.Wpf.Editors
             return item;
         }
 
+        public ButtonGroupItem AddDropDown(string id, string text, string? iconGlyph, object? dropDownMenu, Action<ButtonGroupItem>? action = null)
+        {
+            var item = new ButtonGroupItem(id, text, iconGlyph, ButtonGroupItemType.DropDown, action, dropDownMenu);
+            _model.Add(item);
+            return item;
+        }
+
         public ButtonGroupItem AddSeparator()
         {
             var item = new ButtonGroupItem(Guid.NewGuid().ToString("N"), string.Empty, null, ButtonGroupItemType.Separator);
@@ -125,12 +152,80 @@ namespace ZeroUI.Wpf.Editors
 
         #region Measurement & Layout
 
+        private double MeasureItemWidth(ButtonGroupItem item)
+        {
+            if (item.Type == ButtonGroupItemType.Separator)
+            {
+                return 6.0;
+            }
+
+            string caption = string.IsNullOrEmpty(item.IconGlyph)
+                ? item.Text
+                : $"{item.IconGlyph}  {item.Text}".Trim();
+
+            if (item.Type == ButtonGroupItemType.DropDown)
+            {
+                caption += " ▾";
+            }
+
+            double pad = item.CustomPaddingHorizontal.HasValue
+                ? (double)item.CustomPaddingHorizontal.Value
+                : ItemPaddingHorizontal;
+
+            double textW = 0.0;
+            if (!string.IsNullOrEmpty(caption))
+            {
+                var ft = new FormattedText(
+                    caption,
+                    CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, item.IsChecked ? FontWeights.Bold : FontWeights.Normal, FontStretches.Normal),
+                    12.0,
+                    Brushes.Black,
+                    VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                textW = ft.Width;
+            }
+
+            double w = textW + (pad * 2.0);
+
+            if (!string.IsNullOrEmpty(item.BadgeText))
+            {
+                var badgeFt = new FormattedText(
+                    item.BadgeText,
+                    CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal),
+                    10.0,
+                    Brushes.White,
+                    VisualTreeHelper.GetDpi(this).PixelsPerDip);
+                w += Math.Max(16.0, badgeFt.Width + 8.0) + 6.0;
+            }
+            else if (item.ShowBadgeDot)
+            {
+                w += 10.0;
+            }
+
+            return Math.Max(item.MinWidth > 0 ? (double)item.MinWidth : 32.0, w);
+        }
+
         protected override Size MeasureOverride(Size availableSize)
         {
-            double minWidth = Math.Max(120, _model.Count * 70.0);
+            if (_model.Count == 0)
+            {
+                return new Size(64.0, double.IsNaN(Height) ? 32.0 : Height);
+            }
+
+            double totalW = 0;
+            for (int i = 0; i < _model.Count; i++)
+            {
+                var item = _model[i];
+                if (!item.IsVisible) continue;
+                totalW += MeasureItemWidth(item);
+            }
+
             double height = double.IsNaN(Height) ? 32.0 : Height;
             return new Size(
-                double.IsPositiveInfinity(availableSize.Width) ? minWidth : Math.Min(minWidth, availableSize.Width),
+                double.IsPositiveInfinity(availableSize.Width) ? totalW : Math.Min(totalW, availableSize.Width),
                 double.IsPositiveInfinity(availableSize.Height) ? height : Math.Min(height, availableSize.Height));
         }
 
@@ -152,21 +247,82 @@ namespace ZeroUI.Wpf.Editors
             }
             if (visibleCount == 0) return;
 
-            double itemW = width / visibleCount;
             double currentX = 0;
 
-            for (int i = 0; i < _model.Count; i++)
+            if (SizeMode == ButtonGroupSizeMode.EqualWidth)
             {
-                var item = _model[i];
-                if (!item.IsVisible)
+                double itemW = width / visibleCount;
+                for (int i = 0; i < _model.Count; i++)
                 {
-                    _itemBounds.Add(Rect.Empty);
-                    continue;
+                    var item = _model[i];
+                    if (!item.IsVisible)
+                    {
+                        _itemBounds.Add(Rect.Empty);
+                        continue;
+                    }
+
+                    double w = (i == _model.Count - 1) ? Math.Max(1.0, width - currentX) : itemW;
+                    _itemBounds.Add(new Rect(currentX, 0, w, height));
+                    currentX += w;
+                }
+            }
+            else
+            {
+                var measuredWidths = new double[_model.Count];
+                double totalMeasuredWidth = 0.0;
+
+                for (int i = 0; i < _model.Count; i++)
+                {
+                    var item = _model[i];
+                    if (!item.IsVisible)
+                    {
+                        measuredWidths[i] = 0.0;
+                        continue;
+                    }
+
+                    measuredWidths[i] = MeasureItemWidth(item);
+                    totalMeasuredWidth += measuredWidths[i];
                 }
 
-                double w = (i == _model.Count - 1) ? Math.Max(1, width - currentX) : itemW;
-                _itemBounds.Add(new Rect(currentX, 0, w, height));
-                currentX += itemW;
+                if (SizeMode == ButtonGroupSizeMode.Fill && totalMeasuredWidth > 0.0 && totalMeasuredWidth < width)
+                {
+                    double scaleFactor = width / totalMeasuredWidth;
+                    for (int i = 0; i < _model.Count; i++)
+                    {
+                        var item = _model[i];
+                        if (!item.IsVisible)
+                        {
+                            _itemBounds.Add(Rect.Empty);
+                            continue;
+                        }
+
+                        double w = measuredWidths[i] * scaleFactor;
+                        if (i == _model.Count - 1)
+                        {
+                            w = Math.Max(1.0, width - currentX);
+                        }
+
+                        _itemBounds.Add(new Rect(currentX, 0, w, height));
+                        currentX += w;
+                    }
+                }
+                else
+                {
+                    // AutoFit: keep exact natural item dimensions
+                    for (int i = 0; i < _model.Count; i++)
+                    {
+                        var item = _model[i];
+                        if (!item.IsVisible)
+                        {
+                            _itemBounds.Add(Rect.Empty);
+                            continue;
+                        }
+
+                        double w = measuredWidths[i];
+                        _itemBounds.Add(new Rect(currentX, 0, w, height));
+                        currentX += w;
+                    }
+                }
             }
         }
 
@@ -233,6 +389,14 @@ namespace ZeroUI.Wpf.Editors
                 int releasedIndex = HitTest(e.GetPosition(this));
                 if (releasedIndex == _pressedIndex)
                 {
+                    var item = _model[releasedIndex];
+                    if (item.Type == ButtonGroupItemType.DropDown && item.DropDownMenu is System.Windows.Controls.ContextMenu cm)
+                    {
+                        cm.PlacementTarget = this;
+                        cm.PlacementRectangle = _itemBounds[releasedIndex];
+                        cm.IsOpen = true;
+                    }
+
                     _model.TriggerClick(releasedIndex);
                 }
                 _pressedIndex = -1;
@@ -302,9 +466,7 @@ namespace ZeroUI.Wpf.Editors
                     caption += " ▾";
                 }
 
-                Brush textBrush = (item.IsChecked || item.Style == ButtonGroupItemStyle.Primary || item.Style == ButtonGroupItemStyle.Success)
-                    ? Brushes.White
-                    : (item.IsEnabled ? ZeroWpfTheme.TextPrimary : ZeroWpfTheme.TextMuted);
+                Brush textBrush = GetItemTextBrush(item);
 
                 var formattedText = new FormattedText(
                     caption,
@@ -318,7 +480,43 @@ namespace ZeroUI.Wpf.Editors
                 double textX = bounds.X + (bounds.Width - formattedText.Width) / 2.0;
                 double textY = bounds.Y + (bounds.Height - formattedText.Height) / 2.0;
 
+                if (!string.IsNullOrEmpty(item.BadgeText))
+                {
+                    textX -= 10.0;
+                }
+
                 dc.DrawText(formattedText, new Point(textX, textY));
+
+                // Draw Badge Dot (notification / dirty indicator)
+                if (item.ShowBadgeDot)
+                {
+                    Brush dotBrush = ParseHexBrush(item.BadgeColorHex, ZeroWpfTheme.DangerAccent);
+                    Point center = new Point(bounds.Right - 8.0, bounds.Y + 7.0);
+                    // Draw subtle separator ring
+                    dc.DrawEllipse(bgTrack, null, center, 4.2, 4.2);
+                    dc.DrawEllipse(dotBrush, null, center, 3.2, 3.2);
+                }
+
+                // Draw Badge Pill
+                if (!string.IsNullOrEmpty(item.BadgeText))
+                {
+                    Brush badgeBg = ParseHexBrush(item.BadgeColorHex, ZeroWpfTheme.DangerAccent);
+                    var badgeFt = new FormattedText(
+                        item.BadgeText,
+                        CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal),
+                        9.5,
+                        Brushes.White,
+                        VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+                    double badgeW = Math.Max(16.0, badgeFt.Width + 6.0);
+                    double badgeH = 15.0;
+                    Rect badgeRect = new Rect(bounds.Right - badgeW - 6.0, (bounds.Height - badgeH) / 2.0, badgeW, badgeH);
+
+                    dc.DrawRoundedRectangle(badgeBg, null, badgeRect, 7.5, 7.5);
+                    dc.DrawText(badgeFt, new Point(badgeRect.X + (badgeW - badgeFt.Width) / 2.0, badgeRect.Y + (badgeH - badgeFt.Height) / 2.0));
+                }
 
                 // Draw 1px divider between adjacent items
                 if (i != lastVisible && item.Type != ButtonGroupItemType.Separator)
@@ -329,6 +527,37 @@ namespace ZeroUI.Wpf.Editors
 
             // Re-stroke outer border to prevent internal fills from obscuring rounded edges
             dc.DrawRoundedRectangle(null, borderPen, fullRect, radius, radius);
+        }
+
+        private static Brush ParseHexBrush(string? hex, Brush fallback)
+        {
+            if (string.IsNullOrWhiteSpace(hex)) return fallback;
+            try
+            {
+                var color = (Color)ColorConverter.ConvertFromString(hex);
+                var brush = new SolidColorBrush(color);
+                brush.Freeze();
+                return brush;
+            }
+            catch
+            {
+                return fallback;
+            }
+        }
+
+        private Brush GetItemTextBrush(ButtonGroupItem item)
+        {
+            if (item.IsChecked || item.Style == ButtonGroupItemStyle.Primary || item.Style == ButtonGroupItemStyle.Success || item.Style == ButtonGroupItemStyle.Danger)
+            {
+                return Brushes.White;
+            }
+
+            if (!string.IsNullOrEmpty(item.CustomForeColorHex))
+            {
+                return ParseHexBrush(item.CustomForeColorHex, ZeroWpfTheme.TextPrimary);
+            }
+
+            return item.IsEnabled ? ZeroWpfTheme.TextPrimary : ZeroWpfTheme.TextMuted;
         }
 
         private Brush? GetItemBrush(ButtonGroupItem item, bool isHovered, bool isPressed)
@@ -348,6 +577,11 @@ namespace ZeroUI.Wpf.Editors
             if (isHovered)
             {
                 return ZeroWpfTheme.BgHover;
+            }
+
+            if (!string.IsNullOrEmpty(item.CustomBackColorHex))
+            {
+                return ParseHexBrush(item.CustomBackColorHex, Brushes.Transparent);
             }
 
             return item.Style switch
