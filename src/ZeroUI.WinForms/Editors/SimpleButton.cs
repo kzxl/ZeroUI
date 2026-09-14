@@ -43,10 +43,15 @@ namespace ZeroUI.WinForms.Editors
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             Cursor = Cursors.Hand;
 
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) =>
+            {
+                UpdateRegion();
+                Invalidate();
+            };
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold);
+                UpdateRegion();
                 Invalidate();
             };
         }
@@ -70,7 +75,12 @@ namespace ZeroUI.WinForms.Editors
         public int BorderRadius
         {
             get => _borderRadius;
-            set { _borderRadius = Math.Max(0, value); Invalidate(); }
+            set
+            {
+                _borderRadius = Math.Max(0, value);
+                UpdateRegion();
+                Invalidate();
+            }
         }
 
         [Category("Appearance")]
@@ -111,6 +121,28 @@ namespace ZeroUI.WinForms.Editors
             base.OnMouseUp(e);
             _isPressed = false;
             Invalidate();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            UpdateRegion();
+            Invalidate();
+        }
+
+        private void UpdateRegion()
+        {
+            if (Width <= 0 || Height <= 0) return;
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+            if (effRadius > 0)
+            {
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
+                Region = new Region(path);
+            }
+            else
+            {
+                Region = null;
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)

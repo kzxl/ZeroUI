@@ -830,58 +830,43 @@ namespace ZeroUI.WinForms.Industrial
             using (var fitFont = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
             {
                 g.FillPath(hudBg, hudPath);
-                g.DrawPath(hudBorder, hudPath);
 
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
 
-                // [ - ] ZoomOut
                 var rZoomOut = new RectangleF(hudRect.X, hudRect.Y, 36, hudRect.Height);
-                bool isZoomOutHover = _hoveredHudButton == ZoomHudButton.ZoomOut;
-                if (isZoomOutHover)
-                {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomOut.X + 2, rZoomOut.Y + 2, rZoomOut.Width - 4, rZoomOut.Height - 4), 6))
-                        g.FillPath(highlightBrush, hPath);
-                }
-                g.DrawString("−", boldIconFont, isZoomOutHover ? hudHighlightTextBrush : hudTextBrush, rZoomOut, sf);
-
-                // Divider 1
-                g.DrawLine(dividerPen, hudRect.X + 36, hudRect.Y + 6, hudRect.X + 36, hudRect.Bottom - 6);
-
-                // [ 100% ] Reset
                 var rReset = new RectangleF(hudRect.X + 36, hudRect.Y, 60, hudRect.Height);
-                bool isResetHover = _hoveredHudButton == ZoomHudButton.ResetZoom;
-                if (isResetHover)
-                {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rReset.X + 2, rReset.Y + 2, rReset.Width - 4, rReset.Height - 4), 6))
-                        g.FillPath(highlightBrush, hPath);
-                }
-                string zoomText = $"{(_zoom * 100):0}%";
-                g.DrawString(zoomText, btnTextFont, isResetHover ? hudHighlightTextBrush : hudTextBrush, rReset, sf);
-
-                // Divider 2
-                g.DrawLine(dividerPen, hudRect.X + 96, hudRect.Y + 6, hudRect.X + 96, hudRect.Bottom - 6);
-
-                // [ + ] ZoomIn
                 var rZoomIn = new RectangleF(hudRect.X + 96, hudRect.Y, 36, hudRect.Height);
-                bool isZoomInHover = _hoveredHudButton == ZoomHudButton.ZoomIn;
-                if (isZoomInHover)
-                {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomIn.X + 2, rZoomIn.Y + 2, rZoomIn.Width - 4, rZoomIn.Height - 4), 6))
-                        g.FillPath(highlightBrush, hPath);
-                }
-                g.DrawString("+", boldIconFont, isZoomInHover ? hudHighlightTextBrush : hudTextBrush, rZoomIn, sf);
+                var rFit = new RectangleF(hudRect.X + 132, hudRect.Y, 48, hudRect.Height);
 
-                // Divider 3
+                bool isZoomOutHover = _hoveredHudButton == ZoomHudButton.ZoomOut;
+                bool isResetHover = _hoveredHudButton == ZoomHudButton.ResetZoom;
+                bool isZoomInHover = _hoveredHudButton == ZoomHudButton.ZoomIn;
+                bool isFitHover = _hoveredHudButton == ZoomHudButton.Fit;
+
+                // Clip hover fills and dividers seamlessly to the outer pill path (no inner floating frames)
+                var oldClip = g.Clip;
+                g.SetClip(hudPath, CombineMode.Intersect);
+
+                if (isZoomOutHover) g.FillRectangle(highlightBrush, rZoomOut);
+                if (isResetHover) g.FillRectangle(highlightBrush, rReset);
+                if (isZoomInHover) g.FillRectangle(highlightBrush, rZoomIn);
+                if (isFitHover) g.FillRectangle(highlightBrush, rFit);
+
+                // Subtle button dividers
+                g.DrawLine(dividerPen, hudRect.X + 36, hudRect.Y + 6, hudRect.X + 36, hudRect.Bottom - 6);
+                g.DrawLine(dividerPen, hudRect.X + 96, hudRect.Y + 6, hudRect.X + 96, hudRect.Bottom - 6);
                 g.DrawLine(dividerPen, hudRect.X + 132, hudRect.Y + 6, hudRect.X + 132, hudRect.Bottom - 6);
 
-                // [ Fit ] Fit to View
-                var rFit = new RectangleF(hudRect.X + 132, hudRect.Y, 48, hudRect.Height);
-                bool isFitHover = _hoveredHudButton == ZoomHudButton.Fit;
-                if (isFitHover)
-                {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rFit.X + 2, rFit.Y + 2, rFit.Width - 4, rFit.Height - 4), 6))
-                        g.FillPath(highlightBrush, hPath);
-                }
+                g.Clip = oldClip;
+
+                // Outer pill border drawn seamlessly over fills
+                g.DrawPath(hudBorder, hudPath);
+
+                // Button Glyphs & Text
+                g.DrawString("−", boldIconFont, isZoomOutHover ? hudHighlightTextBrush : hudTextBrush, rZoomOut, sf);
+                string zoomText = $"{(_zoom * 100):0}%";
+                g.DrawString(zoomText, btnTextFont, isResetHover ? hudHighlightTextBrush : hudTextBrush, rReset, sf);
+                g.DrawString("+", boldIconFont, isZoomInHover ? hudHighlightTextBrush : hudTextBrush, rZoomIn, sf);
                 g.DrawString("Fit", fitFont, isFitHover ? hudHighlightTextBrush : hudTextBrush, rFit, sf);
             }
         }

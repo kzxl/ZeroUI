@@ -42,10 +42,15 @@ namespace ZeroUI.WinForms.Editors
                 SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
             };
 
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) =>
+            {
+                UpdateRegion();
+                Invalidate();
+            };
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9f, FontStyle.Regular);
+                UpdateRegion();
                 Invalidate();
             };
         }
@@ -120,6 +125,28 @@ namespace ZeroUI.WinForms.Editors
             if (itemW <= 0) return -1;
             int idx = (x - 2) / itemW;
             return Math.Max(0, Math.Min(_items.Length - 1, idx));
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            UpdateRegion();
+            Invalidate();
+        }
+
+        private void UpdateRegion()
+        {
+            if (Width <= 0 || Height <= 0) return;
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+            if (effRadius > 0)
+            {
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
+                Region = new Region(path);
+            }
+            else
+            {
+                Region = null;
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)

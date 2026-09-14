@@ -62,11 +62,16 @@ namespace ZeroUI.WinForms.Editors
                 Invalidate();
             };
 
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) =>
+            {
+                UpdateRegion();
+                Invalidate();
+            };
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9f, FontStyle.Regular);
                 RecalculateLayout();
+                UpdateRegion();
                 Invalidate();
             };
         }
@@ -115,6 +120,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _borderRadius = Math.Max(0, value);
+                UpdateRegion();
                 Invalidate();
             }
         }
@@ -188,7 +194,23 @@ namespace ZeroUI.WinForms.Editors
         {
             base.OnResize(e);
             RecalculateLayout();
+            UpdateRegion();
             Invalidate();
+        }
+
+        private void UpdateRegion()
+        {
+            if (Width <= 0 || Height <= 0) return;
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+            if (effRadius > 0)
+            {
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius, effRadius, effRadius, effRadius);
+                Region = new Region(path);
+            }
+            else
+            {
+                Region = null;
+            }
         }
 
         protected override void OnThemeChanged(ZeroSkin skin)
@@ -414,6 +436,9 @@ namespace ZeroUI.WinForms.Editors
                 using var bgBrush = new SolidBrush(palette.Surface);
                 g.FillPath(bgBrush, groupPath);
 
+                var oldClip = g.Clip;
+                g.SetClip(groupPath, CombineMode.Intersect);
+
                 // 3. Render Each Item
                 int firstVisible = -1, lastVisible = -1;
                 for (int i = 0; i < _model.Count; i++)
@@ -446,21 +471,13 @@ namespace ZeroUI.WinForms.Editors
                         continue;
                     }
 
-                    // Create item clipping path for corner rounding
-                    int tl = isFirst ? effRadius : 0;
-                    int bl = isFirst ? effRadius : 0;
-                    int tr = isLast ? effRadius : 0;
-                    int br = isLast ? effRadius : 0;
-
-                    using var itemPath = CreateRoundedRectangle(bounds, tl, tr, br, bl);
-
                     // Compute background color
                     var (itemBg, itemFg) = GetItemColors(item, isHovered, isPressed, palette);
 
                     if (itemBg != Color.Transparent)
                     {
                         using var itemBrush = new SolidBrush(itemBg);
-                        g.FillPath(itemBrush, itemPath);
+                        g.FillRectangle(itemBrush, bounds);
                     }
 
                     // Draw Content: Glyph + Text
@@ -508,15 +525,17 @@ namespace ZeroUI.WinForms.Editors
                             TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
                     }
 
-                    // Draw 1px divider between items (if not last item)
-                    if (!isLast && item.Type != ButtonGroupItemType.Separator)
+                    // Draw 1px divider between items (if not last item and next item is not a separator)
+                    if (!isLast && item.Type != ButtonGroupItemType.Separator && (i + 1 < _model.Count && _model[i + 1].Type != ButtonGroupItemType.Separator))
                     {
                         using var divPen = new Pen(palette.Border, 1f);
                         g.DrawLine(divPen, bounds.Right, bounds.Y + 4, bounds.Right, bounds.Bottom - 4);
                     }
                 }
 
-                // 4. Draw Outer Group Border
+                g.Clip = oldClip;
+
+                // 4. Draw Outer Group Border cleanly over clipped items
                 using var borderPen = new Pen(palette.Border, 1f);
                 g.DrawPath(borderPen, groupPath);
             }
