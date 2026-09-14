@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Icons;
 using ZeroUI.Core.Process;
 using ZeroUI.Wpf.Theme;
 
@@ -403,21 +404,21 @@ namespace ZeroUI.Wpf.Process
 
             if (_selectedLane != null)
             {
-                var mnuRename = new MenuItem { Header = "✏ Rename Swimlane..." };
+                var mnuRename = new MenuItem { Header = MenuIcons.Format(MenuIcons.Rename, "Rename Swimlane...") };
                 mnuRename.Click += (s, ev) => ShowRenameLaneDialog(_selectedLane);
                 _contextMenu.Items.Add(mnuRename);
 
-                var mnuFit = new MenuItem { Header = "🎯 Fit Lanes to Nodes" };
+                var mnuFit = new MenuItem { Header = MenuIcons.Format(MenuIcons.FitToContent, "Fit Lanes to Nodes") };
                 mnuFit.Click += (s, ev) => FitLanesToNodes();
                 _contextMenu.Items.Add(mnuFit);
 
-                var mnuAuto = new MenuItem { Header = "📐 Auto-Arrange Flow" };
+                var mnuAuto = new MenuItem { Header = MenuIcons.Format(MenuIcons.AutoLayout, "Auto-Arrange Flow") };
                 mnuAuto.Click += (s, ev) => AutoArrangeLayout(true);
                 _contextMenu.Items.Add(mnuAuto);
 
                 _contextMenu.Items.Add(new Separator());
 
-                var mnuDeleteLane = new MenuItem { Header = "🗑 Delete Swimlane" };
+                var mnuDeleteLane = new MenuItem { Header = MenuIcons.Format(MenuIcons.Delete, "Delete Swimlane") };
                 mnuDeleteLane.Click += (s, ev) =>
                 {
                     if (_selectedLane != null)
@@ -438,7 +439,7 @@ namespace ZeroUI.Wpf.Process
 
             if (_selectedNode == null)
             {
-                var mnuAdd = new MenuItem { Header = "Add New Step Here" };
+                var mnuAdd = new MenuItem { Header = MenuIcons.Format(MenuIcons.Add, "Add New Step Here") };
                 mnuAdd.Click += (s, ev) =>
                 {
                     int nextIdx = _definition.Nodes.Count + 1;
@@ -454,7 +455,7 @@ namespace ZeroUI.Wpf.Process
                     {
                         Shape = ProcessNodeShape.TaskCard,
                         HeaderColorHex = "#3B82F6",
-                        IconGlyph = "📄"
+                        IconGlyph = MenuIcons.Document
                     };
                     _definition.Nodes.Add(newNode);
                     SelectedNode = newNode;
@@ -463,7 +464,7 @@ namespace ZeroUI.Wpf.Process
                 };
                 _contextMenu.Items.Add(mnuAdd);
 
-                var mnuAddLane = new MenuItem { Header = "➕ Add New Swimlane..." };
+                var mnuAddLane = new MenuItem { Header = MenuIcons.Format(MenuIcons.Add, "Add New Swimlane...") };
                 mnuAddLane.Click += (s, ev) =>
                 {
                     var newLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), "1. BUSINESS & DESIGN", _rightClickLocation.X, _rightClickLocation.Y, 680, 340);
@@ -477,11 +478,11 @@ namespace ZeroUI.Wpf.Process
 
                 _contextMenu.Items.Add(new Separator());
 
-                var mnuAutoCanvas = new MenuItem { Header = "📐 Auto-Arrange Flow" };
+                var mnuAutoCanvas = new MenuItem { Header = MenuIcons.Format(MenuIcons.AutoLayout, "Auto-Arrange Flow") };
                 mnuAutoCanvas.Click += (s, ev) => AutoArrangeLayout(true);
                 _contextMenu.Items.Add(mnuAutoCanvas);
 
-                var mnuFitCanvas = new MenuItem { Header = "🎯 Fit Lanes to Nodes" };
+                var mnuFitCanvas = new MenuItem { Header = MenuIcons.Format(MenuIcons.FitToContent, "Fit Lanes to Nodes") };
                 mnuFitCanvas.Click += (s, ev) => FitLanesToNodes();
                 _contextMenu.Items.Add(mnuFitCanvas);
 
@@ -489,13 +490,13 @@ namespace ZeroUI.Wpf.Process
             }
 
             // Node Context Menu
-            var mnuCreateLane = new MenuItem { Header = "📦 Create Frame from Selection" };
+            var mnuCreateLane = new MenuItem { Header = MenuIcons.Format(MenuIcons.Frame, "Create Frame from Selection") };
             mnuCreateLane.Click += (s, ev) => CreateLaneFromSelectedNodes();
             _contextMenu.Items.Add(mnuCreateLane);
             _contextMenu.Items.Add(new Separator());
 
             // Connect to Step Submenu
-            var mnuConnect = new MenuItem { Header = "🔗 Connect to Step..." };
+            var mnuConnect = new MenuItem { Header = MenuIcons.Format(MenuIcons.Connect, "Connect to Step...") };
             var otherNodes = _definition.Nodes.Where(n => n.Id != _selectedNode.Id).ToList();
             if (otherNodes.Count == 0)
             {
@@ -506,7 +507,7 @@ namespace ZeroUI.Wpf.Process
                 foreach (var target in otherNodes)
                 {
                     var tgt = target;
-                    var item = new MenuItem { Header = $"➜ {tgt.Title}" };
+                    var item = new MenuItem { Header = $"{MenuIcons.ArrowRight} {tgt.Title}" };
                     item.Click += (s, ev) =>
                     {
                         if (_selectedNode != null)

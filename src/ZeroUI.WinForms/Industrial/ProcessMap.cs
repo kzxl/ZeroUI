@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.Core.Icons;
 using ZeroUI.Core.Process;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
@@ -150,7 +151,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             _contextMenu = new ContextMenuStrip();
             _mnuEditTitle = new ToolStripMenuItem("Edit Title & Subtitle...", null, OnEditTitleClicked);
-            _mnuConnectTo = new ToolStripMenuItem("🔗 Connect to Step...", null);
+            _mnuConnectTo = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Connect, "Connect to Step..."), null);
             _mnuAssignAction = new ToolStripMenuItem("Assign Navigation Action...", null);
             _mnuChangeShape = new ToolStripMenuItem("Change Shape", null);
 
@@ -163,8 +164,8 @@ namespace ZeroUI.WinForms.Industrial
             _mnuDeleteNode = new ToolStripMenuItem("Delete Step", null, OnDeleteNodeClicked);
             _mnuAddStep = new ToolStripMenuItem("Add New Step Here", null, OnAddStepClicked);
 
-            _mnuCreateLaneFromSelection = new ToolStripMenuItem("📦 Create Frame from Selection", null, (s, e) => CreateLaneFromSelectedNodes());
-            _mnuAddNewLane = new ToolStripMenuItem("➕ Add New Swimlane...", null, (s, e) =>
+            _mnuCreateLaneFromSelection = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Frame, "Create Frame from Selection"), null, (s, e) => CreateLaneFromSelectedNodes());
+            _mnuAddNewLane = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Add, "Add New Swimlane..."), null, (s, e) =>
             {
                 PointF world = _rightClickLocation;
                 var newLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), "1. BUSINESS & DESIGN", world.X, world.Y, 680, 340);
@@ -175,9 +176,9 @@ namespace ZeroUI.WinForms.Industrial
                 Invalidate();
                 DefinitionChanged?.Invoke(this, EventArgs.Empty);
             });
-            _mnuFitLanes = new ToolStripMenuItem("🎯 Fit Lanes to Nodes", null, (s, e) => FitLanesToNodes());
-            _mnuAutoArrange = new ToolStripMenuItem("📐 Auto-Arrange Flow", null, (s, e) => AutoArrangeLayout(true));
-            _mnuDeleteLane = new ToolStripMenuItem("🗑 Delete Swimlane", null, (s, e) =>
+            _mnuFitLanes = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.FitToContent, "Fit Lanes to Nodes"), null, (s, e) => FitLanesToNodes());
+            _mnuAutoArrange = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.AutoLayout, "Auto-Arrange Flow"), null, (s, e) => AutoArrangeLayout(true));
+            _mnuDeleteLane = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Delete, "Delete Swimlane"), null, (s, e) =>
             {
                 if (_selectedLane != null)
                 {
@@ -192,7 +193,7 @@ namespace ZeroUI.WinForms.Industrial
                     DefinitionChanged?.Invoke(this, EventArgs.Empty);
                 }
             });
-            _mnuRenameLane = new ToolStripMenuItem("✏ Rename Swimlane...", null, (s, e) =>
+            _mnuRenameLane = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Rename, "Rename Swimlane..."), null, (s, e) =>
             {
                 if (_selectedLane != null) ShowRenameLaneDialog(_selectedLane);
             });
@@ -219,8 +220,8 @@ namespace ZeroUI.WinForms.Industrial
 
             // Connection context menu
             _connContextMenu = new ContextMenuStrip();
-            _mnuEditConnLabel = new ToolStripMenuItem("✏ Edit Branch Label...", null, OnEditConnLabelClicked);
-            _mnuChangeConnColor = new ToolStripMenuItem("🎨 Change Line Color", null);
+            _mnuEditConnLabel = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Edit, "Edit Branch Label..."), null, OnEditConnLabelClicked);
+            _mnuChangeConnColor = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Palette, "Change Line Color"), null);
 
             var colors = new (string Name, string Hex)[]
             {
@@ -2152,7 +2153,7 @@ namespace ZeroUI.WinForms.Industrial
                 foreach (var target in otherNodes)
                 {
                     var tgt = target;
-                    var item = new ToolStripMenuItem($"➜ {tgt.Title}", null, (s, ev) =>
+                    var item = new ToolStripMenuItem($"{MenuIcons.ArrowRight} {tgt.Title}", null, (s, ev) =>
                     {
                         if (_selectedNode != null)
                         {
