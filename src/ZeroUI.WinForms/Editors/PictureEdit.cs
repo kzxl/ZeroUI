@@ -199,7 +199,7 @@ namespace ZeroUI.WinForms.Editors
             if (_image == null) return;
             var previewPanel = new LightboxViewerPanel(_image);
             IWin32Window parentWindow = (IWin32Window?)FindForm() ?? this;
-            ZeroModal.Show(
+            ModalDialog.Show(
                 parentWindow,
                 $"Image Preview ({_image.Width} x {_image.Height} px)",
                 previewPanel,
@@ -411,7 +411,7 @@ namespace ZeroUI.WinForms.Editors
                     try
                     {
                         Clipboard.SetImage(_image);
-                        if (FindForm() is Form f) ZeroToast.Success(f, "Image copied to clipboard!");
+                        if (FindForm() is Form f) ToastNotification.Success(f, "Image copied to clipboard!");
                     }
                     catch { }
                 });
@@ -431,11 +431,11 @@ namespace ZeroUI.WinForms.Editors
                                       sfd.FileName.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase) ? System.Drawing.Imaging.ImageFormat.Bmp :
                                       System.Drawing.Imaging.ImageFormat.Png;
                             _image.Save(sfd.FileName, fmt);
-                            if (FindForm() is Form f) ZeroToast.Success(f, "Image saved successfully!");
+                            if (FindForm() is Form f) ToastNotification.Success(f, "Image saved successfully!");
                         }
                         catch (Exception ex)
                         {
-                            if (FindForm() is Form f) ZeroToast.Error(f, $"Failed to save: {ex.Message}");
+                            if (FindForm() is Form f) ToastNotification.Error(f, $"Failed to save: {ex.Message}");
                         }
                     }
                 });

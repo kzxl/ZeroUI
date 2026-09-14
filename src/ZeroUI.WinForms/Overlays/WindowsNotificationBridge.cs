@@ -117,14 +117,19 @@ namespace ZeroUI.WinForms.Overlays
             ShowNotificationInternal(title, message, type, timeoutMs, onClick);
         }
 
+        [Obsolete("Use ToastType overload instead.")]
         public static void ShowNotification(
             string title,
             string message,
+#pragma warning disable CS0618
             ZeroToastType type,
+#pragma warning restore CS0618
             int timeoutMs = 4000,
             Action? onClick = null)
         {
+#pragma warning disable CS0618
             ShowNotificationInternal(title, message, (ToastType)type, timeoutMs, onClick);
+#pragma warning restore CS0618
         }
 
         private static void ShowNotificationInternal(

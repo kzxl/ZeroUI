@@ -982,7 +982,7 @@ namespace ZeroUI.WinForms.DataGrid
                 var form = FindForm();
                 if (form != null)
                 {
-                    ZeroToast.Warning(form, validatingArgs.ErrorMessage!);
+                    ToastNotification.Warning(form, validatingArgs.ErrorMessage!);
                 }
             }
         }
@@ -4043,7 +4043,7 @@ namespace ZeroUI.WinForms.DataGrid
                         var form = FindForm();
                         if (form != null)
                         {
-                            ZeroToast.Warning(form, errMsg ?? "Validation failed");
+                            ToastNotification.Warning(form, errMsg ?? "Validation failed");
                         }
                         _activeInPlaceEditor.Focus();
                         return;
@@ -4068,7 +4068,7 @@ namespace ZeroUI.WinForms.DataGrid
                                 var form = FindForm();
                                 if (form != null)
                                 {
-                                    ZeroToast.Warning(form, validatingArgs.ErrorMessage!);
+                                    ToastNotification.Warning(form, validatingArgs.ErrorMessage!);
                                 }
                             }
                             _activeInPlaceEditor.Focus();
