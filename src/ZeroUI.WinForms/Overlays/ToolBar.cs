@@ -1,10 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
@@ -28,8 +29,12 @@ namespace ZeroUI.WinForms.Overlays
         public bool IsVisible { get; set; } = true;
         public object? Tag { get; set; }
 
-        internal Rectangle Bounds;
+        public int? Width { get; set; }
+        public int MinWidth { get; set; } = 36;
+        public bool AutoWidth { get; set; } = true;
+        public Padding? CustomPadding { get; set; }
 
+        internal Rectangle Bounds;
 
         public event EventHandler? Click;
 
@@ -41,6 +46,11 @@ namespace ZeroUI.WinForms.Overlays
         public bool IsPrimary { get; set; }
         public bool IsDanger { get; set; }
         public int? BadgeCount { get; set; }
+        public bool ShowBadgeDot { get; set; }
+        public Color? BadgeColor { get; set; }
+        public Color? BackColor { get; set; }
+        public Color? ForeColor { get; set; }
+        public bool IsSelected { get; set; }
 
         public ToolbarButton() { }
 
@@ -145,6 +155,11 @@ namespace ZeroUI.WinForms.Overlays
             set { _itemHeight = Math.Max(24, value); Invalidate(); }
         }
 
+        [Category("Appearance")]
+        [DefaultValue(false)]
+        [Description("Renders items as a contiguous connected segmented pill toolbar with vertical dividers.")]
+        public bool IsSegmented { get; set; } = false;
+
         public ToolbarButton AddButton(string text, string? glyph = null, EventHandler? onClick = null, string? shortcut = null)
         {
             var btn = new ToolbarButton(text, glyph, onClick, shortcut);
@@ -190,16 +205,18 @@ namespace ZeroUI.WinForms.Overlays
             {
                 g.FillRectangle(bgBrush, ClientRectangle);
             }
-            using (var borderPen = new Pen(_borderColor, 1f))
+            if (!IsSegmented)
             {
+                using var borderPen = new Pen(_borderColor, 1f);
                 g.DrawLine(borderPen, 0, Height - 1, Width, Height - 1);
             }
 
-            // 2. Measure & Layout Items (Handling Left and Right Groups separated by Spacer)
+            // 2. Measure & Layout Items
             LayoutItems(g);
 
             // 3. Draw Items
             int centerY = Height / 2;
+            var palette = ZeroTheme.Colors;
 
             for (int i = 0; i < _items.Count; i++)
             {
@@ -216,68 +233,130 @@ namespace ZeroUI.WinForms.Overlays
 
                 bool isHovered = (item == _hoveredItem && item.IsEnabled);
                 bool isPressed = (item == _pressedItem && item.IsEnabled);
+                var btn = item as ToolbarButton;
 
-                // Draw Button Background
-                var palette = ZeroTheme.Colors;
-                if (item is ToolbarButton btn && btn.IsPrimary)
+                // Determine background color
+                Color? customBg = btn?.BackColor;
+                Color btnBg = Color.Transparent;
+
+                if (customBg.HasValue)
                 {
-                    Color primaryBg = isPressed ? palette.PrimaryHover : (isHovered ? palette.PrimaryHover : palette.Primary);
-                    using var path = CreateRoundedRectangle(item.Bounds, 6);
-                    using var brush = new SolidBrush(primaryBg);
-                    g.FillPath(brush, path);
+                    btnBg = customBg.Value;
+                    if (isHovered && !isPressed) btnBg = ControlPaint.Light(btnBg, 0.15f);
+                    if (isPressed) btnBg = ControlPaint.Dark(btnBg, 0.15f);
+                }
+                else if (btn != null && btn.IsPrimary)
+                {
+                    btnBg = isPressed ? palette.PrimaryHover : (isHovered ? palette.PrimaryHover : palette.Primary);
+                }
+                else if (btn != null && btn.IsSelected)
+                {
+                    btnBg = ZeroTheme.IsDark ? Color.FromArgb(50, 62, 95) : Color.FromArgb(238, 242, 255);
                 }
                 else if (isPressed || isHovered)
                 {
-                    using var path = CreateRoundedRectangle(item.Bounds, 6);
-                    using var brush = new SolidBrush(palette.Hover);
-                    g.FillPath(brush, path);
+                    btnBg = palette.Hover;
                 }
 
-                // Draw Content (Glyph, Text, Shortcut, Dropdown Chevron)
-                int contentX = item.Bounds.Left + 10;
-                Color textColor = !item.IsEnabled ? palette.TextSecondary
-                    : ((item is ToolbarButton b && b.IsPrimary) ? Color.White : palette.TextPrimary);
+                if (btnBg != Color.Transparent)
+                {
+                    int radius = IsSegmented ? 0 : 6;
+                    if (radius > 0)
+                    {
+                        using var path = CreateRoundedRectangle(item.Bounds, radius);
+                        using var brush = new SolidBrush(btnBg);
+                        g.FillPath(brush, path);
+                    }
+                    else
+                    {
+                        using var brush = new SolidBrush(btnBg);
+                        g.FillRectangle(brush, item.Bounds);
+                    }
+                }
 
-                // Glyph
+                // If segmented mode, draw vertical divider to the right of item
+                if (IsSegmented && i < _items.Count - 1 && !(_items[i + 1] is ToolbarSpacer))
+                {
+                    using var divPen = new Pen(Color.FromArgb(40, ZeroTheme.Colors.Border), 1f);
+                    g.DrawLine(divPen, item.Bounds.Right, item.Bounds.Top + 4, item.Bounds.Right, item.Bounds.Bottom - 4);
+                }
+
+                // Text & Content Color
+                Color textColor = !item.IsEnabled ? palette.TextSecondary
+                    : (btn?.ForeColor ?? ((btn != null && (btn.IsPrimary || (btn.BackColor.HasValue && btn.BackColor.Value.GetBrightness() < 0.55f)))
+                        ? Color.White : palette.TextPrimary));
+
+                int padL = item.CustomPadding?.Left ?? 12;
+                int contentX = item.Bounds.Left + padL;
+
+                // Draw Glyph
                 if (!string.IsNullOrEmpty(item.Glyph))
                 {
                     Rectangle glyphRect = new Rectangle(contentX, item.Bounds.Top, 20, item.Bounds.Height);
                     TextRenderer.DrawText(g, item.Glyph, new Font("Segoe UI", 10.5f, FontStyle.Regular), glyphRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-                    contentX += 20;
+                    contentX += 22;
                 }
 
-                // Text
+                // Draw Text (Guaranteed not to cut off)
                 if (!string.IsNullOrEmpty(item.Text))
                 {
-                    Size textSize = TextRenderer.MeasureText(g, item.Text, Font);
-                    Rectangle textRect = new Rectangle(contentX, item.Bounds.Top, textSize.Width + 4, item.Bounds.Height);
+                    Size textSize = TextRenderer.MeasureText(g, item.Text, Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.NoPadding);
+                    int availTextWidth = Math.Max(textSize.Width + 6, item.Bounds.Right - contentX - (btn?.ShowBadgeDot == true ? 20 : (btn?.BadgeCount > 0 ? 30 : 6)));
+                    Rectangle textRect = new Rectangle(contentX, item.Bounds.Top, availTextWidth, item.Bounds.Height);
                     TextRenderer.DrawText(g, item.Text, Font, textRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-                    contentX += textSize.Width + 4;
+                    contentX += textSize.Width + 6;
                 }
 
-                // Dropdown Chevron (▾)
+                // Draw Dropdown Chevron (▾)
                 if (item is ToolbarDropdown)
                 {
                     Rectangle chevRect = new Rectangle(contentX, item.Bounds.Top, 14, item.Bounds.Height);
                     TextRenderer.DrawText(g, "▾", new Font("Segoe UI", 9f, FontStyle.Regular), chevRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                    contentX += 14;
                 }
 
-                // Badge Count (if present)
-                if (item is ToolbarButton buttonWithBadge && buttonWithBadge.BadgeCount.HasValue && buttonWithBadge.BadgeCount.Value > 0)
+                // Draw Badge Dot (Dirty indicator / Unsaved changes)
+                if (btn != null && btn.ShowBadgeDot)
                 {
-                    string badgeStr = buttonWithBadge.BadgeCount.Value > 99 ? "99+" : buttonWithBadge.BadgeCount.Value.ToString();
+                    int dotSize = 10;
+                    int dotX = item.Bounds.Right - (item.CustomPadding?.Right ?? 10) - dotSize;
+                    int dotY = item.Bounds.Top + (item.Bounds.Height - dotSize) / 2;
+                    Color dotColor = btn.BadgeColor ?? Color.FromArgb(239, 68, 68);
+
+                    using var dotBrush = new SolidBrush(dotColor);
+                    using var dotBorder = new Pen(Color.White, 1.2f);
+                    g.FillEllipse(dotBrush, dotX, dotY, dotSize, dotSize);
+                    g.DrawEllipse(dotBorder, dotX, dotY, dotSize, dotSize);
+                }
+                // Draw Badge Count
+                else if (btn != null && btn.BadgeCount.HasValue && btn.BadgeCount.Value > 0)
+                {
+                    string badgeStr = btn.BadgeCount.Value > 99 ? "99+" : btn.BadgeCount.Value.ToString();
                     using var badgeFont = new Font("Segoe UI", 7.5f, FontStyle.Bold);
                     Size badgeSize = TextRenderer.MeasureText(g, badgeStr, badgeFont);
                     int badgeW = Math.Max(16, badgeSize.Width + 6);
                     int badgeH = 16;
-                    Rectangle badgeRect = new Rectangle(item.Bounds.Right - badgeW - 4, item.Bounds.Top + 4, badgeW, badgeH);
+                    Rectangle badgeRect = new Rectangle(item.Bounds.Right - badgeW - 6, item.Bounds.Top + 4, badgeW, badgeH);
 
                     using var bPath = CreateRoundedRectangle(badgeRect, 8);
-                    using var bBrush = new SolidBrush(Color.FromArgb(239, 68, 68));
+                    using var bBrush = new SolidBrush(btn.BadgeColor ?? Color.FromArgb(239, 68, 68));
                     g.FillPath(bBrush, bPath);
 
                     TextRenderer.DrawText(g, badgeStr, badgeFont, badgeRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
                 }
+            }
+
+            // If Segmented, draw outer capsule border around all visible items
+            if (IsSegmented && _items.Any(it => it.IsVisible && !(it is ToolbarSpacer)))
+            {
+                var visibleItems = _items.Where(it => it.IsVisible && !(it is ToolbarSpacer)).ToList();
+                int minX = visibleItems.Min(it => it.Bounds.Left);
+                int maxX = visibleItems.Max(it => it.Bounds.Right);
+                var segBounds = new Rectangle(minX, visibleItems.First().Bounds.Top, maxX - minX, _itemHeight);
+
+                using var segPath = CreateRoundedRectangle(segBounds, 7);
+                using var segPen = new Pen(_borderColor, 1.2f);
+                g.DrawPath(segPen, segPath);
             }
         }
 
@@ -300,6 +379,8 @@ namespace ZeroUI.WinForms.Overlays
                 }
             }
 
+            int itemGap = IsSegmented ? 0 : 4;
+
             // Measure and place left items
             int leftLimit = (spacerIndex == -1) ? _items.Count : spacerIndex;
             for (int i = 0; i < leftLimit; i++)
@@ -309,10 +390,10 @@ namespace ZeroUI.WinForms.Overlays
 
                 int itemW = MeasureItemWidth(g, item);
                 item.Bounds = new Rectangle(leftX, top, itemW, _itemHeight);
-                leftX += itemW + 4;
+                leftX += itemW + itemGap;
             }
 
-            // Measure and place right items (in reverse order from the right side)
+            // Measure and place right items
             if (spacerIndex != -1)
             {
                 for (int i = _items.Count - 1; i > spacerIndex; i--)
@@ -323,13 +404,12 @@ namespace ZeroUI.WinForms.Overlays
                     int itemW = MeasureItemWidth(g, item);
                     if (rightX - itemW < leftX + 8)
                     {
-                        // Prevent overlap with left toolbar items on narrow screens
                         item.Bounds = Rectangle.Empty;
                         continue;
                     }
                     rightX -= itemW;
                     item.Bounds = new Rectangle(rightX, top, itemW, _itemHeight);
-                    rightX -= 4;
+                    rightX -= itemGap;
                 }
             }
         }
@@ -339,17 +419,48 @@ namespace ZeroUI.WinForms.Overlays
             if (item is ToolbarSeparator) return 12;
             if (item is ToolbarSpacer) return 0;
 
-            int w = 20; // base padding left + right
-            if (!string.IsNullOrEmpty(item.Glyph)) w += 22;
+            if (!item.AutoWidth && item.Width.HasValue && item.Width.Value > 0)
+            {
+                return Math.Max(item.MinWidth, item.Width.Value);
+            }
+
+            int padL = item.CustomPadding?.Left ?? 12;
+            int padR = item.CustomPadding?.Right ?? 12;
+            int w = padL + padR;
+
+            if (!string.IsNullOrEmpty(item.Glyph))
+            {
+                w += 22;
+            }
+
             if (!string.IsNullOrEmpty(item.Text))
             {
-                Size s = TextRenderer.MeasureText(g, item.Text, Font);
-                w += s.Width;
+                Size s = TextRenderer.MeasureText(g, item.Text, Font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.NoPadding);
+                w += s.Width + 8; // Extra safety buffer so text is never truncated to "L..."
             }
-            if (item is ToolbarDropdown) w += 16;
-            if (item is ToolbarButton btn && btn.BadgeCount.HasValue && btn.BadgeCount.Value > 0) w += 20;
 
-            return Math.Max(32, w);
+            if (item is ToolbarDropdown)
+            {
+                w += 16;
+            }
+
+            if (item is ToolbarButton btn)
+            {
+                if (btn.ShowBadgeDot)
+                {
+                    w += 18;
+                }
+                else if (btn.BadgeCount.HasValue && btn.BadgeCount.Value > 0)
+                {
+                    string badgeStr = btn.BadgeCount.Value > 99 ? "99+" : btn.BadgeCount.Value.ToString();
+                    using var badgeFont = new Font("Segoe UI", 7.5f, FontStyle.Bold);
+                    Size badgeSize = TextRenderer.MeasureText(g, badgeStr, badgeFont);
+                    int badgeW = Math.Max(16, badgeSize.Width + 6);
+                    w += badgeW + 8;
+                }
+            }
+
+            return Math.Max(item.MinWidth, w);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

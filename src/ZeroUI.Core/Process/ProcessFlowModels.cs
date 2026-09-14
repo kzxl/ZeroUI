@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ZeroUI.Core.Process
 {
@@ -172,6 +173,19 @@ namespace ZeroUI.Core.Process
     }
 
     /// <summary>
+    /// Cardinal and center alignment options for aligning multiple process nodes.
+    /// </summary>
+    public enum ProcessNodeAlignment
+    {
+        Left,
+        Center,
+        Right,
+        Top,
+        Middle,
+        Bottom
+    }
+
+    /// <summary>
     /// Represents a horizontal or vertical swimlane boundary grouping steps by operational department.
     /// </summary>
     public class ProcessFlowLane
@@ -184,6 +198,7 @@ namespace ZeroUI.Core.Process
         public double Height { get; set; } = 400;
         public string HeaderColorHex { get; set; } = "#64748B";
         public string BackgroundColorHex { get; set; } = "#F8FAFC";
+        public double HeaderHeight { get; set; } = 34;
 
         public ProcessFlowLane()
         {
@@ -197,6 +212,25 @@ namespace ZeroUI.Core.Process
             Y = y;
             Width = width;
             Height = height;
+        }
+
+        public bool Contains(double px, double py)
+        {
+            return px >= X && px <= X + Width && py >= Y && py <= Y + Height;
+        }
+
+        public bool Contains(ProcessFlowNode node)
+        {
+            if (node == null) return false;
+            return node.X >= X && (node.X + node.Width) <= (X + Width) &&
+                   node.Y >= Y && (node.Y + node.Height) <= (Y + Height);
+        }
+
+        public bool Intersects(ProcessFlowNode node)
+        {
+            if (node == null) return false;
+            return !(node.X + node.Width < X || node.X > X + Width ||
+                     node.Y + node.Height < Y || node.Y > Y + Height);
         }
     }
 
@@ -214,6 +248,282 @@ namespace ZeroUI.Core.Process
         public List<ProcessFlowLane> Lanes { get; } = new List<ProcessFlowLane>();
         public List<ProcessFlowNode> Nodes { get; } = new List<ProcessFlowNode>();
         public List<ProcessFlowConnection> Connections { get; } = new List<ProcessFlowConnection>();
+
+        /// <summary>
+        /// Creates and adds a new <see cref="ProcessFlowLane"/> that encompasses the specified nodes with appropriate padding.
+        /// </summary>
+        public ProcessFlowLane CreateLaneFromSelection(IEnumerable<ProcessFlowNode> nodes, string title = "NEW PHASE", string headerColorHex = "#0EA5E9", string? bgColorHex = null)
+        {
+            var list = nodes?.ToList() ?? new List<ProcessFlowNode>();
+            if (list.Count == 0)
+            {
+                var emptyLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), title, 40, 40, 600, 300)
+                {
+                    HeaderColorHex = headerColorHex,
+                    BackgroundColorHex = bgColorHex ?? "#F0F9FF"
+                };
+                Lanes.Add(emptyLane);
+                return emptyLane;
+            }
+
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
+
+            foreach (var n in list)
+            {
+                if (n.X < minX) minX = n.X;
+                if (n.Y < minY) minY = n.Y;
+                if (n.X + n.Width > maxX) maxX = n.X + n.Width;
+                if (n.Y + n.Height > maxY) maxY = n.Y + n.Height;
+            }
+
+            double padLeft = 36;
+            double padRight = 36;
+            double padTop = 48;
+            double padBottom = 36;
+
+            var lane = new ProcessFlowLane(
+                "lane_" + Guid.NewGuid().ToString("N").Substring(0, 8),
+                title,
+                Math.Max(10, minX - padLeft),
+                Math.Max(10, minY - padTop),
+                (maxX - minX) + padLeft + padRight,
+                (maxY - minY) + padTop + padBottom)
+            {
+                HeaderColorHex = headerColorHex,
+                BackgroundColorHex = bgColorHex ?? "#F0F9FF"
+            };
+
+            foreach (var n in list)
+            {
+                n.LaneId = lane.Id;
+            }
+
+            Lanes.Add(lane);
+            return lane;
+        }
+
+        /// <summary>
+        /// Adjusts every lane's bounds to snugly enclose all its member nodes.
+        /// </summary>
+        public void FitLanesToNodes(double padding = 36, double headerPadding = 48)
+        {
+            foreach (var lane in Lanes)
+            {
+                var memberNodes = Nodes.Where(n => n.LaneId == lane.Id || lane.Contains(n.X + n.Width / 2, n.Y + n.Height / 2)).ToList();
+                if (memberNodes.Count == 0) continue;
+
+                double minX = memberNodes.Min(n => n.X);
+                double minY = memberNodes.Min(n => n.Y);
+                double maxX = memberNodes.Max(n => n.X + n.Width);
+                double maxY = memberNodes.Max(n => n.Y + n.Height);
+
+                lane.X = Math.Max(10, minX - padding);
+                lane.Y = Math.Max(10, minY - headerPadding);
+                lane.Width = (maxX - minX) + (padding * 2);
+                lane.Height = (maxY - minY) + headerPadding + padding;
+            }
+        }
+
+        /// <summary>
+        /// Automatically organizes nodes in a clear, layered DAG layout and adjusts lane bounds.
+        /// </summary>
+        public void AutoArrangeLayout(bool horizontal = true, double nodeSpacingX = 80, double nodeSpacingY = 50)
+        {
+            if (Nodes.Count == 0) return;
+
+            var laneGroups = Nodes.GroupBy(n => n.LaneId ?? "").ToList();
+            double currentLaneOffsetY = 30;
+            double currentLaneOffsetX = 30;
+
+            foreach (var group in laneGroups)
+            {
+                var groupNodes = group.ToList();
+                var nodeIds = new HashSet<string>(groupNodes.Select(n => n.Id));
+                var groupConns = Connections.Where(c => nodeIds.Contains(c.SourceNodeId) && nodeIds.Contains(c.TargetNodeId)).ToList();
+
+                var inDegrees = new Dictionary<string, int>();
+                foreach (var n in groupNodes) inDegrees[n.Id] = 0;
+                foreach (var c in groupConns)
+                {
+                    if (inDegrees.ContainsKey(c.TargetNodeId))
+                        inDegrees[c.TargetNodeId]++;
+                }
+
+                var layers = new List<List<ProcessFlowNode>>();
+                var assigned = new HashSet<string>();
+
+                var currentLayer = groupNodes.Where(n => inDegrees[n.Id] == 0).ToList();
+                if (currentLayer.Count == 0 && groupNodes.Count > 0)
+                {
+                    currentLayer.Add(groupNodes[0]);
+                }
+
+                while (currentLayer.Count > 0)
+                {
+                    layers.Add(currentLayer);
+                    foreach (var n in currentLayer) assigned.Add(n.Id);
+
+                    var nextLayer = new List<ProcessFlowNode>();
+                    foreach (var n in currentLayer)
+                    {
+                        var targets = groupConns.Where(c => c.SourceNodeId == n.Id)
+                                                .Select(c => groupNodes.FirstOrDefault(gn => gn.Id == c.TargetNodeId))
+                                                .Where(gn => gn != null && !assigned.Contains(gn.Id) && !nextLayer.Contains(gn!))
+                                                .ToList();
+                        foreach (var t in targets)
+                        {
+                            if (t != null) nextLayer.Add(t);
+                        }
+                    }
+
+                    if (nextLayer.Count == 0 && assigned.Count < groupNodes.Count)
+                    {
+                        var unassigned = groupNodes.FirstOrDefault(gn => !assigned.Contains(gn.Id));
+                        if (unassigned != null) nextLayer.Add(unassigned);
+                    }
+
+                    currentLayer = nextLayer;
+                }
+
+                double startX = horizontal ? 60 : currentLaneOffsetX;
+                double startY = horizontal ? currentLaneOffsetY + 50 : 60;
+
+                double maxGroupX = startX;
+                double maxGroupY = startY;
+
+                if (horizontal)
+                {
+                    double curX = startX;
+                    foreach (var layer in layers)
+                    {
+                        double layerMaxW = layer.Max(n => n.Width);
+                        double curY = startY;
+
+                        foreach (var n in layer)
+                        {
+                            n.X = curX;
+                            n.Y = curY;
+                            curY += n.Height + nodeSpacingY;
+                            if (n.X + n.Width > maxGroupX) maxGroupX = n.X + n.Width;
+                            if (n.Y + n.Height > maxGroupY) maxGroupY = n.Y + n.Height;
+                        }
+                        curX += layerMaxW + nodeSpacingX;
+                    }
+                }
+                else
+                {
+                    double curY = startY;
+                    foreach (var layer in layers)
+                    {
+                        double layerMaxH = layer.Max(n => n.Height);
+                        double curX = startX;
+
+                        foreach (var n in layer)
+                        {
+                            n.X = curX;
+                            n.Y = curY;
+                            curX += n.Width + nodeSpacingX;
+                            if (n.X + n.Width > maxGroupX) maxGroupX = n.X + n.Width;
+                            if (n.Y + n.Height > maxGroupY) maxGroupY = n.Y + n.Height;
+                        }
+                        curY += layerMaxH + nodeSpacingY;
+                    }
+                }
+
+                var matchedLane = Lanes.FirstOrDefault(l => l.Id == group.Key);
+                if (matchedLane != null)
+                {
+                    matchedLane.X = Math.Max(20, startX - 40);
+                    matchedLane.Y = Math.Max(20, currentLaneOffsetY);
+                    matchedLane.Width = Math.Max(400, (maxGroupX - startX) + 80);
+                    matchedLane.Height = Math.Max(200, (maxGroupY - currentLaneOffsetY) + 40);
+
+                    currentLaneOffsetY = matchedLane.Y + matchedLane.Height + 40;
+                }
+                else
+                {
+                    currentLaneOffsetY = maxGroupY + 60;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Aligns the specified nodes along a common edge or center axis.
+        /// </summary>
+        public static void AlignNodes(IEnumerable<ProcessFlowNode> nodes, ProcessNodeAlignment alignment)
+        {
+            var list = nodes?.ToList();
+            if (list == null || list.Count < 2) return;
+
+            switch (alignment)
+            {
+                case ProcessNodeAlignment.Left:
+                    double minX = list.Min(n => n.X);
+                    foreach (var n in list) n.X = minX;
+                    break;
+                case ProcessNodeAlignment.Center:
+                    double avgCenterX = list.Average(n => n.X + n.Width / 2);
+                    foreach (var n in list) n.X = avgCenterX - n.Width / 2;
+                    break;
+                case ProcessNodeAlignment.Right:
+                    double maxRight = list.Max(n => n.X + n.Width);
+                    foreach (var n in list) n.X = maxRight - n.Width;
+                    break;
+                case ProcessNodeAlignment.Top:
+                    double minY = list.Min(n => n.Y);
+                    foreach (var n in list) n.Y = minY;
+                    break;
+                case ProcessNodeAlignment.Middle:
+                    double avgCenterY = list.Average(n => n.Y + n.Height / 2);
+                    foreach (var n in list) n.Y = avgCenterY - n.Height / 2;
+                    break;
+                case ProcessNodeAlignment.Bottom:
+                    double maxBottom = list.Max(n => n.Y + n.Height);
+                    foreach (var n in list) n.Y = maxBottom - n.Height;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Evenly distributes the specified nodes horizontally or vertically between the two outermost nodes.
+        /// </summary>
+        public static void DistributeNodes(IEnumerable<ProcessFlowNode> nodes, bool horizontally)
+        {
+            var list = nodes?.ToList();
+            if (list == null || list.Count < 3) return;
+
+            if (horizontally)
+            {
+                var sorted = list.OrderBy(n => n.X).ToList();
+                double totalSpan = (sorted.Last().X + sorted.Last().Width) - sorted.First().X;
+                double totalNodesWidth = sorted.Sum(n => n.Width);
+                double gap = (totalSpan - totalNodesWidth) / (sorted.Count - 1);
+
+                double currentX = sorted.First().X;
+                foreach (var n in sorted)
+                {
+                    n.X = currentX;
+                    currentX += n.Width + gap;
+                }
+            }
+            else
+            {
+                var sorted = list.OrderBy(n => n.Y).ToList();
+                double totalSpan = (sorted.Last().Y + sorted.Last().Height) - sorted.First().Y;
+                double totalNodesHeight = sorted.Sum(n => n.Height);
+                double gap = (totalSpan - totalNodesHeight) / (sorted.Count - 1);
+
+                double currentY = sorted.First().Y;
+                foreach (var n in sorted)
+                {
+                    n.Y = currentY;
+                    currentY += n.Height + gap;
+                }
+            }
+        }
 
         /// <summary>
         /// Creates a factory template matching the standard IT Inventory business workflow

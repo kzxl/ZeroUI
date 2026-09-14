@@ -66,6 +66,40 @@ namespace ZeroUI.WinForms.Industrial
         private bool _enableWheelPan = true;
         private ZoomHudButton _hoveredHudButton = ZoomHudButton.None;
 
+        private ProcessFlowLane? _selectedLane;
+        private ProcessFlowLane? _hoveredLane;
+        private enum LaneResizeHandle
+        {
+            None,
+            HeaderMove,
+            TopLeft,
+            Top,
+            TopRight,
+            Right,
+            BottomRight,
+            Bottom,
+            BottomLeft,
+            Left
+        }
+        private LaneResizeHandle _activeLaneHandle = LaneResizeHandle.None;
+        private LaneResizeHandle _hoveredLaneHandle = LaneResizeHandle.None;
+        private PointF _laneResizeStartMouse;
+        private RectangleF _laneInitialBounds;
+        private Dictionary<string, PointF> _laneNodeInitialPositions = new Dictionary<string, PointF>();
+
+        private enum ControlBarButton
+        {
+            None,
+            View,
+            Design,
+            Save,
+            AutoLayout,
+            Reset
+        }
+        private ControlBarButton _hoveredControlBarButton = ControlBarButton.None;
+        private bool _showControlBar = true;
+        private bool _isDirty = false;
+
         private ContextMenuStrip _contextMenu = null!;
         private ToolStripMenuItem _mnuEditTitle = null!;
         private ToolStripMenuItem _mnuConnectTo = null!;
@@ -74,14 +108,24 @@ namespace ZeroUI.WinForms.Industrial
         private ToolStripMenuItem _mnuDeleteNode = null!;
         private ToolStripMenuItem _mnuAddStep = null!;
 
+        private ToolStripMenuItem _mnuCreateLaneFromSelection = null!;
+        private ToolStripMenuItem _mnuAddNewLane = null!;
+        private ToolStripMenuItem _mnuDeleteLane = null!;
+        private ToolStripMenuItem _mnuFitLanes = null!;
+        private ToolStripMenuItem _mnuAutoArrange = null!;
+        private ToolStripMenuItem _mnuRenameLane = null!;
+
         private ContextMenuStrip _connContextMenu = null!;
         private ToolStripMenuItem _mnuEditConnLabel = null!;
         private ToolStripMenuItem _mnuDeleteConn = null!;
         private ToolStripMenuItem _mnuChangeConnColor = null!;
 
         public event EventHandler<ProcessFlowNode>? NodeClicked;
+        public event EventHandler<ProcessFlowLane>? LaneClicked;
         public event EventHandler<ProcessActionContext>? ActionTriggered;
         public event EventHandler? DefinitionChanged;
+        public event EventHandler? SaveRequested;
+        public event EventHandler? ResetRequested;
 
         public ProcessMap()
         {
@@ -119,15 +163,56 @@ namespace ZeroUI.WinForms.Industrial
             _mnuDeleteNode = new ToolStripMenuItem("Delete Step", null, OnDeleteNodeClicked);
             _mnuAddStep = new ToolStripMenuItem("Add New Step Here", null, OnAddStepClicked);
 
+            _mnuCreateLaneFromSelection = new ToolStripMenuItem("📦 Tạo khung cho các bước chọn (Create Frame from Selection)", null, (s, e) => CreateLaneFromSelectedNodes());
+            _mnuAddNewLane = new ToolStripMenuItem("➕ Thêm khung / Swimlane mới...", null, (s, e) =>
+            {
+                PointF world = _rightClickLocation;
+                var newLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), "1. KINH DOANH & THIẾT KẾ", world.X, world.Y, 680, 340);
+                _definition.Lanes.Add(newLane);
+                SelectedLane = newLane;
+                SelectedNode = null;
+                IsDirty = true;
+                Invalidate();
+                DefinitionChanged?.Invoke(this, EventArgs.Empty);
+            });
+            _mnuFitLanes = new ToolStripMenuItem("🎯 Căng vừa khung theo các bước (Fit Lanes to Nodes)", null, (s, e) => FitLanesToNodes());
+            _mnuAutoArrange = new ToolStripMenuItem("📐 Căn chỉnh layout tự động (Auto-Arrange Flow)", null, (s, e) => AutoArrangeLayout(true));
+            _mnuDeleteLane = new ToolStripMenuItem("🗑 Xoá khung (Delete Swimlane)", null, (s, e) =>
+            {
+                if (_selectedLane != null)
+                {
+                    foreach (var n in _definition.Nodes.Where(n => n.LaneId == _selectedLane.Id))
+                    {
+                        n.LaneId = null;
+                    }
+                    _definition.Lanes.Remove(_selectedLane);
+                    _selectedLane = null;
+                    IsDirty = true;
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                }
+            });
+            _mnuRenameLane = new ToolStripMenuItem("✏ Đổi tên khung (Rename Swimlane)...", null, (s, e) =>
+            {
+                if (_selectedLane != null) ShowRenameLaneDialog(_selectedLane);
+            });
+
             _contextMenu.Items.AddRange(new ToolStripItem[] {
+                _mnuCreateLaneFromSelection,
                 _mnuAddStep,
+                _mnuAddNewLane,
                 new ToolStripSeparator(),
                 _mnuConnectTo,
                 _mnuEditTitle,
+                _mnuRenameLane,
                 _mnuAssignAction,
                 _mnuChangeShape,
                 new ToolStripSeparator(),
-                _mnuDeleteNode
+                _mnuAutoArrange,
+                _mnuFitLanes,
+                new ToolStripSeparator(),
+                _mnuDeleteNode,
+                _mnuDeleteLane
             });
 
             _contextMenu.Opening += OnContextMenuOpening;
@@ -285,7 +370,145 @@ namespace ZeroUI.WinForms.Industrial
                 if (_selectedNode != value)
                 {
                     _selectedNode = value;
+                    if (_selectedNode != null) _selectedLane = null;
                     Invalidate();
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public ProcessFlowLane? SelectedLane
+        {
+            get => _selectedLane;
+            set
+            {
+                if (_selectedLane != value)
+                {
+                    _selectedLane = value;
+                    if (_selectedLane != null) _selectedNode = null;
+                    Invalidate();
+                    if (_selectedLane != null) LaneClicked?.Invoke(this, _selectedLane);
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        [Description("Displays the top segmented mode and action toolbar (View, Design, Save, Auto-Layout, Reset).")]
+        public bool ShowControlBar
+        {
+            get => _showControlBar;
+            set { _showControlBar = value; Invalidate(); }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        [Description("Indicates whether there are unsaved workflow changes (displays a red badge dot on the Save button).")]
+        public bool IsDirty
+        {
+            get => _isDirty;
+            set { _isDirty = value; Invalidate(); }
+        }
+
+        public void CreateLaneFromSelectedNodes(string title = "1. KINH DOANH & THIẾT KẾ (SALES / R&D)")
+        {
+            var targets = new List<ProcessFlowNode>();
+            if (_selectedNode != null)
+            {
+                targets.Add(_selectedNode);
+            }
+            var lane = _definition.CreateLaneFromSelection(targets, title);
+            SelectedLane = lane;
+            SelectedNode = null;
+            IsDirty = true;
+            Invalidate();
+            DefinitionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void AutoArrangeLayout(bool horizontal = true)
+        {
+            _definition.AutoArrangeLayout(horizontal);
+            IsDirty = true;
+            Invalidate();
+            DefinitionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void FitLanesToNodes()
+        {
+            _definition.FitLanesToNodes();
+            IsDirty = true;
+            Invalidate();
+            DefinitionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public ProcessFlowLane? HitTestLane(PointF worldPt)
+        {
+            for (int i = _definition.Lanes.Count - 1; i >= 0; i--)
+            {
+                var lane = _definition.Lanes[i];
+                if (worldPt.X >= lane.X && worldPt.X <= lane.X + lane.Width &&
+                    worldPt.Y >= lane.Y && worldPt.Y <= lane.Y + lane.Height)
+                {
+                    return lane;
+                }
+            }
+            return null;
+        }
+
+        private LaneResizeHandle HitTestLaneHandle(ProcessFlowLane lane, PointF worldPt)
+        {
+            float hs = 10f / _zoom;
+            float x = (float)lane.X;
+            float y = (float)lane.Y;
+            float w = (float)lane.Width;
+            float h = (float)lane.Height;
+
+            if (new RectangleF(x - hs, y - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.TopLeft;
+            if (new RectangleF(x + w - hs, y - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.TopRight;
+            if (new RectangleF(x + w - hs, y + h - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.BottomRight;
+            if (new RectangleF(x - hs, y + h - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.BottomLeft;
+
+            if (new RectangleF(x + w / 2 - hs, y - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.Top;
+            if (new RectangleF(x + w / 2 - hs, y + h - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.Bottom;
+            if (new RectangleF(x - hs, y + h / 2 - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.Left;
+            if (new RectangleF(x + w - hs, y + h / 2 - hs, hs * 2, hs * 2).Contains(worldPt)) return LaneResizeHandle.Right;
+
+            // Header bar (top 34px)
+            if (worldPt.X >= x && worldPt.X <= x + w && worldPt.Y >= y && worldPt.Y <= y + 34)
+            {
+                return LaneResizeHandle.HeaderMove;
+            }
+
+            return LaneResizeHandle.None;
+        }
+
+        private void ShowRenameLaneDialog(ProcessFlowLane lane)
+        {
+            using (var dlg = new Form())
+            {
+                dlg.Text = "Configure Swimlane / Group Frame";
+                dlg.Size = new Size(420, 180);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+
+                var lbl1 = new Label { Text = "Lane Title:", Top = 16, Left = 16, Width = 80 };
+                var txtTitle = new TextBox { Text = lane.Title, Top = 14, Left = 100, Width = 280 };
+
+                var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Top = 70, Left = 210, Width = 80 };
+                var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 70, Left = 300, Width = 80 };
+
+                dlg.Controls.AddRange(new Control[] { lbl1, txtTitle, btnOk, btnCancel });
+                dlg.AcceptButton = btnOk;
+                dlg.CancelButton = btnCancel;
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    lane.Title = txtTitle.Text.Trim();
+                    IsDirty = true;
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -413,7 +636,10 @@ namespace ZeroUI.WinForms.Industrial
         {
             var bounds = new RectangleF((float)lane.X, (float)lane.Y, (float)lane.Width, (float)lane.Height);
             Color bg = ParseColor(lane.BackgroundColorHex, Color.FromArgb(248, 250, 252));
-            Color border = Color.FromArgb(40, ZeroTheme.Colors.Border);
+            bool isSelected = (lane == _selectedLane);
+            bool isHovered = (lane == _hoveredLane);
+            Color border = isSelected ? ZeroTheme.Colors.Primary : (isHovered ? ParseColor(lane.HeaderColorHex, ZeroTheme.Colors.Primary) : Color.FromArgb(40, ZeroTheme.Colors.Border));
+            float borderWidth = isSelected ? 2.2f : (isHovered ? 1.8f : 1.5f);
 
             using (var path = GetRoundedRectPath(bounds, 12))
             {
@@ -421,19 +647,59 @@ namespace ZeroUI.WinForms.Industrial
                 {
                     g.FillPath(fillBrush, path);
                 }
-                using (var pen = new Pen(border, 1.5f) { DashStyle = DashStyle.Dash })
+                using (var pen = new Pen(border, borderWidth))
                 {
+                    if (isSelected && _isDesignMode) pen.DashStyle = DashStyle.Dash;
                     g.DrawPath(pen, path);
                 }
+            }
+
+            // Lane Header Bar
+            var headerRect = new RectangleF(bounds.X, bounds.Y, bounds.Width, 34);
+            using (var headerPath = GetTopRoundedRectPath(headerRect, 12))
+            using (var headerFill = new SolidBrush(Color.FromArgb(20, ParseColor(lane.HeaderColorHex, ZeroTheme.Colors.Primary))))
+            {
+                g.FillPath(headerFill, headerPath);
             }
 
             // Lane Header Tag
             string title = "⚙ " + lane.Title.ToUpperInvariant();
             Color headerColor = ParseColor(lane.HeaderColorHex, ZeroTheme.Colors.TextSecondary);
-            using (var font = new Font(Font.FontFamily, 8f, FontStyle.Bold))
+            using (var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
             using (var brush = new SolidBrush(headerColor))
             {
-                g.DrawString(title, font, brush, bounds.X + 16, bounds.Y + 12);
+                g.DrawString(title, font, brush, bounds.X + 16, bounds.Y + 9);
+            }
+
+            // Draw 8 resize handles in design mode when selected
+            if (_isDesignMode && isSelected)
+            {
+                DrawLaneHandles(g, bounds);
+            }
+        }
+
+        private void DrawLaneHandles(Graphics g, RectangleF b)
+        {
+            float r = 5f / _zoom;
+            PointF[] points = new PointF[]
+            {
+                new PointF(b.Left, b.Top),
+                new PointF(b.Left + b.Width / 2, b.Top),
+                new PointF(b.Right, b.Top),
+                new PointF(b.Right, b.Top + b.Height / 2),
+                new PointF(b.Right, b.Bottom),
+                new PointF(b.Left + b.Width / 2, b.Bottom),
+                new PointF(b.Left, b.Bottom),
+                new PointF(b.Left, b.Top + b.Height / 2)
+            };
+
+            using var fill = new SolidBrush(Color.White);
+            using var stroke = new Pen(ZeroTheme.Colors.Primary, 1.8f / _zoom);
+            foreach (var pt in points)
+            {
+                var hRect = new RectangleF(pt.X - r, pt.Y - r, r * 2, r * 2);
+                g.FillRectangle(fill, hRect);
+                g.DrawRectangle(stroke, hRect.X, hRect.Y, hRect.Width, hRect.Height);
             }
         }
 
@@ -766,10 +1032,16 @@ namespace ZeroUI.WinForms.Industrial
             using (var descBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary))
             {
                 g.DrawString(title, titleFont, titleBrush, 24, 16);
-                if (!string.IsNullOrWhiteSpace(desc))
+                if (!string.IsNullOrWhiteSpace(desc) && !_showControlBar)
                 {
                     g.DrawString("ℹ " + desc, descFont, descBrush, Width - g.MeasureString("ℹ " + desc, descFont).Width - 24, 18);
                 }
+            }
+
+            // Top Control Bar [ 👁 Xem | ✏ Thiết kế | 💾 Lưu 🔴 | 📐 Căn layout | 🔄 Mặc định ]
+            if (_showControlBar)
+            {
+                DrawControlBar(g);
             }
 
             // 2. Mode Badge (Bottom Left) - Theme-aware glass pill with high contrast status dot & text
@@ -869,6 +1141,111 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawString("+", boldIconFont, isZoomInHover ? hudHighlightTextBrush : hudTextBrush, rZoomIn, sf);
                 g.DrawString("Fit", fitFont, isFitHover ? hudHighlightTextBrush : hudTextBrush, rFit, sf);
             }
+        }
+
+        private void DrawControlBar(Graphics g)
+        {
+            var barRect = GetControlBarRect();
+            bool isDark = ZeroTheme.IsDark;
+            Color hudBgColor = isDark ? Color.FromArgb(240, 24, 28, 44) : Color.FromArgb(250, 255, 255, 255);
+            Color hudBorderColor = isDark ? Color.FromArgb(64, 74, 108) : Color.FromArgb(203, 213, 225);
+            Color hudTextColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
+            Color hudHighlightColor = isDark ? Color.FromArgb(50, 62, 95) : Color.FromArgb(226, 232, 240);
+            Color hudHighlightTextColor = isDark ? Color.FromArgb(255, 255, 255) : Color.FromArgb(15, 23, 42);
+            Color hudDividerColor = isDark ? Color.FromArgb(45, 52, 78) : Color.FromArgb(226, 232, 240);
+
+            using var path = GetRoundedRectPath(barRect, 14);
+            using var bgBrush = new SolidBrush(hudBgColor);
+            using var borderPen = new Pen(hudBorderColor, 1.0f);
+            using var dividerPen = new Pen(hudDividerColor, 1.0f);
+            using var activeBgBrush = new SolidBrush(Color.FromArgb(isDark ? 65 : 35, ZeroTheme.Colors.Primary));
+            using var hoverBgBrush = new SolidBrush(hudHighlightColor);
+            using var textBrush = new SolidBrush(hudTextColor);
+            using var activeTextBrush = new SolidBrush(ZeroTheme.Colors.Primary);
+            using var hoverTextBrush = new SolidBrush(hudHighlightTextColor);
+            using var badgeBrush = new SolidBrush(Color.FromArgb(239, 68, 68));
+            using var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+
+            var oldClip = g.Clip;
+            g.SetClip(path, CombineMode.Intersect);
+
+            g.FillPath(bgBrush, path);
+
+            var segments = GetControlBarSegments();
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var seg = segments[i];
+                bool isHover = (_hoveredControlBarButton == seg.Btn);
+
+                if (seg.IsActive)
+                {
+                    g.FillRectangle(activeBgBrush, seg.Rect);
+                }
+                else if (isHover)
+                {
+                    g.FillRectangle(hoverBgBrush, seg.Rect);
+                }
+
+                if (i > 0)
+                {
+                    g.DrawLine(dividerPen, seg.Rect.X, seg.Rect.Y + 6, seg.Rect.X, seg.Rect.Bottom - 6);
+                }
+
+                var currentBrush = seg.IsActive ? activeTextBrush : (isHover ? hoverTextBrush : textBrush);
+                g.DrawString(seg.Text, font, currentBrush, seg.Rect, sf);
+
+                if (seg.HasBadge)
+                {
+                    float bx = seg.Rect.Right - 15f;
+                    float by = seg.Rect.Y + 7f;
+                    g.FillEllipse(badgeBrush, bx, by, 7f, 7f);
+                }
+            }
+
+            g.Clip = oldClip;
+            g.DrawPath(borderPen, path);
+        }
+
+        private RectangleF GetControlBarRect()
+        {
+            float totalW = 384f;
+            float h = 30f;
+            float x = Math.Max(260f, Width - totalW - 20f);
+            float y = 14f;
+            return new RectangleF(x, y, totalW, h);
+        }
+
+        private (RectangleF Rect, ControlBarButton Btn, string Text, bool IsActive, bool HasBadge)[] GetControlBarSegments()
+        {
+            var r = GetControlBarRect();
+            float curX = r.X;
+            return new (RectangleF Rect, ControlBarButton Btn, string Text, bool IsActive, bool HasBadge)[]
+            {
+                (new RectangleF(curX, r.Y, 62, r.Height), ControlBarButton.View, "👁 Xem", !_isDesignMode, false),
+                (new RectangleF(curX += 62, r.Y, 84, r.Height), ControlBarButton.Design, "✏ Thiết kế", _isDesignMode, false),
+                (new RectangleF(curX += 84, r.Y, 64, r.Height), ControlBarButton.Save, "💾 Lưu", false, _isDirty),
+                (new RectangleF(curX += 64, r.Y, 94, r.Height), ControlBarButton.AutoLayout, "📐 Căn layout", false, false),
+                (new RectangleF(curX += 94, r.Y, 80, r.Height), ControlBarButton.Reset, "🔄 Mặc định", false, false)
+            };
+        }
+
+        private ControlBarButton HitTestControlBar(PointF screenPt)
+        {
+            if (!_showControlBar) return ControlBarButton.None;
+            var r = GetControlBarRect();
+            if (!r.Contains(screenPt)) return ControlBarButton.None;
+
+            var segments = GetControlBarSegments();
+            foreach (var seg in segments)
+            {
+                if (seg.Rect.Contains(screenPt))
+                {
+                    return seg.Btn;
+                }
+            }
+            return ControlBarButton.None;
         }
 
         private RectangleF GetZoomHudRect()
@@ -1074,12 +1451,168 @@ namespace ZeroUI.WinForms.Industrial
             };
         }
 
+        private void ApplyLaneResize(float dx, float dy)
+        {
+            if (_selectedLane == null) return;
+            const float minW = 160f;
+            const float minH = 100f;
+
+            float x = _laneInitialBounds.X;
+            float y = _laneInitialBounds.Y;
+            float w = _laneInitialBounds.Width;
+            float h = _laneInitialBounds.Height;
+
+            switch (_activeLaneHandle)
+            {
+                case LaneResizeHandle.HeaderMove:
+                    _selectedLane.X = Math.Max(0, x + dx);
+                    _selectedLane.Y = Math.Max(0, y + dy);
+                    foreach (var kvp in _laneNodeInitialPositions)
+                    {
+                        var n = _definition.Nodes.FirstOrDefault(node => node.Id == kvp.Key);
+                        if (n != null)
+                        {
+                            n.X = Math.Max(0, kvp.Value.X + dx);
+                            n.Y = Math.Max(0, kvp.Value.Y + dy);
+                        }
+                    }
+                    break;
+
+                case LaneResizeHandle.Right:
+                    _selectedLane.Width = Math.Max(minW, w + dx);
+                    break;
+
+                case LaneResizeHandle.Bottom:
+                    _selectedLane.Height = Math.Max(minH, h + dy);
+                    break;
+
+                case LaneResizeHandle.BottomRight:
+                    _selectedLane.Width = Math.Max(minW, w + dx);
+                    _selectedLane.Height = Math.Max(minH, h + dy);
+                    break;
+
+                case LaneResizeHandle.Left:
+                    float newWLeft = w - dx;
+                    if (newWLeft >= minW)
+                    {
+                        _selectedLane.X = x + dx;
+                        _selectedLane.Width = newWLeft;
+                    }
+                    else
+                    {
+                        _selectedLane.X = x + (w - minW);
+                        _selectedLane.Width = minW;
+                    }
+                    break;
+
+                case LaneResizeHandle.Top:
+                    float newHTop = h - dy;
+                    if (newHTop >= minH)
+                    {
+                        _selectedLane.Y = y + dy;
+                        _selectedLane.Height = newHTop;
+                    }
+                    else
+                    {
+                        _selectedLane.Y = y + (h - minH);
+                        _selectedLane.Height = minH;
+                    }
+                    break;
+
+                case LaneResizeHandle.TopLeft:
+                    float newWTL = w - dx;
+                    if (newWTL >= minW)
+                    {
+                        _selectedLane.X = x + dx;
+                        _selectedLane.Width = newWTL;
+                    }
+                    else
+                    {
+                        _selectedLane.X = x + (w - minW);
+                        _selectedLane.Width = minW;
+                    }
+
+                    float newHTL = h - dy;
+                    if (newHTL >= minH)
+                    {
+                        _selectedLane.Y = y + dy;
+                        _selectedLane.Height = newHTL;
+                    }
+                    else
+                    {
+                        _selectedLane.Y = y + (h - minH);
+                        _selectedLane.Height = minH;
+                    }
+                    break;
+
+                case LaneResizeHandle.TopRight:
+                    _selectedLane.Width = Math.Max(minW, w + dx);
+                    float newHTR = h - dy;
+                    if (newHTR >= minH)
+                    {
+                        _selectedLane.Y = y + dy;
+                        _selectedLane.Height = newHTR;
+                    }
+                    else
+                    {
+                        _selectedLane.Y = y + (h - minH);
+                        _selectedLane.Height = minH;
+                    }
+                    break;
+
+                case LaneResizeHandle.BottomLeft:
+                    float newWBL = w - dx;
+                    if (newWBL >= minW)
+                    {
+                        _selectedLane.X = x + dx;
+                        _selectedLane.Width = newWBL;
+                    }
+                    else
+                    {
+                        _selectedLane.X = x + (w - minW);
+                        _selectedLane.Width = minW;
+                    }
+                    _selectedLane.Height = Math.Max(minH, h + dy);
+                    break;
+            }
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
             Focus();
 
-            // 0. Check Zoom HUD interaction
+            // 0a. Check Top Control Bar interaction
+            if (e.Button == MouseButtons.Left && _showControlBar)
+            {
+                var barBtn = HitTestControlBar(e.Location);
+                if (barBtn != ControlBarButton.None)
+                {
+                    switch (barBtn)
+                    {
+                        case ControlBarButton.View:
+                            IsDesignMode = false;
+                            break;
+                        case ControlBarButton.Design:
+                            IsDesignMode = true;
+                            break;
+                        case ControlBarButton.Save:
+                            IsDirty = false;
+                            SaveRequested?.Invoke(this, EventArgs.Empty);
+                            break;
+                        case ControlBarButton.AutoLayout:
+                            AutoArrangeLayout(true);
+                            break;
+                        case ControlBarButton.Reset:
+                            ResetRequested?.Invoke(this, EventArgs.Empty);
+                            break;
+                    }
+                    Invalidate();
+                    return;
+                }
+            }
+
+            // 0b. Check Zoom HUD interaction
             var hudBtn = HitTestZoomHud(e.Location);
             if (hudBtn != ZoomHudButton.None)
             {
@@ -1103,7 +1636,7 @@ namespace ZeroUI.WinForms.Industrial
 
             PointF worldPt = ScreenToWorld(e.Location);
 
-            if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right && _selectedNode == null && _selectedConnection == null))
+            if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right && _selectedNode == null && _selectedConnection == null && _selectedLane == null))
             {
                 _isPanning = true;
                 _panStartMouse = e.Location;
@@ -1126,7 +1659,27 @@ namespace ZeroUI.WinForms.Industrial
                     return;
                 }
 
-                // 2. Check if clicking on node
+                // 2. Check if interacting with SelectedLane handles in design mode
+                if (_isDesignMode && _selectedLane != null)
+                {
+                    var handle = HitTestLaneHandle(_selectedLane, worldPt);
+                    if (handle != LaneResizeHandle.None)
+                    {
+                        _activeLaneHandle = handle;
+                        _laneResizeStartMouse = worldPt;
+                        _laneInitialBounds = new RectangleF((float)_selectedLane.X, (float)_selectedLane.Y, (float)_selectedLane.Width, (float)_selectedLane.Height);
+                        _laneNodeInitialPositions.Clear();
+                        foreach (var n in _definition.Nodes.Where(n => n.LaneId == _selectedLane.Id || _selectedLane.Contains(n.X + n.Width / 2, n.Y + n.Height / 2)))
+                        {
+                            _laneNodeInitialPositions[n.Id] = new PointF((float)n.X, (float)n.Y);
+                        }
+                        Capture = true;
+                        Invalidate();
+                        return;
+                    }
+                }
+
+                // 3. Check if clicking on node
                 var hit = HitTestNode(worldPt);
                 if (hit != null)
                 {
@@ -1143,18 +1696,44 @@ namespace ZeroUI.WinForms.Industrial
                     return;
                 }
 
-                // 3. Check if clicking on connection line
+                // 4. Check if clicking on connection line
                 var hitConn = HitTestConnection(worldPt);
                 if (hitConn != null)
                 {
                     _selectedConnection = hitConn;
                     SelectedNode = null;
+                    SelectedLane = null;
                     Invalidate();
                     return;
                 }
 
-                // 4. Clicking on blank canvas
+                // 5. Check if clicking on Swimlane
+                var hitLane = HitTestLane(worldPt);
+                if (hitLane != null)
+                {
+                    SelectedLane = hitLane;
+                    SelectedNode = null;
+                    _selectedConnection = null;
+
+                    if (_isDesignMode && (worldPt.Y <= hitLane.Y + 36 || ModifierKeys.HasFlag(Keys.Shift)))
+                    {
+                        _activeLaneHandle = LaneResizeHandle.HeaderMove;
+                        _laneResizeStartMouse = worldPt;
+                        _laneInitialBounds = new RectangleF((float)hitLane.X, (float)hitLane.Y, (float)hitLane.Width, (float)hitLane.Height);
+                        _laneNodeInitialPositions.Clear();
+                        foreach (var n in _definition.Nodes.Where(n => n.LaneId == hitLane.Id || hitLane.Contains(n.X + n.Width / 2, n.Y + n.Height / 2)))
+                        {
+                            _laneNodeInitialPositions[n.Id] = new PointF((float)n.X, (float)n.Y);
+                        }
+                        Capture = true;
+                    }
+                    Invalidate();
+                    return;
+                }
+
+                // 6. Clicking on blank canvas
                 SelectedNode = null;
+                SelectedLane = null;
                 _selectedConnection = null;
                 _isPanning = true;
                 _panStartMouse = e.Location;
@@ -1167,6 +1746,22 @@ namespace ZeroUI.WinForms.Industrial
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+
+            // Check Control Bar hover
+            if (_showControlBar)
+            {
+                var barBtn = HitTestControlBar(e.Location);
+                if (barBtn != _hoveredControlBarButton)
+                {
+                    _hoveredControlBarButton = barBtn;
+                    Invalidate();
+                }
+                if (barBtn != ControlBarButton.None)
+                {
+                    Cursor = Cursors.Hand;
+                    return;
+                }
+            }
 
             // Check Zoom HUD hover
             var hudBtn = HitTestZoomHud(e.Location);
@@ -1182,6 +1777,15 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             PointF worldPt = ScreenToWorld(e.Location);
+
+            if (_activeLaneHandle != LaneResizeHandle.None && _selectedLane != null && _isDesignMode)
+            {
+                float dx = worldPt.X - _laneResizeStartMouse.X;
+                float dy = worldPt.Y - _laneResizeStartMouse.Y;
+                ApplyLaneResize(dx, dy);
+                Invalidate();
+                return;
+            }
 
             if (_isConnecting)
             {
@@ -1211,6 +1815,35 @@ namespace ZeroUI.WinForms.Industrial
                 _selectedNode.Y = Math.Max(0, _nodeDragStartPos.Y + dy);
                 Invalidate();
                 return;
+            }
+
+            // Check lane handles cursor in design mode
+            if (_isDesignMode && _selectedLane != null && !_isPanning && !_isDraggingNode && !_isConnecting)
+            {
+                var handle = HitTestLaneHandle(_selectedLane, worldPt);
+                _hoveredLaneHandle = handle;
+                switch (handle)
+                {
+                    case LaneResizeHandle.TopLeft:
+                    case LaneResizeHandle.BottomRight:
+                        Cursor = Cursors.SizeNWSE;
+                        return;
+                    case LaneResizeHandle.TopRight:
+                    case LaneResizeHandle.BottomLeft:
+                        Cursor = Cursors.SizeNESW;
+                        return;
+                    case LaneResizeHandle.Top:
+                    case LaneResizeHandle.Bottom:
+                        Cursor = Cursors.SizeNS;
+                        return;
+                    case LaneResizeHandle.Left:
+                    case LaneResizeHandle.Right:
+                        Cursor = Cursors.SizeWE;
+                        return;
+                    case LaneResizeHandle.HeaderMove:
+                        Cursor = Cursors.SizeAll;
+                        return;
+                }
             }
 
             // Design mode port hovering
@@ -1262,12 +1895,29 @@ namespace ZeroUI.WinForms.Industrial
                 }
                 Invalidate();
             }
+
+            // Lane hovering
+            var hoveredLane = HitTestLane(worldPt);
+            if (hoveredLane != _hoveredLane)
+            {
+                _hoveredLane = hoveredLane;
+                Invalidate();
+            }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
             Capture = false;
+
+            if (_activeLaneHandle != LaneResizeHandle.None)
+            {
+                _activeLaneHandle = LaneResizeHandle.None;
+                IsDirty = true;
+                DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                Invalidate();
+                return;
+            }
 
             if (_isConnecting)
             {
@@ -1327,13 +1977,38 @@ namespace ZeroUI.WinForms.Industrial
                 {
                     _selectedConnection = hitConn;
                     SelectedNode = null;
+                    SelectedLane = null;
                     Invalidate();
                     _connContextMenu.Show(this, e.Location);
                     return;
                 }
 
-                // Check node right-click or blank canvas
-                SelectedNode = hit;
+                // Check node right-click
+                if (hit != null)
+                {
+                    SelectedNode = hit;
+                    SelectedLane = null;
+                    _selectedConnection = null;
+                    Invalidate();
+                    _contextMenu.Show(this, e.Location);
+                    return;
+                }
+
+                // Check lane right-click
+                var hitLane = HitTestLane(worldPtAfter);
+                if (hitLane != null)
+                {
+                    SelectedLane = hitLane;
+                    SelectedNode = null;
+                    _selectedConnection = null;
+                    Invalidate();
+                    _contextMenu.Show(this, e.Location);
+                    return;
+                }
+
+                // Blank canvas right-click
+                SelectedNode = null;
+                SelectedLane = null;
                 _selectedConnection = null;
                 Invalidate();
                 _contextMenu.Show(this, e.Location);
@@ -1358,6 +2033,19 @@ namespace ZeroUI.WinForms.Industrial
                     OnDeleteNodeClicked(this, EventArgs.Empty);
                     e.Handled = true;
                 }
+                else if (_selectedLane != null)
+                {
+                    foreach (var n in _definition.Nodes.Where(n => n.LaneId == _selectedLane.Id))
+                    {
+                        n.LaneId = null;
+                    }
+                    _definition.Lanes.Remove(_selectedLane);
+                    _selectedLane = null;
+                    IsDirty = true;
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                    e.Handled = true;
+                }
             }
         }
 
@@ -1366,9 +2054,10 @@ namespace ZeroUI.WinForms.Industrial
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
-            if (_hoveredHudButton != ZoomHudButton.None)
+            if (_hoveredHudButton != ZoomHudButton.None || _hoveredControlBarButton != ControlBarButton.None)
             {
                 _hoveredHudButton = ZoomHudButton.None;
+                _hoveredControlBarButton = ControlBarButton.None;
                 Invalidate();
             }
         }
@@ -1428,7 +2117,18 @@ namespace ZeroUI.WinForms.Industrial
         private void OnContextMenuOpening(object? sender, CancelEventArgs e)
         {
             bool hasNode = _selectedNode != null;
-            _mnuAddStep.Visible = !hasNode;
+            bool hasLane = _selectedLane != null;
+
+            // Lane operations
+            _mnuCreateLaneFromSelection.Visible = hasNode;
+            _mnuAddNewLane.Visible = true;
+            _mnuRenameLane.Visible = hasLane;
+            _mnuDeleteLane.Visible = hasLane;
+            _mnuFitLanes.Visible = true;
+            _mnuAutoArrange.Visible = true;
+
+            // Node operations
+            _mnuAddStep.Visible = !hasNode && !hasLane;
             _mnuConnectTo.Visible = hasNode;
             _mnuEditTitle.Visible = hasNode;
             _mnuAssignAction.Visible = hasNode;
