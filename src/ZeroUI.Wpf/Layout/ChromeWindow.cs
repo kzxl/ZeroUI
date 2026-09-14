@@ -11,27 +11,27 @@ namespace ZeroUI.Wpf.Layout
     /// Modern frameless enterprise window utilizing WindowChrome with customizable title bar,
     /// dynamic dark/light skin binding, and zero-distortion client area.
     /// </summary>
-    public class ZeroWindow : Window, IZeroSkinnable
+    public class ChromeWindow : Window, IZeroSkinnable
     {
         public static readonly DependencyProperty UseDefaultSkinProperty =
             DependencyProperty.Register(
                 nameof(UseDefaultSkin),
                 typeof(bool),
-                typeof(ZeroWindow),
+                typeof(ChromeWindow),
                 new PropertyMetadata(true, OnSkinPropertyChanged));
 
         public static readonly DependencyProperty CustomSkinProperty =
             DependencyProperty.Register(
                 nameof(CustomSkin),
                 typeof(ZeroSkin),
-                typeof(ZeroWindow),
+                typeof(ChromeWindow),
                 new PropertyMetadata(null, OnSkinPropertyChanged));
 
         public static readonly DependencyProperty TitleBarProperty =
             DependencyProperty.Register(
                 nameof(TitleBar),
-                typeof(ZeroTitleBar),
-                typeof(ZeroWindow),
+                typeof(TitleBar),
+                typeof(ChromeWindow),
                 new PropertyMetadata(null));
 
         public bool UseDefaultSkin
@@ -48,18 +48,18 @@ namespace ZeroUI.Wpf.Layout
 
         public ZeroSkin EffectiveSkin => ZeroSkinManager.ResolveSkin(this);
 
-        public ZeroTitleBar? TitleBar
+        public TitleBar? TitleBar
         {
-            get => (ZeroTitleBar?)GetValue(TitleBarProperty);
+            get => (TitleBar?)GetValue(TitleBarProperty);
             set => SetValue(TitleBarProperty, value);
         }
 
-        static ZeroWindow()
+        static ChromeWindow()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroWindow), new FrameworkPropertyMetadata(typeof(ZeroWindow)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ChromeWindow), new FrameworkPropertyMetadata(typeof(ChromeWindow)));
         }
 
-        public ZeroWindow()
+        public ChromeWindow()
         {
             SetResourceReference(BackgroundProperty, "ZeroUI.BgPrimary");
             SetResourceReference(ForegroundProperty, "ZeroUI.TextPrimary");
@@ -115,10 +115,22 @@ namespace ZeroUI.Wpf.Layout
 
         private static void OnSkinPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroWindow win)
+            if (d is ChromeWindow win)
             {
                 win.OnThemeChanged();
             }
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ChromeWindow"/>.
+    /// </summary>
+    [Obsolete("ZeroWindow is deprecated. Use ChromeWindow instead.")]
+    public class ZeroWindow : ChromeWindow
+    {
+        static ZeroWindow()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroWindow), new FrameworkPropertyMetadata(typeof(ChromeWindow)));
         }
     }
 }

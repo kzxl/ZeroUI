@@ -14,7 +14,7 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
     /// Floats over any application window to display frame time telemetry, 16.6ms budget compliance,
     /// GPU hardware tier, active fidelity tier, and 9-slice atlas hit rates.
     /// </summary>
-    public class ZeroRenderOptimizerHUD : Control
+    public class RenderOptimizerHUD : Control
     {
         private readonly DispatcherTimer _telemetryTimer;
         private Border? _rootBorder;
@@ -27,7 +27,7 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
         private Button? _btnToggle;
 
         public static readonly DependencyProperty IsExpandedProperty =
-            DependencyProperty.Register(nameof(IsExpanded), typeof(bool), typeof(ZeroRenderOptimizerHUD),
+            DependencyProperty.Register(nameof(IsExpanded), typeof(bool), typeof(RenderOptimizerHUD),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public bool IsExpanded
@@ -36,7 +36,7 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
             set => SetValue(IsExpandedProperty, value);
         }
 
-        public ZeroRenderOptimizerHUD()
+        public RenderOptimizerHUD()
         {
             SnapsToDevicePixels = true;
             HorizontalAlignment = HorizontalAlignment.Right;
@@ -282,5 +282,13 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
             _rootBorder?.Arrange(new Rect(arrangeBounds));
             return arrangeBounds;
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="RenderOptimizerHUD"/>.
+    /// </summary>
+    [Obsolete("ZeroRenderOptimizerHUD is deprecated. Use RenderOptimizerHUD instead.")]
+    public class ZeroRenderOptimizerHUD : RenderOptimizerHUD
+    {
     }
 }

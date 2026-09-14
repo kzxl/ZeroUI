@@ -21,35 +21,35 @@ namespace ZeroUI.Wpf.Feedback
     /// Supports Info, Success, Warning, and Error severity modes, custom action slot,
     /// dismiss button, and smooth collapse transition.
     /// </summary>
-    public class ZeroInfoBar : ZeroWpfControlBase
+    public class InfoBar : ZeroWpfControlBase
     {
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register(nameof(Title), typeof(string), typeof(ZeroInfoBar), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(InfoBar), new PropertyMetadata(string.Empty));
 
         public static readonly DependencyProperty MessageProperty =
-            DependencyProperty.Register(nameof(Message), typeof(string), typeof(ZeroInfoBar), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register(nameof(Message), typeof(string), typeof(InfoBar), new PropertyMetadata(string.Empty));
 
         public static readonly DependencyProperty SeverityProperty =
-            DependencyProperty.Register(nameof(Severity), typeof(InfoBarSeverity), typeof(ZeroInfoBar), new PropertyMetadata(InfoBarSeverity.Info, OnSeverityChanged));
+            DependencyProperty.Register(nameof(Severity), typeof(InfoBarSeverity), typeof(InfoBar), new PropertyMetadata(InfoBarSeverity.Info, OnSeverityChanged));
 
         public static readonly DependencyProperty IsOpenProperty =
             DependencyProperty.Register(
                 nameof(IsOpen),
                 typeof(bool),
-                typeof(ZeroInfoBar),
+                typeof(InfoBar),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsOpenChanged));
 
         public static readonly DependencyProperty IsClosableProperty =
-            DependencyProperty.Register(nameof(IsClosable), typeof(bool), typeof(ZeroInfoBar), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(IsClosable), typeof(bool), typeof(InfoBar), new PropertyMetadata(true));
 
         public static readonly DependencyProperty ActionContentProperty =
-            DependencyProperty.Register(nameof(ActionContent), typeof(object), typeof(ZeroInfoBar), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(ActionContent), typeof(object), typeof(InfoBar), new PropertyMetadata(null));
 
         public static readonly DependencyProperty CloseCommandProperty =
-            DependencyProperty.Register(nameof(CloseCommand), typeof(ICommand), typeof(ZeroInfoBar), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(CloseCommand), typeof(ICommand), typeof(InfoBar), new PropertyMetadata(null));
 
         public static readonly RoutedEvent ClosedEvent =
-            EventManager.RegisterRoutedEvent(nameof(Closed), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ZeroInfoBar));
+            EventManager.RegisterRoutedEvent(nameof(Closed), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(InfoBar));
 
         public event RoutedEventHandler Closed
         {
@@ -99,12 +99,12 @@ namespace ZeroUI.Wpf.Feedback
             set => SetValue(CloseCommandProperty, value);
         }
 
-        static ZeroInfoBar()
+        static InfoBar()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroInfoBar), new FrameworkPropertyMetadata(typeof(ZeroInfoBar)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(InfoBar), new FrameworkPropertyMetadata(typeof(InfoBar)));
         }
 
-        public ZeroInfoBar()
+        public InfoBar()
         {
             SetResourceReference(BackgroundProperty, "ZeroUI.BgCard");
             SetResourceReference(ForegroundProperty, "ZeroUI.TextPrimary");
@@ -128,7 +128,7 @@ namespace ZeroUI.Wpf.Feedback
 
         private static void OnIsOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroInfoBar bar)
+            if (d is InfoBar bar)
             {
                 var isOpen = (bool)e.NewValue;
                 bar.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
@@ -145,10 +145,22 @@ namespace ZeroUI.Wpf.Feedback
 
         private static void OnSeverityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroInfoBar bar)
+            if (d is InfoBar bar)
             {
                 bar.OnThemeChanged();
             }
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="InfoBar"/>.
+    /// </summary>
+    [Obsolete("ZeroInfoBar is deprecated. Use InfoBar instead.")]
+    public class ZeroInfoBar : InfoBar
+    {
+        static ZeroInfoBar()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroInfoBar), new FrameworkPropertyMetadata(typeof(InfoBar)));
         }
     }
 }

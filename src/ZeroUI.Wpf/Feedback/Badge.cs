@@ -33,40 +33,40 @@ namespace ZeroUI.Wpf.Feedback
     /// Supports wrapping host content (adorner mode) or standalone rendering, with optional
     /// hardware-accelerated continuous status pulse animation.
     /// </summary>
-    public class ZeroBadge : ContentControl, IZeroSkinnable
+    public class Badge : ContentControl, IZeroSkinnable
     {
         public static readonly DependencyProperty CountProperty =
-            DependencyProperty.Register(nameof(Count), typeof(int?), typeof(ZeroBadge), new PropertyMetadata(null, OnBadgeVisualChanged));
+            DependencyProperty.Register(nameof(Count), typeof(int?), typeof(Badge), new PropertyMetadata(null, OnBadgeVisualChanged));
 
         public static readonly DependencyProperty MaxCountProperty =
-            DependencyProperty.Register(nameof(MaxCount), typeof(int), typeof(ZeroBadge), new PropertyMetadata(99, OnBadgeVisualChanged));
+            DependencyProperty.Register(nameof(MaxCount), typeof(int), typeof(Badge), new PropertyMetadata(99, OnBadgeVisualChanged));
 
         public static readonly DependencyProperty BadgeTextProperty =
-            DependencyProperty.Register(nameof(BadgeText), typeof(string), typeof(ZeroBadge), new PropertyMetadata(null, OnBadgeVisualChanged));
+            DependencyProperty.Register(nameof(BadgeText), typeof(string), typeof(Badge), new PropertyMetadata(null, OnBadgeVisualChanged));
 
         public static readonly DependencyProperty IsDotProperty =
-            DependencyProperty.Register(nameof(IsDot), typeof(bool), typeof(ZeroBadge), new PropertyMetadata(false, OnBadgeVisualChanged));
+            DependencyProperty.Register(nameof(IsDot), typeof(bool), typeof(Badge), new PropertyMetadata(false, OnBadgeVisualChanged));
 
         public static readonly DependencyProperty StatusProperty =
-            DependencyProperty.Register(nameof(Status), typeof(BadgeStatus), typeof(ZeroBadge), new PropertyMetadata(BadgeStatus.None, OnBadgeVisualChanged));
+            DependencyProperty.Register(nameof(Status), typeof(BadgeStatus), typeof(Badge), new PropertyMetadata(BadgeStatus.None, OnBadgeVisualChanged));
 
         public static readonly DependencyProperty IsPulseProperty =
-            DependencyProperty.Register(nameof(IsPulse), typeof(bool), typeof(ZeroBadge), new PropertyMetadata(false, OnPulseChanged));
+            DependencyProperty.Register(nameof(IsPulse), typeof(bool), typeof(Badge), new PropertyMetadata(false, OnPulseChanged));
 
         public static readonly DependencyProperty PlacementProperty =
-            DependencyProperty.Register(nameof(Placement), typeof(BadgePlacement), typeof(ZeroBadge), new PropertyMetadata(BadgePlacement.TopRight));
+            DependencyProperty.Register(nameof(Placement), typeof(BadgePlacement), typeof(Badge), new PropertyMetadata(BadgePlacement.TopRight));
 
         public static readonly DependencyProperty DisplayTextProperty =
-            DependencyProperty.Register(nameof(DisplayText), typeof(string), typeof(ZeroBadge), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register(nameof(DisplayText), typeof(string), typeof(Badge), new PropertyMetadata(string.Empty));
 
         public static readonly DependencyProperty BadgeBrushProperty =
-            DependencyProperty.Register(nameof(BadgeBrush), typeof(Brush), typeof(ZeroBadge), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(BadgeBrush), typeof(Brush), typeof(Badge), new PropertyMetadata(null));
 
         public static readonly DependencyProperty UseDefaultSkinProperty =
-            DependencyProperty.Register(nameof(UseDefaultSkin), typeof(bool), typeof(ZeroBadge), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(UseDefaultSkin), typeof(bool), typeof(Badge), new PropertyMetadata(true));
 
         public static readonly DependencyProperty CustomSkinProperty =
-            DependencyProperty.Register(nameof(CustomSkin), typeof(ZeroSkin), typeof(ZeroBadge), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(CustomSkin), typeof(ZeroSkin), typeof(Badge), new PropertyMetadata(null));
 
         public int? Count
         {
@@ -136,12 +136,12 @@ namespace ZeroUI.Wpf.Feedback
 
         public ZeroSkin EffectiveSkin => ZeroSkinManager.ResolveSkin(this);
 
-        static ZeroBadge()
+        static Badge()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroBadge), new FrameworkPropertyMetadata(typeof(ZeroBadge)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(Badge), new FrameworkPropertyMetadata(typeof(Badge)));
         }
 
-        public ZeroBadge()
+        public Badge()
         {
             Loaded += (s, e) =>
             {
@@ -203,7 +203,7 @@ namespace ZeroUI.Wpf.Feedback
 
         private static void OnBadgeVisualChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroBadge badge)
+            if (d is Badge badge)
             {
                 badge.UpdateBadgeVisuals();
             }
@@ -212,6 +212,18 @@ namespace ZeroUI.Wpf.Feedback
         private static void OnPulseChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             // Pulse triggers handle in template
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="Badge"/>.
+    /// </summary>
+    [Obsolete("ZeroBadge is deprecated. Use Badge instead.")]
+    public class ZeroBadge : Badge
+    {
+        static ZeroBadge()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroBadge), new FrameworkPropertyMetadata(typeof(Badge)));
         }
     }
 }

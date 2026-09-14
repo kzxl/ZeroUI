@@ -17,7 +17,7 @@ namespace ZeroUI.Wpf.Overlays
     /// drop shadow, and dynamic theme synchronization.
     /// </summary>
     [ContentProperty(nameof(FlyoutContent))]
-    public class ZeroFlyout : Control, IZeroSkinnable
+    public class FlyoutControl : Control, IZeroSkinnable
     {
         private Popup? _popup;
 
@@ -25,35 +25,35 @@ namespace ZeroUI.Wpf.Overlays
             DependencyProperty.Register(
                 nameof(IsOpen),
                 typeof(bool),
-                typeof(ZeroFlyout),
+                typeof(FlyoutControl),
                 new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnIsOpenChanged));
 
         public static readonly DependencyProperty StaysOpenProperty =
-            DependencyProperty.Register(nameof(StaysOpen), typeof(bool), typeof(ZeroFlyout), new PropertyMetadata(false));
+            DependencyProperty.Register(nameof(StaysOpen), typeof(bool), typeof(FlyoutControl), new PropertyMetadata(false));
 
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register(nameof(Title), typeof(string), typeof(ZeroFlyout), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(FlyoutControl), new PropertyMetadata(string.Empty));
 
         public static readonly DependencyProperty TargetProperty =
-            DependencyProperty.Register(nameof(Target), typeof(UIElement), typeof(ZeroFlyout), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(Target), typeof(UIElement), typeof(FlyoutControl), new PropertyMetadata(null));
 
         public static readonly DependencyProperty PlacementProperty =
-            DependencyProperty.Register(nameof(Placement), typeof(PlacementMode), typeof(ZeroFlyout), new PropertyMetadata(PlacementMode.Bottom));
+            DependencyProperty.Register(nameof(Placement), typeof(PlacementMode), typeof(FlyoutControl), new PropertyMetadata(PlacementMode.Bottom));
 
         public static readonly DependencyProperty FlyoutContentProperty =
-            DependencyProperty.Register(nameof(FlyoutContent), typeof(object), typeof(ZeroFlyout), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(FlyoutContent), typeof(object), typeof(FlyoutControl), new PropertyMetadata(null));
 
         public static readonly DependencyProperty FooterProperty =
-            DependencyProperty.Register(nameof(Footer), typeof(object), typeof(ZeroFlyout), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(Footer), typeof(object), typeof(FlyoutControl), new PropertyMetadata(null));
 
         public static readonly DependencyProperty ShowCloseButtonProperty =
-            DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(ZeroFlyout), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(FlyoutControl), new PropertyMetadata(true));
 
         public static readonly DependencyProperty UseDefaultSkinProperty =
-            DependencyProperty.Register(nameof(UseDefaultSkin), typeof(bool), typeof(ZeroFlyout), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(UseDefaultSkin), typeof(bool), typeof(FlyoutControl), new PropertyMetadata(true));
 
         public static readonly DependencyProperty CustomSkinProperty =
-            DependencyProperty.Register(nameof(CustomSkin), typeof(ZeroSkin), typeof(ZeroFlyout), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(CustomSkin), typeof(ZeroSkin), typeof(FlyoutControl), new PropertyMetadata(null));
 
         public bool IsOpen
         {
@@ -117,12 +117,12 @@ namespace ZeroUI.Wpf.Overlays
 
         public ZeroSkin EffectiveSkin => ZeroSkinManager.ResolveSkin(this);
 
-        static ZeroFlyout()
+        static FlyoutControl()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroFlyout), new FrameworkPropertyMetadata(typeof(ZeroFlyout)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(FlyoutControl), new FrameworkPropertyMetadata(typeof(FlyoutControl)));
         }
 
-        public ZeroFlyout()
+        public FlyoutControl()
         {
             SetResourceReference(BackgroundProperty, "ZeroUI.BgCard");
             SetResourceReference(ForegroundProperty, "ZeroUI.TextPrimary");
@@ -166,10 +166,22 @@ namespace ZeroUI.Wpf.Overlays
 
         private static void OnIsOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroFlyout flyout && flyout._popup != null)
+            if (d is FlyoutControl flyout && flyout._popup != null)
             {
                 flyout._popup.IsOpen = (bool)e.NewValue;
             }
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="FlyoutControl"/>.
+    /// </summary>
+    [Obsolete("ZeroFlyout is deprecated. Use FlyoutControl instead.")]
+    public class ZeroFlyout : FlyoutControl
+    {
+        static ZeroFlyout()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroFlyout), new FrameworkPropertyMetadata(typeof(FlyoutControl)));
         }
     }
 }

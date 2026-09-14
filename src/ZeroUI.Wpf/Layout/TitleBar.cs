@@ -14,25 +14,25 @@ namespace ZeroUI.Wpf.Layout
     /// Provides drag support, double-click maximize toggle, customizable content slot,
     /// and theme-reactive system window buttons (Minimize, Maximize/Restore, Close).
     /// </summary>
-    public class ZeroTitleBar : ZeroWpfControlBase
+    public class TitleBar : ZeroWpfControlBase
     {
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register(nameof(Title), typeof(string), typeof(ZeroTitleBar), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(TitleBar), new PropertyMetadata(string.Empty));
 
         public static readonly DependencyProperty IconProperty =
-            DependencyProperty.Register(nameof(Icon), typeof(ImageSource), typeof(ZeroTitleBar), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(Icon), typeof(ImageSource), typeof(TitleBar), new PropertyMetadata(null));
 
         public static readonly DependencyProperty TitleContentProperty =
-            DependencyProperty.Register(nameof(TitleContent), typeof(object), typeof(ZeroTitleBar), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(TitleContent), typeof(object), typeof(TitleBar), new PropertyMetadata(null));
 
         public static readonly DependencyProperty ShowMinimizeButtonProperty =
-            DependencyProperty.Register(nameof(ShowMinimizeButton), typeof(bool), typeof(ZeroTitleBar), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(ShowMinimizeButton), typeof(bool), typeof(TitleBar), new PropertyMetadata(true));
 
         public static readonly DependencyProperty ShowMaximizeButtonProperty =
-            DependencyProperty.Register(nameof(ShowMaximizeButton), typeof(bool), typeof(ZeroTitleBar), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(ShowMaximizeButton), typeof(bool), typeof(TitleBar), new PropertyMetadata(true));
 
         public static readonly DependencyProperty ShowCloseButtonProperty =
-            DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(ZeroTitleBar), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(TitleBar), new PropertyMetadata(true));
 
         public string Title
         {
@@ -70,12 +70,12 @@ namespace ZeroUI.Wpf.Layout
             set => SetValue(ShowCloseButtonProperty, value);
         }
 
-        static ZeroTitleBar()
+        static TitleBar()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroTitleBar), new FrameworkPropertyMetadata(typeof(ZeroTitleBar)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(TitleBar), new FrameworkPropertyMetadata(typeof(TitleBar)));
         }
 
-        public ZeroTitleBar()
+        public TitleBar()
         {
             Height = 36;
             SetResourceReference(BackgroundProperty, "ZeroUI.BgPrimary");
@@ -169,6 +169,18 @@ namespace ZeroUI.Wpf.Layout
             {
                 glyph.Text = state == WindowState.Maximized ? "❐" : "▢";
             }
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="TitleBar"/>.
+    /// </summary>
+    [Obsolete("ZeroTitleBar is deprecated. Use TitleBar instead.")]
+    public class ZeroTitleBar : TitleBar
+    {
+        static ZeroTitleBar()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroTitleBar), new FrameworkPropertyMetadata(typeof(TitleBar)));
         }
     }
 }

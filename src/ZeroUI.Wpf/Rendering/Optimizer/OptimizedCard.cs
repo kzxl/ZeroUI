@@ -12,82 +12,82 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
     /// Evaluates visual complexity, frame budget, and batching to route heavy shadow, blur, and glow
     /// to GPU shaders or 9-slice cached atlas, while preserving subpixel ClearType rendering for child text and controls.
     /// </summary>
-    public class ZeroOptimizedCard : Decorator
+    public class OptimizedCard : Decorator
     {
         #region Dependency Properties
 
         public static readonly DependencyProperty ElevationProperty =
-            DependencyProperty.Register(nameof(Elevation), typeof(double), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(Elevation), typeof(double), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(6.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BlurRadiusProperty =
-            DependencyProperty.Register(nameof(BlurRadius), typeof(double), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(BlurRadius), typeof(double), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(12.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GlowIntensityProperty =
-            DependencyProperty.Register(nameof(GlowIntensity), typeof(double), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(GlowIntensity), typeof(double), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GlowColorProperty =
-            DependencyProperty.Register(nameof(GlowColor), typeof(Color), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(GlowColor), typeof(Color), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(Color.FromRgb(0, 229, 255), FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(new CornerRadius(8.0), FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty PaddingProperty =
-            DependencyProperty.Register(nameof(Padding), typeof(Thickness), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(Padding), typeof(Thickness), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(new Thickness(16.0), FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CardBackgroundProperty =
-            DependencyProperty.Register(nameof(CardBackground), typeof(Brush), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(CardBackground), typeof(Brush), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CardBorderBrushProperty =
-            DependencyProperty.Register(nameof(CardBorderBrush), typeof(Brush), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(CardBorderBrush), typeof(Brush), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CardBorderThicknessProperty =
-            DependencyProperty.Register(nameof(CardBorderThickness), typeof(double), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(CardBorderThickness), typeof(double), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty OptimizationModeProperty =
-            DependencyProperty.Register(nameof(OptimizationMode), typeof(OptimizerRoutingMode), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(OptimizationMode), typeof(OptimizerRoutingMode), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(OptimizerRoutingMode.Auto, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BatchCountProperty =
-            DependencyProperty.Register(nameof(BatchCount), typeof(int), typeof(ZeroOptimizedCard),
+            DependencyProperty.Register(nameof(BatchCount), typeof(int), typeof(OptimizedCard),
                 new FrameworkPropertyMetadata(1, FrameworkPropertyMetadataOptions.AffectsRender));
 
         // Read-only Telemetry Keys
         private static readonly DependencyPropertyKey AssignedPipelinePropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(AssignedPipeline), typeof(RenderPipelineTarget), typeof(ZeroOptimizedCard),
+            DependencyProperty.RegisterReadOnly(nameof(AssignedPipeline), typeof(RenderPipelineTarget), typeof(OptimizedCard),
                 new PropertyMetadata(RenderPipelineTarget.Hybrid));
         public static readonly DependencyProperty AssignedPipelineProperty = AssignedPipelinePropertyKey.DependencyProperty;
 
         private static readonly DependencyPropertyKey ActiveShaderPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(ActiveShader), typeof(string), typeof(ZeroOptimizedCard),
+            DependencyProperty.RegisterReadOnly(nameof(ActiveShader), typeof(string), typeof(OptimizedCard),
                 new PropertyMetadata("None"));
         public static readonly DependencyProperty ActiveShaderProperty = ActiveShaderPropertyKey.DependencyProperty;
 
         private static readonly DependencyPropertyKey EstimatedCostScorePropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(EstimatedCostScore), typeof(double), typeof(ZeroOptimizedCard),
+            DependencyProperty.RegisterReadOnly(nameof(EstimatedCostScore), typeof(double), typeof(OptimizedCard),
                 new PropertyMetadata(0.0));
         public static readonly DependencyProperty EstimatedCostScoreProperty = EstimatedCostScorePropertyKey.DependencyProperty;
 
         private static readonly DependencyPropertyKey EstimatedSpeedupFactorPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(EstimatedSpeedupFactor), typeof(double), typeof(ZeroOptimizedCard),
+            DependencyProperty.RegisterReadOnly(nameof(EstimatedSpeedupFactor), typeof(double), typeof(OptimizedCard),
                 new PropertyMetadata(1.0));
         public static readonly DependencyProperty EstimatedSpeedupFactorProperty = EstimatedSpeedupFactorPropertyKey.DependencyProperty;
 
         private static readonly DependencyPropertyKey DecisionReasonPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(DecisionReason), typeof(string), typeof(ZeroOptimizedCard),
-                new PropertyMetadata(string.Empty));
+            DependencyProperty.RegisterReadOnly(nameof(DecisionReason), typeof(string), typeof(OptimizedCard),
+                new PropertyMetadata("Initial"));
         public static readonly DependencyProperty DecisionReasonProperty = DecisionReasonPropertyKey.DependencyProperty;
 
         private static readonly DependencyPropertyKey TelemetryTextPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(TelemetryText), typeof(string), typeof(ZeroOptimizedCard),
+            DependencyProperty.RegisterReadOnly(nameof(TelemetryText), typeof(string), typeof(OptimizedCard),
                 new PropertyMetadata(string.Empty));
         public static readonly DependencyProperty TelemetryTextProperty = TelemetryTextPropertyKey.DependencyProperty;
 
@@ -170,7 +170,7 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
 
         #endregion
 
-        public ZeroOptimizedCard()
+        public OptimizedCard()
         {
             SnapsToDevicePixels = true;
             ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
@@ -383,5 +383,13 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
                 dc.DrawRoundedRectangle(shadowBrush, null, rect, rx + spread * 0.5, ry + spread * 0.5);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="OptimizedCard"/>.
+    /// </summary>
+    [Obsolete("ZeroOptimizedCard is deprecated. Use OptimizedCard instead.")]
+    public class ZeroOptimizedCard : OptimizedCard
+    {
     }
 }

@@ -48,11 +48,17 @@ namespace ZeroUI.Wpf.Theme
         public static Style StatusBarItemStyle => (Style)Dictionary[typeof(StatusBarItem)];
         public static Style SeparatorStyle => (Style)Dictionary[typeof(Separator)];
 
-        public static Style ZeroTitleBarStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Layout.ZeroTitleBar)];
-        public static Style ZeroWindowStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Layout.ZeroWindow)];
-        public static Style ZeroInfoBarStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Feedback.ZeroInfoBar)];
-        public static Style ZeroBadgeStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Feedback.ZeroBadge)];
-        public static Style ZeroFlyoutStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Overlays.ZeroFlyout)];
+        public static Style TitleBarStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Layout.TitleBar)];
+        public static Style ChromeWindowStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Layout.ChromeWindow)];
+        public static Style InfoBarStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Feedback.InfoBar)];
+        public static Style BadgeStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Feedback.Badge)];
+        public static Style FlyoutControlStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Overlays.FlyoutControl)];
+
+        public static Style ZeroTitleBarStyle => TitleBarStyle;
+        public static Style ZeroWindowStyle => ChromeWindowStyle;
+        public static Style ZeroInfoBarStyle => InfoBarStyle;
+        public static Style ZeroBadgeStyle => BadgeStyle;
+        public static Style ZeroFlyoutStyle => FlyoutControlStyle;
         public static Style ButtonEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.ButtonEdit)];
         public static Style PictureEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.PictureEdit)];
         public static Style IPAddressEditStyle => (Style)Dictionary[typeof(ZeroUI.Wpf.Editors.IPAddressEdit)];
@@ -1834,8 +1840,8 @@ namespace ZeroUI.Wpf.Theme
         </Setter>
     </Style>
 
-    <!-- 27. ZEROTITLEBAR STYLE -->
-    <Style TargetType=""{x:Type layout:ZeroTitleBar}"">
+    <!-- 27. TITLEBAR STYLE -->
+    <Style x:Key=""{x:Type layout:TitleBar}"" TargetType=""{x:Type layout:TitleBar}"">
         <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
         <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgPrimary}"" />
         <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
@@ -1844,7 +1850,7 @@ namespace ZeroUI.Wpf.Theme
         <Setter Property=""Height"" Value=""36"" />
         <Setter Property=""Template"">
             <Setter.Value>
-                <ControlTemplate TargetType=""{x:Type layout:ZeroTitleBar}"">
+                <ControlTemplate TargetType=""{x:Type layout:TitleBar}"">
                     <Border Background=""{TemplateBinding Background}""
                             BorderBrush=""{TemplateBinding BorderBrush}""
                             BorderThickness=""{TemplateBinding BorderThickness}""
@@ -1909,9 +1915,10 @@ namespace ZeroUI.Wpf.Theme
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType=""{x:Type layout:ZeroTitleBar}"" BasedOn=""{StaticResource {x:Type layout:TitleBar}}"" />
 
-    <!-- 28. ZEROWINDOW STYLE -->
-    <Style TargetType=""{x:Type layout:ZeroWindow}"">
+    <!-- 28. CHROMEWINDOW STYLE -->
+    <Style x:Key=""{x:Type layout:ChromeWindow}"" TargetType=""{x:Type layout:ChromeWindow}"">
         <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
         <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgPrimary}"" />
         <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
@@ -1919,7 +1926,7 @@ namespace ZeroUI.Wpf.Theme
         <Setter Property=""BorderThickness"" Value=""1"" />
         <Setter Property=""Template"">
             <Setter.Value>
-                <ControlTemplate TargetType=""{x:Type layout:ZeroWindow}"">
+                <ControlTemplate TargetType=""{x:Type layout:ChromeWindow}"">
                     <Border Background=""{TemplateBinding Background}""
                             BorderBrush=""{TemplateBinding BorderBrush}""
                             BorderThickness=""{TemplateBinding BorderThickness}""
@@ -1932,9 +1939,10 @@ namespace ZeroUI.Wpf.Theme
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType=""{x:Type layout:ZeroWindow}"" BasedOn=""{StaticResource {x:Type layout:ChromeWindow}}"" />
 
-    <!-- 29. ZEROINFOBAR STYLE -->
-    <Style TargetType=""{x:Type feed:ZeroInfoBar}"">
+    <!-- 29. INFOBAR STYLE -->
+    <Style x:Key=""{x:Type feed:InfoBar}"" TargetType=""{x:Type feed:InfoBar}"">
         <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
         <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgCard}"" />
         <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
@@ -1943,7 +1951,7 @@ namespace ZeroUI.Wpf.Theme
         <Setter Property=""Padding"" Value=""12,10,12,10"" />
         <Setter Property=""Template"">
             <Setter.Value>
-                <ControlTemplate TargetType=""{x:Type feed:ZeroInfoBar}"">
+                <ControlTemplate TargetType=""{x:Type feed:InfoBar}"">
                     <Border x:Name=""infoBorder""
                             Background=""{TemplateBinding Background}""
                             BorderBrush=""{TemplateBinding BorderBrush}""
@@ -2024,15 +2032,16 @@ namespace ZeroUI.Wpf.Theme
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType=""{x:Type feed:ZeroInfoBar}"" BasedOn=""{StaticResource {x:Type feed:InfoBar}}"" />
 
-    <!-- 30. ZEROBADGE STYLE -->
-    <Style TargetType=""{x:Type feed:ZeroBadge}"">
+    <!-- 30. BADGE STYLE -->
+    <Style x:Key=""{x:Type feed:Badge}"" TargetType=""{x:Type feed:Badge}"">
         <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
         <Setter Property=""HorizontalContentAlignment"" Value=""Stretch"" />
         <Setter Property=""VerticalContentAlignment"" Value=""Stretch"" />
         <Setter Property=""Template"">
             <Setter.Value>
-                <ControlTemplate TargetType=""{x:Type feed:ZeroBadge}"">
+                <ControlTemplate TargetType=""{x:Type feed:Badge}"">
                     <Grid>
                         <!-- Wrapped Content -->
                         <ContentPresenter HorizontalAlignment=""{TemplateBinding HorizontalContentAlignment}""
@@ -2082,9 +2091,10 @@ namespace ZeroUI.Wpf.Theme
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType=""{x:Type feed:ZeroBadge}"" BasedOn=""{StaticResource {x:Type feed:Badge}}"" />
 
-    <!-- 31. ZEROFLYOUT STYLE -->
-    <Style TargetType=""{x:Type ovl:ZeroFlyout}"">
+    <!-- 31. FLYOUTCONTROL STYLE -->
+    <Style x:Key=""{x:Type ovl:FlyoutControl}"" TargetType=""{x:Type ovl:FlyoutControl}"">
         <Setter Property=""SnapsToDevicePixels"" Value=""True"" />
         <Setter Property=""Background"" Value=""{DynamicResource ZeroUI.BgCard}"" />
         <Setter Property=""Foreground"" Value=""{DynamicResource ZeroUI.TextPrimary}"" />
@@ -2092,7 +2102,7 @@ namespace ZeroUI.Wpf.Theme
         <Setter Property=""BorderThickness"" Value=""1"" />
         <Setter Property=""Template"">
             <Setter.Value>
-                <ControlTemplate TargetType=""{x:Type ovl:ZeroFlyout}"">
+                <ControlTemplate TargetType=""{x:Type ovl:FlyoutControl}"">
                     <Popup x:Name=""PART_Popup""
                            AllowsTransparency=""True""
                            IsOpen=""{Binding IsOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}""
@@ -2144,7 +2154,8 @@ namespace ZeroUI.Wpf.Theme
             </Setter.Value>
         </Setter>
     </Style>
- 
+    <Style TargetType=""{x:Type ovl:ZeroFlyout}"" BasedOn=""{StaticResource {x:Type ovl:FlyoutControl}}"" />
+
     <!-- 32. EDITORBUTTON STYLE -->
     <Style TargetType=""{x:Type edit:EditorButton}"">
         <Setter Property=""Background"" Value=""Transparent"" />

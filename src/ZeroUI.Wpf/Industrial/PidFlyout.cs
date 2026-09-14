@@ -15,7 +15,7 @@ namespace ZeroUI.Wpf.Industrial
     /// Features simultaneous PV/SP/MV comparative bargraphs, interactive loop mode switching (Auto/Man/Cas),
     /// a 60 FPS real-time 3-pen micro-trend chart, and interactive PID parameter tuning inputs (Kp, Ti, Td).
     /// </summary>
-    public class ZeroPidFlyout : Window
+    public class PidFlyout : Window
     {
         private string _loopTag = "PIC-101";
         private string _loopDescription = "Boiler Steam Header Pressure";
@@ -93,7 +93,7 @@ namespace ZeroUI.Wpf.Industrial
 
         public event EventHandler? ParametersChanged;
 
-        public ZeroPidFlyout()
+        public PidFlyout()
         {
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -138,21 +138,24 @@ namespace ZeroUI.Wpf.Industrial
         private void OnSimulationTick(object? sender, EventArgs e)
         {
             // Process dynamic response calculation (First-order plus dead time approximation)
-            double error = _setPoint - _processVariable;
-            if (_mode == ZeroPidMode.Auto || _mode == ZeroPidMode.Cascade)
+            if (_mode == ZeroPidMode.Auto)
             {
-                double pTerm = _kp * error;
-                double iTerm = (_kp / Math.Max(0.1, _ti)) * error * 0.05;
-                _manipulatedVariable = Math.Max(0.0, Math.Min(100.0, _manipulatedVariable + (pTerm * 0.08) + iTerm));
+                // Error = SP - PV
+                double error = _setPoint - _processVariable;
+                // Proportional action
+                double pAction = _kp * error;
+                // Integral approximation
+                double iAction = (_kp / Math.Max(0.1, _ti)) * error * 0.05;
+                // Manipulated variable update
+                _manipulatedVariable = Math.Max(0, Math.Min(100, _manipulatedVariable + (pAction * 0.05) + iAction));
             }
 
-            double processGain = 0.85;
-            double processTimeConst = 4.0;
-            double targetPv = _manipulatedVariable * processGain;
-            double noise = (_random.NextDouble() - 0.5) * 0.15;
-            _processVariable += ((targetPv - _processVariable) / processTimeConst) * 0.05 + noise;
+            // System physics simulation (PV tracks MV with lag + sensor noise)
+            double targetPv = _manipulatedVariable * 0.95 + 2.5;
+            double noise = (_random.NextDouble() - 0.5) * 0.4;
+            _processVariable += (targetPv - _processVariable) * 0.08 + noise;
 
-            // Record into circular trend buffers
+            // Push into rolling buffers
             _trendPv[_trendHead] = (float)_processVariable;
             _trendSp[_trendHead] = (float)_setPoint;
             _trendMv[_trendHead] = (float)_manipulatedVariable;
@@ -161,9 +164,16 @@ namespace ZeroUI.Wpf.Industrial
             _visualHost.InvalidateVisual();
         }
 
-        public static ZeroPidFlyout ShowFlyout(Window owner, Point screenLocation, string tag = "PIC-101", string description = "Boiler Steam Header Pressure")
+        public void ShowNear(Point screenPoint)
         {
-            var flyout = new ZeroPidFlyout
+            Left = Math.Max(10, screenPoint.X - Width / 2);
+            Top = Math.Max(10, screenPoint.Y - Height - 10);
+            Show();
+        }
+
+        public static PidFlyout ShowFlyout(Window owner, Point screenLocation, string tag = "PIC-101", string description = "Boiler Steam Header Pressure")
+        {
+            var flyout = new PidFlyout
             {
                 Owner = owner,
                 LoopTag = tag,
@@ -175,9 +185,9 @@ namespace ZeroUI.Wpf.Industrial
             return flyout;
         }
 
-        private class PidVisualHost : FrameworkElement
+        private sealed class PidVisualHost : FrameworkElement
         {
-            private readonly ZeroPidFlyout _parent;
+            private readonly PidFlyout _parent;
             private Rect _headerRect;
             private Rect _closeBtnRect;
             private Rect _btnAutoRect;
@@ -192,7 +202,7 @@ namespace ZeroUI.Wpf.Industrial
             private Rect _btnTdMinusRect;
             private Rect _btnTdPlusRect;
 
-            public PidVisualHost(ZeroPidFlyout parent)
+            public PidVisualHost(PidFlyout parent)
             {
                 _parent = parent;
                 Cursor = Cursors.Arrow;
@@ -249,34 +259,33 @@ namespace ZeroUI.Wpf.Industrial
 
                 dc.DrawRoundedRectangle(bgBrush, borderPen, new Rect(0, 0, w, h), 8, 8);
 
-                // Header Banner
+                // 1. Header Bar
                 _headerRect = new Rect(0, 0, w, 44);
-                var headerBrush = new SolidColorBrush(isDark ? Color.FromRgb(31, 41, 55) : Color.FromRgb(241, 245, 249));
-                headerBrush.Freeze();
-                dc.DrawRoundedRectangle(headerBrush, null, new Rect(1, 1, w - 2, 42), 7, 7);
-                dc.DrawRectangle(headerBrush, null, new Rect(1, 30, w - 2, 14));
+                var headerBg = new SolidColorBrush(isDark ? Color.FromRgb(30, 41, 59) : Color.FromRgb(241, 245, 249));
+                headerBg.Freeze();
+                dc.DrawRoundedRectangle(headerBg, null, _headerRect, 8, 8);
+                dc.DrawRectangle(headerBg, null, new Rect(0, 36, w, 8)); // Square off bottom curve
 
-                var titleText = new FormattedText($"🎛️ {_parent._loopTag} - PID Faceplate", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.BoldTypeface, 12.5, new SolidColorBrush(isDark ? Colors.White : Color.FromRgb(15, 23, 42)), dpi);
-                dc.DrawText(titleText, new Point(12, 8));
+                var tagText = new FormattedText(
+                    $"PID TUNING: {_parent.LoopTag}",
+                    CultureInfo.InvariantCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal),
+                    13.0,
+                    new SolidColorBrush(isDark ? Color.FromRgb(241, 245, 249) : Color.FromRgb(15, 23, 42)),
+                    dpi);
+                dc.DrawText(tagText, new Point(14, 13));
 
-                var descText = new FormattedText(_parent._loopDescription, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.RegularTypeface, 9.5, new SolidColorBrush(isDark ? Color.FromRgb(156, 163, 175) : Color.FromRgb(100, 116, 139)), dpi);
-                dc.DrawText(descText, new Point(14, 25));
-
-                // Close Button
-                _closeBtnRect = new Rect(w - 32, 8, 24, 24);
-                var closeBrush = new SolidColorBrush(Color.FromArgb(40, 239, 68, 68));
+                // Close button [x]
+                _closeBtnRect = new Rect(w - 34, 10, 24, 24);
+                var closeBrush = new SolidColorBrush(isDark ? Color.FromRgb(148, 163, 184) : Color.FromRgb(100, 116, 139));
                 closeBrush.Freeze();
-                dc.DrawRoundedRectangle(closeBrush, null, _closeBtnRect, 4, 4);
-                var closeX = new FormattedText("✕", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.BoldTypeface, 11, new SolidColorBrush(Color.FromRgb(239, 68, 68)), dpi);
-                dc.DrawText(closeX, new Point(w - 25, 12));
+                dc.DrawText(new FormattedText("✕", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.BoldTypeface, 12, closeBrush, dpi), new Point(w - 27, 14));
 
-                // Mode Selector Bar (Auto / Man / Cas)
-                double modeY = 52;
-                double btnW = 72;
-                double btnH = 26;
-                _btnAutoRect = new Rect(14, modeY, btnW, btnH);
-                _btnManRect = new Rect(14 + btnW + 8, modeY, btnW, btnH);
-                _btnCasRect = new Rect(14 + (btnW + 8) * 2, modeY, btnW, btnH);
+                // Mode switch selector buttons (AUTO / MAN / CAS)
+                _btnAutoRect = new Rect(14, 52, 60, 26);
+                _btnManRect = new Rect(78, 52, 60, 26);
+                _btnCasRect = new Rect(142, 52, 60, 26);
 
                 DrawModeButton(dc, _btnAutoRect, "AUTO", _parent._mode == ZeroPidMode.Auto, Color.FromRgb(16, 185, 129), isDark, dpi);
                 DrawModeButton(dc, _btnManRect, "MAN", _parent._mode == ZeroPidMode.Manual, Color.FromRgb(245, 158, 11), isDark, dpi);
@@ -456,5 +465,13 @@ namespace ZeroUI.Wpf.Industrial
                 dc.DrawGeometry(null, pen, geom);
             }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="PidFlyout"/>.
+    /// </summary>
+    [Obsolete("ZeroPidFlyout is deprecated. Use PidFlyout instead.")]
+    public class ZeroPidFlyout : PidFlyout
+    {
     }
 }
