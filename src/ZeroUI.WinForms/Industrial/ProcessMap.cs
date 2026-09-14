@@ -553,7 +553,8 @@ namespace ZeroUI.WinForms.Industrial
 
                 using (var path = GetRoundedRectPath(rect, 4))
                 {
-                    using (var fill = new SolidBrush(Color.FromArgb(240, 255, 255, 255)))
+                    Color connBg = ZeroTheme.IsDark ? Color.FromArgb(240, 24, 28, 44) : Color.FromArgb(245, 255, 255, 255);
+                    using (var fill = new SolidBrush(connBg))
                     {
                         g.FillPath(fill, path);
                     }
@@ -771,34 +772,62 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
 
-            // 2. Mode Badge (Bottom Left)
-            string modeText = _isDesignMode 
-                ? "✏ DESIGN MODE  •  Drag ports to link  •  Right-click: Configure  •  Del: Remove" 
-                : "▶ RUN MODE  •  Ctrl+Wheel: Zoom  •  Wheel: Pan  •  Double-click: Fit view";
-            Color badgeBg = _isDesignMode ? Color.FromArgb(245, 158, 11) : Color.FromArgb(16, 185, 129);
+            // 2. Mode Badge (Bottom Left) - Theme-aware glass pill with high contrast status dot & text
+            bool isDark = ZeroTheme.IsDark;
+            Color hudBgColor = isDark ? Color.FromArgb(240, 24, 28, 44) : Color.FromArgb(250, 255, 255, 255);
+            Color hudBorderColor = isDark ? Color.FromArgb(64, 74, 108) : Color.FromArgb(203, 213, 225);
+            Color hudTextColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
+            Color hudHighlightColor = isDark ? Color.FromArgb(50, 62, 95) : Color.FromArgb(226, 232, 240);
+            Color hudHighlightTextColor = isDark ? Color.FromArgb(255, 255, 255) : Color.FromArgb(15, 23, 42);
+            Color hudDividerColor = isDark ? Color.FromArgb(45, 52, 78) : Color.FromArgb(226, 232, 240);
 
-            using (var font = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
+            string modeTag = _isDesignMode ? "DESIGN MODE" : "RUN MODE";
+            string modeTips = _isDesignMode 
+                ? "•  Drag ports to link  •  Right-click: Configure  •  Del: Remove" 
+                : "•  Ctrl+Wheel: Zoom  •  Wheel: Pan  •  Double-click: Fit view";
+            Color indicatorColor = _isDesignMode ? Color.FromArgb(245, 158, 11) : Color.FromArgb(16, 185, 129);
+
+            using (var tagFont = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
+            using (var tipFont = new Font(Font.FontFamily, 8.0f, FontStyle.Regular))
             {
-                var sz = g.MeasureString(modeText, font);
-                var rect = new RectangleF(16, Height - 36, sz.Width + 20, 24);
+                float tagW = g.MeasureString(modeTag, tagFont).Width;
+                float tipW = g.MeasureString(modeTips, tipFont).Width;
+                float totalW = 10 + 8 + 6 + tagW + 4 + tipW + 12;
+                var rect = new RectangleF(16, Height - 36, totalW, 26);
 
-                using (var path = GetRoundedRectPath(rect, 12))
-                using (var fill = new SolidBrush(badgeBg))
-                using (var textBrush = new SolidBrush(Color.White))
+                using (var path = GetRoundedRectPath(rect, 13))
+                using (var fill = new SolidBrush(hudBgColor))
+                using (var border = new Pen(hudBorderColor, 1.0f))
+                using (var dotBrush = new SolidBrush(indicatorColor))
+                using (var tagBrush = new SolidBrush(indicatorColor))
+                using (var tipBrush = new SolidBrush(isDark ? Color.FromArgb(203, 213, 225) : Color.FromArgb(71, 85, 105)))
                 {
                     g.FillPath(fill, path);
-                    g.DrawString(modeText, font, textBrush, rect.X + 10, rect.Y + 4);
+                    g.DrawPath(border, path);
+
+                    // Indicator dot
+                    g.FillEllipse(dotBrush, rect.X + 10, rect.Y + 9, 8, 8);
+
+                    // Mode Tag (Bold, color-coded)
+                    g.DrawString(modeTag, tagFont, tagBrush, rect.X + 24, rect.Y + 5);
+
+                    // Tips
+                    g.DrawString(modeTips, tipFont, tipBrush, rect.X + 24 + tagW + 4, rect.Y + 5);
                 }
             }
 
-            // 3. Floating Interactive Zoom HUD (Bottom Right)
+            // 3. Floating Interactive Zoom HUD (Bottom Right) - Theme-adaptive high-contrast pill
             var hudRect = GetZoomHudRect();
             using (var hudPath = GetRoundedRectPath(hudRect, 14))
-            using (var hudBg = new SolidBrush(Color.FromArgb(245, 255, 255, 255)))
-            using (var hudBorder = new Pen(Color.FromArgb(210, 220, 230), 1.0f))
-            using (var font = new Font(Font.FontFamily, 8.5f, FontStyle.Regular))
-            using (var textBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
-            using (var highlightBrush = new SolidBrush(Color.FromArgb(220, 235, 252)))
+            using (var hudBg = new SolidBrush(hudBgColor))
+            using (var hudBorder = new Pen(hudBorderColor, 1.0f))
+            using (var hudTextBrush = new SolidBrush(hudTextColor))
+            using (var hudHighlightTextBrush = new SolidBrush(hudHighlightTextColor))
+            using (var highlightBrush = new SolidBrush(hudHighlightColor))
+            using (var dividerPen = new Pen(hudDividerColor, 1.0f))
+            using (var boldIconFont = new Font(Font.FontFamily, 11f, FontStyle.Bold))
+            using (var btnTextFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
+            using (var fitFont = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
             {
                 g.FillPath(hudBg, hudPath);
                 g.DrawPath(hudBorder, hudPath);
@@ -807,46 +836,59 @@ namespace ZeroUI.WinForms.Industrial
 
                 // [ - ] ZoomOut
                 var rZoomOut = new RectangleF(hudRect.X, hudRect.Y, 36, hudRect.Height);
-                if (_hoveredHudButton == ZoomHudButton.ZoomOut)
+                bool isZoomOutHover = _hoveredHudButton == ZoomHudButton.ZoomOut;
+                if (isZoomOutHover)
                 {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomOut.X + 2, rZoomOut.Y + 2, rZoomOut.Width - 2, rZoomOut.Height - 4), 12))
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomOut.X + 2, rZoomOut.Y + 2, rZoomOut.Width - 4, rZoomOut.Height - 4), 6))
                         g.FillPath(highlightBrush, hPath);
                 }
-                g.DrawString("➖", font, textBrush, rZoomOut, sf);
+                g.DrawString("−", boldIconFont, isZoomOutHover ? hudHighlightTextBrush : hudTextBrush, rZoomOut, sf);
+
+                // Divider 1
+                g.DrawLine(dividerPen, hudRect.X + 36, hudRect.Y + 6, hudRect.X + 36, hudRect.Bottom - 6);
 
                 // [ 100% ] Reset
                 var rReset = new RectangleF(hudRect.X + 36, hudRect.Y, 60, hudRect.Height);
-                if (_hoveredHudButton == ZoomHudButton.ResetZoom)
+                bool isResetHover = _hoveredHudButton == ZoomHudButton.ResetZoom;
+                if (isResetHover)
                 {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rReset.X + 1, rReset.Y + 2, rReset.Width - 2, rReset.Height - 4), 4))
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rReset.X + 2, rReset.Y + 2, rReset.Width - 4, rReset.Height - 4), 6))
                         g.FillPath(highlightBrush, hPath);
                 }
                 string zoomText = $"{(_zoom * 100):0}%";
-                g.DrawString(zoomText, font, textBrush, rReset, sf);
+                g.DrawString(zoomText, btnTextFont, isResetHover ? hudHighlightTextBrush : hudTextBrush, rReset, sf);
+
+                // Divider 2
+                g.DrawLine(dividerPen, hudRect.X + 96, hudRect.Y + 6, hudRect.X + 96, hudRect.Bottom - 6);
 
                 // [ + ] ZoomIn
                 var rZoomIn = new RectangleF(hudRect.X + 96, hudRect.Y, 36, hudRect.Height);
-                if (_hoveredHudButton == ZoomHudButton.ZoomIn)
+                bool isZoomInHover = _hoveredHudButton == ZoomHudButton.ZoomIn;
+                if (isZoomInHover)
                 {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomIn.X + 1, rZoomIn.Y + 2, rZoomIn.Width - 2, rZoomIn.Height - 4), 4))
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rZoomIn.X + 2, rZoomIn.Y + 2, rZoomIn.Width - 4, rZoomIn.Height - 4), 6))
                         g.FillPath(highlightBrush, hPath);
                 }
-                g.DrawString("➕", font, textBrush, rZoomIn, sf);
+                g.DrawString("+", boldIconFont, isZoomInHover ? hudHighlightTextBrush : hudTextBrush, rZoomIn, sf);
 
-                // [ ⛶ ] Fit
-                var rFit = new RectangleF(hudRect.X + 132, hudRect.Y, 38, hudRect.Height);
-                if (_hoveredHudButton == ZoomHudButton.Fit)
+                // Divider 3
+                g.DrawLine(dividerPen, hudRect.X + 132, hudRect.Y + 6, hudRect.X + 132, hudRect.Bottom - 6);
+
+                // [ Fit ] Fit to View
+                var rFit = new RectangleF(hudRect.X + 132, hudRect.Y, 48, hudRect.Height);
+                bool isFitHover = _hoveredHudButton == ZoomHudButton.Fit;
+                if (isFitHover)
                 {
-                    using (var hPath = GetRoundedRectPath(new RectangleF(rFit.X, rFit.Y + 2, rFit.Width - 2, rFit.Height - 4), 12))
+                    using (var hPath = GetRoundedRectPath(new RectangleF(rFit.X + 2, rFit.Y + 2, rFit.Width - 4, rFit.Height - 4), 6))
                         g.FillPath(highlightBrush, hPath);
                 }
-                g.DrawString("⛶", font, textBrush, rFit, sf);
+                g.DrawString("Fit", fitFont, isFitHover ? hudHighlightTextBrush : hudTextBrush, rFit, sf);
             }
         }
 
         private RectangleF GetZoomHudRect()
         {
-            return new RectangleF(Width - 186, Height - 38, 170, 30);
+            return new RectangleF(Width - 196, Height - 38, 180, 30);
         }
 
         private ZoomHudButton HitTestZoomHud(PointF screenPt)

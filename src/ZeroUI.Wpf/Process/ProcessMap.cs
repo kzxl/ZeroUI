@@ -833,38 +833,52 @@ namespace ZeroUI.Wpf.Process
                 dc.DrawText(descText, new Point(w - descText.Width - 24, 18));
             }
 
-            // Mode Badge
-            string modeStr = _isDesignMode ? "✏ DESIGN MODE  •  Drag ports to link  •  Right-click: Configure  •  Del: Remove" : "▶ RUN MODE  •  Ctrl+Wheel: Zoom  •  Wheel: Pan  •  Double-click: Fit view";
-            Color badgeBg = _isDesignMode ? Color.FromRgb(245, 158, 11) : Color.FromRgb(16, 185, 129);
+            // Mode Badge - Theme-aware glass pill with high contrast indicator dot & typography
+            string modeTag = _isDesignMode ? "DESIGN MODE" : "RUN MODE";
+            string modeTips = _isDesignMode 
+                ? "•  Drag ports to link  •  Right-click: Configure  •  Del: Remove" 
+                : "•  Ctrl+Wheel: Zoom  •  Wheel: Pan  •  Double-click: Fit view";
+            Color indicatorColor = _isDesignMode ? Color.FromRgb(245, 158, 11) : Color.FromRgb(16, 185, 129);
 
-            var modeTypeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
-            var modeText = new FormattedText(
-                modeStr,
-                CultureInfo.InvariantCulture,
-                FlowDirection.LeftToRight,
-                modeTypeface,
-                10.5,
-                Brushes.White,
-                VisualTreeHelper.GetDpi(this).PixelsPerDip
-            );
+            var tagTypeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+            var tipTypeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Regular, FontStretches.Normal);
+            double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 
-            var badgeRect = new Rect(16, h - 36, modeText.Width + 20, 24);
-            var badgeBrush = new SolidColorBrush(badgeBg);
-            badgeBrush.Freeze();
-            dc.DrawRoundedRectangle(badgeBrush, null, badgeRect, 12, 12);
-            dc.DrawText(modeText, new Point(badgeRect.X + 10, badgeRect.Y + 4));
+            var tagText = new FormattedText(modeTag, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tagTypeface, 10.5, new SolidColorBrush(indicatorColor), dpi);
+            var tipText = new FormattedText(modeTips, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tipTypeface, 10.5, ZeroWpfTheme.TextSecondary, dpi);
 
-            // Zoom Info
+            double totalW = 10 + 8 + 6 + tagText.Width + 4 + tipText.Width + 12;
+            var badgeRect = new Rect(16, h - 36, totalW, 26);
+
+            var badgePen = new Pen(ZeroWpfTheme.BorderDefault, 1.0);
+            badgePen.Freeze();
+            dc.DrawRoundedRectangle(ZeroWpfTheme.BgCard, badgePen, badgeRect, 13, 13);
+
+            // Indicator dot
+            var dotBrush = new SolidColorBrush(indicatorColor);
+            dotBrush.Freeze();
+            dc.DrawEllipse(dotBrush, null, new Point(badgeRect.X + 14, badgeRect.Y + 13), 4, 4);
+
+            // Mode Tag
+            dc.DrawText(tagText, new Point(badgeRect.X + 24, badgeRect.Y + 5));
+
+            // Tips
+            dc.DrawText(tipText, new Point(badgeRect.X + 24 + tagText.Width + 4, badgeRect.Y + 5));
+
+            // Zoom Info Pill (Bottom Right)
             var zoomText = new FormattedText(
                 $"{(_zoom * 100):0}%",
                 CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight,
-                titleTypeface,
-                10.5,
-                ZeroWpfTheme.TextSecondary,
-                VisualTreeHelper.GetDpi(this).PixelsPerDip
+                tagTypeface,
+                11,
+                ZeroWpfTheme.TextPrimary,
+                dpi
             );
-            dc.DrawText(zoomText, new Point(w - 50, h - 30));
+
+            var zoomRect = new Rect(w - zoomText.Width - 32, h - 36, zoomText.Width + 24, 26);
+            dc.DrawRoundedRectangle(ZeroWpfTheme.BgCard, badgePen, zoomRect, 13, 13);
+            dc.DrawText(zoomText, new Point(zoomRect.X + 12, zoomRect.Y + 5));
         }
 
         #endregion
