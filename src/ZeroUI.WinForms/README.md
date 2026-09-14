@@ -44,7 +44,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 * **`ZeroDatePicker` & `ZeroDateRangePicker`:** Multi-tier zoom navigation calendar (Days &rarr; Months &rarr; Years) and dual-date range presets.
 
 ### 📐 Layout, Docking & Workflows
-* **`ZeroProcessMap`:** Interactive business process flowchart & workflow navigation map with customizable UserControl action triggers, orthogonal routing, and JSON serialization.
+* **`ProcessMap`:** Interactive business process flowchart & workflow navigation map with customizable UserControl action triggers, orthogonal routing, and JSON serialization.
 * **`ZeroDockManager`:** Multi-zone docking system (Left/Right/Top/Bottom/Document) with splitters, auto-hide tabs, and `ZeroFloatingWindow` for detached multi-monitor workspaces.
 * **`ZeroWorkspaceSerializer`:** Pure zero-dependency JSON layout persistence engine capturing and restoring DockPanel and DataGrid column configurations.
 * **`ZeroWizard`:** Multi-step process workflow wizard with validation and step progress indicator.

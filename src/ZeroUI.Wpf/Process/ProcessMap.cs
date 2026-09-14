@@ -17,7 +17,7 @@ namespace ZeroUI.Wpf.Process
     /// orthogonal transition arrows with branching labels, UserControl action triggers,
     /// and interactive design-mode customization.
     /// </summary>
-    public class ZeroProcessMap : FrameworkElement
+    public class ProcessMap : FrameworkElement
     {
         private ProcessFlowDefinition _definition = new ProcessFlowDefinition();
         private bool _isDesignMode = false;
@@ -44,7 +44,7 @@ namespace ZeroUI.Wpf.Process
         public event EventHandler<ProcessActionContext>? ActionTriggered;
         public event EventHandler? DefinitionChanged;
 
-        public ZeroProcessMap()
+        public ProcessMap()
         {
             ClipToBounds = true;
             Focusable = true;
@@ -1090,5 +1090,13 @@ namespace ZeroUI.Wpf.Process
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ProcessMap"/>.
+    /// </summary>
+    [Obsolete("ZeroProcessMap is deprecated. Use ProcessMap instead.")]
+    public class ZeroProcessMap : ProcessMap
+    {
     }
 }

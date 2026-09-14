@@ -22,8 +22,8 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultEvent("NodeClicked")]
     [Description("Interactive Business Process Flowchart & Navigation Map control with custom action binding")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroProcessMap.bmp")]
-    public class ZeroProcessMap : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "ProcessMap.bmp")]
+    public class ProcessMap : Control
     {
         private ProcessFlowDefinition _definition = new ProcessFlowDefinition();
         private bool _isDesignMode = false;
@@ -54,7 +54,7 @@ namespace ZeroUI.WinForms.Industrial
         public event EventHandler<ProcessActionContext>? ActionTriggered;
         public event EventHandler? DefinitionChanged;
 
-        public ZeroProcessMap()
+        public ProcessMap()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -1157,5 +1157,13 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ProcessMap"/>.
+    /// </summary>
+    [Obsolete("ZeroProcessMap is deprecated. Use ProcessMap instead.")]
+    public class ZeroProcessMap : ProcessMap
+    {
     }
 }
