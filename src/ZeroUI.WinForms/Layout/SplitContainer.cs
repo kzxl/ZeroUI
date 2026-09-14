@@ -224,7 +224,7 @@ namespace ZeroUI.WinForms.Layout
 
         private void UpdateLayout()
         {
-            if (Width <= 0 || Height <= 0) return;
+            if (Width <= 0 || Height <= 0 || _panel1 == null || _panel2 == null) return;
 
             SuspendLayout();
 

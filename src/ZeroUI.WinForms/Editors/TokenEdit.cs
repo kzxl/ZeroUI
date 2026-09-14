@@ -20,7 +20,12 @@ namespace ZeroUI.WinForms.Editors
         private readonly TokenModel _model = new TokenModel();
         private readonly List<(Rectangle chipRect, Rectangle closeRect, TokenItem item)> _chipLayouts =
             new List<(Rectangle, Rectangle, TokenItem)>();
-        private readonly TextBox _inputBox;
+        private readonly TextBox _inputBox = new TextBox
+        {
+            BorderStyle = BorderStyle.None,
+            Height = 20,
+            Width = 70
+        };
         private bool _readOnly;
         private bool _isModified;
         private bool _isHovered;
@@ -75,7 +80,10 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _readOnly = value;
-                _inputBox.ReadOnly = value;
+                if (_inputBox != null)
+                {
+                    _inputBox.ReadOnly = value;
+                }
             }
         }
 
@@ -114,6 +122,15 @@ namespace ZeroUI.WinForms.Editors
                      ControlStyles.OptimizedDoubleBuffer |
                      ControlStyles.ResizeRedraw, true);
 
+            _inputBox.BackColor = ZeroTheme.Colors.BgInput;
+            _inputBox.ForeColor = ZeroTheme.Colors.TextPrimary;
+            _inputBox.Font = new Font("Segoe UI", 9f);
+            _inputBox.KeyDown += OnInputKeyDown;
+            _inputBox.TextChanged += OnInputTextChanged;
+            _inputBox.GotFocus += (s, e) => Invalidate();
+            _inputBox.LostFocus += (s, e) => Invalidate();
+            Controls.Add(_inputBox);
+
             Height = 34;
             Width = 240;
 
@@ -137,23 +154,28 @@ namespace ZeroUI.WinForms.Editors
                 Invalidate();
             };
 
-            _inputBox = new TextBox
-            {
-                BorderStyle = BorderStyle.None,
-                BackColor = ZeroTheme.Colors.BgInput,
-                ForeColor = ZeroTheme.Colors.TextPrimary,
-                Font = new Font("Segoe UI", 9f),
-                Height = 20,
-                Width = 70
-            };
-
-            _inputBox.KeyDown += OnInputKeyDown;
-            _inputBox.TextChanged += OnInputTextChanged;
-            _inputBox.GotFocus += (s, e) => Invalidate();
-            _inputBox.LostFocus += (s, e) => Invalidate();
-            Controls.Add(_inputBox);
+            ZeroTheme.ThemeChanged += OnThemeChanged;
 
             UpdateLayoutPositions();
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e)
+        {
+            if (_inputBox != null)
+            {
+                _inputBox.BackColor = ZeroTheme.Colors.BgInput;
+                _inputBox.ForeColor = ZeroTheme.Colors.TextPrimary;
+            }
+            Invalidate();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ZeroTheme.ThemeChanged -= OnThemeChanged;
+            }
+            base.Dispose(disposing);
         }
 
         public void Reset()
@@ -215,7 +237,7 @@ namespace ZeroUI.WinForms.Editors
 
         private void OnInputTextChanged(object? sender, EventArgs e)
         {
-            if (_readOnly) return;
+            if (_readOnly || _inputBox == null) return;
 
             string text = _inputBox.Text;
             if (text.Contains(",") || text.Contains(";"))
@@ -231,7 +253,7 @@ namespace ZeroUI.WinForms.Editors
 
         private void CommitInput()
         {
-            if (!string.IsNullOrWhiteSpace(_inputBox.Text))
+            if (_inputBox != null && !string.IsNullOrWhiteSpace(_inputBox.Text))
             {
                 AddToken(_inputBox.Text.Trim());
                 _inputBox.Text = string.Empty;
@@ -240,6 +262,8 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateAutocomplete()
         {
+            if (_inputBox == null) return;
+
             if (_autocompleteSource == null)
             {
                 _inputBox.AutoCompleteMode = AutoCompleteMode.None;
@@ -264,6 +288,8 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateLayoutPositions()
         {
+            if (_inputBox == null) return;
+
             _chipLayouts.Clear();
 
             int x = 6;
@@ -331,7 +357,7 @@ namespace ZeroUI.WinForms.Editors
             }
 
             // Container Border
-            Color borderColor = _isHovered || _inputBox.Focused ? ZeroTheme.Colors.PrimaryAccent : ZeroTheme.Colors.BorderDefault;
+            Color borderColor = _isHovered || (_inputBox != null && _inputBox.Focused) ? ZeroTheme.Colors.PrimaryAccent : ZeroTheme.Colors.BorderDefault;
             using (var borderPen = new Pen(borderColor, 1f))
             using (var path = CreateRoundedRectanglePath(bounds, 5))
             {
@@ -359,7 +385,7 @@ namespace ZeroUI.WinForms.Editors
             }
 
             // Draw Placeholder
-            if (_model.Count == 0 && string.IsNullOrEmpty(_inputBox.Text) && !string.IsNullOrEmpty(_placeholder) && !_inputBox.Focused)
+            if (_model.Count == 0 && (_inputBox == null || string.IsNullOrEmpty(_inputBox.Text)) && !string.IsNullOrEmpty(_placeholder) && (_inputBox == null || !_inputBox.Focused))
             {
                 using var placeholderBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary);
                 g.DrawString(_placeholder, font, placeholderBrush, 8, 7);
@@ -380,7 +406,7 @@ namespace ZeroUI.WinForms.Editors
                 }
             }
 
-            _inputBox.Focus();
+            _inputBox?.Focus();
         }
 
         protected override void OnMouseEnter(EventArgs e)
