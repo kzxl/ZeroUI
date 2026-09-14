@@ -403,21 +403,21 @@ namespace ZeroUI.Wpf.Process
 
             if (_selectedLane != null)
             {
-                var mnuRename = new MenuItem { Header = "✏ Đổi tên khung (Rename Swimlane)..." };
+                var mnuRename = new MenuItem { Header = "✏ Rename Swimlane..." };
                 mnuRename.Click += (s, ev) => ShowRenameLaneDialog(_selectedLane);
                 _contextMenu.Items.Add(mnuRename);
 
-                var mnuFit = new MenuItem { Header = "🎯 Căng vừa khung theo các bước (Fit Lanes to Nodes)" };
+                var mnuFit = new MenuItem { Header = "🎯 Fit Lanes to Nodes" };
                 mnuFit.Click += (s, ev) => FitLanesToNodes();
                 _contextMenu.Items.Add(mnuFit);
 
-                var mnuAuto = new MenuItem { Header = "📐 Căn chỉnh layout tự động (Auto-Arrange Flow)" };
+                var mnuAuto = new MenuItem { Header = "📐 Auto-Arrange Flow" };
                 mnuAuto.Click += (s, ev) => AutoArrangeLayout(true);
                 _contextMenu.Items.Add(mnuAuto);
 
                 _contextMenu.Items.Add(new Separator());
 
-                var mnuDeleteLane = new MenuItem { Header = "🗑 Xoá khung (Delete Swimlane)" };
+                var mnuDeleteLane = new MenuItem { Header = "🗑 Delete Swimlane" };
                 mnuDeleteLane.Click += (s, ev) =>
                 {
                     if (_selectedLane != null)
@@ -463,10 +463,10 @@ namespace ZeroUI.Wpf.Process
                 };
                 _contextMenu.Items.Add(mnuAdd);
 
-                var mnuAddLane = new MenuItem { Header = "➕ Thêm khung / Swimlane mới..." };
+                var mnuAddLane = new MenuItem { Header = "➕ Add New Swimlane..." };
                 mnuAddLane.Click += (s, ev) =>
                 {
-                    var newLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), "1. KINH DOANH & THIẾT KẾ", _rightClickLocation.X, _rightClickLocation.Y, 680, 340);
+                    var newLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), "1. BUSINESS & DESIGN", _rightClickLocation.X, _rightClickLocation.Y, 680, 340);
                     _definition.Lanes.Add(newLane);
                     SelectedLane = newLane;
                     SelectedNode = null;
@@ -477,11 +477,11 @@ namespace ZeroUI.Wpf.Process
 
                 _contextMenu.Items.Add(new Separator());
 
-                var mnuAutoCanvas = new MenuItem { Header = "📐 Căn chỉnh layout tự động (Auto-Arrange Flow)" };
+                var mnuAutoCanvas = new MenuItem { Header = "📐 Auto-Arrange Flow" };
                 mnuAutoCanvas.Click += (s, ev) => AutoArrangeLayout(true);
                 _contextMenu.Items.Add(mnuAutoCanvas);
 
-                var mnuFitCanvas = new MenuItem { Header = "🎯 Căng vừa khung theo các bước (Fit Lanes to Nodes)" };
+                var mnuFitCanvas = new MenuItem { Header = "🎯 Fit Lanes to Nodes" };
                 mnuFitCanvas.Click += (s, ev) => FitLanesToNodes();
                 _contextMenu.Items.Add(mnuFitCanvas);
 
@@ -489,7 +489,7 @@ namespace ZeroUI.Wpf.Process
             }
 
             // Node Context Menu
-            var mnuCreateLane = new MenuItem { Header = "📦 Tạo khung cho các bước chọn (Create Frame from Selection)" };
+            var mnuCreateLane = new MenuItem { Header = "📦 Create Frame from Selection" };
             mnuCreateLane.Click += (s, ev) => CreateLaneFromSelectedNodes();
             _contextMenu.Items.Add(mnuCreateLane);
             _contextMenu.Items.Add(new Separator());

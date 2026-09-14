@@ -163,11 +163,11 @@ namespace ZeroUI.WinForms.Industrial
             _mnuDeleteNode = new ToolStripMenuItem("Delete Step", null, OnDeleteNodeClicked);
             _mnuAddStep = new ToolStripMenuItem("Add New Step Here", null, OnAddStepClicked);
 
-            _mnuCreateLaneFromSelection = new ToolStripMenuItem("📦 Tạo khung cho các bước chọn (Create Frame from Selection)", null, (s, e) => CreateLaneFromSelectedNodes());
-            _mnuAddNewLane = new ToolStripMenuItem("➕ Thêm khung / Swimlane mới...", null, (s, e) =>
+            _mnuCreateLaneFromSelection = new ToolStripMenuItem("📦 Create Frame from Selection", null, (s, e) => CreateLaneFromSelectedNodes());
+            _mnuAddNewLane = new ToolStripMenuItem("➕ Add New Swimlane...", null, (s, e) =>
             {
                 PointF world = _rightClickLocation;
-                var newLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), "1. KINH DOANH & THIẾT KẾ", world.X, world.Y, 680, 340);
+                var newLane = new ProcessFlowLane("lane_" + Guid.NewGuid().ToString("N").Substring(0, 8), "1. BUSINESS & DESIGN", world.X, world.Y, 680, 340);
                 _definition.Lanes.Add(newLane);
                 SelectedLane = newLane;
                 SelectedNode = null;
@@ -175,9 +175,9 @@ namespace ZeroUI.WinForms.Industrial
                 Invalidate();
                 DefinitionChanged?.Invoke(this, EventArgs.Empty);
             });
-            _mnuFitLanes = new ToolStripMenuItem("🎯 Căng vừa khung theo các bước (Fit Lanes to Nodes)", null, (s, e) => FitLanesToNodes());
-            _mnuAutoArrange = new ToolStripMenuItem("📐 Căn chỉnh layout tự động (Auto-Arrange Flow)", null, (s, e) => AutoArrangeLayout(true));
-            _mnuDeleteLane = new ToolStripMenuItem("🗑 Xoá khung (Delete Swimlane)", null, (s, e) =>
+            _mnuFitLanes = new ToolStripMenuItem("🎯 Fit Lanes to Nodes", null, (s, e) => FitLanesToNodes());
+            _mnuAutoArrange = new ToolStripMenuItem("📐 Auto-Arrange Flow", null, (s, e) => AutoArrangeLayout(true));
+            _mnuDeleteLane = new ToolStripMenuItem("🗑 Delete Swimlane", null, (s, e) =>
             {
                 if (_selectedLane != null)
                 {
@@ -192,7 +192,7 @@ namespace ZeroUI.WinForms.Industrial
                     DefinitionChanged?.Invoke(this, EventArgs.Empty);
                 }
             });
-            _mnuRenameLane = new ToolStripMenuItem("✏ Đổi tên khung (Rename Swimlane)...", null, (s, e) =>
+            _mnuRenameLane = new ToolStripMenuItem("✏ Rename Swimlane...", null, (s, e) =>
             {
                 if (_selectedLane != null) ShowRenameLaneDialog(_selectedLane);
             });
