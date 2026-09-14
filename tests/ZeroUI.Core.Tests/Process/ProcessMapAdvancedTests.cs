@@ -135,5 +135,108 @@ namespace ZeroUI.Core.Tests.Process
             Assert.False(lane.Contains(outsideNode));
             Assert.True(lane.Intersects(intersectingNode));
         }
+
+        [Fact]
+        public void AlignNodes_CenterRightMiddleBottom_CalculatesCorrectPositions()
+        {
+            var n1 = new ProcessFlowNode("n1", "1", "", 100, 50, 100, 40);
+            var n2 = new ProcessFlowNode("n2", "2", "", 200, 120, 200, 60);
+
+            // Align Center (average center: (150 + 300) / 2 = 225)
+            ProcessFlowDefinition.AlignNodes(new[] { n1, n2 }, ProcessNodeAlignment.Center);
+            Assert.Equal(225 - n1.Width / 2, n1.X);
+            Assert.Equal(225 - n2.Width / 2, n2.X);
+
+            // Align Right (maxRight: 125 + 200 = 325)
+            ProcessFlowDefinition.AlignNodes(new[] { n1, n2 }, ProcessNodeAlignment.Right);
+            double maxRight = Math.Max(n1.X + n1.Width, n2.X + n2.Width);
+            Assert.Equal(maxRight - n1.Width, n1.X);
+            Assert.Equal(maxRight - n2.Width, n2.X);
+
+            // Align Middle (average center: (70 + 150) / 2 = 110)
+            ProcessFlowDefinition.AlignNodes(new[] { n1, n2 }, ProcessNodeAlignment.Middle);
+            Assert.Equal(110 - n1.Height / 2, n1.Y);
+            Assert.Equal(110 - n2.Height / 2, n2.Y);
+
+            // Align Bottom (maxBottom: 80 + 60 = 140)
+            ProcessFlowDefinition.AlignNodes(new[] { n1, n2 }, ProcessNodeAlignment.Bottom);
+            double maxBottom = Math.Max(n1.Y + n1.Height, n2.Y + n2.Height);
+            Assert.Equal(maxBottom - n1.Height, n1.Y);
+            Assert.Equal(maxBottom - n2.Height, n2.Y);
+        }
+
+        [Fact]
+        public void DistributeNodes_Vertical_EquallySpacesNodes()
+        {
+            var n1 = new ProcessFlowNode("n1", "1", "", 50, 100, 100, 50);
+            var n2 = new ProcessFlowNode("n2", "2", "", 50, 220, 100, 50);
+            var n3 = new ProcessFlowNode("n3", "3", "", 50, 500, 100, 50);
+
+            ProcessFlowDefinition.DistributeNodes(new[] { n1, n2, n3 }, horizontally: false);
+
+            double gap1 = n2.Y - (n1.Y + n1.Height);
+            double gap2 = n3.Y - (n2.Y + n2.Height);
+            Assert.True(Math.Abs(gap1 - gap2) < 0.001, $"Expected equal vertical gaps: {gap1} vs {gap2}");
+        }
+
+        [Fact]
+        public void ProcessFlowSerializer_RoundTrips_ComplexDefinitionsWithAllShapes()
+        {
+            var def = new ProcessFlowDefinition
+            {
+                Title = "Enterprise Production Workflow",
+                Description = "End-to-end MES and Quality Control Flow"
+            };
+
+            var lane1 = new ProcessFlowLane("lane_sales", "Sales Order", 10, 10, 400, 200);
+            def.Lanes.Add(lane1);
+
+            var startNode = new ProcessFlowNode("start", "Order Received", "ERP Webhook", 30, 40, 140, 50)
+            {
+                Shape = ProcessNodeShape.StartTerminal,
+                LaneId = lane1.Id
+            };
+            var decisionNode = new ProcessFlowNode("check_stock", "Stock Available?", "WMS Check", 200, 40, 140, 70)
+            {
+                Shape = ProcessNodeShape.DecisionDiamond,
+                LaneId = lane1.Id
+            };
+            var taskNode = new ProcessFlowNode("produce", "Work Order", "Shop Floor", 400, 40, 160, 60)
+            {
+                Shape = ProcessNodeShape.TaskCard,
+                ActionKey = "WpfMdsModule"
+            };
+            var endNode = new ProcessFlowNode("done", "Completed", "Archived", 600, 40, 120, 50)
+            {
+                Shape = ProcessNodeShape.EndTerminal
+            };
+
+            def.Nodes.Add(startNode);
+            def.Nodes.Add(decisionNode);
+            def.Nodes.Add(taskNode);
+            def.Nodes.Add(endNode);
+
+            def.Connections.Add(new ProcessFlowConnection("start", "check_stock") { SourcePort = ProcessPortPosition.Right, TargetPort = ProcessPortPosition.Left });
+            def.Connections.Add(new ProcessFlowConnection("check_stock", "produce", "In Stock", "#10B981") { SourcePort = ProcessPortPosition.Right, TargetPort = ProcessPortPosition.Left });
+            def.Connections.Add(new ProcessFlowConnection("produce", "done", "Finished") { SourcePort = ProcessPortPosition.Right, TargetPort = ProcessPortPosition.Left });
+
+            string json = ProcessFlowSerializer.ToJson(def, indented: true);
+            Assert.NotNull(json);
+
+            var restored = ProcessFlowSerializer.FromJson(json);
+            Assert.NotNull(restored);
+            Assert.Equal(def.Title, restored.Title);
+            Assert.Equal(4, restored.Nodes.Count);
+            Assert.Single(restored.Lanes);
+            Assert.Equal(3, restored.Connections.Count);
+
+            var rDecision = restored.Nodes.First(n => n.Id == "check_stock");
+            Assert.Equal(ProcessNodeShape.DecisionDiamond, rDecision.Shape);
+            Assert.Equal("Stock Available?", rDecision.Title);
+
+            var rTask = restored.Nodes.First(n => n.Id == "produce");
+            Assert.Equal("WpfMdsModule", rTask.ActionKey);
+            Assert.Equal(ProcessNodeShape.TaskCard, rTask.Shape);
+        }
     }
 }

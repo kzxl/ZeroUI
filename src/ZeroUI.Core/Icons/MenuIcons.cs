@@ -124,6 +124,34 @@ namespace ZeroUI.Core.Icons
 
         #endregion
 
+        #region Alignment & Distribution
+
+        /// <summary>Align left icon ("⇤").</summary>
+        public const string AlignLeft = "⇤";
+
+        /// <summary>Align center icon ("↔").</summary>
+        public const string AlignCenter = "↔";
+
+        /// <summary>Align right icon ("⇥").</summary>
+        public const string AlignRight = "⇥";
+
+        /// <summary>Align top icon ("⤒").</summary>
+        public const string AlignTop = "⤒";
+
+        /// <summary>Align middle icon ("↕").</summary>
+        public const string AlignMiddle = "↕";
+
+        /// <summary>Align bottom icon ("⤓").</summary>
+        public const string AlignBottom = "⤓";
+
+        /// <summary>Distribute horizontally icon ("⬌").</summary>
+        public const string DistributeHorizontal = "⬌";
+
+        /// <summary>Distribute vertically icon ("⬍").</summary>
+        public const string DistributeVertical = "⬍";
+
+        #endregion
+
         #region View & Status
 
         /// <summary>Zoom in icon ("🔍").</summary>

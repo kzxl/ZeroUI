@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using ZeroUI.Core.Icons;
 using ZeroUI.Core.Process;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -115,11 +116,26 @@ namespace ZeroUI.WinForms.Industrial
         private ToolStripMenuItem _mnuFitLanes = null!;
         private ToolStripMenuItem _mnuAutoArrange = null!;
         private ToolStripMenuItem _mnuRenameLane = null!;
+        private ToolStripMenuItem _mnuAlignSteps = null!;
 
         private ContextMenuStrip _connContextMenu = null!;
         private ToolStripMenuItem _mnuEditConnLabel = null!;
         private ToolStripMenuItem _mnuDeleteConn = null!;
         private ToolStripMenuItem _mnuChangeConnColor = null!;
+
+        // Route Caching
+        private readonly Dictionary<string, PointF[]> _routeCache = new Dictionary<string, PointF[]>();
+
+        // Minimap Radar Overlay
+        private bool _showMinimap = true;
+        private bool _isDraggingMinimap = false;
+
+        // Multi-Node Selection & Rubber-band Marquee Box
+        private readonly HashSet<ProcessFlowNode> _selectedNodes = new HashSet<ProcessFlowNode>();
+        private bool _isMarqueeSelecting = false;
+        private PointF _marqueeStartWorld;
+        private PointF _marqueeCurrentWorld;
+        private readonly Dictionary<string, PointF> _multiNodeDragInitialPositions = new Dictionary<string, PointF>();
 
         public event EventHandler<ProcessFlowNode>? NodeClicked;
         public event EventHandler<ProcessFlowLane>? LaneClicked;
@@ -198,6 +214,25 @@ namespace ZeroUI.WinForms.Industrial
                 if (_selectedLane != null) ShowRenameLaneDialog(_selectedLane);
             });
 
+            // Multi-node Alignment Submenu
+            _mnuAlignSteps = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.AlignLeft, "Align Steps"), null);
+            var mnuAlignLeft = new ToolStripMenuItem("Align Left", null, (s, e) => AlignSelectedNodes(ProcessNodeAlignment.Left));
+            var mnuAlignCenter = new ToolStripMenuItem("Align Center (Horizontal)", null, (s, e) => AlignSelectedNodes(ProcessNodeAlignment.Center));
+            var mnuAlignRight = new ToolStripMenuItem("Align Right", null, (s, e) => AlignSelectedNodes(ProcessNodeAlignment.Right));
+            var mnuAlignTop = new ToolStripMenuItem("Align Top", null, (s, e) => AlignSelectedNodes(ProcessNodeAlignment.Top));
+            var mnuAlignMiddle = new ToolStripMenuItem("Align Middle (Vertical)", null, (s, e) => AlignSelectedNodes(ProcessNodeAlignment.Middle));
+            var mnuAlignBottom = new ToolStripMenuItem("Align Bottom", null, (s, e) => AlignSelectedNodes(ProcessNodeAlignment.Bottom));
+            var mnuDistH = new ToolStripMenuItem("Distribute Horizontally", null, (s, e) => DistributeSelectedNodes(true));
+            var mnuDistV = new ToolStripMenuItem("Distribute Vertically", null, (s, e) => DistributeSelectedNodes(false));
+
+            _mnuAlignSteps.DropDownItems.AddRange(new ToolStripItem[] {
+                mnuAlignLeft, mnuAlignCenter, mnuAlignRight,
+                new ToolStripSeparator(),
+                mnuAlignTop, mnuAlignMiddle, mnuAlignBottom,
+                new ToolStripSeparator(),
+                mnuDistH, mnuDistV
+            });
+
             _contextMenu.Items.AddRange(new ToolStripItem[] {
                 _mnuCreateLaneFromSelection,
                 _mnuAddStep,
@@ -208,6 +243,7 @@ namespace ZeroUI.WinForms.Industrial
                 _mnuRenameLane,
                 _mnuAssignAction,
                 _mnuChangeShape,
+                _mnuAlignSteps,
                 new ToolStripSeparator(),
                 _mnuAutoArrange,
                 _mnuFitLanes,
@@ -278,7 +314,11 @@ namespace ZeroUI.WinForms.Industrial
             {
                 _definition = value ?? new ProcessFlowDefinition();
                 _selectedNode = null;
+                _selectedNodes.Clear();
+                _selectedLane = null;
+                _selectedConnection = null;
                 _hoveredNode = null;
+                InvalidateRouteCache();
                 Invalidate();
                 DefinitionChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -300,7 +340,7 @@ namespace ZeroUI.WinForms.Industrial
 
         [Category("Appearance")]
         [DefaultValue(true)]
-        [Description("Displays dot grid in the background.")]
+        [Description("Displays the background grid dots for spatial alignment.")]
         public bool ShowGrid
         {
             get => _showGrid;
@@ -313,7 +353,7 @@ namespace ZeroUI.WinForms.Industrial
 
         [Category("Behavior")]
         [DefaultValue(true)]
-        [Description("Automatically resolves and executes actions registered in ProcessActionRegistry on node click.")]
+        [Description("Automatically executes navigation action or launches UserControl on node click.")]
         public bool AutoExecuteAction
         {
             get => _autoExecuteAction;
@@ -322,7 +362,7 @@ namespace ZeroUI.WinForms.Industrial
 
         [Category("Behavior")]
         [DefaultValue(true)]
-        [Description("When true, zooming with mouse wheel requires holding Ctrl key (industry standard: Figma/Miro/VSCode), preventing accidental zoom while scrolling. When false, normal mouse wheel zooms directly.")]
+        [Description("Requires holding the CTRL key to zoom with the mouse wheel.")]
         public bool WheelZoomRequiresCtrl
         {
             get => _wheelZoomRequiresCtrl;
@@ -331,16 +371,15 @@ namespace ZeroUI.WinForms.Industrial
 
         [Category("Behavior")]
         [DefaultValue(true)]
-        [Description("When true, mouse wheel without Ctrl pans canvas vertically (or horizontally with Shift).")]
+        [Description("Enables panning the canvas using the mouse wheel.")]
         public bool EnableWheelPan
         {
             get => _enableWheelPan;
             set => _enableWheelPan = value;
         }
 
-        [Category("View")]
+        [Category("Appearance")]
         [DefaultValue(1.0f)]
-        [Description("Zoom factor of the diagram canvas (0.2x to 3.0x).")]
         public float ZoomFactor
         {
             get => _zoom;
@@ -371,10 +410,52 @@ namespace ZeroUI.WinForms.Industrial
                 if (_selectedNode != value)
                 {
                     _selectedNode = value;
-                    if (_selectedNode != null) _selectedLane = null;
+                    _selectedNodes.Clear();
+                    if (_selectedNode != null)
+                    {
+                        _selectedNodes.Add(_selectedNode);
+                        _selectedLane = null;
+                    }
                     Invalidate();
                 }
             }
+        }
+
+        [Browsable(false)]
+        public IReadOnlyCollection<ProcessFlowNode> SelectedNodes => _selectedNodes;
+
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        [Description("Displays the bird-eye minimap radar navigation overlay in the bottom right corner.")]
+        public bool ShowMinimap
+        {
+            get => _showMinimap;
+            set { _showMinimap = value; Invalidate(); }
+        }
+
+        public void InvalidateRouteCache()
+        {
+            _routeCache.Clear();
+        }
+
+        public void AlignSelectedNodes(ProcessNodeAlignment alignment)
+        {
+            if (_selectedNodes.Count < 2) return;
+            ProcessFlowDefinition.AlignNodes(_selectedNodes, alignment);
+            InvalidateRouteCache();
+            IsDirty = true;
+            Invalidate();
+            DefinitionChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void DistributeSelectedNodes(bool horizontally)
+        {
+            if (_selectedNodes.Count < 3) return;
+            ProcessFlowDefinition.DistributeNodes(_selectedNodes, horizontally);
+            InvalidateRouteCache();
+            IsDirty = true;
+            Invalidate();
+            DefinitionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         [Browsable(false)]
@@ -411,16 +492,22 @@ namespace ZeroUI.WinForms.Industrial
             set { _isDirty = value; Invalidate(); }
         }
 
-        public void CreateLaneFromSelectedNodes(string title = "1. KINH DOANH & THIẾT KẾ (SALES / R&D)")
+        public void CreateLaneFromSelectedNodes(string title = "1. BUSINESS & DESIGN (SALES / R&D)")
         {
             var targets = new List<ProcessFlowNode>();
-            if (_selectedNode != null)
+            if (_selectedNodes.Count > 0)
+            {
+                targets.AddRange(_selectedNodes);
+            }
+            else if (_selectedNode != null)
             {
                 targets.Add(_selectedNode);
             }
             var lane = _definition.CreateLaneFromSelection(targets, title);
             SelectedLane = lane;
             SelectedNode = null;
+            _selectedNodes.Clear();
+            InvalidateRouteCache();
             IsDirty = true;
             Invalidate();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
@@ -429,6 +516,7 @@ namespace ZeroUI.WinForms.Industrial
         public void AutoArrangeLayout(bool horizontal = true)
         {
             _definition.AutoArrangeLayout(horizontal);
+            InvalidateRouteCache();
             IsDirty = true;
             Invalidate();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
@@ -437,6 +525,7 @@ namespace ZeroUI.WinForms.Industrial
         public void FitLanesToNodes()
         {
             _definition.FitLanesToNodes();
+            InvalidateRouteCache();
             IsDirty = true;
             Invalidate();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
@@ -534,6 +623,15 @@ namespace ZeroUI.WinForms.Industrial
             return new RectangleF(p.X, p.Y, world.Width * _zoom, world.Height * _zoom);
         }
 
+        public RectangleF GetMarqueeBoundsWorld()
+        {
+            float minX = Math.Min(_marqueeStartWorld.X, _marqueeCurrentWorld.X);
+            float minY = Math.Min(_marqueeStartWorld.Y, _marqueeCurrentWorld.Y);
+            float width = Math.Abs(_marqueeCurrentWorld.X - _marqueeStartWorld.X);
+            float height = Math.Abs(_marqueeCurrentWorld.Y - _marqueeStartWorld.Y);
+            return new RectangleF(minX, minY, width, height);
+        }
+
         #endregion
 
         #region Rendering Pipeline
@@ -579,7 +677,8 @@ namespace ZeroUI.WinForms.Industrial
             // 6. Nodes (Task Cards, Decision Diamonds, Terminals)
             foreach (var node in _definition.Nodes)
             {
-                DrawNode(g, node, node == _selectedNode, node == _hoveredNode);
+                bool isSel = (node == _selectedNode) || _selectedNodes.Contains(node);
+                DrawNode(g, node, isSel, node == _hoveredNode);
             }
 
             // 6b. Ports & Rubberband Wire in Design Mode
@@ -602,12 +701,31 @@ namespace ZeroUI.WinForms.Industrial
                     g.DrawLine(rubberPen, p1, p2);
                     DrawArrowhead(g, rubberPen, p1, p2);
                 }
+
+                // 6c. Rubber-band marquee selection box
+                if (_isMarqueeSelecting)
+                {
+                    var mRect = GetMarqueeBoundsWorld();
+                    if (mRect.Width > 1 && mRect.Height > 1)
+                    {
+                        using var mFill = new SolidBrush(Color.FromArgb(35, ZeroTheme.Colors.Primary));
+                        using var mPen = new Pen(ZeroTheme.Colors.Primary, 1.2f / _zoom) { DashStyle = DashStyle.Dash };
+                        g.FillRectangle(mFill, mRect);
+                        g.DrawRectangle(mPen, mRect.X, mRect.Y, mRect.Width, mRect.Height);
+                    }
+                }
             }
 
             g.Restore(state);
 
             // 7. HUD Overlays (Title banner, mode badge, zoom info)
             DrawHudOverlay(g);
+
+            // 8. Bird-Eye Minimap Radar Overlay
+            if (_showMinimap)
+            {
+                DrawMinimap(g, ZeroTheme.Colors);
+            }
         }
 
         private void DrawGrid(Graphics g)
@@ -666,7 +784,7 @@ namespace ZeroUI.WinForms.Industrial
             // Lane Header Tag
             string title = "⚙ " + lane.Title.ToUpperInvariant();
             Color headerColor = ParseColor(lane.HeaderColorHex, ZeroTheme.Colors.TextSecondary);
-            using (var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
+            var font = ZeroFontCache.Get(Font.FontFamily.Name, 8.5f, FontStyle.Bold);
             using (var brush = new SolidBrush(headerColor))
             {
                 g.DrawString(title, font, brush, bounds.X + 16, bounds.Y + 9);
@@ -722,8 +840,14 @@ namespace ZeroUI.WinForms.Industrial
             {
                 if (conn.IsDashed) pen.DashStyle = DashStyle.Dash;
 
-                // Orthogonal routing (Waypoints)
-                var points = CalculateOrthogonalRoute(p1, p2, conn.SourcePort, conn.TargetPort);
+                // Orthogonal routing with caching
+                string cacheKey = $"{conn.Id}_{p1.X:0.0}_{p1.Y:0.0}_{p2.X:0.0}_{p2.Y:0.0}_{(int)conn.SourcePort}_{(int)conn.TargetPort}";
+                if (!_routeCache.TryGetValue(cacheKey, out var points))
+                {
+                    points = CalculateOrthogonalRoute(p1, p2, conn.SourcePort, conn.TargetPort);
+                    _routeCache[cacheKey] = points;
+                }
+
                 if (points.Length >= 2)
                 {
                     g.DrawLines(pen, points);
@@ -813,28 +937,26 @@ namespace ZeroUI.WinForms.Industrial
             PointF b = points[midIdx];
             PointF center = new PointF((a.X + b.X) / 2, (a.Y + b.Y) / 2);
 
-            using (var font = new Font(Font.FontFamily, 7.5f, FontStyle.Bold))
+            var font = ZeroFontCache.Get(Font.FontFamily.Name, 7.5f, FontStyle.Bold);
+            var sz = g.MeasureString(label, font);
+            var rect = new RectangleF(center.X - sz.Width / 2 - 6, center.Y - sz.Height / 2 - 3, sz.Width + 12, sz.Height + 6);
+
+            using (var path = GetRoundedRectPath(rect, 4))
             {
-                var sz = g.MeasureString(label, font);
-                var rect = new RectangleF(center.X - sz.Width / 2 - 6, center.Y - sz.Height / 2 - 3, sz.Width + 12, sz.Height + 6);
-
-                using (var path = GetRoundedRectPath(rect, 4))
+                Color connBg = ZeroTheme.IsDark ? Color.FromArgb(240, 24, 28, 44) : Color.FromArgb(245, 255, 255, 255);
+                using (var fill = new SolidBrush(connBg))
                 {
-                    Color connBg = ZeroTheme.IsDark ? Color.FromArgb(240, 24, 28, 44) : Color.FromArgb(245, 255, 255, 255);
-                    using (var fill = new SolidBrush(connBg))
-                    {
-                        g.FillPath(fill, path);
-                    }
-                    using (var pen = new Pen(color, 1.2f))
-                    {
-                        g.DrawPath(pen, path);
-                    }
+                    g.FillPath(fill, path);
                 }
-
-                using (var brush = new SolidBrush(color))
+                using (var pen = new Pen(color, 1.2f))
                 {
-                    g.DrawString(label, font, brush, rect.X + 6, rect.Y + 3);
+                    g.DrawPath(pen, path);
                 }
+            }
+
+            using (var brush = new SolidBrush(color))
+            {
+                g.DrawString(label, font, brush, rect.X + 6, rect.Y + 3);
             }
         }
 
@@ -909,7 +1031,7 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // Icon + Title in Header
-            using (var titleFont = new Font(Font.FontFamily, 8.8f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.8f, FontStyle.Bold);
             using (var titleBrush = new SolidBrush(headerColor))
             {
                 string headerText = $"{node.IconGlyph} {node.Title}";
@@ -920,7 +1042,7 @@ namespace ZeroUI.WinForms.Industrial
             if (!string.IsNullOrWhiteSpace(node.Subtitle))
             {
                 var bodyRect = new RectangleF(bounds.X + 10, bounds.Y + 32, bounds.Width - 20, bounds.Height - 36);
-                using (var bodyFont = new Font(Font.FontFamily, 8.0f, FontStyle.Regular))
+                var bodyFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.0f, FontStyle.Regular);
                 using (var bodyBrush = new SolidBrush(Color.FromArgb(71, 85, 105)))
                 using (var sf = new StringFormat { Trimming = StringTrimming.EllipsisWord })
                 {
@@ -931,7 +1053,7 @@ namespace ZeroUI.WinForms.Industrial
             // Action Indicator Badge (small link icon on bottom-right if bound)
             if (!string.IsNullOrWhiteSpace(node.ActionKey))
             {
-                using (var badgeFont = new Font(Font.FontFamily, 7.0f, FontStyle.Regular))
+                var badgeFont = ZeroFontCache.Get(Font.FontFamily.Name, 7.0f, FontStyle.Regular);
                 using (var badgeBrush = new SolidBrush(Color.FromArgb(148, 163, 184)))
                 {
                     g.DrawString("⚡ Action", badgeFont, badgeBrush, bounds.Right - 48, bounds.Bottom - 16);
@@ -965,8 +1087,8 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // Text Center
-            using (var titleFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
-            using (var subFont = new Font(Font.FontFamily, 7.5f, FontStyle.Regular))
+            var titleFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.5f, FontStyle.Bold);
+            var subFont = ZeroFontCache.Get(Font.FontFamily.Name, 7.5f, FontStyle.Regular);
             using (var titleBrush = new SolidBrush(accent))
             using (var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
             {
@@ -996,7 +1118,7 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
 
-            using (var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
+            var font = ZeroFontCache.Get(Font.FontFamily.Name, 8.5f, FontStyle.Bold);
             using (var brush = new SolidBrush(Color.White))
             using (var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
             {
@@ -1027,8 +1149,8 @@ namespace ZeroUI.WinForms.Industrial
             // 1. Top Title Bar
             string title = _definition.Title;
             string desc = _definition.Description;
-            using (var titleFont = new Font(Font.FontFamily, 10.5f, FontStyle.Bold))
-            using (var descFont = new Font(Font.FontFamily, 8.0f, FontStyle.Regular))
+            var titleFont = ZeroFontCache.Get(Font.FontFamily.Name, 10.5f, FontStyle.Bold);
+            var descFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.0f, FontStyle.Regular);
             using (var titleBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
             using (var descBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary))
             {
@@ -1060,8 +1182,8 @@ namespace ZeroUI.WinForms.Industrial
                 : "•  Ctrl+Wheel: Zoom  •  Wheel: Pan  •  Double-click: Fit view";
             Color indicatorColor = _isDesignMode ? Color.FromArgb(245, 158, 11) : Color.FromArgb(16, 185, 129);
 
-            using (var tagFont = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
-            using (var tipFont = new Font(Font.FontFamily, 8.0f, FontStyle.Regular))
+            var tagFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.0f, FontStyle.Bold);
+            var tipFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.0f, FontStyle.Regular);
             {
                 float tagW = g.MeasureString(modeTag, tagFont).Width;
                 float tipW = g.MeasureString(modeTips, tipFont).Width;
@@ -1098,10 +1220,11 @@ namespace ZeroUI.WinForms.Industrial
             using (var hudHighlightTextBrush = new SolidBrush(hudHighlightTextColor))
             using (var highlightBrush = new SolidBrush(hudHighlightColor))
             using (var dividerPen = new Pen(hudDividerColor, 1.0f))
-            using (var boldIconFont = new Font(Font.FontFamily, 11f, FontStyle.Bold))
-            using (var btnTextFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
-            using (var fitFont = new Font(Font.FontFamily, 8.0f, FontStyle.Bold))
             {
+                var boldIconFont = ZeroFontCache.Get(Font.FontFamily.Name, 11f, FontStyle.Bold);
+                var btnTextFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.5f, FontStyle.Bold);
+                var fitFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.0f, FontStyle.Bold);
+
                 g.FillPath(hudBg, hudPath);
 
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
@@ -1165,7 +1288,7 @@ namespace ZeroUI.WinForms.Industrial
             using var activeTextBrush = new SolidBrush(ZeroTheme.Colors.Primary);
             using var hoverTextBrush = new SolidBrush(hudHighlightTextColor);
             using var badgeBrush = new SolidBrush(Color.FromArgb(239, 68, 68));
-            using var font = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
+            var font = ZeroFontCache.Get(Font.FontFamily.Name, 8.5f, FontStyle.Bold);
 
             var oldClip = g.Clip;
             g.SetClip(path, CombineMode.Intersect);
@@ -1265,6 +1388,170 @@ namespace ZeroUI.WinForms.Industrial
             if (relX < 132) return ZoomHudButton.ZoomIn;
             return ZoomHudButton.Fit;
         }
+
+        #region Minimap Radar Implementation
+
+        private RectangleF GetMinimapRect()
+        {
+            float w = 180f;
+            float h = 120f;
+            float x = Width - 196f;
+            float y = Height - 38f - h - 8f; // Sits directly above Zoom HUD
+            return new RectangleF(x, y, w, h);
+        }
+
+        private void GetMinimapTransform(out float scale, out float offsetX, out float offsetY, out RectangleF innerRect, out RectangleF worldBounds)
+        {
+            var miniRect = GetMinimapRect();
+            float innerPadding = 6f;
+            innerRect = new RectangleF(miniRect.X + innerPadding, miniRect.Y + innerPadding + 14f, miniRect.Width - innerPadding * 2, miniRect.Height - innerPadding * 2 - 14f);
+
+            float minX = float.MaxValue, minY = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue;
+
+            foreach (var lane in _definition.Lanes)
+            {
+                minX = Math.Min(minX, (float)lane.X);
+                minY = Math.Min(minY, (float)lane.Y);
+                maxX = Math.Max(maxX, (float)(lane.X + lane.Width));
+                maxY = Math.Max(maxY, (float)(lane.Y + lane.Height));
+            }
+            foreach (var node in _definition.Nodes)
+            {
+                minX = Math.Min(minX, (float)node.X);
+                minY = Math.Min(minY, (float)node.Y);
+                maxX = Math.Max(maxX, (float)(node.X + node.Width));
+                maxY = Math.Max(maxY, (float)(node.Y + node.Height));
+            }
+
+            var vpTopLeft = ScreenToWorld(new PointF(0, 0));
+            var vpBottomRight = ScreenToWorld(new PointF(Width, Height));
+            minX = Math.Min(minX, vpTopLeft.X);
+            minY = Math.Min(minY, vpTopLeft.Y);
+            maxX = Math.Max(maxX, vpBottomRight.X);
+            maxY = Math.Max(maxY, vpBottomRight.Y);
+
+            if (minX >= maxX || minY >= maxY)
+            {
+                minX = 0; minY = 0; maxX = 1200; maxY = 800;
+            }
+
+            float margin = 40f;
+            minX -= margin; minY -= margin; maxX += margin; maxY += margin;
+            float worldW = maxX - minX;
+            float worldH = maxY - minY;
+            worldBounds = new RectangleF(minX, minY, worldW, worldH);
+
+            scale = Math.Min(innerRect.Width / worldW, innerRect.Height / worldH);
+            offsetX = innerRect.X + (innerRect.Width - worldW * scale) / 2f - minX * scale;
+            offsetY = innerRect.Y + (innerRect.Height - worldH * scale) / 2f - minY * scale;
+        }
+
+        private void DrawMinimap(Graphics g, ZeroThemePalette colors)
+        {
+            var miniRect = GetMinimapRect();
+            if (miniRect.Width < 20 || miniRect.Height < 20) return;
+
+            bool isDark = ZeroTheme.IsDark;
+            Color hudBgColor = isDark ? Color.FromArgb(235, 20, 24, 38) : Color.FromArgb(240, 255, 255, 255);
+            Color hudBorderColor = isDark ? Color.FromArgb(64, 74, 108) : Color.FromArgb(203, 213, 225);
+            Color hudHeaderColor = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+
+            using var miniPath = GetRoundedRectPath(miniRect, 10);
+            using var bgBrush = new SolidBrush(hudBgColor);
+            using var borderPen = new Pen(hudBorderColor, 1.0f);
+
+            g.FillPath(bgBrush, miniPath);
+            g.DrawPath(borderPen, miniPath);
+
+            // Radar Header Label
+            var headerFont = ZeroFontCache.Get(Font.FontFamily.Name, 7.0f, FontStyle.Bold);
+            using (var headerBrush = new SolidBrush(hudHeaderColor))
+            {
+                g.DrawString("◈ NAVIGATOR", headerFont, headerBrush, miniRect.X + 8, miniRect.Y + 4);
+            }
+
+            GetMinimapTransform(out float scale, out float offsetX, out float offsetY, out var innerRect, out _);
+            if (scale <= 0.0001f) return;
+
+            RectangleF WorldToMiniRect(RectangleF r) =>
+                new RectangleF(r.X * scale + offsetX, r.Y * scale + offsetY, Math.Max(2f, r.Width * scale), Math.Max(2f, r.Height * scale));
+
+            var oldClip = g.Clip;
+            g.SetClip(miniPath, CombineMode.Intersect);
+
+            // 1. Draw swimlanes in minimap
+            using (var laneBrush = new SolidBrush(Color.FromArgb(isDark ? 30 : 25, colors.Primary)))
+            using (var lanePen = new Pen(Color.FromArgb(isDark ? 50 : 40, colors.Border), 1.0f))
+            {
+                foreach (var lane in _definition.Lanes)
+                {
+                    var lr = WorldToMiniRect(new RectangleF((float)lane.X, (float)lane.Y, (float)lane.Width, (float)lane.Height));
+                    g.FillRectangle(laneBrush, lr);
+                    g.DrawRectangle(lanePen, lr.X, lr.Y, lr.Width, lr.Height);
+                }
+            }
+
+            // 2. Draw connections in minimap
+            using (var connPen = new Pen(Color.FromArgb(isDark ? 70 : 60, colors.TextSecondary), 1.0f))
+            {
+                foreach (var conn in _definition.Connections)
+                {
+                    var src = _definition.Nodes.FirstOrDefault(n => n.Id == conn.SourceNodeId);
+                    var tgt = _definition.Nodes.FirstOrDefault(n => n.Id == conn.TargetNodeId);
+                    if (src != null && tgt != null)
+                    {
+                        var p1 = GetPortLocation(src, conn.SourcePort);
+                        var p2 = GetPortLocation(tgt, conn.TargetPort);
+                        g.DrawLine(connPen, p1.X * scale + offsetX, p1.Y * scale + offsetY, p2.X * scale + offsetX, p2.Y * scale + offsetY);
+                    }
+                }
+            }
+
+            // 3. Draw nodes in minimap
+            using (var nodeBrush = new SolidBrush(Color.FromArgb(200, colors.Primary)))
+            using (var selBrush = new SolidBrush(Color.FromArgb(240, 245, 158, 11)))
+            {
+                foreach (var node in _definition.Nodes)
+                {
+                    var nr = WorldToMiniRect(new RectangleF((float)node.X, (float)node.Y, (float)node.Width, (float)node.Height));
+                    bool isSel = (node == _selectedNode) || _selectedNodes.Contains(node);
+                    g.FillRectangle(isSel ? selBrush : nodeBrush, nr);
+                }
+            }
+
+            // 4. Draw viewport camera frustum
+            var vpTL = ScreenToWorld(new PointF(0, 0));
+            var vpBR = ScreenToWorld(new PointF(Width, Height));
+            var vpWorld = new RectangleF(vpTL.X, vpTL.Y, vpBR.X - vpTL.X, vpBR.Y - vpTL.Y);
+            var vpMini = WorldToMiniRect(vpWorld);
+
+            using (var vpFill = new SolidBrush(Color.FromArgb(isDark ? 45 : 30, colors.Primary)))
+            using (var vpPen = new Pen(colors.Primary, 1.5f))
+            {
+                g.FillRectangle(vpFill, vpMini);
+                g.DrawRectangle(vpPen, vpMini.X, vpMini.Y, vpMini.Width, vpMini.Height);
+            }
+
+            g.Clip = oldClip;
+        }
+
+        private void PanToMinimapPoint(PointF mousePt)
+        {
+            var miniRect = GetMinimapRect();
+            if (!miniRect.Contains(mousePt) && !_isDraggingMinimap) return;
+
+            GetMinimapTransform(out float scale, out float offsetX, out float offsetY, out _, out _);
+            if (scale <= 0.0001f) return;
+
+            float worldX = (mousePt.X - offsetX) / scale;
+            float worldY = (mousePt.Y - offsetY) / scale;
+
+            _panOffset = new PointF(Width / 2f - worldX * _zoom, Height / 2f - worldY * _zoom);
+            Invalidate();
+        }
+
+        #endregion
 
         #endregion
 
@@ -1637,7 +1924,16 @@ namespace ZeroUI.WinForms.Industrial
 
             PointF worldPt = ScreenToWorld(e.Location);
 
-            if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right && _selectedNode == null && _selectedConnection == null && _selectedLane == null))
+            // 0c. Check Minimap radar interaction
+            if (_showMinimap && e.Button == MouseButtons.Left && GetMinimapRect().Contains(e.Location))
+            {
+                _isDraggingMinimap = true;
+                Capture = true;
+                PanToMinimapPoint(e.Location);
+                return;
+            }
+
+            if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Right && _selectedNode == null && _selectedConnection == null && _selectedLane == null && _selectedNodes.Count == 0))
             {
                 _isPanning = true;
                 _panStartMouse = e.Location;
@@ -1684,13 +1980,43 @@ namespace ZeroUI.WinForms.Industrial
                 var hit = HitTestNode(worldPt);
                 if (hit != null)
                 {
-                    SelectedNode = hit;
+                    bool isModifier = ModifierKeys.HasFlag(Keys.Control) || ModifierKeys.HasFlag(Keys.Shift);
+                    if (isModifier)
+                    {
+                        if (_selectedNodes.Contains(hit))
+                        {
+                            _selectedNodes.Remove(hit);
+                            _selectedNode = _selectedNodes.LastOrDefault();
+                        }
+                        else
+                        {
+                            _selectedNodes.Add(hit);
+                            _selectedNode = hit;
+                        }
+                    }
+                    else
+                    {
+                        if (!_selectedNodes.Contains(hit))
+                        {
+                            _selectedNodes.Clear();
+                            _selectedNodes.Add(hit);
+                            _selectedNode = hit;
+                        }
+                    }
+
+                    _selectedLane = null;
                     _selectedConnection = null;
+
                     if (_isDesignMode)
                     {
                         _isDraggingNode = true;
                         _nodeDragStartMouse = e.Location;
                         _nodeDragStartPos = new PointF((float)hit.X, (float)hit.Y);
+                        _multiNodeDragInitialPositions.Clear();
+                        foreach (var node in _selectedNodes)
+                        {
+                            _multiNodeDragInitialPositions[node.Id] = new PointF((float)node.X, (float)node.Y);
+                        }
                         Capture = true;
                     }
                     Invalidate();
@@ -1702,7 +2028,8 @@ namespace ZeroUI.WinForms.Industrial
                 if (hitConn != null)
                 {
                     _selectedConnection = hitConn;
-                    SelectedNode = null;
+                    _selectedNode = null;
+                    _selectedNodes.Clear();
                     SelectedLane = null;
                     Invalidate();
                     return;
@@ -1713,7 +2040,8 @@ namespace ZeroUI.WinForms.Industrial
                 if (hitLane != null)
                 {
                     SelectedLane = hitLane;
-                    SelectedNode = null;
+                    _selectedNode = null;
+                    _selectedNodes.Clear();
                     _selectedConnection = null;
 
                     if (_isDesignMode && (worldPt.Y <= hitLane.Y + 36 || ModifierKeys.HasFlag(Keys.Shift)))
@@ -1733,20 +2061,40 @@ namespace ZeroUI.WinForms.Industrial
                 }
 
                 // 6. Clicking on blank canvas
-                SelectedNode = null;
+                _selectedNode = null;
+                _selectedNodes.Clear();
                 SelectedLane = null;
                 _selectedConnection = null;
-                _isPanning = true;
-                _panStartMouse = e.Location;
-                _panStartOffset = _panOffset;
-                Capture = true;
-                Invalidate();
+
+                if (_isDesignMode && !ModifierKeys.HasFlag(Keys.Space))
+                {
+                    _isMarqueeSelecting = true;
+                    _marqueeStartWorld = worldPt;
+                    _marqueeCurrentWorld = worldPt;
+                    Capture = true;
+                    Invalidate();
+                }
+                else
+                {
+                    _isPanning = true;
+                    _panStartMouse = e.Location;
+                    _panStartOffset = _panOffset;
+                    Capture = true;
+                    Invalidate();
+                }
             }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+
+            // Check Minimap drag
+            if (_isDraggingMinimap)
+            {
+                PanToMinimapPoint(e.Location);
+                return;
+            }
 
             // Check Control Bar hover
             if (_showControlBar)
@@ -1777,7 +2125,32 @@ namespace ZeroUI.WinForms.Industrial
                 return;
             }
 
+            // Check Minimap hover
+            if (_showMinimap && GetMinimapRect().Contains(e.Location))
+            {
+                Cursor = Cursors.Hand;
+                return;
+            }
+
             PointF worldPt = ScreenToWorld(e.Location);
+
+            if (_isMarqueeSelecting)
+            {
+                _marqueeCurrentWorld = worldPt;
+                var mRect = GetMarqueeBoundsWorld();
+                _selectedNodes.Clear();
+                foreach (var node in _definition.Nodes)
+                {
+                    var nRect = new RectangleF((float)node.X, (float)node.Y, (float)node.Width, (float)node.Height);
+                    if (mRect.IntersectsWith(nRect))
+                    {
+                        _selectedNodes.Add(node);
+                    }
+                }
+                _selectedNode = _selectedNodes.LastOrDefault();
+                Invalidate();
+                return;
+            }
 
             if (_activeLaneHandle != LaneResizeHandle.None && _selectedLane != null && _isDesignMode)
             {
@@ -1808,12 +2181,21 @@ namespace ZeroUI.WinForms.Industrial
                 return;
             }
 
-            if (_isDraggingNode && _selectedNode != null && _isDesignMode)
+            if (_isDraggingNode && _isDesignMode)
             {
                 float dx = (e.X - _nodeDragStartMouse.X) / _zoom;
                 float dy = (e.Y - _nodeDragStartMouse.Y) / _zoom;
-                _selectedNode.X = Math.Max(0, _nodeDragStartPos.X + dx);
-                _selectedNode.Y = Math.Max(0, _nodeDragStartPos.Y + dy);
+
+                foreach (var node in _selectedNodes)
+                {
+                    if (_multiNodeDragInitialPositions.TryGetValue(node.Id, out var initPos))
+                    {
+                        node.X = Math.Max(0, initPos.X + dx);
+                        node.Y = Math.Max(0, initPos.Y + dy);
+                    }
+                }
+                InvalidateRouteCache();
+                IsDirty = true;
                 Invalidate();
                 return;
             }
@@ -1911,9 +2293,23 @@ namespace ZeroUI.WinForms.Industrial
             base.OnMouseUp(e);
             Capture = false;
 
+            if (_isDraggingMinimap)
+            {
+                _isDraggingMinimap = false;
+                return;
+            }
+
+            if (_isMarqueeSelecting)
+            {
+                _isMarqueeSelecting = false;
+                Invalidate();
+                return;
+            }
+
             if (_activeLaneHandle != LaneResizeHandle.None)
             {
                 _activeLaneHandle = LaneResizeHandle.None;
+                InvalidateRouteCache();
                 IsDirty = true;
                 DefinitionChanged?.Invoke(this, EventArgs.Empty);
                 Invalidate();
@@ -1951,6 +2347,14 @@ namespace ZeroUI.WinForms.Industrial
             _isPanning = false;
             _isDraggingNode = false;
 
+            if (wasDragging)
+            {
+                _multiNodeDragInitialPositions.Clear();
+                InvalidateRouteCache();
+                IsDirty = true;
+                DefinitionChanged?.Invoke(this, EventArgs.Empty);
+            }
+
             PointF worldPtAfter = ScreenToWorld(e.Location);
             var hit = HitTestNode(worldPtAfter);
 
@@ -1977,7 +2381,8 @@ namespace ZeroUI.WinForms.Industrial
                 if (hitConn != null)
                 {
                     _selectedConnection = hitConn;
-                    SelectedNode = null;
+                    _selectedNode = null;
+                    _selectedNodes.Clear();
                     SelectedLane = null;
                     Invalidate();
                     _connContextMenu.Show(this, e.Location);
@@ -1987,7 +2392,12 @@ namespace ZeroUI.WinForms.Industrial
                 // Check node right-click
                 if (hit != null)
                 {
-                    SelectedNode = hit;
+                    if (!_selectedNodes.Contains(hit))
+                    {
+                        _selectedNodes.Clear();
+                        _selectedNodes.Add(hit);
+                        _selectedNode = hit;
+                    }
                     SelectedLane = null;
                     _selectedConnection = null;
                     Invalidate();
@@ -2000,7 +2410,8 @@ namespace ZeroUI.WinForms.Industrial
                 if (hitLane != null)
                 {
                     SelectedLane = hitLane;
-                    SelectedNode = null;
+                    _selectedNode = null;
+                    _selectedNodes.Clear();
                     _selectedConnection = null;
                     Invalidate();
                     _contextMenu.Show(this, e.Location);
@@ -2008,7 +2419,8 @@ namespace ZeroUI.WinForms.Industrial
                 }
 
                 // Blank canvas right-click
-                SelectedNode = null;
+                _selectedNode = null;
+                _selectedNodes.Clear();
                 SelectedLane = null;
                 _selectedConnection = null;
                 Invalidate();
@@ -2029,7 +2441,7 @@ namespace ZeroUI.WinForms.Industrial
                     DefinitionChanged?.Invoke(this, EventArgs.Empty);
                     e.Handled = true;
                 }
-                else if (_selectedNode != null)
+                else if (_selectedNodes.Count > 0 || _selectedNode != null)
                 {
                     OnDeleteNodeClicked(this, EventArgs.Empty);
                     e.Handled = true;
@@ -2117,8 +2529,9 @@ namespace ZeroUI.WinForms.Industrial
 
         private void OnContextMenuOpening(object? sender, CancelEventArgs e)
         {
-            bool hasNode = _selectedNode != null;
+            bool hasNode = _selectedNode != null || _selectedNodes.Count > 0;
             bool hasLane = _selectedLane != null;
+            bool isSingleNode = _selectedNodes.Count <= 1;
 
             // Lane operations
             _mnuCreateLaneFromSelection.Visible = hasNode;
@@ -2128,11 +2541,14 @@ namespace ZeroUI.WinForms.Industrial
             _mnuFitLanes.Visible = true;
             _mnuAutoArrange.Visible = true;
 
+            // Alignment operations (2 or more nodes selected)
+            _mnuAlignSteps.Visible = _selectedNodes.Count >= 2;
+
             // Node operations
             _mnuAddStep.Visible = !hasNode && !hasLane;
-            _mnuConnectTo.Visible = hasNode;
-            _mnuEditTitle.Visible = hasNode;
-            _mnuAssignAction.Visible = hasNode;
+            _mnuConnectTo.Visible = hasNode && isSingleNode;
+            _mnuEditTitle.Visible = hasNode && isSingleNode;
+            _mnuAssignAction.Visible = hasNode && isSingleNode;
             _mnuChangeShape.Visible = hasNode;
             _mnuDeleteNode.Visible = hasNode;
 
@@ -2256,20 +2672,51 @@ namespace ZeroUI.WinForms.Industrial
 
         private void SetSelectedNodeShape(ProcessNodeShape shape)
         {
-            if (_selectedNode == null) return;
-            _selectedNode.Shape = shape;
+            var targets = new List<ProcessFlowNode>();
+            if (_selectedNodes.Count > 0)
+            {
+                targets.AddRange(_selectedNodes);
+            }
+            else if (_selectedNode != null)
+            {
+                targets.Add(_selectedNode);
+            }
+
+            if (targets.Count == 0) return;
+
+            foreach (var node in targets)
+            {
+                node.Shape = shape;
+            }
             Invalidate();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnDeleteNodeClicked(object? sender, EventArgs e)
         {
-            if (_selectedNode == null) return;
+            var targets = new List<ProcessFlowNode>();
+            if (_selectedNodes.Count > 0)
+            {
+                targets.AddRange(_selectedNodes);
+            }
+            else if (_selectedNode != null)
+            {
+                targets.Add(_selectedNode);
+            }
 
-            string id = _selectedNode.Id;
-            _definition.Nodes.Remove(_selectedNode);
-            _definition.Connections.RemoveAll(c => c.SourceNodeId == id || c.TargetNodeId == id);
+            if (targets.Count == 0) return;
+
+            foreach (var node in targets)
+            {
+                string id = node.Id;
+                _definition.Nodes.Remove(node);
+                _definition.Connections.RemoveAll(c => c.SourceNodeId == id || c.TargetNodeId == id);
+            }
+
             _selectedNode = null;
+            _selectedNodes.Clear();
+            InvalidateRouteCache();
+            IsDirty = true;
             Invalidate();
             DefinitionChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -2531,7 +2978,86 @@ namespace ZeroUI.WinForms.Industrial
 
         #endregion
 
-        #region Persistence Methods
+        #region Export & Persistence Methods
+
+        /// <summary>
+        /// Renders the current diagram onto an off-screen high-resolution bitmap image.
+        /// </summary>
+        /// <param name="scale">Scale multiplier (e.g. 1.0f for normal, 2.0f or 3.0f for high-DPI print quality).</param>
+        /// <param name="padding">Margin padding in pixels around the bounding box.</param>
+        public Bitmap RenderToBitmap(float scale = 2.0f, int padding = 40)
+        {
+            float minX = float.MaxValue, minY = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue;
+
+            foreach (var lane in _definition.Lanes)
+            {
+                minX = Math.Min(minX, (float)lane.X);
+                minY = Math.Min(minY, (float)lane.Y);
+                maxX = Math.Max(maxX, (float)(lane.X + lane.Width));
+                maxY = Math.Max(maxY, (float)(lane.Y + lane.Height));
+            }
+            foreach (var node in _definition.Nodes)
+            {
+                minX = Math.Min(minX, (float)node.X);
+                minY = Math.Min(minY, (float)node.Y);
+                maxX = Math.Max(maxX, (float)(node.X + node.Width));
+                maxY = Math.Max(maxY, (float)(node.Y + node.Height));
+            }
+
+            if (minX >= maxX || minY >= maxY)
+            {
+                minX = 0; minY = 0; maxX = 800; maxY = 600;
+            }
+
+            float contentW = (maxX - minX) + padding * 2;
+            float contentH = (maxY - minY) + padding * 2;
+            int bmpW = Math.Max(100, (int)(contentW * scale));
+            int bmpH = Math.Max(100, (int)(contentH * scale));
+
+            var bmp = new Bitmap(bmpW, bmpH);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+                Color bg = ZeroTheme.Colors.Background;
+                using (var bgBrush = new SolidBrush(bg))
+                {
+                    g.FillRectangle(bgBrush, 0, 0, bmpW, bmpH);
+                }
+
+                g.ScaleTransform(scale, scale);
+                g.TranslateTransform(padding - minX, padding - minY);
+
+                foreach (var lane in _definition.Lanes)
+                {
+                    DrawLane(g, lane);
+                }
+                foreach (var conn in _definition.Connections)
+                {
+                    DrawConnection(g, conn, false, false);
+                }
+                foreach (var node in _definition.Nodes)
+                {
+                    DrawNode(g, node, false, false);
+                }
+            }
+
+            return bmp;
+        }
+
+        /// <summary>
+        /// Exports the current diagram directly to an image file (PNG, JPEG, BMP).
+        /// </summary>
+        public void ExportAsImage(string filePath, System.Drawing.Imaging.ImageFormat? format = null, float scale = 2.0f)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentNullException(nameof(filePath));
+            format ??= System.Drawing.Imaging.ImageFormat.Png;
+            using var bmp = RenderToBitmap(scale);
+            bmp.Save(filePath, format);
+        }
 
         /// <summary>
         /// Exports the current process diagram definition to a clean JSON string.
