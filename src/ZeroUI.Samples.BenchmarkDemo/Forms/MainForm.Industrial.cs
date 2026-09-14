@@ -10,6 +10,8 @@ using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Petrochem;
 using ZeroUI.WinForms.Process;
 using ZeroUI.WinForms.Theme;
+using ZeroUI.Core.Data;
+using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Water;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Forms
@@ -242,7 +244,46 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             pnlLogistics.Controls.Add(splitLogistics);
             tabLogistics.Controls.Add(pnlLogistics);
 
-            // Add all 7 vertical sub-tabs
+            // 8. Production Scheduling Gantt & Dispatch (MES)
+            var tabGantt = new ZeroTabPage("MES Gantt Schedule", "📅");
+            var pnlGantt = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12) };
+            var gantt = new GanttControl
+            {
+                Dock = DockStyle.Fill,
+                ShowCriticalPath = true,
+                ShowDependencies = true,
+                TaskListWidth = 340,
+                ProjectStart = DateTime.Today.AddDays(-2),
+                ProjectEnd = DateTime.Today.AddDays(30)
+            };
+
+            DateTime baseDate = DateTime.Today;
+            var t1 = new GanttTaskItem(101, "Order Intake & BOM Explosion", baseDate.AddDays(0), baseDate.AddDays(3), 1.0f, false, "Planner A") { Level = 0 };
+            var t2 = new GanttTaskItem(102, "Material Sourcing & Quarantine", baseDate.AddDays(3), baseDate.AddDays(8), 0.85f, false, "Procurement") { Level = 0 };
+            t2.PredecessorIds.Add(101);
+
+            var t3 = new GanttTaskItem(103, "CNC Multi-Axis Milling", baseDate.AddDays(8), baseDate.AddDays(18), 0.40f, false, "Cell CNC-01") { Level = 1 };
+            t3.PredecessorIds.Add(102);
+
+            var t4 = new GanttTaskItem(104, "Sub-Assembly Harness", baseDate.AddDays(9), baseDate.AddDays(15), 0.60f, false, "Wiring Tech") { Level = 1 };
+            t4.PredecessorIds.Add(102);
+
+            var t5 = new GanttTaskItem(105, "Surface Anodizing & Coating", baseDate.AddDays(18), baseDate.AddDays(22), 0.0f, false, "Coating Tank") { Level = 1 };
+            t5.PredecessorIds.Add(103);
+
+            var t6 = new GanttTaskItem(106, "Final Integration & Testing", baseDate.AddDays(22), baseDate.AddDays(27), 0.0f, false, "QC Team") { Level = 0 };
+            t6.PredecessorIds.Add(105);
+            t6.PredecessorIds.Add(104);
+
+            var t7 = new GanttTaskItem(107, "Customer Acceptance & Dispatch", baseDate.AddDays(27), baseDate.AddDays(27), 0.0f, true, "Logistics") { Level = 0 };
+            t7.PredecessorIds.Add(106);
+
+            gantt.AddTasks(new[] { t1, t2, t3, t4, t5, t6, t7 });
+            pnlGantt.Controls.Add(gantt);
+            tabGantt.Controls.Add(pnlGantt);
+
+            // Add all vertical sub-tabs
+            _subTabsIndustrial.AddTab(tabGantt);
             _subTabsIndustrial.AddTab(tabEnergy);
             _subTabsIndustrial.AddTab(tabPetro);
             _subTabsIndustrial.AddTab(tabPharma);
