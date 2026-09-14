@@ -25,8 +25,8 @@ namespace ZeroUI.WinForms.Overlays
     /// and built-in notification dialogs (Success, Warning, Error, Info, Confirm, Prompt).
     /// </summary>
     [ToolboxItem(true)]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroModal.bmp")]
-    public class ZeroModal : Form
+    [ToolboxBitmap(typeof(ZeroIcons), "ModalDialog.bmp")]
+    public class ModalDialog : Form
     {
         private readonly string _title;
         private readonly Control _contentControl;
@@ -42,7 +42,7 @@ namespace ZeroUI.WinForms.Overlays
         private readonly SimpleButton _btnOk;
         private readonly SimpleButton? _btnCancel;
 
-        public ZeroModal(
+        public ModalDialog(
             string title,
             Control contentControl,
             Action? onOk = null,
@@ -142,7 +142,7 @@ namespace ZeroUI.WinForms.Overlays
             int width = 520,
             int height = 340)
         {
-            using var modal = new ZeroModal(title, content, onOk, onCancel, okText, cancelText, showCancel, width, height);
+            using var modal = new ModalDialog(title, content, onOk, onCancel, okText, cancelText, showCancel, width, height);
             return modal.ShowDialog(parent);
         }
 
@@ -484,6 +484,25 @@ namespace ZeroUI.WinForms.Overlays
                     g.DrawString(_message, Font, brushMsg, msgRect, sf);
                 }
             }
+        }
+    }
+
+    [Obsolete("Use ModalDialog instead.")]
+    [ToolboxItem(false)]
+    public class ZeroModal : ModalDialog
+    {
+        public ZeroModal(
+            string title,
+            Control contentControl,
+            Action? onOk = null,
+            Action? onCancel = null,
+            string okText = "OK",
+            string cancelText = "Cancel",
+            bool showCancel = true,
+            int cardWidth = 520,
+            int cardHeight = 340)
+            : base(title, contentControl, onOk, onCancel, okText, cancelText, showCancel, cardWidth, cardHeight)
+        {
         }
     }
 }

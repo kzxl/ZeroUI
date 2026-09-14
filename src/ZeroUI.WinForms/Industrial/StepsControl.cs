@@ -394,6 +394,8 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(false)]
     public class ZeroSteps : StepsControl
     {
+        public void UpdateStep(string id, int actual, string timestamp, ZeroStepStatus? status = null)
+            => base.UpdateStep(id, actual, timestamp, (StepStatus?)status);
     }
 
     /// <summary>
@@ -402,7 +404,7 @@ namespace ZeroUI.WinForms.Industrial
     /// </summary>
     [Obsolete("ZeroStepsControl is deprecated. Please use StepsControl instead.")]
     [ToolboxItem(false)]
-    public class ZeroStepsControl : StepsControl
+    public class ZeroStepsControl : ZeroSteps
     {
     }
 }

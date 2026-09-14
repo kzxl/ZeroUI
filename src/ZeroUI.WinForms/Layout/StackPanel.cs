@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Arranges child controls into a single horizontal or vertical line with smooth layout calculation.")]
-    public class ZeroStackPanel : Panel
+    public class StackPanel : Panel
     {
         private StackOrientation _orientation = StackOrientation.Vertical;
         private StackAlignment _alignment = StackAlignment.Stretch;
@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Layout
         private int _borderWidth = 0;
         private bool _isPerformingLayout = false;
 
-        public ZeroStackPanel()
+        public StackPanel()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -256,5 +256,11 @@ namespace ZeroUI.WinForms.Layout
             }
             base.Dispose(disposing);
         }
+    }
+
+    [Obsolete("Use StackPanel instead.")]
+    [ToolboxItem(false)]
+    public class ZeroStackPanel : StackPanel
+    {
     }
 }

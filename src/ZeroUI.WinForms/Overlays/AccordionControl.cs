@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Overlays
         SingleGroup
     }
 
-    public class ZeroAccordionItem
+    public class AccordionItem
     {
         public string Text { get; set; } = "";
         public string? Glyph { get; set; }
@@ -28,9 +28,9 @@ namespace ZeroUI.WinForms.Overlays
         internal Rectangle Bounds;
         public event EventHandler? Click;
 
-        public ZeroAccordionItem() { }
+        public AccordionItem() { }
 
-        public ZeroAccordionItem(string text, string? glyph = null, EventHandler? onClick = null, string? badge = null)
+        public AccordionItem(string text, string? glyph = null, EventHandler? onClick = null, string? badge = null)
         {
             Text = text;
             Glyph = glyph;
@@ -41,31 +41,31 @@ namespace ZeroUI.WinForms.Overlays
         internal void OnClick() => Click?.Invoke(this, EventArgs.Empty);
     }
 
-    public class ZeroAccordionGroup
+    public class AccordionGroup
     {
         public string Text { get; set; } = "";
         public string? Glyph { get; set; }
         public bool IsExpanded { get; set; } = true;
         public string? BadgeText { get; set; }
         public Color? BadgeColor { get; set; }
-        public List<ZeroAccordionItem> Items { get; } = new List<ZeroAccordionItem>();
+        public List<AccordionItem> Items { get; } = new List<AccordionItem>();
         public object? Tag { get; set; }
 
         internal Rectangle Bounds;
         internal Rectangle ChevronBounds;
 
-        public ZeroAccordionGroup() { }
+        public AccordionGroup() { }
 
-        public ZeroAccordionGroup(string text, string? glyph = null, bool isExpanded = true)
+        public AccordionGroup(string text, string? glyph = null, bool isExpanded = true)
         {
             Text = text;
             Glyph = glyph;
             IsExpanded = isExpanded;
         }
 
-        public ZeroAccordionItem AddItem(string text, string? glyph = null, EventHandler? onClick = null, string? badge = null)
+        public AccordionItem AddItem(string text, string? glyph = null, EventHandler? onClick = null, string? badge = null)
         {
-            var item = new ZeroAccordionItem(text, glyph, onClick, badge);
+            var item = new AccordionItem(text, glyph, onClick, badge);
             Items.Add(item);
             return item;
         }
@@ -78,10 +78,10 @@ namespace ZeroUI.WinForms.Overlays
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
     [Description("Multi-level collapsible accordion navigation menu with search filtering and badges.")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroAccordion.bmp")]
-    public class ZeroAccordion : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "AccordionControl.bmp")]
+    public class AccordionControl : Control
     {
-        private readonly List<ZeroAccordionGroup> _groups = new List<ZeroAccordionGroup>();
+        private readonly List<AccordionGroup> _groups = new List<AccordionGroup>();
         private AccordionExpandMode _expandMode = AccordionExpandMode.MultipleGroups;
 
         private bool _showSearchBox = true;
@@ -96,12 +96,12 @@ namespace ZeroUI.WinForms.Overlays
         private int _scrollY = 0;
         private int _totalContentHeight = 0;
 
-        private object? _hoveredElement; // Can be ZeroAccordionGroup or ZeroAccordionItem
-        private ZeroAccordionItem? _selectedItem;
+        private object? _hoveredElement; // Can be AccordionGroup or AccordionItem
+        private AccordionItem? _selectedItem;
 
-        public event EventHandler<ZeroAccordionItem>? SelectedItemChanged;
+        public event EventHandler<AccordionItem>? SelectedItemChanged;
 
-        public ZeroAccordion()
+        public AccordionControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -121,7 +121,7 @@ namespace ZeroUI.WinForms.Overlays
 
         [Category("Data")]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public List<ZeroAccordionGroup> Groups => _groups;
+        public List<AccordionGroup> Groups => _groups;
 
         [Category("Behavior")]
         [DefaultValue(AccordionExpandMode.MultipleGroups)]
@@ -160,7 +160,7 @@ namespace ZeroUI.WinForms.Overlays
 
         [Category("Behavior")]
         [Browsable(false)]
-        public ZeroAccordionItem? SelectedItem
+        public AccordionItem? SelectedItem
         {
             get => _selectedItem;
             set
@@ -174,9 +174,9 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
-        public ZeroAccordionGroup AddGroup(string text, string? glyph = null, bool isExpanded = true)
+        public AccordionGroup AddGroup(string text, string? glyph = null, bool isExpanded = true)
         {
-            var grp = new ZeroAccordionGroup(text, glyph, isExpanded);
+            var grp = new AccordionGroup(text, glyph, isExpanded);
             _groups.Add(grp);
             Invalidate();
             return grp;
@@ -331,7 +331,7 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
-        private void DrawGroupHeader(Graphics g, ZeroAccordionGroup group, ZeroThemePalette palette, bool isExpanded)
+        private void DrawGroupHeader(Graphics g, AccordionGroup group, ZeroThemePalette palette, bool isExpanded)
         {
             bool isHovered = (_hoveredElement == group);
 
@@ -375,7 +375,7 @@ namespace ZeroUI.WinForms.Overlays
             TextRenderer.DrawText(g, chevron, new Font("Segoe UI", 7.5f), group.ChevronBounds, palette.TextSecondary, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
-        private void DrawItem(Graphics g, ZeroAccordionItem item, ZeroThemePalette palette)
+        private void DrawItem(Graphics g, AccordionItem item, ZeroThemePalette palette)
         {
             bool isSelected = (item == _selectedItem);
             bool isHovered = (_hoveredElement == item);
@@ -499,7 +499,7 @@ namespace ZeroUI.WinForms.Overlays
                 }
             }
 
-            if (_hoveredElement is ZeroAccordionGroup grp)
+            if (_hoveredElement is AccordionGroup grp)
             {
                 if (_expandMode == AccordionExpandMode.SingleGroup && !grp.IsExpanded)
                 {
@@ -516,7 +516,7 @@ namespace ZeroUI.WinForms.Overlays
                 }
                 Invalidate();
             }
-            else if (_hoveredElement is ZeroAccordionItem item && item.IsEnabled)
+            else if (_hoveredElement is AccordionItem item && item.IsEnabled)
             {
                 SelectedItem = item;
                 item.OnClick();
@@ -555,5 +555,27 @@ namespace ZeroUI.WinForms.Overlays
             }
             base.Dispose(disposing);
         }
+    }
+
+    [Obsolete("Use AccordionItem instead.")]
+    public class ZeroAccordionItem : AccordionItem
+    {
+        public ZeroAccordionItem() : base() { }
+        public ZeroAccordionItem(string text, string? glyph = null, EventHandler? onClick = null, string? badge = null)
+            : base(text, glyph, onClick, badge) { }
+    }
+
+    [Obsolete("Use AccordionGroup instead.")]
+    public class ZeroAccordionGroup : AccordionGroup
+    {
+        public ZeroAccordionGroup() : base() { }
+        public ZeroAccordionGroup(string text, string? glyph = null, bool isExpanded = true)
+            : base(text, glyph, isExpanded) { }
+    }
+
+    [Obsolete("Use AccordionControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroAccordion : AccordionControl
+    {
     }
 }

@@ -14,10 +14,10 @@ namespace ZeroUI.WinForms.Layout
     public class WizardPageValidatingEventArgs : CancelEventArgs
     {
         public int PageIndex { get; }
-        public ZeroWizardPage Page { get; }
+        public WizardPage Page { get; }
         public string? ErrorMessage { get; set; }
 
-        public WizardPageValidatingEventArgs(int pageIndex, ZeroWizardPage page)
+        public WizardPageValidatingEventArgs(int pageIndex, WizardPage page)
         {
             PageIndex = pageIndex;
             Page = page;
@@ -28,7 +28,7 @@ namespace ZeroUI.WinForms.Layout
     /// Represents an individual step/page container in a ZeroWizard sequence.
     /// </summary>
     [ToolboxItem(false)]
-    public class ZeroWizardPage : Panel
+    public class WizardPage : Panel
     {
         public string Title { get; set; } = "Step Title";
         public string Subtitle { get; set; } = "Please review and configure this step.";
@@ -36,13 +36,13 @@ namespace ZeroUI.WinForms.Layout
 
         public event EventHandler<WizardPageValidatingEventArgs>? ValidatingStep;
 
-        public ZeroWizardPage()
+        public WizardPage()
         {
             Dock = DockStyle.Fill;
             BackColor = Color.Transparent;
         }
 
-        public ZeroWizardPage(string title, string subtitle = "", string icon = "📋") : this()
+        public WizardPage(string title, string subtitle = "", string icon = "📋") : this()
         {
             Title = title;
             Subtitle = subtitle;
@@ -78,7 +78,7 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxBitmap(typeof(ZeroIcons), "WizardControl.bmp")]
     public class WizardControl : Control
     {
-        private readonly List<ZeroWizardPage> _pages = new List<ZeroWizardPage>();
+        private readonly List<WizardPage> _pages = new List<WizardPage>();
         private int _currentStep = 0;
 
         private readonly Panel _headerPanel = new Panel { Dock = DockStyle.Top, Height = 64 };
@@ -95,7 +95,7 @@ namespace ZeroUI.WinForms.Layout
         public event EventHandler? Cancelled;
 
         [Browsable(false)]
-        public List<ZeroWizardPage> Pages => _pages;
+        public List<WizardPage> Pages => _pages;
 
         public int CurrentStep
         {
@@ -166,7 +166,7 @@ namespace ZeroUI.WinForms.Layout
             _btnBack.Location = new Point(_btnNext.Left - _btnBack.Width - 10, top);
         }
 
-        public void AddPage(ZeroWizardPage page)
+        public void AddPage(WizardPage page)
         {
             if (page == null || _pages.Contains(page)) return;
             _pages.Add(page);
@@ -343,5 +343,13 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(false)]
     public class ZeroWizard : WizardControl
     {
+    }
+
+    [Obsolete("Use WizardPage instead.")]
+    [ToolboxItem(false)]
+    public class ZeroWizardPage : WizardPage
+    {
+        public ZeroWizardPage() : base() { }
+        public ZeroWizardPage(string title, string subtitle = "", string icon = "📋") : base(title, subtitle, icon) { }
     }
 }

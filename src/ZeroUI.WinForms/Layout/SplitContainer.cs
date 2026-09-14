@@ -16,12 +16,12 @@ namespace ZeroUI.WinForms.Layout
     }
 
     /// <summary>
-    /// Lightweight child panel for ZeroSplitContainer.
+    /// Lightweight child panel for SplitContainerControl.
     /// </summary>
     [ToolboxItem(false)]
-    public class ZeroSplitterPanel : Panel
+    public class SplitterPanelControl : Panel
     {
-        public ZeroSplitterPanel()
+        public SplitterPanelControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -41,11 +41,11 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Splits the control display area into two resizable panels.")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSplitContainer.bmp")]
-    public class ZeroSplitContainer : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "SplitContainerControl.bmp")]
+    public class SplitContainerControl : Control
     {
-        private readonly ZeroSplitterPanel _panel1;
-        private readonly ZeroSplitterPanel _panel2;
+        private readonly SplitterPanelControl _panel1;
+        private readonly SplitterPanelControl _panel2;
 
         private Orientation _orientation = Orientation.Vertical;
         private int _splitterDistance = 250;
@@ -67,7 +67,7 @@ namespace ZeroUI.WinForms.Layout
         public event EventHandler? SplitterMoved;
         public event EventHandler? CollapseStateChanged;
 
-        public ZeroSplitContainer()
+        public SplitContainerControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -79,8 +79,8 @@ namespace ZeroUI.WinForms.Layout
             DoubleBuffered = true;
             BackColor = Color.Transparent;
 
-            _panel1 = new ZeroSplitterPanel();
-            _panel2 = new ZeroSplitterPanel();
+            _panel1 = new SplitterPanelControl();
+            _panel2 = new SplitterPanelControl();
 
             Controls.Add(_panel1);
             Controls.Add(_panel2);
@@ -92,12 +92,12 @@ namespace ZeroUI.WinForms.Layout
         [Category("Layout")]
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public ZeroSplitterPanel Panel1 => _panel1;
+        public SplitterPanelControl Panel1 => _panel1;
 
         [Category("Layout")]
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public ZeroSplitterPanel Panel2 => _panel2;
+        public SplitterPanelControl Panel2 => _panel2;
 
         [Category("Layout")]
         [DefaultValue(Orientation.Vertical)]
@@ -416,5 +416,17 @@ namespace ZeroUI.WinForms.Layout
             }
             base.Dispose(disposing);
         }
+    }
+
+    [Obsolete("Use SplitterPanelControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSplitterPanel : SplitterPanelControl
+    {
+    }
+
+    [Obsolete("Use SplitContainerControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSplitContainer : SplitContainerControl
+    {
     }
 }

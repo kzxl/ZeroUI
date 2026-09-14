@@ -41,8 +41,8 @@ namespace ZeroUI.WinForms.Overlays
     [Category("ZeroUI - Overlays")]
     [DefaultEvent("ItemSelected")]
     [Description("High-throughput log viewer and virtual list view")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroListView.bmp")]
-    public class ZeroListView : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "ListViewControl.bmp")]
+    public class ListViewControl : Control
     {
 
         private readonly List<LogEntry> _entries = new List<LogEntry>(10000);
@@ -59,7 +59,7 @@ namespace ZeroUI.WinForms.Overlays
 
         public event EventHandler<LogEntry>? ItemSelected;
 
-        public ZeroListView()
+        public ListViewControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -311,5 +311,11 @@ namespace ZeroUI.WinForms.Overlays
             }
             base.Dispose(disposing);
         }
+    }
+
+    [Obsolete("Use ListViewControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroListView : ListViewControl
+    {
     }
 }

@@ -10,7 +10,7 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
 {
-    public class ZeroSideNavItem
+    public class SideNavItem
     {
         public string Id { get; set; } = "";
         public string Title { get; set; } = "Nav Item";
@@ -22,9 +22,9 @@ namespace ZeroUI.WinForms.Overlays
 
         internal Rectangle Bounds { get; set; }
 
-        public ZeroSideNavItem() { }
+        public SideNavItem() { }
 
-        public ZeroSideNavItem(string id, string title, string icon, string category = "", int badgeCount = 0, Control? view = null)
+        public SideNavItem(string id, string title, string icon, string category = "", int badgeCount = 0, Control? view = null)
         {
             Id = id;
             Title = title;
@@ -35,12 +35,12 @@ namespace ZeroUI.WinForms.Overlays
         }
     }
 
-    public class ZeroSideNavEventArgs : EventArgs
+    public class SideNavEventArgs : EventArgs
     {
-        public ZeroSideNavItem Item { get; }
+        public SideNavItem Item { get; }
         public int Index { get; }
 
-        public ZeroSideNavEventArgs(ZeroSideNavItem item, int index)
+        public SideNavEventArgs(SideNavItem item, int index)
         {
             Item = item;
             Index = index;
@@ -56,10 +56,10 @@ namespace ZeroUI.WinForms.Overlays
     [Category("ZeroUI - Overlays & Navigation")]
     [DefaultEvent("ItemSelected")]
     [Description("Enterprise Sidebar Navigation with brand header, categorized items, and collapsible rail")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroSideNav.bmp")]
-    public class ZeroSideNav : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "SideNavControl.bmp")]
+    public class SideNavControl : Control
     {
-        private readonly List<ZeroSideNavItem> _items = new List<ZeroSideNavItem>();
+        private readonly List<SideNavItem> _items = new List<SideNavItem>();
         private int _selectedIndex = 0;
         private int _hoveredIndex = -1;
         private bool _isCollapsed = false;
@@ -74,10 +74,10 @@ namespace ZeroUI.WinForms.Overlays
         private readonly ToolTip _toolTip = new ToolTip();
         private int _lastTooltipIndex = -1;
 
-        public event EventHandler<ZeroSideNavEventArgs>? ItemSelected;
+        public event EventHandler<SideNavEventArgs>? ItemSelected;
         public event EventHandler? CollapseChanged;
 
-        public ZeroSideNav()
+        public SideNavControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -99,7 +99,7 @@ namespace ZeroUI.WinForms.Overlays
 
         [Category("Data")]
         [Browsable(false)]
-        public List<ZeroSideNavItem> Items => _items;
+        public List<SideNavItem> Items => _items;
 
         [Category("Appearance")]
         [DefaultValue("⚡")]
@@ -176,22 +176,22 @@ namespace ZeroUI.WinForms.Overlays
                 {
                     _selectedIndex = clamped;
                     SyncAssociatedView();
-                    ItemSelected?.Invoke(this, new ZeroSideNavEventArgs(_items[_selectedIndex], _selectedIndex));
+                    ItemSelected?.Invoke(this, new SideNavEventArgs(_items[_selectedIndex], _selectedIndex));
                     Invalidate();
                 }
             }
         }
 
         [Browsable(false)]
-        public ZeroSideNavItem? SelectedItem => (_selectedIndex >= 0 && _selectedIndex < _items.Count) ? _items[_selectedIndex] : null;
+        public SideNavItem? SelectedItem => (_selectedIndex >= 0 && _selectedIndex < _items.Count) ? _items[_selectedIndex] : null;
 
         #endregion
 
         #region Public API
 
-        public ZeroSideNavItem AddItem(string id, string title, string icon, string category = "", int badgeCount = 0, Control? view = null)
+        public SideNavItem AddItem(string id, string title, string icon, string category = "", int badgeCount = 0, Control? view = null)
         {
-            var item = new ZeroSideNavItem(id, title, icon, category, badgeCount, view);
+            var item = new SideNavItem(id, title, icon, category, badgeCount, view);
             _items.Add(item);
             if (_contentContainer != null && view != null)
             {
@@ -496,5 +496,25 @@ namespace ZeroUI.WinForms.Overlays
             }
             base.Dispose(disposing);
         }
+    }
+
+    [Obsolete("Use SideNavItem instead.")]
+    public class ZeroSideNavItem : SideNavItem
+    {
+        public ZeroSideNavItem() : base() { }
+        public ZeroSideNavItem(string id, string title, string icon, string category = "", int badgeCount = 0, Control? view = null)
+            : base(id, title, icon, category, badgeCount, view) { }
+    }
+
+    [Obsolete("Use SideNavEventArgs instead.")]
+    public class ZeroSideNavEventArgs : SideNavEventArgs
+    {
+        public ZeroSideNavEventArgs(SideNavItem item, int index) : base(item, index) { }
+    }
+
+    [Obsolete("Use SideNavControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSideNav : SideNavControl
+    {
     }
 }

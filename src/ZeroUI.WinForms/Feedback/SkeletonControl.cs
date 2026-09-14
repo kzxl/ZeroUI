@@ -25,7 +25,7 @@ namespace ZeroUI.WinForms.Feedback
     [Category("ZeroUI - Feedback")]
     [Description("Animated shimmer placeholder placeholder for loading states")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSkeleton.bmp")]
-    public class ZeroSkeleton : Control
+    public class SkeletonControl : Control
     {
         private SkeletonShape _shape = SkeletonShape.RoundedRectangle;
         private int _cornerRadius = 6;
@@ -48,7 +48,7 @@ namespace ZeroUI.WinForms.Feedback
             set { _cornerRadius = Math.Max(0, value); Invalidate(); }
         }
 
-        public ZeroSkeleton()
+        public SkeletonControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -170,5 +170,17 @@ namespace ZeroUI.WinForms.Feedback
             path.CloseFigure();
             return path;
         }
+    }
+
+    [Obsolete("Use SkeletonControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSkeleton : SkeletonControl
+    {
+    }
+
+    [Obsolete("Use SkeletonControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroSkeletonControl : SkeletonControl
+    {
     }
 }

@@ -10,24 +10,24 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
 {
-    public enum ZeroTabStyle
+    public enum TabStyle
     {
         Underline,
         Pill,
         Card
     }
 
-    public enum ZeroTabOrientation
+    public enum TabOrientation
     {
         Horizontal,
         Vertical
     }
 
     /// <summary>
-    /// Represents an individual tab page container inside ZeroTabControl.
+    /// Represents an individual tab page container inside TabControlEx.
     /// Inherits from Panel to allow hosting child controls with zero layout constraints.
     /// </summary>
-    public class ZeroTabPage : Panel
+    public class TabPageEx : Panel
     {
         public string Title { get; set; } = "New Tab";
         public string Icon { get; set; } = "";
@@ -38,13 +38,13 @@ namespace ZeroUI.WinForms.Overlays
         internal Rectangle HeaderBounds { get; set; }
         internal Rectangle CloseButtonBounds { get; set; }
 
-        public ZeroTabPage()
+        public TabPageEx()
         {
             Dock = DockStyle.Fill;
             Visible = false;
         }
 
-        public ZeroTabPage(string title, string icon = "") : this()
+        public TabPageEx(string title, string icon = "") : this()
         {
             Title = title;
             Icon = icon;
@@ -61,10 +61,10 @@ namespace ZeroUI.WinForms.Overlays
     [DefaultEvent("SelectedIndexChanged")]
     [DefaultProperty("SelectedIndex")]
     [Description("Modern flat TabControl container with Horizontal/Vertical orientations, Underline/Pill styles and notification badges")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroTabControl.bmp")]
-    public class ZeroTabControl : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "TabControlEx.bmp")]
+    public class TabControlEx : Control
     {
-        private readonly List<ZeroTabPage> _tabPages = new List<ZeroTabPage>();
+        private readonly List<TabPageEx> _tabPages = new List<TabPageEx>();
         private readonly Panel _contentContainer;
 
         private int _selectedIndex = -1;
@@ -72,13 +72,13 @@ namespace ZeroUI.WinForms.Overlays
         private int _hoveredCloseIndex = -1;
         private int _tabHeight = 42;
         private int _tabWidth = 200;
-        private ZeroTabStyle _tabStyle = ZeroTabStyle.Underline;
-        private ZeroTabOrientation _orientation = ZeroTabOrientation.Horizontal;
+        private TabStyle _tabStyle = TabStyle.Underline;
+        private TabOrientation _orientation = TabOrientation.Horizontal;
 
         public event EventHandler? SelectedIndexChanged;
-        public event EventHandler<ZeroTabPage>? TabClosed;
+        public event EventHandler<TabPageEx>? TabClosed;
 
-        public ZeroTabControl()
+        public TabControlEx()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -110,11 +110,11 @@ namespace ZeroUI.WinForms.Overlays
         }
 
         [Browsable(false)]
-        public List<ZeroTabPage> TabPages => _tabPages;
+        public List<TabPageEx> TabPages => _tabPages;
 
         [Category("Appearance")]
-        [DefaultValue(ZeroTabOrientation.Horizontal)]
-        public ZeroTabOrientation Orientation
+        [DefaultValue(TabOrientation.Horizontal)]
+        public TabOrientation Orientation
         {
             get => _orientation;
             set
@@ -138,7 +138,7 @@ namespace ZeroUI.WinForms.Overlays
                 if (_tabWidth != value && value >= 60)
                 {
                     _tabWidth = value;
-                    if (_orientation == ZeroTabOrientation.Vertical)
+                    if (_orientation == TabOrientation.Vertical)
                     {
                         UpdateContainerBounds();
                     }
@@ -157,7 +157,7 @@ namespace ZeroUI.WinForms.Overlays
                 if (_tabHeight != value && value >= 24)
                 {
                     _tabHeight = value;
-                    if (_orientation == ZeroTabOrientation.Horizontal)
+                    if (_orientation == TabOrientation.Horizontal)
                     {
                         UpdateContainerBounds();
                     }
@@ -167,8 +167,8 @@ namespace ZeroUI.WinForms.Overlays
         }
 
         [Category("Appearance")]
-        [DefaultValue(ZeroTabStyle.Underline)]
-        public ZeroTabStyle TabStyle
+        [DefaultValue(TabStyle.Underline)]
+        public TabStyle TabStyle
         {
             get => _tabStyle;
             set
@@ -206,16 +206,16 @@ namespace ZeroUI.WinForms.Overlays
         }
 
         [Browsable(false)]
-        public ZeroTabPage? SelectedTab => (_selectedIndex >= 0 && _selectedIndex < _tabPages.Count) ? _tabPages[_selectedIndex] : null;
+        public TabPageEx? SelectedTab => (_selectedIndex >= 0 && _selectedIndex < _tabPages.Count) ? _tabPages[_selectedIndex] : null;
 
-        public ZeroTabPage AddTab(string title, string icon = "", int badgeCount = 0)
+        public TabPageEx AddTab(string title, string icon = "", int badgeCount = 0)
         {
-            var page = new ZeroTabPage(title, icon) { BadgeCount = badgeCount };
+            var page = new TabPageEx(title, icon) { BadgeCount = badgeCount };
             AddTab(page);
             return page;
         }
 
-        public void AddTab(ZeroTabPage page)
+        public void AddTab(TabPageEx page)
         {
             _tabPages.Add(page);
             _contentContainer.Controls.Add(page);
@@ -226,7 +226,7 @@ namespace ZeroUI.WinForms.Overlays
             Invalidate();
         }
 
-        public void RemoveTab(ZeroTabPage page)
+        public void RemoveTab(TabPageEx page)
         {
             int idx = _tabPages.IndexOf(page);
             if (idx >= 0)
@@ -249,7 +249,7 @@ namespace ZeroUI.WinForms.Overlays
         {
             if (_contentContainer == null) return;
 
-            if (_orientation == ZeroTabOrientation.Vertical)
+            if (_orientation == TabOrientation.Vertical)
             {
                 _contentContainer.Location = new Point(_tabWidth, 0);
                 _contentContainer.Size = new Size(Math.Max(0, Width - _tabWidth), Height);
@@ -280,8 +280,8 @@ namespace ZeroUI.WinForms.Overlays
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (_orientation == ZeroTabOrientation.Horizontal && e.Y > _tabHeight) return;
-            if (_orientation == ZeroTabOrientation.Vertical && e.X > _tabWidth) return;
+            if (_orientation == TabOrientation.Horizontal && e.Y > _tabHeight) return;
+            if (_orientation == TabOrientation.Vertical && e.X > _tabWidth) return;
 
             int hov = -1;
             int hovClose = -1;
@@ -304,7 +304,7 @@ namespace ZeroUI.WinForms.Overlays
                 _hoveredIndex = hov;
                 _hoveredCloseIndex = hovClose;
                 Cursor = (hov >= 0) ? Cursors.Hand : Cursors.Default;
-                if (_orientation == ZeroTabOrientation.Vertical)
+                if (_orientation == TabOrientation.Vertical)
                 {
                     Invalidate(new Rectangle(0, 0, _tabWidth, Height));
                 }
@@ -321,7 +321,7 @@ namespace ZeroUI.WinForms.Overlays
             _hoveredIndex = -1;
             _hoveredCloseIndex = -1;
             Cursor = Cursors.Default;
-            if (_orientation == ZeroTabOrientation.Vertical)
+            if (_orientation == TabOrientation.Vertical)
             {
                 Invalidate(new Rectangle(0, 0, _tabWidth, Height));
             }
@@ -334,8 +334,8 @@ namespace ZeroUI.WinForms.Overlays
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (_orientation == ZeroTabOrientation.Horizontal && e.Y > _tabHeight) return;
-            if (_orientation == ZeroTabOrientation.Vertical && e.X > _tabWidth) return;
+            if (_orientation == TabOrientation.Horizontal && e.Y > _tabHeight) return;
+            if (_orientation == TabOrientation.Vertical && e.X > _tabWidth) return;
 
             for (int i = 0; i < _tabPages.Count; i++)
             {
@@ -361,7 +361,7 @@ namespace ZeroUI.WinForms.Overlays
 
             var palette = ZeroTheme.Colors;
 
-            if (_orientation == ZeroTabOrientation.Vertical)
+            if (_orientation == TabOrientation.Vertical)
             {
                 PaintVerticalTabs(g, palette);
             }
@@ -411,7 +411,7 @@ namespace ZeroUI.WinForms.Overlays
                 page.HeaderBounds = new Rectangle(curX, 0, itemW, _tabHeight);
 
                 // Draw Tab Shape based on style
-                if (_tabStyle == ZeroTabStyle.Pill)
+                if (_tabStyle == TabStyle.Pill)
                 {
                     int pillH = _tabHeight - 12;
                     var pillRect = new Rectangle(curX + 2, 6, itemW - 4, pillH);
@@ -429,7 +429,7 @@ namespace ZeroUI.WinForms.Overlays
                         g.FillPath(brushPillHov, pathPillHov);
                     }
                 }
-                else if (_tabStyle == ZeroTabStyle.Card)
+                else if (_tabStyle == TabStyle.Card)
                 {
                     if (isSelected)
                     {
@@ -465,14 +465,14 @@ namespace ZeroUI.WinForms.Overlays
                 // Draw Icon
                 if (!string.IsNullOrEmpty(page.Icon))
                 {
-                    using var brushIcon = new SolidBrush(isSelected && _tabStyle == ZeroTabStyle.Pill ? Color.White : palette.TextPrimary);
+                    using var brushIcon = new SolidBrush(isSelected && _tabStyle == TabStyle.Pill ? Color.White : palette.TextPrimary);
                     g.DrawString(page.Icon, fontIcon, brushIcon, innerX, (_tabHeight - 18) / 2);
                     innerX += 20;
                 }
 
                 // Draw Tab Title
                 Color textCol;
-                if (_tabStyle == ZeroTabStyle.Pill && isSelected) textCol = Color.White;
+                if (_tabStyle == TabStyle.Pill && isSelected) textCol = Color.White;
                 else if (isSelected) textCol = palette.Primary;
                 else if (isHovered) textCol = palette.TextPrimary;
                 else textCol = palette.TextSecondary;
@@ -559,7 +559,7 @@ namespace ZeroUI.WinForms.Overlays
                 // Draw item background based on selection/hover
                 if (isSelected)
                 {
-                    if (_tabStyle == ZeroTabStyle.Pill)
+                    if (_tabStyle == TabStyle.Pill)
                     {
                         using var brushPill = new SolidBrush(palette.Primary);
                         using var pathPill = CreateRoundedRect(page.HeaderBounds, effRadius);
@@ -590,7 +590,7 @@ namespace ZeroUI.WinForms.Overlays
                 // Draw Icon
                 if (!string.IsNullOrEmpty(page.Icon))
                 {
-                    Color iconCol = (isSelected && _tabStyle == ZeroTabStyle.Pill) ? Color.White : (isSelected ? palette.Primary : palette.TextPrimary);
+                    Color iconCol = (isSelected && _tabStyle == TabStyle.Pill) ? Color.White : (isSelected ? palette.Primary : palette.TextPrimary);
                     using var brushIcon = new SolidBrush(iconCol);
                     g.DrawString(page.Icon, fontIcon, brushIcon, innerX, textY - 1);
                     innerX += 24;
@@ -598,7 +598,7 @@ namespace ZeroUI.WinForms.Overlays
 
                 // Draw Title Text
                 Color textCol;
-                if (_tabStyle == ZeroTabStyle.Pill && isSelected) textCol = Color.White;
+                if (_tabStyle == TabStyle.Pill && isSelected) textCol = Color.White;
                 else if (isSelected) textCol = palette.Primary;
                 else if (isHovered) textCol = palette.TextPrimary;
                 else textCol = palette.TextSecondary;
@@ -641,5 +641,44 @@ namespace ZeroUI.WinForms.Overlays
 
         private static GraphicsPath CreateTopRoundedRect(Rectangle r, int radius) =>
             ZeroUIConfig.CreateTopRoundedRectangle(r, radius);
+    }
+
+    [Obsolete("Use TabStyle instead.")]
+    public enum ZeroTabStyle
+    {
+        Underline = TabStyle.Underline,
+        Pill = TabStyle.Pill,
+        Card = TabStyle.Card
+    }
+
+    [Obsolete("Use TabOrientation instead.")]
+    public enum ZeroTabOrientation
+    {
+        Horizontal = TabOrientation.Horizontal,
+        Vertical = TabOrientation.Vertical
+    }
+
+    [Obsolete("Use TabPageEx instead.")]
+    public class ZeroTabPage : TabPageEx
+    {
+        public ZeroTabPage() : base() { }
+        public ZeroTabPage(string title, string icon = "") : base(title, icon) { }
+    }
+
+    [Obsolete("Use TabControlEx instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTabControl : TabControlEx
+    {
+        public new ZeroTabStyle TabStyle
+        {
+            get => (ZeroTabStyle)base.TabStyle;
+            set => base.TabStyle = (TabStyle)value;
+        }
+
+        public new ZeroTabOrientation Orientation
+        {
+            get => (ZeroTabOrientation)base.Orientation;
+            set => base.Orientation = (TabOrientation)value;
+        }
     }
 }

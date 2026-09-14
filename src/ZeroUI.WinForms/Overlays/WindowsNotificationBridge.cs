@@ -110,9 +110,29 @@ namespace ZeroUI.WinForms.Overlays
         public static void ShowNotification(
             string title,
             string message,
-            ZeroToastType type = ZeroToastType.Info,
+            ToastType type = ToastType.Info,
             int timeoutMs = 4000,
             Action? onClick = null)
+        {
+            ShowNotificationInternal(title, message, type, timeoutMs, onClick);
+        }
+
+        public static void ShowNotification(
+            string title,
+            string message,
+            ZeroToastType type,
+            int timeoutMs = 4000,
+            Action? onClick = null)
+        {
+            ShowNotificationInternal(title, message, (ToastType)type, timeoutMs, onClick);
+        }
+
+        private static void ShowNotificationInternal(
+            string title,
+            string message,
+            ToastType type,
+            int timeoutMs,
+            Action? onClick)
         {
             try
             {
@@ -123,11 +143,11 @@ namespace ZeroUI.WinForms.Overlays
 
                 ToolTipIcon tipIcon = type switch
                 {
-                    ZeroToastType.Success => ToolTipIcon.Info,
-                    ZeroToastType.Info => ToolTipIcon.Info,
-                    ZeroToastType.Warning => ToolTipIcon.Warning,
-                    ZeroToastType.Error => ToolTipIcon.Error,
-                    ZeroToastType.Alarm => ToolTipIcon.Error,
+                    ToastType.Success => ToolTipIcon.Info,
+                    ToastType.Info => ToolTipIcon.Info,
+                    ToastType.Warning => ToolTipIcon.Warning,
+                    ToastType.Error => ToolTipIcon.Error,
+                    ToastType.Alarm => ToolTipIcon.Error,
                     _ => ToolTipIcon.Info
                 };
 

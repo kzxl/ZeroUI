@@ -67,7 +67,7 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Positions child controls within a flexible rows and columns grid structure.")]
-    public class ZeroTablePanel : Panel
+    public class TablePanel : Panel
     {
         private readonly List<TableColumnDefinition> _columns = new List<TableColumnDefinition>();
         private readonly List<TableRowDefinition> _rows = new List<TableRowDefinition>();
@@ -78,7 +78,7 @@ namespace ZeroUI.WinForms.Layout
         private Color _gridLineColor = Color.FromArgb(46, 52, 78);
         private bool _isPerformingLayout = false;
 
-        public ZeroTablePanel()
+        public TablePanel()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -379,5 +379,11 @@ namespace ZeroUI.WinForms.Layout
             }
             base.Dispose(disposing);
         }
+    }
+
+    [Obsolete("Use TablePanel instead.")]
+    [ToolboxItem(false)]
+    public class ZeroTablePanel : TablePanel
+    {
     }
 }

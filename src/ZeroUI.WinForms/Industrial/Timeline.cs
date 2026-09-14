@@ -195,8 +195,8 @@ namespace ZeroUI.WinForms.Industrial
     public class ZeroTimelineItem : TimelineItem
     {
         public ZeroTimelineItem() : base() { }
-        public ZeroTimelineItem(string title, string timestamp, string? description = null, TimelineStatus status = TimelineStatus.Completed)
-            : base(title, timestamp, description, status) { }
+        public ZeroTimelineItem(string title, string timestamp, string? description = null, ZeroTimelineStatus status = ZeroTimelineStatus.Completed)
+            : base(title, timestamp, description, (TimelineStatus)status) { }
     }
 
     /// <summary>
@@ -207,5 +207,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(false)]
     public class ZeroTimeline : Timeline
     {
+        public void Add(string title, string timestamp, string? description = null, ZeroTimelineStatus status = ZeroTimelineStatus.Completed)
+            => base.Add(title, timestamp, description, (TimelineStatus)status);
     }
 }

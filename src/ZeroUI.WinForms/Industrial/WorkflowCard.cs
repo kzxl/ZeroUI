@@ -507,5 +507,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(false)]
     public class ZeroWorkflowCard : WorkflowCard
     {
+        public void AddStage(string id, string title, int quantity, string timestamp, ZeroStepStatus status, ZeroStepGlyph glyph)
+            => base.AddStage(id, title, quantity, timestamp, (StepStatus)status, (StepGlyph)glyph);
     }
 }

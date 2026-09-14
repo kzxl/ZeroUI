@@ -15,11 +15,11 @@ namespace ZeroUI.WinForms.Overlays
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
     [Description("Modern anti-aliased context menu strip with pill highlights and theme support")]
-    public class ZeroContextMenu : ContextMenuStrip
+    public class ContextMenuControl : ContextMenuStrip
     {
-        public ZeroContextMenu()
+        public ContextMenuControl()
         {
-            Renderer = new ZeroContextMenuRenderer();
+            Renderer = new ContextMenuRenderer();
             ShowImageMargin = false;
             ShowCheckMargin = false;
             DropShadowEnabled = true;
@@ -34,9 +34,9 @@ namespace ZeroUI.WinForms.Overlays
             };
         }
 
-        public ZeroMenuItem AddAction(string text, Action onClick, string? shortcut = null, string? icon = null)
+        public MenuItemControl AddAction(string text, Action onClick, string? shortcut = null, string? icon = null)
         {
-            var item = new ZeroMenuItem(text, onClick)
+            var item = new MenuItemControl(text, onClick)
             {
                 ShortcutHint = shortcut,
                 Glyph = icon
@@ -45,9 +45,9 @@ namespace ZeroUI.WinForms.Overlays
             return item;
         }
 
-        public ZeroMenuItem AddDangerAction(string text, Action onClick, string? shortcut = null, string? icon = null)
+        public MenuItemControl AddDangerAction(string text, Action onClick, string? shortcut = null, string? icon = null)
         {
-            var item = new ZeroMenuItem(text, onClick)
+            var item = new MenuItemControl(text, onClick)
             {
                 ShortcutHint = shortcut,
                 Glyph = icon,
@@ -57,9 +57,9 @@ namespace ZeroUI.WinForms.Overlays
             return item;
         }
 
-        public ZeroMenuItem AddCheckable(string text, bool isChecked, Action<bool> onToggle, string? icon = null)
+        public MenuItemControl AddCheckable(string text, bool isChecked, Action<bool> onToggle, string? icon = null)
         {
-            var item = new ZeroMenuItem(text, null)
+            var item = new MenuItemControl(text, null)
             {
                 CheckOnClick = true,
                 Checked = isChecked,
@@ -77,12 +77,12 @@ namespace ZeroUI.WinForms.Overlays
             return sep;
         }
 
-        public ZeroMenuItem AddSubMenu(string text, string? icon = null)
+        public MenuItemControl AddSubMenu(string text, string? icon = null)
         {
-            var item = new ZeroMenuItem(text, null)
+            var item = new MenuItemControl(text, null)
             {
                 Glyph = icon,
-                DropDown = new ZeroContextMenu()
+                DropDown = new ContextMenuControl()
             };
             Items.Add(item);
             return item;
@@ -92,7 +92,7 @@ namespace ZeroUI.WinForms.Overlays
     /// <summary>
     /// Custom MenuItem supporting danger state, glyph emojis, shortcut hints, and badge tags.
     /// </summary>
-    public class ZeroMenuItem : ToolStripMenuItem
+    public class MenuItemControl : ToolStripMenuItem
     {
         public bool IsDanger { get; set; } = false;
         public string? Glyph { get; set; }
@@ -100,9 +100,9 @@ namespace ZeroUI.WinForms.Overlays
         public string? BadgeText { get; set; }
         public Color? BadgeColor { get; set; }
 
-        public ZeroMenuItem() : base() { }
+        public MenuItemControl() : base() { }
 
-        public ZeroMenuItem(string text, Action? onClick) : base(text)
+        public MenuItemControl(string text, Action? onClick) : base(text)
         {
             if (onClick != null) Click += (s, e) => onClick();
         }
@@ -117,9 +117,9 @@ namespace ZeroUI.WinForms.Overlays
             return new Size(Math.Max(180, w), Math.Max(30, baseSize.Height + 6));
         }
 
-        public ZeroMenuItem AddSubAction(string text, Action onClick, string? shortcut = null, string? icon = null)
+        public MenuItemControl AddSubAction(string text, Action onClick, string? shortcut = null, string? icon = null)
         {
-            var item = new ZeroMenuItem(text, onClick)
+            var item = new MenuItemControl(text, onClick)
             {
                 ShortcutHint = shortcut,
                 Glyph = icon
@@ -132,7 +132,7 @@ namespace ZeroUI.WinForms.Overlays
     /// <summary>
     /// Custom ToolStripRenderer rendering anti-aliased rounded pills, theme borders, and typography.
     /// </summary>
-    public class ZeroContextMenuRenderer : ToolStripRenderer
+    public class ContextMenuRenderer : ToolStripRenderer
     {
         protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e)
         {
@@ -162,7 +162,7 @@ namespace ZeroUI.WinForms.Overlays
 
             var palette = ZeroTheme.Colors;
             var item = e.Item;
-            var zeroItem = item as ZeroMenuItem;
+            var zeroItem = item as MenuItemControl;
 
             if (item.Selected && item.Enabled)
             {
@@ -191,7 +191,7 @@ namespace ZeroUI.WinForms.Overlays
 
             var palette = ZeroTheme.Colors;
             var item = e.Item;
-            var zeroItem = item as ZeroMenuItem;
+            var zeroItem = item as MenuItemControl;
 
             // Determine text color
             Color textColor;
@@ -301,5 +301,23 @@ namespace ZeroUI.WinForms.Overlays
 
         private static GraphicsPath CreateRoundedRect(Rectangle r, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(r, radius);
+    }
+
+    [Obsolete("Use ContextMenuControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroContextMenu : ContextMenuControl
+    {
+    }
+
+    [Obsolete("Use MenuItemControl instead.")]
+    public class ZeroMenuItem : MenuItemControl
+    {
+        public ZeroMenuItem() : base() { }
+        public ZeroMenuItem(string text, Action? onClick) : base(text, onClick) { }
+    }
+
+    [Obsolete("Use ContextMenuRenderer instead.")]
+    public class ZeroContextMenuRenderer : ContextMenuRenderer
+    {
     }
 }

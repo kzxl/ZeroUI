@@ -9,7 +9,7 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
 {
-    public enum ZeroToolbarItemType
+    public enum ToolbarItemType
 
     {
         Button,
@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Overlays
         Dropdown
     }
 
-    public abstract class ZeroToolbarItem
+    public abstract class ToolbarItem
     {
         public string Text { get; set; } = "";
         public string? Glyph { get; set; }
@@ -36,15 +36,15 @@ namespace ZeroUI.WinForms.Overlays
         internal void OnClick() => Click?.Invoke(this, EventArgs.Empty);
     }
 
-    public class ZeroToolbarButton : ZeroToolbarItem
+    public class ToolbarButton : ToolbarItem
     {
         public bool IsPrimary { get; set; }
         public bool IsDanger { get; set; }
         public int? BadgeCount { get; set; }
 
-        public ZeroToolbarButton() { }
+        public ToolbarButton() { }
 
-        public ZeroToolbarButton(string text, string? glyph = null, EventHandler? onClick = null, string? shortcut = null)
+        public ToolbarButton(string text, string? glyph = null, EventHandler? onClick = null, string? shortcut = null)
         {
             Text = text;
             Glyph = glyph;
@@ -53,29 +53,29 @@ namespace ZeroUI.WinForms.Overlays
         }
     }
 
-    public class ZeroToolbarSeparator : ZeroToolbarItem
+    public class ToolbarSeparator : ToolbarItem
     {
-        public ZeroToolbarSeparator()
+        public ToolbarSeparator()
         {
             IsEnabled = false;
         }
     }
 
-    public class ZeroToolbarSpacer : ZeroToolbarItem
+    public class ToolbarSpacer : ToolbarItem
     {
-        public ZeroToolbarSpacer()
+        public ToolbarSpacer()
         {
             IsEnabled = false;
         }
     }
 
-    public class ZeroToolbarDropdown : ZeroToolbarItem
+    public class ToolbarDropdown : ToolbarItem
     {
         public event EventHandler? DropdownOpened;
 
-        public ZeroToolbarDropdown() { }
+        public ToolbarDropdown() { }
 
-        public ZeroToolbarDropdown(string text, string? glyph = null, EventHandler? onDropdown = null)
+        public ToolbarDropdown(string text, string? glyph = null, EventHandler? onDropdown = null)
         {
             Text = text;
             Glyph = glyph;
@@ -91,18 +91,18 @@ namespace ZeroUI.WinForms.Overlays
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
     [Description("Flat enterprise action toolbar with buttons, dividers, and elastic spacers")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroToolbar.bmp")]
-    public class ZeroToolbar : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "ToolbarControl.bmp")]
+    public class ToolbarControl : Control
     {
 
-        private readonly List<ZeroToolbarItem> _items = new List<ZeroToolbarItem>();
+        private readonly List<ToolbarItem> _items = new List<ToolbarItem>();
         private Color _borderColor = Color.FromArgb(229, 231, 235);
         private int _itemHeight = 32;
-        private ZeroToolbarItem? _hoveredItem;
-        private ZeroToolbarItem? _pressedItem;
+        private ToolbarItem? _hoveredItem;
+        private ToolbarItem? _pressedItem;
         private readonly ToolTip _toolTip = new ToolTip();
 
-        public ZeroToolbar()
+        public ToolbarControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -128,7 +128,7 @@ namespace ZeroUI.WinForms.Overlays
         }
 
         [Browsable(false)]
-        public List<ZeroToolbarItem> Items => _items;
+        public List<ToolbarItem> Items => _items;
 
         [Category("Appearance")]
         public Color BorderColor
@@ -145,9 +145,9 @@ namespace ZeroUI.WinForms.Overlays
             set { _itemHeight = Math.Max(24, value); Invalidate(); }
         }
 
-        public ZeroToolbarButton AddButton(string text, string? glyph = null, EventHandler? onClick = null, string? shortcut = null)
+        public ToolbarButton AddButton(string text, string? glyph = null, EventHandler? onClick = null, string? shortcut = null)
         {
-            var btn = new ZeroToolbarButton(text, glyph, onClick, shortcut);
+            var btn = new ToolbarButton(text, glyph, onClick, shortcut);
             _items.Add(btn);
             Invalidate();
             return btn;
@@ -155,19 +155,19 @@ namespace ZeroUI.WinForms.Overlays
 
         public void AddSeparator()
         {
-            _items.Add(new ZeroToolbarSeparator());
+            _items.Add(new ToolbarSeparator());
             Invalidate();
         }
 
         public void AddSpacer()
         {
-            _items.Add(new ZeroToolbarSpacer());
+            _items.Add(new ToolbarSpacer());
             Invalidate();
         }
 
-        public ZeroToolbarDropdown AddDropdown(string text, string? glyph = null, EventHandler? onDropdown = null)
+        public ToolbarDropdown AddDropdown(string text, string? glyph = null, EventHandler? onDropdown = null)
         {
-            var dd = new ZeroToolbarDropdown(text, glyph, onDropdown);
+            var dd = new ToolbarDropdown(text, glyph, onDropdown);
             _items.Add(dd);
             Invalidate();
             return dd;
@@ -204,9 +204,9 @@ namespace ZeroUI.WinForms.Overlays
             for (int i = 0; i < _items.Count; i++)
             {
                 var item = _items[i];
-                if (!item.IsVisible || item is ZeroToolbarSpacer) continue;
+                if (!item.IsVisible || item is ToolbarSpacer) continue;
 
-                if (item is ZeroToolbarSeparator)
+                if (item is ToolbarSeparator)
                 {
                     int sepX = item.Bounds.X + (item.Bounds.Width / 2);
                     using var sepPen = new Pen(_borderColor, 1f);
@@ -219,7 +219,7 @@ namespace ZeroUI.WinForms.Overlays
 
                 // Draw Button Background
                 var palette = ZeroTheme.Colors;
-                if (item is ZeroToolbarButton btn && btn.IsPrimary)
+                if (item is ToolbarButton btn && btn.IsPrimary)
                 {
                     Color primaryBg = isPressed ? palette.PrimaryHover : (isHovered ? palette.PrimaryHover : palette.Primary);
                     using var path = CreateRoundedRectangle(item.Bounds, 6);
@@ -236,7 +236,7 @@ namespace ZeroUI.WinForms.Overlays
                 // Draw Content (Glyph, Text, Shortcut, Dropdown Chevron)
                 int contentX = item.Bounds.Left + 10;
                 Color textColor = !item.IsEnabled ? palette.TextSecondary
-                    : ((item is ZeroToolbarButton b && b.IsPrimary) ? Color.White : palette.TextPrimary);
+                    : ((item is ToolbarButton b && b.IsPrimary) ? Color.White : palette.TextPrimary);
 
                 // Glyph
                 if (!string.IsNullOrEmpty(item.Glyph))
@@ -256,14 +256,14 @@ namespace ZeroUI.WinForms.Overlays
                 }
 
                 // Dropdown Chevron (▾)
-                if (item is ZeroToolbarDropdown)
+                if (item is ToolbarDropdown)
                 {
                     Rectangle chevRect = new Rectangle(contentX, item.Bounds.Top, 14, item.Bounds.Height);
                     TextRenderer.DrawText(g, "▾", new Font("Segoe UI", 9f, FontStyle.Regular), chevRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
                 }
 
                 // Badge Count (if present)
-                if (item is ZeroToolbarButton buttonWithBadge && buttonWithBadge.BadgeCount.HasValue && buttonWithBadge.BadgeCount.Value > 0)
+                if (item is ToolbarButton buttonWithBadge && buttonWithBadge.BadgeCount.HasValue && buttonWithBadge.BadgeCount.Value > 0)
                 {
                     string badgeStr = buttonWithBadge.BadgeCount.Value > 99 ? "99+" : buttonWithBadge.BadgeCount.Value.ToString();
                     using var badgeFont = new Font("Segoe UI", 7.5f, FontStyle.Bold);
@@ -293,7 +293,7 @@ namespace ZeroUI.WinForms.Overlays
             int spacerIndex = -1;
             for (int i = 0; i < _items.Count; i++)
             {
-                if (_items[i] is ZeroToolbarSpacer)
+                if (_items[i] is ToolbarSpacer)
                 {
                     spacerIndex = i;
                     break;
@@ -334,10 +334,10 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
-        private int MeasureItemWidth(Graphics g, ZeroToolbarItem item)
+        private int MeasureItemWidth(Graphics g, ToolbarItem item)
         {
-            if (item is ZeroToolbarSeparator) return 12;
-            if (item is ZeroToolbarSpacer) return 0;
+            if (item is ToolbarSeparator) return 12;
+            if (item is ToolbarSpacer) return 0;
 
             int w = 20; // base padding left + right
             if (!string.IsNullOrEmpty(item.Glyph)) w += 22;
@@ -346,8 +346,8 @@ namespace ZeroUI.WinForms.Overlays
                 Size s = TextRenderer.MeasureText(g, item.Text, Font);
                 w += s.Width;
             }
-            if (item is ZeroToolbarDropdown) w += 16;
-            if (item is ZeroToolbarButton btn && btn.BadgeCount.HasValue && btn.BadgeCount.Value > 0) w += 20;
+            if (item is ToolbarDropdown) w += 16;
+            if (item is ToolbarButton btn && btn.BadgeCount.HasValue && btn.BadgeCount.Value > 0) w += 20;
 
             return Math.Max(32, w);
         }
@@ -355,11 +355,11 @@ namespace ZeroUI.WinForms.Overlays
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            ZeroToolbarItem? found = null;
+            ToolbarItem? found = null;
             for (int i = 0; i < _items.Count; i++)
             {
                 var item = _items[i];
-                if (item.IsVisible && item.IsEnabled && !(item is ZeroToolbarSeparator) && !(item is ZeroToolbarSpacer))
+                if (item.IsVisible && item.IsEnabled && !(item is ToolbarSeparator) && !(item is ToolbarSpacer))
                 {
                     if (item.Bounds.Contains(e.Location))
                     {
@@ -419,7 +419,7 @@ namespace ZeroUI.WinForms.Overlays
 
                 if (clicked.Bounds.Contains(e.Location))
                 {
-                    if (clicked is ZeroToolbarDropdown dd)
+                    if (clicked is ToolbarDropdown dd)
                     {
                         dd.OnDropdown();
                     }
@@ -439,6 +439,67 @@ namespace ZeroUI.WinForms.Overlays
                 _toolTip.Dispose();
             }
             base.Dispose(disposing);
+        }
+    }
+
+    [Obsolete("Use ToolbarItemType instead.")]
+    public enum ZeroToolbarItemType
+    {
+        Button = ToolbarItemType.Button,
+        Separator = ToolbarItemType.Separator,
+        Spacer = ToolbarItemType.Spacer,
+        Dropdown = ToolbarItemType.Dropdown
+    }
+
+    [Obsolete("Use ToolbarItem instead.")]
+    public abstract class ZeroToolbarItem : ToolbarItem
+    {
+    }
+
+    [Obsolete("Use ToolbarButton instead.")]
+    public class ZeroToolbarButton : ToolbarButton
+    {
+        public ZeroToolbarButton() : base() { }
+        public ZeroToolbarButton(string text, string? glyph = null, EventHandler? onClick = null, string? shortcut = null)
+            : base(text, glyph, onClick, shortcut) { }
+    }
+
+    [Obsolete("Use ToolbarSeparator instead.")]
+    public class ZeroToolbarSeparator : ToolbarSeparator
+    {
+    }
+
+    [Obsolete("Use ToolbarSpacer instead.")]
+    public class ZeroToolbarSpacer : ToolbarSpacer
+    {
+    }
+
+    [Obsolete("Use ToolbarDropdown instead.")]
+    public class ZeroToolbarDropdown : ToolbarDropdown
+    {
+        public ZeroToolbarDropdown() : base() { }
+        public ZeroToolbarDropdown(string text, string? glyph = null, EventHandler? onDropdown = null)
+            : base(text, glyph, onDropdown) { }
+    }
+
+    [Obsolete("Use ToolbarControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroToolbar : ToolbarControl
+    {
+        public new ZeroToolbarButton AddButton(string text, string? glyph = null, EventHandler? onClick = null, string? shortcut = null)
+        {
+            var btn = new ZeroToolbarButton(text, glyph, onClick, shortcut);
+            Items.Add(btn);
+            Invalidate();
+            return btn;
+        }
+
+        public new ZeroToolbarDropdown AddDropdown(string text, string? glyph = null, EventHandler? onDropdown = null)
+        {
+            var dd = new ZeroToolbarDropdown(text, glyph, onDropdown);
+            Items.Add(dd);
+            Invalidate();
+            return dd;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace ZeroUI.WinForms.Overlays
     /// Runs on an independent background STA thread,
     /// guaranteeing smooth 60 FPS animation and responsive status updates while the main application initializes.
     /// </summary>
-    public static class ZeroSplashScreen
+    public static class SplashScreen
     {
         private static Thread? _splashThread;
         private static SplashForm? _splashForm;
@@ -259,5 +259,22 @@ namespace ZeroUI.WinForms.Overlays
                 base.Dispose(disposing);
             }
         }
+    }
+
+    [Obsolete("Use SplashScreen instead.")]
+    public static class ZeroSplashScreen
+    {
+        public static bool IsShowing => SplashScreen.IsShowing;
+        public static void Show(
+            string appTitle = "ZeroUI Application",
+            string subtitle = "High-Performance Enterprise Suite",
+            string initialStatus = "Initializing...")
+            => SplashScreen.Show(appTitle, subtitle, initialStatus);
+
+        public static void SetStatus(string status, int? progressPercentage = null)
+            => SplashScreen.SetStatus(status, progressPercentage);
+
+        public static void Close(int delayMs = 150)
+            => SplashScreen.Close(delayMs);
     }
 }

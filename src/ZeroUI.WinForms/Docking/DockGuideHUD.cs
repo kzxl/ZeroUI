@@ -7,14 +7,14 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.Docking
 {
     /// <summary>
-    /// Visual Docking Diamond HUD overlay control for ZeroDockManager.
+    /// Visual Docking Diamond HUD overlay control for DockManager.
     /// Renders 5-zone docking targets (Center/Document, Left, Top, Right, Bottom)
     /// and dynamic translucent preview zones during panel drag operations.
     /// </summary>
-    internal class ZeroDockGuideHUD : Control
+    internal class DockGuideHUD : Control
     {
-        private readonly ZeroDockManager _manager;
-        private ZeroDockPosition? _hoveredPosition;
+        private readonly DockManager _manager;
+        private DockPosition? _hoveredPosition;
 
         private Rectangle _centerRect;
         private Rectangle _leftRect;
@@ -22,9 +22,9 @@ namespace ZeroUI.WinForms.Docking
         private Rectangle _topRect;
         private Rectangle _bottomRect;
 
-        public ZeroDockPosition? HoveredPosition => _hoveredPosition;
+        public DockPosition? HoveredPosition => _hoveredPosition;
 
-        public ZeroDockGuideHUD(ZeroDockManager manager)
+        public DockGuideHUD(DockManager manager)
         {
             _manager = manager;
             SetStyle(
@@ -40,13 +40,13 @@ namespace ZeroUI.WinForms.Docking
         public void UpdateMouse(Point screenPoint)
         {
             Point clientPt = PointToClient(screenPoint);
-            ZeroDockPosition? newPos = null;
+            DockPosition? newPos = null;
 
-            if (_centerRect.Contains(clientPt)) newPos = ZeroDockPosition.Document;
-            else if (_leftRect.Contains(clientPt)) newPos = ZeroDockPosition.Left;
-            else if (_rightRect.Contains(clientPt)) newPos = ZeroDockPosition.Right;
-            else if (_topRect.Contains(clientPt)) newPos = ZeroDockPosition.Top;
-            else if (_bottomRect.Contains(clientPt)) newPos = ZeroDockPosition.Bottom;
+            if (_centerRect.Contains(clientPt)) newPos = DockPosition.Document;
+            else if (_leftRect.Contains(clientPt)) newPos = DockPosition.Left;
+            else if (_rightRect.Contains(clientPt)) newPos = DockPosition.Right;
+            else if (_topRect.Contains(clientPt)) newPos = DockPosition.Top;
+            else if (_bottomRect.Contains(clientPt)) newPos = DockPosition.Bottom;
 
             if (_hoveredPosition != newPos)
             {
@@ -94,10 +94,10 @@ namespace ZeroUI.WinForms.Docking
             {
                 Rectangle previewRect = _hoveredPosition.Value switch
                 {
-                    ZeroDockPosition.Left => new Rectangle(0, 0, Math.Min(280, Width / 2), Height),
-                    ZeroDockPosition.Right => new Rectangle(Width - Math.Min(280, Width / 2), 0, Math.Min(280, Width / 2), Height),
-                    ZeroDockPosition.Top => new Rectangle(0, 0, Width, Math.Min(200, Height / 2)),
-                    ZeroDockPosition.Bottom => new Rectangle(0, Height - Math.Min(200, Height / 2), Width, Math.Min(200, Height / 2)),
+                    DockPosition.Left => new Rectangle(0, 0, Math.Min(280, Width / 2), Height),
+                    DockPosition.Right => new Rectangle(Width - Math.Min(280, Width / 2), 0, Math.Min(280, Width / 2), Height),
+                    DockPosition.Top => new Rectangle(0, 0, Width, Math.Min(200, Height / 2)),
+                    DockPosition.Bottom => new Rectangle(0, Height - Math.Min(200, Height / 2), Width, Math.Min(200, Height / 2)),
                     _ => new Rectangle(40, 40, Math.Max(100, Width - 80), Math.Max(100, Height - 80))
                 };
 
@@ -109,14 +109,14 @@ namespace ZeroUI.WinForms.Docking
 
             // 2. Draw Diamond HUD Buttons
             ComputeGuideRectangles();
-            DrawGuideButton(g, _centerRect, ZeroDockPosition.Document, palette);
-            DrawGuideButton(g, _leftRect, ZeroDockPosition.Left, palette);
-            DrawGuideButton(g, _rightRect, ZeroDockPosition.Right, palette);
-            DrawGuideButton(g, _topRect, ZeroDockPosition.Top, palette);
-            DrawGuideButton(g, _bottomRect, ZeroDockPosition.Bottom, palette);
+            DrawGuideButton(g, _centerRect, DockPosition.Document, palette);
+            DrawGuideButton(g, _leftRect, DockPosition.Left, palette);
+            DrawGuideButton(g, _rightRect, DockPosition.Right, palette);
+            DrawGuideButton(g, _topRect, DockPosition.Top, palette);
+            DrawGuideButton(g, _bottomRect, DockPosition.Bottom, palette);
         }
 
-        private void DrawGuideButton(Graphics g, Rectangle r, ZeroDockPosition pos, ZeroThemePalette palette)
+        private void DrawGuideButton(Graphics g, Rectangle r, DockPosition pos, ZeroThemePalette palette)
         {
             bool isHovered = _hoveredPosition == pos;
             Color bgColor = isHovered ? palette.Primary : Color.FromArgb(240, palette.Surface);
@@ -144,35 +144,41 @@ namespace ZeroUI.WinForms.Docking
 
             switch (pos)
             {
-                case ZeroDockPosition.Document:
+                case DockPosition.Document:
                     g.DrawRectangle(iconPen, cx - 7, cy - 7, 14, 14);
                     g.DrawLine(iconPen, cx - 7, cy - 3, cx + 7, cy - 3);
                     break;
 
-                case ZeroDockPosition.Left:
+                case DockPosition.Left:
                     g.DrawRectangle(iconPen, cx - 7, cy - 7, 14, 14);
                     using (var b = new SolidBrush(iconColor))
                         g.FillRectangle(b, cx - 7, cy - 7, 5, 14);
                     break;
 
-                case ZeroDockPosition.Right:
+                case DockPosition.Right:
                     g.DrawRectangle(iconPen, cx - 7, cy - 7, 14, 14);
                     using (var b = new SolidBrush(iconColor))
                         g.FillRectangle(b, cx + 2, cy - 7, 5, 14);
                     break;
 
-                case ZeroDockPosition.Top:
+                case DockPosition.Top:
                     g.DrawRectangle(iconPen, cx - 7, cy - 7, 14, 14);
                     using (var b = new SolidBrush(iconColor))
                         g.FillRectangle(b, cx - 7, cy - 7, 14, 5);
                     break;
 
-                case ZeroDockPosition.Bottom:
+                case DockPosition.Bottom:
                     g.DrawRectangle(iconPen, cx - 7, cy - 7, 14, 14);
                     using (var b = new SolidBrush(iconColor))
                         g.FillRectangle(b, cx - 7, cy + 2, 14, 5);
                     break;
             }
         }
+    }
+
+    [Obsolete("Use DockGuideHUD instead.")]
+    internal class ZeroDockGuideHUD : DockGuideHUD
+    {
+        public ZeroDockGuideHUD(DockManager manager) : base(manager) { }
     }
 }

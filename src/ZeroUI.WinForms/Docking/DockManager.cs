@@ -11,7 +11,7 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Docking
 {
-    public enum ZeroDockPosition
+    public enum DockPosition
     {
         Left,
         Right,
@@ -26,10 +26,10 @@ namespace ZeroUI.WinForms.Docking
     /// pin toggle, float button, and close actions.
     /// </summary>
     [ToolboxItem(false)]
-    public class ZeroDockPanel : Panel
+    public class DockPanelControl : Panel
     {
         private string _title = "Panel";
-        private ZeroDockPosition _dockPosition = ZeroDockPosition.Document;
+        private DockPosition _dockPosition = DockPosition.Document;
         private bool _isPinned = true;
         private bool _autoHide = false;
         private bool _closable = true;
@@ -73,8 +73,8 @@ namespace ZeroUI.WinForms.Docking
         }
 
         [Category("Layout")]
-        [DefaultValue(ZeroDockPosition.Document)]
-        public ZeroDockPosition DockPosition
+        [DefaultValue(DockPosition.Document)]
+        public DockPosition DockPosition
         {
             get => _dockPosition;
             set
@@ -138,7 +138,7 @@ namespace ZeroUI.WinForms.Docking
 
         public Control? HostedContent { get; set; }
 
-        public ZeroDockPanel()
+        public DockPanelControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -149,7 +149,7 @@ namespace ZeroUI.WinForms.Docking
             Padding = new Padding(0, _headerHeight, 0, 0);
         }
 
-        public ZeroDockPanel(string title, ZeroDockPosition position = ZeroDockPosition.Document) : this()
+        public DockPanelControl(string title, DockPosition position = DockPosition.Document) : this()
         {
             Title = title;
             DockPosition = position;
@@ -370,18 +370,18 @@ namespace ZeroUI.WinForms.Docking
     }
 
     /// <summary>
-    /// Independent floating tool window hosting a detached ZeroDockPanel across multiple monitors.
+    /// Independent floating tool window hosting a detached DockPanelControl across multiple monitors.
     /// </summary>
     [ToolboxItem(true)]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroFloatingWindow.bmp")]
-    public class ZeroFloatingWindow : Form
+    [ToolboxBitmap(typeof(ZeroIcons), "FloatingWindow.bmp")]
+    public class FloatingWindow : Form
     {
-        private readonly ZeroDockPanel _panel;
-        private readonly ZeroDockManager _dockManager;
+        private readonly DockPanelControl _panel;
+        private readonly DockManager _dockManager;
 
-        public ZeroDockPanel DockPanel => _panel;
+        public DockPanelControl DockPanel => _panel;
 
-        public ZeroFloatingWindow(ZeroDockManager dockManager, ZeroDockPanel panel, Rectangle? initialBounds = null)
+        public FloatingWindow(DockManager dockManager, DockPanelControl panel, Rectangle? initialBounds = null)
         {
             _dockManager = dockManager ?? throw new ArgumentNullException(nameof(dockManager));
             _panel = panel ?? throw new ArgumentNullException(nameof(panel));
@@ -404,15 +404,15 @@ namespace ZeroUI.WinForms.Docking
             panel.Dock = DockStyle.Fill;
 
             panel.CloseRequested += (s, e) => Close();
-            panel.FloatRequested += (s, e) => RedockToManager(ZeroDockPosition.Document);
+            panel.FloatRequested += (s, e) => RedockToManager(DockPosition.Document);
         }
 
-        public ZeroFloatingWindow(ZeroDockManager dockManager, ZeroDockPanel panel)
+        public FloatingWindow(DockManager dockManager, DockPanelControl panel)
             : this(dockManager, panel, null)
         {
         }
 
-        public void RedockToManager(ZeroDockPosition targetPosition)
+        public void RedockToManager(DockPosition targetPosition)
         {
             Controls.Remove(_panel);
             _dockManager.AddPanel(_panel, targetPosition);
@@ -437,11 +437,11 @@ namespace ZeroUI.WinForms.Docking
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout & Windowing")]
     [Description("Enterprise Visual Studio-style multi-region dock manager with splitters, tabs, and multi-monitor floating panels.")]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroDockManager.bmp")]
-    public class ZeroDockManager : Control
+    [ToolboxBitmap(typeof(ZeroIcons), "DockManager.bmp")]
+    public class DockManager : Control
     {
-        private readonly List<ZeroDockPanel> _panels = new List<ZeroDockPanel>();
-        private readonly List<ZeroFloatingWindow> _floatingWindows = new List<ZeroFloatingWindow>();
+        private readonly List<DockPanelControl> _panels = new List<DockPanelControl>();
+        private readonly List<FloatingWindow> _floatingWindows = new List<FloatingWindow>();
 
         // Layout Containers
         private readonly Panel _leftContainer = new Panel { Width = 260, Dock = DockStyle.Left, Visible = false };
@@ -456,29 +456,29 @@ namespace ZeroUI.WinForms.Docking
         private readonly Panel _topContainer = new Panel { Height = 140, Dock = DockStyle.Top, Visible = false };
         private readonly Splitter _topSplitter = new Splitter { Dock = DockStyle.Top, Height = 5, Visible = false };
 
-        // Center Document Area using ZeroTabControl
-        private readonly ZeroTabControl _documentTabControl = new ZeroTabControl
+        // Center Document Area using TabControlEx
+        private readonly TabControlEx _documentTabControl = new TabControlEx
         {
             Dock = DockStyle.Fill,
-            TabStyle = ZeroTabStyle.Card
+            TabStyle = TabStyle.Card
         };
 
         // Auto-Hide Sidebars & Drawer Overlay
         private readonly Panel _leftAutoHideBar = new Panel { Width = 28, Dock = DockStyle.Left, Visible = false };
         private readonly Panel _rightAutoHideBar = new Panel { Width = 28, Dock = DockStyle.Right, Visible = false };
         private readonly Panel _drawerOverlay;
-        private ZeroDockPanel? _activeDrawerPanel;
+        private DockPanelControl? _activeDrawerPanel;
 
         // Visual Dock Guides Diamond HUD
-        private readonly ZeroDockGuideHUD _guideHUD;
+        private readonly DockGuideHUD _guideHUD;
 
         [Browsable(false)]
-        public IReadOnlyList<ZeroDockPanel> Panels => _panels;
+        public IReadOnlyList<DockPanelControl> Panels => _panels;
 
         [Browsable(false)]
-        public ZeroTabControl DocumentTabs => _documentTabControl;
+        public TabControlEx DocumentTabs => _documentTabControl;
 
-        public ZeroDockManager()
+        public DockManager()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -514,7 +514,7 @@ namespace ZeroUI.WinForms.Docking
             };
             Controls.Add(_drawerOverlay);
 
-            _guideHUD = new ZeroDockGuideHUD(this);
+            _guideHUD = new DockGuideHUD(this);
             Controls.Add(_guideHUD);
 
             _leftSplitter.BackColor = ZeroTheme.Colors.Border;
@@ -539,14 +539,14 @@ namespace ZeroUI.WinForms.Docking
             };
         }
 
-        public void AddPanel(ZeroDockPanel panel, ZeroDockPosition position)
+        public void AddPanel(DockPanelControl panel, DockPosition position)
         {
             if (panel == null) throw new ArgumentNullException(nameof(panel));
             panel.DockPosition = position;
             AddPanel(panel);
         }
 
-        public void AddPanel(ZeroDockPanel panel)
+        public void AddPanel(DockPanelControl panel)
         {
             if (panel == null || _panels.Contains(panel)) return;
             _panels.Add(panel);
@@ -560,7 +560,7 @@ namespace ZeroUI.WinForms.Docking
             ArrangePanel(panel);
         }
 
-        public void RemovePanel(ZeroDockPanel panel)
+        public void RemovePanel(DockPanelControl panel)
         {
             if (panel == null || !_panels.Remove(panel)) return;
 
@@ -587,7 +587,7 @@ namespace ZeroUI.WinForms.Docking
 
         private void Panel_HeaderDragged(object? sender, Point screenPt)
         {
-            if (sender is ZeroDockPanel panel)
+            if (sender is DockPanelControl panel)
             {
                 _guideHUD.Bounds = ClientRectangle;
                 _guideHUD.BringToFront();
@@ -598,7 +598,7 @@ namespace ZeroUI.WinForms.Docking
 
         private void Panel_HeaderDragEnded(object? sender, Point screenPt)
         {
-            if (sender is ZeroDockPanel panel)
+            if (sender is DockPanelControl panel)
             {
                 var targetPos = _guideHUD.HoveredPosition;
                 _guideHUD.Visible = false;
@@ -619,7 +619,7 @@ namespace ZeroUI.WinForms.Docking
             }
         }
 
-        public void RedockPanel(ZeroDockPanel panel, ZeroDockPosition position)
+        public void RedockPanel(DockPanelControl panel, DockPosition position)
         {
             if (panel.Parent != null)
             {
@@ -631,54 +631,54 @@ namespace ZeroUI.WinForms.Docking
             RebuildLayout();
         }
 
-        private void ArrangePanel(ZeroDockPanel panel)
+        private void ArrangePanel(DockPanelControl panel)
         {
             switch (panel.DockPosition)
             {
-                case ZeroDockPosition.Left:
+                case DockPosition.Left:
                     panel.Dock = DockStyle.Fill;
                     _leftContainer.Controls.Add(panel);
                     _leftContainer.Visible = true;
                     _leftSplitter.Visible = true;
                     break;
 
-                case ZeroDockPosition.Right:
+                case DockPosition.Right:
                     panel.Dock = DockStyle.Fill;
                     _rightContainer.Controls.Add(panel);
                     _rightContainer.Visible = true;
                     _rightSplitter.Visible = true;
                     break;
 
-                case ZeroDockPosition.Bottom:
+                case DockPosition.Bottom:
                     panel.Dock = DockStyle.Fill;
                     _bottomContainer.Controls.Add(panel);
                     _bottomContainer.Visible = true;
                     _bottomSplitter.Visible = true;
                     break;
 
-                case ZeroDockPosition.Top:
+                case DockPosition.Top:
                     panel.Dock = DockStyle.Fill;
                     _topContainer.Controls.Add(panel);
                     _topContainer.Visible = true;
                     _topSplitter.Visible = true;
                     break;
 
-                case ZeroDockPosition.Document:
-                    var page = new ZeroTabPage(panel.Title) { Closable = panel.Closable };
+                case DockPosition.Document:
+                    var page = new TabPageEx(panel.Title) { Closable = panel.Closable };
                     panel.Dock = DockStyle.Fill;
                     page.Controls.Add(panel);
                     _documentTabControl.TabPages.Add(page);
                     break;
 
-                case ZeroDockPosition.Float:
+                case DockPosition.Float:
                     FloatPanel(panel);
                     break;
             }
         }
 
-        public void FloatPanel(ZeroDockPanel panel) => FloatPanel(panel, null);
+        public void FloatPanel(DockPanelControl panel) => FloatPanel(panel, null);
 
-        public void FloatPanel(ZeroDockPanel panel, Rectangle? initialBounds)
+        public void FloatPanel(DockPanelControl panel, Rectangle? initialBounds)
         {
             if (panel == null) return;
             if (panel.Parent != null)
@@ -686,8 +686,8 @@ namespace ZeroUI.WinForms.Docking
                 panel.Parent.Controls.Remove(panel);
             }
 
-            panel.DockPosition = ZeroDockPosition.Float;
-            var floatWin = new ZeroFloatingWindow(this, panel, initialBounds);
+            panel.DockPosition = DockPosition.Float;
+            var floatWin = new FloatingWindow(this, panel, initialBounds);
             _floatingWindows.Add(floatWin);
             floatWin.FormClosed += (s, e) => _floatingWindows.Remove(floatWin);
             floatWin.Show(this);
@@ -696,7 +696,7 @@ namespace ZeroUI.WinForms.Docking
 
         private void Panel_FloatRequested(object? sender, EventArgs e)
         {
-            if (sender is ZeroDockPanel panel)
+            if (sender is DockPanelControl panel)
             {
                 FloatPanel(panel);
             }
@@ -704,7 +704,7 @@ namespace ZeroUI.WinForms.Docking
 
         private void Panel_CloseRequested(object? sender, EventArgs e)
         {
-            if (sender is ZeroDockPanel panel)
+            if (sender is DockPanelControl panel)
             {
                 RemovePanel(panel);
             }
@@ -712,7 +712,7 @@ namespace ZeroUI.WinForms.Docking
 
         private void Panel_PinStateChanged(object? sender, EventArgs e)
         {
-            if (sender is ZeroDockPanel panel)
+            if (sender is DockPanelControl panel)
             {
                 if (!panel.IsPinned)
                 {
@@ -757,7 +757,7 @@ namespace ZeroUI.WinForms.Docking
 
             foreach (var p in _panels)
             {
-                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Left)
+                if (!p.IsPinned && p.DockPosition == DockPosition.Left)
                 {
                     var textSz = g.MeasureString(p.Title, font);
                     int tabH = (int)textSz.Width + 24;
@@ -792,7 +792,7 @@ namespace ZeroUI.WinForms.Docking
 
             foreach (var p in _panels)
             {
-                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Left)
+                if (!p.IsPinned && p.DockPosition == DockPosition.Left)
                 {
                     var textSz = g.MeasureString(p.Title, font);
                     int tabH = (int)textSz.Width + 24;
@@ -824,7 +824,7 @@ namespace ZeroUI.WinForms.Docking
 
             foreach (var p in _panels)
             {
-                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Right)
+                if (!p.IsPinned && p.DockPosition == DockPosition.Right)
                 {
                     var textSz = g.MeasureString(p.Title, font);
                     int tabH = (int)textSz.Width + 24;
@@ -859,7 +859,7 @@ namespace ZeroUI.WinForms.Docking
 
             foreach (var p in _panels)
             {
-                if (!p.IsPinned && p.DockPosition == ZeroDockPosition.Right)
+                if (!p.IsPinned && p.DockPosition == DockPosition.Right)
                 {
                     var textSz = g.MeasureString(p.Title, font);
                     int tabH = (int)textSz.Width + 24;
@@ -875,7 +875,7 @@ namespace ZeroUI.WinForms.Docking
             }
         }
 
-        private void ToggleDrawer(ZeroDockPanel panel, bool isLeft)
+        private void ToggleDrawer(DockPanelControl panel, bool isLeft)
         {
             if (_activeDrawerPanel == panel)
             {
@@ -919,8 +919,8 @@ namespace ZeroUI.WinForms.Docking
             {
                 if (!p.IsPinned)
                 {
-                    if (p.DockPosition == ZeroDockPosition.Left) hasUnpinnedLeft = true;
-                    if (p.DockPosition == ZeroDockPosition.Right) hasUnpinnedRight = true;
+                    if (p.DockPosition == DockPosition.Left) hasUnpinnedLeft = true;
+                    if (p.DockPosition == DockPosition.Right) hasUnpinnedRight = true;
                 }
             }
             _leftAutoHideBar.Visible = hasUnpinnedLeft;
@@ -969,7 +969,7 @@ namespace ZeroUI.WinForms.Docking
                     OrderIndex = i
                 };
 
-                if (p.DockPosition == ZeroDockPosition.Float)
+                if (p.DockPosition == DockPosition.Float)
                 {
                     var win = _floatingWindows.Find(f => f.DockPanel == p);
                     if (win != null && !win.IsDisposed)
@@ -1008,7 +1008,7 @@ namespace ZeroUI.WinForms.Docking
                 }
 
                 // 2. Build lookup map of registered panels by key and title
-                var panelLookup = new Dictionary<string, ZeroDockPanel>(StringComparer.OrdinalIgnoreCase);
+                var panelLookup = new Dictionary<string, DockPanelControl>(StringComparer.OrdinalIgnoreCase);
                 foreach (var p in _panels)
                 {
                     string key = p.PanelKey;
@@ -1029,7 +1029,7 @@ namespace ZeroUI.WinForms.Docking
                 _drawerOverlay.Visible = false;
                 _activeDrawerPanel = null;
 
-                var oldFloats = new List<ZeroFloatingWindow>(_floatingWindows);
+                var oldFloats = new List<FloatingWindow>(_floatingWindows);
                 foreach (var fw in oldFloats)
                 {
                     try { fw.Close(); } catch { }
@@ -1037,20 +1037,20 @@ namespace ZeroUI.WinForms.Docking
                 _floatingWindows.Clear();
 
                 // 4. Re-dock panels according to saved layout
-                var appliedPanels = new HashSet<ZeroDockPanel>();
+                var appliedPanels = new HashSet<DockPanelControl>();
 
                 foreach (var pState in state.DockPanels)
                 {
                     string key = !string.IsNullOrEmpty(pState.Name) ? pState.Name : pState.Title;
                     if (panelLookup.TryGetValue(key, out var panel) && appliedPanels.Add(panel))
                     {
-                        if (Enum.TryParse<ZeroDockPosition>(pState.DockPosition, true, out var pos))
+                        if (Enum.TryParse<DockPosition>(pState.DockPosition, true, out var pos))
                         {
                             panel.DockPosition = pos;
                         }
                         else
                         {
-                            panel.DockPosition = ZeroDockPosition.Document;
+                            panel.DockPosition = DockPosition.Document;
                         }
 
                         panel.IsPinned = pState.IsPinned;
@@ -1060,11 +1060,11 @@ namespace ZeroUI.WinForms.Docking
                         if (pState.Width > 0) panel.Width = pState.Width;
                         if (pState.Height > 0) panel.Height = pState.Height;
 
-                        if (panel.DockPosition == ZeroDockPosition.Float)
+                        if (panel.DockPosition == DockPosition.Float)
                         {
                             FloatPanel(panel, new Rectangle(pState.FloatX, pState.FloatY, pState.FloatWidth, pState.FloatHeight));
                         }
-                        else if (!panel.IsPinned && (panel.DockPosition == ZeroDockPosition.Left || panel.DockPosition == ZeroDockPosition.Right))
+                        else if (!panel.IsPinned && (panel.DockPosition == DockPosition.Left || panel.DockPosition == DockPosition.Right))
                         {
                             // Unpinned auto-hide panel lives in sidebar until clicked
                         }
@@ -1171,5 +1171,52 @@ namespace ZeroUI.WinForms.Docking
         }
 
         #endregion
+    }
+
+    [Obsolete("Use DockPosition instead.")]
+    public enum ZeroDockPosition
+    {
+        Left = DockPosition.Left,
+        Right = DockPosition.Right,
+        Top = DockPosition.Top,
+        Bottom = DockPosition.Bottom,
+        Document = DockPosition.Document,
+        Float = DockPosition.Float
+    }
+
+    [Obsolete("Use DockPanelControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroDockPanel : DockPanelControl
+    {
+        public new ZeroDockPosition DockPosition
+        {
+            get => (ZeroDockPosition)base.DockPosition;
+            set => base.DockPosition = (DockPosition)value;
+        }
+    }
+
+    [Obsolete("Use FloatingWindow instead.")]
+    [ToolboxItem(false)]
+    public class ZeroFloatingWindow : FloatingWindow
+    {
+        public ZeroFloatingWindow(DockManager dockManager, DockPanelControl panel, Rectangle? initialBounds = null)
+            : base(dockManager, panel, initialBounds)
+        {
+        }
+
+        public ZeroFloatingWindow(DockManager dockManager, DockPanelControl panel)
+            : base(dockManager, panel)
+        {
+        }
+
+        public void RedockToManager(ZeroDockPosition targetPosition)
+            => base.RedockToManager((DockPosition)targetPosition);
+    }
+
+    [Obsolete("Use DockManager instead.")]
+    public class ZeroDockManager : DockManager
+    {
+        public void AddPanel(DockPanelControl panel, ZeroDockPosition position)
+            => base.AddPanel(panel, (DockPosition)position);
     }
 }

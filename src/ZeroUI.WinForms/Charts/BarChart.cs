@@ -75,5 +75,16 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(false)]
     public class ZeroBarChart : BarChart
     {
+        public new ZeroUI.WinForms.Charts.Model.ZeroChartLegendPosition LegendPosition
+        {
+            get => (ZeroUI.WinForms.Charts.Model.ZeroChartLegendPosition)base.LegendPosition;
+            set => base.LegendPosition = (ZeroUI.WinForms.Charts.Model.ChartLegendPosition)value;
+        }
+
+        public new ZeroUI.WinForms.Charts.Model.ZeroChartType ChartType
+        {
+            get => (ZeroUI.WinForms.Charts.Model.ZeroChartType)base.ChartType;
+            set => base.ChartType = (ZeroUI.WinForms.Charts.Model.ChartType)value;
+        }
     }
 }

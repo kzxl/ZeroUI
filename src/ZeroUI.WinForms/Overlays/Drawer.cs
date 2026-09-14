@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Overlays
     [Category("ZeroUI - Overlays")]
     [DefaultProperty("Title")]
     [Description("High-performance slide-out drawer panel with non-blocking floating overlay")]
-    public class ZeroDrawer : ZeroControlBase
+    public class DrawerControl : ZeroControlBase
     {
         private static readonly Font TitleFont = new Font("Segoe UI", 11f, FontStyle.Bold);
         private static readonly Font SubFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
@@ -70,7 +70,7 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
-        public ZeroDrawer()
+        public DrawerControl()
         {
             Dock = DockStyle.None;
             Width = 0;
@@ -433,9 +433,11 @@ namespace ZeroUI.WinForms.Overlays
     }
 
     /// <summary>
-    /// Modern enterprise slide-out drawer panel for ZeroUI WinForms.
+    /// Legacy alias for <see cref="DrawerControl"/>.
     /// </summary>
-    public class DrawerControl : ZeroDrawer
+    [Obsolete("Use DrawerControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroDrawer : DrawerControl
     {
     }
 

@@ -17,15 +17,15 @@ namespace ZeroUI.WinForms.Feedback
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroVisualDebugger.bmp")]
     [Category("ZeroUI - Diagnostics")]
     [Description("In-app embedded visual tree inspector, frame latency HUD, and GC allocation monitor")]
-    public class ZeroVisualDebugger : Component, IMessageFilter
+    public class VisualDebugger : Component, IMessageFilter
     {
-        private static ZeroVisualDebugger? s_globalInstance;
+        private static VisualDebugger? s_globalInstance;
         private Form? _targetForm;
         private DebuggerHudForm? _hudWindow;
         private bool _isEnabled = true;
         private Keys _toggleKey = Keys.F12;
 
-        public ZeroVisualDebugger()
+        public VisualDebugger()
         {
             if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
             {
@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.Feedback
             }
         }
 
-        public ZeroVisualDebugger(IContainer container) : this()
+        public VisualDebugger(IContainer container) : this()
         {
             container.Add(this);
         }
@@ -73,7 +73,7 @@ namespace ZeroUI.WinForms.Feedback
         {
             if (s_globalInstance == null)
             {
-                s_globalInstance = new ZeroVisualDebugger { ToggleKey = toggleKey };
+                s_globalInstance = new VisualDebugger { ToggleKey = toggleKey };
             }
         }
 
@@ -469,5 +469,13 @@ namespace ZeroUI.WinForms.Feedback
         }
 
         #endregion
+    }
+
+    [Obsolete("Use VisualDebugger instead.")]
+    [ToolboxItem(false)]
+    public class ZeroVisualDebugger : VisualDebugger
+    {
+        public ZeroVisualDebugger() : base() { }
+        public ZeroVisualDebugger(IContainer container) : base(container) { }
     }
 }

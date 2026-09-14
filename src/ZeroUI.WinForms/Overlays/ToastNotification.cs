@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Overlays
     /// <summary>
     /// Categorizes toast notifications by operational priority and severity.
     /// </summary>
-    public enum ZeroToastType
+    public enum ToastType
     {
         Info,
         Success,
@@ -25,7 +25,7 @@ namespace ZeroUI.WinForms.Overlays
     /// <summary>
     /// Specifies the screen anchor position for stacked toast notifications.
     /// </summary>
-    public enum ZeroToastPosition
+    public enum ToastPosition
     {
         TopRight,
         BottomRight,
@@ -40,11 +40,11 @@ namespace ZeroUI.WinForms.Overlays
     /// Supports title + message, left accent indicator, close button, pause on hover, and smooth stacking animations.
     /// </summary>
     [ToolboxItem(true)]
-    [ToolboxBitmap(typeof(ZeroIcons), "ZeroToast.bmp")]
-    public sealed class ZeroToast : Form
+    [ToolboxBitmap(typeof(ZeroIcons), "ToastNotification.bmp")]
+    public class ToastNotification : Form
     {
         private readonly Form _ownerForm;
-        private readonly ZeroToastType _type;
+        private readonly ToastType _type;
         private readonly string _message;
         private readonly string _title;
         private readonly Timer _stayTimer;
@@ -59,18 +59,18 @@ namespace ZeroUI.WinForms.Overlays
 
         public string Title => _title;
         public string Message => _message;
-        public ZeroToastType ToastType => _type;
+        public ToastType ToastType => _type;
         public Action? ClickAction { get; set; }
-        public ZeroToastPosition Position { get; set; } = ZeroToastPosition.TopRight;
+        public ToastPosition Position { get; set; } = ToastPosition.TopRight;
 
-        internal ZeroToast(
+        public ToastNotification(
             Form owner,
             string message,
             string title = "",
-            ZeroToastType type = ZeroToastType.Info,
+            ToastType type = ToastType.Info,
             int durationMs = 3000,
             Action? onClick = null,
-            ZeroToastPosition position = ZeroToastPosition.TopRight)
+            ToastPosition position = ToastPosition.TopRight)
         {
             _ownerForm = owner ?? throw new ArgumentNullException(nameof(owner));
             _message = message ?? string.Empty;
@@ -253,10 +253,10 @@ namespace ZeroUI.WinForms.Overlays
             // 2. Resolve Accent Color & Glyph
             var (accentColor, iconChar) = _type switch
             {
-                ZeroToastType.Success => (palette.Success, "✔"),
-                ZeroToastType.Warning => (palette.Warning, "⚠"),
-                ZeroToastType.Error => (palette.Danger, "✕"),
-                ZeroToastType.Alarm => (Color.FromArgb(220, 38, 38), "⚡"),
+                ToastType.Success => (palette.Success, "✔"),
+                ToastType.Warning => (palette.Warning, "⚠"),
+                ToastType.Error => (palette.Danger, "✕"),
+                ToastType.Alarm => (Color.FromArgb(220, 38, 38), "⚡"),
                 _ => (palette.Primary, "ℹ")
             };
 
@@ -341,43 +341,43 @@ namespace ZeroUI.WinForms.Overlays
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
 
-        #region Static Convenience API (Delegating to ZeroToastStackManager)
+        #region Static Convenience API (Delegating to ToastStackManager)
 
         public static void Show(
             Form parent,
             string message,
-            ZeroToastType type = ZeroToastType.Info,
+            ToastType type = ToastType.Info,
             int durationMs = 3000)
         {
-            ZeroToastStackManager.Show(parent, message, string.Empty, type, durationMs);
+            ToastStackManager.Show(parent, message, string.Empty, type, durationMs);
         }
 
         public static void Show(
             Form parent,
             string message,
             string title,
-            ZeroToastType type = ZeroToastType.Info,
+            ToastType type = ToastType.Info,
             int durationMs = 3000,
             Action? onClick = null,
-            ZeroToastPosition position = ZeroToastPosition.TopRight)
+            ToastPosition position = ToastPosition.TopRight)
         {
-            ZeroToastStackManager.Show(parent, message, title, type, durationMs, onClick, position);
+            ToastStackManager.Show(parent, message, title, type, durationMs, onClick, position);
         }
 
         public static void Success(Form parent, string message, string title = "") =>
-            ZeroToastStackManager.Success(parent, message, title);
+            ToastStackManager.Success(parent, message, title);
 
         public static void Info(Form parent, string message, string title = "") =>
-            ZeroToastStackManager.Info(parent, message, title);
+            ToastStackManager.Info(parent, message, title);
 
         public static void Warning(Form parent, string message, string title = "") =>
-            ZeroToastStackManager.Warning(parent, message, title);
+            ToastStackManager.Warning(parent, message, title);
 
         public static void Error(Form parent, string message, string title = "") =>
-            ZeroToastStackManager.Error(parent, message, title);
+            ToastStackManager.Error(parent, message, title);
 
         public static void Alarm(Form parent, string message, string title = "") =>
-            ZeroToastStackManager.Alarm(parent, message, title);
+            ToastStackManager.Alarm(parent, message, title);
 
         #endregion
 
@@ -397,20 +397,20 @@ namespace ZeroUI.WinForms.Overlays
     /// Thread-safe central stacking manager for ZeroUI toasts.
     /// Manages active toast slot allocations, multi-corner anchors, overflow queueing, and smooth slide repositioning.
     /// </summary>
-    public static class ZeroToastStackManager
+    public static class ToastStackManager
     {
         private class PendingToastInfo
         {
             public Form Owner { get; set; } = null!;
             public string Message { get; set; } = string.Empty;
             public string Title { get; set; } = string.Empty;
-            public ZeroToastType Type { get; set; }
+            public ToastType Type { get; set; }
             public int DurationMs { get; set; }
             public Action? OnClick { get; set; }
-            public ZeroToastPosition Position { get; set; }
+            public ToastPosition Position { get; set; }
         }
 
-        private static readonly List<ZeroToast> _activeToasts = new List<ZeroToast>();
+        private static readonly List<ToastNotification> _activeToasts = new List<ToastNotification>();
         private static readonly Queue<PendingToastInfo> _pendingQueue = new Queue<PendingToastInfo>();
         private static readonly object _syncLock = new object();
 
@@ -418,11 +418,11 @@ namespace ZeroUI.WinForms.Overlays
         public static int MarginX { get; set; } = 24;
         public static int MarginY { get; set; } = 24;
         public static int Gap { get; set; } = 10;
-        public static ZeroToastPosition DefaultPosition { get; set; } = ZeroToastPosition.TopRight;
+        public static ToastPosition DefaultPosition { get; set; } = ToastPosition.TopRight;
         public static ZeroNotificationDeliveryMode DeliveryMode { get; set; } = ZeroNotificationDeliveryMode.Auto;
         public static bool RouteAlarmsToSystem { get; set; } = true;
 
-        public static IReadOnlyList<ZeroToast> ActiveToasts
+        public static IReadOnlyList<ToastNotification> ActiveToasts
         {
             get
             {
@@ -448,10 +448,10 @@ namespace ZeroUI.WinForms.Overlays
             Form parent,
             string message,
             string title = "",
-            ZeroToastType type = ZeroToastType.Info,
+            ToastType type = ToastType.Info,
             int durationMs = 3000,
             Action? onClick = null,
-            ZeroToastPosition? position = null)
+            ToastPosition? position = null)
         {
             if (parent == null || parent.IsDisposed) return;
 
@@ -471,7 +471,7 @@ namespace ZeroUI.WinForms.Overlays
             bool shouldShowSystem = DeliveryMode == ZeroNotificationDeliveryMode.SystemOnly ||
                                     DeliveryMode == ZeroNotificationDeliveryMode.Dual ||
                                     (DeliveryMode == ZeroNotificationDeliveryMode.Auto && !isAppForeground) ||
-                                    (RouteAlarmsToSystem && type == ZeroToastType.Alarm);
+                                    (RouteAlarmsToSystem && type == ToastType.Alarm);
 
             if (shouldShowSystem)
             {
@@ -505,30 +505,30 @@ namespace ZeroUI.WinForms.Overlays
         }
 
         public static void Success(Form parent, string message, string title = "") =>
-            Show(parent, message, title, ZeroToastType.Success);
+            Show(parent, message, title, ToastType.Success);
 
         public static void Info(Form parent, string message, string title = "") =>
-            Show(parent, message, title, ZeroToastType.Info);
+            Show(parent, message, title, ToastType.Info);
 
         public static void Warning(Form parent, string message, string title = "") =>
-            Show(parent, message, title, ZeroToastType.Warning);
+            Show(parent, message, title, ToastType.Warning);
 
         public static void Error(Form parent, string message, string title = "") =>
-            Show(parent, message, title, ZeroToastType.Error);
+            Show(parent, message, title, ToastType.Error);
 
         public static void Alarm(Form parent, string message, string title = "") =>
-            Show(parent, message, title, ZeroToastType.Alarm);
+            Show(parent, message, title, ToastType.Alarm);
 
         private static void SpawnToast(
             Form parent,
             string message,
             string title,
-            ZeroToastType type,
+            ToastType type,
             int durationMs,
             Action? onClick,
-            ZeroToastPosition pos)
+            ToastPosition pos)
         {
-            var toast = new ZeroToast(parent, message, title, type, durationMs, onClick, pos);
+            var toast = new ToastNotification(parent, message, title, type, durationMs, onClick, pos);
 
             // Compute target position based on current active list
             var target = CalculateLocation(parent, toast.Width, toast.Height, _activeToasts.Count, pos);
@@ -543,7 +543,7 @@ namespace ZeroUI.WinForms.Overlays
             toast.StartDisplay();
         }
 
-        private static void OnToastClosed(ZeroToast toast, Form parent)
+        private static void OnToastClosed(ToastNotification toast, Form parent)
         {
             lock (_syncLock)
             {
@@ -581,7 +581,7 @@ namespace ZeroUI.WinForms.Overlays
             int toastWidth,
             int toastHeight,
             int stackIndex,
-            ZeroToastPosition position)
+            ToastPosition position)
         {
             Point parentScreen = owner.PointToScreen(Point.Empty);
             int clientW = owner.ClientSize.Width;
@@ -593,32 +593,32 @@ namespace ZeroUI.WinForms.Overlays
 
             switch (position)
             {
-                case ZeroToastPosition.TopRight:
+                case ToastPosition.TopRight:
                     x = parentScreen.X + clientW - toastWidth - MarginX;
                     y = parentScreen.Y + MarginY + cumulativeOffset;
                     break;
 
-                case ZeroToastPosition.BottomRight:
+                case ToastPosition.BottomRight:
                     x = parentScreen.X + clientW - toastWidth - MarginX;
                     y = parentScreen.Y + clientH - MarginY - toastHeight - cumulativeOffset;
                     break;
 
-                case ZeroToastPosition.TopLeft:
+                case ToastPosition.TopLeft:
                     x = parentScreen.X + MarginX;
                     y = parentScreen.Y + MarginY + cumulativeOffset;
                     break;
 
-                case ZeroToastPosition.BottomLeft:
+                case ToastPosition.BottomLeft:
                     x = parentScreen.X + MarginX;
                     y = parentScreen.Y + clientH - MarginY - toastHeight - cumulativeOffset;
                     break;
 
-                case ZeroToastPosition.TopCenter:
+                case ToastPosition.TopCenter:
                     x = parentScreen.X + (clientW - toastWidth) / 2;
                     y = parentScreen.Y + MarginY + cumulativeOffset;
                     break;
 
-                case ZeroToastPosition.BottomCenter:
+                case ToastPosition.BottomCenter:
                     x = parentScreen.X + (clientW - toastWidth) / 2;
                     y = parentScreen.Y + clientH - MarginY - toastHeight - cumulativeOffset;
                     break;
@@ -640,7 +640,7 @@ namespace ZeroUI.WinForms.Overlays
             lock (_syncLock)
             {
                 _pendingQueue.Clear();
-                var activeCopy = new List<ZeroToast>(_activeToasts);
+                var activeCopy = new List<ToastNotification>(_activeToasts);
                 foreach (var toast in activeCopy)
                 {
                     try { toast.Close(); } catch { }
@@ -648,5 +648,96 @@ namespace ZeroUI.WinForms.Overlays
                 _activeToasts.Clear();
             }
         }
+    }
+
+    [Obsolete("Use ToastType instead.")]
+    public enum ZeroToastType
+    {
+        Info = ToastType.Info,
+        Success = ToastType.Success,
+        Warning = ToastType.Warning,
+        Error = ToastType.Error,
+        Alarm = ToastType.Alarm
+    }
+
+    [Obsolete("Use ToastPosition instead.")]
+    public enum ZeroToastPosition
+    {
+        TopRight = ToastPosition.TopRight,
+        BottomRight = ToastPosition.BottomRight,
+        TopLeft = ToastPosition.TopLeft,
+        BottomLeft = ToastPosition.BottomLeft,
+        TopCenter = ToastPosition.TopCenter,
+        BottomCenter = ToastPosition.BottomCenter
+    }
+
+    [Obsolete("Use ToastNotification instead.")]
+    [ToolboxItem(false)]
+    public class ZeroToast : ToastNotification
+    {
+        public ZeroToast(
+            Form owner,
+            string message,
+            string title = "",
+            ToastType type = ToastType.Info,
+            int durationMs = 3000,
+            Action? onClick = null,
+            ToastPosition position = ToastPosition.TopRight)
+            : base(owner, message, title, type, durationMs, onClick, position)
+        {
+        }
+
+        public static void Show(Form parent, string message, ZeroToastType type = ZeroToastType.Info, int durationMs = 3000)
+            => ToastNotification.Show(parent, message, (ToastType)type, durationMs);
+
+        public static void Show(Form parent, string message, string title, ZeroToastType type = ZeroToastType.Info, int durationMs = 3000, Action? onClick = null, ZeroToastPosition position = ZeroToastPosition.TopRight)
+            => ToastNotification.Show(parent, message, title, (ToastType)type, durationMs, onClick, (ToastPosition)position);
+
+        public static new void Show(Form parent, string message, ToastType type = ToastType.Info, int durationMs = 3000)
+            => ToastNotification.Show(parent, message, type, durationMs);
+
+        public static new void Show(Form parent, string message, string title, ToastType type = ToastType.Info, int durationMs = 3000, Action? onClick = null, ToastPosition position = ToastPosition.TopRight)
+            => ToastNotification.Show(parent, message, title, type, durationMs, onClick, position);
+
+        public static new void Success(Form parent, string message, string title = "")
+            => ToastNotification.Success(parent, message, title);
+
+        public static new void Info(Form parent, string message, string title = "")
+            => ToastNotification.Info(parent, message, title);
+
+        public static new void Warning(Form parent, string message, string title = "")
+            => ToastNotification.Warning(parent, message, title);
+
+        public static new void Error(Form parent, string message, string title = "")
+            => ToastNotification.Error(parent, message, title);
+
+        public static new void Alarm(Form parent, string message, string title = "")
+            => ToastNotification.Alarm(parent, message, title);
+    }
+
+    [Obsolete("Use ToastStackManager instead.")]
+    public static class ZeroToastStackManager
+    {
+        public static int MaxVisibleToasts { get => ToastStackManager.MaxVisibleToasts; set => ToastStackManager.MaxVisibleToasts = value; }
+        public static int MarginX { get => ToastStackManager.MarginX; set => ToastStackManager.MarginX = value; }
+        public static int MarginY { get => ToastStackManager.MarginY; set => ToastStackManager.MarginY = value; }
+        public static int Gap { get => ToastStackManager.Gap; set => ToastStackManager.Gap = value; }
+        public static ToastPosition DefaultPosition { get => ToastStackManager.DefaultPosition; set => ToastStackManager.DefaultPosition = value; }
+        public static ZeroNotificationDeliveryMode DeliveryMode { get => ToastStackManager.DeliveryMode; set => ToastStackManager.DeliveryMode = value; }
+        public static bool RouteAlarmsToSystem { get => ToastStackManager.RouteAlarmsToSystem; set => ToastStackManager.RouteAlarmsToSystem = value; }
+
+        public static void Show(Form parent, string message, string title = "", ZeroToastType type = ZeroToastType.Info, int durationMs = 3000, Action? onClick = null, ZeroToastPosition position = ZeroToastPosition.TopRight)
+            => ToastStackManager.Show(parent, message, title, (ToastType)type, durationMs, onClick, (ToastPosition)position);
+
+        public static void Show(Form parent, string message, string title = "", ToastType type = ToastType.Info, int durationMs = 3000, Action? onClick = null, ToastPosition position = ToastPosition.TopRight)
+            => ToastStackManager.Show(parent, message, title, type, durationMs, onClick, position);
+
+        public static void Success(Form parent, string message, string title = "") => ToastStackManager.Success(parent, message, title);
+        public static void Info(Form parent, string message, string title = "") => ToastStackManager.Info(parent, message, title);
+        public static void Warning(Form parent, string message, string title = "") => ToastStackManager.Warning(parent, message, title);
+        public static void Error(Form parent, string message, string title = "") => ToastStackManager.Error(parent, message, title);
+        public static void Alarm(Form parent, string message, string title = "") => ToastStackManager.Alarm(parent, message, title);
+        public static void Clear() => ToastStackManager.Clear();
+        public static void CloseAll() => ToastStackManager.Clear();
     }
 }

@@ -8,7 +8,7 @@ using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Layout
 {
-    public enum ZeroScrollOrientation
+    public enum ScrollBarOrientation
     {
         Vertical,
         Horizontal
@@ -23,9 +23,9 @@ namespace ZeroUI.WinForms.Layout
     [Category("ZeroUI - Layout")]
     [Description("Provides a custom modern flat scrollbar supporting horizontal and vertical orientations.")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroScrollBar.bmp")]
-    public class ZeroScrollBar : Control
+    public class ScrollBarControl : Control
     {
-        private ZeroScrollOrientation _orientation = ZeroScrollOrientation.Vertical;
+        private ScrollBarOrientation _orientation = ScrollBarOrientation.Vertical;
         private int _minimum = 0;
         private int _maximum = 100;
         private int _value = 0;
@@ -40,7 +40,7 @@ namespace ZeroUI.WinForms.Layout
 
         public event EventHandler? ValueChanged;
 
-        public ZeroScrollBar()
+        public ScrollBarControl()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -58,8 +58,8 @@ namespace ZeroUI.WinForms.Layout
         }
 
         [Category("Layout")]
-        [DefaultValue(ZeroScrollOrientation.Vertical)]
-        public ZeroScrollOrientation Orientation
+        [DefaultValue(ScrollBarOrientation.Vertical)]
+        public ScrollBarOrientation Orientation
         {
             get => _orientation;
             set
@@ -166,7 +166,7 @@ namespace ZeroUI.WinForms.Layout
             }
 
             int margin = 2;
-            if (_orientation == ZeroScrollOrientation.Vertical)
+            if (_orientation == ScrollBarOrientation.Vertical)
             {
                 int trackHeight = Math.Max(10, Height - (margin * 2));
                 int thumbHeight = Math.Max(24, (int)((float)_largeChange / (_largeChange + range) * trackHeight));
@@ -196,7 +196,7 @@ namespace ZeroUI.WinForms.Layout
                 if (range <= 0) return;
 
                 int margin = 2;
-                if (_orientation == ZeroScrollOrientation.Vertical)
+                if (_orientation == ScrollBarOrientation.Vertical)
                 {
                     int trackHeight = Math.Max(10, Height - (margin * 2));
                     int thumbHeight = _thumbRect.Height;
@@ -234,7 +234,7 @@ namespace ZeroUI.WinForms.Layout
                 if (_thumbRect.Contains(e.Location))
                 {
                     _isDragging = true;
-                    _dragStartPos = _orientation == ZeroScrollOrientation.Vertical ? e.Y : e.X;
+                    _dragStartPos = _orientation == ScrollBarOrientation.Vertical ? e.Y : e.X;
                     _dragStartValue = _value;
                     Capture = true;
                     Invalidate(_thumbRect);
@@ -242,7 +242,7 @@ namespace ZeroUI.WinForms.Layout
                 else
                 {
                     // Click on track: Page Up or Page Down
-                    if (_orientation == ZeroScrollOrientation.Vertical)
+                    if (_orientation == ScrollBarOrientation.Vertical)
                     {
                         if (e.Y < _thumbRect.Top) Value -= _largeChange;
                         else if (e.Y > _thumbRect.Bottom) Value += _largeChange;
@@ -318,6 +318,24 @@ namespace ZeroUI.WinForms.Layout
                 ZeroTheme.ThemeChanged -= OnThemeChanged;
             }
             base.Dispose(disposing);
+        }
+    }
+
+    [Obsolete("Use ScrollBarOrientation instead.")]
+    public enum ZeroScrollOrientation
+    {
+        Vertical = ScrollBarOrientation.Vertical,
+        Horizontal = ScrollBarOrientation.Horizontal
+    }
+
+    [Obsolete("Use ScrollBarControl instead.")]
+    [ToolboxItem(false)]
+    public class ZeroScrollBar : ScrollBarControl
+    {
+        public new ZeroScrollOrientation Orientation
+        {
+            get => (ZeroScrollOrientation)base.Orientation;
+            set => base.Orientation = (ScrollBarOrientation)value;
         }
     }
 }

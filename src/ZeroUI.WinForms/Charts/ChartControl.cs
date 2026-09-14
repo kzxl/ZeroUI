@@ -1305,6 +1305,17 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(false)]
     public class ZeroChart : ChartControl
     {
+        public new ZeroUI.WinForms.Charts.Model.ZeroChartLegendPosition LegendPosition
+        {
+            get => (ZeroUI.WinForms.Charts.Model.ZeroChartLegendPosition)base.LegendPosition;
+            set => base.LegendPosition = (ZeroUI.WinForms.Charts.Model.ChartLegendPosition)value;
+        }
+
+        public new ZeroUI.WinForms.Charts.Model.ZeroChartType ChartType
+        {
+            get => (ZeroUI.WinForms.Charts.Model.ZeroChartType)base.ChartType;
+            set => base.ChartType = (ZeroUI.WinForms.Charts.Model.ChartType)value;
+        }
     }
 
     /// <summary>
@@ -1313,7 +1324,7 @@ namespace ZeroUI.WinForms.Charts
     /// </summary>
     [Obsolete("ZeroChartControl is deprecated. Please use ChartControl instead.")]
     [ToolboxItem(false)]
-    public class ZeroChartControl : ChartControl
+    public class ZeroChartControl : ZeroChart
     {
     }
 }
