@@ -40,7 +40,7 @@ namespace ZeroUI.WinForms.Ribbon
     /// <summary>
     /// Modern Enterprise Lightweight Ribbon Control for ZeroUI WinForms.
     /// Delivers 100% visual parity with enterprise ERP ribbon bars, single-HWND canvas rendering,
-    /// dynamic approval queues (Chờ duyệt), and instant visibility customization.
+    /// dynamic approval queues, and instant visibility customization.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Navigation")]
@@ -173,9 +173,9 @@ namespace ZeroUI.WinForms.Ribbon
         public bool ShowApprovalOptionsButton { get; set; } = true;
 
         [Category("Appearance")]
-        [DefaultValue("Tùy chọn hiển thị ⯆")]
+        [DefaultValue("Display Options ⯆")]
         [Description("Custom text or localized label for the approval visibility options dropdown button.")]
-        public string ApprovalOptionsText { get; set; } = "Tùy chọn hiển thị ⯆";
+        public string ApprovalOptionsText { get; set; } = "Display Options ⯆";
 
         private IRibbonStateStore? _stateStore;
 

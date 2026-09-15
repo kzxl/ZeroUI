@@ -113,7 +113,7 @@ namespace ZeroUI.WinForms.Ribbon
 
     /// <summary>
     /// Represents an approval task item inside an approval dropdown group.
-    /// Example: "YCSL: 3" (red dot) or "Bàn giao: 0" (green/blue dot).
+    /// Example: "Pending Orders: 3" (red dot) or "Handover: 0" (green/blue dot).
     /// </summary>
     public class RibbonApprovalItem
     {
@@ -152,7 +152,7 @@ namespace ZeroUI.WinForms.Ribbon
     }
 
     /// <summary>
-    /// Specialized group container for approval queues (Chờ duyệt chung, Chờ duyệt SX, Chờ duyệt Kho).
+    /// Specialized group container for approval queues (e.g., General, Production, Inventory).
     /// Displays a dropdown button with current total count and opens a status popup with color-coded dots.
     /// </summary>
     public class RibbonApprovalGroup
@@ -211,7 +211,7 @@ namespace ZeroUI.WinForms.Ribbon
 
     /// <summary>
     /// Represents a functional group of ribbon items under a specific page.
-    /// Example: "Thông tin", "Quản lý chung", "Quản lý nhóm", "Hệ thống".
+    /// Example: "Information", "General Management", "Team Management", "System".
     /// </summary>
     public class RibbonGroup
     {
