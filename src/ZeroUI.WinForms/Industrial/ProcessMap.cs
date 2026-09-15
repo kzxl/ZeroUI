@@ -98,6 +98,7 @@ namespace ZeroUI.WinForms.Industrial
             Reset
         }
         private ControlBarButton _hoveredControlBarButton = ControlBarButton.None;
+        private bool _showTitle = true;
         private bool _showControlBar = false;
         private bool _isDirty = false;
 
@@ -433,6 +434,15 @@ namespace ZeroUI.WinForms.Industrial
         {
             get => _showMinimap;
             set { _showMinimap = value; Invalidate(); }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        [Description("Displays the workflow title and description HUD banner in the top left corner.")]
+        public bool ShowTitle
+        {
+            get => _showTitle;
+            set { _showTitle = value; Invalidate(); }
         }
 
 
@@ -1150,17 +1160,20 @@ namespace ZeroUI.WinForms.Industrial
         private void DrawHudOverlay(Graphics g)
         {
             // 1. Top Title Bar
-            string title = _definition.Title;
-            string desc = _definition.Description;
-            var titleFont = ZeroFontCache.Get(Font.FontFamily.Name, 10.5f, FontStyle.Bold);
-            var descFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.0f, FontStyle.Regular);
-            using (var titleBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
-            using (var descBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary))
+            if (_showTitle && !string.IsNullOrWhiteSpace(_definition.Title))
             {
-                g.DrawString(title, titleFont, titleBrush, 24, 16);
-                if (!string.IsNullOrWhiteSpace(desc) && !_showControlBar)
+                string title = _definition.Title;
+                string desc = _definition.Description;
+                var titleFont = ZeroFontCache.Get(Font.FontFamily.Name, 10.5f, FontStyle.Bold);
+                var descFont = ZeroFontCache.Get(Font.FontFamily.Name, 8.0f, FontStyle.Regular);
+                using (var titleBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
+                using (var descBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary))
                 {
-                    g.DrawString("ℹ " + desc, descFont, descBrush, Width - g.MeasureString("ℹ " + desc, descFont).Width - 24, 18);
+                    g.DrawString(title, titleFont, titleBrush, 24, 16);
+                    if (!string.IsNullOrWhiteSpace(desc) && !_showControlBar)
+                    {
+                        g.DrawString("ℹ " + desc, descFont, descBrush, Width - g.MeasureString("ℹ " + desc, descFont).Width - 24, 18);
+                    }
                 }
             }
 
