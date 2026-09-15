@@ -9,6 +9,7 @@ using System.Windows.Media;
 using ZeroUI.Core.Icons;
 using ZeroUI.Core.Process;
 using ZeroUI.Wpf.Theme;
+using ZeroUI.Wpf.Editors;
 
 namespace ZeroUI.Wpf.Process
 {
@@ -697,7 +698,7 @@ namespace ZeroUI.Wpf.Process
             {
                 Title = "Configure Swimlane / Group Frame",
                 Width = 460,
-                Height = 310,
+                Height = 390,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 ResizeMode = ResizeMode.NoResize,
                 Background = ZeroWpfTheme.BgCard
@@ -710,6 +711,19 @@ namespace ZeroUI.Wpf.Process
             stack.Children.Add(new TextBlock { Text = "Lane Title:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) });
             var txtTitle = new TextBox { Text = lane.Title, Margin = new Thickness(0, 0, 0, 12), Padding = new Thickness(4) };
             stack.Children.Add(txtTitle);
+
+            var cpeHeader = new ColorPickEdit { SelectedColor = ParseColor(selectedHeaderHex, Colors.Gray), Height = 32 };
+            var cpeBg = new ColorPickEdit { SelectedColor = ParseColor(selectedBgHex, Color.FromRgb(248, 250, 252)), Height = 32 };
+
+            cpeHeader.ColorChanged += (s, c) =>
+            {
+                selectedHeaderHex = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+            };
+
+            cpeBg.ColorChanged += (s, c) =>
+            {
+                selectedBgHex = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+            };
 
             stack.Children.Add(new TextBlock { Text = "Color Theme Presets:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 6) });
             var wrapPresets = new WrapPanel { Margin = new Thickness(0, 0, 0, 14) };
@@ -761,11 +775,32 @@ namespace ZeroUI.Wpf.Process
                     selectedBorder = border;
                     border.BorderThickness = new Thickness(2.5);
                     border.BorderBrush = new SolidColorBrush(Colors.Black);
+                    cpeHeader.SelectedColor = ParseColor(p.HeaderHex, Colors.Gray);
+                    cpeBg.SelectedColor = ParseColor(p.BgHex, Color.FromRgb(248, 250, 252));
                 };
 
                 wrapPresets.Children.Add(border);
             }
             stack.Children.Add(wrapPresets);
+
+            var pickersPanel = new Grid { Margin = new Thickness(0, 0, 0, 14) };
+            pickersPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            pickersPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(16, GridUnitType.Pixel) });
+            pickersPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            var headerCol = new StackPanel();
+            headerCol.Children.Add(new TextBlock { Text = "Header / Accent:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) });
+            headerCol.Children.Add(cpeHeader);
+            Grid.SetColumn(headerCol, 0);
+
+            var bgCol = new StackPanel();
+            bgCol.Children.Add(new TextBlock { Text = "Background Color:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) });
+            bgCol.Children.Add(cpeBg);
+            Grid.SetColumn(bgCol, 2);
+
+            pickersPanel.Children.Add(headerCol);
+            pickersPanel.Children.Add(bgCol);
+            stack.Children.Add(pickersPanel);
 
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 6, 0, 0) };
             var btnOk = new Button { Content = "OK", Width = 75, Height = 26, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };

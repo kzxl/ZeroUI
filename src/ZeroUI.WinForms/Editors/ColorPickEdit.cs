@@ -100,10 +100,121 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        [Category("Appearance")]
+        [DefaultValue("#4F46E5")]
+        public string HexCode
+        {
+            get => $"#{_selectedColor.R:X2}{_selectedColor.G:X2}{_selectedColor.B:X2}";
+            set
+            {
+                if (TryParseHex(value, out var c))
+                {
+                    SelectedColor = c;
+                }
+            }
+        }
+
         [Category("Behavior")]
         [DefaultValue(true)]
         [Description("Enables the desktop screen eyedropper button in the color picker popup.")]
         public bool ShowEyedropper { get; set; } = true;
+
+        /// <summary>
+        /// Attempts to parse a color from hex string representation (#RGB, #RRGGBB, #AARRGGBB, or without '#').
+        /// </summary>
+        public static bool TryParseHex(string? hex, out Color color)
+        {
+            if (!string.IsNullOrWhiteSpace(hex))
+            {
+                string h = hex!.Trim();
+                if (!h.StartsWith("#")) h = "#" + h;
+                if (ZeroColor.TryParseHex(h, out var zc))
+                {
+                    color = Color.FromArgb(zc.A, zc.R, zc.G, zc.B);
+                    return true;
+                }
+                try
+                {
+                    color = ColorTranslator.FromHtml(h);
+                    return true;
+                }
+                catch { }
+            }
+            color = Color.Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// Displays a modern modal ZeroUI Color Picker dialog using ColorPickEdit.
+        /// </summary>
+        /// <param name="owner">Optional parent window.</param>
+        /// <param name="initialColor">Initial color to select.</param>
+        /// <param name="title">Optional dialog title.</param>
+        /// <returns>The chosen <see cref="Color"/>, or <c>null</c> if canceled.</returns>
+        public static Color? PickColor(IWin32Window? owner, Color initialColor, string title = "Select Color")
+        {
+            using (var dlg = new Form())
+            {
+                dlg.Text = title;
+                dlg.Font = new Font("Segoe UI", 9f);
+                dlg.Size = new Size(340, 180);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+                dlg.BackColor = Color.FromArgb(248, 250, 252);
+
+                var lbl = new Label
+                {
+                    Text = "Choose Color or Enter Hex / Eyedropper:",
+                    Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+                    Top = 16,
+                    Left = 20,
+                    AutoSize = true
+                };
+
+                var editor = new ColorPickEdit
+                {
+                    SelectedColor = initialColor,
+                    Top = 42,
+                    Left = 20,
+                    Width = 284,
+                    Height = 36
+                };
+
+                var btnOk = new Button
+                {
+                    Text = "OK",
+                    DialogResult = DialogResult.OK,
+                    Top = 96,
+                    Left = 138,
+                    Width = 80,
+                    Height = 28,
+                    FlatStyle = FlatStyle.System
+                };
+
+                var btnCancel = new Button
+                {
+                    Text = "Cancel",
+                    DialogResult = DialogResult.Cancel,
+                    Top = 96,
+                    Left = 224,
+                    Width = 80,
+                    Height = 28,
+                    FlatStyle = FlatStyle.System
+                };
+
+                dlg.Controls.AddRange(new Control[] { lbl, editor, btnOk, btnCancel });
+                dlg.AcceptButton = btnOk;
+                dlg.CancelButton = btnCancel;
+
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
+                {
+                    return editor.SelectedColor;
+                }
+                return null;
+            }
+        }
 
         public ColorPickEdit()
         {
@@ -215,7 +326,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 _isDroppedDown = true;
                 _popupControl.SyncColor(_selectedColor);
-                _dropdown.ShowDropDown(this, 220, 240);
+                _dropdown.ShowDropDown(this, 220, 202);
                 Invalidate();
             }
         }
@@ -257,7 +368,12 @@ namespace ZeroUI.WinForms.Editors
                 Color.FromArgb(100, 116, 139), // Slate Muted
                 Color.FromArgb(148, 163, 184), // Slate Light
                 Color.FromArgb(226, 232, 240), // Slate Border
-                Color.FromArgb(255, 255, 255)  // Pure White
+                Color.FromArgb(255, 255, 255), // Pure White
+                Color.FromArgb(248, 250, 252), // Slate 50 (Neutral background)
+                Color.FromArgb(238, 242, 255), // Indigo 50 (Blue tint background)
+                Color.FromArgb(236, 253, 245), // Emerald 50 (Green tint background)
+                Color.FromArgb(255, 251, 235), // Amber 50 (Warm tint background)
+                Color.FromArgb(255, 241, 242)  // Rose 50 (Red tint background)
             };
 
             public ColorPickerPopupControl(ColorPickEdit owner)
@@ -272,9 +388,18 @@ namespace ZeroUI.WinForms.Editors
 
                 _hexBox = new TextBox
                 {
-                    Location = new Point(12, 196),
-                    Width = 68,
+                    Location = new Point(12, 160),
+                    Width = 70,
                     Font = new Font("Segoe UI", 9f)
+                };
+                _hexBox.TextChanged += (s, e) =>
+                {
+                    string text = _hexBox.Text.Trim();
+                    if (TryParseHex(text, out var parsed))
+                    {
+                        _currentColor = parsed;
+                        Invalidate();
+                    }
                 };
                 _hexBox.KeyDown += (s, e) =>
                 {
@@ -285,7 +410,7 @@ namespace ZeroUI.WinForms.Editors
                     }
                 };
                 Controls.Add(_hexBox);
-                _eyedropperRect = new Rectangle(86, 194, 28, 26);
+                _eyedropperRect = new Rectangle(88, 158, 28, 26);
             }
 
             public void SyncColor(Color color)
@@ -297,9 +422,9 @@ namespace ZeroUI.WinForms.Editors
 
             private void TryApplyHex(string hex)
             {
-                if (ZeroColor.TryParseHex(hex, out var zc))
+                if (TryParseHex(hex, out var parsed))
                 {
-                    _currentColor = Color.FromArgb(zc.A, zc.R, zc.G, zc.B);
+                    _currentColor = parsed;
                     _owner.SelectedColor = _currentColor;
                     _owner._dropdown.Close();
                 }
@@ -346,7 +471,7 @@ namespace ZeroUI.WinForms.Editors
                     g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
                 }
 
-                // Draw Swatch Matrix (3 rows x 5 columns)
+                // Draw Swatch Matrix (4 rows x 5 columns)
                 int swatchSize = 28;
                 int spacing = 8;
                 int startX = 12;
@@ -407,8 +532,8 @@ namespace ZeroUI.WinForms.Editors
                 }
 
                 // Draw Color Preview Swatch
-                int previewX = _owner.ShowEyedropper ? 120 : 90;
-                int previewY = 194;
+                int previewX = _owner.ShowEyedropper ? 122 : 90;
+                int previewY = 158;
                 int previewW = Width - previewX - 12;
                 int previewH = 26;
                 var pRect = new Rectangle(previewX, previewY, previewW, previewH);
@@ -432,6 +557,18 @@ namespace ZeroUI.WinForms.Editors
                 if (_owner.ShowEyedropper && _eyedropperRect.Contains(e.Location))
                 {
                     StartEyedropper();
+                    return;
+                }
+
+                // Click Preview Swatch to confirm and close
+                int previewX = _owner.ShowEyedropper ? 122 : 90;
+                int previewY = 158;
+                int previewW = Width - previewX - 12;
+                int previewH = 26;
+                if (new Rectangle(previewX, previewY, previewW, previewH).Contains(e.Location))
+                {
+                    _owner.SelectedColor = _currentColor;
+                    _owner._dropdown.Close();
                     return;
                 }
 

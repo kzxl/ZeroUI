@@ -11,6 +11,7 @@ using ZeroUI.Core.Process;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
+using ZeroUI.WinForms.Editors;
 
 namespace ZeroUI.WinForms.Workflow
 {
@@ -244,14 +245,11 @@ namespace ZeroUI.WinForms.Workflow
             var mnuCustomLaneHeader = new ToolStripMenuItem("🎨 Custom Header / Border Color...", null, (s, e) =>
             {
                 if (_selectedLane == null) return;
-                using var dlg = new ColorDialog
+                var initial = ParseColor(_selectedLane.HeaderColorHex, Color.FromArgb(100, 116, 139));
+                var chosen = ColorPickEdit.PickColor(this, initial, "Choose Swimlane Header Color");
+                if (chosen.HasValue)
                 {
-                    Color = ParseColor(_selectedLane.HeaderColorHex, Color.FromArgb(100, 116, 139)),
-                    FullOpen = true
-                };
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    _selectedLane.HeaderColorHex = $"#{dlg.Color.R:X2}{dlg.Color.G:X2}{dlg.Color.B:X2}";
+                    _selectedLane.HeaderColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
                     IsDirty = true;
                     Invalidate();
                     DefinitionChanged?.Invoke(this, EventArgs.Empty);
@@ -262,14 +260,11 @@ namespace ZeroUI.WinForms.Workflow
             var mnuCustomLaneBg = new ToolStripMenuItem("🎨 Custom Background Color...", null, (s, e) =>
             {
                 if (_selectedLane == null) return;
-                using var dlg = new ColorDialog
+                var initial = ParseColor(_selectedLane.BackgroundColorHex, Color.FromArgb(248, 250, 252));
+                var chosen = ColorPickEdit.PickColor(this, initial, "Choose Swimlane Background Color");
+                if (chosen.HasValue)
                 {
-                    Color = ParseColor(_selectedLane.BackgroundColorHex, Color.FromArgb(248, 250, 252)),
-                    FullOpen = true
-                };
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    _selectedLane.BackgroundColorHex = $"#{dlg.Color.R:X2}{dlg.Color.G:X2}{dlg.Color.B:X2}";
+                    _selectedLane.BackgroundColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
                     IsDirty = true;
                     Invalidate();
                     DefinitionChanged?.Invoke(this, EventArgs.Empty);
@@ -345,6 +340,21 @@ namespace ZeroUI.WinForms.Workflow
                 });
                 _mnuChangeConnColor.DropDownItems.Add(itm);
             }
+
+            _mnuChangeConnColor.DropDownItems.Add(new ToolStripSeparator());
+            var mnuCustomConn = new ToolStripMenuItem("🎨 Custom Line Color...", null, (s, e) =>
+            {
+                if (_selectedConnection == null) return;
+                var initial = ParseColor(_selectedConnection.StrokeColorHex, Color.FromArgb(14, 165, 233));
+                var chosen = ColorPickEdit.PickColor(this, initial, "Choose Connection Line Color");
+                if (chosen.HasValue)
+                {
+                    _selectedConnection.StrokeColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                }
+            });
+            _mnuChangeConnColor.DropDownItems.Add(mnuCustomConn);
 
             var mnuToggleDashed = new ToolStripMenuItem("➖ Toggle Dashed Style", null, (s, e) =>
             {
@@ -680,33 +690,50 @@ namespace ZeroUI.WinForms.Workflow
 
                 var toolTip = new ToolTip();
 
-                // Panels & Pickers
-                var lblCustom = new Label { Text = "Custom Theme Colors:", Top = 148, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+                // Custom ColorPickEdit Pickers
+                var lblHeaderPicker = new Label { Text = "Header / Accent Color:", Top = 148, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+                var cpeHeader = new ColorPickEdit
+                {
+                    Top = 170,
+                    Left = 20,
+                    Width = 220,
+                    Height = 34,
+                    SelectedColor = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139))
+                };
 
-                var btnHeaderColor = new Button { Text = "🎨 Header / Border Color...", Top = 172, Left = 20, Width = 180, Height = 28, FlatStyle = FlatStyle.System };
-                var pnlHeaderSwatch = new Panel { Top = 172, Left = 206, Width = 28, Height = 28, BackColor = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139)), BorderStyle = BorderStyle.FixedSingle };
-
-                var btnBgColor = new Button { Text = "🎨 Background Color...", Top = 172, Left = 250, Width = 165, Height = 28, FlatStyle = FlatStyle.System };
-                var pnlBgSwatch = new Panel { Top = 172, Left = 421, Width = 28, Height = 28, BackColor = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252)), BorderStyle = BorderStyle.FixedSingle };
+                var lblBgPicker = new Label { Text = "Background Color:", Top = 148, Left = 254, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+                var cpeBg = new ColorPickEdit
+                {
+                    Top = 170,
+                    Left = 254,
+                    Width = 230,
+                    Height = 34,
+                    SelectedColor = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252))
+                };
 
                 // Mini Preview Panel
-                var lblPreview = new Label { Text = "Live Preview:", Top = 212, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+                var lblPreview = new Label { Text = "Live Preview:", Top = 214, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
                 var pnlPreview = new Panel
                 {
-                    Top = 234,
+                    Top = 236,
                     Left = 20,
                     Width = 464,
-                    Height = 120,
+                    Height = 118,
                     BackColor = Color.White,
                     BorderStyle = BorderStyle.FixedSingle
                 };
 
-                void UpdateSwatchesAndPreview()
+                cpeHeader.ColorChanged += (s, e) =>
                 {
-                    pnlHeaderSwatch.BackColor = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139));
-                    pnlBgSwatch.BackColor = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252));
+                    selectedHeaderHex = cpeHeader.HexCode;
                     pnlPreview.Invalidate();
-                }
+                };
+
+                cpeBg.ColorChanged += (s, e) =>
+                {
+                    selectedBgHex = cpeBg.HexCode;
+                    pnlPreview.Invalidate();
+                };
 
                 pnlPreview.Paint += (s, pe) =>
                 {
@@ -772,39 +799,13 @@ namespace ZeroUI.WinForms.Workflow
                     {
                         selectedHeaderHex = p.HeaderHex;
                         selectedBgHex = p.BgHex;
-                        UpdateSwatchesAndPreview();
+                        cpeHeader.SelectedColor = ParseColor(p.HeaderHex, Color.FromArgb(100, 116, 139));
+                        cpeBg.SelectedColor = ParseColor(p.BgHex, Color.FromArgb(248, 250, 252));
+                        pnlPreview.Invalidate();
                     };
 
                     flowPresets.Controls.Add(btnSwatch);
                 }
-
-                btnHeaderColor.Click += (s, e) =>
-                {
-                    using var cd = new ColorDialog
-                    {
-                        Color = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139)),
-                        FullOpen = true
-                    };
-                    if (cd.ShowDialog(dlg) == DialogResult.OK)
-                    {
-                        selectedHeaderHex = $"#{cd.Color.R:X2}{cd.Color.G:X2}{cd.Color.B:X2}";
-                        UpdateSwatchesAndPreview();
-                    }
-                };
-
-                btnBgColor.Click += (s, e) =>
-                {
-                    using var cd = new ColorDialog
-                    {
-                        Color = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252)),
-                        FullOpen = true
-                    };
-                    if (cd.ShowDialog(dlg) == DialogResult.OK)
-                    {
-                        selectedBgHex = $"#{cd.Color.R:X2}{cd.Color.G:X2}{cd.Color.B:X2}";
-                        UpdateSwatchesAndPreview();
-                    }
-                };
 
                 var btnOk = new Button { Text = "Save", DialogResult = DialogResult.OK, Top = 370, Left = 296, Width = 90, Height = 30, FlatStyle = FlatStyle.System };
                 var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 370, Left = 394, Width = 90, Height = 30, FlatStyle = FlatStyle.System };
@@ -813,7 +814,7 @@ namespace ZeroUI.WinForms.Workflow
                 {
                     lblTitle, txtTitle,
                     lblPresets, flowPresets,
-                    lblCustom, btnHeaderColor, pnlHeaderSwatch, btnBgColor, pnlBgSwatch,
+                    lblHeaderPicker, cpeHeader, lblBgPicker, cpeBg,
                     lblPreview, pnlPreview,
                     btnOk, btnCancel
                 });
