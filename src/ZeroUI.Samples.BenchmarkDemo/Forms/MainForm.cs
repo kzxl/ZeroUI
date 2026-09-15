@@ -117,6 +117,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private ZeroTabPage _tabOfficeDocs = null!;
         private ZeroTabPage _tabCharts = null!;
         private ZeroTabPage _tabLayout = null!;
+        private ZeroTabPage _tabMasterDetail = null!;
 
         private ZeroGridControl _zeroGrid = null!;
         private DataGridView _dgv = null!;
@@ -533,11 +534,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabOfficeDocs = new ZeroTabPage("Office & Technical Documents", "📄");
             _tabAdvanced = new ZeroTabPage("Data Hierarchy & BOM", "🌳");
             _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐");
+            _tabMasterDetail = new ZeroTabPage("Master-Detail & In-Place LookUp", "📑");
             subTabsComponents.AddTab(_tabControls);
             subTabsComponents.AddTab(_tabCommercial);
             subTabsComponents.AddTab(_tabOfficeDocs);
             subTabsComponents.AddTab(_tabAdvanced);
             subTabsComponents.AddTab(_tabLayout);
+            subTabsComponents.AddTab(_tabMasterDetail);
             _clusterComponents.Controls.Add(subTabsComponents);
 
             // Cluster 7: SCADA Process & P&ID Synoptic (Phased Real-Time Automation)
@@ -585,6 +588,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             InitializeChartsDashboard();
             InitializeWarehouseWorkstation();
             InitializeLayoutShowcase(_tabLayout);
+            InitializeMasterDetailDemo(_tabMasterDetail);
             InitializeScadaClosedLoopProcess(_tabScadaClosedLoop);
             InitializeScadaProcessFlow(_tabScadaPid);
             InitializeScadaAlarmsAndPid(_tabScadaAlarms);

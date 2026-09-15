@@ -12,7 +12,7 @@ namespace ZeroUI.Core.Data
     /// Automatically manages compiled property reflection, zero-copy formatting,
     /// type-safe sorting, and in-place editing.
     /// </summary>
-    public class ZeroListSource<T> : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource
+    public class ZeroListSource<T> : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource, IZeroItemSource
     {
         private readonly IList<T> _items;
         private readonly List<ColumnBinding> _bindings = new List<ColumnBinding>();
@@ -42,6 +42,8 @@ namespace ZeroUI.Core.Data
         }
 
         public T GetItem(int index) => _items[index];
+
+        object? IZeroItemSource.GetItem(int index) => (index >= 0 && index < _items.Count) ? (object?)_items[index] : null;
 
         public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer)
         {

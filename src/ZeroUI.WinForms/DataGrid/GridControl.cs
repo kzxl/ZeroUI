@@ -619,7 +619,8 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
                 int footerH = ShowFooter ? _footerHeight : 0;
-                int maxScroll = Math.Max(0, (_dataSource?.TotalRowCount ?? 0) * _rowHeight - (ClientSize.Height - topOffset - footerH));
+                int totalH = ((_dataSource?.TotalRowCount ?? 0) * _rowHeight) + (_enableMasterDetail ? _expandedMasterRows.Count * _detailRowHeight : 0);
+                int maxScroll = Math.Max(0, totalH - (ClientSize.Height - topOffset - footerH));
                 int clamped = Math.Max(0, Math.Min(maxScroll, value));
                 if (_scrollY != clamped)
                 {
@@ -634,7 +635,7 @@ namespace ZeroUI.WinForms.DataGrid
         public void ScrollToRow(int visualRowIndex)
         {
             if (visualRowIndex < 0) visualRowIndex = 0;
-            ScrollY = visualRowIndex * _rowHeight;
+            ScrollY = GetRowY(visualRowIndex);
         }
 
         public int SelectedVisualRow
@@ -1421,7 +1422,9 @@ namespace ZeroUI.WinForms.DataGrid
 
         public int GetPinnedColumnsWidth()
         {
-            int total = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+            int total = 0;
+            if (_enableMasterDetail) total += _masterDetailColumnWidth;
+            if (_showCheckBoxSelectorColumn) total += CheckBoxColWidth;
             for (int i = 0; i < _columns.Count; i++)
             {
                 if (_columns[i].IsVisible && _columns[i].IsPinned)
@@ -1430,6 +1433,23 @@ namespace ZeroUI.WinForms.DataGrid
                 }
             }
             return total;
+        }
+
+        private void DrawMasterDetailGlyph(int x, int y, int size, bool isExpanded)
+        {
+            uint borderColor = _pinnedBorderColor;
+            uint bgColor = _rowBgColor;
+            _dibSection.FillRectangle(x, y, size, size, borderColor);
+            _dibSection.FillRectangle(x + 1, y + 1, size - 2, size - 2, bgColor);
+
+            uint iconColor = ToBgr(ZeroTheme.Colors.TextPrimary);
+            // Horizontal bar
+            _dibSection.FillRectangle(x + 3, y + (size / 2) - 1, size - 6, 2, iconColor);
+            if (!isExpanded)
+            {
+                // Vertical bar for "+"
+                _dibSection.FillRectangle(x + (size / 2) - 1, y + 3, 2, size - 6, iconColor);
+            }
         }
 
         private void DrawCheckBoxGlyph(int x, int y, int size, CheckState state)
@@ -1467,7 +1487,7 @@ namespace ZeroUI.WinForms.DataGrid
 
             if (_columns[colIndex].IsPinned)
             {
-                int x = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                int x = (_enableMasterDetail ? _masterDetailColumnWidth : 0) + (_showCheckBoxSelectorColumn ? CheckBoxColWidth : 0);
                 for (int i = 0; i < colIndex; i++)
                 {
                     if (_columns[i].IsVisible && _columns[i].IsPinned)
@@ -1494,7 +1514,7 @@ namespace ZeroUI.WinForms.DataGrid
         private int HitTestColumnDropTarget(int clientX)
         {
             int pinnedW = GetPinnedColumnsWidth();
-            int currentX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+            int currentX = (_enableMasterDetail ? _masterDetailColumnWidth : 0) + (_showCheckBoxSelectorColumn ? CheckBoxColWidth : 0);
 
             for (int i = 0; i < _columns.Count; i++)
             {
@@ -1587,7 +1607,7 @@ namespace ZeroUI.WinForms.DataGrid
             int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
             int clientH = ClientSize.Height - topOffset - footerH;
-            int totalH = totalRows * _rowHeight;
+            int totalH = (totalRows * _rowHeight) + (_enableMasterDetail ? _expandedMasterRows.Count * _detailRowHeight : 0);
             int pinnedW = GetPinnedColumnsWidth();
             int unpinnedW = GetUnpinnedColumnsWidth();
             int scrollableW = Math.Max(0, clientW - pinnedW);
@@ -1653,12 +1673,23 @@ namespace ZeroUI.WinForms.DataGrid
                 {
                     _dibSection.SelectFont(_hFont);
 
-                    int startRow = Math.Max(0, _scrollY / _rowHeight);
-                    int visibleRowCount = (clientDataHeight / _rowHeight) + 2;
+                    int startRow = 0;
+                    if (!_enableMasterDetail || _expandedMasterRows.Count == 0)
+                    {
+                        startRow = Math.Max(0, _scrollY / _rowHeight);
+                    }
+                    else
+                    {
+                        while (startRow < totalRows - 1 && GetRowY(startRow + 1) <= _scrollY)
+                        {
+                            startRow++;
+                        }
+                    }
+                    int visibleRowCount = (clientDataHeight / _rowHeight) + 4;
                     int endRow = Math.Min(totalRows - 1, startRow + visibleRowCount);
 
                     CellValueBuffer cellBuffer = new CellValueBuffer();
-                    int firstRowY = (startRow * _rowHeight) - _scrollY;
+                    int firstRowY = GetRowY(startRow) - _scrollY;
                     int currentY = topOffset + firstRowY;
 
                     for (int r = startRow; r <= endRow && r < totalRows; r++)
@@ -1803,13 +1834,25 @@ namespace ZeroUI.WinForms.DataGrid
 
                         // (B) Draw Pinned Cells on top (fixed at 0..pinnedW)
                         int pinnedX = 0;
+                        if (_enableMasterDetail)
+                        {
+                            bool isExp = _expandedMasterRows.Contains(r);
+                            _dibSection.FillRectangle(0, currentY, _masterDetailColumnWidth, _rowHeight, rowBg);
+                            int gSize = 14;
+                            int gx = (_masterDetailColumnWidth - gSize) / 2;
+                            int gy = currentY + (_rowHeight - gSize) / 2;
+                            DrawMasterDetailGlyph(gx, gy, gSize, isExp);
+                            _dibSection.FillRectangle(_masterDetailColumnWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            pinnedX += _masterDetailColumnWidth;
+                        }
+
                         if (_showCheckBoxSelectorColumn)
                         {
                             int cbSize = 16;
-                            int cbX = (CheckBoxColWidth - cbSize) / 2;
+                            int cbX = pinnedX + (CheckBoxColWidth - cbSize) / 2;
                             int cbY = currentY + (_rowHeight - cbSize) / 2;
                             DrawCheckBoxGlyph(cbX, cbY, cbSize, isSelected ? CheckState.Checked : CheckState.Unchecked);
-                            _dibSection.FillRectangle(CheckBoxColWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            _dibSection.FillRectangle(pinnedX + CheckBoxColWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
                             pinnedX += CheckBoxColWidth;
                         }
 
@@ -1947,7 +1990,18 @@ namespace ZeroUI.WinForms.DataGrid
                                 hUnpinnedX += colW;
                             }
 
-                            int hPinnedX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                            int hPinnedX = 0;
+                            if (_enableMasterDetail)
+                            {
+                                _dibSection.FillRectangle(0, currentY + _rowHeight - 1, _masterDetailColumnWidth, 1, _gridLineColor);
+                                hPinnedX += _masterDetailColumnWidth;
+                            }
+                            if (_showCheckBoxSelectorColumn)
+                            {
+                                _dibSection.FillRectangle(hPinnedX, currentY + _rowHeight - 1, CheckBoxColWidth, 1, _gridLineColor);
+                                hPinnedX += CheckBoxColWidth;
+                            }
+
                             for (int c = 0; c < totalCols; c++)
                             {
                                 if (!_columns[c].IsVisible || !_columns[c].IsPinned) continue;
@@ -1974,13 +2028,28 @@ namespace ZeroUI.WinForms.DataGrid
                                     hPinnedX += colW;
                                 }
                             }
-                            if (_showCheckBoxSelectorColumn)
-                            {
-                                _dibSection.FillRectangle(0, currentY + _rowHeight - 1, CheckBoxColWidth, 1, _gridLineColor);
-                            }
                         }
 
-                        currentY += _rowHeight;
+                        if (_enableMasterDetail && _expandedMasterRows.Contains(r))
+                        {
+                            int detailY = currentY + _rowHeight;
+                            int detailH = _detailRowHeight;
+                            _dibSection.FillRectangle(0, detailY, width, detailH, ToBgr(ZeroTheme.Colors.HeaderBackground));
+                            _dibSection.FillRectangle(0, detailY, _masterDetailColumnWidth, detailH, _headerBgColor);
+                            _dibSection.FillRectangle(_masterDetailColumnWidth - 1, detailY, 1, detailH, _pinnedBorderColor);
+                            _dibSection.FillRectangle(0, detailY + detailH - 1, width, 1, _gridLineColor);
+
+                            GetOrCreateDetailControl(r, modelRow, width, detailY, detailH);
+                            currentY += _rowHeight + detailH;
+                        }
+                        else
+                        {
+                            if (_detailControls.TryGetValue(r, out var oldCtrl))
+                            {
+                                oldCtrl.Visible = false;
+                            }
+                            currentY += _rowHeight;
+                        }
                     }
 
                     // Pinned columns vertical accent border
@@ -2052,10 +2121,17 @@ namespace ZeroUI.WinForms.DataGrid
 
                 // (B) Draw Pinned Headers
                 int pinnedHdrX = 0;
+                if (_enableMasterDetail)
+                {
+                    _dibSection.FillRectangle(0, bandH, _masterDetailColumnWidth, _headerHeight, _headerBgColor);
+                    _dibSection.FillRectangle(_masterDetailColumnWidth - 1, bandH + 4, 1, _headerHeight - 8, 0x00CCCCCC);
+                    pinnedHdrX += _masterDetailColumnWidth;
+                }
+
                 if (_showCheckBoxSelectorColumn)
                 {
                     int cbSize = 16;
-                    int cbX = (CheckBoxColWidth - cbSize) / 2;
+                    int cbX = pinnedHdrX + (CheckBoxColWidth - cbSize) / 2;
                     int cbY = bandH + (_headerHeight - cbSize) / 2;
                     CheckState allState = CheckState.Unchecked;
                     if (totalRows > 0)
@@ -2064,7 +2140,7 @@ namespace ZeroUI.WinForms.DataGrid
                         else if (_selectedVisualRows.Count > 0) allState = CheckState.Indeterminate;
                     }
                     DrawCheckBoxGlyph(cbX, cbY, cbSize, allState);
-                    _dibSection.FillRectangle(CheckBoxColWidth - 1, bandH + 4, 1, _headerHeight - 8, 0x00CCCCCC);
+                    _dibSection.FillRectangle(pinnedHdrX + CheckBoxColWidth - 1, bandH + 4, 1, _headerHeight - 8, 0x00CCCCCC);
                     pinnedHdrX += CheckBoxColWidth;
                 }
 
@@ -2128,9 +2204,14 @@ namespace ZeroUI.WinForms.DataGrid
 
                     // (B) Pinned Filter Cells
                     int pinnedFilterX = 0;
+                    if (_enableMasterDetail)
+                    {
+                        _dibSection.FillRectangle(_masterDetailColumnWidth - 1, filterY, 1, filterH, _gridLineColor);
+                        pinnedFilterX += _masterDetailColumnWidth;
+                    }
                     if (_showCheckBoxSelectorColumn)
                     {
-                        _dibSection.FillRectangle(CheckBoxColWidth - 1, filterY, 1, filterH, _gridLineColor);
+                        _dibSection.FillRectangle(pinnedFilterX + CheckBoxColWidth - 1, filterY, 1, filterH, _gridLineColor);
                         pinnedFilterX += CheckBoxColWidth;
                     }
 
@@ -2593,7 +2674,7 @@ namespace ZeroUI.WinForms.DataGrid
             if (!_columns[columnIndex].IsVisible) return;
 
             int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
-            int rowY = topOffset + (visualRow * _rowHeight) - _scrollY;
+            int rowY = topOffset + GetRowY(visualRow) - _scrollY;
             int footerH = ShowFooter ? _footerHeight : 0;
             int clientDataHeight = Math.Max(0, ClientSize.Height - topOffset - footerH);
 
@@ -2605,7 +2686,7 @@ namespace ZeroUI.WinForms.DataGrid
 
             if (_columns[columnIndex].IsPinned)
             {
-                colX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                colX = (_enableMasterDetail ? _masterDetailColumnWidth : 0) + (_showCheckBoxSelectorColumn ? CheckBoxColWidth : 0);
                 for (int c = 0; c < columnIndex; c++)
                 {
                     if (_columns[c].IsVisible && _columns[c].IsPinned)
@@ -2643,13 +2724,14 @@ namespace ZeroUI.WinForms.DataGrid
             if (visualRow < 0 || visualRow >= VisualRowCount) return;
 
             int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
-            int rowY = topOffset + (visualRow * _rowHeight) - _scrollY;
+            int rowY = topOffset + GetRowY(visualRow) - _scrollY;
+            int totalRowH = _rowHeight + (IsMasterRowExpanded(visualRow) ? _detailRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
             int clientDataHeight = Math.Max(0, ClientSize.Height - topOffset - footerH);
 
-            if (rowY + _rowHeight <= topOffset || rowY >= topOffset + clientDataHeight) return;
+            if (rowY + totalRowH <= topOffset || rowY >= topOffset + clientDataHeight) return;
 
-            Rectangle rowRect = new Rectangle(0, rowY, ClientSize.Width, _rowHeight);
+            Rectangle rowRect = new Rectangle(0, rowY, ClientSize.Width, totalRowH);
             Invalidate(rowRect);
         }
 
@@ -2670,11 +2752,25 @@ namespace ZeroUI.WinForms.DataGrid
 
             int effHeaderH = EffectiveHeaderHeight;
             int footerH = ShowFooter ? _footerHeight : 0;
-            int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+            int pinnedOffset = (_enableMasterDetail ? _masterDetailColumnWidth : 0) + (_showCheckBoxSelectorColumn ? CheckBoxColWidth : 0);
             int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
 
             if (e.Button == MouseButtons.Left)
             {
+                if (_enableMasterDetail && e.X < _masterDetailColumnWidth)
+                {
+                    int clickedRow = GetVisualRowAtClientY(e.Y);
+                    if (clickedRow >= 0 && clickedRow < VisualRowCount)
+                    {
+                        int rowTop = effHeaderH + autoFilterH + GetRowY(clickedRow) - _scrollY;
+                        if (e.Y >= rowTop && e.Y < rowTop + _rowHeight)
+                        {
+                            if (_isEditing) CommitEdit();
+                            ToggleMasterRow(clickedRow);
+                            return;
+                        }
+                    }
+                }
                 var hit = SpatialHitTester.HitTest(
                     e.X,
                     e.Y,
@@ -2860,7 +2956,7 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 int effHeaderH = EffectiveHeaderHeight;
                 int footerH = ShowFooter ? _footerHeight : 0;
-                int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                int pinnedOffset = (_enableMasterDetail ? _masterDetailColumnWidth : 0) + (_showCheckBoxSelectorColumn ? CheckBoxColWidth : 0);
                 int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
                 var hit = SpatialHitTester.HitTest(
                     e.X,
@@ -2897,7 +2993,7 @@ namespace ZeroUI.WinForms.DataGrid
 
             int effHeaderH = EffectiveHeaderHeight;
             int footerH = ShowFooter ? _footerHeight : 0;
-            int pinnedOffset = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+            int pinnedOffset = (_enableMasterDetail ? _masterDetailColumnWidth : 0) + (_showCheckBoxSelectorColumn ? CheckBoxColWidth : 0);
             int autoFilterH = _showAutoFilterRow ? _autoFilterRowHeight : 0;
 
             if (_isSelectingBlock && e.Button == MouseButtons.Left)
@@ -3717,9 +3813,15 @@ namespace ZeroUI.WinForms.DataGrid
         }
 
         private readonly HashSet<int> _expandedMasterRows = new HashSet<int>();
+        private readonly Dictionary<int, Control> _detailControls = new Dictionary<int, Control>();
         private bool _enableMasterDetail = false;
-        private int _detailRowHeight = 120;
+        private int _detailRowHeight = 140;
+        private int _masterDetailColumnWidth = 28;
         private int _bandRowCount = 1;
+
+        public event EventHandler<MasterRowGetChildDataEventArgs>? MasterRowGetChildData;
+        public event EventHandler<MasterRowExpandingEventArgs>? MasterRowExpanding;
+        public event EventHandler<MasterRowCollapsedEventArgs>? MasterRowCollapsed;
 
         [Category("ZeroUI - MasterDetail")]
         [DefaultValue(false)]
@@ -3732,6 +3834,11 @@ namespace ZeroUI.WinForms.DataGrid
                 if (_enableMasterDetail != value)
                 {
                     _enableMasterDetail = value;
+                    if (!_enableMasterDetail)
+                    {
+                        ClearDetailControls();
+                        _expandedMasterRows.Clear();
+                    }
                     UpdateScrollBars();
                     Invalidate();
                 }
@@ -3739,7 +3846,21 @@ namespace ZeroUI.WinForms.DataGrid
         }
 
         [Category("ZeroUI - MasterDetail")]
-        [DefaultValue(120)]
+        [DefaultValue(28)]
+        [Description("Width of the master row expansion indicator column.")]
+        public int MasterDetailColumnWidth
+        {
+            get => _masterDetailColumnWidth;
+            set
+            {
+                _masterDetailColumnWidth = Math.Max(16, value);
+                UpdateScrollBars();
+                Invalidate();
+            }
+        }
+
+        [Category("ZeroUI - MasterDetail")]
+        [DefaultValue(140)]
         [Description("Height in pixels of the expanded detail container.")]
         public int DetailRowHeight
         {
@@ -3757,12 +3878,138 @@ namespace ZeroUI.WinForms.DataGrid
 
         public bool IsMasterRowExpanded(int visualRow) => _expandedMasterRows.Contains(visualRow);
 
+        public int GetExpandedCountBefore(int visualRow)
+        {
+            if (!_enableMasterDetail || _expandedMasterRows.Count == 0) return 0;
+            int count = 0;
+            foreach (int r in _expandedMasterRows)
+            {
+                if (r < visualRow) count++;
+            }
+            return count;
+        }
+
+        public int GetRowY(int visualRow)
+        {
+            if (!_enableMasterDetail || _expandedMasterRows.Count == 0)
+            {
+                return visualRow * _rowHeight;
+            }
+            return (visualRow * _rowHeight) + (GetExpandedCountBefore(visualRow) * _detailRowHeight);
+        }
+
+        public int GetVisualRowAtClientY(int clientY)
+        {
+            int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+            int footerH = ShowFooter ? _footerHeight : 0;
+            if (clientY < topOffset || clientY >= ClientSize.Height - footerH) return -1;
+
+            int relY = clientY - topOffset + _scrollY;
+            if (relY < 0) return -1;
+
+            if (!_enableMasterDetail || _expandedMasterRows.Count == 0)
+            {
+                int r = relY / _rowHeight;
+                return (r >= 0 && r < VisualRowCount) ? r : -1;
+            }
+
+            int currY = 0;
+            for (int r = 0; r < VisualRowCount; r++)
+            {
+                int h = _rowHeight + (IsMasterRowExpanded(r) ? _detailRowHeight : 0);
+                if (relY >= currY && relY < currY + h)
+                {
+                    return r;
+                }
+                currY += h;
+            }
+            return -1;
+        }
+
+        private Control? GetOrCreateDetailControl(int visualRow, int modelRow, int totalWidth, int detailY, int detailH)
+        {
+            if (!_detailControls.TryGetValue(visualRow, out var ctrl) || ctrl.IsDisposed)
+            {
+                object? masterRowData = null;
+                if (_dataSource is IZeroItemSource itemSource)
+                {
+                    masterRowData = itemSource.GetItem(modelRow);
+                }
+
+                var args = new MasterRowGetChildDataEventArgs(visualRow, modelRow, masterRowData);
+                MasterRowGetChildData?.Invoke(this, args);
+
+                if (args.ChildControl != null)
+                {
+                    ctrl = args.ChildControl;
+                }
+                else if (args.ChildDataSource != null)
+                {
+                    var childGrid = new GridControl
+                    {
+                        DataSource = args.ChildDataSource,
+                        RowHeight = Math.Max(20, _rowHeight - 2),
+                        HeaderHeight = Math.Max(22, _headerHeight - 4),
+                        Font = new Font(Font.FontFamily, Math.Max(8f, Font.Size - 1f)),
+                        ViewType = GridViewType.Table
+                    };
+                    if (args.ChildColumns != null && args.ChildColumns.Count > 0)
+                    {
+                        childGrid.Columns.Clear();
+                        foreach (var c in args.ChildColumns) childGrid.Columns.Add(c);
+                    }
+                    ctrl = childGrid;
+                }
+
+                if (ctrl != null)
+                {
+                    _detailControls[visualRow] = ctrl;
+                    if (!Controls.Contains(ctrl))
+                    {
+                        Controls.Add(ctrl);
+                    }
+                }
+            }
+
+            if (ctrl != null)
+            {
+                int childX = _masterDetailColumnWidth + 12;
+                int childW = Math.Max(50, totalWidth - childX - 16);
+                int childH = Math.Max(20, detailH - 8);
+                ctrl.SetBounds(childX, detailY + 4, childW, childH);
+                ctrl.Visible = true;
+                ctrl.BringToFront();
+            }
+            return ctrl;
+        }
+
+        public void ClearDetailControls()
+        {
+            foreach (var kvp in _detailControls)
+            {
+                if (kvp.Value != null && !kvp.Value.IsDisposed)
+                {
+                    Controls.Remove(kvp.Value);
+                    kvp.Value.Dispose();
+                }
+            }
+            _detailControls.Clear();
+        }
+
         public void ExpandMasterRow(int visualRow)
         {
-            if (visualRow >= 0 && visualRow < VisualRowCount && _expandedMasterRows.Add(visualRow))
+            if (visualRow >= 0 && visualRow < VisualRowCount)
             {
-                UpdateScrollBars();
-                Invalidate();
+                int modelRow = GetModelRowIndex(visualRow);
+                var args = new MasterRowExpandingEventArgs(visualRow, modelRow);
+                MasterRowExpanding?.Invoke(this, args);
+                if (args.Cancel) return;
+
+                if (_expandedMasterRows.Add(visualRow))
+                {
+                    UpdateScrollBars();
+                    Invalidate();
+                }
             }
         }
 
@@ -3770,6 +4017,12 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (_expandedMasterRows.Remove(visualRow))
             {
+                int modelRow = GetModelRowIndex(visualRow);
+                if (_detailControls.TryGetValue(visualRow, out var ctrl))
+                {
+                    ctrl.Visible = false;
+                }
+                MasterRowCollapsed?.Invoke(this, new MasterRowCollapsedEventArgs(visualRow, modelRow));
                 UpdateScrollBars();
                 Invalidate();
             }
@@ -3779,6 +4032,46 @@ namespace ZeroUI.WinForms.DataGrid
         {
             if (IsMasterRowExpanded(visualRow)) CollapseMasterRow(visualRow);
             else ExpandMasterRow(visualRow);
+        }
+
+        /// <summary>
+        /// Gets the underlying domain model instance for the specified visual row index.
+        /// Equivalent to DevExpress GridView.GetRow(rowHandle).
+        /// </summary>
+        public object? GetRow(int visualRow)
+        {
+            if (_dataSource is IZeroItemSource itemSource)
+            {
+                int modelRow = GetModelRowIndex(visualRow);
+                return itemSource.GetItem(modelRow);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the strongly-typed domain model instance for the specified visual row index.
+        /// </summary>
+        public T? GetRow<T>(int visualRow) where T : class
+        {
+            return GetRow(visualRow) as T;
+        }
+
+        /// <summary>
+        /// Gets the underlying domain model instance of the currently selected row.
+        /// Equivalent to DevExpress GridView.GetFocusedRow().
+        /// </summary>
+        public object? GetFocusedRow()
+        {
+            if (_selectedVisualRow < 0) return null;
+            return GetRow(_selectedVisualRow);
+        }
+
+        /// <summary>
+        /// Gets the strongly-typed domain model instance of the currently selected row.
+        /// </summary>
+        public T? GetFocusedRow<T>() where T : class
+        {
+            return GetFocusedRow() as T;
         }
 
         [Category("ZeroUI - Layout")]
@@ -3844,7 +4137,7 @@ namespace ZeroUI.WinForms.DataGrid
             int cellX;
             if (_columns[colIndex].IsPinned)
             {
-                cellX = _showCheckBoxSelectorColumn ? CheckBoxColWidth : 0;
+                cellX = (_enableMasterDetail ? _masterDetailColumnWidth : 0) + (_showCheckBoxSelectorColumn ? CheckBoxColWidth : 0);
                 for (int c = 0; c < colIndex; c++)
                 {
                     if (_columns[c].IsVisible && _columns[c].IsPinned) cellX += _columns[c].Width;
@@ -3866,7 +4159,7 @@ namespace ZeroUI.WinForms.DataGrid
             if (visualRow < 0 || colIndex < 0 || colIndex >= _columns.Count) return Rectangle.Empty;
 
             int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
-            int cellY = topOffset + (visualRow * _rowHeight) - _scrollY;
+            int cellY = topOffset + GetRowY(visualRow) - _scrollY;
             int cellX = GetColumnX(colIndex);
 
             return new Rectangle(cellX, cellY, _columns[colIndex].Width, _rowHeight);
@@ -3936,6 +4229,21 @@ namespace ZeroUI.WinForms.DataGrid
                 else if (editor is SpinEdit spRep && decimal.TryParse(val.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) spRep.Value = n;
                 else if (editor is DateEdit deRep && DateTime.TryParse(val, out var d)) deRep.Value = d;
                 else if (editor is CheckBox cbRep && bool.TryParse(val, out var b)) cbRep.Checked = b;
+                else if (editor is GridLookupEdit gleRep)
+                {
+                    gleRep.EditValue = val;
+                    gleRep.SelectionChanged += (s, e) => CommitEdit();
+                }
+                else if (editor is LookUpEdit lueRep)
+                {
+                    lueRep.EditValue = val;
+                    lueRep.SelectedItemChanged += (s, e) => CommitEdit();
+                }
+                else if (editor is ComboBoxEdit cmbRep)
+                {
+                    cmbRep.Text = val;
+                    cmbRep.SelectedIndexChanged += (s, e) => CommitEdit();
+                }
                 editor.KeyDown += (s, e) =>
                 {
                     if (e.KeyCode == Keys.Enter) CommitEdit();
@@ -4010,6 +4318,14 @@ namespace ZeroUI.WinForms.DataGrid
             else if (_activeInPlaceEditor is CheckBox cb)
             {
                 newText = cb.Checked.ToString();
+            }
+            else if (_activeInPlaceEditor is GridLookupEdit gle)
+            {
+                newText = gle.SelectedValue?.ToString() ?? gle.SelectedText;
+            }
+            else if (_activeInPlaceEditor is LookUpEdit lue)
+            {
+                newText = lue.SelectedKey ?? lue.SelectedItem?.DisplayText ?? lue.Text;
             }
             else if (_activeInPlaceEditor is ComboBoxEdit cmb)
             {
