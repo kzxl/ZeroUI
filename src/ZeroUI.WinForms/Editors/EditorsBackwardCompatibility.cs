@@ -13,4 +13,15 @@ namespace ZeroUI.WinForms.Editors
 
     [Obsolete("Use ZeroUI.WinForms.Navigation.PaginationControl instead.")]
     public class PaginationControl : ZeroUI.WinForms.Navigation.PaginationControl { }
+
+    [Obsolete("ColorPickerEdit is deprecated. Use ColorPickEdit instead.")]
+    public class ColorPickerEdit : ColorPickEdit
+    {
+        [Obsolete("Use SelectedColor instead.")]
+        public System.Drawing.Color Color
+        {
+            get => SelectedColor;
+            set => SelectedColor = value;
+        }
+    }
 }

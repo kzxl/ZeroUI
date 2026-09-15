@@ -537,8 +537,9 @@ namespace ZeroUI.Wpf.Editors
     }
 
     /// <summary>
-    /// Modern alias for <see cref="ColorPickEdit"/>.
+    /// Backward-compatibility alias for <see cref="ColorPickEdit"/>.
     /// </summary>
+    [Obsolete("ColorPickerEdit is deprecated. Use ColorPickEdit instead.")]
     public class ColorPickerEdit : ColorPickEdit
     {
     }

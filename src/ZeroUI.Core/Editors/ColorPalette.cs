@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ZeroUI.Core.Editors
 {
     /// <summary>
-    /// Curated enterprise color palettes for <c>ColorPickerEdit</c>.
+    /// Curated enterprise color palettes for <c>ColorPickEdit</c>.
     /// </summary>
     public static class ColorPalette
     {
