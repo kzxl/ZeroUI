@@ -95,7 +95,6 @@ namespace ZeroUI.WinForms.Industrial
             View,
             Design,
             Save,
-            AutoLayout,
             Reset
         }
         private ControlBarButton _hoveredControlBarButton = ControlBarButton.None;
@@ -194,6 +193,9 @@ namespace ZeroUI.WinForms.Industrial
             });
             _mnuFitLanes = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.FitToContent, "Fit Lanes to Nodes"), null, (s, e) => FitLanesToNodes());
             _mnuAutoArrange = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.AutoLayout, "Auto-Arrange Flow"), null, (s, e) => AutoArrangeLayout(true));
+            var mnuAutoH = new ToolStripMenuItem("Horizontal Flow (Left-to-Right)", null, (s, e) => AutoArrangeLayout(true));
+            var mnuAutoV = new ToolStripMenuItem("Vertical Flow (Top-to-Bottom)", null, (s, e) => AutoArrangeLayout(false));
+            _mnuAutoArrange.DropDownItems.AddRange(new ToolStripItem[] { mnuAutoH, mnuAutoV });
             _mnuDeleteLane = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Delete, "Delete Swimlane"), null, (s, e) =>
             {
                 if (_selectedLane != null)
@@ -1343,7 +1345,7 @@ namespace ZeroUI.WinForms.Industrial
 
         private RectangleF GetControlBarRect()
         {
-            float totalW = 400f;
+            float totalW = 304f;
             float h = 30f;
             float x = Math.Max(260f, Width - totalW - 20f);
             float y = 14f;
@@ -1359,8 +1361,7 @@ namespace ZeroUI.WinForms.Industrial
                 (new RectangleF(curX, r.Y, 68, r.Height), ControlBarButton.View, IconKey.Document, "Xem", !_isDesignMode, false),
                 (new RectangleF(curX += 68, r.Y, 86, r.Height), ControlBarButton.Design, IconKey.Edit, "Thiết kế", _isDesignMode, false),
                 (new RectangleF(curX += 86, r.Y, 64, r.Height), ControlBarButton.Save, IconKey.Save, "Lưu", false, _isDirty),
-                (new RectangleF(curX += 64, r.Y, 96, r.Height), ControlBarButton.AutoLayout, IconKey.AutoLayout, "Căn layout", false, false),
-                (new RectangleF(curX += 96, r.Y, 86, r.Height), ControlBarButton.Reset, IconKey.Refresh, "Mặc định", false, false)
+                (new RectangleF(curX += 64, r.Y, 86, r.Height), ControlBarButton.Reset, IconKey.Refresh, "Mặc định", false, false)
             };
         }
 
@@ -1889,9 +1890,6 @@ namespace ZeroUI.WinForms.Industrial
                         case ControlBarButton.Save:
                             IsDirty = false;
                             SaveRequested?.Invoke(this, EventArgs.Empty);
-                            break;
-                        case ControlBarButton.AutoLayout:
-                            AutoArrangeLayout(true);
                             break;
                         case ControlBarButton.Reset:
                             ResetRequested?.Invoke(this, EventArgs.Empty);
