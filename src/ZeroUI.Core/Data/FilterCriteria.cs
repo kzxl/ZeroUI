@@ -33,6 +33,7 @@ namespace ZeroUI.Core.Data
     {
         string ToDisplayString();
         string ToSqlWhere();
+        string ToRowFilter();
     }
 
     public class ConditionFilterNode : IFilterCriteriaNode
@@ -40,18 +41,24 @@ namespace ZeroUI.Core.Data
         public string FieldName { get; set; } = string.Empty;
         public FilterComparisonOperator Operator { get; set; } = FilterComparisonOperator.Equals;
         public string Value { get; set; } = string.Empty;
+        public string Value2 { get; set; } = string.Empty;
 
         public ConditionFilterNode() { }
 
-        public ConditionFilterNode(string fieldName, FilterComparisonOperator op, string value)
+        public ConditionFilterNode(string fieldName, FilterComparisonOperator op, string value, string value2 = "")
         {
             FieldName = fieldName;
             Operator = op;
             Value = value;
+            Value2 = value2;
         }
 
         public string ToDisplayString()
         {
+            if (Operator == FilterComparisonOperator.Between)
+            {
+                return $"[{FieldName}] Between '{Value}' And '{Value2}'";
+            }
             return $"[{FieldName}] {Operator} '{Value}'";
         }
 
@@ -68,6 +75,27 @@ namespace ZeroUI.Core.Data
                 FilterComparisonOperator.Contains => $"[{FieldName}] LIKE '%{Value}%'",
                 FilterComparisonOperator.StartsWith => $"[{FieldName}] LIKE '{Value}%'",
                 FilterComparisonOperator.EndsWith => $"[{FieldName}] LIKE '%{Value}'",
+                FilterComparisonOperator.Between => $"[{FieldName}] BETWEEN '{Value}' AND '{Value2}'",
+                FilterComparisonOperator.IsNull => $"[{FieldName}] IS NULL",
+                FilterComparisonOperator.IsNotNull => $"[{FieldName}] IS NOT NULL",
+                _ => $"[{FieldName}] = '{Value}'"
+            };
+        }
+
+        public string ToRowFilter()
+        {
+            return Operator switch
+            {
+                FilterComparisonOperator.Equals => $"[{FieldName}] = '{Value}'",
+                FilterComparisonOperator.NotEquals => $"[{FieldName}] <> '{Value}'",
+                FilterComparisonOperator.GreaterThan => $"[{FieldName}] > '{Value}'",
+                FilterComparisonOperator.GreaterThanOrEqual => $"[{FieldName}] >= '{Value}'",
+                FilterComparisonOperator.LessThan => $"[{FieldName}] < '{Value}'",
+                FilterComparisonOperator.LessThanOrEqual => $"[{FieldName}] <= '{Value}'",
+                FilterComparisonOperator.Contains => $"[{FieldName}] LIKE '%{Value}%'",
+                FilterComparisonOperator.StartsWith => $"[{FieldName}] LIKE '{Value}%'",
+                FilterComparisonOperator.EndsWith => $"[{FieldName}] LIKE '%{Value}'",
+                FilterComparisonOperator.Between => $"([{FieldName}] >= '{Value}' AND [{FieldName}] <= '{Value2}')",
                 FilterComparisonOperator.IsNull => $"[{FieldName}] IS NULL",
                 FilterComparisonOperator.IsNotNull => $"[{FieldName}] IS NOT NULL",
                 _ => $"[{FieldName}] = '{Value}'"
@@ -87,9 +115,9 @@ namespace ZeroUI.Core.Data
             Operator = op;
         }
 
-        public void AddCondition(string fieldName, FilterComparisonOperator op, string value)
+        public void AddCondition(string fieldName, FilterComparisonOperator op, string value, string value2 = "")
         {
-            Children.Add(new ConditionFilterNode(fieldName, op, value));
+            Children.Add(new ConditionFilterNode(fieldName, op, value, value2));
         }
 
         public GroupFilterNode AddGroup(FilterGroupOperator op)
@@ -103,7 +131,11 @@ namespace ZeroUI.Core.Data
         {
             var sb = new StringBuilder();
             sb.Append("(");
-            string joiner = Operator == FilterGroupOperator.Or ? " OR " : " AND ";
+            string joiner = (Operator == FilterGroupOperator.Or || Operator == FilterGroupOperator.NotOr) ? " OR " : " AND ";
+            if (Operator == FilterGroupOperator.NotAnd || Operator == FilterGroupOperator.NotOr)
+            {
+                sb.Append("NOT ");
+            }
             for (int i = 0; i < Children.Count; i++)
             {
                 if (i > 0) sb.Append(joiner);
@@ -117,12 +149,35 @@ namespace ZeroUI.Core.Data
         {
             if (Children.Count == 0) return "1=1";
             var sb = new StringBuilder();
+            if (Operator == FilterGroupOperator.NotAnd || Operator == FilterGroupOperator.NotOr)
+            {
+                sb.Append("NOT ");
+            }
             sb.Append("(");
-            string joiner = Operator == FilterGroupOperator.Or ? " OR " : " AND ";
+            string joiner = (Operator == FilterGroupOperator.Or || Operator == FilterGroupOperator.NotOr) ? " OR " : " AND ";
             for (int i = 0; i < Children.Count; i++)
             {
                 if (i > 0) sb.Append(joiner);
                 sb.Append(Children[i].ToSqlWhere());
+            }
+            sb.Append(")");
+            return sb.ToString();
+        }
+
+        public string ToRowFilter()
+        {
+            if (Children.Count == 0) return "";
+            var sb = new StringBuilder();
+            if (Operator == FilterGroupOperator.NotAnd || Operator == FilterGroupOperator.NotOr)
+            {
+                sb.Append("NOT ");
+            }
+            sb.Append("(");
+            string joiner = (Operator == FilterGroupOperator.Or || Operator == FilterGroupOperator.NotOr) ? " OR " : " AND ";
+            for (int i = 0; i < Children.Count; i++)
+            {
+                if (i > 0) sb.Append(joiner);
+                sb.Append(Children[i].ToRowFilter());
             }
             sb.Append(")");
             return sb.ToString();
@@ -153,7 +208,10 @@ namespace ZeroUI.Core.Data
                 FilterComparisonOperator.StartsWith => ZeroLocalizer.GetString(ZeroStringId.FilterStartsWith),
                 FilterComparisonOperator.EndsWith => ZeroLocalizer.GetString(ZeroStringId.FilterEndsWith),
                 FilterComparisonOperator.GreaterThan => ZeroLocalizer.GetString(ZeroStringId.FilterGreaterThan),
+                FilterComparisonOperator.GreaterThanOrEqual => ">=",
                 FilterComparisonOperator.LessThan => ZeroLocalizer.GetString(ZeroStringId.FilterLessThan),
+                FilterComparisonOperator.LessThanOrEqual => "<=",
+                FilterComparisonOperator.Between => "Between",
                 FilterComparisonOperator.IsNull => ZeroLocalizer.GetString(ZeroStringId.FilterIsNull),
                 FilterComparisonOperator.IsNotNull => ZeroLocalizer.GetString(ZeroStringId.FilterIsNotNull),
                 _ => op.ToString()

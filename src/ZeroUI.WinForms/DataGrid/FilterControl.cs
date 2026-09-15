@@ -263,26 +263,76 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 if (cboOp.SelectedItem is FilterOperatorDisplayItem item)
                 {
+                    bool needRebuild = (cond.Operator == FilterComparisonOperator.Between || item.Operator == FilterComparisonOperator.Between ||
+                                        cond.Operator == FilterComparisonOperator.IsNull || item.Operator == FilterComparisonOperator.IsNull ||
+                                        cond.Operator == FilterComparisonOperator.IsNotNull || item.Operator == FilterComparisonOperator.IsNotNull);
                     cond.Operator = item.Operator;
+                    if (needRebuild)
+                    {
+                        RebuildTreeUI();
+                    }
                     FilterChanged?.Invoke(this, EventArgs.Empty);
                 }
             };
             condRow.Controls.Add(cboOp);
 
-            // Value TextBox
-            var txtValue = new TextBox
+            // Value Inputs based on Operator
+            if (cond.Operator == FilterComparisonOperator.Between)
             {
-                Text = cond.Value,
-                Font = new Font("Segoe UI", 9f),
-                Size = new Size(140, 26),
-                Location = new Point(304, 3)
-            };
-            txtValue.TextChanged += (s, e) =>
+                var txtVal1 = new TextBox
+                {
+                    Text = cond.Value,
+                    Font = new Font("Segoe UI", 9f),
+                    Size = new Size(80, 26),
+                    Location = new Point(304, 3)
+                };
+                txtVal1.TextChanged += (s, e) =>
+                {
+                    cond.Value = txtVal1.Text;
+                    FilterChanged?.Invoke(this, EventArgs.Empty);
+                };
+                condRow.Controls.Add(txtVal1);
+
+                var lblAnd = new Label
+                {
+                    Text = "and",
+                    Font = new Font("Segoe UI", 9f),
+                    ForeColor = colors.TextSecondary,
+                    AutoSize = true,
+                    Location = new Point(388, 7)
+                };
+                condRow.Controls.Add(lblAnd);
+
+                var txtVal2 = new TextBox
+                {
+                    Text = cond.Value2,
+                    Font = new Font("Segoe UI", 9f),
+                    Size = new Size(80, 26),
+                    Location = new Point(416, 3)
+                };
+                txtVal2.TextChanged += (s, e) =>
+                {
+                    cond.Value2 = txtVal2.Text;
+                    FilterChanged?.Invoke(this, EventArgs.Empty);
+                };
+                condRow.Controls.Add(txtVal2);
+            }
+            else if (cond.Operator != FilterComparisonOperator.IsNull && cond.Operator != FilterComparisonOperator.IsNotNull)
             {
-                cond.Value = txtValue.Text;
-                FilterChanged?.Invoke(this, EventArgs.Empty);
-            };
-            condRow.Controls.Add(txtValue);
+                var txtValue = new TextBox
+                {
+                    Text = cond.Value,
+                    Font = new Font("Segoe UI", 9f),
+                    Size = new Size(140, 26),
+                    Location = new Point(304, 3)
+                };
+                txtValue.TextChanged += (s, e) =>
+                {
+                    cond.Value = txtValue.Text;
+                    FilterChanged?.Invoke(this, EventArgs.Empty);
+                };
+                condRow.Controls.Add(txtValue);
+            }
 
             _treePanel.Controls.Add(condRow);
             curY += 32;
