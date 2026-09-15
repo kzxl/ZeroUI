@@ -146,6 +146,20 @@ namespace ZeroUI.WinForms.Layout
             }
         }
 
+        protected override void OnControlAdded(ControlEventArgs e)
+        {
+            base.OnControlAdded(e);
+            if (e.Control != null)
+            {
+                // Reset DockStyle so StackPanel manages positions cleanly without WinForms docking collisions
+                if (e.Control.Dock != DockStyle.None)
+                {
+                    e.Control.Dock = DockStyle.None;
+                }
+            }
+            PerformLayout();
+        }
+
         protected override void OnLayout(LayoutEventArgs levent)
         {
             if (_isPerformingLayout) return;
@@ -153,7 +167,6 @@ namespace ZeroUI.WinForms.Layout
             _isPerformingLayout = true;
             try
             {
-                base.OnLayout(levent);
                 ArrangeChildren();
             }
             finally
@@ -164,76 +177,110 @@ namespace ZeroUI.WinForms.Layout
 
         private void ArrangeChildren()
         {
-            if (Controls.Count == 0) return;
+            if (Controls.Count == 0)
+            {
+                AutoScrollMinSize = Size.Empty;
+                return;
+            }
 
-            int clientLeft = Padding.Left + AutoScrollPosition.X;
-            int clientTop = Padding.Top + AutoScrollPosition.Y;
-            int availableWidth = Math.Max(0, DisplayRectangle.Width - Padding.Horizontal);
-            int availableHeight = Math.Max(0, DisplayRectangle.Height - Padding.Vertical);
+            // Use ClientRectangle to automatically account for active scrollbars and prevent horizontal scrollbar leak
+            int clientW = ClientRectangle.Width;
+            int clientH = ClientRectangle.Height;
 
-            int currentX = clientLeft;
-            int currentY = clientTop;
+            int availableWidth = Math.Max(0, clientW - Padding.Horizontal);
+            int availableHeight = Math.Max(0, clientH - Padding.Vertical);
+
+            int startX = Padding.Left + AutoScrollPosition.X;
+            int startY = Padding.Top + AutoScrollPosition.Y;
+
+            int currentX = startX;
+            int currentY = startY;
 
             for (int i = 0; i < Controls.Count; i++)
             {
                 Control child = Controls[i];
                 if (!child.Visible) continue;
 
+                if (child.Dock != DockStyle.None)
+                {
+                    child.Dock = DockStyle.None;
+                }
+
                 int childW = child.Width;
                 int childH = child.Height;
 
                 if (_orientation == StackOrientation.Vertical)
                 {
-                    int x = currentX;
+                    int x = startX;
                     int w = childW;
 
                     switch (_alignment)
                     {
                         case StackAlignment.Stretch:
-                            x = clientLeft;
+                            x = startX;
                             w = availableWidth;
                             break;
                         case StackAlignment.Center:
-                            x = clientLeft + Math.Max(0, (availableWidth - childW) / 2);
+                            x = startX + Math.Max(0, (availableWidth - childW) / 2);
                             break;
                         case StackAlignment.End:
-                            x = clientLeft + Math.Max(0, availableWidth - childW);
+                            x = startX + Math.Max(0, availableWidth - childW);
                             break;
                         case StackAlignment.Start:
                         default:
-                            x = clientLeft;
+                            x = startX;
                             break;
                     }
 
-                    child.SetBounds(x, currentY, w, childH);
+                    if (child.Location.X != x || child.Location.Y != currentY || child.Width != w || child.Height != childH)
+                    {
+                        child.SetBounds(x, currentY, w, childH, BoundsSpecified.All);
+                    }
+
                     currentY += childH + _spacing;
                 }
                 else // Horizontal
                 {
-                    int y = currentY;
+                    int y = startY;
                     int h = childH;
 
                     switch (_alignment)
                     {
                         case StackAlignment.Stretch:
-                            y = clientTop;
+                            y = startY;
                             h = availableHeight;
                             break;
                         case StackAlignment.Center:
-                            y = clientTop + Math.Max(0, (availableHeight - childH) / 2);
+                            y = startY + Math.Max(0, (availableHeight - childH) / 2);
                             break;
                         case StackAlignment.End:
-                            y = clientTop + Math.Max(0, availableHeight - childH);
+                            y = startY + Math.Max(0, availableHeight - childH);
                             break;
                         case StackAlignment.Start:
                         default:
-                            y = clientTop;
+                            y = startY;
                             break;
                     }
 
-                    child.SetBounds(currentX, y, childW, h);
+                    if (child.Location.X != currentX || child.Location.Y != y || child.Width != childW || child.Height != h)
+                    {
+                        child.SetBounds(currentX, y, childW, h, BoundsSpecified.All);
+                    }
+
                     currentX += childW + _spacing;
                 }
+            }
+
+            // Automatically set scroll minimum virtual boundaries
+            if (_orientation == StackOrientation.Vertical)
+            {
+                int totalHeight = (currentY - AutoScrollPosition.Y) - _spacing + Padding.Bottom;
+                AutoScrollMinSize = new Size(0, Math.Max(0, totalHeight));
+            }
+            else
+            {
+                int totalWidth = (currentX - AutoScrollPosition.X) - _spacing + Padding.Right;
+                AutoScrollMinSize = new Size(Math.Max(0, totalWidth), 0);
             }
         }
 
