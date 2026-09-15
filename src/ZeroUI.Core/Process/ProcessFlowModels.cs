@@ -200,6 +200,22 @@ namespace ZeroUI.Core.Process
         public string BackgroundColorHex { get; set; } = "#F8FAFC";
         public double HeaderHeight { get; set; } = 34;
 
+        /// <summary>
+        /// Curated visual color theme presets for swimlanes / group frames.
+        /// </summary>
+        public static readonly SwimlaneColorPreset[] DefaultPresets = new[]
+        {
+            new SwimlaneColorPreset("Slate Gray (Default)",  "#64748B", "#F8FAFC"),
+            new SwimlaneColorPreset("Indigo / Blue",         "#6366F1", "#EEF2FF"),
+            new SwimlaneColorPreset("Emerald Green",         "#10B981", "#ECFDF5"),
+            new SwimlaneColorPreset("Amber Orange",          "#F59E0B", "#FFFBEB"),
+            new SwimlaneColorPreset("Rose Red",              "#F43F5E", "#FFF1F2"),
+            new SwimlaneColorPreset("Purple / Violet",       "#8B5CF6", "#F5F3FF"),
+            new SwimlaneColorPreset("Sky Blue / Cyan",       "#0284C7", "#F0F9FF"),
+            new SwimlaneColorPreset("Teal / Mint",           "#0D9488", "#F0FDFA"),
+            new SwimlaneColorPreset("Dark Steel / Charcoal", "#334155", "#F1F5F9")
+        };
+
         public ProcessFlowLane()
         {
         }
@@ -232,6 +248,29 @@ namespace ZeroUI.Core.Process
             return !(node.X + node.Width < X || node.X > X + Width ||
                      node.Y + node.Height < Y || node.Y > Y + Height);
         }
+    }
+
+    /// <summary>
+    /// Visual color preset for swimlanes combining complementary header and background colors.
+    /// </summary>
+    public class SwimlaneColorPreset
+    {
+        public string Name { get; set; } = string.Empty;
+        public string HeaderHex { get; set; } = "#64748B";
+        public string BgHex { get; set; } = "#F8FAFC";
+
+        public SwimlaneColorPreset()
+        {
+        }
+
+        public SwimlaneColorPreset(string name, string headerHex, string bgHex)
+        {
+            Name = name;
+            HeaderHex = headerHex;
+            BgHex = bgHex;
+        }
+
+        public override string ToString() => Name;
     }
 
     /// <summary>

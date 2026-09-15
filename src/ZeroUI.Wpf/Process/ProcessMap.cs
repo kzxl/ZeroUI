@@ -404,9 +404,26 @@ namespace ZeroUI.Wpf.Process
 
             if (_selectedLane != null)
             {
-                var mnuRename = new MenuItem { Header = MenuIcons.Format(MenuIcons.Rename, "Rename Swimlane...") };
-                mnuRename.Click += (s, ev) => ShowRenameLaneDialog(_selectedLane);
+                var lane = _selectedLane;
+                var mnuRename = new MenuItem { Header = MenuIcons.Format(MenuIcons.Rename, "Configure Swimlane...") };
+                mnuRename.Click += (s, ev) => ShowRenameLaneDialog(lane);
                 _contextMenu.Items.Add(mnuRename);
+
+                var mnuColor = new MenuItem { Header = MenuIcons.Format(MenuIcons.Palette, "Change Swimlane Color") };
+                foreach (var preset in ProcessFlowLane.DefaultPresets)
+                {
+                    var p = preset;
+                    var itm = new MenuItem { Header = p.Name };
+                    itm.Click += (s, ev) =>
+                    {
+                        lane.HeaderColorHex = p.HeaderHex;
+                        lane.BackgroundColorHex = p.BgHex;
+                        InvalidateVisual();
+                        DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                    };
+                    mnuColor.Items.Add(itm);
+                }
+                _contextMenu.Items.Add(mnuColor);
 
                 var mnuFit = new MenuItem { Header = MenuIcons.Format(MenuIcons.FitToContent, "Fit Lanes to Nodes") };
                 mnuFit.Click += (s, ev) => FitLanesToNodes();
@@ -674,20 +691,81 @@ namespace ZeroUI.Wpf.Process
 
         private void ShowRenameLaneDialog(ProcessFlowLane lane)
         {
+            if (lane == null) return;
+
             var win = new Window
             {
                 Title = "Configure Swimlane / Group Frame",
-                Width = 400,
-                Height = 180,
+                Width = 460,
+                Height = 310,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 ResizeMode = ResizeMode.NoResize,
                 Background = ZeroWpfTheme.BgCard
             };
 
+            string selectedHeaderHex = lane.HeaderColorHex;
+            string selectedBgHex = lane.BackgroundColorHex;
+
             var stack = new StackPanel { Margin = new Thickness(16) };
             stack.Children.Add(new TextBlock { Text = "Lane Title:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) });
-            var txtTitle = new TextBox { Text = lane.Title, Margin = new Thickness(0, 0, 0, 10), Padding = new Thickness(4) };
+            var txtTitle = new TextBox { Text = lane.Title, Margin = new Thickness(0, 0, 0, 12), Padding = new Thickness(4) };
             stack.Children.Add(txtTitle);
+
+            stack.Children.Add(new TextBlock { Text = "Color Theme Presets:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 6) });
+            var wrapPresets = new WrapPanel { Margin = new Thickness(0, 0, 0, 14) };
+
+            Border? selectedBorder = null;
+
+            foreach (var preset in ProcessFlowLane.DefaultPresets)
+            {
+                var p = preset;
+                Color hColor = ParseColor(p.HeaderHex, Color.FromRgb(100, 116, 139));
+                Color bColor = ParseColor(p.BgHex, Color.FromRgb(248, 250, 252));
+
+                var border = new Border
+                {
+                    Width = 40,
+                    Height = 28,
+                    Margin = new Thickness(3),
+                    CornerRadius = new CornerRadius(4),
+                    BorderThickness = new Thickness(selectedHeaderHex == p.HeaderHex ? 2.5 : 1.2),
+                    BorderBrush = new SolidColorBrush(selectedHeaderHex == p.HeaderHex ? Colors.Black : hColor),
+                    Background = new SolidColorBrush(bColor),
+                    Cursor = Cursors.Hand,
+                    ToolTip = p.Name
+                };
+
+                var topBar = new Border
+                {
+                    Height = 8,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    CornerRadius = new CornerRadius(3, 3, 0, 0),
+                    Background = new SolidColorBrush(hColor)
+                };
+                border.Child = topBar;
+
+                if (selectedHeaderHex == p.HeaderHex)
+                {
+                    selectedBorder = border;
+                }
+
+                border.MouseLeftButtonDown += (s, e) =>
+                {
+                    if (selectedBorder != null)
+                    {
+                        selectedBorder.BorderThickness = new Thickness(1.2);
+                        selectedBorder.BorderBrush = new SolidColorBrush(ParseColor(selectedHeaderHex, Colors.Gray));
+                    }
+                    selectedHeaderHex = p.HeaderHex;
+                    selectedBgHex = p.BgHex;
+                    selectedBorder = border;
+                    border.BorderThickness = new Thickness(2.5);
+                    border.BorderBrush = new SolidColorBrush(Colors.Black);
+                };
+
+                wrapPresets.Children.Add(border);
+            }
+            stack.Children.Add(wrapPresets);
 
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 6, 0, 0) };
             var btnOk = new Button { Content = "OK", Width = 75, Height = 26, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
@@ -696,6 +774,8 @@ namespace ZeroUI.Wpf.Process
             btnOk.Click += (s, e) =>
             {
                 lane.Title = txtTitle.Text.Trim();
+                lane.HeaderColorHex = selectedHeaderHex;
+                lane.BackgroundColorHex = selectedBgHex;
                 InvalidateVisual();
                 DefinitionChanged?.Invoke(this, EventArgs.Empty);
                 win.DialogResult = true;

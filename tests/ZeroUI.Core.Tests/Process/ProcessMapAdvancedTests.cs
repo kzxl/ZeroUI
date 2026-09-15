@@ -238,5 +238,30 @@ namespace ZeroUI.Core.Tests.Process
             Assert.Equal("WpfMdsModule", rTask.ActionKey);
             Assert.Equal(ProcessNodeShape.TaskCard, rTask.Shape);
         }
+
+        [Fact]
+        public void ProcessFlowLane_ColorPresetsAndCustomColors_PreservedInSerialization()
+        {
+            Assert.NotEmpty(ProcessFlowLane.DefaultPresets);
+            var preset = ProcessFlowLane.DefaultPresets.First(p => p.Name.Contains("Emerald"));
+
+            var lane = new ProcessFlowLane("lane_qc", "Quality Inspection", 100, 100, 600, 300)
+            {
+                HeaderColorHex = preset.HeaderHex,
+                BackgroundColorHex = preset.BgHex
+            };
+
+            var def = new ProcessFlowDefinition();
+            def.Lanes.Add(lane);
+
+            string json = ProcessFlowSerializer.ToJson(def);
+            var restored = ProcessFlowSerializer.FromJson(json);
+
+            Assert.Single(restored.Lanes);
+            var restoredLane = restored.Lanes[0];
+            Assert.Equal("Quality Inspection", restoredLane.Title);
+            Assert.Equal(preset.HeaderHex, restoredLane.HeaderColorHex);
+            Assert.Equal(preset.BgHex, restoredLane.BackgroundColorHex);
+        }
     }
 }

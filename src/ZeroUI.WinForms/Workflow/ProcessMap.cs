@@ -116,6 +116,7 @@ namespace ZeroUI.WinForms.Workflow
         private ToolStripMenuItem _mnuFitLanes = null!;
         private ToolStripMenuItem _mnuAutoArrange = null!;
         private ToolStripMenuItem _mnuRenameLane = null!;
+        private ToolStripMenuItem _mnuChangeLaneColor = null!;
         private ToolStripMenuItem _mnuAlignSteps = null!;
 
         private ContextMenuStrip _connContextMenu = null!;
@@ -212,10 +213,69 @@ namespace ZeroUI.WinForms.Workflow
                     DefinitionChanged?.Invoke(this, EventArgs.Empty);
                 }
             });
-            _mnuRenameLane = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Rename, "Rename Swimlane..."), null, (s, e) =>
+            _mnuRenameLane = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Rename, "Configure Swimlane..."), null, (s, e) =>
             {
-                if (_selectedLane != null) ShowRenameLaneDialog(_selectedLane);
+                if (_selectedLane != null) ShowConfigureLaneDialog(_selectedLane);
             });
+
+            _mnuChangeLaneColor = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.Palette, "Change Swimlane Color"), null);
+            foreach (var preset in ProcessFlowLane.DefaultPresets)
+            {
+                var p = preset;
+                var hColor = ParseColor(p.HeaderHex, Color.FromArgb(100, 116, 139));
+                var bColor = ParseColor(p.BgHex, Color.FromArgb(248, 250, 252));
+                var icon = CreateLaneColorSwatch(hColor, bColor);
+                var itm = new ToolStripMenuItem(p.Name, icon, (s, e) =>
+                {
+                    if (_selectedLane != null)
+                    {
+                        _selectedLane.HeaderColorHex = p.HeaderHex;
+                        _selectedLane.BackgroundColorHex = p.BgHex;
+                        IsDirty = true;
+                        Invalidate();
+                        DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                });
+                _mnuChangeLaneColor.DropDownItems.Add(itm);
+            }
+
+            _mnuChangeLaneColor.DropDownItems.Add(new ToolStripSeparator());
+
+            var mnuCustomLaneHeader = new ToolStripMenuItem("🎨 Custom Header / Border Color...", null, (s, e) =>
+            {
+                if (_selectedLane == null) return;
+                using var dlg = new ColorDialog
+                {
+                    Color = ParseColor(_selectedLane.HeaderColorHex, Color.FromArgb(100, 116, 139)),
+                    FullOpen = true
+                };
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    _selectedLane.HeaderColorHex = $"#{dlg.Color.R:X2}{dlg.Color.G:X2}{dlg.Color.B:X2}";
+                    IsDirty = true;
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                }
+            });
+            _mnuChangeLaneColor.DropDownItems.Add(mnuCustomLaneHeader);
+
+            var mnuCustomLaneBg = new ToolStripMenuItem("🎨 Custom Background Color...", null, (s, e) =>
+            {
+                if (_selectedLane == null) return;
+                using var dlg = new ColorDialog
+                {
+                    Color = ParseColor(_selectedLane.BackgroundColorHex, Color.FromArgb(248, 250, 252)),
+                    FullOpen = true
+                };
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    _selectedLane.BackgroundColorHex = $"#{dlg.Color.R:X2}{dlg.Color.G:X2}{dlg.Color.B:X2}";
+                    IsDirty = true;
+                    Invalidate();
+                    DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                }
+            });
+            _mnuChangeLaneColor.DropDownItems.Add(mnuCustomLaneBg);
 
             // Multi-node Alignment Submenu
             _mnuAlignSteps = new ToolStripMenuItem(MenuIcons.Format(MenuIcons.AlignLeft, "Align Steps"), null);
@@ -244,6 +304,7 @@ namespace ZeroUI.WinForms.Workflow
                 _mnuConnectTo,
                 _mnuEditTitle,
                 _mnuRenameLane,
+                _mnuChangeLaneColor,
                 _mnuAssignAction,
                 _mnuChangeShape,
                 _mnuAlignSteps,
@@ -585,36 +646,193 @@ namespace ZeroUI.WinForms.Workflow
             return LaneResizeHandle.None;
         }
 
-        private void ShowRenameLaneDialog(ProcessFlowLane lane)
+        public void ShowConfigureLaneDialog(ProcessFlowLane lane)
         {
+            if (lane == null) return;
+
             using (var dlg = new Form())
             {
                 dlg.Text = "Configure Swimlane / Group Frame";
-                dlg.Size = new Size(420, 180);
+                dlg.Font = new Font("Segoe UI", 9f);
+                dlg.Size = new Size(520, 460);
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.MaximizeBox = false;
                 dlg.MinimizeBox = false;
+                dlg.BackColor = Color.FromArgb(248, 250, 252);
 
-                var lbl1 = new Label { Text = "Lane Title:", Top = 16, Left = 16, Width = 80 };
-                var txtTitle = new TextBox { Text = lane.Title, Top = 14, Left = 100, Width = 280 };
+                string selectedHeaderHex = lane.HeaderColorHex;
+                string selectedBgHex = lane.BackgroundColorHex;
 
-                var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Top = 70, Left = 210, Width = 80 };
-                var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 70, Left = 300, Width = 80 };
+                var lblTitle = new Label { Text = "Lane Title:", Top = 16, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+                var txtTitle = new TextBox { Text = lane.Title, Top = 38, Left = 20, Width = 464, Font = new Font("Segoe UI", 10f) };
 
-                dlg.Controls.AddRange(new Control[] { lbl1, txtTitle, btnOk, btnCancel });
+                var lblPresets = new Label { Text = "Color Theme Presets:", Top = 74, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+                var flowPresets = new FlowLayoutPanel
+                {
+                    Top = 96,
+                    Left = 20,
+                    Width = 464,
+                    Height = 44,
+                    WrapContents = false,
+                    AutoScroll = true
+                };
+
+                var toolTip = new ToolTip();
+
+                // Panels & Pickers
+                var lblCustom = new Label { Text = "Custom Theme Colors:", Top = 148, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+
+                var btnHeaderColor = new Button { Text = "🎨 Header / Border Color...", Top = 172, Left = 20, Width = 180, Height = 28, FlatStyle = FlatStyle.System };
+                var pnlHeaderSwatch = new Panel { Top = 172, Left = 206, Width = 28, Height = 28, BackColor = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139)), BorderStyle = BorderStyle.FixedSingle };
+
+                var btnBgColor = new Button { Text = "🎨 Background Color...", Top = 172, Left = 250, Width = 165, Height = 28, FlatStyle = FlatStyle.System };
+                var pnlBgSwatch = new Panel { Top = 172, Left = 421, Width = 28, Height = 28, BackColor = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252)), BorderStyle = BorderStyle.FixedSingle };
+
+                // Mini Preview Panel
+                var lblPreview = new Label { Text = "Live Preview:", Top = 212, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
+                var pnlPreview = new Panel
+                {
+                    Top = 234,
+                    Left = 20,
+                    Width = 464,
+                    Height = 120,
+                    BackColor = Color.White,
+                    BorderStyle = BorderStyle.FixedSingle
+                };
+
+                void UpdateSwatchesAndPreview()
+                {
+                    pnlHeaderSwatch.BackColor = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139));
+                    pnlBgSwatch.BackColor = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252));
+                    pnlPreview.Invalidate();
+                }
+
+                pnlPreview.Paint += (s, pe) =>
+                {
+                    var g = pe.Graphics;
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    var b = new RectangleF(10, 10, pnlPreview.Width - 20, pnlPreview.Height - 20);
+                    Color bg = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252));
+                    Color header = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139));
+
+                    using (var path = GetRoundedRectPath(b, 8))
+                    {
+                        using (var fillBrush = new SolidBrush(bg)) g.FillPath(fillBrush, path);
+                        using (var pen = new Pen(header, 1.8f)) g.DrawPath(pen, path);
+                    }
+
+                    var hb = new RectangleF(b.X, b.Y, b.Width, 26);
+                    using (var hPath = GetTopRoundedRectPath(hb, 8))
+                    using (var hBrush = new SolidBrush(Color.FromArgb(24, header)))
+                    {
+                        g.FillPath(hBrush, hPath);
+                    }
+
+                    string previewTitle = "⚙ " + (string.IsNullOrWhiteSpace(txtTitle.Text) ? "LANE" : txtTitle.Text.Trim().ToUpperInvariant());
+                    using (var font = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+                    using (var brush = new SolidBrush(header))
+                    {
+                        g.DrawString(previewTitle, font, brush, b.X + 12, b.Y + 6);
+                    }
+                };
+
+                txtTitle.TextChanged += (s, e) => pnlPreview.Invalidate();
+
+                foreach (var preset in ProcessFlowLane.DefaultPresets)
+                {
+                    var p = preset;
+                    var btnSwatch = new Button
+                    {
+                        Width = 44,
+                        Height = 32,
+                        Margin = new Padding(2),
+                        FlatStyle = FlatStyle.Flat,
+                        Cursor = Cursors.Hand
+                    };
+                    btnSwatch.FlatAppearance.BorderSize = 1;
+                    btnSwatch.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+                    toolTip.SetToolTip(btnSwatch, p.Name);
+
+                    Color hColor = ParseColor(p.HeaderHex, Color.FromArgb(100, 116, 139));
+                    Color bColor = ParseColor(p.BgHex, Color.FromArgb(248, 250, 252));
+
+                    btnSwatch.Paint += (s, pe) =>
+                    {
+                        var g = pe.Graphics;
+                        using (var bgBrush = new SolidBrush(bColor))
+                            g.FillRectangle(bgBrush, 0, 0, btnSwatch.Width, btnSwatch.Height);
+                        using (var hBrush = new SolidBrush(hColor))
+                            g.FillRectangle(hBrush, 0, 0, btnSwatch.Width, 10);
+                        using (var borderPen = new Pen(hColor, 1.5f))
+                            g.DrawRectangle(borderPen, 0, 0, btnSwatch.Width - 1, btnSwatch.Height - 1);
+                    };
+
+                    btnSwatch.Click += (s, e) =>
+                    {
+                        selectedHeaderHex = p.HeaderHex;
+                        selectedBgHex = p.BgHex;
+                        UpdateSwatchesAndPreview();
+                    };
+
+                    flowPresets.Controls.Add(btnSwatch);
+                }
+
+                btnHeaderColor.Click += (s, e) =>
+                {
+                    using var cd = new ColorDialog
+                    {
+                        Color = ParseColor(selectedHeaderHex, Color.FromArgb(100, 116, 139)),
+                        FullOpen = true
+                    };
+                    if (cd.ShowDialog(dlg) == DialogResult.OK)
+                    {
+                        selectedHeaderHex = $"#{cd.Color.R:X2}{cd.Color.G:X2}{cd.Color.B:X2}";
+                        UpdateSwatchesAndPreview();
+                    }
+                };
+
+                btnBgColor.Click += (s, e) =>
+                {
+                    using var cd = new ColorDialog
+                    {
+                        Color = ParseColor(selectedBgHex, Color.FromArgb(248, 250, 252)),
+                        FullOpen = true
+                    };
+                    if (cd.ShowDialog(dlg) == DialogResult.OK)
+                    {
+                        selectedBgHex = $"#{cd.Color.R:X2}{cd.Color.G:X2}{cd.Color.B:X2}";
+                        UpdateSwatchesAndPreview();
+                    }
+                };
+
+                var btnOk = new Button { Text = "Save", DialogResult = DialogResult.OK, Top = 370, Left = 296, Width = 90, Height = 30, FlatStyle = FlatStyle.System };
+                var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 370, Left = 394, Width = 90, Height = 30, FlatStyle = FlatStyle.System };
+
+                dlg.Controls.AddRange(new Control[]
+                {
+                    lblTitle, txtTitle,
+                    lblPresets, flowPresets,
+                    lblCustom, btnHeaderColor, pnlHeaderSwatch, btnBgColor, pnlBgSwatch,
+                    lblPreview, pnlPreview,
+                    btnOk, btnCancel
+                });
                 dlg.AcceptButton = btnOk;
                 dlg.CancelButton = btnCancel;
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     lane.Title = txtTitle.Text.Trim();
+                    lane.HeaderColorHex = selectedHeaderHex;
+                    lane.BackgroundColorHex = selectedBgHex;
                     IsDirty = true;
                     Invalidate();
                     DefinitionChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
+
+        private void ShowRenameLaneDialog(ProcessFlowLane lane) => ShowConfigureLaneDialog(lane);
 
         #endregion
 
@@ -1635,6 +1853,22 @@ namespace ZeroUI.WinForms.Workflow
             }
         }
 
+        private static Bitmap CreateLaneColorSwatch(Color headerColor, Color bgColor)
+        {
+            var bmp = new Bitmap(16, 16);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                using (var brush = new SolidBrush(bgColor))
+                    g.FillRectangle(brush, 0, 0, 16, 16);
+                using (var brush = new SolidBrush(headerColor))
+                    g.FillRectangle(brush, 0, 0, 16, 5);
+                using (var pen = new Pen(headerColor, 1.2f))
+                    g.DrawRectangle(pen, 0, 0, 15, 15);
+            }
+            return bmp;
+        }
+
         #endregion
 
         #region Mouse Interaction & Events
@@ -2491,6 +2725,11 @@ namespace ZeroUI.WinForms.Workflow
         protected override void OnDoubleClick(EventArgs e)
         {
             base.OnDoubleClick(e);
+            if (_selectedLane != null && _selectedNode == null && _selectedConnection == null)
+            {
+                ShowConfigureLaneDialog(_selectedLane);
+                return;
+            }
             if (_selectedNode == null && _selectedConnection == null)
             {
                 ZoomToFit();
@@ -2550,6 +2789,7 @@ namespace ZeroUI.WinForms.Workflow
             _mnuCreateLaneFromSelection.Visible = hasNode;
             _mnuAddNewLane.Visible = true;
             _mnuRenameLane.Visible = hasLane;
+            _mnuChangeLaneColor.Visible = hasLane;
             _mnuDeleteLane.Visible = hasLane;
             _mnuFitLanes.Visible = true;
             _mnuAutoArrange.Visible = true;
