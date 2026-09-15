@@ -38,6 +38,28 @@ namespace ZeroUI.WinForms.Ribbon
     }
 
     /// <summary>
+    /// Display mode configuration for approval queue groups on the ribbon.
+    /// </summary>
+    public enum RibbonApprovalDisplayMode
+    {
+        /// <summary>
+        /// Automatically expands individual approval items if sufficient screen width is available;
+        /// collapses into compact dropdown buttons when space is constrained.
+        /// </summary>
+        Auto,
+
+        /// <summary>
+        /// Always renders individual approval items directly on the ribbon canvas.
+        /// </summary>
+        Expanded,
+
+        /// <summary>
+        /// Always collapses approval queues into compact dropdown buttons.
+        /// </summary>
+        Compact
+    }
+
+    /// <summary>
     /// Decoupled persistence contract for saving and loading ribbon group visibility and preferences.
     /// Prevents hardcoding Registry or local storage into business forms.
     /// </summary>

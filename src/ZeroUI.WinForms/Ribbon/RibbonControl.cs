@@ -60,6 +60,7 @@ namespace ZeroUI.WinForms.Ribbon
         private readonly List<Rectangle> _tabRects = new List<Rectangle>();
         private readonly List<(Rectangle Rect, RibbonItem Item, RibbonGroup Group)> _itemHitAreas = new List<(Rectangle, RibbonItem, RibbonGroup)>();
         private readonly List<(Rectangle Rect, RibbonApprovalGroup Group)> _approvalHitAreas = new List<(Rectangle, RibbonApprovalGroup)>();
+        private readonly List<(Rectangle Rect, RibbonApprovalItem Item, RibbonApprovalGroup Group)> _approvalItemHitAreas = new List<(Rectangle, RibbonApprovalItem, RibbonApprovalGroup)>();
         private Rectangle _optionsButtonRect;
         private Rectangle _minimizeButtonRect;
 
@@ -68,8 +69,31 @@ namespace ZeroUI.WinForms.Ribbon
         private RibbonItem? _hoveredItem;
         private RibbonItem? _pressedItem;
         private RibbonApprovalGroup? _hoveredApprovalGroup;
+        private RibbonApprovalItem? _hoveredApprovalItem;
         private bool _hoverOptionsButton;
         private bool _hoverMinimizeButton;
+
+        private RibbonApprovalDisplayMode _approvalDisplayMode = RibbonApprovalDisplayMode.Auto;
+
+        /// <summary>
+        /// Controls whether approval groups expand individual task items directly onto the ribbon canvas
+        /// or collapse into compact dropdown buttons. Default: Auto (expands if width permits).
+        /// </summary>
+        [Category("ZeroUI - Behavior")]
+        [DefaultValue(RibbonApprovalDisplayMode.Auto)]
+        [Description("Controls whether approval queues expand task items directly or collapse into dropdown buttons.")]
+        public RibbonApprovalDisplayMode ApprovalDisplayMode
+        {
+            get => _approvalDisplayMode;
+            set
+            {
+                if (_approvalDisplayMode != value)
+                {
+                    _approvalDisplayMode = value;
+                    Invalidate();
+                }
+            }
+        }
 
         public event EventHandler<RibbonItemClickEventArgs>? ItemClick;
         public event EventHandler<RibbonApprovalItem>? ApprovalItemClick;
@@ -357,6 +381,7 @@ namespace ZeroUI.WinForms.Ribbon
             _tabRects.Clear();
             _itemHitAreas.Clear();
             _approvalHitAreas.Clear();
+            _approvalItemHitAreas.Clear();
 
             // 1. Render Tab Header Bar (Top 28px)
             var tabHeaderRect = new Rectangle(0, 0, Width, _tabHeight);
@@ -460,22 +485,54 @@ namespace ZeroUI.WinForms.Ribbon
 
             // 1. Calculate space required by right-aligned widgets/approval groups
             bool hasApprovalGroups = (activePage.ApprovalGroups.Count > 0);
-            int rightNeeded = 0;
+            int optW = 0;
+            if (hasApprovalGroups && ShowApprovalOptionsButton)
+            {
+                Size optSize = TextRenderer.MeasureText(ApprovalOptionsText, Font);
+                optW = Math.Max(115, optSize.Width + 24);
+            }
+
+            int compactApprovalsWidth = 0;
+            int expandedApprovalsWidth = 0;
             if (hasApprovalGroups)
             {
                 if (ShowApprovalOptionsButton)
                 {
-                    Size optSize = TextRenderer.MeasureText(ApprovalOptionsText, Font);
-                    int optW = Math.Max(115, optSize.Width + 24);
-                    rightNeeded += optW + 8;
+                    compactApprovalsWidth += optW + 8;
+                    expandedApprovalsWidth += optW + 8;
                 }
                 foreach (var ag in activePage.ApprovalGroups)
                 {
                     if (!ag.Visible) continue;
                     Size titleSize = TextRenderer.MeasureText(ag.Title, Font);
-                    rightNeeded += Math.Max(120, titleSize.Width + 36) + 6;
+                    compactApprovalsWidth += Math.Max(120, titleSize.Width + 36) + 6;
+                    expandedApprovalsWidth += MeasureExpandedApprovalGroupWidth(g, ag) + 8;
                 }
             }
+
+            int functionalGroupsWidth = MeasureFunctionalGroupsWidth(g, activePage);
+            int availableWidth = Width - minBtnSize - 16 - functionalGroupsWidth;
+
+            bool isExpandedApprovals = false;
+            if (hasApprovalGroups)
+            {
+                if (ApprovalDisplayMode == RibbonApprovalDisplayMode.Expanded)
+                {
+                    isExpandedApprovals = true;
+                }
+                else if (ApprovalDisplayMode == RibbonApprovalDisplayMode.Compact)
+                {
+                    isExpandedApprovals = false;
+                }
+                else // Auto
+                {
+                    isExpandedApprovals = (availableWidth >= expandedApprovalsWidth);
+                }
+            }
+
+            int rightNeeded = hasApprovalGroups
+                ? (isExpandedApprovals ? expandedApprovalsWidth : compactApprovalsWidth)
+                : 0;
             int maxGroupX = Width - minBtnSize - 16 - rightNeeded;
 
             // 2. Render Standard Functional Groups
@@ -514,8 +571,6 @@ namespace ZeroUI.WinForms.Ribbon
                 // Options button: configurable label & visibility
                 if (ShowApprovalOptionsButton)
                 {
-                    Size optSize = TextRenderer.MeasureText(ApprovalOptionsText, Font);
-                    int optW = Math.Max(115, optSize.Width + 24);
                     int optH = 26;
                     _optionsButtonRect = new Rectangle(rightX - optW, groupContentY + 18, optW, optH);
                     rightX -= (optW + 8);
@@ -535,49 +590,131 @@ namespace ZeroUI.WinForms.Ribbon
                     _optionsButtonRect = Rectangle.Empty;
                 }
 
-                // Approval Queue Groups
-                for (int i = activePage.ApprovalGroups.Count - 1; i >= 0; i--)
+                if (isExpandedApprovals)
                 {
-                    var ag = activePage.ApprovalGroups[i];
-                    if (!ag.Visible) continue;
-
-                    Size titleSize = TextRenderer.MeasureText(ag.Title, Font);
-                    int agW = Math.Max(120, titleSize.Width + 36);
-                    int agH = 34;
-
-                    var agRect = new Rectangle(rightX - agW, groupContentY + 14, agW, agH);
-                    _approvalHitAreas.Add((agRect, ag));
-                    rightX -= (agW + 6);
-
-                    bool isHover = (ag == _hoveredApprovalGroup);
-                    Color agBg = isHover ? pal.Hover : pal.HeaderBackground;
-
-                    using (var b = new SolidBrush(agBg))
-                    using (var p = new Pen(isHover ? pal.Primary : pal.Border, 1f))
+                    // Render Expanded Mode: Items displayed directly on the ribbon canvas in columns (up to 3 rows per col)
+                    for (int i = activePage.ApprovalGroups.Count - 1; i >= 0; i--)
                     {
-                        g.FillRectangle(b, agRect);
-                        g.DrawRectangle(p, agRect);
+                        var ag = activePage.ApprovalGroups[i];
+                        if (!ag.Visible) continue;
+
+                        int agW = MeasureExpandedApprovalGroupWidth(g, ag);
+                        int agX = rightX - agW;
+                        var agGroupRect = new Rectangle(agX, groupContentY, agW, groupContentH);
+                        rightX -= (agW + 8);
+
+                        // Vertical separator to the right
+                        using (var sepPen = new Pen(pal.Border, 1f))
+                        {
+                            g.DrawLine(sepPen, agGroupRect.Right + 4, _tabHeight + 6, agGroupRect.Right + 4, Height - 6);
+                        }
+
+                        // Group Title at bottom
+                        var captionRect = new Rectangle(agX, Height - 18, agW, 16);
+                        using (var captionFont = new Font(Font.FontFamily, 7.5f))
+                        {
+                            TextRenderer.DrawText(g, ag.Title, captionFont, captionRect, pal.TextSecondary,
+                                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                        }
+
+                        // Child items in columns (up to 3 rows per col)
+                        int cols = Math.Max(1, (int)Math.Ceiling(ag.Items.Count / 3.0));
+                        int colW = (agW - 6) / cols;
+
+                        using (var itemFont = new Font("Segoe UI", 8.25f))
+                        {
+                            for (int itemIdx = 0; itemIdx < ag.Items.Count; itemIdx++)
+                            {
+                                var item = ag.Items[itemIdx];
+                                int col = itemIdx / 3;
+                                int row = itemIdx % 3;
+
+                                int itemX = agX + 2 + col * colW;
+                                int itemY = groupContentY + 2 + row * 23;
+                                int itemH = 21;
+                                var itemRect = new Rectangle(itemX, itemY, colW - 2, itemH);
+                                _approvalItemHitAreas.Add((itemRect, item, ag));
+
+                                bool isHover = (item == _hoveredApprovalItem);
+                                if (isHover)
+                                {
+                                    using (var hb = new SolidBrush(pal.Hover))
+                                    using (var hp = new Pen(pal.Border, 1f))
+                                    {
+                                        g.FillRectangle(hb, itemRect);
+                                        g.DrawRectangle(hp, itemRect);
+                                    }
+                                }
+
+                                // Status dot (Green if Count == 0, Red/Danger if Count > 0)
+                                int dotSize = 8;
+                                int dotX = itemRect.X + 4;
+                                int dotY = itemRect.Y + (itemRect.Height - dotSize) / 2;
+                                var dotRect = new Rectangle(dotX, dotY, dotSize, dotSize);
+                                Color dotColor = item.StatusColor
+                                    ?? item.StatusColorResolver?.Invoke(item)
+                                    ?? (item.Count > 0 ? pal.Danger : Color.FromArgb(16, 185, 129));
+
+                                using (var db = new SolidBrush(dotColor))
+                                {
+                                    g.FillEllipse(db, dotRect);
+                                }
+
+                                // Item text: "Name: Count"
+                                string txt = item.GetDisplayText();
+                                var txtRect = new Rectangle(dotRect.Right + 5, itemRect.Y, itemRect.Width - (dotSize + 7), itemRect.Height);
+                                TextRenderer.DrawText(g, txt, itemFont, txtRect, pal.TextPrimary,
+                                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                            }
+                        }
                     }
-
-                    // Title + Arrow
-                    string displayText = $"{ag.Title} ⯆";
-                    TextRenderer.DrawText(g, displayText, Font, new Rectangle(agRect.X + 6, agRect.Y, agRect.Width - 30, agRect.Height),
-                        pal.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-
-                    // Badge circle indicating total count
-                    int badgeSize = 18;
-                    var badgeRect = new Rectangle(agRect.Right - badgeSize - 6, agRect.Y + (agRect.Height - badgeSize) / 2, badgeSize, badgeSize);
-                    Color badgeColor = ag.BadgeColorResolver?.Invoke(ag.TotalCount)
-                        ?? (ag.TotalCount > 0 ? pal.Danger : Color.FromArgb(16, 185, 129));
-
-                    using (var bb = new SolidBrush(badgeColor))
+                }
+                else
+                {
+                    // Render Compact Mode: Single dropdown button with badge count
+                    for (int i = activePage.ApprovalGroups.Count - 1; i >= 0; i--)
                     {
-                        g.FillEllipse(bb, badgeRect);
-                    }
-                    using (var bf = new Font("Segoe UI", 7f, FontStyle.Bold))
-                    {
-                        TextRenderer.DrawText(g, ag.TotalCount.ToString(), bf, badgeRect, Color.White,
-                            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                        var ag = activePage.ApprovalGroups[i];
+                        if (!ag.Visible) continue;
+
+                        Size titleSize = TextRenderer.MeasureText(ag.Title, Font);
+                        int agW = Math.Max(120, titleSize.Width + 36);
+                        int agH = 34;
+
+                        var agRect = new Rectangle(rightX - agW, groupContentY + 14, agW, agH);
+                        _approvalHitAreas.Add((agRect, ag));
+                        rightX -= (agW + 6);
+
+                        bool isHover = (ag == _hoveredApprovalGroup);
+                        Color agBg = isHover ? pal.Hover : pal.HeaderBackground;
+
+                        using (var b = new SolidBrush(agBg))
+                        using (var p = new Pen(isHover ? pal.Primary : pal.Border, 1f))
+                        {
+                            g.FillRectangle(b, agRect);
+                            g.DrawRectangle(p, agRect);
+                        }
+
+                        // Title + Arrow
+                        string displayText = $"{ag.Title} ⯆";
+                        TextRenderer.DrawText(g, displayText, Font, new Rectangle(agRect.X + 6, agRect.Y, agRect.Width - 30, agRect.Height),
+                            pal.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+                        // Badge circle indicating total count
+                        int badgeSize = 18;
+                        var badgeRect = new Rectangle(agRect.Right - badgeSize - 6, agRect.Y + (agRect.Height - badgeSize) / 2, badgeSize, badgeSize);
+                        Color badgeColor = ag.BadgeColorResolver?.Invoke(ag.TotalCount)
+                            ?? (ag.TotalCount > 0 ? pal.Danger : Color.FromArgb(16, 185, 129));
+
+                        using (var bb = new SolidBrush(badgeColor))
+                        {
+                            g.FillEllipse(bb, badgeRect);
+                        }
+                        using (var bf = new Font("Segoe UI", 7f, FontStyle.Bold))
+                        {
+                            TextRenderer.DrawText(g, ag.TotalCount.ToString(), bf, badgeRect, Color.White,
+                                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                        }
                     }
                 }
             }
@@ -591,6 +728,78 @@ namespace ZeroUI.WinForms.Ribbon
             {
                 g.DrawLine(bPen, 0, Height - 1, Width, Height - 1);
             }
+        }
+
+        private int MeasureExpandedApprovalGroupWidth(Graphics g, RibbonApprovalGroup ag)
+        {
+            if (ag.Items.Count == 0) return 90;
+            int cols = Math.Max(1, (int)Math.Ceiling(ag.Items.Count / 3.0));
+            int maxItemW = 55;
+            using (var itemFont = new Font("Segoe UI", 8.25f))
+            {
+                foreach (var item in ag.Items)
+                {
+                    string txt = item.GetDisplayText();
+                    Size sz = TextRenderer.MeasureText(g, txt, itemFont);
+                    if (sz.Width > maxItemW) maxItemW = sz.Width;
+                }
+            }
+            int colW = maxItemW + 20; // 8px dot + padding
+            Size titleSz = TextRenderer.MeasureText(g, ag.Title, Font);
+            return Math.Max(cols * colW + 10, titleSz.Width + 16);
+        }
+
+        private int MeasureFunctionalGroupsWidth(Graphics g, RibbonPage page)
+        {
+            int total = 12;
+            foreach (var grp in page.Groups)
+            {
+                if (!grp.Visible || grp.ApprovalGroup != null) continue;
+                total += MeasureGroupWidth(g, grp) + 6;
+            }
+            return total;
+        }
+
+        private int MeasureGroupWidth(Graphics g, RibbonGroup grp)
+        {
+            int w = 0;
+            int smallInCol = 0;
+            int maxSmallW = 0;
+
+            foreach (var item in grp.Items)
+            {
+                if (!item.Visible) continue;
+                if (item.Style == RibbonItemStyle.Large)
+                {
+                    if (smallInCol > 0)
+                    {
+                        w += Math.Max(120, maxSmallW) + 4;
+                        smallInCol = 0;
+                        maxSmallW = 0;
+                    }
+                    w += 76;
+                }
+                else
+                {
+                    Size s = TextRenderer.MeasureText(g, item.Text, Font);
+                    int itemW = s.Width + 34;
+                    if (itemW > maxSmallW) maxSmallW = itemW;
+                    smallInCol++;
+                    if (smallInCol == 3)
+                    {
+                        w += Math.Max(120, maxSmallW) + 4;
+                        smallInCol = 0;
+                        maxSmallW = 0;
+                    }
+                }
+            }
+            if (smallInCol > 0)
+            {
+                w += Math.Max(120, maxSmallW) + 4;
+            }
+
+            Size titleSize = TextRenderer.MeasureText(g, grp.Text, Font);
+            return Math.Max(w, titleSize.Width + 12);
         }
 
         private int RenderStandardGroup(Graphics g, RibbonGroup grp, int startX, int contentY, int contentH, ZeroThemePalette pal, int maxGroupX)
@@ -805,12 +1014,14 @@ namespace ZeroUI.WinForms.Ribbon
             int prevTab = _hoveredTabIndex;
             RibbonItem? prevItem = _hoveredItem;
             RibbonApprovalGroup? prevAg = _hoveredApprovalGroup;
+            RibbonApprovalItem? prevAppItem = _hoveredApprovalItem;
             bool prevOpt = _hoverOptionsButton;
             bool prevMin = _hoverMinimizeButton;
 
             _hoveredTabIndex = -1;
             _hoveredItem = null;
             _hoveredApprovalGroup = null;
+            _hoveredApprovalItem = null;
             _hoverOptionsButton = !_optionsButtonRect.IsEmpty && _optionsButtonRect.Contains(e.Location);
             _hoverMinimizeButton = _minimizeButtonRect.Contains(e.Location);
 
@@ -838,7 +1049,17 @@ namespace ZeroUI.WinForms.Ribbon
                     }
                 }
 
-                // Approval group hover
+                // Approval item hover (expanded mode)
+                foreach (var area in _approvalItemHitAreas)
+                {
+                    if (area.Rect.Contains(e.Location))
+                    {
+                        _hoveredApprovalItem = area.Item;
+                        break;
+                    }
+                }
+
+                // Approval group hover (compact mode)
                 foreach (var area in _approvalHitAreas)
                 {
                     if (area.Rect.Contains(e.Location))
@@ -849,8 +1070,18 @@ namespace ZeroUI.WinForms.Ribbon
                 }
             }
 
+            if (_hoveredApprovalItem != null || _hoveredItem != null || _hoveredApprovalGroup != null ||
+                _hoverOptionsButton || _hoverMinimizeButton || _hoveredTabIndex >= 0)
+            {
+                Cursor = Cursors.Hand;
+            }
+            else
+            {
+                Cursor = Cursors.Default;
+            }
+
             if (prevTab != _hoveredTabIndex || prevItem != _hoveredItem || prevAg != _hoveredApprovalGroup ||
-                prevOpt != _hoverOptionsButton || prevMin != _hoverMinimizeButton)
+                prevAppItem != _hoveredApprovalItem || prevOpt != _hoverOptionsButton || prevMin != _hoverMinimizeButton)
             {
                 if (_hoveredItem != prevItem)
                 {
@@ -873,8 +1104,10 @@ namespace ZeroUI.WinForms.Ribbon
             _hoveredTabIndex = -1;
             _hoveredItem = null;
             _hoveredApprovalGroup = null;
+            _hoveredApprovalItem = null;
             _hoverOptionsButton = false;
             _hoverMinimizeButton = false;
+            Cursor = Cursors.Default;
             _toolTip.SetToolTip(this, null);
             Invalidate();
         }
@@ -911,6 +1144,16 @@ namespace ZeroUI.WinForms.Ribbon
                 if (_hoveredTabIndex >= 0 && _hoveredTabIndex != _selectedPageIndex)
                 {
                     SelectedPageIndex = _hoveredTabIndex;
+                    return;
+                }
+
+                // Approval Item Click (Expanded Mode)
+                if (_hoveredApprovalItem != null)
+                {
+                    var clicked = _hoveredApprovalItem;
+                    clicked.ClickAction?.Invoke();
+                    ApprovalItemClick?.Invoke(this, clicked);
+                    Invalidate();
                     return;
                 }
 
