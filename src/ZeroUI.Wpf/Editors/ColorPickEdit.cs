@@ -33,7 +33,12 @@ namespace ZeroUI.Wpf.Editors
             Color.FromRgb(100, 116, 139), // Slate Muted
             Color.FromRgb(148, 163, 184), // Slate Light
             Color.FromRgb(226, 232, 240), // Slate Border
-            Color.FromRgb(255, 255, 255)  // Pure White
+            Color.FromRgb(255, 255, 255), // Pure White
+            Color.FromRgb(248, 250, 252), // Slate 50 (Pastel)
+            Color.FromRgb(238, 242, 255), // Indigo 50 (Pastel)
+            Color.FromRgb(236, 253, 245), // Emerald 50 (Pastel)
+            Color.FromRgb(255, 251, 235), // Amber 50 (Pastel)
+            Color.FromRgb(255, 241, 242)  // Rose 50 (Pastel)
         };
 
         private Border? _border;
@@ -235,8 +240,8 @@ namespace ZeroUI.Wpf.Editors
 
             var popupStack = new StackPanel();
 
-            // Swatch Grid (3 rows x 5 cols)
-            var swatchGrid = new UniformGrid { Columns = 5, Rows = 3, Margin = new Thickness(0, 0, 0, 10) };
+            // Swatch Grid (4 rows x 5 cols)
+            var swatchGrid = new UniformGrid { Columns = 5, Rows = 4, Margin = new Thickness(0, 0, 0, 10) };
             for (int i = 0; i < Palette.Length; i++)
             {
                 var color = Palette[i];
@@ -276,6 +281,15 @@ namespace ZeroUI.Wpf.Editors
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Padding = new Thickness(4, 0, 4, 0)
             };
+            _hexInputBox.TextChanged += (s, e) =>
+            {
+                if (ReadOnly) return;
+                string t = _hexInputBox.Text.Trim();
+                if (TryParseHex(t, out Color parsed))
+                {
+                    if (_previewBorder != null) _previewBorder.Background = new SolidColorBrush(parsed);
+                }
+            };
             _hexInputBox.KeyDown += (s, e) =>
             {
                 if (ReadOnly) return;
@@ -296,7 +310,18 @@ namespace ZeroUI.Wpf.Editors
                 CornerRadius = new CornerRadius(3),
                 Background = new SolidColorBrush(SelectedColor),
                 BorderBrush = ZeroWpfTheme.BorderDefault,
-                BorderThickness = new Thickness(1)
+                BorderThickness = new Thickness(1),
+                Cursor = Cursors.Hand,
+                ToolTip = "Click to select this preview color"
+            };
+            _previewBorder.MouseDown += (s, e) =>
+            {
+                if (ReadOnly) return;
+                if (TryParseHex(_hexInputBox?.Text, out Color parsed))
+                {
+                    SelectedColor = parsed;
+                    IsDropDownOpen = false;
+                }
             };
             Grid.SetColumn(_previewBorder, 1);
             bottomGrid.Children.Add(_previewBorder);
@@ -369,11 +394,32 @@ namespace ZeroUI.Wpf.Editors
             }
         }
 
+        public static bool TryParseHex(string? hex, out Color color)
+        {
+            if (string.IsNullOrWhiteSpace(hex))
+            {
+                color = Colors.Transparent;
+                return false;
+            }
+            string clean = hex!.Trim();
+            if (!clean.StartsWith("#") && (clean.Length == 6 || clean.Length == 8))
+            {
+                clean = "#" + clean;
+            }
+            if (ZeroColor.TryParseHex(clean, out var zc))
+            {
+                color = Color.FromArgb(zc.A, zc.R, zc.G, zc.B);
+                return true;
+            }
+            color = Colors.Transparent;
+            return false;
+        }
+
         private void TryApplyHex(string hex)
         {
-            if (ZeroColor.TryParseHex(hex, out var zc))
+            if (TryParseHex(hex, out Color parsed))
             {
-                SelectedColor = Color.FromArgb(zc.A, zc.R, zc.G, zc.B);
+                SelectedColor = parsed;
             }
         }
 
@@ -401,6 +447,84 @@ namespace ZeroUI.Wpf.Editors
         {
             SelectedColor = Colors.Transparent;
             IsModified = false;
+        }
+
+        /// <summary>
+        /// Displays a modern ZeroUI modal dialog for color selection.
+        /// </summary>
+        public static Color? PickColor(Window? owner, Color initialColor, string title = "Select Color")
+        {
+            var win = new Window
+            {
+                Title = title,
+                Width = 280,
+                Height = 200,
+                WindowStartupLocation = owner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
+                Owner = owner,
+                ResizeMode = ResizeMode.NoResize,
+                Background = ZeroWpfTheme.BgCard
+            };
+
+            var stack = new StackPanel { Margin = new Thickness(16) };
+            var lbl = new TextBlock
+            {
+                Text = "Choose Color:",
+                Foreground = ZeroWpfTheme.TextPrimary,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            stack.Children.Add(lbl);
+
+            var picker = new ColorPickEdit
+            {
+                SelectedColor = initialColor,
+                Height = 34,
+                Margin = new Thickness(0, 0, 0, 16)
+            };
+            stack.Children.Add(picker);
+
+            var btnPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var btnOk = new SimpleButton
+            {
+                Content = "OK",
+                Variant = ButtonVariant.Primary,
+                Width = 75,
+                Height = 28,
+                Margin = new Thickness(0, 0, 8, 0),
+                IsDefault = true
+            };
+            var btnCancel = new SimpleButton
+            {
+                Content = "Cancel",
+                Variant = ButtonVariant.Secondary,
+                Width = 75,
+                Height = 28,
+                IsCancel = true
+            };
+
+            Color? result = null;
+            btnOk.Click += (s, e) =>
+            {
+                result = picker.SelectedColor;
+                win.DialogResult = true;
+                win.Close();
+            };
+
+            btnPanel.Children.Add(btnOk);
+            btnPanel.Children.Add(btnCancel);
+            stack.Children.Add(btnPanel);
+
+            win.Content = stack;
+            if (win.ShowDialog() == true)
+            {
+                return result;
+            }
+            return null;
         }
     }
 

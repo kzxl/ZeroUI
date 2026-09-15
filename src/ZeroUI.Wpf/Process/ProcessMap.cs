@@ -424,6 +424,35 @@ namespace ZeroUI.Wpf.Process
                     };
                     mnuColor.Items.Add(itm);
                 }
+
+                mnuColor.Items.Add(new Separator());
+
+                var mnuCustomHeader = new MenuItem { Header = "Custom Header / Border Color..." };
+                mnuCustomHeader.Click += (s, ev) =>
+                {
+                    var chosen = ColorPickEdit.PickColor(Window.GetWindow(this), ParseColor(lane.HeaderColorHex, Colors.Gray), "Choose Swimlane Header Color");
+                    if (chosen.HasValue)
+                    {
+                        lane.HeaderColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
+                        InvalidateVisual();
+                        DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                };
+                mnuColor.Items.Add(mnuCustomHeader);
+
+                var mnuCustomBg = new MenuItem { Header = "Custom Background Color..." };
+                mnuCustomBg.Click += (s, ev) =>
+                {
+                    var chosen = ColorPickEdit.PickColor(Window.GetWindow(this), ParseColor(lane.BackgroundColorHex, Color.FromRgb(248, 250, 252)), "Choose Swimlane Background Color");
+                    if (chosen.HasValue)
+                    {
+                        lane.BackgroundColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
+                        InvalidateVisual();
+                        DefinitionChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                };
+                mnuColor.Items.Add(mnuCustomBg);
+
                 _contextMenu.Items.Add(mnuColor);
 
                 var mnuFit = new MenuItem { Header = MenuIcons.Format(MenuIcons.FitToContent, "Fit Lanes to Nodes") };
@@ -661,16 +690,16 @@ namespace ZeroUI.Wpf.Process
             var stack = new StackPanel { Margin = new Thickness(16) };
 
             stack.Children.Add(new TextBlock { Text = "Title:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) });
-            var txtTitle = new TextBox { Text = _selectedNode.Title, Margin = new Thickness(0, 0, 0, 10), Padding = new Thickness(4) };
+            var txtTitle = new TextEdit { Text = _selectedNode.Title, Margin = new Thickness(0, 0, 0, 10), Padding = new Thickness(4), Height = 30 };
             stack.Children.Add(txtTitle);
 
             stack.Children.Add(new TextBlock { Text = "Subtitle / Description:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) });
-            var txtSub = new TextBox { Text = _selectedNode.Subtitle, Height = 55, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true, Margin = new Thickness(0, 0, 0, 10), Padding = new Thickness(4) };
+            var txtSub = new TextEdit { Text = _selectedNode.Subtitle, Height = 60, TextWrapping = TextWrapping.Wrap, AcceptsReturn = true, Margin = new Thickness(0, 0, 0, 10), Padding = new Thickness(4) };
             stack.Children.Add(txtSub);
 
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 6, 0, 0) };
-            var btnOk = new Button { Content = "OK", Width = 75, Height = 26, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
-            var btnCancel = new Button { Content = "Cancel", Width = 75, Height = 26, IsCancel = true };
+            var btnOk = new SimpleButton { Content = "OK", Variant = ButtonVariant.Primary, Width = 75, Height = 28, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
+            var btnCancel = new SimpleButton { Content = "Cancel", Variant = ButtonVariant.Secondary, Width = 75, Height = 28, IsCancel = true };
 
             btnOk.Click += (s, e) =>
             {
@@ -709,7 +738,7 @@ namespace ZeroUI.Wpf.Process
 
             var stack = new StackPanel { Margin = new Thickness(16) };
             stack.Children.Add(new TextBlock { Text = "Lane Title:", Foreground = ZeroWpfTheme.TextPrimary, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 4) });
-            var txtTitle = new TextBox { Text = lane.Title, Margin = new Thickness(0, 0, 0, 12), Padding = new Thickness(4) };
+            var txtTitle = new TextEdit { Text = lane.Title, Margin = new Thickness(0, 0, 0, 12), Padding = new Thickness(4), Height = 30 };
             stack.Children.Add(txtTitle);
 
             var cpeHeader = new ColorPickEdit { SelectedColor = ParseColor(selectedHeaderHex, Colors.Gray), Height = 32 };
@@ -803,8 +832,8 @@ namespace ZeroUI.Wpf.Process
             stack.Children.Add(pickersPanel);
 
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 6, 0, 0) };
-            var btnOk = new Button { Content = "OK", Width = 75, Height = 26, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
-            var btnCancel = new Button { Content = "Cancel", Width = 75, Height = 26, IsCancel = true };
+            var btnOk = new SimpleButton { Content = "Save", Variant = ButtonVariant.Primary, Width = 75, Height = 28, Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
+            var btnCancel = new SimpleButton { Content = "Cancel", Variant = ButtonVariant.Secondary, Width = 75, Height = 28, IsCancel = true };
 
             btnOk.Click += (s, e) =>
             {

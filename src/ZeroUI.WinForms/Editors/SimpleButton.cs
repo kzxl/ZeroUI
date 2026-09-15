@@ -28,14 +28,15 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("Click")]
     [DefaultProperty("Text")]
     [Description("Modern anti-aliased button with rounded corners and stateful styling")]
-    public class SimpleButton : ZeroControlBase
+    public class SimpleButton : ZeroControlBase, IButtonControl
     {
-
         private ZeroButtonStyle _style = ZeroButtonStyle.Primary;
         private int _borderRadius = 6;
         private string? _badgeText;
         private bool _isHovered = false;
         private bool _isPressed = false;
+        private DialogResult _dialogResult = DialogResult.None;
+        private bool _isDefault = false;
 
         public SimpleButton()
         {
@@ -121,6 +122,40 @@ namespace ZeroUI.WinForms.Editors
             base.OnMouseUp(e);
             _isPressed = false;
             Invalidate();
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(DialogResult.None)]
+        public DialogResult DialogResult
+        {
+            get => _dialogResult;
+            set => _dialogResult = value;
+        }
+
+        public void NotifyDefault(bool value)
+        {
+            if (_isDefault != value)
+            {
+                _isDefault = value;
+                Invalidate();
+            }
+        }
+
+        public void PerformClick()
+        {
+            if (CanSelect)
+            {
+                OnClick(EventArgs.Empty);
+            }
+        }
+
+        protected override void OnClick(EventArgs e)
+        {
+            base.OnClick(e);
+            if (_dialogResult != DialogResult.None && FindForm() is Form parentForm)
+            {
+                parentForm.DialogResult = _dialogResult;
+            }
         }
 
         protected override void OnResize(EventArgs e)

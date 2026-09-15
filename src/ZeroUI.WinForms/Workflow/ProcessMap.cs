@@ -675,7 +675,7 @@ namespace ZeroUI.WinForms.Workflow
                 string selectedBgHex = lane.BackgroundColorHex;
 
                 var lblTitle = new Label { Text = "Lane Title:", Top = 16, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
-                var txtTitle = new TextBox { Text = lane.Title, Top = 38, Left = 20, Width = 464, Font = new Font("Segoe UI", 10f) };
+                var txtTitle = new TextEdit { Text = lane.Title, Top = 38, Left = 20, Width = 464, Height = 32 };
 
                 var lblPresets = new Label { Text = "Color Theme Presets:", Top = 74, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
                 var flowPresets = new FlowLayoutPanel
@@ -807,8 +807,8 @@ namespace ZeroUI.WinForms.Workflow
                     flowPresets.Controls.Add(btnSwatch);
                 }
 
-                var btnOk = new Button { Text = "Save", DialogResult = DialogResult.OK, Top = 370, Left = 296, Width = 90, Height = 30, FlatStyle = FlatStyle.System };
-                var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 370, Left = 394, Width = 90, Height = 30, FlatStyle = FlatStyle.System };
+                var btnOk = new SimpleButton { Text = "Save", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 370, Left = 296, Width = 90, Height = 32 };
+                var btnCancel = new SimpleButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 370, Left = 394, Width = 90, Height = 32 };
 
                 dlg.Controls.AddRange(new Control[]
                 {
@@ -2898,16 +2898,16 @@ namespace ZeroUI.WinForms.Workflow
                 dlg.MinimizeBox = false;
 
                 var lbl1 = new Label { Text = "Title:", Top = 16, Left = 16, Width = 80 };
-                var txtTitle = new TextBox { Text = _selectedNode.Title, Top = 14, Left = 100, Width = 260 };
+                var txtTitle = new TextEdit { Text = _selectedNode.Title, Top = 14, Left = 100, Width = 260, Height = 30 };
 
                 var lbl2 = new Label { Text = "Subtitle:", Top = 50, Left = 16, Width = 80 };
-                var txtSub = new TextBox { Text = _selectedNode.Subtitle, Top = 48, Left = 100, Width = 260, Multiline = true, Height = 60 };
+                var txtSub = new MemoEdit { Text = _selectedNode.Subtitle, Top = 48, Left = 100, Width = 260, Height = 60 };
 
                 var lbl3 = new Label { Text = "Icon Glyph:", Top = 120, Left = 16, Width = 80 };
-                var txtIcon = new TextBox { Text = _selectedNode.IconGlyph, Top = 118, Left = 100, Width = 80 };
+                var txtIcon = new TextEdit { Text = _selectedNode.IconGlyph, Top = 118, Left = 100, Width = 80, Height = 30 };
 
-                var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Top = 170, Left = 190, Width = 80 };
-                var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 170, Left = 280, Width = 80 };
+                var btnOk = new SimpleButton { Text = "OK", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 170, Left = 190, Width = 80, Height = 30 };
+                var btnCancel = new SimpleButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 170, Left = 280, Width = 80, Height = 30 };
 
                 dlg.Controls.AddRange(new Control[] { lbl1, txtTitle, lbl2, txtSub, lbl3, txtIcon, btnOk, btnCancel });
                 dlg.AcceptButton = btnOk;
@@ -2988,9 +2988,9 @@ namespace ZeroUI.WinForms.Workflow
                 dlg.MinimizeBox = false;
 
                 var lbl = new Label { Text = "Branch Label (e.g. Approved, Rejected, In Stock):", Top = 16, Left = 16, Width = 340 };
-                var txtLabel = new TextBox { Text = _selectedConnection.Label, Top = 42, Left = 16, Width = 330 };
-                var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Top = 80, Left = 170, Width = 80 };
-                var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Top = 80, Left = 266, Width = 80 };
+                var txtLabel = new TextEdit { Text = _selectedConnection.Label, Top = 42, Left = 16, Width = 330, Height = 30 };
+                var btnOk = new SimpleButton { Text = "OK", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 80, Left = 170, Width = 80, Height = 30 };
+                var btnCancel = new SimpleButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 80, Left = 266, Width = 80, Height = 30 };
 
                 dlg.Controls.AddRange(new Control[] { lbl, txtLabel, btnOk, btnCancel });
                 dlg.AcceptButton = btnOk;
