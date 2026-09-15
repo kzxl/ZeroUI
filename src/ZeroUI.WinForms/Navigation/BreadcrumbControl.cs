@@ -425,4 +425,14 @@ namespace ZeroUI.WinForms.Navigation
 
         #endregion
     }
+
+    /// <summary>
+    /// Alias for BreadcrumbControl providing hierarchical path navigation.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Layout")]
+    [Description("Hierarchical breadcrumb navigation bar")]
+    public class BreadcrumbNavigation : BreadcrumbControl
+    {
+    }
 }
