@@ -99,7 +99,7 @@ namespace ZeroUI.WinForms.Industrial
             Reset
         }
         private ControlBarButton _hoveredControlBarButton = ControlBarButton.None;
-        private bool _showControlBar = true;
+        private bool _showControlBar = false;
         private bool _isDirty = false;
 
         private ContextMenuStrip _contextMenu = null!;
@@ -433,6 +433,7 @@ namespace ZeroUI.WinForms.Industrial
             set { _showMinimap = value; Invalidate(); }
         }
 
+
         public void InvalidateRouteCache()
         {
             _routeCache.Clear();
@@ -475,7 +476,7 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
-        [DefaultValue(true)]
+        [DefaultValue(false)]
         [Description("Displays the top segmented mode and action toolbar (View, Design, Save, Auto-Layout, Reset).")]
         public bool ShowControlBar
         {
@@ -1318,7 +1319,15 @@ namespace ZeroUI.WinForms.Industrial
                 }
 
                 var currentBrush = seg.IsActive ? activeTextBrush : (isHover ? hoverTextBrush : textBrush);
-                g.DrawString(seg.Text, font, currentBrush, seg.Rect, sf);
+                
+                // Draw crisp vector icon
+                var iconRect = new Rectangle((int)seg.Rect.X + 8, (int)(seg.Rect.Y + (seg.Rect.Height - 14) / 2), 14, 14);
+                ZeroIcon.Draw(g, seg.Icon, iconRect, currentBrush.Color);
+
+                // Draw label text
+                var textRect = new RectangleF(seg.Rect.X + 24, seg.Rect.Y, seg.Rect.Width - 26, seg.Rect.Height);
+                var sfLeft = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
+                g.DrawString(seg.Text, font, currentBrush, textRect, sfLeft);
 
                 if (seg.HasBadge)
                 {
@@ -1334,24 +1343,24 @@ namespace ZeroUI.WinForms.Industrial
 
         private RectangleF GetControlBarRect()
         {
-            float totalW = 384f;
+            float totalW = 400f;
             float h = 30f;
             float x = Math.Max(260f, Width - totalW - 20f);
             float y = 14f;
             return new RectangleF(x, y, totalW, h);
         }
 
-        private (RectangleF Rect, ControlBarButton Btn, string Text, bool IsActive, bool HasBadge)[] GetControlBarSegments()
+        private (RectangleF Rect, ControlBarButton Btn, IconKey Icon, string Text, bool IsActive, bool HasBadge)[] GetControlBarSegments()
         {
             var r = GetControlBarRect();
             float curX = r.X;
-            return new (RectangleF Rect, ControlBarButton Btn, string Text, bool IsActive, bool HasBadge)[]
+            return new (RectangleF Rect, ControlBarButton Btn, IconKey Icon, string Text, bool IsActive, bool HasBadge)[]
             {
-                (new RectangleF(curX, r.Y, 62, r.Height), ControlBarButton.View, "👁 Xem", !_isDesignMode, false),
-                (new RectangleF(curX += 62, r.Y, 84, r.Height), ControlBarButton.Design, "✏ Thiết kế", _isDesignMode, false),
-                (new RectangleF(curX += 84, r.Y, 64, r.Height), ControlBarButton.Save, "💾 Lưu", false, _isDirty),
-                (new RectangleF(curX += 64, r.Y, 94, r.Height), ControlBarButton.AutoLayout, "📐 Căn layout", false, false),
-                (new RectangleF(curX += 94, r.Y, 80, r.Height), ControlBarButton.Reset, "🔄 Mặc định", false, false)
+                (new RectangleF(curX, r.Y, 68, r.Height), ControlBarButton.View, IconKey.Document, "Xem", !_isDesignMode, false),
+                (new RectangleF(curX += 68, r.Y, 86, r.Height), ControlBarButton.Design, IconKey.Edit, "Thiết kế", _isDesignMode, false),
+                (new RectangleF(curX += 86, r.Y, 64, r.Height), ControlBarButton.Save, IconKey.Save, "Lưu", false, _isDirty),
+                (new RectangleF(curX += 64, r.Y, 96, r.Height), ControlBarButton.AutoLayout, IconKey.AutoLayout, "Căn layout", false, false),
+                (new RectangleF(curX += 96, r.Y, 86, r.Height), ControlBarButton.Reset, IconKey.Refresh, "Mặc định", false, false)
             };
         }
 
