@@ -167,6 +167,53 @@ namespace ZeroUI.WinForms.Ribbon
             ? _pages[_selectedPageIndex]
             : null;
 
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Controls whether the visibility options dropdown button is displayed for approval groups.")]
+        public bool ShowApprovalOptionsButton { get; set; } = true;
+
+        [Category("Appearance")]
+        [DefaultValue("Tùy chọn hiển thị ⯆")]
+        [Description("Custom text or localized label for the approval visibility options dropdown button.")]
+        public string ApprovalOptionsText { get; set; } = "Tùy chọn hiển thị ⯆";
+
+        private IRibbonStateStore? _stateStore;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IRibbonStateStore? StateStore
+        {
+            get => _stateStore;
+            set
+            {
+                _stateStore = value;
+                ApplyStateStore();
+            }
+        }
+
+        /// <summary>
+        /// Global resolver for approval item status dot color.
+        /// Fallbacks to item-level resolver, group-level resolver, and finally theme palette defaults.
+        /// </summary>
+        [Browsable(false)]
+        public Func<RibbonApprovalItem, Color>? ApprovalStatusColorResolver { get; set; }
+
+        public void ApplyStateStore()
+        {
+            if (_stateStore == null) return;
+            foreach (var page in _pages)
+            {
+                foreach (var ag in page.ApprovalGroups)
+                {
+                    bool isVis = _stateStore.LoadGroupVisibility(ag.GroupKey, ag.Visible);
+                    ag.Visible = isVis;
+                    var rg = page.Groups.Find(g => g.ApprovalGroup == ag);
+                    if (rg != null) rg.Visible = isVis;
+                }
+            }
+            Invalidate();
+        }
+
         #endregion
 
         #region Fluent API
@@ -224,6 +271,28 @@ namespace ZeroUI.WinForms.Ribbon
             }
             if (InvokeRequired) BeginInvoke((Action)Invalidate);
             else Invalidate();
+        }
+
+        /// <summary>
+        /// Universally binds approval counts from any strongly typed DTO, entity, or domain model collection.
+        /// Eliminates manual mapping boilerplate in business controllers/views.
+        /// </summary>
+        public void BindApprovalCounts<TSource>(
+            IEnumerable<TSource> source,
+            Func<TSource, string> keySelector,
+            Func<TSource, int> countSelector)
+        {
+            if (source == null || keySelector == null || countSelector == null) return;
+            var list = new List<(string Key, int Count)>();
+            foreach (var item in source)
+            {
+                string key = keySelector(item);
+                if (!string.IsNullOrEmpty(key))
+                {
+                    list.Add((key, countSelector(item)));
+                }
+            }
+            UpdateApprovalCounts(list);
         }
 
         public void SetApprovalGroupVisibility(string groupKey, bool isVisible)
@@ -389,93 +458,132 @@ namespace ZeroUI.WinForms.Ribbon
             int groupContentY = _tabHeight + 4;
             int groupContentH = Height - _tabHeight - 24;
 
-            // Render Standard Functional Groups
+            // 1. Calculate space required by right-aligned widgets/approval groups
+            bool hasApprovalGroups = (activePage.ApprovalGroups.Count > 0);
+            int rightNeeded = 0;
+            if (hasApprovalGroups)
+            {
+                if (ShowApprovalOptionsButton)
+                {
+                    Size optSize = TextRenderer.MeasureText(ApprovalOptionsText, Font);
+                    int optW = Math.Max(115, optSize.Width + 24);
+                    rightNeeded += optW + 8;
+                }
+                foreach (var ag in activePage.ApprovalGroups)
+                {
+                    if (!ag.Visible) continue;
+                    Size titleSize = TextRenderer.MeasureText(ag.Title, Font);
+                    rightNeeded += Math.Max(120, titleSize.Width + 36) + 6;
+                }
+            }
+            int maxGroupX = Width - minBtnSize - 16 - rightNeeded;
+
+            // 2. Render Standard Functional Groups
             foreach (var grp in activePage.Groups)
             {
                 if (!grp.Visible || grp.ApprovalGroup != null) continue;
+                if (curX >= maxGroupX) break;
 
                 int grpStartX = curX;
-                curX = RenderStandardGroup(g, grp, curX, groupContentY, groupContentH, pal);
+                curX = RenderStandardGroup(g, grp, curX, groupContentY, groupContentH, pal, maxGroupX);
 
                 // Group caption at bottom
                 int grpW = curX - grpStartX;
-                var captionRect = new Rectangle(grpStartX, Height - 18, grpW, 16);
-                using (var captionFont = new Font(Font.FontFamily, 7.5f))
+                if (grpW > 0)
                 {
-                    TextRenderer.DrawText(g, grp.Text, captionFont, captionRect, pal.TextSecondary,
-                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
-                }
+                    var captionRect = new Rectangle(grpStartX, Height - 18, grpW, 16);
+                    using (var captionFont = new Font(Font.FontFamily, 7.5f))
+                    {
+                        TextRenderer.DrawText(g, grp.Text, captionFont, captionRect, pal.TextSecondary,
+                            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                    }
 
-                // Vertical Separator line
-                using (var sepPen = new Pen(pal.Border, 1f))
-                {
-                    g.DrawLine(sepPen, curX + 2, _tabHeight + 6, curX + 2, Height - 6);
+                    // Vertical Separator line
+                    using (var sepPen = new Pen(pal.Border, 1f))
+                    {
+                        g.DrawLine(sepPen, curX + 2, _tabHeight + 6, curX + 2, Height - 6);
+                    }
+                    curX += 6;
                 }
-                curX += 6;
             }
 
-            // 3. Render Approval Groups (Positioned towards the right side like ERP MDS)
+            // 3. Render Approval Groups if configured on the active page
             int rightX = Width - minBtnSize - 16;
-
-            // Options button: "Tùy chọn hiển thị ⯆"
-            int optW = 115;
-            int optH = 26;
-            _optionsButtonRect = new Rectangle(rightX - optW, groupContentY + 18, optW, optH);
-            rightX -= (optW + 8);
-
-            Color optBg = _hoverOptionsButton ? pal.Hover : pal.Surface;
-            using (var b = new SolidBrush(optBg))
-            using (var p = new Pen(pal.Border, 1f))
+            if (hasApprovalGroups)
             {
-                g.FillRectangle(b, _optionsButtonRect);
-                g.DrawRectangle(p, _optionsButtonRect);
-            }
-            TextRenderer.DrawText(g, "Tùy chọn hiển thị ⯆", Font, _optionsButtonRect, pal.TextPrimary,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-
-            // Approval Queue Groups (Right-to-Left or Grouped)
-            for (int i = activePage.ApprovalGroups.Count - 1; i >= 0; i--)
-            {
-                var ag = activePage.ApprovalGroups[i];
-                if (!ag.Visible) continue;
-
-                Size titleSize = TextRenderer.MeasureText(ag.Title, Font);
-                int agW = Math.Max(120, titleSize.Width + 36);
-                int agH = 34;
-
-                var agRect = new Rectangle(rightX - agW, groupContentY + 14, agW, agH);
-                _approvalHitAreas.Add((agRect, ag));
-                rightX -= (agW + 6);
-
-                bool isHover = (ag == _hoveredApprovalGroup);
-                Color agBg = isHover ? pal.Hover : pal.HeaderBackground;
-
-                using (var b = new SolidBrush(agBg))
-                using (var p = new Pen(isHover ? pal.Primary : pal.Border, 1f))
+                // Options button: configurable label & visibility
+                if (ShowApprovalOptionsButton)
                 {
-                    g.FillRectangle(b, agRect);
-                    g.DrawRectangle(p, agRect);
-                }
+                    Size optSize = TextRenderer.MeasureText(ApprovalOptionsText, Font);
+                    int optW = Math.Max(115, optSize.Width + 24);
+                    int optH = 26;
+                    _optionsButtonRect = new Rectangle(rightX - optW, groupContentY + 18, optW, optH);
+                    rightX -= (optW + 8);
 
-                // Title + Arrow
-                string displayText = $"{ag.Title} ⯆";
-                TextRenderer.DrawText(g, displayText, Font, new Rectangle(agRect.X + 6, agRect.Y, agRect.Width - 30, agRect.Height),
-                    pal.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
-
-                // Badge circle indicating total count
-                int badgeSize = 18;
-                var badgeRect = new Rectangle(agRect.Right - badgeSize - 6, agRect.Y + (agRect.Height - badgeSize) / 2, badgeSize, badgeSize);
-                Color badgeColor = ag.TotalCount > 0 ? pal.Danger : Color.FromArgb(16, 185, 129); // Red or Green
-
-                using (var bb = new SolidBrush(badgeColor))
-                {
-                    g.FillEllipse(bb, badgeRect);
-                }
-                using (var bf = new Font("Segoe UI", 7f, FontStyle.Bold))
-                {
-                    TextRenderer.DrawText(g, ag.TotalCount.ToString(), bf, badgeRect, Color.White,
+                    Color optBg = _hoverOptionsButton ? pal.Hover : pal.Surface;
+                    using (var b = new SolidBrush(optBg))
+                    using (var p = new Pen(pal.Border, 1f))
+                    {
+                        g.FillRectangle(b, _optionsButtonRect);
+                        g.DrawRectangle(p, _optionsButtonRect);
+                    }
+                    TextRenderer.DrawText(g, ApprovalOptionsText, Font, _optionsButtonRect, pal.TextPrimary,
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
                 }
+                else
+                {
+                    _optionsButtonRect = Rectangle.Empty;
+                }
+
+                // Approval Queue Groups
+                for (int i = activePage.ApprovalGroups.Count - 1; i >= 0; i--)
+                {
+                    var ag = activePage.ApprovalGroups[i];
+                    if (!ag.Visible) continue;
+
+                    Size titleSize = TextRenderer.MeasureText(ag.Title, Font);
+                    int agW = Math.Max(120, titleSize.Width + 36);
+                    int agH = 34;
+
+                    var agRect = new Rectangle(rightX - agW, groupContentY + 14, agW, agH);
+                    _approvalHitAreas.Add((agRect, ag));
+                    rightX -= (agW + 6);
+
+                    bool isHover = (ag == _hoveredApprovalGroup);
+                    Color agBg = isHover ? pal.Hover : pal.HeaderBackground;
+
+                    using (var b = new SolidBrush(agBg))
+                    using (var p = new Pen(isHover ? pal.Primary : pal.Border, 1f))
+                    {
+                        g.FillRectangle(b, agRect);
+                        g.DrawRectangle(p, agRect);
+                    }
+
+                    // Title + Arrow
+                    string displayText = $"{ag.Title} ⯆";
+                    TextRenderer.DrawText(g, displayText, Font, new Rectangle(agRect.X + 6, agRect.Y, agRect.Width - 30, agRect.Height),
+                        pal.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+
+                    // Badge circle indicating total count
+                    int badgeSize = 18;
+                    var badgeRect = new Rectangle(agRect.Right - badgeSize - 6, agRect.Y + (agRect.Height - badgeSize) / 2, badgeSize, badgeSize);
+                    Color badgeColor = ag.BadgeColorResolver?.Invoke(ag.TotalCount)
+                        ?? (ag.TotalCount > 0 ? pal.Danger : Color.FromArgb(16, 185, 129));
+
+                    using (var bb = new SolidBrush(badgeColor))
+                    {
+                        g.FillEllipse(bb, badgeRect);
+                    }
+                    using (var bf = new Font("Segoe UI", 7f, FontStyle.Bold))
+                    {
+                        TextRenderer.DrawText(g, ag.TotalCount.ToString(), bf, badgeRect, Color.White,
+                            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    }
+                }
+            }
+            else
+            {
+                _optionsButtonRect = Rectangle.Empty;
             }
 
             // Outer bottom border
@@ -485,7 +593,7 @@ namespace ZeroUI.WinForms.Ribbon
             }
         }
 
-        private int RenderStandardGroup(Graphics g, RibbonGroup grp, int startX, int contentY, int contentH, ZeroThemePalette pal)
+        private int RenderStandardGroup(Graphics g, RibbonGroup grp, int startX, int contentY, int contentH, ZeroThemePalette pal, int maxGroupX)
         {
             int x = startX;
             int colY = contentY;
@@ -501,13 +609,14 @@ namespace ZeroUI.WinForms.Ribbon
                     // Flush pending small button column if any
                     if (smallInCol > 0)
                     {
-                        x += 115;
+                        x += 135 + 4;
                         smallInCol = 0;
                         smallColStartX = -1;
                     }
 
                     int w = 76;
                     int h = contentH;
+                    if (x + w > maxGroupX) break; // Overflow protection
                     var itemRect = new Rectangle(x, contentY, w, h);
                     _itemHitAreas.Add((itemRect, item, grp));
 
@@ -587,6 +696,7 @@ namespace ZeroUI.WinForms.Ribbon
                     // Small Button (Stacked vertically up to 3 per column)
                     if (smallColStartX == -1)
                     {
+                        if (x + 135 > maxGroupX) break; // Overflow protection
                         smallColStartX = x;
                         colY = contentY;
                     }
@@ -701,7 +811,7 @@ namespace ZeroUI.WinForms.Ribbon
             _hoveredTabIndex = -1;
             _hoveredItem = null;
             _hoveredApprovalGroup = null;
-            _hoverOptionsButton = _optionsButtonRect.Contains(e.Location);
+            _hoverOptionsButton = !_optionsButtonRect.IsEmpty && _optionsButtonRect.Contains(e.Location);
             _hoverMinimizeButton = _minimizeButtonRect.Contains(e.Location);
 
             // Tab hover
@@ -836,7 +946,7 @@ namespace ZeroUI.WinForms.Ribbon
                 }
 
                 // Options Button Click
-                if (_optionsButtonRect.Contains(e.Location))
+                if (!_optionsButtonRect.IsEmpty && _optionsButtonRect.Contains(e.Location))
                 {
                     ShowVisibilityOptionsDropdown(_optionsButtonRect);
                     return;
@@ -871,11 +981,16 @@ namespace ZeroUI.WinForms.Ribbon
 
             foreach (var item in ag.Items)
             {
-                // Red dot for pending count > 0, green/blue for 0
-                Color dotColor = item.Count > 0 ? pal.Danger : Color.FromArgb(59, 130, 246);
+                // Decoupled status dot color resolving
+                Color dotColor = item.StatusColor
+                    ?? item.StatusColorResolver?.Invoke(item)
+                    ?? ag.StatusColorResolver?.Invoke(item)
+                    ?? ApprovalStatusColorResolver?.Invoke(item)
+                    ?? (item.Count > 0 ? pal.Danger : Color.FromArgb(59, 130, 246));
+
                 var dotImage = CreateDotImage(dotColor, 12);
 
-                string text = $"  {item.Name}: {item.Count}";
+                string text = $"  {item.GetDisplayText()}";
                 var menuItem = new ToolStripMenuItem(text, dotImage)
                 {
                     Font = item.Count > 0 ? new Font(menu.Font, FontStyle.Bold) : menu.Font
@@ -917,6 +1032,9 @@ namespace ZeroUI.WinForms.Ribbon
                     ag.Visible = chkItem.Checked;
                     var rg = activePage.Groups.Find(g => g.ApprovalGroup == ag);
                     if (rg != null) rg.Visible = chkItem.Checked;
+
+                    // Automatically persist state if store configured
+                    _stateStore?.SaveGroupVisibility(ag.GroupKey, ag.Visible);
 
                     Invalidate();
                     ApprovalVisibilityChanged?.Invoke(this, new ApprovalVisibilityChangedEventArgs(ag.GroupKey, ag.Visible));

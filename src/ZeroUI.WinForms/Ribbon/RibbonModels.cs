@@ -24,6 +24,47 @@ namespace ZeroUI.WinForms.Ribbon
         DropDown
     }
 
+    public enum RibbonGroupAlignment
+    {
+        /// <summary>
+        /// Left-aligned standard functional group, flowing from left to right.
+        /// </summary>
+        Left,
+
+        /// <summary>
+        /// Right-aligned specialized group (such as approval queues, quick status, options).
+        /// </summary>
+        Right
+    }
+
+    /// <summary>
+    /// Decoupled persistence contract for saving and loading ribbon group visibility and preferences.
+    /// Prevents hardcoding Registry or local storage into business forms.
+    /// </summary>
+    public interface IRibbonStateStore
+    {
+        bool LoadGroupVisibility(string groupKey, bool defaultVisible);
+        void SaveGroupVisibility(string groupKey, bool isVisible);
+    }
+
+    /// <summary>
+    /// Functional delegate-based implementation of IRibbonStateStore for easy inline configuration.
+    /// </summary>
+    public class DelegateRibbonStateStore : IRibbonStateStore
+    {
+        private readonly Func<string, bool, bool> _loader;
+        private readonly Action<string, bool> _saver;
+
+        public DelegateRibbonStateStore(Func<string, bool, bool> loader, Action<string, bool> saver)
+        {
+            _loader = loader ?? throw new ArgumentNullException(nameof(loader));
+            _saver = saver ?? throw new ArgumentNullException(nameof(saver));
+        }
+
+        public bool LoadGroupVisibility(string groupKey, bool defaultVisible) => _loader(groupKey, defaultVisible);
+        public void SaveGroupVisibility(string groupKey, bool isVisible) => _saver(groupKey, isVisible);
+    }
+
     /// <summary>
     /// Represents an actionable item (button, dropdown) on a ribbon group.
     /// </summary>
@@ -82,6 +123,21 @@ namespace ZeroUI.WinForms.Ribbon
         public object? Tag { get; set; }
         public Action? ClickAction { get; set; }
 
+        /// <summary>
+        /// Explicit dot indicator color for this item. If null, resolved via StatusColorResolver.
+        /// </summary>
+        public Color? StatusColor { get; set; }
+
+        /// <summary>
+        /// Custom resolver function returning the status color for this specific item.
+        /// </summary>
+        public Func<RibbonApprovalItem, Color>? StatusColorResolver { get; set; }
+
+        /// <summary>
+        /// Formatting template for display text. Default: "{0}: {1}" (Name: Count).
+        /// </summary>
+        public string DisplayFormat { get; set; } = "{0}: {1}";
+
         public RibbonApprovalItem() { }
 
         public RibbonApprovalItem(string key, string name, int count = 0, Action? onClick = null)
@@ -92,7 +148,7 @@ namespace ZeroUI.WinForms.Ribbon
             ClickAction = onClick;
         }
 
-        public string GetDisplayText() => $"{Name}: {Count}";
+        public string GetDisplayText() => string.Format(DisplayFormat, Name, Count);
     }
 
     /// <summary>
@@ -104,7 +160,18 @@ namespace ZeroUI.WinForms.Ribbon
         public string GroupKey { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public bool Visible { get; set; } = true;
+        public RibbonGroupAlignment Alignment { get; set; } = RibbonGroupAlignment.Right;
         public List<RibbonApprovalItem> Items { get; } = new List<RibbonApprovalItem>();
+
+        /// <summary>
+        /// Optional delegate to resolve status dot color for items in this group.
+        /// </summary>
+        public Func<RibbonApprovalItem, Color>? StatusColorResolver { get; set; }
+
+        /// <summary>
+        /// Optional delegate to resolve group badge color based on total count.
+        /// </summary>
+        public Func<int, Color>? BadgeColorResolver { get; set; }
 
         public event EventHandler? ItemsChanged;
 
@@ -150,6 +217,7 @@ namespace ZeroUI.WinForms.Ribbon
     {
         public string Text { get; set; } = string.Empty;
         public bool Visible { get; set; } = true;
+        public RibbonGroupAlignment Alignment { get; set; } = RibbonGroupAlignment.Left;
         public List<RibbonItem> Items { get; } = new List<RibbonItem>();
 
         // Optional link to specialized approval group
