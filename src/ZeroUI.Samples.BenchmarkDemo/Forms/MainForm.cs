@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
+using ZeroUI.Core.Icons;
 using ZeroUI.Core.Input.Date;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Runtime;
@@ -330,40 +331,52 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             _mainToolbar.AddDropdown("Grid Options", "⚙", (s, e) =>
             {
-                var menu = new ZeroContextMenu();
-                menu.AddAction("↔️ Best Fit Columns", () =>
+                var menu = new ContextMenuControl();
+                menu.AddSearch("Filter grid options...", text =>
                 {
-                    _zeroGrid.BestFitColumns();
-                    ZeroToast.Info(this, "Auto-sized all columns to fit content (Best Fit).");
-                });
-                menu.AddAction(_zeroGrid.ShowCheckBoxSelectorColumn ? "☑️ Hide Checkbox Column" : "☑️ Show Checkbox Column", () =>
-                {
-                    _zeroGrid.ShowCheckBoxSelectorColumn = !_zeroGrid.ShowCheckBoxSelectorColumn;
-                    ZeroToast.Info(this, $"Selection Checkbox Column: {(_zeroGrid.ShowCheckBoxSelectorColumn ? "Visible" : "Hidden")}");
-                });
-                menu.AddAction(_zeroGrid.ShowAutoFilterRow ? "🔍 Disable Auto Filter Row" : "🔍 Enable Auto Filter Row", () =>
-                {
-                    _zeroGrid.ShowAutoFilterRow = !_zeroGrid.ShowAutoFilterRow;
-                    ZeroToast.Info(this, $"Auto Filter Row: {(_zeroGrid.ShowAutoFilterRow ? "Enabled" : "Disabled")}");
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        ToastNotification.Info(this, $"Filter option: {text}");
+                    }
                 });
                 menu.AddSeparator();
-                menu.AddAction("💾 Save Column Layout (JSON)", () =>
+                menu.AddToggle("Checkbox Column", _zeroGrid.ShowCheckBoxSelectorColumn, val =>
+                {
+                    _zeroGrid.ShowCheckBoxSelectorColumn = val;
+                    ToastNotification.Info(this, $"Selection Checkbox: {(val ? "Visible" : "Hidden")}");
+                }, subtitle: "Enable multi-row checkbox selection");
+                menu.AddToggle("Auto Filter Row", _zeroGrid.ShowAutoFilterRow, val =>
+                {
+                    _zeroGrid.ShowAutoFilterRow = val;
+                    ToastNotification.Info(this, $"Auto Filter Row: {(val ? "Enabled" : "Disabled")}");
+                }, subtitle: "Header row instant column filtering");
+                menu.AddSlider("Row Height", 24, 60, _zeroGrid.RowHeight, val =>
+                {
+                    _zeroGrid.RowHeight = val;
+                }, unit: "px");
+                menu.AddSeparator();
+                menu.AddAction("Best Fit Columns", () =>
+                {
+                    _zeroGrid.BestFitColumns();
+                    ToastNotification.Info(this, "Auto-sized all columns to fit content (Best Fit).");
+                }, IconKey.AutoLayout);
+                menu.AddAction("Save Column Layout (JSON)", () =>
                 {
                     _savedGridLayout = _zeroGrid.SaveLayoutToJson();
-                    ZeroToast.Success(this, "Saved column layout to JSON.");
-                });
-                menu.AddAction("📂 Restore Column Layout (JSON)", () =>
+                    ToastNotification.Success(this, "Saved column layout to JSON.");
+                }, IconKey.Save);
+                menu.AddAction("Restore Column Layout (JSON)", () =>
                 {
                     if (!string.IsNullOrEmpty(_savedGridLayout))
                     {
                         _zeroGrid.RestoreLayoutFromJson(_savedGridLayout);
-                        ZeroToast.Success(this, "Restored column layout from JSON.");
+                        ToastNotification.Success(this, "Restored column layout from JSON.");
                     }
                     else
                     {
-                        ZeroToast.Warning(this, "No saved layout found. Save layout first.");
+                        ToastNotification.Warning(this, "No saved layout found. Save layout first.");
                     }
-                });
+                }, IconKey.Refresh);
                 var pos = _mainToolbar.PointToScreen(new Point(Math.Max(100, _mainToolbar.Width / 3), _mainToolbar.Height));
                 menu.Show(pos);
             });

@@ -3,18 +3,22 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Icons;
+using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Overlays
 {
     /// <summary>
     /// Modern anti-aliased context menu with rounded highlight pills, shortcut keys,
-    /// danger action styling, checkable items, submenus, and 100% theme reactivity.
+    /// danger action styling, checkable items, submenus, interactive editors (Search, Toggle, Slider, Combo, Numeric),
+    /// and 100% theme reactivity.
     /// Can be assigned directly to any WinForms control's ContextMenuStrip property.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
-    [Description("Modern anti-aliased context menu strip with pill highlights and theme support")]
+    [Description("Modern anti-aliased context menu strip with pill highlights, interactive editors, and theme support")]
     public class ContextMenuControl : ContextMenuStrip
     {
         public ContextMenuControl()
@@ -23,7 +27,7 @@ namespace ZeroUI.WinForms.Overlays
             ShowImageMargin = false;
             ShowCheckMargin = false;
             DropShadowEnabled = true;
-            Font = new Font("Segoe UI", 9.25f, FontStyle.Regular);
+            Font = ZeroFontCache.Get("Segoe UI", 9.25f, FontStyle.Regular);
             Padding = new Padding(4, 6, 4, 6);
             BackColor = ZeroTheme.Colors.CardBackground;
 
@@ -34,12 +38,25 @@ namespace ZeroUI.WinForms.Overlays
             };
         }
 
+        #region Actions & Submenus
+
         public MenuItemControl AddAction(string text, Action onClick, string? shortcut = null, string? icon = null)
         {
             var item = new MenuItemControl(text, onClick)
             {
                 ShortcutHint = shortcut,
                 Glyph = icon
+            };
+            Items.Add(item);
+            return item;
+        }
+
+        public MenuItemControl AddAction(string text, Action onClick, IconKey icon, string? shortcut = null)
+        {
+            var item = new MenuItemControl(text, onClick)
+            {
+                ShortcutHint = shortcut,
+                Icon = icon
             };
             Items.Add(item);
             return item;
@@ -57,6 +74,18 @@ namespace ZeroUI.WinForms.Overlays
             return item;
         }
 
+        public MenuItemControl AddDangerAction(string text, Action onClick, IconKey icon, string? shortcut = null)
+        {
+            var item = new MenuItemControl(text, onClick)
+            {
+                ShortcutHint = shortcut,
+                Icon = icon,
+                IsDanger = true
+            };
+            Items.Add(item);
+            return item;
+        }
+
         public MenuItemControl AddCheckable(string text, bool isChecked, Action<bool> onToggle, string? icon = null)
         {
             var item = new MenuItemControl(text, null)
@@ -64,6 +93,19 @@ namespace ZeroUI.WinForms.Overlays
                 CheckOnClick = true,
                 Checked = isChecked,
                 Glyph = icon
+            };
+            item.CheckedChanged += (s, e) => onToggle(item.Checked);
+            Items.Add(item);
+            return item;
+        }
+
+        public MenuItemControl AddCheckable(string text, bool isChecked, Action<bool> onToggle, IconKey icon)
+        {
+            var item = new MenuItemControl(text, null)
+            {
+                CheckOnClick = true,
+                Checked = isChecked,
+                Icon = icon
             };
             item.CheckedChanged += (s, e) => onToggle(item.Checked);
             Items.Add(item);
@@ -87,15 +129,94 @@ namespace ZeroUI.WinForms.Overlays
             Items.Add(item);
             return item;
         }
+
+        public MenuItemControl AddSubMenu(string text, IconKey icon)
+        {
+            var item = new MenuItemControl(text, null)
+            {
+                Icon = icon,
+                DropDown = new ContextMenuControl()
+            };
+            Items.Add(item);
+            return item;
+        }
+
+        #endregion
+
+        #region Interactive Editors (Search, Toggle, Slider, ComboBox, Numeric, Custom)
+
+        /// <summary>
+        /// Adds an embedded search box with vector search icon, debounce filtering, and quick-clear action.
+        /// </summary>
+        public MenuItemSearch AddSearch(string placeholder = "Search...", Action<string>? onSearch = null, int debounceMs = 250, int width = 220)
+        {
+            var searchItem = new MenuItemSearch(placeholder, onSearch, debounceMs, width);
+            Items.Add(searchItem);
+            return searchItem;
+        }
+
+        /// <summary>
+        /// Adds an embedded iOS/Fluent style toggle switch item with title and optional description subtitle.
+        /// </summary>
+        public MenuItemToggle AddToggle(string text, bool isChecked = false, Action<bool>? onToggle = null, string? subtitle = null, int width = 220)
+        {
+            var toggleItem = new MenuItemToggle(text, isChecked, onToggle, subtitle, width);
+            Items.Add(toggleItem);
+            return toggleItem;
+        }
+
+        /// <summary>
+        /// Adds an embedded continuous horizontal slider item with title, live value readout, and custom unit.
+        /// </summary>
+        public MenuItemSlider AddSlider(string title, int min = 0, int max = 100, int current = 50, Action<int>? onValueChanged = null, string unit = "", int width = 220)
+        {
+            var sliderItem = new MenuItemSlider(title, min, max, current, onValueChanged, unit, width);
+            Items.Add(sliderItem);
+            return sliderItem;
+        }
+
+        /// <summary>
+        /// Adds an embedded ComboBox dropdown selector item for category/preset selection.
+        /// </summary>
+        public MenuItemComboBox AddComboBox(string label, object[]? items, int selectedIndex = -1, Action<object?>? onSelectionChanged = null, int width = 220)
+        {
+            var comboItem = new MenuItemComboBox(label, items, selectedIndex, onSelectionChanged, width);
+            Items.Add(comboItem);
+            return comboItem;
+        }
+
+        /// <summary>
+        /// Adds an embedded numeric stepper with precision minus/plus buttons.
+        /// </summary>
+        public MenuItemNumeric AddNumeric(string label, decimal min = 0, decimal max = 100, decimal current = 1, decimal step = 1, Action<decimal>? onValueChanged = null, int width = 220)
+        {
+            var numItem = new MenuItemNumeric(label, min, max, current, step, onValueChanged, width);
+            Items.Add(numItem);
+            return numItem;
+        }
+
+        /// <summary>
+        /// Adds an arbitrary custom control hosted safely inside the context menu.
+        /// </summary>
+        public MenuItemControlHost<T> AddCustom<T>(T control, Padding? margin = null) where T : Control
+        {
+            var host = new MenuItemControlHost<T>(control);
+            if (margin.HasValue) host.Margin = margin.Value;
+            Items.Add(host);
+            return host;
+        }
+
+        #endregion
     }
 
     /// <summary>
-    /// Custom MenuItem supporting danger state, glyph emojis, shortcut hints, and badge tags.
+    /// Custom MenuItem supporting danger state, glyph emojis, vector IconKey, shortcut hints, and badge tags.
     /// </summary>
     public class MenuItemControl : ToolStripMenuItem
     {
         public bool IsDanger { get; set; } = false;
         public string? Glyph { get; set; }
+        public IconKey? Icon { get; set; }
         public string? ShortcutHint { get; set; }
         public string? BadgeText { get; set; }
         public Color? BadgeColor { get; set; }
@@ -113,7 +234,7 @@ namespace ZeroUI.WinForms.Overlays
             int w = baseSize.Width + 36;
             if (!string.IsNullOrEmpty(ShortcutHint)) w += 65;
             if (!string.IsNullOrEmpty(BadgeText)) w += 40;
-            if (!string.IsNullOrEmpty(Glyph)) w += 20;
+            if (!string.IsNullOrEmpty(Glyph) || Icon.HasValue) w += 24;
             return new Size(Math.Max(180, w), Math.Max(30, baseSize.Height + 6));
         }
 
@@ -123,6 +244,17 @@ namespace ZeroUI.WinForms.Overlays
             {
                 ShortcutHint = shortcut,
                 Glyph = icon
+            };
+            DropDownItems.Add(item);
+            return item;
+        }
+
+        public MenuItemControl AddSubAction(string text, Action onClick, IconKey icon, string? shortcut = null)
+        {
+            var item = new MenuItemControl(text, onClick)
+            {
+                ShortcutHint = shortcut,
+                Icon = icon
             };
             DropDownItems.Add(item);
             return item;
@@ -217,23 +349,29 @@ namespace ZeroUI.WinForms.Overlays
             // 1. Draw Checkmark (if checked)
             if (item is ToolStripMenuItem tsmi && tsmi.Checked)
             {
-                using var fontCheck = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+                var fontCheck = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
                 using var brushCheck = new SolidBrush(palette.Primary);
                 g.DrawString("✔", fontCheck, brushCheck, curX, (item.Height - 16) / 2);
                 curX += 18;
             }
 
-            // 2. Draw Glyph (if specified)
-            if (zeroItem != null && !string.IsNullOrEmpty(zeroItem.Glyph))
+            // 2. Draw Vector Icon or Glyph (if specified)
+            if (zeroItem != null && zeroItem.Icon.HasValue)
             {
-                using var fontGlyph = new Font("Segoe UI Emoji", 9.5f);
+                var iconRect = new Rectangle(curX, (item.Height - 16) / 2, 16, 16);
+                ZeroIcon.Draw(g, zeroItem.Icon.Value, iconRect, textColor);
+                curX += 22;
+            }
+            else if (zeroItem != null && !string.IsNullOrEmpty(zeroItem.Glyph))
+            {
+                var fontGlyph = ZeroFontCache.Get("Segoe UI Emoji", 9.5f, FontStyle.Regular);
                 using var brushGlyph = new SolidBrush(textColor);
                 g.DrawString(zeroItem.Glyph, fontGlyph, brushGlyph, curX, (item.Height - 18) / 2);
                 curX += 22;
             }
 
             // 3. Draw Item Text
-            using (var fontText = new Font(item.Font.FontFamily, 9f, FontStyle.Regular))
+            var fontText = ZeroFontCache.Get(item.Font.FontFamily.Name, 9f, FontStyle.Regular);
             using (var brushText = new SolidBrush(textColor))
             {
                 g.DrawString(item.Text, fontText, brushText, curX, (item.Height - 16) / 2);
@@ -242,7 +380,7 @@ namespace ZeroUI.WinForms.Overlays
             // 4. Draw Badge Tag (if any)
             if (zeroItem != null && !string.IsNullOrEmpty(zeroItem.BadgeText))
             {
-                int textW = (int)g.MeasureString(item.Text, item.Font).Width;
+                int textW = (int)g.MeasureString(item.Text, fontText).Width;
                 int badgeX = curX + textW + 8;
                 int badgeW = 28;
                 var badgeRect = new Rectangle(badgeX, (item.Height - 16) / 2, badgeW, 16);
@@ -252,7 +390,7 @@ namespace ZeroUI.WinForms.Overlays
                 using var pathBadge = CreateRoundedRect(badgeRect, 3);
                 g.FillPath(brushBadgeBg, pathBadge);
 
-                using var fontBadge = new Font(item.Font.FontFamily, 7.5f, FontStyle.Bold);
+                var fontBadge = ZeroFontCache.Get(item.Font.FontFamily.Name, 7.5f, FontStyle.Bold);
                 using var brushBadgeText = new SolidBrush(bColor);
                 var sfB = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                 g.DrawString(zeroItem.BadgeText, fontBadge, brushBadgeText, badgeRect, sfB);
@@ -262,7 +400,7 @@ namespace ZeroUI.WinForms.Overlays
             string? shortcut = zeroItem?.ShortcutHint ?? (item as ToolStripMenuItem)?.ShortcutKeyDisplayString;
             if (!string.IsNullOrEmpty(shortcut))
             {
-                using var fontShort = new Font(item.Font.FontFamily, 8f, FontStyle.Regular);
+                var fontShort = ZeroFontCache.Get(item.Font.FontFamily.Name, 8f, FontStyle.Regular);
                 using var brushShort = new SolidBrush(palette.TextSecondary);
                 var sf = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
                 Rectangle shortRect = new Rectangle(item.Width - 100, 0, 88, item.Height);
@@ -288,7 +426,7 @@ namespace ZeroUI.WinForms.Overlays
             var palette = ZeroTheme.Colors;
             Color arrowColor = (e.Item != null && e.Item.Selected) ? palette.Primary : palette.TextSecondary;
 
-            using var fontArrow = new Font("Segoe UI", 9f, FontStyle.Bold);
+            var fontArrow = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold);
             using var brushArrow = new SolidBrush(arrowColor);
             var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
             g.DrawString("›", fontArrow, brushArrow, e.ArrowRectangle, sf);
