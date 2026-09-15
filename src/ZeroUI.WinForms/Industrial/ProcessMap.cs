@@ -1433,19 +1433,12 @@ namespace ZeroUI.WinForms.Industrial
                 maxY = Math.Max(maxY, (float)(node.Y + node.Height));
             }
 
-            var vpTopLeft = ScreenToWorld(new PointF(0, 0));
-            var vpBottomRight = ScreenToWorld(new PointF(Width, Height));
-            minX = Math.Min(minX, vpTopLeft.X);
-            minY = Math.Min(minY, vpTopLeft.Y);
-            maxX = Math.Max(maxX, vpBottomRight.X);
-            maxY = Math.Max(maxY, vpBottomRight.Y);
-
             if (minX >= maxX || minY >= maxY)
             {
                 minX = 0; minY = 0; maxX = 1200; maxY = 800;
             }
 
-            float margin = 40f;
+            float margin = 60f;
             minX -= margin; minY -= margin; maxX += margin; maxY += margin;
             float worldW = maxX - minX;
             float worldH = maxY - minY;
