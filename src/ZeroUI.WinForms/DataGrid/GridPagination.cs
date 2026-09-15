@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel;
-using ZeroUI.WinForms.Editors;
+using ZeroUI.WinForms.Navigation;
 
 namespace ZeroUI.WinForms.DataGrid
 {

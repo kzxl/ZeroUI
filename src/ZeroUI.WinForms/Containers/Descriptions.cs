@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Containers
 {
     public class DescriptionItem
     {

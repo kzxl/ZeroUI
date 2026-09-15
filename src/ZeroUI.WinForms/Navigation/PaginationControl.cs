@@ -10,7 +10,7 @@ using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Editors
+namespace ZeroUI.WinForms.Navigation
 {
     internal enum PagerButtonKind
     {

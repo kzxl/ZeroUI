@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Containers
 {
     /// <summary>
     /// Column definition for the lightweight embedded grid in ZeroGridCard.

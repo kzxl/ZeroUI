@@ -1,16 +1,15 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Workflow
 {
-    public enum StepStatus
-
+    public enum StepsControlStatus
     {
         Waiting,
         InProgress,
@@ -19,7 +18,7 @@ namespace ZeroUI.WinForms.Industrial
         Error
     }
 
-    public enum StepGlyph
+    public enum StepsControlGlyph
     {
         Gear,
         Checkmark,
@@ -29,28 +28,27 @@ namespace ZeroUI.WinForms.Industrial
         Custom
     }
 
-    public class StepItem
+    public class StepsControlItem
     {
         public string Key { get; set; } = "";
         public string Title { get; set; } = "Step Title";
         public int Quantity { get; set; } = 0;
         public int? TargetQuantity { get; set; }
         public string? Timestamp { get; set; } = "--";
-        public StepStatus Status { get; set; } = StepStatus.Waiting;
-        public StepGlyph Glyph { get; set; } = StepGlyph.Gear;
+        public StepsControlStatus Status { get; set; } = StepsControlStatus.Waiting;
+        public StepsControlGlyph Glyph { get; set; } = StepsControlGlyph.Gear;
         public string? CustomGlyphText { get; set; }
         public string QuantityPrefix { get; set; } = "Qty: ";
         public string TimestampPrefix { get; set; } = "Updated: ";
         public object? Tag { get; set; }
     }
 
-
-    public class StepClickedEventArgs : EventArgs
+    public class StepsControlClickedEventArgs : EventArgs
     {
         public int StepIndex { get; }
-        public StepItem Step { get; }
+        public StepsControlItem Step { get; }
 
-        public StepClickedEventArgs(int index, StepItem step)
+        public StepsControlClickedEventArgs(int index, StepsControlItem step)
         {
             StepIndex = index;
             Step = step;
@@ -67,12 +65,11 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSteps.bmp")]
     public class StepsControl : Control
     {
-
-        private readonly List<StepItem> _steps = new List<StepItem>();
+        private readonly List<StepsControlItem> _steps = new List<StepsControlItem>();
         private readonly List<Rectangle> _stepRects = new List<Rectangle>();
         private int _hoveredIndex = -1;
 
-        public event EventHandler<StepClickedEventArgs>? StepClicked;
+        public event EventHandler<StepsControlClickedEventArgs>? StepClicked;
 
         public StepsControl()
         {
@@ -91,9 +88,9 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Browsable(false)]
-        public IReadOnlyList<StepItem> Steps => _steps;
+        public IReadOnlyList<StepsControlItem> Steps => _steps;
 
-        public void SetSteps(IEnumerable<StepItem> steps)
+        public void SetSteps(IEnumerable<StepsControlItem> steps)
         {
             _steps.Clear();
             if (steps != null)
@@ -103,7 +100,7 @@ namespace ZeroUI.WinForms.Industrial
             Invalidate();
         }
 
-        public void UpdateStep(string key, int quantity, string? timestamp = null, StepStatus? status = null)
+        public void UpdateStep(string key, int quantity, string? timestamp = null, StepsControlStatus? status = null)
         {
             for (int i = 0; i < _steps.Count; i++)
             {
@@ -138,15 +135,31 @@ namespace ZeroUI.WinForms.Industrial
             int cardWidth;
             int gap;
 
-            if (availableW < (count * idealCardWidth) + ((count - 1) * minGap))
+            if (count == 1)
             {
-                cardWidth = Math.Max(150, (availableW - ((count - 1) * minGap)) / count);
-                gap = (count > 1) ? Math.Max(8, (availableW - (count * cardWidth)) / (count - 1)) : 0;
+                cardWidth = Math.Min(idealCardWidth, availableW);
+                gap = 0;
             }
             else
             {
-                cardWidth = idealCardWidth;
-                gap = (count > 1) ? (availableW - (count * cardWidth)) / (count - 1) : 0;
+                int totalIdealWidth = (count * idealCardWidth) + ((count - 1) * minGap);
+
+                if (totalIdealWidth <= availableW)
+                {
+                    cardWidth = idealCardWidth;
+                    gap = (availableW - (count * cardWidth)) / (count - 1);
+                }
+                else
+                {
+                    gap = minGap;
+                    cardWidth = (availableW - ((count - 1) * gap)) / count;
+
+                    if (cardWidth < 140)
+                    {
+                        gap = Math.Max(12, (availableW - (count * 140)) / Math.Max(1, count - 1));
+                        cardWidth = Math.Max(110, (availableW - ((count - 1) * gap)) / count);
+                    }
+                }
             }
 
             int cardHeight = Math.Min(64, Math.Max(52, Height - 12));
@@ -258,26 +271,25 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-
-        private static (Color bg, Color border, Color icon, string glyph) GetStepColorsAndGlyph(StepItem step)
+        private static (Color bg, Color border, Color icon, string glyph) GetStepColorsAndGlyph(StepsControlItem step)
         {
             string glyph = step.Glyph switch
             {
-                StepGlyph.Gear => "⚙",
-                StepGlyph.Checkmark => "✔",
-                StepGlyph.Warehouse => "🏠",
-                StepGlyph.Truck => "🚚",
-                StepGlyph.Alert => "⚠",
-                StepGlyph.Custom => step.CustomGlyphText ?? "•",
+                StepsControlGlyph.Gear => "⚙",
+                StepsControlGlyph.Checkmark => "✔",
+                StepsControlGlyph.Warehouse => "🏠",
+                StepsControlGlyph.Truck => "🚚",
+                StepsControlGlyph.Alert => "⚠",
+                StepsControlGlyph.Custom => step.CustomGlyphText ?? "•",
                 _ => "•"
             };
 
             return step.Status switch
             {
-                StepStatus.Completed => (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(82, 196, 26), step.Glyph == StepGlyph.Checkmark ? "✔" : glyph),
-                StepStatus.InProgress => (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(22, 119, 255), glyph),
-                StepStatus.Warning => (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(250, 173, 20), glyph),
-                StepStatus.Error => (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(255, 77, 79), "✖"),
+                StepsControlStatus.Completed => (Color.FromArgb(246, 255, 237), Color.FromArgb(183, 235, 143), Color.FromArgb(82, 196, 26), step.Glyph == StepsControlGlyph.Checkmark ? "✔" : glyph),
+                StepsControlStatus.InProgress => (Color.FromArgb(230, 244, 255), Color.FromArgb(145, 202, 255), Color.FromArgb(22, 119, 255), glyph),
+                StepsControlStatus.Warning => (Color.FromArgb(255, 251, 230), Color.FromArgb(255, 229, 143), Color.FromArgb(250, 173, 20), glyph),
+                StepsControlStatus.Error => (Color.FromArgb(255, 242, 240), Color.FromArgb(255, 204, 199), Color.FromArgb(255, 77, 79), "✖"),
                 _ => (Color.FromArgb(243, 244, 246), Color.FromArgb(229, 231, 235), Color.FromArgb(156, 163, 175), glyph)
             };
         }
@@ -319,7 +331,7 @@ namespace ZeroUI.WinForms.Industrial
             base.OnMouseClick(e);
             if (e.Button == MouseButtons.Left && _hoveredIndex >= 0 && _hoveredIndex < _steps.Count)
             {
-                StepClicked?.Invoke(this, new StepClickedEventArgs(_hoveredIndex, _steps[_hoveredIndex]));
+                StepClicked?.Invoke(this, new StepsControlClickedEventArgs(_hoveredIndex, _steps[_hoveredIndex]));
             }
         }
 
@@ -328,62 +340,62 @@ namespace ZeroUI.WinForms.Industrial
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="StepStatus"/>.
+    /// Legacy alias for <see cref="StepsControlStatus"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroStepStatus is deprecated. Please use StepStatus instead.")]
+    [Obsolete("ZeroStepStatus is deprecated. Please use StepsControlStatus instead.")]
     public enum ZeroStepStatus
     {
-        Waiting = StepStatus.Waiting,
-        InProgress = StepStatus.InProgress,
-        Completed = StepStatus.Completed,
-        Warning = StepStatus.Warning,
-        Error = StepStatus.Error
+        Waiting = StepsControlStatus.Waiting,
+        InProgress = StepsControlStatus.InProgress,
+        Completed = StepsControlStatus.Completed,
+        Warning = StepsControlStatus.Warning,
+        Error = StepsControlStatus.Error
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="StepGlyph"/>.
+    /// Legacy alias for <see cref="StepsControlGlyph"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroStepGlyph is deprecated. Please use StepGlyph instead.")]
+    [Obsolete("ZeroStepGlyph is deprecated. Please use StepsControlGlyph instead.")]
     public enum ZeroStepGlyph
     {
-        Gear = StepGlyph.Gear,
-        Checkmark = StepGlyph.Checkmark,
-        Warehouse = StepGlyph.Warehouse,
-        Truck = StepGlyph.Truck,
-        Alert = StepGlyph.Alert,
-        Custom = StepGlyph.Custom
+        Gear = StepsControlGlyph.Gear,
+        Checkmark = StepsControlGlyph.Checkmark,
+        Warehouse = StepsControlGlyph.Warehouse,
+        Truck = StepsControlGlyph.Truck,
+        Alert = StepsControlGlyph.Alert,
+        Custom = StepsControlGlyph.Custom
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="StepItem"/>.
+    /// Legacy alias for <see cref="StepsControlItem"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroStepItem is deprecated. Please use StepItem instead.")]
-    public class ZeroStepItem : StepItem
+    [Obsolete("ZeroStepItem is deprecated. Please use StepsControlItem instead.")]
+    public class ZeroStepItem : StepsControlItem
     {
         public new ZeroStepStatus Status
         {
             get => (ZeroStepStatus)base.Status;
-            set => base.Status = (StepStatus)value;
+            set => base.Status = (StepsControlStatus)value;
         }
 
         public new ZeroStepGlyph Glyph
         {
             get => (ZeroStepGlyph)base.Glyph;
-            set => base.Glyph = (StepGlyph)value;
+            set => base.Glyph = (StepsControlGlyph)value;
         }
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="StepClickedEventArgs"/>.
+    /// Legacy alias for <see cref="StepsControlClickedEventArgs"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroStepClickedEventArgs is deprecated. Please use StepClickedEventArgs instead.")]
-    public class ZeroStepClickedEventArgs : StepClickedEventArgs
+    [Obsolete("ZeroStepClickedEventArgs is deprecated. Please use StepsControlClickedEventArgs instead.")]
+    public class ZeroStepClickedEventArgs : StepsControlClickedEventArgs
     {
-        public ZeroStepClickedEventArgs(int index, StepItem step) : base(index, step) { }
+        public ZeroStepClickedEventArgs(int index, StepsControlItem step) : base(index, step) { }
     }
 
     /// <summary>
@@ -395,7 +407,7 @@ namespace ZeroUI.WinForms.Industrial
     public class ZeroSteps : StepsControl
     {
         public void UpdateStep(string id, int actual, string timestamp, ZeroStepStatus? status = null)
-            => base.UpdateStep(id, actual, timestamp, (StepStatus?)status);
+            => base.UpdateStep(id, actual, timestamp, (StepsControlStatus?)status);
     }
 
     /// <summary>

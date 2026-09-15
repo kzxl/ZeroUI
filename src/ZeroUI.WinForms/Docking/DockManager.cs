@@ -6,7 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Layout;
 using ZeroUI.WinForms.Icons;
-using ZeroUI.WinForms.Overlays;
+using ZeroUI.WinForms.Navigation;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Docking

@@ -8,7 +8,7 @@ using ZeroUI.Core.Scada;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Containers
 {
     public enum MachineStatus
     {

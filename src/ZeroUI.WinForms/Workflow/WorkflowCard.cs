@@ -1,15 +1,18 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Workflow
 {
+    using StepStatus = ZeroUI.WinForms.Workflow.StepsControlStatus;
+    using StepGlyph = ZeroUI.WinForms.Workflow.StepsControlGlyph;
+
     /// <summary>
     /// Represents a single stage node in a ZeroWorkflowCard pipeline.
     /// </summary>

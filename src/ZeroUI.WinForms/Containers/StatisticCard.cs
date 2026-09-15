@@ -9,7 +9,7 @@ using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Editors
+namespace ZeroUI.WinForms.Containers
 {
     /// <summary>
     /// Modern KPI Metric Card component for ZeroUI executive dashboards and analytical summaries.

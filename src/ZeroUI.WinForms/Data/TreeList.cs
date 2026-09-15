@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Data
 {
     /// <summary>
     /// Represents a column definition in the TreeList hierarchical multi-column grid.

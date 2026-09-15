@@ -10,6 +10,8 @@ using ZeroUI.Core.Workflow;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
+using StepStatus = ZeroUI.Core.Workflow.StepStatus;
+using StepItem = ZeroUI.Core.Workflow.StepItem;
 
 namespace ZeroUI.WinForms.Workflow
 {

@@ -12,7 +12,7 @@ using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Workflow
 {
     /// <summary>
     /// High-performance interactive business flowchart and process map control.

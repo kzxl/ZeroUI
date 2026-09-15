@@ -6,7 +6,7 @@ using ZeroUI.WinForms.Bms;
 using ZeroUI.WinForms.Energy;
 using ZeroUI.WinForms.LifeSciences;
 using ZeroUI.WinForms.Logistics;
-using ZeroUI.WinForms.Overlays;
+using ZeroUI.WinForms.Navigation;
 using ZeroUI.WinForms.Petrochem;
 using ZeroUI.WinForms.Process;
 using ZeroUI.WinForms.Theme;

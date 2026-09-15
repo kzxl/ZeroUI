@@ -10,7 +10,7 @@ using ZeroUI.Core.Localization;
 using ZeroUI.Core.Range;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Range
+namespace ZeroUI.WinForms.Charts
 {
     /// <summary>
     /// High-performance visual timeline and numeric range selection control for WinForms.

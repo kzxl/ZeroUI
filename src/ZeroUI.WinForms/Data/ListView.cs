@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Rendering;
 
-namespace ZeroUI.WinForms.Overlays
+namespace ZeroUI.WinForms.Data
 {
     public enum LogSeverity : byte
 

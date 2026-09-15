@@ -10,7 +10,7 @@ using ZeroUI.Core.Data;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Layout
+namespace ZeroUI.WinForms.Navigation
 {
     /// <summary>
     /// Interactive hierarchical path navigator supporting segmented crumb buttons,

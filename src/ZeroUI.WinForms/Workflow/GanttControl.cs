@@ -9,7 +9,7 @@ using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Workflow
 {
     /// <summary>
     /// Event arguments for Gantt task modification (drag reschedule or duration resize).

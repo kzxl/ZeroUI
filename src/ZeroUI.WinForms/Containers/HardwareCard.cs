@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using ZeroGraphics.DirectX.Controls;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Containers
 {
     /// <summary>
     /// Hardware-accelerated GPU UI card for industrial dashboards, SCADA machine panels, and equipment monitors.

@@ -9,7 +9,7 @@ using ZeroUI.Core.Localization;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Layout
+namespace ZeroUI.WinForms.Navigation
 {
     public class WizardPageValidatingEventArgs : CancelEventArgs
     {

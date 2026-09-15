@@ -8,9 +8,9 @@ using System.IO;
 using System.Windows.Forms;
 using ZeroUI.Core.Localization;
 using ZeroUI.Core.Pdf;
+using ZeroUI.WinForms.Data;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Icons;
-using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Reporting

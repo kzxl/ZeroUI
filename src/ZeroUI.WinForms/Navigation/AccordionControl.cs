@@ -7,7 +7,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Overlays
+namespace ZeroUI.WinForms.Navigation
 {
     public enum AccordionExpandMode
     {

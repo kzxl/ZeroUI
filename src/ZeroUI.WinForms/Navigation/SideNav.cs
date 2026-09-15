@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Overlays
+namespace ZeroUI.WinForms.Navigation
 {
     public class SideNavItem
     {

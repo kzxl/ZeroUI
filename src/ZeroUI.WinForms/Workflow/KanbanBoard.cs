@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Workflow
 {
     public enum KanbanPriority
     {

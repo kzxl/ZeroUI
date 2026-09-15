@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.WinForms.Industrial
+namespace ZeroUI.WinForms.Charts
 {
     public enum HeatmapPaletteMode
     {
