@@ -3,7 +3,7 @@
 > **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.6.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.7.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
 [![Unit Tests](https://img.shields.io/badge/tests-440%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#-package-matrix)
@@ -35,6 +35,7 @@
 * **Win32 Memory DC DIBSection Engine**: Offscreen unmanaged double buffering with zero-copy `BitBlt` presentation (100% resilient across RDP and virtual machines).
 * **Enterprise Dual-Runtime Support**: Full native compatibility with **.NET Framework 4.6.2** as well as modern **.NET 8.0 / 9.0**.
 * **Unified Theme Engine**: Instant reactive switching between **Obsidian Dark Mode** (`#12151C`) and **Clean Light Mode** across all controls.
+* **Creative & Media Controls Suite (v1.7.0)**: Direct-rendered, high-performance visual editors for digital imaging, raw photography, and video grading (`CurveEditor`, `ColorWheel`, `CompareViewerControl`, `HistogramScopeControl`, `CropBoxControl`, `MiniMapNavigator`, `MaskGizmoOverlay`, `FacetedFilterBar`).
 * **Centralized 60 FPS Clock (`ZeroAnimationClock`)**: Single global ticker with synchronized ISA-18.2 blinking phases, eliminating timer scatter.
 
 ---
@@ -46,7 +47,7 @@ In-depth technical specifications and architectural documentation are modularize
 | Document | Description |
 | :--- | :--- |
 | 📊 **[Verified Benchmarks](docs/BENCHMARKS.md)** | Frame budgets, 10M rows virtualization, GC allocations, and telemetry throughput. |
-| 🎛️ **[Controls Catalog](docs/CONTROLS_CATALOG.md)** | Full reference for 40+ controls (ZeroGrid, PivotGrid, Gauges, Pumps, Valves, Tanks 3D). |
+| 🎛️ **[Controls Catalog](docs/CONTROLS_CATALOG.md)** | Full reference for 45+ controls (ZeroGrid, PivotGrid, SCADA, Charts, and Creative Editors). |
 | 🎨 **[Theming & Styling](docs/THEMING_AND_STYLING.md)** | Obsidian Dark / Clean Light themes, High-DPI Per-Monitor V2, and single-HWND architecture. |
 | 🏛️ **[Threading Model](docs/standards/threading-model.md)** | Multi-tier pipeline coordination, lock-free TripleBuffer, and UiDispatcher. |
 | 🗺️ **[Development Roadmap](docs/roadmap.md)** | Release milestones, feature requests, and future capabilities. |
@@ -59,7 +60,7 @@ In-depth technical specifications and architectural documentation are modularize
 | :--- | :--- | :--- |
 | **`ZeroUI.Core`** | `netstandard2.0`, `net462`, `net8.0` | High-frequency telemetry triple-buffer, TagEngine v2, PackML state machine, OEE metrics |
 | **`ZeroUI.WinForms`** | `net462`, `net8.0-windows` | 10M+ rows virtual grid, 40+ SCADA/HMI controls, Obsidian dark theme, DIBSection engine |
-| **`ZeroUI.Wpf`** | `net462`, `net8.0-windows` | Zero-allocation WPF virtual big data grid and reactive industrial theme styling |
+| **`ZeroUI.Wpf`** | `net462`, `net8.0-windows` | Zero-alloc WPF virtual grid, industrial styling, and Creative Media Editors Suite |
 
 ---
 

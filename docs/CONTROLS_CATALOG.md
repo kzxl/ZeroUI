@@ -53,10 +53,23 @@ A reference catalog of all enterprise and industrial controls provided by ZeroUI
 ---
 
 ## 5. Enterprise Layout & Navigation Controls
-
-* **`ZeroSideNav`**: Collapsible industrial side navigation with badge counts, flyout menus, and active states.
-* **`ZeroRibbon`**: Modern Office/AutoCAD style ribbon bar with grouped tool buttons, gallery selectors, and contextual tabs.
-* **`ZeroSteps`**: Multi-stage industrial wizard indicator with completed, active, pending, and error states.
-* **`ZeroTimeline`**: Vertical activity timeline for audit logs and machine event journals.
-* **`ZeroToolbar`**: High-density action bar with icon-text buttons, dropdowns, and separators.
-* **`ZeroHardwareCard`**: SDF rounded panel with analytical soft drop shadows and customizable glow.
+ 
+ * **`ZeroSideNav`**: Collapsible industrial side navigation with badge counts, flyout menus, and active states.
+ * **`ZeroRibbon`**: Modern Office/AutoCAD style ribbon bar with grouped tool buttons, gallery selectors, and contextual tabs.
+ * **`ZeroSteps`**: Multi-stage industrial wizard indicator with completed, active, pending, and error states.
+ * **`ZeroTimeline`**: Vertical activity timeline for audit logs and machine event journals.
+ * **`ZeroToolbar`**: High-density action bar with icon-text buttons, dropdowns, and separators.
+ * **`ZeroHardwareCard`**: SDF rounded panel with analytical soft drop shadows and customizable glow.
+ 
+---
+ 
+## 6. Creative & Media Controls Suite (`ZeroUI.Wpf.Editors`)
+ 
+ * **`CurveEditor` & `CurveMath`**: Monotone cubic spline curve editor supporting RGB and per-channel curves (Red, Green, Blue), 4x4 coordinate grid, interactive control point manipulation, delete, and evaluate.
+ * **`ColorWheelEdit` / `ColorWheel`**: 360° Hue/Saturation color grading wheel with pre-calculated antialiased gamut bitmap, smooth dragging crosshairs, and numeric degree/distance updates.
+ * **`CompareViewerControl`**: Dual-image comparison inspection viewer featuring Split-Curtain (with draggable divider line), Side-by-Side (horizontal split), and Fade-Blend modes with synchronized panning and zoom.
+ * **`CropBoxControl`**: Non-destructive image cropping canvas with 8-point bounding box handles, aspect ratio locking, and dynamic rule overlays (Rule of Thirds, Golden Ratio, Diagonals, Grid, None).
+ * **`HistogramScopeControl`**: Real-time histogram and waveform scope supporting RGB Parade, Luminance curve, 5-zone parametric tonal range dragging (Blacks, Shadows, Midtones, Highlights, Whites), and clipping warnings.
+ * **`FacetedFilterBar`**: Multi-dimension drill-down search and faceted filter bar featuring categorized pill chips, match count badges, active indicator, and batch reset.
+ * **`MiniMapNavigator`**: Floating / docking thumbnail canvas overview with an interactive translucent viewport box for fluid 2D pan/zoom navigation.
+ * **`MaskGizmoOverlay`**: Non-destructive linear / radial gradient and brush mask gizmo with interactive origin pin, cardinal handles, feather boundary ellipses, and rotation arcs.
