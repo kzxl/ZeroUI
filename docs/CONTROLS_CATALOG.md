@@ -73,3 +73,7 @@ A reference catalog of all enterprise and industrial controls provided by ZeroUI
  * **`FacetedFilterBar`**: Multi-dimension drill-down search and faceted filter bar featuring categorized pill chips, match count badges, active indicator, and batch reset.
  * **`MiniMapNavigator`**: Floating / docking thumbnail canvas overview with an interactive translucent viewport box for fluid 2D pan/zoom navigation.
  * **`MaskGizmoOverlay`**: Non-destructive linear / radial gradient and brush mask gizmo with interactive origin pin, cardinal handles, feather boundary ellipses, and rotation arcs.
+ * **`HistoryTimelineControl`** *(v1.8.0)*: Visual undo/redo history and snapshot tree timeline with step indexing, relative timestamps, state jumping, and snapshot curation.
+ * **`FilmstripScrollerControl`** *(v1.8.0)*: Horizontal smooth-scrolling thumbnail filmstrip with rating stars, color label flags, active badges, and multi-selection support.
+ * **`DominantPaletteControl`** *(v1.8.0)*: Dominant color palette inspector with extracted swatches, percentage labels, click-to-copy hex codes, color theory harmonies (Complementary, Analogous, Triadic), and contrast evaluation.
+ * **`ExifTelemetryCard`** *(v1.8.0)*: Camera & exposure HUD metrics deck (Shutter, Aperture, ISO, Focal Length), device banner, GPS location link, and detailed collapsible EXIF table.
