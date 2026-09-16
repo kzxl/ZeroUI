@@ -122,6 +122,12 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(PatternProperty, value);
         }
 
+        public string Text
+        {
+            get => Pattern;
+            set => Pattern = value;
+        }
+
         public bool ShowLabel
         {
             get => (bool)GetValue(ShowLabelProperty);
