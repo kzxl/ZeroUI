@@ -88,11 +88,11 @@ namespace ZeroUI.Wpf.Editors
 
         public static readonly DependencyProperty LabelTextProperty =
             DependencyProperty.Register(nameof(LabelText), typeof(string), typeof(TokenPatternEditor),
-                new PropertyMetadata("Filename Pattern", OnLabelTextChanged));
+                new PropertyMetadata("Pattern", OnLabelTextChanged));
 
         public static readonly DependencyProperty PatternProperty =
             DependencyProperty.Register(nameof(Pattern), typeof(string), typeof(TokenPatternEditor),
-                new FrameworkPropertyMetadata("{name}_export.{ext}", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnPatternChanged));
+                new FrameworkPropertyMetadata("{name}.{ext}", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnPatternChanged));
 
         public static readonly DependencyProperty ShowLabelProperty =
             DependencyProperty.Register(nameof(ShowLabel), typeof(bool), typeof(TokenPatternEditor),
@@ -185,7 +185,7 @@ namespace ZeroUI.Wpf.Editors
 
         public void Reset()
         {
-            Pattern = "{name}_export.{ext}";
+            Pattern = "{name}.{ext}";
             _isModified = false;
             UpdatePreview();
         }
@@ -194,6 +194,38 @@ namespace ZeroUI.Wpf.Editors
         {
             Pattern = "";
             _isModified = false;
+            UpdatePreview();
+        }
+
+        /// <summary>
+        /// Registers or updates a token chip with description and sample preview value.
+        /// </summary>
+        public void RegisterToken(string token, string displayName, string description, string sampleValue)
+        {
+            var existing = _tokens.FirstOrDefault(t => string.Equals(t.Token, token, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+            {
+                existing.DisplayName = displayName;
+                existing.Description = description;
+                existing.SampleValue = sampleValue;
+            }
+            else
+            {
+                _tokens.Add(new TokenChipItem(token, displayName, description, sampleValue));
+            }
+            _sampleValues[token] = sampleValue;
+            RebuildChips();
+            UpdatePreview();
+        }
+
+        /// <summary>
+        /// Clears all registered token chips.
+        /// </summary>
+        public void ClearTokens()
+        {
+            _tokens.Clear();
+            _sampleValues.Clear();
+            RebuildChips();
             UpdatePreview();
         }
 
@@ -210,14 +242,11 @@ namespace ZeroUI.Wpf.Editors
 
         private void InitializeDefaultTokens()
         {
-            _tokens.Add(new TokenChipItem("{name}", "{name}", "Original file name without extension", "IMG_2024"));
-            _tokens.Add(new TokenChipItem("{ext}", "{ext}", "File extension", "jpg"));
-            _tokens.Add(new TokenChipItem("{w}", "{w}", "Image pixel width", "4000"));
-            _tokens.Add(new TokenChipItem("{h}", "{h}", "Image pixel height", "3000"));
+            _tokens.Add(new TokenChipItem("{name}", "{name}", "Base file name without extension", "Document_01"));
+            _tokens.Add(new TokenChipItem("{ext}", "{ext}", "File extension", "pdf"));
             _tokens.Add(new TokenChipItem("{n:000}", "{n:000}", "Sequential index number (3 digits)", "001"));
             _tokens.Add(new TokenChipItem("{date}", "{date}", "Current ISO date (YYYY-MM-DD)", DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
             _tokens.Add(new TokenChipItem("{date:yyyyMMdd}", "{date:yyyyMMdd}", "Compact date (YYYYMMDD)", DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture)));
-            _tokens.Add(new TokenChipItem("{parent}", "{parent}", "Parent folder name", "Photos"));
 
             foreach (var t in _tokens)
             {

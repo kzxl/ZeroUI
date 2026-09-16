@@ -221,7 +221,15 @@ namespace ZeroUI.Wpf.Editors
 
         public static readonly DependencyProperty EmptyMessageProperty =
             DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(BatchTaskQueueControl),
-                new PropertyMetadata("Queue is empty.\nExport photos or run plugins to add tasks.", OnEmptyMessageChanged));
+                new PropertyMetadata("Queue is empty.", OnEmptyMessageChanged));
+
+        public static readonly DependencyProperty ParallelLabelProperty =
+            DependencyProperty.Register(nameof(ParallelLabel), typeof(string), typeof(BatchTaskQueueControl),
+                new PropertyMetadata("Parallel:", OnParallelLabelChanged));
+
+        public static readonly DependencyProperty ConcurrencyOptionsProperty =
+            DependencyProperty.Register(nameof(ConcurrencyOptions), typeof(int[]), typeof(BatchTaskQueueControl),
+                new PropertyMetadata(new[] { 1, 2, 4, 8 }, OnConcurrencyOptionsChanged));
 
         public static readonly DependencyProperty ShowParallelSelectorProperty =
             DependencyProperty.Register(nameof(ShowParallelSelector), typeof(bool), typeof(BatchTaskQueueControl),
@@ -253,6 +261,18 @@ namespace ZeroUI.Wpf.Editors
         {
             get => (string)GetValue(EmptyMessageProperty);
             set => SetValue(EmptyMessageProperty, value);
+        }
+
+        public string ParallelLabel
+        {
+            get => (string)GetValue(ParallelLabelProperty);
+            set => SetValue(ParallelLabelProperty, value);
+        }
+
+        public int[] ConcurrencyOptions
+        {
+            get => (int[])GetValue(ConcurrencyOptionsProperty);
+            set => SetValue(ConcurrencyOptionsProperty, value);
         }
 
         public bool ShowParallelSelector
@@ -370,6 +390,22 @@ namespace ZeroUI.Wpf.Editors
             }
         }
 
+        private static void OnParallelLabelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is BatchTaskQueueControl ctrl && ctrl._lblParallel != null)
+            {
+                ctrl._lblParallel.Text = e.NewValue as string ?? "";
+            }
+        }
+
+        private static void OnConcurrencyOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is BatchTaskQueueControl ctrl)
+            {
+                ctrl.RebuildConcurrencyCombo();
+            }
+        }
+
         private static void OnShowParallelSelectorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is BatchTaskQueueControl ctrl)
@@ -414,7 +450,7 @@ namespace ZeroUI.Wpf.Editors
 
             _lblParallel = new TextBlock
             {
-                Text = "Parallel:",
+                Text = ParallelLabel,
                 FontSize = 10,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 4, 0)
@@ -427,12 +463,7 @@ namespace ZeroUI.Wpf.Editors
                 Height = 22,
                 Margin = new Thickness(0, 0, 4, 0)
             };
-            int[] parallelValues = new[] { 1, 2, 3, 4, 6, 8 };
-            foreach (var val in parallelValues)
-            {
-                _cmbParallel.Items.Add(new ComboBoxItem { Content = val.ToString(CultureInfo.InvariantCulture), Tag = val });
-            }
-            SelectParallelComboValue(MaxParallel);
+            RebuildConcurrencyCombo();
             _cmbParallel.SelectionChanged += CmbParallel_SelectionChanged;
             rightPanel.Children.Add(_cmbParallel);
 
@@ -513,6 +544,26 @@ namespace ZeroUI.Wpf.Editors
 
             ApplyTheme();
             UpdateEmptyState();
+        }
+
+        private void RebuildConcurrencyCombo()
+        {
+            if (_cmbParallel == null) return;
+            _suppressSelectionEvent = true;
+            try
+            {
+                _cmbParallel.Items.Clear();
+                int[] options = ConcurrencyOptions ?? new[] { 1, 2, 4, 8 };
+                foreach (var val in options)
+                {
+                    _cmbParallel.Items.Add(new ComboBoxItem { Content = val.ToString(CultureInfo.InvariantCulture), Tag = val });
+                }
+                SelectParallelComboValue(MaxParallel);
+            }
+            finally
+            {
+                _suppressSelectionEvent = false;
+            }
         }
 
         private void CmbParallel_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -235,7 +235,11 @@ namespace ZeroUI.Wpf.Editors
 
         public static readonly DependencyProperty EmptyMessageProperty =
             DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(ThumbnailGridControl),
-                new PropertyMetadata("No photos to display.", OnEmptyMessageChanged));
+                new PropertyMetadata("No items to display.", OnEmptyMessageChanged));
+
+        public static readonly DependencyProperty CardTemplateProperty =
+            DependencyProperty.Register(nameof(CardTemplate), typeof(DataTemplate), typeof(ThumbnailGridControl),
+                new PropertyMetadata(null, OnCardTemplateChanged));
 
         public static readonly DependencyProperty ReadOnlyProperty =
             DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ThumbnailGridControl),
@@ -245,6 +249,12 @@ namespace ZeroUI.Wpf.Editors
         {
             get => (IEnumerable?)GetValue(ItemsSourceProperty);
             set => SetValue(ItemsSourceProperty, value);
+        }
+
+        public DataTemplate? CardTemplate
+        {
+            get => (DataTemplate?)GetValue(CardTemplateProperty);
+            set => SetValue(CardTemplateProperty, value);
         }
 
         public double ThumbnailWidth
@@ -358,6 +368,14 @@ namespace ZeroUI.Wpf.Editors
             }
         }
 
+        private static void OnCardTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ThumbnailGridControl ctrl && ctrl._itemsControl != null)
+            {
+                ctrl._itemsControl.ItemTemplate = e.NewValue as DataTemplate ?? ctrl.CreateThumbnailTemplate();
+            }
+        }
+
         private void BuildVisualTree()
         {
             var grid = new Grid();
@@ -381,7 +399,7 @@ namespace ZeroUI.Wpf.Editors
             panelFactory.SetValue(WrapPanel.IsItemsHostProperty, true);
             _itemsControl.ItemsPanel = new ItemsPanelTemplate(panelFactory);
 
-            _itemsControl.ItemTemplate = CreateThumbnailTemplate();
+            _itemsControl.ItemTemplate = CardTemplate ?? CreateThumbnailTemplate();
 
             _scroller.Content = _itemsControl;
             grid.Children.Add(_scroller);
@@ -515,6 +533,7 @@ namespace ZeroUI.Wpf.Editors
                 Converter = new BooleanToVisibilityConverter()
             };
             factoryBadgeBorder.SetBinding(Border.VisibilityProperty, badgeBinding);
+            factoryBadgeBorder.SetBinding(Border.ToolTipProperty, new Binding("VirtualCopyBadge"));
 
             var factoryBadgeText = new FrameworkElementFactory(typeof(TextBlock));
             factoryBadgeText.SetValue(TextBlock.FontSizeProperty, 9.0);
