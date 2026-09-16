@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -53,7 +54,13 @@ namespace ZeroUI.Wpf.Editors
         public ImageSource? Thumbnail
         {
             get => _thumbnail;
-            set { _thumbnail = value; OnPropertyChanged(nameof(Thumbnail)); }
+            set { _thumbnail = value; OnPropertyChanged(nameof(Thumbnail)); OnPropertyChanged(nameof(Thumb)); }
+        }
+
+        public ImageSource? Thumb
+        {
+            get => _thumbnail;
+            set => Thumbnail = value;
         }
 
         public int Rating
@@ -125,15 +132,25 @@ namespace ZeroUI.Wpf.Editors
             {
                 _badgeText = value;
                 OnPropertyChanged(nameof(BadgeText));
+                OnPropertyChanged(nameof(VirtualCopyBadge));
                 IsBadgeVisible = !string.IsNullOrEmpty(value);
             }
         }
 
+        public string VirtualCopyBadge => BadgeText;
+
         public bool IsBadgeVisible
         {
             get => _isBadgeVisible;
-            set { _isBadgeVisible = value; OnPropertyChanged(nameof(IsBadgeVisible)); }
+            set
+            {
+                _isBadgeVisible = value;
+                OnPropertyChanged(nameof(IsBadgeVisible));
+                OnPropertyChanged(nameof(IsVirtualCopy));
+            }
         }
+
+        public bool IsVirtualCopy => IsBadgeVisible;
 
         public object? Tag
         {
@@ -172,11 +189,11 @@ namespace ZeroUI.Wpf.Editors
     /// </summary>
     public class ThumbnailGridItemClickEventArgs : EventArgs
     {
-        public ThumbnailGridItemModel Item { get; }
+        public object Item { get; }
         public bool IsControlDown { get; }
         public bool IsShiftDown { get; }
 
-        public ThumbnailGridItemClickEventArgs(ThumbnailGridItemModel item, bool ctrl, bool shift)
+        public ThumbnailGridItemClickEventArgs(object item, bool ctrl, bool shift)
         {
             Item = item;
             IsControlDown = ctrl;
@@ -200,6 +217,10 @@ namespace ZeroUI.Wpf.Editors
 
         #region Dependency Properties
 
+        public static readonly DependencyProperty ItemsSourceProperty =
+            DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(ThumbnailGridControl),
+                new PropertyMetadata(null, OnItemsSourceChanged));
+
         public static readonly DependencyProperty ThumbnailWidthProperty =
             DependencyProperty.Register(nameof(ThumbnailWidth), typeof(double), typeof(ThumbnailGridControl),
                 new PropertyMetadata(130.0));
@@ -219,6 +240,12 @@ namespace ZeroUI.Wpf.Editors
         public static readonly DependencyProperty ReadOnlyProperty =
             DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ThumbnailGridControl),
                 new PropertyMetadata(false));
+
+        public IEnumerable? ItemsSource
+        {
+            get => (IEnumerable?)GetValue(ItemsSourceProperty);
+            set => SetValue(ItemsSourceProperty, value);
+        }
 
         public double ThumbnailWidth
         {
@@ -261,8 +288,8 @@ namespace ZeroUI.Wpf.Editors
         #region Events
 
         public event EventHandler<ThumbnailGridItemClickEventArgs>? ItemClicked;
-        public event EventHandler<ThumbnailGridItemModel>? ItemRightClicked;
-        public event EventHandler<ThumbnailGridItemModel>? ItemDoubleClicked;
+        public event EventHandler<object>? ItemRightClicked;
+        public event EventHandler<object>? ItemDoubleClicked;
         public event EventHandler<ThumbnailGridItemModel?>? ActiveItemChanged;
         public event EventHandler? SelectionChanged;
 
@@ -314,6 +341,15 @@ namespace ZeroUI.Wpf.Editors
             BuildVisualTree();
         }
 
+        private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ThumbnailGridControl ctrl && ctrl._itemsControl != null)
+            {
+                ctrl._itemsControl.ItemsSource = e.NewValue as IEnumerable ?? ctrl._items;
+                ctrl.UpdateEmptyState();
+            }
+        }
+
         private static void OnEmptyMessageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is ThumbnailGridControl ctrl && ctrl._txtEmpty != null)
@@ -335,7 +371,7 @@ namespace ZeroUI.Wpf.Editors
 
             _itemsControl = new ItemsControl
             {
-                ItemsSource = _items,
+                ItemsSource = ItemsSource ?? _items,
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0)
             };
@@ -374,7 +410,7 @@ namespace ZeroUI.Wpf.Editors
 
         private DataTemplate CreateThumbnailTemplate()
         {
-            var template = new DataTemplate(typeof(ThumbnailGridItemModel));
+            var template = new DataTemplate();
 
             var factoryBorder = new FrameworkElementFactory(typeof(Border));
             factoryBorder.SetValue(Border.WidthProperty, ThumbnailWidth);
@@ -384,23 +420,35 @@ namespace ZeroUI.Wpf.Editors
             factoryBorder.SetValue(Border.BorderThicknessProperty, new Thickness(2));
             factoryBorder.SetValue(Border.CursorProperty, Cursors.Hand);
             factoryBorder.SetValue(Border.BackgroundProperty, ZeroWpfTheme.BgInput);
-            factoryBorder.SetBinding(Border.BorderBrushProperty, new Binding(nameof(ThumbnailGridItemModel.BorderBrush)));
+
+            var borderStyle = new Style(typeof(Border));
+            borderStyle.Setters.Add(new Setter(Border.BorderBrushProperty, ZeroWpfTheme.BorderSubtle ?? Brushes.Transparent));
+
+            var triggerSelected = new DataTrigger { Binding = new Binding("IsSelected"), Value = true };
+            triggerSelected.Setters.Add(new Setter(Border.BorderBrushProperty, ZeroWpfTheme.PrimaryAccent ?? Brushes.DodgerBlue));
+            borderStyle.Triggers.Add(triggerSelected);
+
+            var triggerActive = new DataTrigger { Binding = new Binding("IsActive"), Value = true };
+            triggerActive.Setters.Add(new Setter(Border.BorderBrushProperty, ZeroWpfTheme.SecondaryAccent ?? Brushes.DarkOrange));
+            borderStyle.Triggers.Add(triggerActive);
+
+            factoryBorder.SetValue(Border.StyleProperty, borderStyle);
 
             // Left Click
             factoryBorder.AddHandler(UIElement.MouseLeftButtonUpEvent, new MouseButtonEventHandler((s, e) =>
             {
-                if (s is FrameworkElement fe && fe.DataContext is ThumbnailGridItemModel item)
+                if (s is FrameworkElement fe && fe.DataContext != null)
                 {
                     bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
                     bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
 
                     if (ItemClicked != null)
                     {
-                        ItemClicked.Invoke(this, new ThumbnailGridItemClickEventArgs(item, ctrl, shift));
+                        ItemClicked.Invoke(this, new ThumbnailGridItemClickEventArgs(fe.DataContext, ctrl, shift));
                     }
-                    else
+                    else if (fe.DataContext is ThumbnailGridItemModel model)
                     {
-                        HandleDefaultClick(item, ctrl, shift);
+                        HandleDefaultClick(model, ctrl, shift);
                     }
                 }
             }));
@@ -408,28 +456,28 @@ namespace ZeroUI.Wpf.Editors
             // Right Click
             factoryBorder.AddHandler(UIElement.MouseRightButtonUpEvent, new MouseButtonEventHandler((s, e) =>
             {
-                if (s is FrameworkElement fe && fe.DataContext is ThumbnailGridItemModel item)
+                if (s is FrameworkElement fe && fe.DataContext != null)
                 {
-                    ItemRightClicked?.Invoke(this, item);
+                    ItemRightClicked?.Invoke(this, fe.DataContext);
                 }
             }));
 
             // Double Click
             factoryBorder.AddHandler(Control.MouseDoubleClickEvent, new MouseButtonEventHandler((s, e) =>
             {
-                if (s is FrameworkElement fe && fe.DataContext is ThumbnailGridItemModel item)
+                if (s is FrameworkElement fe && fe.DataContext != null)
                 {
-                    ItemDoubleClicked?.Invoke(this, item);
+                    ItemDoubleClicked?.Invoke(this, fe.DataContext);
                 }
             }));
 
             var factoryGrid = new FrameworkElementFactory(typeof(Grid));
 
-            // Image Thumbnail
+            // Image Thumbnail (bind Thumb)
             var factoryImg = new FrameworkElementFactory(typeof(Image));
             factoryImg.SetValue(Image.StretchProperty, Stretch.Uniform);
             factoryImg.SetValue(Image.MarginProperty, new Thickness(3));
-            factoryImg.SetBinding(Image.SourceProperty, new Binding(nameof(ThumbnailGridItemModel.Thumbnail)));
+            factoryImg.SetBinding(Image.SourceProperty, new Binding("Thumb"));
             factoryGrid.AppendChild(factoryImg);
 
             // Color Label Badge (top-left circle)
@@ -440,7 +488,7 @@ namespace ZeroUI.Wpf.Editors
             factoryColorDot.SetValue(Border.HorizontalAlignmentProperty, HorizontalAlignment.Left);
             factoryColorDot.SetValue(Border.VerticalAlignmentProperty, VerticalAlignment.Top);
             factoryColorDot.SetValue(Border.MarginProperty, new Thickness(6));
-            factoryColorDot.SetBinding(Border.BackgroundProperty, new Binding(nameof(ThumbnailGridItemModel.LabelBrush)));
+            factoryColorDot.SetBinding(Border.BackgroundProperty, new Binding("LabelBrush"));
             factoryGrid.AppendChild(factoryColorDot);
 
             // Pick Flag (top-right text)
@@ -450,7 +498,7 @@ namespace ZeroUI.Wpf.Editors
             factoryPick.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Top);
             factoryPick.SetValue(TextBlock.MarginProperty, new Thickness(0, 4, 6, 0));
             factoryPick.SetValue(TextBlock.ForegroundProperty, ZeroWpfTheme.SuccessAccent ?? Brushes.LimeGreen);
-            factoryPick.SetBinding(TextBlock.TextProperty, new Binding(nameof(ThumbnailGridItemModel.PickDisplay)));
+            factoryPick.SetBinding(TextBlock.TextProperty, new Binding("PickDisplay"));
             factoryGrid.AppendChild(factoryPick);
 
             // Virtual Copy / Edit Badge (bottom-left badge)
@@ -462,7 +510,7 @@ namespace ZeroUI.Wpf.Editors
             factoryBadgeBorder.SetValue(Border.PaddingProperty, new Thickness(3, 1, 3, 1));
             factoryBadgeBorder.SetValue(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(0, 122, 204)));
 
-            var badgeBinding = new Binding(nameof(ThumbnailGridItemModel.IsBadgeVisible))
+            var badgeBinding = new Binding("IsVirtualCopy")
             {
                 Converter = new BooleanToVisibilityConverter()
             };
@@ -472,7 +520,7 @@ namespace ZeroUI.Wpf.Editors
             factoryBadgeText.SetValue(TextBlock.FontSizeProperty, 9.0);
             factoryBadgeText.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
             factoryBadgeText.SetValue(TextBlock.ForegroundProperty, Brushes.White);
-            factoryBadgeText.SetBinding(TextBlock.TextProperty, new Binding(nameof(ThumbnailGridItemModel.BadgeText)));
+            factoryBadgeText.SetBinding(TextBlock.TextProperty, new Binding("VirtualCopyBadge"));
             factoryBadgeBorder.AppendChild(factoryBadgeText);
             factoryGrid.AppendChild(factoryBadgeBorder);
 
@@ -489,7 +537,7 @@ namespace ZeroUI.Wpf.Editors
             factoryRating.SetValue(DockPanel.DockProperty, Dock.Right);
             factoryRating.SetValue(TextBlock.FontSizeProperty, 10.0);
             factoryRating.SetValue(TextBlock.ForegroundProperty, ZeroWpfTheme.WarningAccent ?? Brushes.Gold);
-            factoryRating.SetBinding(TextBlock.TextProperty, new Binding(nameof(ThumbnailGridItemModel.RatingDisplay)));
+            factoryRating.SetBinding(TextBlock.TextProperty, new Binding("RatingDisplay"));
             factoryFooterDock.AppendChild(factoryRating);
 
             // FileName
@@ -497,7 +545,7 @@ namespace ZeroUI.Wpf.Editors
             factoryFileName.SetValue(TextBlock.FontSizeProperty, 10.0);
             factoryFileName.SetValue(TextBlock.ForegroundProperty, Brushes.WhiteSmoke);
             factoryFileName.SetValue(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis);
-            factoryFileName.SetBinding(TextBlock.TextProperty, new Binding(nameof(ThumbnailGridItemModel.FileName)));
+            factoryFileName.SetBinding(TextBlock.TextProperty, new Binding("FileName"));
             factoryFooterDock.AppendChild(factoryFileName);
 
             factoryFooter.AppendChild(factoryFooterDock);
@@ -580,7 +628,17 @@ namespace ZeroUI.Wpf.Editors
         {
             if (_txtEmpty != null)
             {
-                _txtEmpty.Visibility = _items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                bool hasItems = false;
+                if (ItemsSource != null)
+                {
+                    var enumerator = ItemsSource.GetEnumerator();
+                    hasItems = enumerator != null && enumerator.MoveNext();
+                }
+                else
+                {
+                    hasItems = _items.Count > 0;
+                }
+                _txtEmpty.Visibility = hasItems ? Visibility.Collapsed : Visibility.Visible;
             }
         }
 
