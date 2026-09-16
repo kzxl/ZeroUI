@@ -77,3 +77,7 @@ A reference catalog of all enterprise and industrial controls provided by ZeroUI
  * **`FilmstripScrollerControl`** *(v1.8.0)*: Horizontal smooth-scrolling thumbnail filmstrip with rating stars, color label flags, active badges, and multi-selection support.
  * **`DominantPaletteControl`** *(v1.8.0)*: Dominant color palette inspector with extracted swatches, percentage labels, click-to-copy hex codes, color theory harmonies (Complementary, Analogous, Triadic), and contrast evaluation.
  * **`ExifTelemetryCard`** *(v1.8.0)*: Camera & exposure HUD metrics deck (Shutter, Aperture, ISO, Focal Length), device banner, GPS location link, and detailed collapsible EXIF table.
+ * **`NumericSliderEdit`** *(v1.8.0)*: High-precision slider + label + direct numeric input composite control with double-click reset to default, Alt-key clipping preview, and drag-scrubbing.
+ * **`BatchTaskQueueControl`** *(v1.8.0)*: Production-grade background batch task queue controller with concurrency selection (1..8 workers), pause/resume orchestration, retry/remove item actions, and live visual progress bars.
+ * **`TokenPatternEditor`** *(v1.8.0)*: Filename and dynamic text template pattern editor with interactive token insertion chips, caret placement, and live evaluated preview.
+ * **`ThumbnailGridControl`** *(v1.8.0)*: Lightroom-style light table photo browser grid with responsive wrap-panel card layout, Ctrl/Shift multi-selection, rating stars, color label badges, pick flags, and overlay badges.
