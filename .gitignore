@@ -49,3 +49,5 @@ TestResults/
 # Distribution & release artifacts
 dist/
 artifacts/
+packages/
+*.nupkg
