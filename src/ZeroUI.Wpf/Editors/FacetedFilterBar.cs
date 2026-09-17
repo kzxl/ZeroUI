@@ -111,6 +111,7 @@ namespace ZeroUI.Wpf.Editors
     public class FacetedFilterBar : Control, IZeroEditor
     {
         private readonly ObservableCollection<FacetColumnModel> _columns = new ObservableCollection<FacetColumnModel>();
+        private Grid? _rootGrid;
         private Grid? _columnsGrid;
         private Button? _btnClearAll;
         private TextBlock? _txtSummary;
@@ -301,7 +302,9 @@ namespace ZeroUI.Wpf.Editors
             Grid.SetRow(_columnsGrid, 1);
             rootGrid.Children.Add(_columnsGrid);
 
+            _rootGrid = rootGrid;
             AddVisualChild(rootGrid);
+            AddLogicalChild(rootGrid);
             ApplyTheme();
         }
 
@@ -436,25 +439,26 @@ namespace ZeroUI.Wpf.Editors
 
         #region Visual Children Plumbing
 
-        protected override int VisualChildrenCount => VisualTreeHelper.GetChildrenCount(this) > 0 ? 1 : 0;
-        protected override Visual GetVisualChild(int index) => (Visual)VisualTreeHelper.GetChild(this, index);
+        protected override int VisualChildrenCount => _rootGrid != null ? 1 : 0;
+        protected override Visual GetVisualChild(int index)
+        {
+            if (_rootGrid == null || index != 0) throw new ArgumentOutOfRangeException(nameof(index));
+            return _rootGrid;
+        }
 
         protected override Size MeasureOverride(Size constraint)
         {
-            if (VisualChildrenCount > 0 && GetVisualChild(0) is UIElement child)
+            if (_rootGrid != null)
             {
-                child.Measure(constraint);
-                return child.DesiredSize;
+                _rootGrid.Measure(constraint);
+                return _rootGrid.DesiredSize;
             }
             return new Size(0, 0);
         }
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
-            if (VisualChildrenCount > 0 && GetVisualChild(0) is UIElement child)
-            {
-                child.Arrange(new Rect(arrangeBounds));
-            }
+            _rootGrid?.Arrange(new Rect(arrangeBounds));
             return arrangeBounds;
         }
 
