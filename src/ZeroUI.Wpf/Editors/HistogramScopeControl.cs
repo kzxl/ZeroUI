@@ -289,12 +289,43 @@ namespace ZeroUI.Wpf.Editors
 
             if (r == null && g == null && b == null && l == null) return;
 
-            // Find peak value across active channels (using 99.5% percentile or max)
+            // Find peak value across interior bins [1, count - 2] to prevent boundary clipping spikes
+            // (e.g. 21.5% shadow clipping at bin 0) from crushing the midtone curves flat to the floor.
+            int FindInteriorPeak(int[]? ch)
+            {
+                if (ch == null || ch.Length == 0) return 0;
+                int peak = 0;
+                int start = ch.Length > 2 ? 1 : 0;
+                int end = ch.Length > 2 ? ch.Length - 2 : ch.Length - 1;
+                for (int i = start; i <= end; i++)
+                {
+                    if (ch[i] > peak) peak = ch[i];
+                }
+                // Fallback to all bins if interior is completely empty (e.g. pure solid color image)
+                if (peak <= 0)
+                {
+                    for (int i = 0; i < ch.Length; i++)
+                    {
+                        if (ch[i] > peak) peak = ch[i];
+                    }
+                }
+                return peak;
+            }
+
             int maxVal = 1;
-            if (r != null) foreach (var val in r) if (val > maxVal) maxVal = val;
-            if (g != null) foreach (var val in g) if (val > maxVal) maxVal = val;
-            if (b != null) foreach (var val in b) if (val > maxVal) maxVal = val;
-            if (l != null) foreach (var val in l) if (val > maxVal) maxVal = val;
+            if (ChannelMode == HistogramChannelMode.Luma)
+            {
+                maxVal = Math.Max(maxVal, FindInteriorPeak(l));
+            }
+            else
+            {
+                if (ChannelMode == HistogramChannelMode.Rgb || ChannelMode == HistogramChannelMode.RedOnly)
+                    maxVal = Math.Max(maxVal, FindInteriorPeak(r));
+                if (ChannelMode == HistogramChannelMode.Rgb || ChannelMode == HistogramChannelMode.GreenOnly)
+                    maxVal = Math.Max(maxVal, FindInteriorPeak(g));
+                if (ChannelMode == HistogramChannelMode.Rgb || ChannelMode == HistogramChannelMode.BlueOnly)
+                    maxVal = Math.Max(maxVal, FindInteriorPeak(b));
+            }
 
             if (ChannelMode == HistogramChannelMode.Luma)
             {
@@ -329,7 +360,9 @@ namespace ZeroUI.Wpf.Editors
                 for (int i = 0; i < count; i++)
                 {
                     double x = (i / (double)(count - 1)) * w;
-                    double normH = Math.Min(1.0, bins[i] / (double)maxVal);
+                    double ratio = Math.Max(0.0, Math.Min(1.0, bins[i] / (double)maxVal));
+                    // Square-root perceptual scaling so midtones, subtle shadows, and highlights are clearly visible
+                    double normH = Math.Sqrt(ratio);
                     double y = h - normH * (h - 6.0);
                     ctx.LineTo(new Point(x, y), false, false);
                 }
@@ -343,13 +376,13 @@ namespace ZeroUI.Wpf.Editors
         {
             if (ShadowClipPercent > 0.05)
             {
-                // Blue shadow clipping triangle (bottom left)
+                // Blue shadow clipping triangle (top left, matching Lightroom standard)
                 var geo = new StreamGeometry();
                 using (var ctx = geo.Open())
                 {
-                    ctx.BeginFigure(new Point(0, h), true, true);
-                    ctx.LineTo(new Point(10, h), false, false);
-                    ctx.LineTo(new Point(0, h - 10), false, false);
+                    ctx.BeginFigure(new Point(0, 0), true, true);
+                    ctx.LineTo(new Point(10, 0), false, false);
+                    ctx.LineTo(new Point(0, 10), false, false);
                 }
                 geo.Freeze();
                 dc.DrawGeometry(Brushes.DeepSkyBlue, null, geo);
@@ -357,7 +390,7 @@ namespace ZeroUI.Wpf.Editors
 
             if (HighlightClipPercent > 0.05)
             {
-                // Red highlight clipping triangle (top right)
+                // Red highlight clipping triangle (top right, matching Lightroom standard)
                 var geo = new StreamGeometry();
                 using (var ctx = geo.Open())
                 {

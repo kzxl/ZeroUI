@@ -110,6 +110,14 @@ namespace ZeroUI.Wpf.Editors
             if (_hoveredIndex != idx)
             {
                 _hoveredIndex = idx;
+                if (idx >= 0 && idx < _items.Length)
+                {
+                    ToolTip = _items[idx];
+                }
+                else
+                {
+                    ToolTip = null;
+                }
                 InvalidateVisual();
             }
         }
@@ -118,6 +126,7 @@ namespace ZeroUI.Wpf.Editors
         {
             base.OnMouseLeave(e);
             _hoveredIndex = -1;
+            ToolTip = null;
             InvalidateVisual();
         }
 
@@ -188,8 +197,8 @@ namespace ZeroUI.Wpf.Editors
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            double minWidth = Math.Max(200, _items.Length * 65.0);
-            double height = Math.Max(30, Height);
+            double minWidth = Math.Max(120, _items.Length * 36.0);
+            double height = Math.Max(22, Height);
             return new Size(
                 double.IsPositiveInfinity(availableSize.Width) ? minWidth : Math.Min(minWidth, availableSize.Width),
                 double.IsPositiveInfinity(availableSize.Height) ? height : Math.Min(height, availableSize.Height));
@@ -228,15 +237,18 @@ namespace ZeroUI.Wpf.Editors
                 bool isSelected = (i == selIdx);
                 bool isHovered = (i == _hoveredIndex && !isSelected && IsEnabled);
 
+                // Clip strictly within the segment's boundary to guarantee no text bleed
+                dc.PushClip(new RectangleGeometry(new Rect(segX, 0, curSegW, h)));
+
                 // Segment Background
                 if (isSelected)
                 {
-                    Rect pillRect = new Rect(segX + 2, 2, curSegW - 4, h - 4);
+                    Rect pillRect = new Rect(segX + 2, 2, Math.Max(0, curSegW - 4), Math.Max(0, h - 4));
                     dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, null, pillRect, Math.Max(2, radius - 2), Math.Max(2, radius - 2));
                 }
                 else if (isHovered)
                 {
-                    Rect hoverRect = new Rect(segX + 2, 2, curSegW - 4, h - 4);
+                    Rect hoverRect = new Rect(segX + 2, 2, Math.Max(0, curSegW - 4), Math.Max(0, h - 4));
                     dc.DrawRoundedRectangle(ZeroWpfTheme.BgHover, null, hoverRect, Math.Max(2, radius - 2), Math.Max(2, radius - 2));
                 }
 
@@ -270,13 +282,20 @@ namespace ZeroUI.Wpf.Editors
                     CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
                     isSelected ? ZeroWpfTheme.BoldTypeface : ZeroWpfTheme.RegularTypeface,
-                    12.0,
+                    11.0,
                     textBrush,
                     VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-                double textX = Math.Round(segX + (curSegW - formattedText.Width) / 2.0);
+                double maxTextW = Math.Max(1.0, curSegW - 4.0);
+                formattedText.MaxTextWidth = maxTextW;
+                formattedText.Trimming = TextTrimming.CharacterEllipsis;
+                formattedText.TextAlignment = TextAlignment.Center;
+
+                double textX = segX + 2.0;
                 double textY = Math.Round((h - formattedText.Height) / 2.0);
                 dc.DrawText(formattedText, new Point(textX, textY));
+
+                dc.Pop(); // End segment clip
             }
         }
 
