@@ -142,6 +142,7 @@ namespace ZeroUI.Wpf.DataGrid
         private readonly ObservableCollection<ConditionalFormattingRule> _conditionalRules = new ObservableCollection<ConditionalFormattingRule>();
         private readonly Dictionary<int, HashSet<string>> _columnDistinctFilters = new Dictionary<int, HashSet<string>>();
         private readonly Dictionary<int, Rect> _columnFilterButtonBounds = new Dictionary<int, Rect>();
+        private int _pendingFilterColumn = -1;
 
         // Master-Detail
         private bool _allowMasterDetail = false;
@@ -524,6 +525,10 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 ApplyDistinctColumnFilter(colIdx, selected);
             });
+            if (_columnFilterButtonBounds.TryGetValue(columnIndex, out var buttonRect))
+            {
+                popup.PlacementRectangle = buttonRect;
+            }
             popup.IsOpen = true;
         }
 
@@ -1869,7 +1874,8 @@ namespace ZeroUI.Wpf.DataGrid
                 {
                     if (kvp.Value.Contains(pt))
                     {
-                        ShowColumnFilterPopup(kvp.Key);
+                        _pendingFilterColumn = kvp.Key;
+                        e.Handled = true;
                         return;
                     }
                 }
@@ -2017,6 +2023,14 @@ namespace ZeroUI.Wpf.DataGrid
         protected override void OnMouseUp(MouseButtonEventArgs e)
         {
             base.OnMouseUp(e);
+            if (_pendingFilterColumn >= 0 && e.ChangedButton == MouseButton.Left)
+            {
+                int pendingCol = _pendingFilterColumn;
+                _pendingFilterColumn = -1;
+                ShowColumnFilterPopup(pendingCol);
+                e.Handled = true;
+                return;
+            }
             if (_isDraggingHeader)
             {
                 _isDraggingHeader = false;
