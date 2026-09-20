@@ -5,7 +5,7 @@
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
 [![NuGet Version](https://img.shields.io/badge/nuget-v1.8.1-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
-[![Unit Tests](https://img.shields.io/badge/tests-529%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
+[![Unit Tests](https://img.shields.io/badge/tests-554%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#-package-matrix)
 [![UI Frame Latency](https://img.shields.io/badge/Frame%20Latency-%3C%204ms%20P95-brightgreen.svg)](docs/BENCHMARKS.md)
 [![GC Allocations](https://img.shields.io/badge/Hot%20Path%20Allocations-0%20B%20(Zero--Alloc)-brightgreen.svg)](docs/BENCHMARKS.md)
@@ -117,8 +117,8 @@ grid.SetProceduralDataSource(rowCount: 1000000, (rowIndex, colIndex) =>
 ## 🧪 Testing & Quality Assurance
 
 ```bash
-# Run comprehensive automated test suite (529 tests, 100% pass)
-dotnet test tests/ZeroUI.Core.Tests/ZeroUI.Core.Tests.csproj
+# Run comprehensive automated test suites (554 tests, 100% pass across Core & Desktop UI)
+dotnet test ZeroUI.slnx
 
 # Launch interactive demonstration suite
 dotnet run --project src/ZeroUI.Samples.BenchmarkDemo/ZeroUI.Samples.BenchmarkDemo.csproj -f net8.0-windows

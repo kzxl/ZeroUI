@@ -40,10 +40,14 @@ namespace ZeroUI.Wpf.Editors
             set
             {
                 _items = value ?? Array.Empty<string>();
-                _selection.SetSource(() => _items.Length, idx => _items[idx]);
-                if (_selection.SelectedIndex >= _items.Length)
+                _selection.SetSource(() => _items.Length, idx => (idx >= 0 && idx < _items.Length) ? _items[idx] : string.Empty);
+                if (_items.Length == 0)
                 {
-                    _selection.SelectIndex(Math.Max(0, _items.Length - 1));
+                    _selection.SelectIndex(-1);
+                }
+                else if (_selection.SelectedIndex >= _items.Length)
+                {
+                    _selection.SelectIndex(_items.Length - 1);
                 }
                 InvalidateMeasure();
                 InvalidateVisual();
