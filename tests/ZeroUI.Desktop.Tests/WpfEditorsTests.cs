@@ -139,5 +139,68 @@ namespace ZeroUI.Desktop.Tests
                 Assert.Contains("Status", display);
             });
         }
+
+        [Fact]
+        public void CollapsibleToolCard_DefaultState_And_Toggle_ShouldWork()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var card = new ZeroUI.Wpf.Layout.CollapsibleToolCard
+                {
+                    HeaderGlyph = "⚙️",
+                    Header = "FUSION STRATEGY",
+                    Content = new System.Windows.Controls.Button { Content = "Test Button" }
+                };
+
+                Assert.True(card.IsExpanded);
+                Assert.Equal(1, card.Elevation);
+                Assert.Equal("⚙️", card.HeaderGlyph);
+                Assert.Equal("FUSION STRATEGY", card.Header);
+
+                bool expandedFired = false;
+                bool collapsedFired = false;
+                card.Expanded += (s, e) => expandedFired = true;
+                card.Collapsed += (s, e) => collapsedFired = true;
+
+                card.IsExpanded = false;
+                Assert.False(card.IsExpanded);
+                Assert.True(collapsedFired);
+
+                card.IsExpanded = true;
+                Assert.True(card.IsExpanded);
+                Assert.True(expandedFired);
+
+                card.Measure(new Size(360, 600));
+                card.Arrange(new Rect(0, 0, 360, 600));
+                Assert.True(card.ActualWidth >= 0);
+            });
+        }
+
+        [Fact]
+        public void ReticleLoupeControl_DefaultState_And_EditValue_ShouldWork()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var loupe = new ZeroUI.Wpf.Overlays.ReticleLoupeControl();
+
+                Assert.True(loupe.IsActive);
+                Assert.Equal(90.0, loupe.Radius);
+                Assert.Equal(15.0, loupe.ReticleRadius);
+                Assert.True(loupe.ShowCrosshair);
+                Assert.Equal("100% LOUPE", loupe.ModeBadgeText);
+
+                // EditValue IZeroEditor integration
+                loupe.EditValue = new Point(120, 240);
+                Assert.Equal(new Point(120, 240), loupe.Center);
+                Assert.True(loupe.IsModified);
+
+                loupe.Reset();
+                Assert.Equal(new Point(0, 0), loupe.Center);
+                Assert.False(loupe.IsModified);
+
+                loupe.Measure(new Size(800, 600));
+                loupe.Arrange(new Rect(0, 0, 800, 600));
+            });
+        }
     }
 }
