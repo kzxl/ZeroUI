@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Buttons
     [Category("ZeroUI - Buttons")]
     [DefaultEvent("Click")]
     [Description("Action button with overlapping floating notification badge and vector icons")]
-    public class BadgeButton : ZeroControlBase
+    public class BadgeButton : ControlBase
     {
         private int _badgeValue = 0;
         private string? _badgeText;

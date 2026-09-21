@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ItemClick")]
     [DefaultProperty("Items")]
     [Description("Seamless connected button cluster with single-HWND rendering, toggle grouping, and theme reactivity")]
-    public class ButtonGroup : ZeroControlBase
+    public class ButtonGroup : ControlBase
     {
         private readonly ButtonGroupModel _model = new ButtonGroupModel();
         private readonly List<Rectangle> _itemBounds = new List<Rectangle>();

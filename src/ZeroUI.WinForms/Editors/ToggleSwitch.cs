@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Category("ZeroUI - Editors")]
     [Description("Smooth sliding animated toggle switch")]
-    public class ToggleSwitch : ZeroControlBase, IZeroEditor
+    public class ToggleSwitch : ControlBase, IZeroEditor
     {
         private bool _checked = false;
         private string? _checkedText = "ON";

@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Logistics
     [ToolboxItem(true)]
     [Category("ZeroUI - Logistics & Warehouse")]
     [Description("ASRS Stacker Crane 2D elevation visualizer with mast, hoist, forks, and cycle telemetry")]
-    public class AsrsCraneVisualizer : ZeroVisualControlBase
+    public class AsrsCraneVisualizer : VisualControlBase
     {
         private readonly AsrsEngine _engine = new AsrsEngine();
         private string _aisleTag = "AISLE-04";

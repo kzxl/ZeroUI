@@ -14,7 +14,7 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Modern, anti-aliased text input control for ZeroUI with built-in placeholder text,
     /// one-click clear button, password masking, character casing, and action icon slots.
-    /// Standardized on ZeroEditorBase for unified theme, focus rings, and data binding.
+    /// Standardized on EditorBase for unified theme, focus rings, and data binding.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern text input control with clear button, placeholder, and action icons")]
     [ToolboxBitmap(typeof(ZeroIcons), "TextEdit.bmp")]
-    public class TextEdit : ZeroEditorBase<string>
+    public class TextEdit : EditorBase<string>
     {
         private readonly TextBox _innerBox;
         private string _leadingIcon = "";

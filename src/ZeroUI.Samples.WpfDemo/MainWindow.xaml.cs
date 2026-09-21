@@ -41,7 +41,7 @@ namespace ZeroUI.Samples.WpfDemo
 {
     public partial class MainWindow : Window
     {
-        private ZeroWpfInventorySource? _inventorySource;
+        private WpfInventorySource? _inventorySource;
         private DispatcherTimer? _telemetryTimer;
         private DispatcherTimer? _scadaSimTimer;
         private bool _isSimulating = true;
@@ -119,10 +119,10 @@ namespace ZeroUI.Samples.WpfDemo
             DemoDateRangePicker.SetRange(DateTime.Today.AddDays(-7), DateTime.Today);
 
             // Populate Lookup with 5,000 industrial items
-            var lookupItems = new List<ZeroLookupItem>(5000);
+            var lookupItems = new List<LookUpItem>(5000);
             for (int i = 1; i <= 5000; i++)
             {
-                lookupItems.Add(new ZeroLookupItem(
+                lookupItems.Add(new LookUpItem(
                     key: $"AST-{i:D5}",
                     displayText: $"Transducer Transmitter PT-{i:D4}",
                     subText: $"Building {((i % 5) + 1)} • Line {((char)('A' + (i % 6)))} • Modbus ID {i % 254 + 1}",
@@ -389,8 +389,8 @@ namespace ZeroUI.Samples.WpfDemo
         private void LoadData(int count)
         {
             var sw = Stopwatch.StartNew();
-            var items = ZeroWpfInventorySource.Generate(count);
-            _inventorySource = new ZeroWpfInventorySource(items);
+            var items = WpfInventorySource.Generate(count);
+            _inventorySource = new WpfInventorySource(items);
             VirtualGrid.DataSource = _inventorySource;
             sw.Stop();
 
@@ -574,8 +574,8 @@ namespace ZeroUI.Samples.WpfDemo
         private void SetupCharts()
         {
             // 1. Bar Chart
-            var salesSeries = new ZeroChartSeries("Sales", Color.FromRgb(129, 140, 248));
-            var targetSeries = new ZeroChartSeries("Target", Color.FromRgb(166, 227, 161));
+            var salesSeries = new ChartSeries("Sales", Color.FromRgb(129, 140, 248));
+            var targetSeries = new ChartSeries("Target", Color.FromRgb(166, 227, 161));
             string[] months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
             double[] sales = new[] { 45.0, 52.0, 58.0, 64.0, 78.0, 85.0, 92.0, 88.0, 95.0, 104.0, 115.0, 128.0 };
 
@@ -586,7 +586,7 @@ namespace ZeroUI.Samples.WpfDemo
             BarChart.Series.Add(salesSeries);
 
             // 2. Area Spline Chart
-            var workloadSeries = new ZeroChartSeries("CPU %", Color.FromRgb(243, 139, 168));
+            var workloadSeries = new ChartSeries("CPU %", Color.FromRgb(243, 139, 168));
             double[] loads = new double[] { 18, 22, 25, 42, 68, 75, 82, 80, 71, 65, 54, 48, 52, 60, 78, 88, 92, 85, 62, 45, 34, 28, 22, 19 };
             for (int i = 0; i < loads.Length; i++)
             {
@@ -605,11 +605,11 @@ namespace ZeroUI.Samples.WpfDemo
                 double high = Math.Max(open, close) + rand.NextDouble() * 5;
                 double low = Math.Min(open, close) - rand.NextDouble() * 5;
                 basePrice = close;
-                CandleChart.CandleData.Add(new ZeroCandlePoint(now.AddDays(i), open, high, low, close, 15000));
+                CandleChart.CandleData.Add(new CandlePoint(now.AddDays(i), open, high, low, close, 15000));
             }
 
             // 4. Donut Chart
-            var donutSeries = new ZeroChartSeries("Inventory", Color.FromRgb(129, 140, 248));
+            var donutSeries = new ChartSeries("Inventory", Color.FromRgb(129, 140, 248));
             donutSeries.AddPoint("SMT Active (42%)", 420);
             donutSeries.AddPoint("Warehouse A (28%)", 280);
             donutSeries.AddPoint("QC Quarantine (12%)", 120);
@@ -992,32 +992,32 @@ namespace ZeroUI.Samples.WpfDemo
             DemoTreeList.Columns.Add(new ZeroColumn("Next Maintenance", 115, CellAlignment.Center));
 
             // Populate hierarchical model
-            var model = new ZeroTreeModel();
+            var model = new TreeModel();
 
             // Root 1: Gigafactory
-            var root1 = new ZeroTreeNode("🏭 North American Gigafactory", "FAC-001", "Online", "94.2%", "2026-11-15");
-            var line1 = new ZeroTreeNode("⚙️ Assembly Line 01 (Welding)", "LNE-010", "Running", "96.5%", "2026-10-01");
-            line1.AddChild(new ZeroTreeNode("🦾 KUKA Titan Welder Arm", "ROB-101", "Running", "98.1%", "2026-09-20"));
-            line1.AddChild(new ZeroTreeNode("🦾 Fanuc M-20iA Feed Cell", "ROB-102", "Running", "97.4%", "2026-09-28"));
-            line1.AddChild(new ZeroTreeNode("📷 Cognex In-Sight 3D Vision", "CAM-105", "Running", "99.2%", "2026-12-10"));
+            var root1 = new TreeNode("🏭 North American Gigafactory", "FAC-001", "Online", "94.2%", "2026-11-15");
+            var line1 = new TreeNode("⚙️ Assembly Line 01 (Welding)", "LNE-010", "Running", "96.5%", "2026-10-01");
+            line1.AddChild(new TreeNode("🦾 KUKA Titan Welder Arm", "ROB-101", "Running", "98.1%", "2026-09-20"));
+            line1.AddChild(new TreeNode("🦾 Fanuc M-20iA Feed Cell", "ROB-102", "Running", "97.4%", "2026-09-28"));
+            line1.AddChild(new TreeNode("📷 Cognex In-Sight 3D Vision", "CAM-105", "Running", "99.2%", "2026-12-10"));
 
-            var line2 = new ZeroTreeNode("📦 Packaging & Case Packing", "LNE-020", "Standby", "91.8%", "2026-09-18");
-            line2.AddChild(new ZeroTreeNode("🤖 Omron Delta High-Speed Robot", "ROB-201", "Standby", "93.4%", "2026-09-22"));
-            line2.AddChild(new ZeroTreeNode("🌀 Automated Stretch Wrapper", "WRP-202", "Running", "95.0%", "2026-10-15"));
+            var line2 = new TreeNode("📦 Packaging & Case Packing", "LNE-020", "Standby", "91.8%", "2026-09-18");
+            line2.AddChild(new TreeNode("🤖 Omron Delta High-Speed Robot", "ROB-201", "Standby", "93.4%", "2026-09-22"));
+            line2.AddChild(new TreeNode("🌀 Automated Stretch Wrapper", "WRP-202", "Running", "95.0%", "2026-10-15"));
 
             root1.AddChild(line1);
             root1.AddChild(line2);
             model.AddRoot(root1);
 
             // Root 2: European Distribution Hub
-            var root2 = new ZeroTreeNode("🌐 European Logistics Center", "FAC-002", "Online", "88.9%", "2026-10-30");
-            var asrs = new ZeroTreeNode("🏗️ High-Bay ASRS Storage Bay A", "ASRS-01", "Running", "99.5%", "2026-12-01");
-            asrs.AddChild(new ZeroTreeNode("🪜 Dual-Mast Crane Stacker 01", "CRN-301", "Running", "99.1%", "2026-11-10"));
-            asrs.AddChild(new ZeroTreeNode("🪜 Dual-Mast Crane Stacker 02", "CRN-302", "Running", "98.7%", "2026-11-12"));
+            var root2 = new TreeNode("🌐 European Logistics Center", "FAC-002", "Online", "88.9%", "2026-10-30");
+            var asrs = new TreeNode("🏗️ High-Bay ASRS Storage Bay A", "ASRS-01", "Running", "99.5%", "2026-12-01");
+            asrs.AddChild(new TreeNode("🪜 Dual-Mast Crane Stacker 01", "CRN-301", "Running", "99.1%", "2026-11-10"));
+            asrs.AddChild(new TreeNode("🪜 Dual-Mast Crane Stacker 02", "CRN-302", "Running", "98.7%", "2026-11-12"));
 
-            var agvFleet = new ZeroTreeNode("🚜 Autonomous Mobile Robots (AMR)", "AMR-GRP", "Running", "86.4%", "2026-09-15");
-            agvFleet.AddChild(new ZeroTreeNode("🤖 Tugger AMR Unit #04", "AMR-004", "Charging", "82.0%", "2026-09-16"));
-            agvFleet.AddChild(new ZeroTreeNode("🤖 Forklift AMR Unit #09", "AMR-009", "Running", "91.5%", "2026-09-25"));
+            var agvFleet = new TreeNode("🚜 Autonomous Mobile Robots (AMR)", "AMR-GRP", "Running", "86.4%", "2026-09-15");
+            agvFleet.AddChild(new TreeNode("🤖 Tugger AMR Unit #04", "AMR-004", "Charging", "82.0%", "2026-09-16"));
+            agvFleet.AddChild(new TreeNode("🤖 Forklift AMR Unit #09", "AMR-009", "Running", "91.5%", "2026-09-25"));
 
             root2.AddChild(asrs);
             root2.AddChild(agvFleet);
@@ -1203,26 +1203,26 @@ namespace ZeroUI.Samples.WpfDemo
 
         #region Dock Manager & P&ID Diagram Setup
 
-        private ZeroDiagramCanvas? _diagramCanvas;
+        private DiagramCanvas? _diagramCanvas;
 
         private void SetupDockAndDiagram()
         {
             // Left Toolbox Panel
-            var leftPanel = new ZeroDockPanel { Title = "Toolbox & Asset Library", DockPosition = DockPosition.Left, PanelKey = "ToolboxPanel" };
+            var leftPanel = new DockPanelControl { Title = "Toolbox & Asset Library", DockPosition = DockPosition.Left, PanelKey = "ToolboxPanel" };
             var toolboxStack = new StackPanel { Margin = new Thickness(12) };
             toolboxStack.Children.Add(new TextBlock { Text = "📐 Process Library", FontWeight = FontWeights.Bold, Foreground = ZeroWpfTheme.TextPrimary, Margin = new Thickness(0, 0, 0, 8) });
             toolboxStack.Children.Add(new TextBlock { Text = "• Primary Buffer Tank (TK-101)\n• Centrifugal Feed Pump (P-201)\n• Proportional Control Valve (XV-301)\n• Exothermic Reactor Vessel (RX-401)\n• RTD Temperature Sensor (TE-501)", Foreground = ZeroWpfTheme.TextSecondary, LineHeight = 20 });
             leftPanel.Content = toolboxStack;
             DemoDockManager.AddPanel(leftPanel);
 
-            // Center Document: ZeroDiagramCanvas
-            var centerDoc = new ZeroDockPanel { Title = "P&ID Process Diagram Loop", DockPosition = DockPosition.Document, PanelKey = "DiagramDoc" };
-            _diagramCanvas = new ZeroDiagramCanvas();
+            // Center Document: DiagramCanvas
+            var centerDoc = new DockPanelControl { Title = "P&ID Process Diagram Loop", DockPosition = DockPosition.Document, PanelKey = "DiagramDoc" };
+            _diagramCanvas = new DiagramCanvas();
             centerDoc.Content = _diagramCanvas;
             DemoDockManager.AddPanel(centerDoc);
 
             // Bottom Output Panel
-            var bottomPanel = new ZeroDockPanel { Title = "Output & Fieldbus Telemetry", DockPosition = DockPosition.Bottom, PanelKey = "OutputPanel" };
+            var bottomPanel = new DockPanelControl { Title = "Output & Fieldbus Telemetry", DockPosition = DockPosition.Bottom, PanelKey = "OutputPanel" };
             var outputBox = new TextBox
             {
                 IsReadOnly = true,
@@ -1237,7 +1237,7 @@ namespace ZeroUI.Samples.WpfDemo
             DemoDockManager.AddPanel(bottomPanel);
 
             // Right Properties Panel
-            var rightPanel = new ZeroDockPanel { Title = "Node Inspector", DockPosition = DockPosition.Right, PanelKey = "InspectorPanel" };
+            var rightPanel = new DockPanelControl { Title = "Node Inspector", DockPosition = DockPosition.Right, PanelKey = "InspectorPanel" };
             var rightStack = new StackPanel { Margin = new Thickness(12) };
             var lblInspector = new TextBlock { Text = "Select a diagram node to inspect parameters", TextWrapping = TextWrapping.Wrap, Foreground = ZeroWpfTheme.TextMuted };
             rightStack.Children.Add(lblInspector);
@@ -1302,7 +1302,7 @@ namespace ZeroUI.Samples.WpfDemo
         private void BtnSaveDockLayout_Click(object sender, RoutedEventArgs e)
         {
             _savedWpfDockLayout = DemoDockManager.SaveLayoutToJson();
-            ZeroToast.Success(this, "Dock layout configuration saved to JSON.", 3000);
+            ToastNotification.Success(this, "Dock layout configuration saved to JSON.", 3000);
         }
 
         private void BtnRestoreDockLayout_Click(object sender, RoutedEventArgs e)
@@ -1310,11 +1310,11 @@ namespace ZeroUI.Samples.WpfDemo
             if (!string.IsNullOrEmpty(_savedWpfDockLayout))
             {
                 DemoDockManager.RestoreLayoutFromJson(_savedWpfDockLayout);
-                ZeroToast.Success(this, "Dock layout restored from JSON configuration.", 3000);
+                ToastNotification.Success(this, "Dock layout restored from JSON configuration.", 3000);
             }
             else
             {
-                ZeroToast.Warning(this, "No saved layout state found. Please click 'Save Layout' first.", 3500);
+                ToastNotification.Warning(this, "No saved layout state found. Please click 'Save Layout' first.", 3500);
             }
         }
 
@@ -1590,7 +1590,7 @@ namespace ZeroUI.Samples.WpfDemo
             DemoGridLookup.SetDataSource(sampleMaterials);
             DemoGridLookup.ProcessNewValue += (s, e) =>
             {
-                ZeroToast.Success(this, $"Quick Add requested for new material: {e.DisplayText}");
+                ToastNotification.Success(this, $"Quick Add requested for new material: {e.DisplayText}");
                 e.Handled = true;
             };
 
@@ -1602,7 +1602,7 @@ namespace ZeroUI.Samples.WpfDemo
             {
                 if (DemoSearchLookup.EditValue is DemoProduct prod)
                 {
-                    ZeroToast.Info(this, $"SearchLookUpEdit selected: {prod.Name} ({prod.Code})");
+                    ToastNotification.Info(this, $"SearchLookUpEdit selected: {prod.Name} ({prod.Code})");
                 }
             };
 
@@ -1633,7 +1633,7 @@ namespace ZeroUI.Samples.WpfDemo
             };
 
             // 6. Setup ZeroWizard
-            var p1 = new ZeroWizardPage
+            var p1 = new WizardPage
             {
                 Title = "1. Work Order Parameters",
                 Subtitle = "Specify manufacturing lot code, scheduled unit quota, and line assignment.",
@@ -1644,7 +1644,7 @@ namespace ZeroUI.Samples.WpfDemo
             p1Stack.Children.Add(new TextBlock { Text = "Line: SMT Robotic Cell A  |  Operator: OP-492  |  Target: 2,500 Units", FontSize = 12, Foreground = ZeroWpfTheme.TextSecondary });
             p1.Content = p1Stack;
 
-            var p2 = new ZeroWizardPage
+            var p2 = new WizardPage
             {
                 Title = "2. Material Feeder Verification",
                 Subtitle = "Verify electronic reel lot barcodes and feeder reel alignment.",
@@ -1656,7 +1656,7 @@ namespace ZeroUI.Samples.WpfDemo
             p2Stack.Children.Add(new TextBlock { Text = "Feeder 03: MCU-STM32F4 (Tray #12) - OK", FontSize = 12, Foreground = ZeroWpfTheme.SuccessAccent });
             p2.Content = p2Stack;
 
-            var p3 = new ZeroWizardPage
+            var p3 = new WizardPage
             {
                 Title = "3. Quality & Safety Sign-Off",
                 Subtitle = "Inspect optical safety interlocks and electronic authorization signature.",
@@ -1672,10 +1672,10 @@ namespace ZeroUI.Samples.WpfDemo
             DemoInlineWizard.Pages.Add(p3);
             DemoInlineWizard.Finished += (s, e) =>
             {
-                ZeroToast.Success(this, "Production Order WO-2026-904 successfully launched!");
+                ToastNotification.Success(this, "Production Order WO-2026-904 successfully launched!");
             };
 
-            // 7. Setup ZeroBoxPlotChart
+            // 7. Setup BoxPlotChart
             DemoBoxPlot.ChartTitle = "SPC Tolerance Distribution (Six Sigma)";
             DemoBoxPlot.UpperSpecLimit = 12.08;
             DemoBoxPlot.LowerSpecLimit = 11.92;
@@ -1809,14 +1809,14 @@ namespace ZeroUI.Samples.WpfDemo
             DemoRangeControl.SelectedStartDate = new DateTime(2026, 1, 1);
             DemoRangeControl.SelectedEndDate = new DateTime(2026, 12, 31);
             UpdateRangeReadout();
-            ZeroToast.Info(this, "RangeControl reset to full 2026 timeline.");
+            ToastNotification.Info(this, "RangeControl reset to full 2026 timeline.");
         }
 
         private void BtnApplyFilter_Click(object sender, RoutedEventArgs e)
         {
             string sql = DemoFilterControl.RootGroup.ToSqlWhere();
             TxtGeneratedSql.Text = sql;
-            ZeroToast.Info(this, "Filter Criteria Compiled: " + sql);
+            ToastNotification.Info(this, "Filter Criteria Compiled: " + sql);
         }
 
         private void BtnResetFilter_Click(object sender, RoutedEventArgs e)
@@ -1825,32 +1825,32 @@ namespace ZeroUI.Samples.WpfDemo
             DemoFilterControl.RootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
             DemoFilterControl.RebuildTreeUI();
             TxtGeneratedSql.Text = DemoFilterControl.RootGroup.ToSqlWhere();
-            ZeroToast.Info(this, "Filter criteria reset to default.");
+            ToastNotification.Info(this, "Filter criteria reset to default.");
         }
 
         private void BtnToastSuccess_Click(object sender, RoutedEventArgs e)
         {
-            ZeroToast.Success(this, "Production batch #8091 successfully released to shopfloor.");
+            ToastNotification.Success(this, "Production batch #8091 successfully released to shopfloor.");
         }
 
         private void BtnToastInfo_Click(object sender, RoutedEventArgs e)
         {
-            ZeroToast.Info(this, "PLC connection synchronized at 10 ms cycle (Modbus TCP).");
+            ToastNotification.Info(this, "PLC connection synchronized at 10 ms cycle (Modbus TCP).");
         }
 
         private void BtnToastWarning_Click(object sender, RoutedEventArgs e)
         {
-            ZeroToast.Warning(this, "Thermal threshold approaching USL warning limit (82.5°C).");
+            ToastNotification.Warning(this, "Thermal threshold approaching USL warning limit (82.5°C).");
         }
 
         private void BtnToastError_Click(object sender, RoutedEventArgs e)
         {
-            ZeroToast.Error(this, "Emergency Stop circuit tripped on Conveyor CV-401!");
+            ToastNotification.Error(this, "Emergency Stop circuit tripped on Conveyor CV-401!");
         }
 
         private void BtnToastAlarm_Click(object sender, RoutedEventArgs e)
         {
-            ZeroToast.Alarm(this, "Critical: High-temperature limit exceeded on Exothermic Reactor RX-401 (94.8°C)!", 4000);
+            ToastNotification.Alarm(this, "Critical: High-temperature limit exceeded on Exothermic Reactor RX-401 (94.8°C)!", 4000);
         }
 
         private void ComboDeliveryMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1860,7 +1860,7 @@ namespace ZeroUI.Samples.WpfDemo
                 ToastStackManager.DeliveryMode = mode;
                 if (IsLoaded)
                 {
-                    ZeroToast.Info(this, $"Notification delivery mode switched to: {mode}");
+                    ToastNotification.Info(this, $"Notification delivery mode switched to: {mode}");
                 }
             }
         }
@@ -1881,7 +1881,7 @@ namespace ZeroUI.Samples.WpfDemo
                 ToastType.Alarm,
                 onClick: () =>
                 {
-                    ZeroToast.Info(this, "Operator activated window via Windows Action Center notification.");
+                    ToastNotification.Info(this, "Operator activated window via Windows Action Center notification.");
                 });
         }
 
@@ -1889,13 +1889,13 @@ namespace ZeroUI.Samples.WpfDemo
         {
             DemoD3DCanvas.IsRenderingActive = !DemoD3DCanvas.IsRenderingActive;
             BtnToggleD3D.Content = DemoD3DCanvas.IsRenderingActive ? "⏸️ Pause GPU" : "▶️ Resume GPU";
-            ZeroToast.Info(this, DemoD3DCanvas.IsRenderingActive ? "DirectX 11 GPU rendering active (60-144 FPS)." : "DirectX 11 GPU rendering paused.");
+            ToastNotification.Info(this, DemoD3DCanvas.IsRenderingActive ? "DirectX 11 GPU rendering active (60-144 FPS)." : "DirectX 11 GPU rendering paused.");
         }
 
         private void BtnTriggerD3DFrame_Click(object sender, RoutedEventArgs e)
         {
             DemoD3DCanvas.RenderCurrentFrame();
-            ZeroToast.Success(this, "Direct3D 11 GPU frame rendered & composited via D3DImage.");
+            ToastNotification.Success(this, "Direct3D 11 GPU frame rendered & composited via D3DImage.");
         }
 
         private void BtnD3DStream1M_Click(object sender, RoutedEventArgs e)
@@ -1920,7 +1920,7 @@ namespace ZeroUI.Samples.WpfDemo
             DemoD3DCanvas.SetData(data);
             sw.Stop();
 
-            ZeroToast.Success(this, $"Streamed 1,000,000 points to GPU with MinMax Decimation in {sw.ElapsedMilliseconds} ms.");
+            ToastNotification.Success(this, $"Streamed 1,000,000 points to GPU with MinMax Decimation in {sw.ElapsedMilliseconds} ms.");
         }
 
         private void BtnD3DStream100kLttb_Click(object sender, RoutedEventArgs e)
@@ -1941,7 +1941,7 @@ namespace ZeroUI.Samples.WpfDemo
             DemoD3DCanvas.SetData(data);
             sw.Stop();
 
-            ZeroToast.Success(this, $"Streamed 100,000 points to GPU with LTTB Decimation in {sw.ElapsedMilliseconds} ms.");
+            ToastNotification.Success(this, $"Streamed 100,000 points to GPU with LTTB Decimation in {sw.ElapsedMilliseconds} ms.");
         }
 
         private void BtnD3DOscilloscope_Click(object sender, RoutedEventArgs e)
@@ -1949,7 +1949,7 @@ namespace ZeroUI.Samples.WpfDemo
             DemoD3DCanvas.SetData((float[]?)null);
             DemoD3DCanvas.EnableWaveformDemo = true;
             DemoD3DCanvas.TraceColor = System.Windows.Media.Color.FromRgb(0x00, 0xE5, 0xFF); // Neon cyan
-            ZeroToast.Info(this, "Switched to interactive animated multi-frequency oscilloscope demo.");
+            ToastNotification.Info(this, "Switched to interactive animated multi-frequency oscilloscope demo.");
         }
 
         #region Automatic Render Optimizer Handlers
@@ -1991,7 +1991,7 @@ namespace ZeroUI.Samples.WpfDemo
             SliderGlow.Value = 0;
             CmbBatchCount.SelectedIndex = 0;
             CmbOptimizerMode.SelectedIndex = 0;
-            ZeroToast.Info(this, "Preset applied: Flat UI (Labels + Buttons). Routed to pure CPU DirectWrite!");
+            ToastNotification.Info(this, "Preset applied: Flat UI (Labels + Buttons). Routed to pure CPU DirectWrite!");
         }
 
         private void BtnPresetElevated_Click(object sender, RoutedEventArgs e)
@@ -2001,7 +2001,7 @@ namespace ZeroUI.Samples.WpfDemo
             SliderGlow.Value = 0;
             CmbBatchCount.SelectedIndex = 0;
             CmbOptimizerMode.SelectedIndex = 0;
-            ZeroToast.Success(this, "Preset applied: Elevated Glass Card. Routed to Hybrid (GPU SDF Shadow + CPU subpixel text)!");
+            ToastNotification.Success(this, "Preset applied: Elevated Glass Card. Routed to Hybrid (GPU SDF Shadow + CPU subpixel text)!");
         }
 
         private void BtnPresetNeon_Click(object sender, RoutedEventArgs e)
@@ -2011,7 +2011,7 @@ namespace ZeroUI.Samples.WpfDemo
             SliderGlow.Value = 1.0;
             CmbBatchCount.SelectedIndex = 0;
             CmbOptimizerMode.SelectedIndex = 0;
-            ZeroToast.Success(this, "Preset applied: Cyberpunk Neon Bloom. Routed to Live GPU NeonGlowSdf shader!");
+            ToastNotification.Success(this, "Preset applied: Cyberpunk Neon Bloom. Routed to Live GPU NeonGlowSdf shader!");
         }
 
         private void BtnPresetBatch_Click(object sender, RoutedEventArgs e)
@@ -2021,14 +2021,14 @@ namespace ZeroUI.Samples.WpfDemo
             SliderGlow.Value = 0;
             CmbBatchCount.SelectedIndex = 3; // 32 Cards
             CmbOptimizerMode.SelectedIndex = 0;
-            ZeroToast.Success(this, "Preset applied: 32x Batched Cards. Routed to 9-Slice Atlas (95% draw calls saved)!");
+            ToastNotification.Success(this, "Preset applied: 32x Batched Cards. Routed to 9-Slice Atlas (95% draw calls saved)!");
         }
 
         private void BtnFlushAtlas_Click(object sender, RoutedEventArgs e)
         {
             ZeroUI.Core.Rendering.Optimizer.ZeroShadowAtlas.Clear();
             UpdateAtlasTelemetry();
-            ZeroToast.Info(this, "9-Slice Shadow Atlas cache cleared.");
+            ToastNotification.Info(this, "9-Slice Shadow Atlas cache cleared.");
         }
 
         private void UpdateOptimizerState()
@@ -2186,7 +2186,7 @@ namespace ZeroUI.Samples.WpfDemo
 
         private void BtnShowModalConfirm_Click(object sender, RoutedEventArgs e)
         {
-            bool confirmed = ZeroModal.Confirm(this,
+            bool confirmed = ModalDialog.Confirm(this,
                 "Confirm Batch Release",
                 "Are you sure you want to dispatch Batch WO-2026-904 to Robotic Workcell A? All feeder allocations and safety interlocks have been verified.",
                 "Release Batch",
@@ -2194,11 +2194,11 @@ namespace ZeroUI.Samples.WpfDemo
 
             if (confirmed)
             {
-                ZeroToast.Success(this, "Batch dispatched successfully to manufacturing line!");
+                ToastNotification.Success(this, "Batch dispatched successfully to manufacturing line!");
             }
             else
             {
-                ZeroToast.Warning(this, "Dispatch cancelled by operator.");
+                ToastNotification.Warning(this, "Dispatch cancelled by operator.");
             }
         }
 
@@ -2222,19 +2222,19 @@ namespace ZeroUI.Samples.WpfDemo
             BtnToggleLoto.Content = _isLotoActive ? "🔓 Release OSHA LOTO" : "🔒 Toggle OSHA LOTO";
             if (_isLotoActive)
             {
-                ZeroToast.Alarm(this, "OSHA LOTO Padlock applied to Pump P-101A and Valve XV-101!", 4000);
+                ToastNotification.Alarm(this, "OSHA LOTO Padlock applied to Pump P-101A and Valve XV-101!", 4000);
             }
             else
             {
-                ZeroToast.Success(this, "OSHA LOTO Padlock removed. System clear for operation.");
+                ToastNotification.Success(this, "OSHA LOTO Padlock removed. System clear for operation.");
             }
         }
 
         private void BtnTunePid_Click(object sender, RoutedEventArgs e)
         {
             var screenPoint = PointToScreen(new Point(Math.Max(50, ActualWidth - 420), 100));
-            ZeroPidFlyout.ShowFlyout(this, screenPoint, "PIC-101", "Boiler Steam Header Pressure");
-            ZeroToast.Info(this, "PID Faceplate activated. Live 60 FPS loop tuning active.");
+            PidFlyout.ShowFlyout(this, screenPoint, "PIC-101", "Boiler Steam Header Pressure");
+            ToastNotification.Info(this, "PID Faceplate activated. Live 60 FPS loop tuning active.");
         }
 
         private void BtnToggleCrosshair_Click(object sender, RoutedEventArgs e)
@@ -2243,7 +2243,7 @@ namespace ZeroUI.Samples.WpfDemo
             AreaChart.InvalidateVisual();
             BarChart.CrosshairMode = AreaChart.CrosshairMode;
             BarChart.InvalidateVisual();
-            ZeroToast.Info(this, $"Crosshair HUD mode: {AreaChart.CrosshairMode}");
+            ToastNotification.Info(this, $"Crosshair HUD mode: {AreaChart.CrosshairMode}");
         }
 
         private void BtnToggleSpcBelts_Click(object sender, RoutedEventArgs e)
@@ -2252,7 +2252,7 @@ namespace ZeroUI.Samples.WpfDemo
             AreaChart.InvalidateVisual();
             BarChart.EnableSpcBelts = AreaChart.EnableSpcBelts;
             BarChart.InvalidateVisual();
-            ZeroToast.Info(this, AreaChart.EnableSpcBelts ? "SPC 3σ Limit Belts (UCL, CL, LCL) enabled." : "SPC 3σ Limit Belts hidden.");
+            ToastNotification.Info(this, AreaChart.EnableSpcBelts ? "SPC 3σ Limit Belts (UCL, CL, LCL) enabled." : "SPC 3σ Limit Belts hidden.");
         }
 
         #endregion

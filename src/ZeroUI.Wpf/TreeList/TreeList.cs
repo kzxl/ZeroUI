@@ -18,7 +18,7 @@ namespace ZeroUI.Wpf.TreeList
     /// </summary>
     public class TreeList : FrameworkElement
     {
-        private ZeroTreeModel _model = new ZeroTreeModel();
+        private TreeModel _model = new TreeModel();
         private readonly ObservableCollection<ZeroColumn> _columns = new ObservableCollection<ZeroColumn>();
 
         private int _headerHeight = 30;
@@ -31,15 +31,15 @@ namespace ZeroUI.Wpf.TreeList
         private double _scrollX = 0;
         private int _hoveredRowIndex = -1;
         private int _selectedRowIndex = -1;
-        private ZeroTreeNode? _selectedNode;
+        private TreeNode? _selectedNode;
 
         private const double ScrollBarWidth = 7.0;
 
-        public event EventHandler<ZeroTreeNode>? NodeSelected;
-        public event EventHandler<ZeroTreeNode>? NodeExpanded;
-        public event EventHandler<ZeroTreeNode>? NodeCollapsed;
+        public event EventHandler<TreeNode>? NodeSelected;
+        public event EventHandler<TreeNode>? NodeExpanded;
+        public event EventHandler<TreeNode>? NodeCollapsed;
 
-        public ZeroTreeModel Model
+        public TreeModel Model
         {
             get => _model;
             set
@@ -47,7 +47,7 @@ namespace ZeroUI.Wpf.TreeList
                 if (_model != value)
                 {
                     if (_model != null) _model.ModelChanged -= OnModelChanged;
-                    _model = value ?? new ZeroTreeModel();
+                    _model = value ?? new TreeModel();
                     _model.ModelChanged += OnModelChanged;
                     _scrollY = 0;
                     _selectedRowIndex = -1;
@@ -89,7 +89,7 @@ namespace ZeroUI.Wpf.TreeList
             set { _showHeaders = value; InvalidateVisual(); }
         }
 
-        public ZeroTreeNode? SelectedNode
+        public TreeNode? SelectedNode
         {
             get => _selectedNode;
             set

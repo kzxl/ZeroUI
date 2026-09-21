@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Image")]
     [Description("Modern anti-aliased image and avatar control with initials fallback and zoom lightbox")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroImage.bmp")]
-    public class PictureEdit : ZeroControlBase
+    public class PictureEdit : ControlBase
     {
         private Image? _image;
         private ImageScaleMode _scaleMode = ImageScaleMode.Cover;

@@ -28,7 +28,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("Click")]
     [DefaultProperty("Text")]
     [Description("Modern anti-aliased button with rounded corners and stateful styling")]
-    public class SimpleButton : ZeroControlBase, IButtonControl
+    public class SimpleButton : ControlBase, IButtonControl
     {
         private ZeroButtonStyle _style = ZeroButtonStyle.Primary;
         private int _borderRadius = 6;

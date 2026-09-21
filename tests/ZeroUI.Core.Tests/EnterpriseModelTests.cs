@@ -27,9 +27,9 @@ namespace ZeroUI.Core.Tests
         }
 
         [Fact]
-        public void ZeroTreeModel_FlatteningAndExpandCollapse_WorksCorrectly()
+        public void TreeModel_FlatteningAndExpandCollapse_WorksCorrectly()
         {
-            var model = new ZeroTreeModel();
+            var model = new TreeModel();
             var root1 = model.AddRoot("Root 1", "Data 1");
             var child1_1 = root1.AddChild("Child 1.1", "Data 1.1");
             var child1_2 = root1.AddChild("Child 1.2", "Data 1.2");
@@ -58,6 +58,16 @@ namespace ZeroUI.Core.Tests
             // ExpandAll: back to 5
             model.ExpandAll();
             Assert.Equal(5, model.VisibleNodeCount);
+        }
+
+        [Fact]
+        [Obsolete]
+        public void ZeroTreeModel_BackwardCompatibility_WorksCorrectly()
+        {
+            var model = new ZeroTreeModel();
+            var root = model.AddRoot(new ZeroTreeNode("Legacy Root"));
+            Assert.Equal(1, model.VisibleNodeCount);
+            Assert.Equal("Legacy Root", model.GetVisibleNode(0).GetValue(0));
         }
 
         private class SampleTestDevice

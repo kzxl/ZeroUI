@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("IEC 61850 Substation Single-Line Diagram (SLD) canvas with dynamic busbar coloring and power flows")]
-    public class SingleLineDiagram : ZeroVisualControlBase
+    public class SingleLineDiagram : VisualControlBase
     {
         private readonly SldEngine _engine = new SldEngine();
         private string _substationName = "110kV / 22kV Primary Substation";

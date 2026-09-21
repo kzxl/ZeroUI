@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Water
     [ToolboxItem(true)]
     [Category("ZeroUI - Water & Wastewater")]
     [Description("Pipeline Hydraulic Grade Line (HGL) & Energy Grade Line (EGL) elevation profile chart")]
-    public class HydraulicGradientChart : ZeroVisualControlBase
+    public class HydraulicGradientChart : VisualControlBase
     {
         private readonly HydraulicGradientEngine _engine = new HydraulicGradientEngine();
         private string _pipelineTag = "TRANSMISSION-MAIN-01";

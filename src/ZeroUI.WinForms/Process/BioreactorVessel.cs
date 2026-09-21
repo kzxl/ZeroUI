@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Process
     [ToolboxItem(true)]
     [Category("ZeroUI - Process & Life Sciences")]
     [Description("Sanitary bioreactor vessel with animated rotating impellers and biological process HUD")]
-    public class BioreactorVessel : ZeroVisualControlBase
+    public class BioreactorVessel : VisualControlBase
     {
         private readonly BioreactorEngine _engine = new BioreactorEngine();
 

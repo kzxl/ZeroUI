@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern anti-aliased masked text box")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroMaskedTextBox.bmp")]
-    public class MaskBox : ZeroControlBase
+    public class MaskBox : ControlBase
     {
         private readonly MaskedTextBox _innerBox;
         private bool _isFocused = false;

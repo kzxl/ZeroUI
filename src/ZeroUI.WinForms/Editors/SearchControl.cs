@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("PlaceholderText")]
     [Description("Modern search box with debounced input and clear button")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSearchBox.bmp")]
-    public class SearchControl : ZeroControlBase
+    public class SearchControl : ControlBase
     {
         private readonly TextBox _textBox;
         private readonly Timer _debounceTimer;

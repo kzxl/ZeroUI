@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Water
     [ToolboxItem(true)]
     [Category("ZeroUI - Water & Wastewater")]
     [Description("Clarifier sedimentation basin with animated rotating scraper bridge and hydraulic loading HUD")]
-    public class ClarifierBasin : ZeroVisualControlBase
+    public class ClarifierBasin : VisualControlBase
     {
         private readonly ClarifierEngine _engine = new ClarifierEngine();
         private string _basinTag = "SEC-CLAR-01";

@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.LifeSciences
     [ToolboxItem(true)]
     [Category("ZeroUI - Life Sciences")]
     [Description("ANSI/SLAS 96/384-well microplate absorbance/fluorescence reader heatmap with well selection")]
-    public class MicroplateReader : ZeroVisualControlBase
+    public class MicroplateReader : VisualControlBase
     {
         private readonly MicroplateEngine _engine;
         private MicroplateWell? _selectedWell;

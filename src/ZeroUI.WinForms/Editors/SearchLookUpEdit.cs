@@ -28,9 +28,9 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Placeholder")]
     [Description("High-capacity enterprise search lookup with persistent header search and virtual grid.")]
     [ToolboxBitmap(typeof(ZeroIcons), "SearchLookUpEdit.bmp")]
-    public class SearchLookUpEdit : ZeroControlBase, IZeroEditor
+    public class SearchLookUpEdit : ControlBase, IZeroEditor
     {
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly Panel _popupContainer;
         private readonly TextBox _searchBox;
         private readonly Button _btnFind;
@@ -467,7 +467,7 @@ namespace ZeroUI.WinForms.Editors
             _popupContainer.Controls.Add(footerPanel);
             _grid.BringToFront();
 
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _popupContainer
             };

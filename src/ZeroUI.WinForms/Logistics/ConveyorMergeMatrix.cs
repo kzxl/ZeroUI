@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Logistics
     [ToolboxItem(true)]
     [Category("ZeroUI - Logistics & Warehouse")]
     [Description("High-speed parcel sorting conveyor merge visualizer with photo-eyes, divert chutes, and PPH meter")]
-    public class ConveyorMergeMatrix : ZeroVisualControlBase
+    public class ConveyorMergeMatrix : VisualControlBase
     {
         private readonly ConveyorMergeEngine _engine = new ConveyorMergeEngine();
         private string _lineName = "Main Infeed & Merge Line 1";

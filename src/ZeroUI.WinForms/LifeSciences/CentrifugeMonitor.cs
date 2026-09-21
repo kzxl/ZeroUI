@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.LifeSciences
     [ToolboxItem(true)]
     [Category("ZeroUI - Life Sciences")]
     [Description("Refrigerated centrifuge monitor with animated rotor, RCF g-force, bucket balance, and vibration sensors")]
-    public class CentrifugeMonitor : ZeroVisualControlBase
+    public class CentrifugeMonitor : VisualControlBase
     {
         private readonly CentrifugeEngine _engine = new CentrifugeEngine();
 

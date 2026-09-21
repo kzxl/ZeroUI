@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Modern anti-aliased time picker control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTimePicker.bmp")]
-    public class TimeEdit : ZeroControlBase
+    public class TimeEdit : ControlBase
     {
         private readonly TimeSegmentModel _model = new TimeSegmentModel();
         private bool _isHovered = false;
@@ -35,7 +35,7 @@ namespace ZeroUI.WinForms.Editors
         private Rectangle _secondRect;
         private Rectangle _clockIconRect;
 
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly TimePresetListControl _presetControl;
 
         public event EventHandler? ValueChanged;
@@ -55,7 +55,7 @@ namespace ZeroUI.WinForms.Editors
             _model.SegmentChanged += (s, e) => Invalidate();
 
             _presetControl = new TimePresetListControl(this);
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _presetControl
             };

@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Petrochem
     [ToolboxItem(true)]
     [Category("ZeroUI - Oil & Gas")]
     [Description("Intelligent pipeline PIG tracking monitor with AGM markers and wall anomaly diagnostics")]
-    public class PipelinePigMonitor : ZeroVisualControlBase
+    public class PipelinePigMonitor : VisualControlBase
     {
         private readonly PipelinePigEngine _engine = new PipelinePigEngine();
         private double _pulsePhase;

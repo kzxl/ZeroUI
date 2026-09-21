@@ -7,13 +7,13 @@ namespace ZeroUI.Core.Data
     /// Represents a hierarchical node in a high-performance TreeList or TreeGrid.
     /// Supports parent-child traversal, expand/collapse state, and arbitrary cell values.
     /// </summary>
-    public class ZeroTreeNode
+    public class TreeNode
     {
-        private readonly List<ZeroTreeNode> _children = new List<ZeroTreeNode>();
+        private readonly List<TreeNode> _children = new List<TreeNode>();
         private readonly List<string> _cellValues = new List<string>();
 
-        public ZeroTreeNode? Parent { get; internal set; }
-        public IReadOnlyList<ZeroTreeNode> Children => _children;
+        public TreeNode? Parent { get; internal set; }
+        public IReadOnlyList<TreeNode> Children => _children;
         public bool IsExpanded { get; set; } = true;
         public bool IsVisible { get; set; } = true;
         public object? Tag { get; set; }
@@ -35,9 +35,9 @@ namespace ZeroUI.Core.Data
 
         public bool HasChildren => _children.Count > 0;
 
-        public ZeroTreeNode() { }
+        public TreeNode() { }
 
-        public ZeroTreeNode(params string[] cellValues)
+        public TreeNode(params string[] cellValues)
         {
             if (cellValues != null)
             {
@@ -63,7 +63,7 @@ namespace ZeroUI.Core.Data
             _cellValues[columnIndex] = value;
         }
 
-        public ZeroTreeNode AddChild(ZeroTreeNode child)
+        public TreeNode AddChild(TreeNode child)
         {
             if (child == null) throw new ArgumentNullException(nameof(child));
             child.Parent = this;
@@ -71,14 +71,14 @@ namespace ZeroUI.Core.Data
             return child;
         }
 
-        public ZeroTreeNode AddChild(params string[] cellValues)
+        public TreeNode AddChild(params string[] cellValues)
         {
-            var node = new ZeroTreeNode(cellValues);
+            var node = new TreeNode(cellValues);
             AddChild(node);
             return node;
         }
 
-        public bool RemoveChild(ZeroTreeNode child)
+        public bool RemoveChild(TreeNode child)
         {
             if (child != null && _children.Remove(child))
             {
@@ -96,5 +96,12 @@ namespace ZeroUI.Core.Data
             }
             _children.Clear();
         }
+    }
+
+    [Obsolete("ZeroTreeNode is deprecated. Use TreeNode instead.")]
+    public class ZeroTreeNode : TreeNode
+    {
+        public ZeroTreeNode() { }
+        public ZeroTreeNode(params string[] cellValues) : base(cellValues) { }
     }
 }

@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Bms
     [ToolboxItem(true)]
     [Category("ZeroUI - BMS & HVAC")]
     [Description("Air Handling Unit (AHU) mechanical schematic with animated dampers, filters, coils, and fans")]
-    public class AhuSchematic : ZeroVisualControlBase
+    public class AhuSchematic : VisualControlBase
     {
         private readonly AhuEngine _engine = new AhuEngine();
         private string _unitTag = "AHU-01";

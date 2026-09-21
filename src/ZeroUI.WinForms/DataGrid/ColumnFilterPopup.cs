@@ -16,7 +16,7 @@ namespace ZeroUI.WinForms.DataGrid
         private readonly int _columnIndex;
         private readonly string _columnName;
         private readonly Action<int, HashSet<string>?> _applyCallback;
-        private readonly ZeroDropDownHost _host;
+        private readonly DropDownHost _host;
         private readonly Panel _container;
 
         private readonly TextBox _searchBox;
@@ -152,7 +152,7 @@ namespace ZeroUI.WinForms.DataGrid
             _btnClear.Click += (s, e) => ClearAndClose();
             _container.Controls.Add(_btnClear);
 
-            _host = new ZeroDropDownHost
+            _host = new DropDownHost
             {
                 Content = _container
             };

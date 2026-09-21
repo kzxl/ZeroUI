@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Modern anti-aliased multi-line text editor")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroMemoEdit.bmp")]
-    public class MemoEdit : ZeroControlBase, IZeroEditor
+    public class MemoEdit : ControlBase, IZeroEditor
     {
         private readonly TextBox _innerBox;
         private string _placeholderText = "";

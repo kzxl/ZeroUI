@@ -24,9 +24,9 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectionChanged")]
     [Description("Enterprise multi-column dropdown lookup with embedded virtual DataGrid and search")]
     [ToolboxBitmap(typeof(ZeroIcons), "GridLookupEdit.bmp")]
-    public class GridLookupEdit : ZeroControlBase, IZeroEditor
+    public class GridLookupEdit : ControlBase, IZeroEditor
     {
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly Panel _popupContainer;
         private readonly TextBox _searchBox;
         private readonly GridControl _grid;
@@ -189,7 +189,7 @@ namespace ZeroUI.WinForms.Editors
                 Padding = new Padding(6)
             };
 
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _popupContainer
             };

@@ -278,17 +278,32 @@ namespace ZeroUI.Wpf.Overlays
         public static void Success(Window? owner, string message, string title = "", int durationMs = 3000) =>
             ToastStackManager.Show(owner, message, title, ToastType.Success, durationMs);
 
+        public static void Success(Window? owner, string message, int durationMs) =>
+            ToastStackManager.Show(owner, message, string.Empty, ToastType.Success, durationMs);
+
         public static void Info(Window? owner, string message, string title = "", int durationMs = 3000) =>
             ToastStackManager.Show(owner, message, title, ToastType.Info, durationMs);
+
+        public static void Info(Window? owner, string message, int durationMs) =>
+            ToastStackManager.Show(owner, message, string.Empty, ToastType.Info, durationMs);
 
         public static void Warning(Window? owner, string message, string title = "", int durationMs = 3500) =>
             ToastStackManager.Show(owner, message, title, ToastType.Warning, durationMs);
 
+        public static void Warning(Window? owner, string message, int durationMs) =>
+            ToastStackManager.Show(owner, message, string.Empty, ToastType.Warning, durationMs);
+
         public static void Error(Window? owner, string message, string title = "", int durationMs = 4000) =>
             ToastStackManager.Show(owner, message, title, ToastType.Error, durationMs);
 
+        public static void Error(Window? owner, string message, int durationMs) =>
+            ToastStackManager.Show(owner, message, string.Empty, ToastType.Error, durationMs);
+
         public static void Alarm(Window? owner, string message, string title = "", int durationMs = 4000) =>
             ToastStackManager.Show(owner, message, title, ToastType.Alarm, durationMs);
+
+        public static void Alarm(Window? owner, string message, int durationMs) =>
+            ToastStackManager.Show(owner, message, string.Empty, ToastType.Alarm, durationMs);
 
         #endregion
     }
@@ -574,19 +589,19 @@ namespace ZeroUI.Wpf.Overlays
         public ZeroToast(Window? owner, string message, WpfToastType type, int durationMs = 3000)
             : base(owner, message, string.Empty, (ToastType)type, durationMs) { }
 
-        public static void Success(Window? owner, string message, int durationMs = 3000) =>
+        public new static void Success(Window? owner, string message, int durationMs = 3000) =>
             ToastNotification.Success(owner, message, string.Empty, durationMs);
 
-        public static void Warning(Window? owner, string message, int durationMs = 3500) =>
+        public new static void Warning(Window? owner, string message, int durationMs = 3500) =>
             ToastNotification.Warning(owner, message, string.Empty, durationMs);
 
-        public static void Error(Window? owner, string message, int durationMs = 4000) =>
+        public new static void Error(Window? owner, string message, int durationMs = 4000) =>
             ToastNotification.Error(owner, message, string.Empty, durationMs);
 
-        public static void Info(Window? owner, string message, int durationMs = 3000) =>
+        public new static void Info(Window? owner, string message, int durationMs = 3000) =>
             ToastNotification.Info(owner, message, string.Empty, durationMs);
 
-        public static void Alarm(Window? owner, string message, int durationMs = 4000) =>
+        public new static void Alarm(Window? owner, string message, int durationMs = 4000) =>
             ToastNotification.Alarm(owner, message, string.Empty, durationMs);
     }
 }

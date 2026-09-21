@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Process
     [ToolboxItem(true)]
     [Category("ZeroUI - Process & Life Sciences")]
     [Description("CIP/SIP 4 TACT validation matrix and thermal sterilization F0 lethality accumulator")]
-    public class CipValidationMatrix : ZeroVisualControlBase
+    public class CipValidationMatrix : VisualControlBase
     {
         private readonly CipValidationEngine _engine = new CipValidationEngine();
 

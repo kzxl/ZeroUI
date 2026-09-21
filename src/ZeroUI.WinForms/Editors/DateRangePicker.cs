@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("StartDate")]
     [Description("Enterprise dual-date range selector with 1-click presets and calendar popup")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDateRangePicker.bmp")]
-    public class DateRangePicker : ZeroControlBase
+    public class DateRangePicker : ControlBase
     {
         private DateTime _startDate = DateTime.Today.AddDays(-6);
         private DateTime _endDate = DateTime.Today;
@@ -31,7 +31,7 @@ namespace ZeroUI.WinForms.Editors
 
         private bool _isHovered = false;
         private bool _isFocused = false;
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly DateRangePopupControl _popupControl;
         private Rectangle _chevronRect;
 
@@ -45,7 +45,7 @@ namespace ZeroUI.WinForms.Editors
             Cursor = Cursors.Hand;
 
             _popupControl = new DateRangePopupControl(this);
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _popupControl
             };

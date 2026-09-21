@@ -34,11 +34,11 @@ namespace ZeroUI.Samples.WpfDemo.Data
         }
     }
 
-    public sealed class ZeroWpfInventorySource : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource
+    public class WpfInventorySource : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource
     {
         private readonly InventoryItem[] _items;
 
-        public ZeroWpfInventorySource(InventoryItem[] items)
+        public WpfInventorySource(InventoryItem[] items)
         {
             _items = items;
         }
@@ -221,5 +221,11 @@ namespace ZeroUI.Samples.WpfDemo.Data
 
             return items;
         }
+    }
+
+    [Obsolete("ZeroWpfInventorySource is deprecated. Use WpfInventorySource instead.")]
+    public class ZeroWpfInventorySource : WpfInventorySource
+    {
+        public ZeroWpfInventorySource(InventoryItem[] items) : base(items) { }
     }
 }

@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedItem")]
     [Description("Searchable autocomplete dropdown & lookup box for large datasets")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroLookup.bmp")]
-    public class LookUpEdit : ZeroControlBase, IZeroEditor
+    public class LookUpEdit : ControlBase, IZeroEditor
     {
         private readonly List<LookUpItem> _items = new List<LookUpItem>();
         private readonly List<LookUpItem> _filteredItems = new List<LookUpItem>();
@@ -34,7 +34,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isFocused = false;
 
         private readonly TextBox _searchTextBox;
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly LookupListControl _listControl;
 
         private Rectangle _clearButtonRect;
@@ -159,7 +159,7 @@ namespace ZeroUI.WinForms.Editors
             Controls.Add(_searchTextBox);
 
             _listControl = new LookupListControl(this);
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _listControl
             };

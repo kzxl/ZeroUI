@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Bms
     [ToolboxItem(true)]
     [Category("ZeroUI - BMS & HVAC")]
     [Description("Multi-Zone 7-day 24-hour occupancy calendar schedule matrix")]
-    public class ZoneScheduler : ZeroVisualControlBase
+    public class ZoneScheduler : VisualControlBase
     {
         private readonly ZoneSchedulerEngine _engine = new ZoneSchedulerEngine();
         private int _selectedZoneIndex = 0;

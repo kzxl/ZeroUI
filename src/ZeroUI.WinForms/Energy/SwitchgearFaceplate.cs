@@ -16,7 +16,7 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("MV/HV Switchgear faceplate with spring charge indicator, contact wear gauge, trip coil supervision, and LOTO interlock")]
-    public class SwitchgearFaceplate : ZeroVisualControlBase
+    public class SwitchgearFaceplate : VisualControlBase
     {
         private readonly SwitchgearEngine _engine = new SwitchgearEngine();
         private string _breakerTag = "VCB-BAY-04 (110kV Incomer)";

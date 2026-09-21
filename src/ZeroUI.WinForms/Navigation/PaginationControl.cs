@@ -43,7 +43,7 @@ namespace ZeroUI.WinForms.Navigation
     [Category("ZeroUI - Editors")]
     [DefaultEvent("PageChanged")]
     [Description("Modern, high-performance single-HWND data pagination control with seamless vector geometry")]
-    public class PaginationControl : ZeroControlBase
+    public class PaginationControl : ControlBase
     {
         private readonly PaginationModel _model = new PaginationModel();
         private readonly List<PagerButton> _buttons = new List<PagerButton>();

@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Modern anti-aliased slider control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSlider.bmp")]
-    public class TrackBarControl : ZeroControlBase
+    public class TrackBarControl : ControlBase
     {
         private readonly RangeModel _rangeModel = new RangeModel(0f, 100f, 0f, 1f);
         private Orientation _orientation = Orientation.Horizontal;

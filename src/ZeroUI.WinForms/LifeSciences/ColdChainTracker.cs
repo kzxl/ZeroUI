@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.LifeSciences
     [ToolboxItem(true)]
     [Category("ZeroUI - Life Sciences")]
     [Description("Cold Chain -80°C ULT freezer telemetry ribbon with Mean Kinetic Temperature (MKT) and excursion alerts")]
-    public class ColdChainTracker : ZeroVisualControlBase
+    public class ColdChainTracker : VisualControlBase
     {
         private readonly ColdChainEngine _engine = new ColdChainEngine();
 

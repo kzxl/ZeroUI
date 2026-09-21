@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("Solar PV string matrix array with MPPT string mismatch, shading, and blown fuse diagnostics")]
-    public class SolarPvMatrix : ZeroVisualControlBase
+    public class SolarPvMatrix : VisualControlBase
     {
         private readonly SolarPvEngine _engine = new SolarPvEngine();
 

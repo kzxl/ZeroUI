@@ -62,7 +62,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Floating Render Optimizer Diagnostics HUD -->
-            <opt:ZeroRenderOptimizerHUD x:Name="MasterHUD" Grid.ColumnSpan="2" Panel.ZIndex="999" IsExpanded="True" Margin="0,16,24,0" Visibility="Collapsed" />
+            <opt:RenderOptimizerHUD x:Name="MasterHUD" Grid.ColumnSpan="2" Panel.ZIndex="999" IsExpanded="True" Margin="0,16,24,0" Visibility="Collapsed" />
 
             <!-- Left Navigation Rail: 7 Primary Clusters -->
             <nav:SideNav x:Name="MainNavRail" Grid.Column="0"
@@ -153,18 +153,18 @@
 
                                 <!-- Search Bar & Hint -->
                                 <StackPanel Grid.Row="2" Margin="14,0,14,6">
-                                    <grid:ZeroGridSearchBar x:Name="GridSearch" />
+                                    <grid:GridSearchBar x:Name="GridSearch" />
                                     <TextBlock Margin="2,4,0,0" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}"
                                                Text="💡 Drag headers into Group Panel to group | Click [✕] to remove group | Header [▼] for Excel distinct filter | In-Place Editing: F2 | In-Cell DataBars: Live % visual" />
                                 </StackPanel>
 
                                 <!-- ZeroGridControl -->
                                 <Border Grid.Row="3" Margin="14,0,14,0" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                    <grid:ZeroGridControl x:Name="VirtualGrid" ShowGroupPanel="True" />
+                                    <grid:GridControl x:Name="VirtualGrid" ShowGroupPanel="True" />
                                 </Border>
 
                                 <!-- Pagination -->
-                                <grid:ZeroGridPagination x:Name="GridPager" Grid.Row="4" Margin="14,0,14,10" />
+                                <grid:GridPagination x:Name="GridPager" Grid.Row="4" Margin="14,0,14,10" />
                             </Grid>
                         </TabItem>
 
@@ -195,7 +195,7 @@
                                     </Border>
 
                                     <Border Grid.Row="1" Margin="0,0,0,16" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                        <ind:ZeroPivotGrid x:Name="DemoPivotGrid" />
+                                        <ind:PivotMatrix x:Name="DemoPivotGrid" />
                                     </Border>
 
                                     <!-- Section B: PivotGridControl Commercial Hierarchical Slicing -->
@@ -223,7 +223,7 @@
 
                                 <!-- Breadcrumb Navigation Bar -->
                                 <Border Grid.Row="0" Margin="0,0,0,14" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                    <nav:ZeroBreadcrumb x:Name="DemoBreadcrumb" Path="Enterprise Plant / Shopfloor North / Production Line 01 / Robotic Cell A" />
+                                    <nav:BreadcrumbControl x:Name="DemoBreadcrumb" Path="Enterprise Plant / Shopfloor North / Production Line 01 / Robotic Cell A" />
                                 </Border>
 
                                 <!-- Master-Detail Split Workspace -->
@@ -248,7 +248,7 @@
                                                     <Button x:Name="BtnCollapseAllTree" Click="BtnCollapseAllTree_Click" Content="↕️ Collapse All" Padding="10,2,10,2" DockPanel.Dock="Right" Cursor="Hand" />
                                                 </DockPanel>
                                             </Border>
-                                            <tree:ZeroTreeList x:Name="DemoTreeList" Grid.Row="1" />
+                                            <tree:TreeList x:Name="DemoTreeList" Grid.Row="1" />
                                         </Grid>
                                     </Border>
 
@@ -265,7 +265,7 @@
                                             <Border Grid.Row="0" Background="{DynamicResource ZeroUI.BgCard}" Padding="12,8,12,8" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
                                                 <TextBlock Text="⚙️ Node Properties &amp; Telemetry (ZeroPropertyGrid)" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" VerticalAlignment="Center" />
                                             </Border>
-                                            <prop:ZeroPropertyGrid x:Name="DemoPropertyGrid" Grid.Row="1" />
+                                            <prop:PropertyGridControl x:Name="DemoPropertyGrid" Grid.Row="1" />
                                         </Grid>
                                     </Border>
                                 </Grid>
@@ -301,22 +301,22 @@
                                     </Border>
 
                                     <!-- Row 1: SLD & BESS Rack -->
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="0" HeaderText="Single-Line Diagram (IEC 61850 SLD)" SubtitleText="High/Medium Voltage Substation Topology &amp; Flow" Margin="0,0,8,12">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="0" HeaderText="Single-Line Diagram (IEC 61850 SLD)" SubtitleText="High/Medium Voltage Substation Topology &amp; Flow" Margin="0,0,8,12">
                                         <energy:SingleLineDiagram Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="1" HeaderText="BESS Rack Monitor" SubtitleText="Grid-Scale Battery Energy Storage Rack &amp; Cell Telemetry" Margin="8,0,0,12">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="1" HeaderText="BESS Rack Monitor" SubtitleText="Grid-Scale Battery Energy Storage Rack &amp; Cell Telemetry" Margin="8,0,0,12">
                                         <energy:BessRackMonitor Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Row 2: Switchgear & Solar PV Matrix -->
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="0" HeaderText="Switchgear Faceplate" SubtitleText="Vacuum Circuit Breaker (VCB) &amp; Protection Relay" Margin="0,0,8,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="0" HeaderText="Switchgear Faceplate" SubtitleText="Vacuum Circuit Breaker (VCB) &amp; Protection Relay" Margin="0,0,8,0">
                                         <energy:SwitchgearFaceplate Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="1" HeaderText="Solar PV Matrix" SubtitleText="String Inverter Health, DC/AC Watts &amp; Solar Irradiance" Margin="8,0,0,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="1" HeaderText="Solar PV Matrix" SubtitleText="String Inverter Health, DC/AC Watts &amp; Solar Irradiance" Margin="8,0,0,0">
                                         <energy:SolarPvMatrix Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
@@ -342,9 +342,9 @@
                                     </Border>
 
                                     <!-- Left Column: Distillation Column -->
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="0" HeaderText="Fractionation Distillation Column" SubtitleText="Tray Hydraulics, Thermal Gradient, Reflux &amp; Reboiler" Margin="0,0,12,0">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="0" HeaderText="Fractionation Distillation Column" SubtitleText="Tray Hydraulics, Thermal Gradient, Reflux &amp; Reboiler" Margin="0,0,12,0">
                                         <petro:DistillationColumn Height="660" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Right Column: ESD Matrix & PIG Monitor -->
                                     <Grid Grid.Row="1" Grid.Column="1">
@@ -353,13 +353,13 @@
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
 
-                                        <ind:ZeroCard Grid.Row="0" HeaderText="Emergency Shutdown (ESD) Cause &amp; Effect Matrix" SubtitleText="IEC 61508 / IEC 61511 Safety Instrumented System (SIS) SIL 1-4" Margin="0,0,0,12">
+                                        <ind:GridCard Grid.Row="0" HeaderText="Emergency Shutdown (ESD) Cause &amp; Effect Matrix" SubtitleText="IEC 61508 / IEC 61511 Safety Instrumented System (SIS) SIL 1-4" Margin="0,0,0,12">
                                             <petro:EsdMatrix Height="300" Margin="0,6,0,0" />
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
 
-                                        <ind:ZeroCard Grid.Row="1" HeaderText="Pipeline PIG Tracker &amp; Defect Inspection" SubtitleText="Inline Inspection (ILI) Ultrasonic Wall Loss, Geometry &amp; Acoustic Telemetry">
+                                        <ind:GridCard Grid.Row="1" HeaderText="Pipeline PIG Tracker &amp; Defect Inspection" SubtitleText="Inline Inspection (ILI) Ultrasonic Wall Loss, Geometry &amp; Acoustic Telemetry">
                                             <petro:PipelinePigMonitor Height="300" Margin="0,6,0,0" />
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
                                     </Grid>
                                 </Grid>
                             </ScrollViewer>
@@ -386,21 +386,21 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="0" HeaderText="ISA-88 SFC Batch Procedure Tracker" SubtitleText="Recipe Step Transition &amp; Phase Execution" Margin="0,0,8,12">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="0" HeaderText="ISA-88 SFC Batch Procedure Tracker" SubtitleText="Recipe Step Transition &amp; Phase Execution" Margin="0,0,8,12">
                                         <proc:SfcBatchTracker Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="1" HeaderText="Bioreactor Vessel Visualizer" SubtitleText="Agitation Impeller, DO2 / pH / Temperature Sensors" Margin="8,0,0,12">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="1" HeaderText="Bioreactor Vessel Visualizer" SubtitleText="Agitation Impeller, DO2 / pH / Temperature Sensors" Margin="8,0,0,12">
                                         <proc:BioreactorVessel Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="0" HeaderText="CIP / SIP Clean-in-Place Validation" SubtitleText="Multi-Circuit Chemical Wash &amp; Sterilization Matrix" Margin="0,0,8,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="0" HeaderText="CIP / SIP Clean-in-Place Validation" SubtitleText="Multi-Circuit Chemical Wash &amp; Sterilization Matrix" Margin="0,0,8,0">
                                         <proc:CipValidationMatrix Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="1" HeaderText="Cleanroom Environmental HUD" SubtitleText="ISO 14644-1 Class 5-8 Particle Count &amp; Differential Pressure" Margin="8,0,0,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="1" HeaderText="Cleanroom Environmental HUD" SubtitleText="ISO 14644-1 Class 5-8 Particle Count &amp; Differential Pressure" Margin="8,0,0,0">
                                         <proc:CleanroomEnvHud Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
@@ -427,18 +427,18 @@
                                     </Border>
 
                                     <!-- Top: Clarifier Basin -->
-                                    <ind:ZeroCard Grid.Row="1" Grid.ColumnSpan="2" HeaderText="Primary / Secondary Clarifier Basin" SubtitleText="Sludge Blanket Level, Torq Scraper Arm &amp; Effluent Weir" Margin="0,0,0,12">
+                                    <ind:GridCard Grid.Row="1" Grid.ColumnSpan="2" HeaderText="Primary / Secondary Clarifier Basin" SubtitleText="Sludge Blanket Level, Torq Scraper Arm &amp; Effluent Weir" Margin="0,0,0,12">
                                         <water:ClarifierBasin Height="300" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Bottom: Chemical Skid & Hydraulic Gradient -->
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="0" HeaderText="Chemical Dosing Skid" SubtitleText="Multi-Chemical Metering Pump Skid &amp; Tank Levels" Margin="0,0,8,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="0" HeaderText="Chemical Dosing Skid" SubtitleText="Multi-Chemical Metering Pump Skid &amp; Tank Levels" Margin="0,0,8,0">
                                         <water:ChemicalDosingSkid Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="1" HeaderText="Hydraulic Grade Line (HGL)" SubtitleText="Gravity Head, Friction Losses &amp; Booster Station Pressures" Margin="8,0,0,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="1" HeaderText="Hydraulic Grade Line (HGL)" SubtitleText="Gravity Head, Friction Losses &amp; Booster Station Pressures" Margin="8,0,0,0">
                                         <water:HydraulicGradientChart Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
@@ -465,18 +465,18 @@
                                     </Border>
 
                                     <!-- Top: AHU Schematic -->
-                                    <ind:ZeroCard Grid.Row="1" Grid.ColumnSpan="2" HeaderText="Air Handling Unit (AHU) Mechanical Schematic" SubtitleText="Supply/Return Fans, Mixed Air Dampers, Heating/Cooling Coils, Filter ΔP" Margin="0,0,0,12">
+                                    <ind:GridCard Grid.Row="1" Grid.ColumnSpan="2" HeaderText="Air Handling Unit (AHU) Mechanical Schematic" SubtitleText="Supply/Return Fans, Mixed Air Dampers, Heating/Cooling Coils, Filter ΔP" Margin="0,0,0,12">
                                         <bms:AhuSchematic Height="300" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Bottom: Chiller Plant & Zone Scheduler -->
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="0" HeaderText="Central Chiller Plant" SubtitleText="Evaporator/Condenser Loops, Cooling Towers &amp; COP kW/Ton" Margin="0,0,8,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="0" HeaderText="Central Chiller Plant" SubtitleText="Evaporator/Condenser Loops, Cooling Towers &amp; COP kW/Ton" Margin="0,0,8,0">
                                         <bms:ChillerPlant Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="2" Grid.Column="1" HeaderText="7-Day Multi-Zone Scheduler" SubtitleText="Occupied / Unoccupied Thermal Setpoints &amp; Night Setback" Margin="8,0,0,0">
+                                    <ind:GridCard Grid.Row="2" Grid.Column="1" HeaderText="7-Day Multi-Zone Scheduler" SubtitleText="Occupied / Unoccupied Thermal Setpoints &amp; Night Setback" Margin="8,0,0,0">
                                         <bms:ZoneScheduler Height="320" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
@@ -502,17 +502,17 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="0" HeaderText="96 / 384 Microplate Reader" SubtitleText="Absorbance Heatmap &amp; Well Spectral Readout" Margin="0,0,8,0">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="0" HeaderText="96 / 384 Microplate Reader" SubtitleText="Absorbance Heatmap &amp; Well Spectral Readout" Margin="0,0,8,0">
                                         <life:MicroplateReader Height="650" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="1" HeaderText="Refrigerated Centrifuge" SubtitleText="RCF G-Force, Vacuum Rotor &amp; Imbalance Vector" Margin="4,0,4,0">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="1" HeaderText="Refrigerated Centrifuge" SubtitleText="RCF G-Force, Vacuum Rotor &amp; Imbalance Vector" Margin="4,0,4,0">
                                         <life:CentrifugeMonitor Height="650" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="2" HeaderText="Ultra-Low Cold Chain (-80°C)" SubtitleText="Vaccine Freezer Vaults &amp; Dry-Ice Shippers" Margin="8,0,0,0">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="2" HeaderText="Ultra-Low Cold Chain (-80°C)" SubtitleText="Vaccine Freezer Vaults &amp; Dry-Ice Shippers" Margin="8,0,0,0">
                                         <life:ColdChainTracker Height="650" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
@@ -537,9 +537,9 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="0" HeaderText="Automated Storage &amp; Retrieval (ASRS)" SubtitleText="High-Bay Dual-Mast Crane &amp; Shuttle Telemetry" Margin="0,0,12,0">
+                                    <ind:GridCard Grid.Row="1" Grid.Column="0" HeaderText="Automated Storage &amp; Retrieval (ASRS)" SubtitleText="High-Bay Dual-Mast Crane &amp; Shuttle Telemetry" Margin="0,0,12,0">
                                         <log:AsrsCraneVisualizer Height="650" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <Grid Grid.Row="1" Grid.Column="1">
                                         <Grid.RowDefinitions>
@@ -547,13 +547,13 @@
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
 
-                                        <ind:ZeroCard Grid.Row="0" HeaderText="Autonomous Guided Vehicle (AGV) Fleet" SubtitleText="LiDAR SLAM Map, Obstacle Avoidance &amp; Waypoint Routing" Margin="0,0,0,12">
+                                        <ind:GridCard Grid.Row="0" HeaderText="Autonomous Guided Vehicle (AGV) Fleet" SubtitleText="LiDAR SLAM Map, Obstacle Avoidance &amp; Waypoint Routing" Margin="0,0,0,12">
                                             <log:AgvFleetCanvas Height="300" Margin="0,6,0,0" />
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
 
-                                        <ind:ZeroCard Grid.Row="1" HeaderText="High-Speed Conveyor Merge Matrix" SubtitleText="Photo-Eye Sensors, Sorting Diverters &amp; Singulation Control">
+                                        <ind:GridCard Grid.Row="1" HeaderText="High-Speed Conveyor Merge Matrix" SubtitleText="Photo-Eye Sensors, Sorting Diverters &amp; Singulation Control">
                                             <log:ConveyorMergeMatrix Height="290" Margin="0,6,0,0" />
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
                                     </Grid>
                                 </Grid>
                             </ScrollViewer>
@@ -593,37 +593,37 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Instrument 1: Radial Speedometer -->
-                                    <ind:ZeroCard Grid.Column="0" HeaderText="Motor RPM Telemetry" SubtitleText="Spindle vector tachometer" Margin="0,0,10,0">
-                                        <ind:ZeroGauge x:Name="SpindleGauge" Margin="0,8,0,0" Minimum="0" Maximum="3000" Value="1840" Unit="RPM" WarningThreshold="2200" DangerThreshold="2700" />
-                                    </ind:ZeroCard>
+                                    <ind:GridCard Grid.Column="0" HeaderText="Motor RPM Telemetry" SubtitleText="Spindle vector tachometer" Margin="0,0,10,0">
+                                        <ind:RadialGauge x:Name="SpindleGauge" Margin="0,8,0,0" Minimum="0" Maximum="3000" Value="1840" Unit="RPM" WarningThreshold="2200" DangerThreshold="2700" />
+                                    </ind:GridCard>
 
                                     <!-- Instrument 2: Linear Gauges -->
-                                    <ind:ZeroCard Grid.Column="1" HeaderText="Hydraulic Levels" SubtitleText="Tank pressure &amp; coolant" Margin="0,0,10,0">
+                                    <ind:GridCard Grid.Column="1" HeaderText="Hydraulic Levels" SubtitleText="Tank pressure &amp; coolant" Margin="0,0,10,0">
                                         <Grid Margin="0,10,0,0">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <ind:ZeroLinearGauge x:Name="PressureGauge" Grid.Column="0" Minimum="0" Maximum="200" Value="145" Unit="Bar" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
-                                            <ind:ZeroLinearGauge x:Name="CoolantGauge" Grid.Column="1" Minimum="0" Maximum="100" Value="68" Unit="°C" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
+                                            <ind:LinearGauge x:Name="PressureGauge" Grid.Column="0" Minimum="0" Maximum="200" Value="145" Unit="Bar" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
+                                            <ind:LinearGauge x:Name="CoolantGauge" Grid.Column="1" Minimum="0" Maximum="100" Value="68" Unit="°C" IsHorizontal="False" HorizontalAlignment="Center" Width="80" />
                                         </Grid>
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Instrument 3: 7-Segment Displays -->
-                                    <ind:ZeroCard Grid.Column="2" HeaderText="Assembly Cycle &amp; Takt" SubtitleText="Active takt timing countdown" Margin="0,0,10,0">
+                                    <ind:GridCard Grid.Column="2" HeaderText="Assembly Cycle &amp; Takt" SubtitleText="Active takt timing countdown" Margin="0,0,10,0">
                                         <StackPanel Margin="0,14,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="CURRENT TAKT TIME" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextMuted}" Margin="0,0,0,4" />
-                                            <ind:ZeroSevenSegment x:Name="TaktTimerDisplay" ValueText="04:25" LedColor="#A6E3A1" Margin="0,0,0,16" />
+                                            <ind:SevenSegment x:Name="TaktTimerDisplay" ValueText="04:25" LedColor="#A6E3A1" Margin="0,0,0,16" />
                                             
                                             <TextBlock Text="COMPLETED UNITS TODAY" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextMuted}" Margin="0,0,0,4" />
-                                            <ind:ZeroSevenSegment x:Name="CycleCounterDisplay" ValueText="1842" LedColor="#818CF8" />
+                                            <ind:SevenSegment x:Name="CycleCounterDisplay" ValueText="1842" LedColor="#818CF8" />
                                         </StackPanel>
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Instrument 4: Andon Stack Tower -->
-                                    <ind:ZeroCard Grid.Column="3" HeaderText="Andon Tower" SubtitleText="Factory alarm stack">
-                                        <ind:ZeroLedTower x:Name="AndonTower" GreenOn="True" YellowOn="False" RedBlink="False" Margin="0,10,0,0" HorizontalAlignment="Center" Width="70" />
-                                    </ind:ZeroCard>
+                                    <ind:GridCard Grid.Column="3" HeaderText="Andon Tower" SubtitleText="Factory alarm stack">
+                                        <ind:LedTower x:Name="AndonTower" GreenOn="True" YellowOn="False" RedBlink="False" Margin="0,10,0,0" HorizontalAlignment="Center" Width="70" />
+                                    </ind:GridCard>
                                 </Grid>
                             </Grid>
                         </TabItem>
@@ -652,14 +652,14 @@
                                 </Border>
 
                                 <!-- Interactive Plant Mimic Canvas -->
-                                <ind:ZeroCard Grid.Row="1" HeaderText="Interactive Plant Mimic Canvas (ZeroPlantMimicCanvas)" SubtitleText="Zero-allocation DrawingContext vector mimic with OSHA LOTO safety padlocks and interlock badges" Margin="0,0,0,10">
-                                    <ind:ZeroPlantMimicCanvas x:Name="PlantCanvas" Margin="0,4,0,0" />
-                                </ind:ZeroCard>
+                                <ind:GridCard Grid.Row="1" HeaderText="Interactive Plant Mimic Canvas (ZeroPlantMimicCanvas)" SubtitleText="Zero-allocation DrawingContext vector mimic with OSHA LOTO safety padlocks and interlock badges" Margin="0,0,0,10">
+                                    <ind:PlantMimicCanvas x:Name="PlantCanvas" Margin="0,4,0,0" />
+                                </ind:GridCard>
 
                                 <!-- Industrial Multi-Segment Piping Flow Network -->
-                                <ind:ZeroCard Grid.Row="2" HeaderText="Continuous Polyline Fluid Piping &amp; Recirculation Header (PolylinePipeFlow)" SubtitleText="Subpixel animated fluid dynamics with automated elbow transitions, pulsation chevrons, and flange collars">
+                                <ind:GridCard Grid.Row="2" HeaderText="Continuous Polyline Fluid Piping &amp; Recirculation Header (PolylinePipeFlow)" SubtitleText="Subpixel animated fluid dynamics with automated elbow transitions, pulsation chevrons, and flange collars">
                                     <ind:PolylinePipeFlow x:Name="RecircPipeFlow" Margin="0,4,0,0" PipeDiameter="16" FlowVelocity="2.5" />
-                                </ind:ZeroCard>
+                                </ind:GridCard>
                             </Grid>
                         </TabItem>
 
@@ -687,7 +687,7 @@
                                 </Border>
 
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                    <dock:ZeroDockManager x:Name="DemoDockManager" />
+                                    <dock:DockManager x:Name="DemoDockManager" />
                                 </Border>
                             </Grid>
                         </TabItem>
@@ -715,7 +715,7 @@
                                 </Border>
 
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                    <ind:ZeroStateExecutor x:Name="DemoStateExecutor" />
+                                    <ind:StateExecutor x:Name="DemoStateExecutor" />
                                 </Border>
                             </Grid>
                         </TabItem>
@@ -737,7 +737,7 @@
 
                                 <net:DeviceRack x:Name="DemoDeviceRack" Grid.Column="0" Height="680" ShowThermalOverlay="True" />
 
-                                <ind:ZeroCard Grid.Column="1" Margin="16,0,0,0" HeaderText="Physical 19&quot; Server Rack Specifications" SubtitleText="EIA-310 Standard 42U Datacenter Enclosure with Real-Time Thermal Gradient">
+                                <ind:GridCard Grid.Column="1" Margin="16,0,0,0" HeaderText="Physical 19&quot; Server Rack Specifications" SubtitleText="EIA-310 Standard 42U Datacenter Enclosure with Real-Time Thermal Gradient">
                                     <StackPanel Margin="0,10,0,0">
                                         <TextBlock Text="• EIA-310 Standard: 42U Vertical mounting rails with precision 1/2U pitch" FontSize="13" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,8" />
                                         <TextBlock Text="• Dynamic Thermal Gradient: 18.0°C cold-aisle bottom intake to 42.5°C hot-aisle exhaust" FontSize="13" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,8" />
@@ -745,7 +745,7 @@
                                         <TextBlock Text="• Weight &amp; Center of Gravity: Dynamic ballast calculation with floor load limits" FontSize="13" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,8" />
                                         <TextBlock Text="• Interactive Selection: Click any blade, server, switch, or UPS to view asset metadata" FontSize="13" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,8" />
                                     </StackPanel>
-                                </ind:ZeroCard>
+                                </ind:GridCard>
                             </Grid>
                         </TabItem>
 
@@ -753,12 +753,12 @@
                         <TabItem Header="🔌 48-Port Enterprise Switch">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="16">
-                                    <ind:ZeroCard HeaderText="48-Port Enterprise Managed Switch Faceplate" SubtitleText="Hardware 1U rackmount faceplate with dual-row RJ45 matrix, SFP+ 10G optical ports, and 60 FPS LED blinking" Margin="0,0,0,16">
+                                    <ind:GridCard HeaderText="48-Port Enterprise Managed Switch Faceplate" SubtitleText="Hardware 1U rackmount faceplate with dual-row RJ45 matrix, SFP+ 10G optical ports, and 60 FPS LED blinking" Margin="0,0,0,16">
                                         <net:SwitchFaceplate x:Name="DemoSwitchFaceplate" Height="190" Margin="0,6,0,0" />
-                                    </ind:ZeroCard>
-                                    <ind:ZeroCard HeaderText="Port Telemetry &amp; Link State Details" SubtitleText="Real-time physical layer inspection">
+                                    </ind:GridCard>
+                                    <ind:GridCard HeaderText="Port Telemetry &amp; Link State Details" SubtitleText="Real-time physical layer inspection">
                                         <TextBlock Text="• Ports 1-48: 10/100/1000BASE-T RJ45 with 802.3at PoE+ (up to 30W/port, 740W PoE budget)&#x0a;• Ports 49-52: 10G SFP+ Optical Uplink Cages with DDM (Digital Diagnostic Monitoring)&#x0a;• LEDs: Synchronized 60 FPS Link/Speed (Amber/Green) and Activity (flashing) driven by ZeroAnimationClock" FontSize="13" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,8,0,0" />
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>
@@ -766,36 +766,36 @@
                         <!-- Sub-Tab 4.3: Network Topology Canvas -->
                         <TabItem Header="🌐 Network Topology Canvas">
                             <Grid Margin="16">
-                                <ind:ZeroCard HeaderText="Dynamic Vector Network Topology Canvas" SubtitleText="Sugiyama layered layout with animated packet pulse waves, pan/zoom canvas, and node dragging">
+                                <ind:GridCard HeaderText="Dynamic Vector Network Topology Canvas" SubtitleText="Sugiyama layered layout with animated packet pulse waves, pan/zoom canvas, and node dragging">
                                     <net:NetworkTopology x:Name="DemoNetworkTopology" Height="650" Margin="0,6,0,0" />
-                                </ind:ZeroCard>
+                                </ind:GridCard>
                             </Grid>
                         </TabItem>
 
                         <!-- Sub-Tab 4.4: Device Chassis & SFP DDM -->
                         <TabItem Header="⚙️ Device Chassis &amp; SFP DDM">
                             <Grid Margin="16">
-                                <ind:ZeroCard HeaderText="Core Network Device Chassis &amp; Optical Telemetry" SubtitleText="Dual redundant hot-swap power supplies, dynamic fan tachometer RPM, and SFP optical power (dBm)">
+                                <ind:GridCard HeaderText="Core Network Device Chassis &amp; Optical Telemetry" SubtitleText="Dual redundant hot-swap power supplies, dynamic fan tachometer RPM, and SFP optical power (dBm)">
                                     <net:DeviceFaceplate x:Name="DemoDeviceFaceplate" Height="420" Margin="0,6,0,0" />
-                                </ind:ZeroCard>
+                                </ind:GridCard>
                             </Grid>
                         </TabItem>
 
                         <!-- Sub-Tab 4.5: IP Subnet Matrix (/24 IPAM) -->
                         <TabItem Header="🗺️ IP Subnet Matrix (/24 IPAM)">
                             <Grid Margin="16">
-                                <ind:ZeroCard HeaderText="/24 Enterprise IPv4 Address Management (IPAM) Matrix" SubtitleText="256-cell interactive subnet grid: Ping RTT latency, gateway, DHCP, DNS, and industrial PLC reservations">
+                                <ind:GridCard HeaderText="/24 Enterprise IPv4 Address Management (IPAM) Matrix" SubtitleText="256-cell interactive subnet grid: Ping RTT latency, gateway, DHCP, DNS, and industrial PLC reservations">
                                     <net:IpMatrix x:Name="DemoIpMatrix" Height="650" Margin="0,6,0,0" />
-                                </ind:ZeroCard>
+                                </ind:GridCard>
                             </Grid>
                         </TabItem>
 
                         <!-- Sub-Tab 4.6: Fieldbus Daisy-Chain Monitor -->
                         <TabItem Header="⚡ Fieldbus Daisy-Chain Monitor">
                             <Grid Margin="16">
-                                <ind:ZeroCard HeaderText="Industrial Fieldbus Daisy-Chain &amp; Physical Layer Monitor" SubtitleText="RS-485 / Profibus / Modbus RTU daisy-chain line inspection, termination resistors, and cable break localization">
+                                <ind:GridCard HeaderText="Industrial Fieldbus Daisy-Chain &amp; Physical Layer Monitor" SubtitleText="RS-485 / Profibus / Modbus RTU daisy-chain line inspection, termination resistors, and cable break localization">
                                     <net:FieldbusMonitor x:Name="DemoFieldbusMonitor" Height="460" Margin="0,6,0,0" />
-                                </ind:ZeroCard>
+                                </ind:GridCard>
                             </Grid>
                         </TabItem>
                     </TabControl>
@@ -829,34 +829,34 @@
                                         <ColumnDefinition Width="1*" />
                                     </Grid.ColumnDefinitions>
 
-                                    <ind:ZeroHeatmap x:Name="MesHeatmap" Grid.Column="0" Margin="0,0,12,0" />
+                                    <ind:Heatmap x:Name="MesHeatmap" Grid.Column="0" Margin="0,0,12,0" />
 
                                     <!-- Factory KPI Summary Cards -->
                                     <StackPanel Grid.Column="1">
-                                        <ind:ZeroCard HeaderText="Line Overall Equipment Effectiveness (OEE)" SubtitleText="Daily computed performance ratio" Margin="0,0,0,12">
+                                        <ind:GridCard HeaderText="Line Overall Equipment Effectiveness (OEE)" SubtitleText="Daily computed performance ratio" Margin="0,0,0,12">
                                             <StackPanel>
                                                 <TextBlock Text="92.8%" FontSize="28" FontWeight="Bold" Foreground="#A6E3A1" Margin="0,4,0,8" />
                                                 <TextBlock Text="Availability: 96.2% | Quality: 99.1% | Speed: 97.4%" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" />
                                             </StackPanel>
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
 
-                                        <ind:ZeroCard HeaderText="Active Production Orders" SubtitleText="Shift 1 Work-In-Progress">
+                                        <ind:GridCard HeaderText="Active Production Orders" SubtitleText="Shift 1 Work-In-Progress">
                                             <StackPanel>
                                                 <TextBlock Text="48 Batches / 12 Lines" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" Margin="0,4,0,8" />
-                                                <edit:ZeroProgressBar Value="72" Margin="0,0,0,6" />
+                                                <edit:ProgressBarControl Value="72" Margin="0,0,0,6" />
                                                 <TextBlock Text="Target quota: 15,000 units (Current: 10,800 units)" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" />
                                             </StackPanel>
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
                                     </StackPanel>
                                 </Grid>
 
                                 <!-- Station Badges Row -->
                                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Running" StatusText="SMT Line 1: 120 UPH" />
-                                    <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Running" StatusText="SMT Line 2: 115 UPH" />
-                                    <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Standby" StatusText="SMT Line 3: Feed Refill" />
-                                    <ind:ZeroStatusBadge Margin="0,0,10,0" Status="Fault" StatusText="Line 4: Solder Stencil Alert" />
-                                    <ind:ZeroStatusBadge Status="Running" StatusText="Final Assembly: 88 UPH" />
+                                    <ind:StatusBadge Margin="0,0,10,0" Status="Running" StatusText="SMT Line 1: 120 UPH" />
+                                    <ind:StatusBadge Margin="0,0,10,0" Status="Running" StatusText="SMT Line 2: 115 UPH" />
+                                    <ind:StatusBadge Margin="0,0,10,0" Status="Standby" StatusText="SMT Line 3: Feed Refill" />
+                                    <ind:StatusBadge Margin="0,0,10,0" Status="Fault" StatusText="Line 4: Solder Stencil Alert" />
+                                    <ind:StatusBadge Status="Running" StatusText="Final Assembly: 88 UPH" />
                                 </StackPanel>
                             </Grid>
                         </TabItem>
@@ -878,12 +878,12 @@
 
                                 <!-- Uniform Grid of 6 Inventory Cards -->
                                 <UniformGrid Grid.Row="1" Columns="3" Rows="2">
-                                    <wh:ZeroInventoryCard Margin="6" ProductCode="RES-0402-10K" ProductName="SMD Resistor 10k 0402 1%" LocationBin="BIN-A1-04" AvailableQuantity="185000" WaitingQuantity="45000" ReservedQuantity="20000" UnitOfMeasure="pcs" />
-                                    <wh:ZeroInventoryCard Margin="6" ProductCode="CAP-0603-100N" ProductName="Ceramic Capacitor 100nF 50V" LocationBin="BIN-A1-12" AvailableQuantity="120000" WaitingQuantity="30000" ReservedQuantity="30000" UnitOfMeasure="pcs" />
-                                    <wh:ZeroInventoryCard Margin="6" ProductCode="IC-STM32F407" ProductName="MCU ARM Cortex-M4 168MHz" LocationBin="BIN-B2-01" AvailableQuantity="1200" WaitingQuantity="800" ReservedQuantity="2500" UnitOfMeasure="pcs" />
-                                    <wh:ZeroInventoryCard Margin="6" ProductCode="CONN-RJ45-LED" ProductName="Ethernet Jack MagJack 1G" LocationBin="BIN-C3-08" AvailableQuantity="9500" WaitingQuantity="1500" ReservedQuantity="1000" UnitOfMeasure="pcs" />
-                                    <wh:ZeroInventoryCard Margin="6" ProductCode="DIODE-SS34-SMA" ProductName="Schottky Diode 40V 3A" LocationBin="BIN-D4-15" AvailableQuantity="62000" WaitingQuantity="13000" ReservedQuantity="10000" UnitOfMeasure="pcs" />
-                                    <wh:ZeroInventoryCard Margin="6" ProductCode="PWR-LM2596S-5" ProductName="Step-Down Buck Regulator 5V" LocationBin="BIN-E5-02" AvailableQuantity="800" WaitingQuantity="600" ReservedQuantity="5000" UnitOfMeasure="pcs" />
+                                    <wh:InventoryCard Margin="6" ProductCode="RES-0402-10K" ProductName="SMD Resistor 10k 0402 1%" LocationBin="BIN-A1-04" AvailableQuantity="185000" WaitingQuantity="45000" ReservedQuantity="20000" UnitOfMeasure="pcs" />
+                                    <wh:InventoryCard Margin="6" ProductCode="CAP-0603-100N" ProductName="Ceramic Capacitor 100nF 50V" LocationBin="BIN-A1-12" AvailableQuantity="120000" WaitingQuantity="30000" ReservedQuantity="30000" UnitOfMeasure="pcs" />
+                                    <wh:InventoryCard Margin="6" ProductCode="IC-STM32F407" ProductName="MCU ARM Cortex-M4 168MHz" LocationBin="BIN-B2-01" AvailableQuantity="1200" WaitingQuantity="800" ReservedQuantity="2500" UnitOfMeasure="pcs" />
+                                    <wh:InventoryCard Margin="6" ProductCode="CONN-RJ45-LED" ProductName="Ethernet Jack MagJack 1G" LocationBin="BIN-C3-08" AvailableQuantity="9500" WaitingQuantity="1500" ReservedQuantity="1000" UnitOfMeasure="pcs" />
+                                    <wh:InventoryCard Margin="6" ProductCode="DIODE-SS34-SMA" ProductName="Schottky Diode 40V 3A" LocationBin="BIN-D4-15" AvailableQuantity="62000" WaitingQuantity="13000" ReservedQuantity="10000" UnitOfMeasure="pcs" />
+                                    <wh:InventoryCard Margin="6" ProductCode="PWR-LM2596S-5" ProductName="Step-Down Buck Regulator 5V" LocationBin="BIN-E5-02" AvailableQuantity="800" WaitingQuantity="600" ReservedQuantity="5000" UnitOfMeasure="pcs" />
                                 </UniformGrid>
                             </Grid>
                         </TabItem>
@@ -925,24 +925,24 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Chart 1: Bar Chart -->
-                                    <ind:ZeroCard Grid.Row="0" Grid.Column="0" HeaderText="Monthly Sales vs Target" SubtitleText="FY2026 Monthly throughput (USD x1000)" Margin="0,0,10,10">
-                                        <chart:ZeroChart x:Name="BarChart" ChartType="Column" Margin="0,4,0,0" />
-                                    </ind:ZeroCard>
+                                    <ind:GridCard Grid.Row="0" Grid.Column="0" HeaderText="Monthly Sales vs Target" SubtitleText="FY2026 Monthly throughput (USD x1000)" Margin="0,0,10,10">
+                                        <chart:ChartControl x:Name="BarChart" ChartType="Column" Margin="0,4,0,0" />
+                                    </ind:GridCard>
 
                                     <!-- Chart 2: Spline Area Chart -->
-                                    <ind:ZeroCard Grid.Row="0" Grid.Column="1" HeaderText="Server CPU &amp; Load Timeline" SubtitleText="24-Hour continuous vector spline with Catmull-Rom smoothing" Margin="0,0,0,10">
-                                        <chart:ZeroChart x:Name="AreaChart" ChartType="SplineArea" Margin="0,4,0,0" />
-                                    </ind:ZeroCard>
+                                    <ind:GridCard Grid.Row="0" Grid.Column="1" HeaderText="Server CPU &amp; Load Timeline" SubtitleText="24-Hour continuous vector spline with Catmull-Rom smoothing" Margin="0,0,0,10">
+                                        <chart:ChartControl x:Name="AreaChart" ChartType="SplineArea" Margin="0,4,0,0" />
+                                    </ind:GridCard>
 
                                     <!-- Chart 3: Candlestick OHLC Chart -->
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="0" HeaderText="Component Price Trend (OHLC)" SubtitleText="Daily trading range &amp; volume analysis" Margin="0,0,10,0">
-                                        <chart:ZeroChart x:Name="CandleChart" ChartType="Candlestick" Margin="0,4,0,0" />
-                                    </ind:ZeroCard>
+                                    <ind:GridCard Grid.Row="1" Grid.Column="0" HeaderText="Component Price Trend (OHLC)" SubtitleText="Daily trading range &amp; volume analysis" Margin="0,0,10,0">
+                                        <chart:ChartControl x:Name="CandleChart" ChartType="Candlestick" Margin="0,4,0,0" />
+                                    </ind:GridCard>
 
                                     <!-- Chart 4: Donut KPI Chart -->
-                                    <ind:ZeroCard Grid.Row="1" Grid.Column="1" HeaderText="Quality Yield Breakdown" SubtitleText="Inspection defect distribution" Margin="0,0,0,0">
-                                        <chart:ZeroChart x:Name="DonutChart" ChartType="Donut" Margin="0,4,0,0" />
-                                    </ind:ZeroCard>
+                                    <ind:GridCard Grid.Row="1" Grid.Column="1" HeaderText="Quality Yield Breakdown" SubtitleText="Inspection defect distribution" Margin="0,0,0,0">
+                                        <chart:ChartControl x:Name="DonutChart" ChartType="Donut" Margin="0,4,0,0" />
+                                    </ind:GridCard>
                                 </Grid>
                             </Grid>
                         </TabItem>
@@ -970,7 +970,7 @@
                                 </Border>
 
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                    <ind:ZeroGanttChart x:Name="DemoGanttChart" />
+                                    <ind:GanttControl x:Name="DemoGanttChart" />
                                 </Border>
                             </Grid>
                         </TabItem>
@@ -999,7 +999,7 @@
                                 </Border>
 
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                    <ind:ZeroSignalScope x:Name="DemoSignalScope" />
+                                    <ind:SignalScope x:Name="DemoSignalScope" />
                                 </Border>
                             </Grid>
                         </TabItem>
@@ -1027,7 +1027,7 @@
                                 </Border>
 
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
-                                    <ind:ZeroHexInspector x:Name="DemoHexInspector" />
+                                    <ind:HexInspector x:Name="DemoHexInspector" />
                                 </Border>
                             </Grid>
                         </TabItem>
@@ -1183,7 +1183,7 @@
                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                     <WrapPanel x:Name="PanelOptimizerCards" Margin="4">
                                         <!-- Primary Showcase Card -->
-                                        <opt:ZeroOptimizedCard x:Name="PrimaryCard" Width="380" Height="230" Margin="0,0,20,20"
+                                        <opt:OptimizedCard x:Name="PrimaryCard" Width="380" Height="230" Margin="0,0,20,20"
                                                               Elevation="8" BlurRadius="14" GlowIntensity="0.0" CornerRadius="10" Padding="18">
                                             <Grid>
                                                 <Grid.RowDefinitions>
@@ -1210,10 +1210,10 @@
                                                     <TextBlock x:Name="TxtCardBadge" Text="0.0 µs CPU overhead" FontSize="10.5" Foreground="{DynamicResource ZeroUI.TextMuted}" DockPanel.Dock="Right" VerticalAlignment="Center" />
                                                 </DockPanel>
                                             </Grid>
-                                        </opt:ZeroOptimizedCard>
+                                        </opt:OptimizedCard>
 
                                         <!-- Secondary Telemetry Card -->
-                                        <opt:ZeroOptimizedCard x:Name="SecondaryCard" Width="380" Height="230" Margin="0,0,20,20"
+                                        <opt:OptimizedCard x:Name="SecondaryCard" Width="380" Height="230" Margin="0,0,20,20"
                                                               Elevation="8" BlurRadius="14" GlowIntensity="0.0" CornerRadius="10" Padding="18">
                                             <Grid>
                                                 <Grid.RowDefinitions>
@@ -1241,7 +1241,7 @@
 
                                                 <Button Grid.Row="2" Content="🔄 Flush Atlas Cache" Click="BtnFlushAtlas_Click" Height="28" Cursor="Hand" />
                                             </Grid>
-                                        </opt:ZeroOptimizedCard>
+                                        </opt:OptimizedCard>
 
                                         <!-- Attached Properties Showcase Card -->
                                         <Border Width="380" Height="230" Margin="0,0,20,20" Background="{DynamicResource ZeroUI.BgCard}" CornerRadius="10" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" Padding="18">
@@ -1300,11 +1300,11 @@
                                     <!-- 1. Buttons Section -->
                                     <TextBlock Text="1. Button Variants" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                                     <WrapPanel Margin="0,0,0,24">
-                                        <edit:ZeroButton Variant="Primary" Content="Primary CTA" Margin="0,0,10,10" />
-                                        <edit:ZeroButton Variant="Secondary" Content="Secondary Action" Margin="0,0,10,10" />
-                                        <edit:ZeroButton Variant="Success" Content="✔ Approved" Margin="0,0,10,10" />
-                                        <edit:ZeroButton Variant="Danger" Content="✖ Terminate" Margin="0,0,10,10" />
-                                        <edit:ZeroButton Variant="Ghost" Content="Ghost Button" Margin="0,0,10,10" />
+                                        <edit:SimpleButton Variant="Primary" Content="Primary CTA" Margin="0,0,10,10" />
+                                        <edit:SimpleButton Variant="Secondary" Content="Secondary Action" Margin="0,0,10,10" />
+                                        <edit:SimpleButton Variant="Success" Content="✔ Approved" Margin="0,0,10,10" />
+                                        <edit:SimpleButton Variant="Danger" Content="✖ Terminate" Margin="0,0,10,10" />
+                                        <edit:SimpleButton Variant="Ghost" Content="Ghost Button" Margin="0,0,10,10" />
                                         <Button Content="Standard WPF Button (Themed)" Height="32" Padding="12,0,12,0" Margin="0,0,10,10" />
                                         <Button Content="Disabled State" IsEnabled="False" Height="32" Padding="12,0,12,0" Margin="0,0,10,10" />
                                     </WrapPanel>
@@ -1313,8 +1313,8 @@
                                     <TextBlock Text="2. Fluent Text Inputs (TextBox &amp; ZeroTextBox)" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                                     <WrapPanel Margin="0,0,0,24">
                                         <TextBox Width="200" Height="32" Text="Standard input field" Margin="0,0,12,10" />
-                                        <edit:ZeroTextBox Width="240" Height="32" Placeholder="Enter SKU or barcode..." LeadingText="🔍" Margin="0,0,12,10" />
-                                        <edit:ZeroTextBox Width="230" Height="32" Text="Focus to view brand border" Margin="0,0,12,10" />
+                                        <edit:TextEdit Width="240" Height="32" Placeholder="Enter SKU or barcode..." LeadingText="🔍" Margin="0,0,12,10" />
+                                        <edit:TextEdit Width="230" Height="32" Text="Focus to view brand border" Margin="0,0,12,10" />
                                         <TextBox Width="180" Height="32" Text="Disabled field" IsEnabled="False" Margin="0,0,12,10" />
                                     </WrapPanel>
 
@@ -1323,27 +1323,27 @@
                                     <WrapPanel Margin="0,0,0,24">
                                         <StackPanel Margin="0,0,14,10">
                                             <TextBlock Text="Integer Quantity (pcs)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroNumericBox Width="180" Value="150" MinValue="0" MaxValue="10000" Step="10" Suffix=" pcs" />
+                                            <edit:SpinEdit Width="180" Value="150" MinValue="0" MaxValue="10000" Step="10" Suffix=" pcs" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,14,10">
                                             <TextBlock Text="Precision Setpoint (mm)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroNumericBox Width="180" Value="12.750" MinValue="0" MaxValue="100" Step="0.025" DecimalPlaces="3" Suffix=" mm" />
+                                            <edit:SpinEdit Width="180" Value="12.750" MinValue="0" MaxValue="100" Step="0.025" DecimalPlaces="3" Suffix=" mm" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,14,10">
                                             <TextBlock Text="Unit Price (USD)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroNumericBox Width="200" Value="24500" MinValue="0" MaxValue="500000" Step="500" DecimalPlaces="2" Prefix="$ " ThousandsSeparator="True" />
+                                            <edit:SpinEdit Width="200" Value="24500" MinValue="0" MaxValue="500000" Step="500" DecimalPlaces="2" Prefix="$ " ThousandsSeparator="True" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,14,10">
                                             <TextBlock Text="Inspection Yield (%)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroNumericBox Width="170" Value="98.5" MinValue="0" MaxValue="100" Step="0.5" DecimalPlaces="1" Suffix=" %" />
+                                            <edit:SpinEdit Width="170" Value="98.5" MinValue="0" MaxValue="100" Step="0.5" DecimalPlaces="1" Suffix=" %" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,14,10">
                                             <TextBlock Text="Locked Setpoint" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroNumericBox Width="160" Value="500" IsEnabled="False" Suffix=" pcs" />
+                                            <edit:SpinEdit Width="160" Value="500" IsEnabled="False" Suffix=" pcs" />
                                         </StackPanel>
                                     </WrapPanel>
 
@@ -1355,8 +1355,8 @@
                                         <CheckBox Content="Disabled CheckBox" IsEnabled="False" IsChecked="True" Margin="0,0,20,10" VerticalAlignment="Center" />
                                         <RadioButton Content="Radio Choice A" IsChecked="True" GroupName="RadioA" Margin="0,0,16,10" VerticalAlignment="Center" />
                                         <RadioButton Content="Radio Choice B" GroupName="RadioA" Margin="0,0,20,10" VerticalAlignment="Center" />
-                                        <edit:ZeroSwitch IsChecked="True" Margin="0,0,12,10" VerticalAlignment="Center" />
-                                        <edit:ZeroSwitch IsChecked="False" Margin="0,0,16,10" VerticalAlignment="Center" />
+                                        <edit:ToggleSwitch IsChecked="True" Margin="0,0,12,10" VerticalAlignment="Center" />
+                                        <edit:ToggleSwitch IsChecked="False" Margin="0,0,16,10" VerticalAlignment="Center" />
                                     </WrapPanel>
 
                                     <!-- 5. Segmented Buttons & Radio Groups -->
@@ -1364,24 +1364,24 @@
                                     <WrapPanel Margin="0,0,0,24">
                                         <StackPanel Margin="0,0,24,10">
                                             <TextBlock Text="Period Selector (ZeroSegmented)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
-                                            <edit:ZeroSegmented x:Name="SegPeriod" SelectedIndex="0" />
+                                            <edit:SegmentedControl x:Name="SegPeriod" SelectedIndex="0" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,24,10">
                                             <TextBlock Text="Filter Tier (ZeroSegmented)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
-                                            <edit:ZeroSegmented x:Name="SegFilter" SelectedIndex="1" />
+                                            <edit:SegmentedControl x:Name="SegFilter" SelectedIndex="1" />
                                         </StackPanel>
                                     </WrapPanel>
 
                                     <WrapPanel Margin="0,0,0,24">
                                         <StackPanel Margin="0,0,32,10">
                                             <TextBlock Text="Dispatch Mode (ZeroRadioGroup)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
-                                            <edit:ZeroRadioGroup x:Name="RadioDispatchMode" SelectedIndex="0" />
+                                            <edit:RadioGroup x:Name="RadioDispatchMode" SelectedIndex="0" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,24,10">
                                             <TextBlock Text="Sampling Tier (ZeroRadioGroup)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,6" />
-                                            <edit:ZeroRadioGroup x:Name="RadioSamplingTier" SelectedIndex="1" />
+                                            <edit:RadioGroup x:Name="RadioSamplingTier" SelectedIndex="1" />
                                         </StackPanel>
                                     </WrapPanel>
 
@@ -1390,39 +1390,39 @@
                                     <WrapPanel Margin="0,0,0,24">
                                         <StackPanel Margin="0,0,16,10">
                                             <TextBlock Text="Start Date (ZeroDatePicker)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroDatePicker x:Name="DatePickerStart" Width="180" />
+                                            <edit:DateEdit x:Name="DatePickerStart" Width="180" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,16,10">
                                             <TextBlock Text="End Date (ZeroDatePicker)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroDatePicker x:Name="DatePickerEnd" Width="180" />
+                                            <edit:DateEdit x:Name="DatePickerEnd" Width="180" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,16,10">
                                             <TextBlock Text="Audit Range (ZeroDateRangePicker)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroDateRangePicker x:Name="DemoDateRangePicker" Width="260" />
+                                            <edit:DateRangePicker x:Name="DemoDateRangePicker" Width="260" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,16,10">
                                             <TextBlock Text="Tolerance Slider (ZeroSlider: 0–100%)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroSlider Width="220" Minimum="0" Maximum="100" Value="75" Step="1" Unit="%" Margin="0,8,0,0" />
+                                            <edit:SliderControl Width="220" Minimum="0" Maximum="100" Value="75" Step="1" Unit="%" Margin="0,8,0,0" />
                                         </StackPanel>
 
                                         <StackPanel Margin="0,0,16,10">
                                             <TextBlock Text="Asset &amp; Sensor Lookup (ZeroLookup)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroLookup x:Name="DemoAssetLookup" Width="320" Placeholder="Search asset code, tag, or description..." />
+                                            <edit:LookUpEdit x:Name="DemoAssetLookup" Width="320" Placeholder="Search asset code, tag, or description..." />
                                         </StackPanel>
                                     </WrapPanel>
 
                                     <!-- 7. Feedback, Status & Badges -->
                                     <TextBlock Text="7. Feedback, Status &amp; Badges" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                                     <WrapPanel Margin="0,0,0,24">
-                                        <ind:ZeroStatusBadge Status="Running" StatusText="Active Node" Margin="0,0,10,10" />
-                                        <ind:ZeroStatusBadge Status="Standby" StatusText="Warm Standby" Margin="0,0,10,10" />
-                                        <ind:ZeroStatusBadge Status="Fault" StatusText="Sensor Fault" Margin="0,0,10,10" />
-                                        <ind:ZeroStatusBadge Status="Offline" StatusText="Disconnected" Margin="0,0,14,10" />
+                                        <ind:StatusBadge Status="Running" StatusText="Active Node" Margin="0,0,10,10" />
+                                        <ind:StatusBadge Status="Standby" StatusText="Warm Standby" Margin="0,0,10,10" />
+                                        <ind:StatusBadge Status="Fault" StatusText="Sensor Fault" Margin="0,0,10,10" />
+                                        <ind:StatusBadge Status="Offline" StatusText="Disconnected" Margin="0,0,14,10" />
                                         <edit:RatingControl Value="4" MaxRating="5" Margin="0,0,16,10" VerticalAlignment="Center" />
-                                        <edit:ZeroProgressBar Value="65" Width="180" Height="8" Margin="0,0,16,10" VerticalAlignment="Center" />
+                                        <edit:ProgressBarControl Value="65" Width="180" Height="8" Margin="0,0,16,10" VerticalAlignment="Center" />
                                     </WrapPanel>
 
                                     <!-- 8. Specialized Action Slot, Avatar & Network Editors -->
@@ -1622,10 +1622,10 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Column 1: Visual Query Builder (ZeroFilterControl) -->
-                                    <ind:ZeroCard Grid.Column="0" HeaderText="Visual Query Builder (ZeroFilterControl &amp; FilterCriteria)" SubtitleText="Hierarchical Boolean Criteria Tree (And / Or) with instant SQL WHERE compilation" Margin="0,0,12,0">
+                                    <ind:GridCard Grid.Column="0" HeaderText="Visual Query Builder (ZeroFilterControl &amp; FilterCriteria)" SubtitleText="Hierarchical Boolean Criteria Tree (And / Or) with instant SQL WHERE compilation" Margin="0,0,12,0">
                                         <StackPanel Margin="0,8,0,0">
                                             <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Padding="4" MinHeight="220" Background="{DynamicResource ZeroUI.BgInput}">
-                                                <grid:ZeroFilterControl x:Name="DemoFilterControl" />
+                                                <grid:FilterControl x:Name="DemoFilterControl" />
                                             </Border>
                                             <Border Margin="0,8,0,0" Background="{DynamicResource ZeroUI.BgCard}" Padding="10,6,10,6" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
                                                 <StackPanel Orientation="Horizontal">
@@ -1638,14 +1638,14 @@
                                                 <Button x:Name="BtnResetFilter" Click="BtnResetFilter_Click" Content="🔄 Reset Filter Criteria" Height="28" Padding="12,0,12,0" Cursor="Hand" />
                                             </WrapPanel>
                                         </StackPanel>
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Column 2: Advanced Enterprise Form Editors -->
-                                    <ind:ZeroCard Grid.Column="1" HeaderText="Advanced Enterprise Form Editors" SubtitleText="ZeroGridLookup, ZeroCheckedComboBox, ZeroTokenEdit &amp; ZeroColorPicker">
+                                    <ind:GridCard Grid.Column="1" HeaderText="Advanced Enterprise Form Editors" SubtitleText="ZeroGridLookup, ZeroCheckedComboBox, ZeroTokenEdit &amp; ZeroColorPicker">
                                         <StackPanel Margin="0,8,0,0">
                                             <!-- 1. ZeroGridLookup -->
                                             <TextBlock Text="Material &amp; Asset Lookup (Embedded Virtual DataGrid + Quick-Create Footer)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroGridLookup x:Name="DemoGridLookup" Height="34" Margin="0,0,0,10" Placeholder="Select material or component..." ShowAddNewButton="True" AddNewButtonText="➕ Quick Add Material" />
+                                            <edit:SearchLookUpEdit x:Name="DemoGridLookup" Height="34" Margin="0,0,0,10" Placeholder="Select material or component..." ShowAddNewButton="True" AddNewButtonText="➕ Quick Add Material" />
 
                                             <!-- 1b. High-Capacity SearchLookUpEdit -->
                                             <TextBlock Text="High-Capacity Search Lookup (SearchLookUpEdit with Paginated Search)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
@@ -1653,17 +1653,17 @@
 
                                             <!-- 2. ZeroCheckedComboBox -->
                                             <TextBlock Text="Assigned Access Roles &amp; Factory Zones (Multi-Select Checkboxes)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroCheckedComboBox x:Name="DemoCheckedCombo" Height="34" Margin="0,0,0,10" Placeholder="Select authorized zones..." />
+                                            <edit:CheckedComboBoxEdit x:Name="DemoCheckedCombo" Height="34" Margin="0,0,0,10" Placeholder="Select authorized zones..." />
 
                                             <!-- 3. ZeroTokenEdit -->
                                             <TextBlock Text="Defect Classification Tags (Type tag and press Enter / Comma)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroTokenEdit x:Name="DemoTokenEdit" Height="34" Margin="0,0,0,10" Placeholder="Add tag (e.g. Solder, Thermal, AOI)..." />
+                                            <edit:TokenEdit x:Name="DemoTokenEdit" Height="34" Margin="0,0,0,10" Placeholder="Add tag (e.g. Solder, Thermal, AOI)..." />
 
                                             <!-- 4. ZeroColorPicker -->
                                             <TextBlock Text="Status Marker &amp; Palette Swatch Selector" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:ZeroColorPicker x:Name="DemoColorPicker" Height="34" Margin="0,0,0,4" />
+                                            <edit:ColorPickEdit x:Name="DemoColorPicker" Height="34" Margin="0,0,0,4" />
                                         </StackPanel>
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
@@ -1686,30 +1686,30 @@
                                         </Grid.ColumnDefinitions>
 
                                         <!-- 1. Guided Process Wizard (ZeroWizard) -->
-                                        <ind:ZeroCard Grid.Column="0" HeaderText="Process Workflow Sequence (ZeroWizard)" SubtitleText="Multi-step guided manufacturing order wizard with page validation" Margin="0,0,10,0">
+                                        <ind:GridCard Grid.Column="0" HeaderText="Process Workflow Sequence (ZeroWizard)" SubtitleText="Multi-step guided manufacturing order wizard with page validation" Margin="0,0,10,0">
                                             <Border Height="340" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgInput}">
-                                                <nav:ZeroWizard x:Name="DemoInlineWizard" />
+                                                <nav:WizardControl x:Name="DemoInlineWizard" />
                                             </Border>
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
 
                                         <!-- 2. Statistical BoxPlot SPC Chart (ZeroBoxPlotChart) -->
-                                        <ind:ZeroCard Grid.Column="1" HeaderText="Six Sigma SPC Quality Inspection (ZeroBoxPlotChart)" SubtitleText="Five-number summaries (Min, Q1, Median, Q3, Max), Outliers &amp; USL/LSL lines" Margin="0,0,10,0">
+                                        <ind:GridCard Grid.Column="1" HeaderText="Six Sigma SPC Quality Inspection (ZeroBoxPlotChart)" SubtitleText="Five-number summaries (Min, Q1, Median, Q3, Max), Outliers &amp; USL/LSL lines" Margin="0,0,10,0">
                                             <Border Height="340" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgInput}">
-                                                <chart:ZeroBoxPlotChart x:Name="DemoBoxPlot" />
+                                                <chart:BoxPlotChart x:Name="DemoBoxPlot" />
                                             </Border>
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
 
                                         <!-- 3. Document Print Previewer (ZeroPrintPreview) -->
-                                        <ind:ZeroCard Grid.Column="2" HeaderText="Vector Document Print Preview (ZeroPrintPreview)" SubtitleText="Integrated paper canvas with drop shadow, zoom (25%–500%) &amp; print dispatch">
+                                        <ind:GridCard Grid.Column="2" HeaderText="Vector Document Print Preview (ZeroPrintPreview)" SubtitleText="Integrated paper canvas with drop shadow, zoom (25%–500%) &amp; print dispatch">
                                             <Border Height="340" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6">
-                                                <report:ZeroPrintPreview x:Name="DemoPrintPreview" />
+                                                <report:DocumentPreviewControl x:Name="DemoPrintPreview" />
                                             </Border>
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
                                     </Grid>
 
                                     <!-- Row 1: Visual Timeline & Range Selector -->
                                     <Grid Grid.Row="1" Margin="0,0,0,16">
-                                        <ind:ZeroCard HeaderText="Visual Timeline &amp; Range Selector (RangeControl / DateTimeRangeSlider)" SubtitleText="Interactive thumb sliding, span panning, mouse wheel zoom, ruler scale, and distribution histogram/area graph with full toggle options">
+                                        <ind:GridCard HeaderText="Visual Timeline &amp; Range Selector (RangeControl / DateTimeRangeSlider)" SubtitleText="Interactive thumb sliding, span panning, mouse wheel zoom, ruler scale, and distribution histogram/area graph with full toggle options">
                                             <StackPanel Margin="0,8,0,0">
                                                 <!-- Interactive RangeControl Component -->
                                                 <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgInput}" Padding="6">
@@ -1747,7 +1747,7 @@
                                                     </StackPanel>
                                                 </WrapPanel>
                                             </StackPanel>
-                                        </ind:ZeroCard>
+                                        </ind:GridCard>
                                     </Grid>
                                 </Grid>
                             </ScrollViewer>
@@ -1763,23 +1763,23 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Shimmer Skeleton -->
-                                    <ind:ZeroCard Grid.Column="0" HeaderText="60 FPS Shimmer Loading Placeholder (ZeroSkeleton)" SubtitleText="Hardware-accelerated linear gradient shimmer during async data fetching" Margin="0,0,10,0">
+                                    <ind:GridCard Grid.Column="0" HeaderText="60 FPS Shimmer Loading Placeholder (ZeroSkeleton)" SubtitleText="Hardware-accelerated linear gradient shimmer during async data fetching" Margin="0,0,10,0">
                                         <StackPanel Margin="0,10,0,0">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                                <feed:ZeroSkeleton Shape="Circle" Width="48" Height="48" Margin="0,0,14,0" />
+                                                <feed:SkeletonControl Shape="Circle" Width="48" Height="48" Margin="0,0,14,0" />
                                                 <StackPanel VerticalAlignment="Center">
-                                                    <feed:ZeroSkeleton Shape="Rectangle" Width="200" Height="16" CornerRadius="4" Margin="0,0,0,6" />
-                                                    <feed:ZeroSkeleton Shape="Rectangle" Width="130" Height="12" CornerRadius="4" />
+                                                    <feed:SkeletonControl Shape="Rectangle" Width="200" Height="16" CornerRadius="4" Margin="0,0,0,6" />
+                                                    <feed:SkeletonControl Shape="Rectangle" Width="130" Height="12" CornerRadius="4" />
                                                 </StackPanel>
                                             </StackPanel>
-                                            <feed:ZeroSkeleton Shape="Rectangle" Width="420" Height="20" CornerRadius="4" Margin="0,0,0,8" />
-                                            <feed:ZeroSkeleton Shape="Rectangle" Width="380" Height="20" CornerRadius="4" Margin="0,0,0,8" />
-                                            <feed:ZeroSkeleton Shape="Rectangle" Width="320" Height="20" CornerRadius="4" />
+                                            <feed:SkeletonControl Shape="Rectangle" Width="420" Height="20" CornerRadius="4" Margin="0,0,0,8" />
+                                            <feed:SkeletonControl Shape="Rectangle" Width="380" Height="20" CornerRadius="4" Margin="0,0,0,8" />
+                                            <feed:SkeletonControl Shape="Rectangle" Width="320" Height="20" CornerRadius="4" />
                                         </StackPanel>
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
 
                                     <!-- Toast Notifications & Modal Dialog Trigger -->
-                                    <ind:ZeroCard Grid.Column="1" HeaderText="Non-Intrusive Overlays (ZeroToast &amp; ZeroModal)" SubtitleText="Floating auto-dismiss toast notification stack and backdrop-dimming modal dialog">
+                                    <ind:GridCard Grid.Column="1" HeaderText="Non-Intrusive Overlays (ZeroToast &amp; ZeroModal)" SubtitleText="Floating auto-dismiss toast notification stack and backdrop-dimming modal dialog">
                                         <StackPanel Margin="0,10,0,0">
                                             <TextBlock Text="Trigger Instant Toast Notifications (Stacked at Bottom-Right):" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
                                             <WrapPanel Margin="0,0,0,14">
@@ -1803,7 +1803,7 @@
                                                 <Button x:Name="BtnShowModalConfirm" Click="BtnShowModalConfirm_Click" Content="💬 Show Production Order Modal" Height="32" Padding="16,0,16,0" Cursor="Hand" FontWeight="SemiBold" />
                                             </WrapPanel>
                                         </StackPanel>
-                                    </ind:ZeroCard>
+                                    </ind:GridCard>
                                 </Grid>
                             </ScrollViewer>
                         </TabItem>
@@ -1817,18 +1817,18 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Column 0: Vector PDF & CAD Schematic Reader -->
-                                <ind:ZeroCard Grid.Column="0" HeaderText="Vector PDF &amp; CAD Schematic Reader (PdfViewerControl)" SubtitleText="Vector CAD schematics, SOP work instructions, multi-level zoom (25%–400%), search &amp; print" Margin="0,0,8,0">
+                                <ind:GridCard Grid.Column="0" HeaderText="Vector PDF &amp; CAD Schematic Reader (PdfViewerControl)" SubtitleText="Vector CAD schematics, SOP work instructions, multi-level zoom (25%–400%), search &amp; print" Margin="0,0,8,0">
                                     <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgInput}">
                                         <report:PdfViewerControl x:Name="DemoPdfViewer" />
                                     </Border>
-                                </ind:ZeroCard>
+                                </ind:GridCard>
 
                                 <!-- Column 1: Vector Spreadsheet & Formula Engine -->
-                                <ind:ZeroCard Grid.Column="1" HeaderText="Vector Spreadsheet &amp; Formula Engine (SpreadsheetControl)" SubtitleText="Sparse matrix, interactive Formula Bar, live =SUM/AVERAGE/IF calculations, column/row resizing dividers &amp; BOM costing" Margin="8,0,0,0">
+                                <ind:GridCard Grid.Column="1" HeaderText="Vector Spreadsheet &amp; Formula Engine (SpreadsheetControl)" SubtitleText="Sparse matrix, interactive Formula Bar, live =SUM/AVERAGE/IF calculations, column/row resizing dividers &amp; BOM costing" Margin="8,0,0,0">
                                     <Border BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="6" Background="{DynamicResource ZeroUI.BgInput}">
                                         <report:SpreadsheetControl x:Name="DemoSpreadsheet" />
                                     </Border>
-                                </ind:ZeroCard>
+                                </ind:GridCard>
                             </Grid>
                         </TabItem>
 
@@ -1979,10 +1979,10 @@
                                             <TextBlock Text="ZeroInfoBar (In-Window Alerts &amp; Banners)" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
                                             <TextBlock Text="Non-intrusive alert bars with Info, Success, Warning, Error severities and dismiss buttons." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" />
 
-                                            <feed:ZeroInfoBar Severity="Info" Title="System Initialization" Message="ZeroWpfStyles implicit dictionary loaded with full theme synchronization." Margin="0,0,0,8" />
-                                            <feed:ZeroInfoBar Severity="Success" Title="Telemetry Stream Active" Message="Direct2D GPU acceleration online at 120 FPS. Zero memory leak detected." Margin="0,0,0,8" />
-                                            <feed:ZeroInfoBar Severity="Warning" Title="Threshold Warning" Message="Ring buffer capacity at 82%. Automated page compaction scheduled in 10s." Margin="0,0,0,8" />
-                                            <feed:ZeroInfoBar Severity="Error" Title="Fieldbus Alert" Message="Safety interlock triggered on Crane Gantry #3. Motor drive held in safe state." Margin="0,0,0,0" />
+                                            <feed:InfoBar Severity="Info" Title="System Initialization" Message="ZeroWpfStyles implicit dictionary loaded with full theme synchronization." Margin="0,0,0,8" />
+                                            <feed:InfoBar Severity="Success" Title="Telemetry Stream Active" Message="Direct2D GPU acceleration online at 120 FPS. Zero memory leak detected." Margin="0,0,0,8" />
+                                            <feed:InfoBar Severity="Warning" Title="Threshold Warning" Message="Ring buffer capacity at 82%. Automated page compaction scheduled in 10s." Margin="0,0,0,8" />
+                                            <feed:InfoBar Severity="Error" Title="Fieldbus Alert" Message="Safety interlock triggered on Crane Gantry #3. Motor drive held in safe state." Margin="0,0,0,0" />
                                         </StackPanel>
                                     </Border>
 
@@ -2001,23 +2001,23 @@
 
                                                 <TextBlock Text="Standalone Status Pills:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
                                                 <WrapPanel Margin="0,0,0,16">
-                                                    <feed:ZeroBadge Status="Online" BadgeText="ONLINE" Margin="0,0,8,6" />
-                                                    <feed:ZeroBadge Status="Busy" BadgeText="BUSY (94%)" Margin="0,0,8,6" />
-                                                    <feed:ZeroBadge Status="Idle" BadgeText="STANDBY" Margin="0,0,8,6" />
-                                                    <feed:ZeroBadge Status="Offline" BadgeText="DISCONNECTED" Margin="0,0,8,6" />
+                                                    <feed:Badge Status="Online" BadgeText="ONLINE" Margin="0,0,8,6" />
+                                                    <feed:Badge Status="Busy" BadgeText="BUSY (94%)" Margin="0,0,8,6" />
+                                                    <feed:Badge Status="Idle" BadgeText="STANDBY" Margin="0,0,8,6" />
+                                                    <feed:Badge Status="Offline" BadgeText="DISCONNECTED" Margin="0,0,8,6" />
                                                 </WrapPanel>
 
                                                 <TextBlock Text="Adorning Host Buttons (Numeric &amp; Dot Badges):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
                                                 <WrapPanel>
-                                                    <feed:ZeroBadge Count="5" Margin="0,0,20,10">
+                                                    <feed:Badge Count="5" Margin="0,0,20,10">
                                                         <Button Content="Active Alerts" Height="34" Padding="12,0,12,0" />
-                                                    </feed:ZeroBadge>
-                                                    <feed:ZeroBadge Count="128" MaxCount="99" Margin="0,0,20,10">
+                                                    </feed:Badge>
+                                                    <feed:Badge Count="128" MaxCount="99" Margin="0,0,20,10">
                                                         <Button Content="Messages" Height="34" Padding="12,0,12,0" />
-                                                    </feed:ZeroBadge>
-                                                    <feed:ZeroBadge IsDot="True" Status="Online" Margin="0,0,20,10">
-                                                        <edit:ZeroButton Content="PLC Live Feed" />
-                                                    </feed:ZeroBadge>
+                                                    </feed:Badge>
+                                                    <feed:Badge IsDot="True" Status="Online" Margin="0,0,20,10">
+                                                        <edit:SimpleButton Content="PLC Live Feed" />
+                                                    </feed:Badge>
                                                 </WrapPanel>
                                             </StackPanel>
                                         </Border>
@@ -2031,8 +2031,8 @@
                                                 <TextBlock Text="Anchored Popover:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
                                                 <Grid Margin="0,0,0,20">
                                                     <Button x:Name="DemoFlyoutTargetBtn" Content="⚡ Open Filter Flyout" Width="170" Height="34" HorizontalAlignment="Left" Click="OnOpenFlyoutClicked" />
-                                                    <overlay:ZeroFlyout x:Name="AuditDemoFlyout" Title="Telemetry Filters" Target="{Binding ElementName=DemoFlyoutTargetBtn}">
-                                                        <overlay:ZeroFlyout.FlyoutContent>
+                                                    <overlay:FlyoutControl x:Name="AuditDemoFlyout" Title="Telemetry Filters" Target="{Binding ElementName=DemoFlyoutTargetBtn}">
+                                                        <overlay:FlyoutControl.FlyoutContent>
                                                             <StackPanel Width="220">
                                                                 <TextBlock Text="Select target telemetry channels:" FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
                                                                 <CheckBox Content="DirectX GPU Canvas" IsChecked="True" Margin="0,0,0,4" />
@@ -2040,8 +2040,8 @@
                                                                 <CheckBox Content="OPC UA Server Line 1" IsChecked="False" Margin="0,0,0,8" />
                                                                 <Button Content="Apply Filter" Height="28" Click="OnApplyFlyoutFilterClicked" />
                                                             </StackPanel>
-                                                        </overlay:ZeroFlyout.FlyoutContent>
-                                                    </overlay:ZeroFlyout>
+                                                        </overlay:FlyoutControl.FlyoutContent>
+                                                    </overlay:FlyoutControl>
                                                 </Grid>
 
                                                 <TextBlock Text="Frameless Window Demo:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,8" />
@@ -2080,7 +2080,7 @@
         </Grid>
 
         <!-- Global Detail Drawer Overlay -->
-        <overlay:ZeroDrawer x:Name="MainDetailDrawer" Grid.RowSpan="2" DrawerWidth="420"
+        <overlay:DrawerControl x:Name="MainDetailDrawer" Grid.RowSpan="2" DrawerWidth="420"
                             Title="Inspection Drawer"
                             Subtitle="Material &amp; Quality Parameters">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -2134,6 +2134,6 @@
                     <Button x:Name="BtnDrawerAuditLog" Click="BtnDrawerAuditLog_Click" Content="📜 View Quality Audit Trail" Height="34" Cursor="Hand" />
                 </StackPanel>
             </ScrollViewer>
-        </overlay:ZeroDrawer>
+        </overlay:DrawerControl>
     </Grid>
 </Window>

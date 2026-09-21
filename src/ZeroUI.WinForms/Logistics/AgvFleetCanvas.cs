@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Logistics
     [ToolboxItem(true)]
     [Category("ZeroUI - Logistics & Warehouse")]
     [Description("2D LiDAR SLAM floor map canvas for AGV / AMR robot fleets with trajectory splines")]
-    public class AgvFleetCanvas : ZeroVisualControlBase
+    public class AgvFleetCanvas : VisualControlBase
     {
         private readonly AgvFleetEngine _engine = new AgvFleetEngine();
         private AgvVehicle? _selectedVehicle;

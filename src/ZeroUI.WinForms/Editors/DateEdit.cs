@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [DefaultEvent("ValueChanged")]
     [Description("Modern date picker with custom-drawn popup calendar and quick-select presets")]
-    public class DateEdit : ZeroControlBase, IZeroEditor
+    public class DateEdit : ControlBase, IZeroEditor
     {
         private DateTime _selectedDate = DateTime.Today;
         private string _dateFormat = "yyyy-MM-dd";
@@ -29,7 +29,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isHovered = false;
         private bool _isFocused = false;
 
-        private ZeroDropDownHost? _popup;
+        private DropDownHost? _popup;
         private ZeroCalendarPopupControl? _calendarControl;
         private Rectangle _chevronRect;
         private readonly TextBox _innerBox;
@@ -268,7 +268,7 @@ namespace ZeroUI.WinForms.Editors
             }
 
             _calendarControl = new ZeroCalendarPopupControl(this, _selectedDate, _showPresets);
-            _popup = new ZeroDropDownHost
+            _popup = new DropDownHost
             {
                 Content = _calendarControl
             };

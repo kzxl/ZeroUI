@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [Description("Modern flat progress bar with percentage overlay and indeterminate shimmer")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroProgressBar.bmp")]
-    public class ProgressBarControl : ZeroControlBase
+    public class ProgressBarControl : ControlBase
     {
         private int _value = 0;
         private int _maximum = 100;

@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Description("Modern anti-aliased flat RadioButton control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadioButton.bmp")]
-    public class RadioButtonControl : ZeroControlBase
+    public class RadioButtonControl : ControlBase
     {
         private bool _checked = false;
         private bool _autoCheck = true;

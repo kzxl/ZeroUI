@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [Description("Precision half-star rating and defect severity editor")]
     [ToolboxBitmap(typeof(ZeroIcons), "RatingControl.bmp")]
-    public class RatingControl : ZeroControlBase, IZeroEditor
+    public class RatingControl : ControlBase, IZeroEditor
     {
         private readonly RatingModel _model = new RatingModel();
         private RatingShape _shape = RatingShape.Star;

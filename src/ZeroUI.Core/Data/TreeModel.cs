@@ -4,20 +4,20 @@ using System.Collections.Generic;
 namespace ZeroUI.Core.Data
 {
     /// <summary>
-    /// Headless hierarchical model for ZeroTreeList / ZeroTreeGrid.
+    /// Headless hierarchical model for TreeList / TreeGrid.
     /// Provides depth-first flattening of visible nodes for ultra-fast $O(1)$ virtualized rendering.
     /// </summary>
-    public class ZeroTreeModel
+    public class TreeModel
     {
-        private readonly List<ZeroTreeNode> _roots = new List<ZeroTreeNode>();
-        private readonly List<ZeroTreeNode> _flattenedVisibleNodes = new List<ZeroTreeNode>();
+        private readonly List<TreeNode> _roots = new List<TreeNode>();
+        private readonly List<TreeNode> _flattenedVisibleNodes = new List<TreeNode>();
         private bool _isDirty = true;
 
-        public IReadOnlyList<ZeroTreeNode> Roots => _roots;
+        public IReadOnlyList<TreeNode> Roots => _roots;
 
         public event EventHandler? ModelChanged;
 
-        public ZeroTreeNode AddRoot(ZeroTreeNode node)
+        public TreeNode AddRoot(TreeNode node)
         {
             if (node == null) throw new ArgumentNullException(nameof(node));
             node.Parent = null;
@@ -27,14 +27,14 @@ namespace ZeroUI.Core.Data
             return node;
         }
 
-        public ZeroTreeNode AddRoot(params string[] cellValues)
+        public TreeNode AddRoot(params string[] cellValues)
         {
-            var node = new ZeroTreeNode(cellValues);
+            var node = new TreeNode(cellValues);
             AddRoot(node);
             return node;
         }
 
-        public bool RemoveRoot(ZeroTreeNode node)
+        public bool RemoveRoot(TreeNode node)
         {
             if (node != null && _roots.Remove(node))
             {
@@ -62,7 +62,7 @@ namespace ZeroUI.Core.Data
             }
         }
 
-        public ZeroTreeNode GetVisibleNode(int visualIndex)
+        public TreeNode GetVisibleNode(int visualIndex)
         {
             EnsureFlattened();
             if (visualIndex >= 0 && visualIndex < _flattenedVisibleNodes.Count)
@@ -72,13 +72,13 @@ namespace ZeroUI.Core.Data
             throw new ArgumentOutOfRangeException(nameof(visualIndex));
         }
 
-        public int IndexOf(ZeroTreeNode node)
+        public int IndexOf(TreeNode node)
         {
             EnsureFlattened();
             return _flattenedVisibleNodes.IndexOf(node);
         }
 
-        public void ToggleExpand(ZeroTreeNode node)
+        public void ToggleExpand(TreeNode node)
         {
             if (node == null || !node.HasChildren) return;
             node.IsExpanded = !node.IsExpanded;
@@ -100,7 +100,7 @@ namespace ZeroUI.Core.Data
             ModelChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private static void SetExpandRecursive(IEnumerable<ZeroTreeNode> nodes, bool isExpanded)
+        private static void SetExpandRecursive(IEnumerable<TreeNode> nodes, bool isExpanded)
         {
             foreach (var node in nodes)
             {
@@ -130,7 +130,7 @@ namespace ZeroUI.Core.Data
             _isDirty = false;
         }
 
-        private void FlattenNodeRecursive(ZeroTreeNode node)
+        private void FlattenNodeRecursive(TreeNode node)
         {
             if (!node.IsVisible) return;
             _flattenedVisibleNodes.Add(node);
@@ -143,5 +143,10 @@ namespace ZeroUI.Core.Data
                 }
             }
         }
+    }
+
+    [Obsolete("ZeroTreeModel is deprecated. Use TreeModel instead.")]
+    public class ZeroTreeModel : TreeModel
+    {
     }
 }

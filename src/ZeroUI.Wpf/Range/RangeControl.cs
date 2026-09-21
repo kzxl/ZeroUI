@@ -682,6 +682,7 @@ namespace ZeroUI.Wpf.Range
     /// <summary>
     /// Backward-compatible alias for RangeControl.
     /// </summary>
+    [Obsolete("ZeroRangeControl is deprecated. Use RangeControl instead.")]
     public class ZeroRangeControl : RangeControl
     {
     }

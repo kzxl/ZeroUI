@@ -57,7 +57,7 @@ namespace ZeroUI.WinForms.Workflow
     [Category("ZeroUI - Workflow")]
     [DefaultEvent("StepClicked")]
     [Description("Interactive horizontal approval workflow bar with status glyphs and audit notes")]
-    public class ApprovalFlowBar : ZeroControlBase
+    public class ApprovalFlowBar : ControlBase
     {
         private readonly List<ApprovalStep> _steps = new List<ApprovalStep>();
         private readonly List<Rectangle> _nodeRects = new List<Rectangle>();

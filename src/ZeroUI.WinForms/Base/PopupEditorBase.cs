@@ -9,7 +9,7 @@ namespace ZeroUI.WinForms.Base
 {
     /// <summary>
     /// Universal base class for all popup and drop-down editors (ComboBox, LookUp, DateEdit, ColorPickEdit).
-    /// Standardizes ZeroDropDownHost lifecycle, automatic DropUp/DropDown boundary clamping,
+    /// Standardizes DropDownHost lifecycle, automatic DropUp/DropDown boundary clamping,
     /// chevron arrow glyph rendering, and keyboard dropdown shortcuts (Alt+Down, F4, Escape).
     /// </summary>
     /// <typeparam name="TValue">The primary strongly-typed value managed by the editor.</typeparam>

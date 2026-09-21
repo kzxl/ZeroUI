@@ -46,7 +46,7 @@ namespace ZeroUI.WinForms.Ribbon
     [Category("ZeroUI - Navigation")]
     [DefaultEvent("ItemClick")]
     [Description("Modern high-performance enterprise Ribbon control with built-in approval dropdown queues.")]
-    public class RibbonControl : ZeroControlBase
+    public class RibbonControl : ControlBase
     {
         private readonly List<RibbonPage> _pages = new List<RibbonPage>();
         private readonly ToolTip _toolTip = new ToolTip();

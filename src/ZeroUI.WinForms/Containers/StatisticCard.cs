@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Containers
     [DefaultProperty("Value")]
     [Description("KPI Metric Card component for dashboards and analytical summaries")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroStatistic.bmp")]
-    public class StatisticCard : ZeroControlBase
+    public class StatisticCard : ControlBase
     {
         private string _title = "Metric Title";
         private string _value = "0";

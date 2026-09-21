@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid & Reporting")]
     [DefaultEvent("FilterApplied")]
     [Description("Interactive hierarchical visual filter editor with expression preview and grid binding.")]
-    public class FilterEditorControl : ZeroControlBase
+    public class FilterEditorControl : ControlBase
     {
         private readonly FilterControl _filterControl;
         private readonly TextBox _txtExpressionPreview;

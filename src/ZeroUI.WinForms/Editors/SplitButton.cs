@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ActionClick")]
     [DefaultProperty("Text")]
     [Description("Modern split button with independent action and dropdown zones in a single HWND")]
-    public class SplitButton : ZeroControlBase
+    public class SplitButton : ControlBase
     {
         private string? _iconGlyph;
         private int _splitWidth = 28;

@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("TextChanged")]
     [Description("Pure vector 1D barcode and 2D QR code generator and viewer")]
     [ToolboxBitmap(typeof(ZeroIcons), "BarcodeBox.bmp")]
-    public class BarcodeBox : ZeroControlBase, IZeroEditor
+    public class BarcodeBox : ControlBase, IZeroEditor
     {
         private string _text = "LOT-123456";
         private BarcodeSymbology _symbology = BarcodeSymbology.Code128;

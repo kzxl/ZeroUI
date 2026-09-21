@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Energy
     [ToolboxItem(true)]
     [Category("ZeroUI - Energy & Smart Grid")]
     [Description("BESS High-Voltage Rack telemetry with cell voltage balancing heatmap and thermal runaway precursor alarm")]
-    public class BessRackMonitor : ZeroVisualControlBase
+    public class BessRackMonitor : VisualControlBase
     {
         private readonly BessEngine _engine = new BessEngine();
 

@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("CheckedChanged")]
     [Description("Modern anti-aliased flat CheckBox control with tri-state support")]
     [ToolboxBitmap(typeof(ZeroIcons), "CheckEdit.bmp")]
-    public class CheckEdit : ZeroControlBase, IZeroEditor
+    public class CheckEdit : ControlBase, IZeroEditor
     {
         private CheckState _checkState = CheckState.Unchecked;
         private bool _threeState = false;

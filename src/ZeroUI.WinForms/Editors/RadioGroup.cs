@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Radio button group container with auto-layout and selection management")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroRadioGroup.bmp")]
-    public class RadioGroup : ZeroControlBase
+    public class RadioGroup : ControlBase
     {
         private string[] _items = Array.Empty<string>();
         private readonly SelectionModel<string> _selection = new SelectionModel<string>();

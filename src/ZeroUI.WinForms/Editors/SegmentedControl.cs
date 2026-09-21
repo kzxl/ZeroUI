@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("SelectedIndex")]
     [Description("Segmented pill switcher for view and filter options")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSegmented.bmp")]
-    public class SegmentedControl : ZeroControlBase
+    public class SegmentedControl : ControlBase
     {
         private string[] _items = new[] { "All", "Daily", "Weekly", "Monthly" };
         private readonly SelectionModel<string> _selection = new SelectionModel<string> { WrapAround = false };

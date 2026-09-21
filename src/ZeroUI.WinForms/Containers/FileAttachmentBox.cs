@@ -81,7 +81,7 @@ namespace ZeroUI.WinForms.Containers
     [DefaultEvent(nameof(FilesChanged))]
     [Description("Drag & drop file attachment manager with clipboard screenshot pasting and file actions.")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroCard.bmp")]
-    public class FileAttachmentBox : ZeroControlBase
+    public class FileAttachmentBox : ControlBase
     {
         private readonly List<FileAttachmentItem> _files = new List<FileAttachmentItem>();
 

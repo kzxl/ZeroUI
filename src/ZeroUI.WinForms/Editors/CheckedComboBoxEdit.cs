@@ -37,7 +37,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ItemCheck")]
     [Description("Modern checked combo box allowing multi-item selection with checkboxes and filter")]
     [ToolboxBitmap(typeof(ZeroIcons), "CheckedComboBoxEdit.bmp")]
-    public class CheckedComboBoxEdit : ZeroControlBase, IZeroEditor
+    public class CheckedComboBoxEdit : ControlBase, IZeroEditor
     {
         public class CheckedItem
         {
@@ -75,7 +75,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
 
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly CheckedComboPopupControl _popupControl;
 
         public event EventHandler<ItemCheckEventArgs>? ItemCheck;
@@ -214,7 +214,7 @@ namespace ZeroUI.WinForms.Editors
             BackColor = Color.Transparent;
 
             _popupControl = new CheckedComboPopupControl(this);
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _popupControl
             };

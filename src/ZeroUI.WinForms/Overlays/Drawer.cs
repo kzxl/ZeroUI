@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Overlays
     [Category("ZeroUI - Overlays")]
     [DefaultProperty("Title")]
     [Description("High-performance slide-out drawer panel with non-blocking floating overlay")]
-    public class DrawerControl : ZeroControlBase
+    public class DrawerControl : ControlBase
     {
         private static readonly Font TitleFont = new Font("Segoe UI", 11f, FontStyle.Bold);
         private static readonly Font SubFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);

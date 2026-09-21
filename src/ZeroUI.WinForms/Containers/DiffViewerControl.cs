@@ -41,7 +41,7 @@ namespace ZeroUI.WinForms.Containers
     [Category("ZeroUI - Containers")]
     [DefaultProperty("DiffMode")]
     [Description("Visual side-by-side and inline diff viewer for audit trails and text comparison")]
-    public class DiffViewerControl : ZeroControlBase
+    public class DiffViewerControl : ControlBase
     {
         private readonly Panel _headerPanel;
         private readonly Button _btnSideBySide;

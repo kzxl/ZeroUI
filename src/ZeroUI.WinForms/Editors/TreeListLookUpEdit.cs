@@ -27,9 +27,9 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty(nameof(SelectedText))]
     [Description("Hierarchical multi-level dropdown tree editor with fast search and auto-expand.")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTreeList.bmp")]
-    public class TreeListLookUpEdit : ZeroControlBase, IZeroEditor
+    public class TreeListLookUpEdit : ControlBase, IZeroEditor
     {
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly Panel _popupPanel;
         private readonly TextEdit _searchBox;
         private readonly SimpleButton _btnExpandAll;
@@ -181,7 +181,7 @@ namespace ZeroUI.WinForms.Editors
             _popupPanel.Controls.Add(headerPanel);
             _popupPanel.Controls.Add(footerPanel);
 
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _popupPanel
             };

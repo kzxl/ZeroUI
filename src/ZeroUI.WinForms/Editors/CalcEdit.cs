@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ValueChanged")]
     [DefaultProperty("Value")]
     [Description("Precision numeric and calculation editor with popup calculator and financial formatting.")]
-    public class CalcEdit : ZeroEditorBase<decimal>
+    public class CalcEdit : EditorBase<decimal>
     {
         private decimal _minValue = decimal.MinValue / 100m;
         private decimal _maxValue = decimal.MaxValue / 100m;
@@ -34,7 +34,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _hoverCalcButton;
         private bool _pressCalcButton;
 
-        private ZeroDropDownHost? _popupHost;
+        private DropDownHost? _popupHost;
         private CalculatorPanel? _calcPanel;
 
         public CalcEdit()
@@ -368,7 +368,7 @@ namespace ZeroUI.WinForms.Editors
                     _innerBox.Focus();
                 };
 
-                _popupHost = new ZeroDropDownHost
+                _popupHost = new DropDownHost
                 {
                     Content = _calcPanel
                 };

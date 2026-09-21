@@ -31,7 +31,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectedIndexChanged")]
     [Description("Modern anti-aliased ComboBox dropdown control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroComboBox.bmp")]
-    public class ComboBoxEdit : ZeroControlBase, IZeroEditor
+    public class ComboBoxEdit : ControlBase, IZeroEditor
     {
         private readonly List<object> _items = new List<object>();
         private readonly SelectionModel<object> _selection = new SelectionModel<object>();
@@ -44,7 +44,7 @@ namespace ZeroUI.WinForms.Editors
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
 
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly ComboListControl _listControl;
 
         public event EventHandler? SelectedIndexChanged;
@@ -119,7 +119,7 @@ namespace ZeroUI.WinForms.Editors
             };
 
             _listControl = new ComboListControl(this);
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _listControl
             };

@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Text")]
     [Description("Industrial 4-octet segmented IPv4 address editor")]
     [ToolboxBitmap(typeof(ZeroIcons), "TextEdit.bmp")]
-    public class IPAddressEdit : ZeroControlBase, IZeroEditor
+    public class IPAddressEdit : ControlBase, IZeroEditor
     {
         private readonly IPAddressModel _model = new IPAddressModel();
         private readonly TextBox[] _octets = new TextBox[4];

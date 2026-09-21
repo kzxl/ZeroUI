@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.Bms
     [ToolboxItem(true)]
     [Category("ZeroUI - BMS & HVAC")]
     [Description("Central Chiller Plant visualizer with animated water loops and efficiency gauges")]
-    public class ChillerPlant : ZeroVisualControlBase
+    public class ChillerPlant : VisualControlBase
     {
         private readonly ChillerPlantEngine _engine = new ChillerPlantEngine();
         private string _plantTitle = "Central Utility Plant";

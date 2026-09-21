@@ -21,14 +21,14 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("ColorChanged")]
     [Description("Modern color picker editor with swatch preview, palette, and hex input")]
     [ToolboxBitmap(typeof(ZeroIcons), "ColorPickEdit.bmp")]
-    public class ColorPickEdit : ZeroControlBase, IZeroEditor
+    public class ColorPickEdit : ControlBase, IZeroEditor
     {
         private Color _selectedColor = Color.FromArgb(79, 70, 229); // Default ZeroUI Primary
         private bool _isHovered = false;
         private bool _isFocused = false;
         private bool _isDroppedDown = false;
 
-        private readonly ZeroDropDownHost _dropdown;
+        private readonly DropDownHost _dropdown;
         private readonly ColorPickerPopupControl _popupControl;
 
         public event EventHandler? ColorChanged;
@@ -224,7 +224,7 @@ namespace ZeroUI.WinForms.Editors
             BackColor = Color.Transparent;
 
             _popupControl = new ColorPickerPopupControl(this);
-            _dropdown = new ZeroDropDownHost
+            _dropdown = new DropDownHost
             {
                 Content = _popupControl
             };

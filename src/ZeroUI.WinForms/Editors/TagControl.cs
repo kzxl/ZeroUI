@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Text")]
     [Description("Lightweight status tag badge with clean border and status typography")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTag.bmp")]
-    public class TagControl : ZeroControlBase
+    public class TagControl : ControlBase
     {
         private TagType _tagType = TagType.Default;
         private int _borderRadius = 4;

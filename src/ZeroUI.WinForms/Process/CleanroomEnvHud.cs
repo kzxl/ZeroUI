@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Process
     [ToolboxItem(true)]
     [Category("ZeroUI - Process & Life Sciences")]
     [Description("Cleanroom multi-zone pressure cascade and particulate compliance monitor")]
-    public class CleanroomEnvHud : ZeroVisualControlBase
+    public class CleanroomEnvHud : VisualControlBase
     {
         private readonly CleanroomEngine _engine = new CleanroomEngine();
         private string _facilityTag = "ASEPTIC-SUITE-B";

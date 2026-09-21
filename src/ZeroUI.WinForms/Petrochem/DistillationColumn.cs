@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Petrochem
     [ToolboxItem(true)]
     [Category("ZeroUI - Oil & Gas")]
     [Description("Multi-tray fractional distillation column with reflux balance and hydraulic flood diagnostics")]
-    public class DistillationColumn : ZeroVisualControlBase
+    public class DistillationColumn : VisualControlBase
     {
         private readonly DistillationEngine _engine = new DistillationEngine();
         private double _animationPhase;

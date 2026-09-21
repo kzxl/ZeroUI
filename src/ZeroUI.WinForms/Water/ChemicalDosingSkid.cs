@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Water
     [ToolboxItem(true)]
     [Category("ZeroUI - Water & Wastewater")]
     [Description("Precision chemical dosing skid with animated metering pumps and inventory tracking")]
-    public class ChemicalDosingSkid : ZeroVisualControlBase
+    public class ChemicalDosingSkid : VisualControlBase
     {
         private readonly ChemicalDosingEngine _engine = new ChemicalDosingEngine();
         private string _skidTag = "CHEM-SKID-01";

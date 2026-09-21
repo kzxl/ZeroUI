@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// High-precision numeric stepper and spin box editor for industrial tolerances, setpoints,
     /// and quantities with unit prefixes/suffixes, acceleration on hold, and decimal formatting.
-    /// Standardized on ZeroEditorBase for unified theme, focus rings, and data binding.
+    /// Standardized on EditorBase for unified theme, focus rings, and data binding.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [Description("Precision numeric stepper and spin box editor with unit formatting")]
     [ToolboxBitmap(typeof(ZeroIcons), "SpinEdit.bmp")]
-    public class SpinEdit : ZeroEditorBase<decimal>
+    public class SpinEdit : EditorBase<decimal>
     {
         private decimal _minValue = 0m;
         private decimal _maxValue = 1000000m;

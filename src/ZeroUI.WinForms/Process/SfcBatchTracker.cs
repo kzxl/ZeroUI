@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Process
     [ToolboxItem(true)]
     [Category("ZeroUI - Process & Life Sciences")]
     [Description("ISA-88 Sequential Function Chart (SFC) procedural batch execution tracker")]
-    public class SfcBatchTracker : ZeroVisualControlBase
+    public class SfcBatchTracker : VisualControlBase
     {
         private readonly SfcRecipeExecutionEngine _engine = new SfcRecipeExecutionEngine();
 

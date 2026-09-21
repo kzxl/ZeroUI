@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Petrochem
     [ToolboxItem(true)]
     [Category("ZeroUI - Oil & Gas")]
     [Description("SIS / ESD Cause & Effect safety matrix with SIL 1-4 ratings and MOS bypass tracking")]
-    public class EsdMatrix : ZeroVisualControlBase
+    public class EsdMatrix : VisualControlBase
     {
         private readonly EsdEngine _engine = new EsdEngine();
         private double _pulsePhase;

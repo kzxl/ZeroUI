@@ -37,7 +37,7 @@ namespace ZeroUI.WinForms.Workflow
     [Category("ZeroUI - Workflow")]
     [DefaultEvent("StepClick")]
     [Description("High-performance single-HWND workflow pipeline stepper with vector nodes and progress tracks")]
-    public class StepBar : ZeroControlBase
+    public class StepBar : ControlBase
     {
         private readonly StepBarModel _model = new StepBarModel();
         private readonly List<Rectangle> _nodeBounds = new List<Rectangle>();
