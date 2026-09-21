@@ -162,6 +162,18 @@ namespace ZeroUI.Wpf.DataGrid
         private int _draggedHeaderCol = -1;
         private Point _headerDragStart;
         private Point _currentMousePos;
+        private int _reorderDropTargetIndex = -1;
+        private bool _allowColumnReordering = true;
+        private ColumnChooserWindow? _columnChooser;
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Allows users to reorder columns by dragging column headers.")]
+        public bool AllowColumnReordering
+        {
+            get => _allowColumnReordering;
+            set => _allowColumnReordering = value;
+        }
 
         public bool ShowGroupPanel
         {
@@ -1624,6 +1636,30 @@ namespace ZeroUI.Wpf.DataGrid
                 Rect badgeRect = new Rect(_currentMousePos.X - badgeW / 2.0, _currentMousePos.Y - badgeH / 2.0, badgeW, badgeH);
                 dc.DrawRoundedRectangle(ZeroWpfTheme.PrimaryAccent, new Pen(Brushes.White, 1.0), badgeRect, 4, 4);
                 dc.DrawText(dft, new Point(badgeRect.X + 12, badgeRect.Y + (badgeH - dft.Height) / 2.0));
+
+                if (_allowColumnReordering && _reorderDropTargetIndex >= 0)
+                {
+                    double indicatorX = GetColumnHeaderScreenX(_reorderDropTargetIndex);
+                    double indicatorY = groupPanelH;
+                    double indicatorH = EffectiveHeaderHeight;
+                    Pen indicatorPen = new Pen(ZeroWpfTheme.PrimaryAccent, 2.5);
+                    indicatorPen.Freeze();
+                    dc.DrawLine(indicatorPen, new Point(indicatorX, indicatorY), new Point(indicatorX, indicatorY + indicatorH));
+
+                    StreamGeometry markerGeo = new StreamGeometry();
+                    using (var ctx = markerGeo.Open())
+                    {
+                        ctx.BeginFigure(new Point(indicatorX - 4, indicatorY), true, true);
+                        ctx.LineTo(new Point(indicatorX + 4, indicatorY), true, false);
+                        ctx.LineTo(new Point(indicatorX, indicatorY + 5), true, false);
+
+                        ctx.BeginFigure(new Point(indicatorX - 4, indicatorY + indicatorH), true, true);
+                        ctx.LineTo(new Point(indicatorX + 4, indicatorY + indicatorH), true, false);
+                        ctx.LineTo(new Point(indicatorX, indicatorY + indicatorH - 5), true, false);
+                    }
+                    markerGeo.Freeze();
+                    dc.DrawGeometry(ZeroWpfTheme.PrimaryAccent, null, markerGeo);
+                }
             }
 
             // 4. Render Footer Summary Bar (if enabled)
@@ -1739,6 +1775,16 @@ namespace ZeroUI.Wpf.DataGrid
 
             if (_isDraggingHeader)
             {
+                if (_allowColumnReordering && pt.Y >= groupPanelH)
+                {
+                    _reorderDropTargetIndex = HitTestColumnDropTarget(pt.X);
+                    Mouse.OverrideCursor = Cursors.SizeWE;
+                }
+                else
+                {
+                    _reorderDropTargetIndex = -1;
+                    Mouse.OverrideCursor = null;
+                }
                 InvalidateVisual();
                 return;
             }
@@ -2034,6 +2080,7 @@ namespace ZeroUI.Wpf.DataGrid
             if (_isDraggingHeader)
             {
                 _isDraggingHeader = false;
+                Mouse.OverrideCursor = null;
                 ReleaseMouseCapture();
                 Point pt = e.GetPosition(this);
                 int groupPanelH = ShowGroupPanel ? _groupPanelHeight : 0;
@@ -2047,7 +2094,15 @@ namespace ZeroUI.Wpf.DataGrid
                         GroupBy(newCols);
                     }
                 }
+                else if (_allowColumnReordering && _reorderDropTargetIndex >= 0 && _draggedHeaderCol >= 0 && _draggedHeaderCol != _reorderDropTargetIndex && _draggedHeaderCol < _columns.Count)
+                {
+                    var col = _columns[_draggedHeaderCol];
+                    _columns.RemoveAt(_draggedHeaderCol);
+                    int targetIdx = Math.Min(_columns.Count, _reorderDropTargetIndex);
+                    _columns.Insert(targetIdx, col);
+                }
                 _draggedHeaderCol = -1;
+                _reorderDropTargetIndex = -1;
                 InvalidateVisual();
                 return;
             }
@@ -2076,6 +2131,24 @@ namespace ZeroUI.Wpf.DataGrid
                 _resizingColIndex = -1;
                 ReleaseMouseCapture();
                 InvalidateVisual();
+            }
+        }
+
+        protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
+        {
+            base.OnMouseRightButtonUp(e);
+            Point pt = e.GetPosition(this);
+            int topOffset = TotalTopOffset;
+            int groupPanelH = ShowGroupPanel ? _groupPanelHeight : 0;
+
+            if (pt.Y >= groupPanelH && pt.Y <= topOffset)
+            {
+                int col = HitTestColumn(pt.X);
+                if (col >= 0)
+                {
+                    ShowHeaderContextMenu(col, pt);
+                    e.Handled = true;
+                }
             }
         }
 
@@ -2697,6 +2770,364 @@ namespace ZeroUI.Wpf.DataGrid
                 }
             }
             return -1;
+        }
+
+        public void ShowColumnChooser()
+        {
+            if (_columnChooser == null)
+            {
+                _columnChooser = new ColumnChooserWindow(this);
+            }
+
+            Point screenPt = PointToScreen(new Point(Math.Max(0, ActualWidth - 280), 40));
+            _columnChooser.Left = Math.Max(0, screenPt.X);
+            _columnChooser.Top = Math.Max(0, screenPt.Y);
+            _columnChooser.RefreshColumns();
+            _columnChooser.Show();
+            _columnChooser.Activate();
+        }
+
+        public void HideColumnChooser()
+        {
+            _columnChooser?.Hide();
+        }
+
+        public void AutoFitColumnWidth(int columnIndex)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count) return;
+            var col = _columns[columnIndex];
+            double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            var headerFt = CreateFormattedText(col.HeaderText, ZeroWpfTheme.BoldTypeface, 12, Brushes.White, dpi);
+            double maxW = headerFt.Width + 36;
+
+            if (_dataSource != null)
+            {
+                int sampleCount = Math.Min(200, _rowIndexMap.ActiveCount);
+                CellValueBuffer buf = new CellValueBuffer();
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    int modelRow = _rowIndexMap[i];
+                    _dataSource.GetCellValue(modelRow, columnIndex, ref buf);
+                    if (buf.Text.Length > 0)
+                    {
+                        var cellFt = CreateFormattedText(buf.Text.ToString(), ZeroWpfTheme.RegularTypeface, 12, Brushes.White, dpi);
+                        double w = cellFt.Width + 24;
+                        if (w > maxW) maxW = w;
+                    }
+                }
+            }
+
+            col.Width = (int)Math.Max(col.MinWidth, Math.Min(col.MaxWidth, Math.Ceiling(maxW)));
+            InvalidateVisual();
+        }
+
+        public void AutoFitAllColumns()
+        {
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (_columns[i].IsVisible)
+                {
+                    AutoFitColumnWidth(i);
+                }
+            }
+        }
+
+        public async Task SortColumnAsync(int colIndex, SortDirection direction)
+        {
+            if (_dataSource == null || colIndex < 0 || colIndex >= _columns.Count) return;
+            var col = _columns[colIndex];
+            if (direction == SortDirection.None)
+            {
+                col.SortOrder = SortDirection.None;
+                _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+                InvalidateVisual();
+                return;
+            }
+
+            System.Collections.Generic.IComparer<int> comp;
+            if (_dataSource is IZeroSortableSource sortable)
+            {
+                comp = new SortableSourceComparer(sortable, colIndex, direction);
+            }
+            else
+            {
+                comp = new FastComparisonComparer((a, b) =>
+                {
+                    CellValueBuffer bufA = new CellValueBuffer();
+                    CellValueBuffer bufB = new CellValueBuffer();
+                    _dataSource.GetCellValue(a, colIndex, ref bufA);
+                    _dataSource.GetCellValue(b, colIndex, ref bufB);
+                    int cmp = bufA.Text.CompareTo(bufB.Text, StringComparison.Ordinal);
+                    return direction == SortDirection.Ascending ? cmp : -cmp;
+                });
+            }
+
+            col.SortOrder = direction;
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (i != colIndex) _columns[i].SortOrder = SortDirection.None;
+            }
+
+            int count = _rowIndexMap.ActiveCount;
+            if (count <= 1)
+            {
+                InvalidateVisual();
+                return;
+            }
+
+            _isSorting = true;
+            _sortingColumnIndex = colIndex;
+            SortingStarted?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+
+            _sortCts?.Cancel();
+            _sortCts = new System.Threading.CancellationTokenSource();
+            var token = _sortCts.Token;
+
+            int[] working = new int[count];
+            for (int i = 0; i < count; i++) working[i] = _rowIndexMap[i];
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                await Task.Run(() =>
+                {
+                    Array.Sort(working, comp);
+                }, token);
+
+                if (!token.IsCancellationRequested)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        _rowIndexMap[i] = working[i];
+                    }
+                    _scrollY = 0;
+                    sw.Stop();
+                    SortingCompleted?.Invoke(this, sw.Elapsed);
+                }
+            }
+            catch (OperationCanceledException) { }
+            finally
+            {
+                _isSorting = false;
+                _sortingColumnIndex = -1;
+                InvalidateVisual();
+            }
+        }
+
+        protected virtual void ShowHeaderContextMenu(int columnIndex, Point location)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count) return;
+            var col = _columns[columnIndex];
+
+            var menu = new ContextMenu
+            {
+                Style = ZeroWpfStyles.ContextMenuStyle
+            };
+
+            // 1. Sort Ascending
+            var itemAsc = new MenuItem
+            {
+                Header = "▲  Sort Ascending",
+                IsChecked = col.SortOrder == SortDirection.Ascending,
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemAsc.Click += (s, e) => _ = SortColumnAsync(columnIndex, SortDirection.Ascending);
+            menu.Items.Add(itemAsc);
+
+            // 2. Sort Descending
+            var itemDesc = new MenuItem
+            {
+                Header = "▼  Sort Descending",
+                IsChecked = col.SortOrder == SortDirection.Descending,
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemDesc.Click += (s, e) => _ = SortColumnAsync(columnIndex, SortDirection.Descending);
+            menu.Items.Add(itemDesc);
+
+            // 3. Clear Sorting
+            var itemClear = new MenuItem
+            {
+                Header = "✕  Clear Sorting",
+                IsEnabled = col.SortOrder != SortDirection.None,
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemClear.Click += (s, e) => _ = SortColumnAsync(columnIndex, SortDirection.None);
+            menu.Items.Add(itemClear);
+
+            menu.Items.Add(new Separator { Style = ZeroWpfStyles.SeparatorStyle });
+
+            // 4. Best Fit
+            var itemFit = new MenuItem
+            {
+                Header = "↔  Best Fit Column",
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemFit.Click += (s, e) => AutoFitColumnWidth(columnIndex);
+            menu.Items.Add(itemFit);
+
+            var itemFitAll = new MenuItem
+            {
+                Header = "⇹  Best Fit All Columns",
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemFitAll.Click += (s, e) => AutoFitAllColumns();
+            menu.Items.Add(itemFitAll);
+
+            // 5. Alignment Submenu
+            var itemAlign = new MenuItem
+            {
+                Header = "⬌  Alignment",
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            var alignLeft = new MenuItem
+            {
+                Header = "⬅  Left",
+                IsChecked = col.Alignment == CellAlignment.Left,
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            alignLeft.Click += (s, e) => { col.Alignment = CellAlignment.Left; InvalidateVisual(); };
+            var alignCenter = new MenuItem
+            {
+                Header = "⬌  Center",
+                IsChecked = col.Alignment == CellAlignment.Center,
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            alignCenter.Click += (s, e) => { col.Alignment = CellAlignment.Center; InvalidateVisual(); };
+            var alignRight = new MenuItem
+            {
+                Header = "➡  Right",
+                IsChecked = col.Alignment == CellAlignment.Right,
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            alignRight.Click += (s, e) => { col.Alignment = CellAlignment.Right; InvalidateVisual(); };
+            itemAlign.Items.Add(alignLeft);
+            itemAlign.Items.Add(alignCenter);
+            itemAlign.Items.Add(alignRight);
+            menu.Items.Add(itemAlign);
+
+            menu.Items.Add(new Separator { Style = ZeroWpfStyles.SeparatorStyle });
+
+            // 6. Hide Column
+            var itemHide = new MenuItem
+            {
+                Header = $"👁  Hide '{col.HeaderText}'",
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemHide.Click += (s, e) =>
+            {
+                col.IsVisible = false;
+                InvalidateVisual();
+                _columnChooser?.RefreshColumns();
+            };
+            menu.Items.Add(itemHide);
+
+            // 7. Show All Columns (if any is hidden)
+            bool hasHidden = false;
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (!_columns[i].IsVisible) { hasHidden = true; break; }
+            }
+            if (hasHidden)
+            {
+                var itemShowAll = new MenuItem
+                {
+                    Header = "📋  Show All Columns",
+                    Style = ZeroWpfStyles.MenuItemStyle
+                };
+                itemShowAll.Click += (s, e) =>
+                {
+                    for (int i = 0; i < _columns.Count; i++) _columns[i].IsVisible = true;
+                    InvalidateVisual();
+                    _columnChooser?.RefreshColumns();
+                };
+                menu.Items.Add(itemShowAll);
+            }
+
+            menu.Items.Add(new Separator { Style = ZeroWpfStyles.SeparatorStyle });
+
+            // 8. Filter
+            var itemFilter = new MenuItem
+            {
+                Header = "🔍  Filter...",
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemFilter.Click += (s, e) => ShowColumnFilterPopup(columnIndex);
+            menu.Items.Add(itemFilter);
+
+            // 9. Column Chooser
+            var itemChooser = new MenuItem
+            {
+                Header = "⚙️  Column Chooser...",
+                Style = ZeroWpfStyles.MenuItemStyle
+            };
+            itemChooser.Click += (s, e) => ShowColumnChooser();
+            menu.Items.Add(itemChooser);
+
+            menu.PlacementTarget = this;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Relative;
+            menu.HorizontalOffset = location.X;
+            menu.VerticalOffset = location.Y;
+            menu.IsOpen = true;
+        }
+
+        private int HitTestColumnDropTarget(double mouseX)
+        {
+            int pinnedW = GetPinnedColumnsWidth();
+            if (mouseX < pinnedW)
+            {
+                double curX = 0;
+                for (int i = 0; i < _columns.Count; i++)
+                {
+                    if (!_columns[i].IsVisible || !_columns[i].IsPinned) continue;
+                    double colW = _columns[i].Width;
+                    if (mouseX < curX + colW / 2.0) return i;
+                    curX += colW;
+                }
+            }
+            else
+            {
+                double curX = pinnedW - _scrollX;
+                for (int i = 0; i < _columns.Count; i++)
+                {
+                    if (!_columns[i].IsVisible || _columns[i].IsPinned) continue;
+                    double colW = _columns[i].Width;
+                    if (mouseX < curX + colW / 2.0) return i;
+                    curX += colW;
+                }
+            }
+            return Math.Max(0, _columns.Count - 1);
+        }
+
+        private double GetColumnHeaderScreenX(int colIndex)
+        {
+            int pinnedW = GetPinnedColumnsWidth();
+            if (colIndex < 0 || colIndex >= _columns.Count) return pinnedW;
+
+            if (_columns[colIndex].IsPinned)
+            {
+                double x = 0;
+                for (int i = 0; i < colIndex; i++)
+                {
+                    if (_columns[i].IsVisible && _columns[i].IsPinned)
+                    {
+                        x += _columns[i].Width;
+                    }
+                }
+                return x;
+            }
+            else
+            {
+                double x = pinnedW - _scrollX;
+                for (int i = 0; i < colIndex; i++)
+                {
+                    if (_columns[i].IsVisible && !_columns[i].IsPinned)
+                    {
+                        x += _columns[i].Width;
+                    }
+                }
+                return x;
+            }
         }
 
         private sealed class FastComparisonComparer : System.Collections.Generic.IComparer<int>
