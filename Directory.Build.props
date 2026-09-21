@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <Version>1.8.2</Version>
-    <AssemblyVersion>1.8.2.0</AssemblyVersion>
-    <FileVersion>1.8.2.0</FileVersion>
-    <InformationalVersion>1.8.2</InformationalVersion>
+    <Version>1.8.3</Version>
+    <AssemblyVersion>1.8.3.0</AssemblyVersion>
+    <FileVersion>1.8.3.0</FileVersion>
+    <InformationalVersion>1.8.3</InformationalVersion>
     <Authors>Phong Võ</Authors>
     <Company>ZeroUI</Company>
     <Copyright>Copyright © 2026 Phong Võ</Copyright>

@@ -236,6 +236,11 @@ namespace ZeroUI.Wpf.Layout
             stack.Children.Add(_headerButton);
 
             // Content Container
+            if (Content is UIElement contentElement)
+            {
+                RemoveLogicalChild(contentElement);
+            }
+
             _contentHost = new Border
             {
                 Visibility = IsExpanded ? Visibility.Visible : Visibility.Collapsed,
@@ -269,6 +274,21 @@ namespace ZeroUI.Wpf.Layout
         {
             _rootBorder?.Arrange(new Rect(arrangeBounds));
             return arrangeBounds;
+        }
+
+        protected override void OnContentChanged(object oldContent, object newContent)
+        {
+            base.OnContentChanged(oldContent, newContent);
+
+            if (newContent is UIElement newElement)
+            {
+                RemoveLogicalChild(newElement);
+            }
+
+            if (_contentHost != null)
+            {
+                _contentHost.Child = newContent as UIElement;
+            }
         }
 
         private void HeaderButton_Click(object sender, RoutedEventArgs e)
