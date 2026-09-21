@@ -12,6 +12,15 @@ namespace ZeroUI.WinForms.Data
     /// <summary>
     /// Represents a column definition in the TreeList hierarchical multi-column grid.
     /// </summary>
+    public enum TreeListSelectionMode
+    {
+        Single,
+        MultiSelect
+    }
+
+    /// <summary>
+    /// Represents a column definition in the TreeList hierarchical multi-column grid.
+    /// </summary>
     public class TreeListColumn
     {
         public string Name { get; set; } = "";
@@ -21,6 +30,11 @@ namespace ZeroUI.WinForms.Data
         public bool Visible { get; set; } = true;
         public HorizontalAlignment Alignment { get; set; } = HorizontalAlignment.Left;
         public SortOrder SortOrder { get; set; } = SortOrder.None;
+        public bool AllowEdit { get; set; } = true;
+        public string? FieldName { get; set; }
+        public TreeListSummaryType SummaryType { get; set; } = TreeListSummaryType.None;
+        public string SummaryFormat { get; set; } = "{0:N2}";
+        public TreeListRollupMode RollupMode { get; set; } = TreeListRollupMode.None;
 
         internal Rectangle HeaderBounds;
 
@@ -31,6 +45,14 @@ namespace ZeroUI.WinForms.Data
             Name = name;
             Caption = caption;
             Width = width;
+        }
+
+        public TreeListColumn(string name, string caption, int width, HorizontalAlignment alignment)
+        {
+            Name = name;
+            Caption = caption;
+            Width = width;
+            Alignment = alignment;
         }
     }
 
@@ -50,6 +72,8 @@ namespace ZeroUI.WinForms.Data
         public bool IsExpanded { get; set; } = true;
         public CheckState CheckState { get; set; } = CheckState.Unchecked;
         public object? Tag { get; set; }
+        public bool HasLoadedChildren { get; set; } = true;
+        public bool IsLazyLoadable { get; set; } = false;
 
         public ZeroTreeNode? Parent { get; internal set; }
         public List<ZeroTreeNode> Children { get; } = new List<ZeroTreeNode>();
@@ -91,7 +115,7 @@ namespace ZeroUI.WinForms.Data
             }
         }
 
-        public bool HasChildren => Children.Count > 0;
+        public bool HasChildren => Children.Count > 0 || (IsLazyLoadable && !HasLoadedChildren);
 
         public ZeroTreeNode AddChild(ZeroTreeNode child)
         {
@@ -182,7 +206,7 @@ namespace ZeroUI.WinForms.Data
     [DefaultEvent("NodeSelected")]
     [Description("High-performance virtualized hierarchical Tree and BOM TreeList control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTreeList.bmp")]
-    public class TreeList : Control
+    public partial class TreeList : Control
     {
         private readonly List<ZeroTreeNode> _nodes = new List<ZeroTreeNode>();
         private readonly List<ZeroTreeNode> _visibleNodes = new List<ZeroTreeNode>();
@@ -207,12 +231,37 @@ namespace ZeroUI.WinForms.Data
         private bool _hoveredOnChevron = false;
         private bool _hoveredOnCheck = false;
 
+        private TreeListSelectionMode _selectionMode = TreeListSelectionMode.Single;
+        private readonly List<ZeroTreeNode> _selectedNodes = new List<ZeroTreeNode>();
+
+        private bool _allowInPlaceEditing = false;
+        private ZeroTreeNode? _editingNode;
+        private TreeListColumn? _editingColumn;
+        private Control? _activeEditor;
+
+        private bool _allowDragDrop = false;
+        private bool _isDragging = false;
+        private Point _dragStartPoint;
+        private ZeroTreeNode? _dragCandidateNode;
+        private ZeroTreeNode? _dropTargetNode;
+        private TreeListDropPosition _dropPosition = TreeListDropPosition.None;
+
         private int _scrollOffset = 0;
         private readonly VScrollBar _vScrollBar;
 
         public event EventHandler<ZeroTreeNode>? NodeSelected;
         public event EventHandler<ZeroTreeNode>? NodeCheckChanged;
         public event EventHandler<ZeroTreeNode>? NodeExpandedChanged;
+        public event EventHandler<TreeListBeforeExpandEventArgs>? BeforeExpand;
+        public event EventHandler<TreeListVirtualLoadEventArgs>? VirtualLoadChildren;
+        public event EventHandler<TreeListShowingEditorEventArgs>? ShowingEditor;
+        public event EventHandler<TreeListCellValueChangedEventArgs>? CellValueChanged;
+        public event EventHandler<TreeListValidatingEditorEventArgs>? ValidatingEditor;
+        public event EventHandler? HiddenEditor;
+        public event EventHandler<TreeListBeforeDragEventArgs>? BeforeDragNode;
+        public event EventHandler<TreeListDragOverEventArgs>? DragOverNode;
+        public event EventHandler<TreeListAfterDropEventArgs>? AfterDropNode;
+        public event EventHandler? SummariesRecalculated;
 
         public TreeList()
         {
@@ -427,6 +476,11 @@ namespace ZeroUI.WinForms.Data
                 if (_selectedNode != value)
                 {
                     _selectedNode = value;
+                    _selectedNodes.Clear();
+                    if (_selectedNode != null)
+                    {
+                        _selectedNodes.Add(_selectedNode);
+                    }
                     Invalidate();
                     if (_selectedNode != null)
                     {
@@ -434,6 +488,83 @@ namespace ZeroUI.WinForms.Data
                     }
                 }
             }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(TreeListSelectionMode.Single)]
+        [Description("Controls whether single or multiple nodes can be selected simultaneously.")]
+        public TreeListSelectionMode SelectionMode
+        {
+            get => _selectionMode;
+            set
+            {
+                if (_selectionMode != value)
+                {
+                    _selectionMode = value;
+                    if (_selectionMode == TreeListSelectionMode.Single && _selectedNodes.Count > 1)
+                    {
+                        var primary = _selectedNode ?? _selectedNodes[0];
+                        _selectedNodes.Clear();
+                        _selectedNodes.Add(primary);
+                        _selectedNode = primary;
+                    }
+                    Invalidate();
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public IReadOnlyList<ZeroTreeNode> SelectedNodes => _selectedNodes;
+
+        public void SelectNode(ZeroTreeNode node, bool addToSelection = false)
+        {
+            if (node == null) return;
+            if (!addToSelection || _selectionMode == TreeListSelectionMode.Single)
+            {
+                _selectedNodes.Clear();
+                _selectedNodes.Add(node);
+                _selectedNode = node;
+                Invalidate();
+                NodeSelected?.Invoke(this, node);
+            }
+            else
+            {
+                if (!_selectedNodes.Contains(node))
+                {
+                    _selectedNodes.Add(node);
+                }
+                _selectedNode = node;
+                Invalidate();
+                NodeSelected?.Invoke(this, node);
+            }
+        }
+
+        public void DeselectNode(ZeroTreeNode node)
+        {
+            if (node == null) return;
+            if (_selectedNodes.Remove(node))
+            {
+                if (_selectedNode == node)
+                {
+                    _selectedNode = _selectedNodes.Count > 0 ? _selectedNodes[_selectedNodes.Count - 1] : null;
+                }
+                Invalidate();
+            }
+        }
+
+        public void ClearSelection()
+        {
+            _selectedNodes.Clear();
+            _selectedNode = null;
+            Invalidate();
+        }
+
+        public bool IsNodeSelected(ZeroTreeNode node)
+        {
+            if (node == null) return false;
+            return _selectionMode == TreeListSelectionMode.MultiSelect
+                ? _selectedNodes.Contains(node)
+                : _selectedNode == node;
         }
 
         public void AddNode(ZeroTreeNode node)
@@ -447,6 +578,7 @@ namespace ZeroUI.WinForms.Data
         {
             _nodes.Clear();
             _visibleNodes.Clear();
+            _selectedNodes.Clear();
             _selectedNode = null;
             _hoveredNode = null;
             UpdateScrollBar();
@@ -548,8 +680,9 @@ namespace ZeroUI.WinForms.Data
         {
             if (_vScrollBar == null || _visibleNodes == null) return;
             int headerOffset = (_showColumnHeaders && _columns.Count > 0) ? _headerHeight : 0;
+            int footerOffset = (_showFooter && _columns.Count > 0) ? _footerHeight : 0;
             int totalHeight = _visibleNodes.Count * _rowHeight;
-            int viewHeight = Height - headerOffset;
+            int viewHeight = Height - headerOffset - footerOffset;
 
             if (totalHeight > viewHeight && viewHeight > 0)
             {
@@ -640,6 +773,29 @@ namespace ZeroUI.WinForms.Data
 
             if (e.X > clientWidth) return;
 
+            // 2.5 Drag & Drop Candidate Detection
+            if (_allowDragDrop && (e.Button & MouseButtons.Left) == MouseButtons.Left && _dragCandidateNode != null && !_isDragging)
+            {
+                int dx = Math.Abs(e.X - _dragStartPoint.X);
+                int dy = Math.Abs(e.Y - _dragStartPoint.Y);
+                if (dx > 4 || dy > 4)
+                {
+                    _isDragging = true;
+                    var beforeArgs = new TreeListBeforeDragEventArgs(_dragCandidateNode);
+                    BeforeDragNode?.Invoke(this, beforeArgs);
+                    if (!beforeArgs.Cancel)
+                    {
+                        DoDragDrop(_dragCandidateNode, DragDropEffects.Move);
+                    }
+                    _isDragging = false;
+                    _dragCandidateNode = null;
+                    _dropTargetNode = null;
+                    _dropPosition = TreeListDropPosition.None;
+                    Invalidate();
+                    return;
+                }
+            }
+
             // 3. Tree Rows Hover
             int index = ((e.Y - headerOffset) / _rowHeight) + _scrollOffset;
             if (index >= 0 && index < _visibleNodes.Count)
@@ -718,6 +874,10 @@ namespace ZeroUI.WinForms.Data
 
             if (node.ChevronBounds.Contains(e.Location) && node.HasChildren)
             {
+                if (node.IsLazyLoadable && !node.HasLoadedChildren)
+                {
+                    TriggerLazyLoad(node);
+                }
                 node.IsExpanded = !node.IsExpanded;
                 UpdateVisibleNodes();
                 NodeExpandedChanged?.Invoke(this, node);
@@ -734,7 +894,48 @@ namespace ZeroUI.WinForms.Data
                 return;
             }
 
-            SelectedNode = node;
+            if (_allowDragDrop)
+            {
+                _dragStartPoint = e.Location;
+                _dragCandidateNode = node;
+            }
+
+            if (_selectionMode == TreeListSelectionMode.MultiSelect)
+            {
+                if ((ModifierKeys & Keys.Control) == Keys.Control)
+                {
+                    if (_selectedNodes.Contains(node))
+                        DeselectNode(node);
+                    else
+                        SelectNode(node, addToSelection: true);
+                }
+                else if ((ModifierKeys & Keys.Shift) == Keys.Shift && _selectedNode != null)
+                {
+                    int fromIdx = _visibleNodes.IndexOf(_selectedNode);
+                    int toIdx = _visibleNodes.IndexOf(node);
+                    if (fromIdx >= 0 && toIdx >= 0)
+                    {
+                        _selectedNodes.Clear();
+                        int start = Math.Min(fromIdx, toIdx);
+                        int end = Math.Max(fromIdx, toIdx);
+                        for (int k = start; k <= end; k++)
+                        {
+                            _selectedNodes.Add(_visibleNodes[k]);
+                        }
+                        _selectedNode = node;
+                        Invalidate();
+                        NodeSelected?.Invoke(this, node);
+                    }
+                }
+                else
+                {
+                    SelectNode(node, addToSelection: false);
+                }
+            }
+            else
+            {
+                SelectedNode = node;
+            }
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
@@ -822,8 +1023,9 @@ namespace ZeroUI.WinForms.Data
                 }
             }
 
+            int footerOffset = (_showFooter && _columns.Count > 0) ? _footerHeight : 0;
             int startIdx = _scrollOffset;
-            int maxVisible = ((Height - headerOffset) / _rowHeight) + 2;
+            int maxVisible = ((Height - headerOffset - footerOffset) / _rowHeight) + 2;
             int endIdx = Math.Min(_visibleNodes.Count, startIdx + maxVisible);
 
             using var penGuide = new Pen(palette.Border, 1f) { DashStyle = DashStyle.Dot };
@@ -839,7 +1041,7 @@ namespace ZeroUI.WinForms.Data
                 int y = headerOffset + (i - startIdx) * _rowHeight;
                 node.RowBounds = new Rectangle(0, y, clientWidth, _rowHeight);
 
-                bool isSelected = node == _selectedNode;
+                bool isSelected = IsNodeSelected(node);
                 bool isHovered = node == _hoveredNode;
 
                 // 1. Draw Row Background
@@ -1051,6 +1253,62 @@ namespace ZeroUI.WinForms.Data
                 // Separator bottom line
                 using var penSep = new Pen(Color.FromArgb(12, palette.Border));
                 g.DrawLine(penSep, 0, y + _rowHeight - 1, clientWidth, y + _rowHeight - 1);
+            }
+
+            // Render Drop Feedback Indicator (Drag & Drop)
+            DrawDragDropIndicator(g, palette, clientWidth);
+
+            // Render Footer Summary Bar
+            if (_showFooter && _columns.Count > 0)
+            {
+                DrawFooter(g, palette, clientWidth, headerOffset);
+            }
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            base.OnMouseDoubleClick(e);
+            if (!_allowInPlaceEditing) return;
+
+            int headerOffset = (_showColumnHeaders && _columns.Count > 0) ? _headerHeight : 0;
+            int clientWidth = _vScrollBar.Visible ? Width - _vScrollBar.Width : Width;
+            if (e.X > clientWidth || e.Y < headerOffset) return;
+
+            int index = ((e.Y - headerOffset) / _rowHeight) + _scrollOffset;
+            if (index < 0 || index >= _visibleNodes.Count) return;
+
+            var node = _visibleNodes[index];
+            if (node.ChevronBounds.Contains(e.Location) || node.CheckBounds.Contains(e.Location)) return;
+
+            // Determine which column was clicked
+            int curX = 0;
+            for (int c = 0; c < _columns.Count; c++)
+            {
+                var col = _columns[c];
+                if (!col.Visible) continue;
+                if (e.X >= curX && e.X < curX + col.Width)
+                {
+                    ShowEditor(node, col);
+                    break;
+                }
+                curX += col.Width;
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.KeyCode == Keys.F2 && _allowInPlaceEditing && _selectedNode != null && _columns.Count > 0)
+            {
+                ShowEditor(_selectedNode, _columns[0]);
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.A && e.Control && _selectionMode == TreeListSelectionMode.MultiSelect)
+            {
+                _selectedNodes.Clear();
+                _selectedNodes.AddRange(_visibleNodes);
+                Invalidate();
+                e.Handled = true;
             }
         }
 
