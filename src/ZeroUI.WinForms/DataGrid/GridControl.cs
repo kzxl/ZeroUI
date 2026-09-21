@@ -6,9 +6,11 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ZeroData.Core;
 
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
@@ -356,31 +358,33 @@ namespace ZeroUI.WinForms.DataGrid
         public IZeroVirtualSource? DataSource
         {
             get => _dataSource;
-            set
+            set => SetVirtualSourceInternal(value);
+        }
+
+        private void SetVirtualSourceInternal(IZeroVirtualSource? value)
+        {
+            _dataSource = value;
+            if (_dataSource != null)
             {
-                _dataSource = value;
-                if (_dataSource != null)
+                _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+                if (_groupColumnIndices.Length > 0)
                 {
-                    _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
-                    if (_groupColumnIndices.Length > 0)
-                    {
-                        GroupBy(_groupColumnIndices);
-                    }
-                    else
-                    {
-                        _groupedMap.ResetIdentity(_dataSource.TotalRowCount);
-                    }
+                    GroupBy(_groupColumnIndices);
                 }
                 else
                 {
-                    _rowIndexMap.ResetIdentity(0);
-                    _groupedMap.ResetIdentity(0);
+                    _groupedMap.ResetIdentity(_dataSource.TotalRowCount);
                 }
-                _scrollY = 0;
-                _selectedVisualRow = -1;
-                UpdateScrollBars();
-                Invalidate();
             }
+            else
+            {
+                _rowIndexMap.ResetIdentity(0);
+                _groupedMap.ResetIdentity(0);
+            }
+            _scrollY = 0;
+            _selectedVisualRow = -1;
+            UpdateScrollBars();
+            Invalidate();
         }
 
         [Browsable(false)]
@@ -1349,6 +1353,132 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 DataSource = new ZeroListSource<T>(items, _columns);
             }
+        }
+
+        public void SetDataSource(DataTable? table, bool autoGenerateColumns = true)
+        {
+            if (table == null)
+            {
+                DataSource = null;
+                return;
+            }
+
+            if (autoGenerateColumns && _columns.Count == 0)
+            {
+                var src = new ZeroDataTableSource(table);
+                _columns.AddRange(src.GenerateColumns());
+                DataSource = src;
+            }
+            else
+            {
+                DataSource = new ZeroDataTableSource(table, _columns);
+            }
+        }
+
+        public void SetDataSource(DataView? view, bool autoGenerateColumns = true)
+        {
+            if (view == null)
+            {
+                DataSource = null;
+                return;
+            }
+
+            if (autoGenerateColumns && _columns.Count == 0)
+            {
+                var src = new ZeroDataTableSource(view);
+                _columns.AddRange(src.GenerateColumns());
+                DataSource = src;
+            }
+            else
+            {
+                DataSource = new ZeroDataTableSource(view, _columns);
+            }
+        }
+
+        public void SetDataSource(DataFrame? dataFrame, bool autoGenerateColumns = true)
+        {
+            if (dataFrame == null)
+            {
+                DataSource = null;
+                return;
+            }
+
+            if (autoGenerateColumns && _columns.Count == 0)
+            {
+                var src = new ZeroDataFrameSource(dataFrame);
+                _columns.AddRange(src.GenerateColumns());
+                DataSource = src;
+            }
+            else
+            {
+                DataSource = new ZeroDataFrameSource(dataFrame, _columns);
+            }
+        }
+
+        /// <summary>
+        /// Universal polymorphic binding supporting DataFrame, DataTable, DataView, IList, and IZeroVirtualSource.
+        /// </summary>
+        public void SetDataSource(object? source, bool autoGenerateColumns = true)
+        {
+            if (source == null)
+            {
+                DataSource = null;
+                return;
+            }
+
+            if (source is IZeroVirtualSource virtualSource)
+            {
+                DataSource = virtualSource;
+                return;
+            }
+
+            if (source is DataFrame df)
+            {
+                SetDataSource(df, autoGenerateColumns);
+                return;
+            }
+
+            if (source is DataTable dt)
+            {
+                SetDataSource(dt, autoGenerateColumns);
+                return;
+            }
+
+            if (source is DataView dv)
+            {
+                SetDataSource(dv, autoGenerateColumns);
+                return;
+            }
+
+            // Generic IList fallback
+            var type = source.GetType();
+            foreach (var iface in type.GetInterfaces())
+            {
+                if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IList<>))
+                {
+                    var itemType = iface.GetGenericArguments()[0];
+                    var listSourceType = typeof(ZeroListSource<>).MakeGenericType(itemType);
+                    if (autoGenerateColumns && _columns.Count == 0)
+                    {
+                        var listSource = Activator.CreateInstance(listSourceType, source);
+                        var genMethod = listSourceType.GetMethod("GenerateColumns");
+                        if (genMethod != null)
+                        {
+                            var genCols = genMethod.Invoke(listSource, null) as IEnumerable<ZeroColumn>;
+                            if (genCols != null) _columns.AddRange(genCols);
+                        }
+                        DataSource = (IZeroVirtualSource)listSource!;
+                    }
+                    else
+                    {
+                        var listSource = Activator.CreateInstance(listSourceType, source, _columns);
+                        DataSource = (IZeroVirtualSource)listSource!;
+                    }
+                    return;
+                }
+            }
+
+            throw new ArgumentException($"Unsupported data source type: {source.GetType().FullName}. Expected DataFrame, DataTable, DataView, IList<T>, or IZeroVirtualSource.", nameof(source));
         }
 
         public bool HasAnySummaryColumns()

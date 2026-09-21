@@ -138,6 +138,46 @@ namespace ZeroUI.Desktop.Tests
             });
         }
 
+        [Fact]
+        public void WinForms_GridControl_SetDataSource_DataTable_BindsCorrectly()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var grid = new GridControl();
+                var dt = new System.Data.DataTable();
+                dt.Columns.Add("Code", typeof(string));
+                dt.Columns.Add("Qty", typeof(int));
+                dt.Rows.Add("ITEM-01", 100);
+                dt.Rows.Add("ITEM-02", 250);
+
+                grid.SetDataSource(dt);
+
+                Assert.NotNull(grid.DataSource);
+                Assert.IsType<ZeroDataTableSource>(grid.DataSource);
+                Assert.Equal(2, grid.Columns.Count);
+                Assert.Equal(2, grid.VisualRowCount);
+            });
+        }
+
+        [Fact]
+        public void WinForms_GridControl_SetDataSource_DataFrame_BindsCorrectly()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var grid = new GridControl();
+                var df = new ZeroData.Core.DataFrame();
+                df.AddColumn(new ZeroData.Core.DataColumn<string>("Machine", new[] { "CNC-01", "CNC-02", "Laser-01" }));
+                df.AddColumn(new ZeroData.Core.DataColumn<double>("Temp", new[] { 65.5, 72.1, 44.0 }));
+
+                grid.SetDataSource(df);
+
+                Assert.NotNull(grid.DataSource);
+                Assert.IsType<ZeroDataFrameSource>(grid.DataSource);
+                Assert.Equal(2, grid.Columns.Count);
+                Assert.Equal(3, grid.VisualRowCount);
+            });
+        }
+
         private sealed class MockVirtualSource : IZeroVirtualSource
         {
             public int TotalRowCount { get; }

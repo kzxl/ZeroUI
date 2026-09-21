@@ -22,5 +22,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
+    <PackageReference Include="ZeroData.Core" Version="1.2.0" />
   </ItemGroup>
 </Project>
