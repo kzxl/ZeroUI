@@ -15,10 +15,10 @@ namespace ZeroUI.WinForms.Base
     /// <typeparam name="TValue">The primary strongly-typed value managed by the editor.</typeparam>
     /// <typeparam name="TPopupContent">The specialized WinForms control hosted within the dropdown popup.</typeparam>
     [ToolboxItem(false)]
-    public abstract class ZeroPopupEditorBase<TValue, TPopupContent> : ZeroEditorBase<TValue>
+    public abstract class PopupEditorBase<TValue, TPopupContent> : EditorBase<TValue>
         where TPopupContent : Control, new()
     {
-        private readonly ZeroDropDownHost _dropDownHost;
+        private readonly DropDownHost _dropDownHost;
         private readonly TPopupContent _popupContent;
         private Rectangle _chevronRect;
         private bool _hoverOnChevron;
@@ -60,12 +60,12 @@ namespace ZeroUI.WinForms.Base
 
         #endregion
 
-        protected ZeroPopupEditorBase()
+        protected PopupEditorBase()
         {
             Cursor = Cursors.Hand;
 
             _popupContent = new TPopupContent();
-            _dropDownHost = new ZeroDropDownHost
+            _dropDownHost = new DropDownHost
             {
                 Content = _popupContent
             };
@@ -232,4 +232,14 @@ namespace ZeroUI.WinForms.Base
 
         #endregion
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="PopupEditorBase{TValue, TPopupContent}"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use PopupEditorBase<TValue, TPopupContent> instead.")]
+    public abstract class ZeroPopupEditorBase<TValue, TPopupContent> : PopupEditorBase<TValue, TPopupContent>
+        where TPopupContent : Control, new()
+    {
+    }
 }
+

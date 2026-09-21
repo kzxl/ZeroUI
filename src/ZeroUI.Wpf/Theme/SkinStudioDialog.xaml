@@ -1,4 +1,4 @@
-<Window x:Class="ZeroUI.Wpf.Theme.ZeroSkinStudioDialog"
+<Window x:Class="ZeroUI.Wpf.Theme.SkinStudioDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="ZeroUI Skin Studio - Dynamic Palette Generator"

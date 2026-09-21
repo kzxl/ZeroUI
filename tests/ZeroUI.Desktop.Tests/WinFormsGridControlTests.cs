@@ -153,7 +153,7 @@ namespace ZeroUI.Desktop.Tests
                 grid.SetDataSource(dt);
 
                 Assert.NotNull(grid.DataSource);
-                Assert.IsType<ZeroDataTableSource>(grid.DataSource);
+                Assert.IsType<DataTableSource>(grid.DataSource);
                 Assert.Equal(2, grid.Columns.Count);
                 Assert.Equal(2, grid.VisualRowCount);
             });
@@ -172,7 +172,7 @@ namespace ZeroUI.Desktop.Tests
                 grid.SetDataSource(df);
 
                 Assert.NotNull(grid.DataSource);
-                Assert.IsType<ZeroDataFrameSource>(grid.DataSource);
+                Assert.IsType<DataFrameSource>(grid.DataSource);
                 Assert.Equal(2, grid.Columns.Count);
                 Assert.Equal(3, grid.VisualRowCount);
             });

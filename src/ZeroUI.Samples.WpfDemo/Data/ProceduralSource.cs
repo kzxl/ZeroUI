@@ -8,7 +8,7 @@ namespace ZeroUI.Samples.WpfDemo.Data
     /// Procedural virtual data source for extreme datasets (1,000,000 to 10,000,000+ rows).
     /// Generates cell values completely on-the-fly without keeping multi-gigabyte managed objects in RAM.
     /// </summary>
-    public sealed class ZeroProceduralSource : IZeroVirtualSource, IZeroSortableSource
+    public sealed class ProceduralSource : IZeroVirtualSource, IZeroSortableSource
     {
         private readonly int _totalRowCount;
 
@@ -28,7 +28,7 @@ namespace ZeroUI.Samples.WpfDemo.Data
             "Passed OQC", "Pending IQC", "Safety Stock", "Inspection Hold", "Restock Needed"
         };
 
-        public ZeroProceduralSource(int totalRowCount = 10000000)
+        public ProceduralSource(int totalRowCount = 10000000)
         {
             _totalRowCount = totalRowCount;
         }
@@ -110,4 +110,19 @@ namespace ZeroUI.Samples.WpfDemo.Data
             };
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="ProceduralSource"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use ProceduralSource instead.")]
+    public class ZeroProceduralSource : IZeroVirtualSource, IZeroSortableSource
+    {
+        private readonly ProceduralSource _inner;
+        public ZeroProceduralSource(int totalRowCount = 10000000) => _inner = new ProceduralSource(totalRowCount);
+        public int TotalRowCount => _inner.TotalRowCount;
+        public int TotalColumnCount => _inner.TotalColumnCount;
+        public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer) => _inner.GetCellValue(rowIndex, columnIndex, ref buffer);
+        public int CompareRows(int rowA, int rowB, int columnIndex) => _inner.CompareRows(rowA, rowB, columnIndex);
+    }
 }
+

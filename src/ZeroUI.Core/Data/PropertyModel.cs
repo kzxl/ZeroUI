@@ -8,7 +8,7 @@ namespace ZeroUI.Core.Data
     {
         public string Name { get; set; } = string.Empty;
         public bool IsExpanded { get; set; } = true;
-        public List<ZeroPropertyItem> Items { get; } = new List<ZeroPropertyItem>();
+        public List<PropertyItem> Items { get; } = new List<PropertyItem>();
 
         public PropertyCategoryGroup(string name)
         {
@@ -17,17 +17,17 @@ namespace ZeroUI.Core.Data
     }
 
     /// <summary>
-    /// Headless model for ZeroPropertyGrid.
+    /// Headless model for PropertyGridControl.
     /// Supports automatic reflection analysis of any C# object or manual property registration.
     /// </summary>
-    public class ZeroPropertyModel
+    public class PropertyModel
     {
-        private readonly List<ZeroPropertyItem> _items = new List<ZeroPropertyItem>();
+        private readonly List<PropertyItem> _items = new List<PropertyItem>();
         private readonly List<PropertyCategoryGroup> _categories = new List<PropertyCategoryGroup>();
         private object? _selectedObject;
         private string _searchFilter = string.Empty;
 
-        public IReadOnlyList<ZeroPropertyItem> Items => _items;
+        public IReadOnlyList<PropertyItem> Items => _items;
         public IReadOnlyList<PropertyCategoryGroup> Categories => _categories;
         public object? SelectedObject => _selectedObject;
 
@@ -60,7 +60,7 @@ namespace ZeroUI.Core.Data
                     var prop = props[i];
                     if (!prop.CanRead) continue;
 
-                    var item = ZeroPropertyItem.FromPropertyInfo(prop, target);
+                    var item = PropertyItem.FromPropertyInfo(prop, target);
                     item.ValueChanged += (s, e) =>
                     {
                         if (_selectedObject != null && prop.CanWrite)
@@ -80,7 +80,7 @@ namespace ZeroUI.Core.Data
             RebuildCategories();
         }
 
-        public void AddItem(ZeroPropertyItem item)
+        public void AddItem(PropertyItem item)
         {
             if (item == null) throw new ArgumentNullException(nameof(item));
             item.ValueChanged += (s, e) => PropertyValueChanged?.Invoke(s, e);
@@ -138,5 +138,13 @@ namespace ZeroUI.Core.Data
 
             ModelChanged?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="PropertyModel"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use PropertyModel instead.")]
+    public class ZeroPropertyModel : PropertyModel
+    {
     }
 }

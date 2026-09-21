@@ -17,7 +17,7 @@ namespace ZeroUI.Wpf.Navigation
     /// </summary>
     public class BreadcrumbControl : FrameworkElement
     {
-        private readonly ObservableCollection<ZeroBreadcrumbItem> _items = new ObservableCollection<ZeroBreadcrumbItem>();
+        private readonly ObservableCollection<BreadcrumbItem> _items = new ObservableCollection<BreadcrumbItem>();
         private readonly Stack<string> _backHistory = new Stack<string>();
         private readonly Stack<string> _forwardHistory = new Stack<string>();
 
@@ -27,9 +27,9 @@ namespace ZeroUI.Wpf.Navigation
         private readonly List<Rect> _crumbBounds = new List<Rect>();
         private readonly List<Rect> _chevronBounds = new List<Rect>();
 
-        public ObservableCollection<ZeroBreadcrumbItem> Items => _items;
+        public ObservableCollection<BreadcrumbItem> Items => _items;
 
-        public event EventHandler<ZeroBreadcrumbItem>? ItemClicked;
+        public event EventHandler<BreadcrumbItem>? ItemClicked;
         public event EventHandler<string>? PathChanged;
         public event EventHandler<int>? ChevronClicked;
 
@@ -72,7 +72,7 @@ namespace ZeroUI.Wpf.Navigation
                 for (int i = 0; i < parts.Length; i++)
                 {
                     string part = parts[i].Trim();
-                    _items.Add(new ZeroBreadcrumbItem(part, part));
+                    _items.Add(new BreadcrumbItem(part, part));
                 }
             }
             InvalidateVisual();

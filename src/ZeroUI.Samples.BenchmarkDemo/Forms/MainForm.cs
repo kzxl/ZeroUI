@@ -73,7 +73,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private readonly System.Windows.Forms.Timer _autoScrollTimer = new System.Windows.Forms.Timer();
 
         private InventoryItem[] _dataset = Array.Empty<InventoryItem>();
-        private ZeroInventorySource? _zeroSource;
+        private InventorySource? _zeroSource;
 
         // UI Controls
         private Panel _topPanel = null!;
@@ -1044,7 +1044,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             if (count >= 10_000_000)
             {
                 // Extreme Procedural Virtual Source (0 allocation overhead, <45MB RAM!)
-                var procSource = new ZeroProceduralSource(count);
+                var procSource = new ProceduralSource(count);
                 _zeroGrid.DataSource = procSource;
 
                 // For DataGridView: Protect from OutOfMemory crash at 10M rows
@@ -1069,7 +1069,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             }
 
             _dataset = MockDataGenerator.Generate(count);
-            _zeroSource = new ZeroInventorySource(_dataset);
+            _zeroSource = new InventorySource(_dataset);
 
             // Bind to ZeroGrid (Executes in <1ms)
             _zeroGrid.DataSource = _zeroSource;

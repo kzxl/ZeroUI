@@ -109,7 +109,7 @@ namespace ZeroUI.Samples.BenchmarkDemo
                 long zeroInitRam = Process.GetCurrentProcess().WorkingSet64;
                 int zeroGen0Start = GC.CollectionCount(0);
 
-                var zeroSource = new ZeroInventorySource(dataset);
+                var zeroSource = new InventorySource(dataset);
                 var rowMap = new RowIndexMap(size);
                 rowMap.ResetIdentity(size);
 
@@ -207,7 +207,7 @@ namespace ZeroUI.Samples.BenchmarkDemo
             int ultraGen0Start = GC.CollectionCount(0);
 
             var ultraSw = Stopwatch.StartNew();
-            var ultraSource = new ZeroProceduralSource(10_000_000);
+            var ultraSource = new ProceduralSource(10_000_000);
             var ultraRowMap = new RowIndexMap(10_000_000);
             ultraRowMap.ResetIdentity(10_000_000);
             ultraSw.Stop();

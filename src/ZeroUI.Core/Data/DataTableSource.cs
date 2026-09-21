@@ -1,34 +1,38 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
-using ZeroData.Core;
 using ZeroUI.Core.Common;
 
 namespace ZeroUI.Core.Data
 {
     /// <summary>
-    /// High-performance, zero-copy virtual data adapter wrapping ZeroData.Core.DataFrame.
-    /// Provides register-speed access directly from contiguous column memory buffers without heap boxing.
+    /// High-performance zero-allocation virtual data adapter wrapping ADO.NET DataTable and DataView.
+    /// Provides 100% backward compatibility for legacy WinForms and WPF data grids.
     /// </summary>
-    public class ZeroDataFrameSource : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource, IZeroItemSource
+    public class DataTableSource : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource, IZeroItemSource
     {
-        private readonly DataFrame _dataFrame;
-        private readonly List<DataFrameColumnBinding> _bindings = new List<DataFrameColumnBinding>();
+        private readonly DataTable? _table;
+        private readonly DataView _view;
+        private readonly List<TableColumnBinding> _bindings = new List<TableColumnBinding>();
 
-        public DataFrame DataFrame => _dataFrame;
+        public DataTable? Table => _table;
+        public DataView View => _view;
 
-        public int TotalRowCount => _dataFrame.RowCount;
+        public int TotalRowCount => _view.Count;
         public int TotalColumnCount => _bindings.Count;
 
-        public ZeroDataFrameSource(DataFrame dataFrame)
+        public DataTableSource(DataTable table)
         {
-            _dataFrame = dataFrame ?? throw new ArgumentNullException(nameof(dataFrame));
+            _table = table ?? throw new ArgumentNullException(nameof(table));
+            _view = table.DefaultView;
             AutoGenerateBindings();
         }
 
-        public ZeroDataFrameSource(DataFrame dataFrame, IEnumerable<ZeroColumn> columns)
+        public DataTableSource(DataTable table, IEnumerable<ZeroColumn> columns)
         {
-            _dataFrame = dataFrame ?? throw new ArgumentNullException(nameof(dataFrame));
+            _table = table ?? throw new ArgumentNullException(nameof(table));
+            _view = table.DefaultView;
             if (columns != null)
             {
                 ConfigureFromColumns(columns);
@@ -39,100 +43,92 @@ namespace ZeroUI.Core.Data
             }
         }
 
-        public RowView GetRowView(int index) => new RowView(_dataFrame, index);
-
-        object? IZeroItemSource.GetItem(int index)
+        public DataTableSource(DataView view)
         {
-            if ((uint)index >= (uint)_dataFrame.RowCount) return null;
-            var dict = new Dictionary<string, object?>(_dataFrame.ColumnCount, StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < _dataFrame.ColumnCount; i++)
-            {
-                dict[_dataFrame.ColumnNames[i]] = _dataFrame.GetColumnByIndex(i).GetValue(index);
-            }
-            return dict;
+            _view = view ?? throw new ArgumentNullException(nameof(view));
+            _table = view.Table;
+            AutoGenerateBindings();
         }
+
+        public DataTableSource(DataView view, IEnumerable<ZeroColumn> columns)
+        {
+            _view = view ?? throw new ArgumentNullException(nameof(view));
+            _table = view.Table;
+            if (columns != null)
+            {
+                ConfigureFromColumns(columns);
+            }
+            else
+            {
+                AutoGenerateBindings();
+            }
+        }
+
+        public DataRowView GetRowView(int index) => _view[index];
+
+        public DataRow? GetRow(int index) => (index >= 0 && index < _view.Count) ? _view[index].Row : null;
+
+        object? IZeroItemSource.GetItem(int index) => GetRow(index);
 
         public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer)
         {
-            if ((uint)rowIndex >= (uint)_dataFrame.RowCount || (uint)columnIndex >= (uint)_bindings.Count)
+            if ((uint)rowIndex >= (uint)_view.Count || (uint)columnIndex >= (uint)_bindings.Count)
             {
                 return;
             }
 
             var binding = _bindings[columnIndex];
-            var col = binding.Column;
+            var row = _view[rowIndex];
+            object val = row[binding.ColumnOrdinal];
 
-            if (col.HasNulls && col.IsNull(rowIndex))
+            if (val == null || val == DBNull.Value)
             {
                 buffer.Text = ReadOnlySpan<char>.Empty;
                 buffer.Alignment = binding.Alignment;
                 return;
             }
 
-            // High-speed string dictionary resolution
-            if (binding.StringDictColumn != null)
-            {
-                string? str = binding.StringDictColumn.GetString(rowIndex);
-                buffer.Text = str != null ? str.AsSpan() : ReadOnlySpan<char>.Empty;
-                buffer.Alignment = binding.Alignment;
-                return;
-            }
-
-            // Primitive typed columns without boxing
-            object? val = col.GetValue(rowIndex);
-            if (val == null)
-            {
-                buffer.Text = ReadOnlySpan<char>.Empty;
-                buffer.Alignment = binding.Alignment;
-                return;
-            }
-
-            string text = FormatValue(val, binding.FormatString);
-            buffer.Text = text.AsSpan();
+            string str = FormatValue(val, binding.FormatString);
+            buffer.Text = str.AsSpan();
             buffer.Alignment = binding.Alignment;
         }
 
         public int CompareRows(int rowA, int rowB, int columnIndex)
         {
-            if ((uint)rowA >= (uint)_dataFrame.RowCount || (uint)rowB >= (uint)_dataFrame.RowCount ||
+            if ((uint)rowA >= (uint)_view.Count || (uint)rowB >= (uint)_view.Count ||
                 (uint)columnIndex >= (uint)_bindings.Count)
             {
                 return 0;
             }
 
-            var binding = _bindings[columnIndex];
-            var col = binding.Column;
+            int ordinal = _bindings[columnIndex].ColumnOrdinal;
+            object valA = _view[rowA][ordinal];
+            object valB = _view[rowB][ordinal];
 
-            bool isNullA = col.HasNulls && col.IsNull(rowA);
-            bool isNullB = col.HasNulls && col.IsNull(rowB);
+            bool isNullA = valA == null || valA == DBNull.Value;
+            bool isNullB = valB == null || valB == DBNull.Value;
 
             if (isNullA && isNullB) return 0;
             if (isNullA) return -1;
             if (isNullB) return 1;
 
-            if (binding.StringDictColumn != null)
-            {
-                string? strA = binding.StringDictColumn.GetString(rowA);
-                string? strB = binding.StringDictColumn.GetString(rowB);
-                return string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);
-            }
-
-            object? valA = col.GetValue(rowA);
-            object? valB = col.GetValue(rowB);
-
-            if (valA is IComparable compA && valB != null)
+            if (valA is IComparable comp)
             {
                 try
                 {
-                    return compA.CompareTo(valB);
+                    return comp.CompareTo(valB);
                 }
                 catch
                 {
-                    // Fallback
+                    // Fallback to string comparison on incompatible types
                 }
             }
 
-            return string.Compare(valA?.ToString(), valB?.ToString(), StringComparison.OrdinalIgnoreCase);
+            if (string.Compare(valA?.ToString(), valB?.ToString(), StringComparison.OrdinalIgnoreCase) is int res)
+            {
+                return res;
+            }
+            return 0;
         }
 
         public bool IsCellEditable(int rowIndex, int columnIndex)
@@ -143,7 +139,7 @@ namespace ZeroUI.Core.Data
 
         public bool SetCellValue(int rowIndex, int columnIndex, string textValue)
         {
-            if ((uint)rowIndex >= (uint)_dataFrame.RowCount || (uint)columnIndex >= (uint)_bindings.Count)
+            if ((uint)rowIndex >= (uint)_view.Count || (uint)columnIndex >= (uint)_bindings.Count)
             {
                 return false;
             }
@@ -153,22 +149,15 @@ namespace ZeroUI.Core.Data
 
             try
             {
-                var col = binding.Column;
+                var row = _view[rowIndex];
                 if (string.IsNullOrEmpty(textValue))
                 {
-                    col.SetNull(rowIndex);
+                    row[binding.ColumnOrdinal] = DBNull.Value;
                 }
                 else
                 {
-                    if (binding.StringDictColumn != null)
-                    {
-                        binding.StringDictColumn.SetString(rowIndex, textValue);
-                    }
-                    else
-                    {
-                        object parsed = Convert.ChangeType(textValue, binding.DataType, CultureInfo.CurrentCulture);
-                        col.SetValue(rowIndex, parsed);
-                    }
+                    object parsed = Convert.ChangeType(textValue, binding.DataType, CultureInfo.CurrentCulture);
+                    row[binding.ColumnOrdinal] = parsed;
                 }
                 return true;
             }
@@ -181,35 +170,38 @@ namespace ZeroUI.Core.Data
         public List<ZeroColumn> GenerateColumns()
         {
             var cols = new List<ZeroColumn>();
-            for (int i = 0; i < _dataFrame.ColumnCount; i++)
+            if (_table == null) return cols;
+
+            for (int i = 0; i < _table.Columns.Count; i++)
             {
-                var col = _dataFrame.GetColumnByIndex(i);
-                var zc = new ZeroColumn(col.Name, col.Name)
+                var dtCol = _table.Columns[i];
+                var zc = new ZeroColumn(dtCol.ColumnName, dtCol.Caption ?? dtCol.ColumnName)
                 {
-                    ColumnType = ResolveColumnType(col.DataType),
-                    Alignment = ResolveAlignment(col.DataType),
-                    Width = Math.Max(90, Math.Min(250, col.Name.Length * 12 + 30))
+                    ColumnType = ResolveColumnType(dtCol.DataType),
+                    Alignment = ResolveAlignment(dtCol.DataType),
+                    Width = Math.Max(90, Math.Min(250, (dtCol.Caption ?? dtCol.ColumnName).Length * 12 + 30))
                 };
                 cols.Add(zc);
             }
+
             return cols;
         }
 
         private void AutoGenerateBindings()
         {
             _bindings.Clear();
-            for (int i = 0; i < _dataFrame.ColumnCount; i++)
+            if (_table == null) return;
+
+            for (int i = 0; i < _table.Columns.Count; i++)
             {
-                var col = _dataFrame.GetColumnByIndex(i);
-                _bindings.Add(new DataFrameColumnBinding
+                var col = _table.Columns[i];
+                _bindings.Add(new TableColumnBinding
                 {
-                    ColumnName = col.Name,
+                    ColumnName = col.ColumnName,
                     ColumnOrdinal = i,
-                    Column = col,
-                    StringDictColumn = col as StringDictionaryColumn,
                     DataType = col.DataType,
                     Alignment = ResolveAlignment(col.DataType),
-                    ReadOnly = false
+                    ReadOnly = col.ReadOnly
                 });
             }
         }
@@ -217,33 +209,24 @@ namespace ZeroUI.Core.Data
         private void ConfigureFromColumns(IEnumerable<ZeroColumn> columns)
         {
             _bindings.Clear();
+            if (_table == null) return;
+
             foreach (var zc in columns)
             {
                 if (string.IsNullOrEmpty(zc.FieldName)) continue;
 
-                if (_dataFrame.HasColumn(zc.FieldName))
+                int ordinal = _table.Columns.IndexOf(zc.FieldName);
+                if (ordinal >= 0)
                 {
-                    var col = _dataFrame[zc.FieldName];
-                    int ordinal = -1;
-                    for (int i = 0; i < _dataFrame.ColumnCount; i++)
+                    var col = _table.Columns[ordinal];
+                    _bindings.Add(new TableColumnBinding
                     {
-                        if (string.Equals(_dataFrame.ColumnNames[i], zc.FieldName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            ordinal = i;
-                            break;
-                        }
-                    }
-
-                    _bindings.Add(new DataFrameColumnBinding
-                    {
-                        ColumnName = col.Name,
+                        ColumnName = col.ColumnName,
                         ColumnOrdinal = ordinal,
-                        Column = col,
-                        StringDictColumn = col as StringDictionaryColumn,
                         DataType = col.DataType,
                         Alignment = zc.Alignment != CellAlignment.Left ? zc.Alignment : ResolveAlignment(col.DataType),
                         FormatString = zc.DisplayFormat,
-                        ReadOnly = false
+                        ReadOnly = col.ReadOnly
                     });
                 }
             }
@@ -296,16 +279,27 @@ namespace ZeroUI.Core.Data
             return val.ToString() ?? string.Empty;
         }
 
-        private sealed class DataFrameColumnBinding
+        private sealed class TableColumnBinding
         {
             public string ColumnName { get; set; } = string.Empty;
             public int ColumnOrdinal { get; set; }
-            public IDataColumn Column { get; set; } = null!;
-            public StringDictionaryColumn? StringDictColumn { get; set; }
             public Type DataType { get; set; } = typeof(object);
             public CellAlignment Alignment { get; set; }
             public string? FormatString { get; set; }
             public bool ReadOnly { get; set; }
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="DataTableSource"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroDataTableSource is deprecated. Use DataTableSource instead.")]
+    public class ZeroDataTableSource : DataTableSource
+    {
+        public ZeroDataTableSource(DataTable table) : base(table) { }
+        public ZeroDataTableSource(DataTable table, IEnumerable<ZeroColumn> columns) : base(table, columns) { }
+        public ZeroDataTableSource(DataView view) : base(view) { }
+        public ZeroDataTableSource(DataView view, IEnumerable<ZeroColumn> columns) : base(view, columns) { }
     }
 }

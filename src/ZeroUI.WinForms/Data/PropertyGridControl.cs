@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Data
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPropertyGrid.bmp")]
     public class PropertyGridControl : Control
     {
-        private readonly ZeroPropertyModel _model = new ZeroPropertyModel();
+        private readonly PropertyModel _model = new PropertyModel();
         private readonly Panel _searchPanel;
         private readonly TextBox _searchBox;
         private readonly Panel _scrollContainer;
@@ -32,12 +32,12 @@ namespace ZeroUI.WinForms.Data
         private readonly Label _lblDescBody;
 
         private int _splitPosition = 160;
-        private ZeroPropertyItem? _selectedItem;
+        private PropertyItem? _selectedItem;
 
         public event EventHandler<ZeroUI.Core.Data.PropertyValueChangedEventArgs>? PropertyValueChanged;
 
         [Browsable(false)]
-        public ZeroPropertyModel Model => _model;
+        public PropertyModel Model => _model;
 
         [Category("Data")]
         public object? SelectedObject
@@ -256,7 +256,7 @@ namespace ZeroUI.WinForms.Data
             }
         }
 
-        private void SelectProperty(ZeroPropertyItem item)
+        private void SelectProperty(PropertyItem item)
         {
             _selectedItem = item;
             _lblDescTitle.Text = item.DisplayName;

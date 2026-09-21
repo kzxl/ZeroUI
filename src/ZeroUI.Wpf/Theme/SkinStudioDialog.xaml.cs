@@ -14,7 +14,7 @@ namespace ZeroUI.Wpf.Theme
     /// Provides live seed color adjustments, WCAG AAA contrast verification,
     /// dynamic palette generation, and JSON skin file persistence.
     /// </summary>
-    public partial class ZeroSkinStudioDialog : Window
+    public partial class SkinStudioDialog : Window
     {
         private ZeroSkin _generatedSkin = null!;
         private bool _isUpdating = true;
@@ -47,7 +47,7 @@ namespace ZeroUI.Wpf.Theme
             new PresetSeed("Obsidian Slate", "#64748B", "#94A3B8")
         };
 
-        public ZeroSkinStudioDialog()
+        public SkinStudioDialog()
         {
             _isUpdating = true;
             InitializeComponent();
@@ -310,5 +310,13 @@ namespace ZeroUI.Wpf.Theme
         {
             Close();
         }
+    }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="SkinStudioDialog"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use SkinStudioDialog instead.")]
+    public class ZeroSkinStudioDialog : SkinStudioDialog
+    {
     }
 }

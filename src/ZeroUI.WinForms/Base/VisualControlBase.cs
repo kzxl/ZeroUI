@@ -14,7 +14,7 @@ namespace ZeroUI.WinForms.Base
     /// and standard GDI+ anti-aliased surface rendering.
     /// </summary>
     [ToolboxItem(false)]
-    public abstract class ZeroVisualControlBase : ZeroControlBase
+    public abstract class VisualControlBase : ControlBase
     {
         private IDisposable? _animSub;
 
@@ -24,7 +24,7 @@ namespace ZeroUI.WinForms.Base
         /// </summary>
         protected virtual bool AutoAnimate => false;
 
-        protected ZeroVisualControlBase()
+        protected VisualControlBase()
         {
         }
 
@@ -130,4 +130,13 @@ namespace ZeroUI.WinForms.Base
 
         #endregion
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="VisualControlBase"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use VisualControlBase instead.")]
+    public abstract class ZeroVisualControlBase : VisualControlBase
+    {
+    }
 }
+

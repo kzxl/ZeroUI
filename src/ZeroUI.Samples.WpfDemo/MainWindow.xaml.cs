@@ -214,7 +214,7 @@ namespace ZeroUI.Samples.WpfDemo
 
         private void BtnSkinStudio_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new ZeroSkinStudioDialog { Owner = this };
+            var dialog = new SkinStudioDialog { Owner = this };
             dialog.ShowDialog();
         }
 
@@ -737,7 +737,7 @@ namespace ZeroUI.Samples.WpfDemo
         private void BtnLoad10M_Click(object sender, RoutedEventArgs e)
         {
             var sw = Stopwatch.StartNew();
-            var source = new ZeroProceduralSource(10000000);
+            var source = new ProceduralSource(10000000);
             _inventorySource = null;
             VirtualGrid.DataSource = source;
             sw.Stop();

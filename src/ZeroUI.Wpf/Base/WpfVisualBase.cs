@@ -13,7 +13,7 @@ namespace ZeroUI.Wpf.Base
     /// Manages theme lifecycle invalidation, memory-safe event subscription, localized skin scoping,
     /// automated ZeroAnimationClock subscriptions, and standard DrawingContext visual primitives.
     /// </summary>
-    public abstract class ZeroWpfVisualBase : FrameworkElement, IZeroSkinnable
+    public abstract class WpfVisualBase : FrameworkElement, IZeroSkinnable
     {
         private IDisposable? _animSub;
         private int _isRenderPending = 0;
@@ -22,14 +22,14 @@ namespace ZeroUI.Wpf.Base
             DependencyProperty.Register(
                 nameof(UseDefaultSkin),
                 typeof(bool),
-                typeof(ZeroWpfVisualBase),
+                typeof(WpfVisualBase),
                 new PropertyMetadata(true, OnSkinPropertyChanged));
 
         public static readonly DependencyProperty CustomSkinProperty =
             DependencyProperty.Register(
                 nameof(CustomSkin),
                 typeof(ZeroSkin),
-                typeof(ZeroWpfVisualBase),
+                typeof(WpfVisualBase),
                 new PropertyMetadata(null, OnSkinPropertyChanged));
 
         public bool UseDefaultSkin
@@ -51,7 +51,7 @@ namespace ZeroUI.Wpf.Base
         /// </summary>
         protected virtual bool AutoAnimate => false;
 
-        protected ZeroWpfVisualBase()
+        protected WpfVisualBase()
         {
             ClipToBounds = true;
             Loaded += OnLoaded;
@@ -148,7 +148,7 @@ namespace ZeroUI.Wpf.Base
 
         private static void OnSkinPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroWpfVisualBase visual)
+            if (d is WpfVisualBase visual)
             {
                 visual.OnThemeChanged();
                 visual.InvalidateVisual();
@@ -289,4 +289,13 @@ namespace ZeroUI.Wpf.Base
 
         #endregion
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="WpfVisualBase"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use WpfVisualBase instead.")]
+    public abstract class ZeroWpfVisualBase : WpfVisualBase
+    {
+    }
 }
+

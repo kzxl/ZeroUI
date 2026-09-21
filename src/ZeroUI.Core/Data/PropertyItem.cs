@@ -18,9 +18,9 @@ namespace ZeroUI.Core.Data
     }
 
     /// <summary>
-    /// Represents an inspectable property in ZeroPropertyGrid.
+    /// Represents an inspectable property in PropertyGridControl.
     /// </summary>
-    public class ZeroPropertyItem
+    public class PropertyItem
     {
         private object? _value;
 
@@ -50,9 +50,9 @@ namespace ZeroUI.Core.Data
 
         public event EventHandler<PropertyValueChangedEventArgs>? ValueChanged;
 
-        public ZeroPropertyItem() { }
+        public PropertyItem() { }
 
-        public ZeroPropertyItem(string name, object? value, string category = "General", string description = "", bool isReadOnly = false)
+        public PropertyItem(string name, object? value, string category = "General", string description = "", bool isReadOnly = false)
         {
             Name = name;
             DisplayName = name;
@@ -75,7 +75,7 @@ namespace ZeroUI.Core.Data
             return PropertyEditorType.Text;
         }
 
-        public static ZeroPropertyItem FromPropertyInfo(PropertyInfo prop, object target)
+        public static PropertyItem FromPropertyInfo(PropertyInfo prop, object target)
         {
             var catAttr = prop.GetCustomAttribute<CategoryAttribute>();
             var descAttr = prop.GetCustomAttribute<DescriptionAttribute>();
@@ -83,7 +83,7 @@ namespace ZeroUI.Core.Data
             var readAttr = prop.GetCustomAttribute<ReadOnlyAttribute>();
             var defAttr = prop.GetCustomAttribute<DefaultValueAttribute>();
 
-            var item = new ZeroPropertyItem
+            var item = new PropertyItem
             {
                 Name = prop.Name,
                 DisplayName = dispAttr?.DisplayName ?? prop.Name,
@@ -103,6 +103,17 @@ namespace ZeroUI.Core.Data
 
             return item;
         }
+    }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="PropertyItem"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use PropertyItem instead.")]
+    public class ZeroPropertyItem : PropertyItem
+    {
+        public ZeroPropertyItem() { }
+        public ZeroPropertyItem(string name, object? value, string category = "General", string description = "", bool isReadOnly = false)
+            : base(name, value, category, description, isReadOnly) { }
     }
 
     public class PropertyValueChangedEventArgs : EventArgs

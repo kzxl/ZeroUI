@@ -737,7 +737,7 @@ namespace ZeroUI.Wpf.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroListSource<T>(items);
+                var src = new ListSource<T>(items);
                 foreach (var c in src.GenerateColumns())
                 {
                     _columns.Add(c);
@@ -746,7 +746,7 @@ namespace ZeroUI.Wpf.DataGrid
             }
             else
             {
-                DataSource = new ZeroListSource<T>(items, _columns);
+                DataSource = new ListSource<T>(items, _columns);
             }
         }
 
@@ -760,7 +760,7 @@ namespace ZeroUI.Wpf.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroDataTableSource(table);
+                var src = new DataTableSource(table);
                 foreach (var c in src.GenerateColumns())
                 {
                     _columns.Add(c);
@@ -769,7 +769,7 @@ namespace ZeroUI.Wpf.DataGrid
             }
             else
             {
-                DataSource = new ZeroDataTableSource(table, _columns);
+                DataSource = new DataTableSource(table, _columns);
             }
         }
 
@@ -783,7 +783,7 @@ namespace ZeroUI.Wpf.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroDataTableSource(view);
+                var src = new DataTableSource(view);
                 foreach (var c in src.GenerateColumns())
                 {
                     _columns.Add(c);
@@ -792,7 +792,7 @@ namespace ZeroUI.Wpf.DataGrid
             }
             else
             {
-                DataSource = new ZeroDataTableSource(view, _columns);
+                DataSource = new DataTableSource(view, _columns);
             }
         }
 
@@ -806,7 +806,7 @@ namespace ZeroUI.Wpf.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroDataFrameSource(dataFrame);
+                var src = new DataFrameSource(dataFrame);
                 foreach (var c in src.GenerateColumns())
                 {
                     _columns.Add(c);
@@ -815,7 +815,7 @@ namespace ZeroUI.Wpf.DataGrid
             }
             else
             {
-                DataSource = new ZeroDataFrameSource(dataFrame, _columns);
+                DataSource = new DataFrameSource(dataFrame, _columns);
             }
         }
 
@@ -861,7 +861,7 @@ namespace ZeroUI.Wpf.DataGrid
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IList<>))
                 {
                     var itemType = iface.GetGenericArguments()[0];
-                    var listSourceType = typeof(ZeroListSource<>).MakeGenericType(itemType);
+                    var listSourceType = typeof(ListSource<>).MakeGenericType(itemType);
                     if (autoGenerateColumns && _columns.Count == 0)
                     {
                         var listSource = Activator.CreateInstance(listSourceType, source);

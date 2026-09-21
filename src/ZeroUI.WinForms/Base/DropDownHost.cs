@@ -17,7 +17,7 @@ namespace ZeroUI.WinForms.Base
     /// Provides screen boundary clamping, automatic DropUp/DropDown flipping,
     /// seamless focus management, and unified theme styling.
     /// </summary>
-    public class ZeroDropDownHost : ToolStripDropDown
+    public class DropDownHost : ToolStripDropDown
     {
         private Control? _content;
         private ToolStripControlHost? _host;
@@ -45,7 +45,7 @@ namespace ZeroUI.WinForms.Base
             }
         }
 
-        public ZeroDropDownHost()
+        public DropDownHost()
         {
             AutoClose = true;
             DropShadowEnabled = true;
@@ -126,4 +126,13 @@ namespace ZeroUI.WinForms.Base
             }
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="DropDownHost"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use DropDownHost instead.")]
+    public class ZeroDropDownHost : DropDownHost
+    {
+    }
 }
+

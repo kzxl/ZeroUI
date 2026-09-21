@@ -15,7 +15,7 @@ namespace ZeroUI.Wpf.Rendering
     /// Supports streaming up to 10 million points with real-time MinMax/LTTB decimation at 60/120/144 FPS.
     /// Automatically manages high-DPI scaling, front-buffer loss recovery, and zero-allocation updates.
     /// </summary>
-    public class ZeroD3DCanvas : Image, IDisposable
+    public class D3DCanvas : Image, IDisposable
     {
         private readonly D3DImage _d3dImage;
         private readonly ZeroD3D11Bridge _bridge;
@@ -35,49 +35,49 @@ namespace ZeroUI.Wpf.Rendering
             DependencyProperty.Register(
                 nameof(IsRenderingActive),
                 typeof(bool),
-                typeof(ZeroD3DCanvas),
+                typeof(D3DCanvas),
                 new PropertyMetadata(true, OnIsRenderingActiveChanged));
 
         public static readonly DependencyProperty EnableWaveformDemoProperty =
             DependencyProperty.Register(
                 nameof(EnableWaveformDemo),
                 typeof(bool),
-                typeof(ZeroD3DCanvas),
+                typeof(D3DCanvas),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty TraceColorProperty =
             DependencyProperty.Register(
                 nameof(TraceColor),
                 typeof(Color),
-                typeof(ZeroD3DCanvas),
+                typeof(D3DCanvas),
                 new PropertyMetadata(Color.FromRgb(0x00, 0xE5, 0xFF))); // High-visibility neon cyan
 
         public static readonly DependencyProperty MinYProperty =
             DependencyProperty.Register(
                 nameof(MinY),
                 typeof(float),
-                typeof(ZeroD3DCanvas),
+                typeof(D3DCanvas),
                 new PropertyMetadata(-1.0f));
 
         public static readonly DependencyProperty MaxYProperty =
             DependencyProperty.Register(
                 nameof(MaxY),
                 typeof(float),
-                typeof(ZeroD3DCanvas),
+                typeof(D3DCanvas),
                 new PropertyMetadata(1.0f));
 
         public static readonly DependencyProperty AutoScaleProperty =
             DependencyProperty.Register(
                 nameof(AutoScale),
                 typeof(bool),
-                typeof(ZeroD3DCanvas),
+                typeof(D3DCanvas),
                 new PropertyMetadata(false));
 
         public static readonly DependencyProperty DecimationModeProperty =
             DependencyProperty.Register(
                 nameof(DecimationMode),
                 typeof(WaveformDecimationMode),
-                typeof(ZeroD3DCanvas),
+                typeof(D3DCanvas),
                 new PropertyMetadata(WaveformDecimationMode.MinMax));
 
         public bool IsRenderingActive
@@ -132,7 +132,7 @@ namespace ZeroUI.Wpf.Rendering
 
         public ZeroD3D11Bridge Bridge => _bridge;
 
-        public ZeroD3DCanvas()
+        public D3DCanvas()
         {
             _d3dImage = new D3DImage();
             Source = _d3dImage;
@@ -154,7 +154,7 @@ namespace ZeroUI.Wpf.Rendering
 
         private static void OnIsRenderingActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroD3DCanvas canvas && canvas.IsLoaded)
+            if (d is D3DCanvas canvas && canvas.IsLoaded)
             {
                 canvas.UpdateRenderingSubscription();
             }
@@ -401,4 +401,13 @@ namespace ZeroUI.Wpf.Rendering
             _bridge.Dispose();
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="D3DCanvas"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use D3DCanvas instead.")]
+    public class ZeroD3DCanvas : D3DCanvas
+    {
+    }
 }
+

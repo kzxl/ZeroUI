@@ -4,14 +4,14 @@ using ZeroUI.Core.Data;
 
 namespace ZeroUI.Samples.BenchmarkDemo.Data
 {
-    public sealed class ZeroInventorySource : IZeroVirtualSource, IZeroSortableSource
+    public sealed class InventorySource : IZeroVirtualSource, IZeroSortableSource
     {
 
         private readonly InventoryItem[] _items;
         // Small thread-local or instance scratch buffers for zero-alloc formatting
         private readonly char[] _formatBuffer = new char[64];
 
-        public ZeroInventorySource(InventoryItem[] items)
+        public InventorySource(InventoryItem[] items)
         {
             _items = items;
         }
@@ -113,5 +113,21 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
             };
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="InventorySource"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use InventorySource instead.")]
+    public class ZeroInventorySource : IZeroVirtualSource, IZeroSortableSource
+    {
+        private readonly InventorySource _inner;
+        public ZeroInventorySource(InventoryItem[] items) => _inner = new InventorySource(items);
+        public int TotalRowCount => _inner.TotalRowCount;
+        public int TotalColumnCount => _inner.TotalColumnCount;
+        public InventoryItem[] Items => _inner.Items;
+        public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer) => _inner.GetCellValue(rowIndex, columnIndex, ref buffer);
+        public int CompareRows(int rowA, int rowB, int columnIndex) => _inner.CompareRows(rowA, rowB, columnIndex);
+    }
 }
+
 

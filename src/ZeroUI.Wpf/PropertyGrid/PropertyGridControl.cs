@@ -17,7 +17,7 @@ namespace ZeroUI.Wpf.PropertyGrid
     /// </summary>
     public class PropertyGridControl : FrameworkElement
     {
-        private ZeroPropertyModel _model = new ZeroPropertyModel();
+        private PropertyModel _model = new PropertyModel();
         private readonly TextBox _searchBox;
         private readonly TextBox _inPlaceEditor;
 
@@ -30,16 +30,16 @@ namespace ZeroUI.Wpf.PropertyGrid
 
         private double _scrollY = 0;
         private int _hoveredRowIndex = -1;
-        private ZeroPropertyItem? _selectedItem;
+        private PropertyItem? _selectedItem;
         private bool _isEditing = false;
-        private ZeroPropertyItem? _editingItem;
+        private PropertyItem? _editingItem;
 
         private const double ScrollBarWidth = 7.0;
 
         public event EventHandler<PropertyValueChangedEventArgs>? PropertyValueChanged;
-        public event EventHandler<ZeroPropertyItem>? PropertySelected;
+        public event EventHandler<PropertyItem>? PropertySelected;
 
-        public ZeroPropertyModel Model
+        public PropertyModel Model
         {
             get => _model;
             set
@@ -51,7 +51,7 @@ namespace ZeroUI.Wpf.PropertyGrid
                         _model.ModelChanged -= OnModelChanged;
                         _model.PropertyValueChanged -= OnPropertyValueChanged;
                     }
-                    _model = value ?? new ZeroPropertyModel();
+                    _model = value ?? new PropertyModel();
                     _model.ModelChanged += OnModelChanged;
                     _model.PropertyValueChanged += OnPropertyValueChanged;
                     _scrollY = 0;
@@ -79,7 +79,7 @@ namespace ZeroUI.Wpf.PropertyGrid
             set { _splitterX = Math.Max(80.0, Math.Min(ActualWidth - 80.0, value)); InvalidateVisual(); }
         }
 
-        public ZeroPropertyItem? SelectedItem
+        public PropertyItem? SelectedItem
         {
             get => _selectedItem;
             set
@@ -434,7 +434,7 @@ namespace ZeroUI.Wpf.PropertyGrid
             e.Handled = true;
         }
 
-        private void StartEdit(ZeroPropertyItem item, Rect bounds)
+        private void StartEdit(PropertyItem item, Rect bounds)
         {
             _editingItem = item;
             _isEditing = true;
@@ -495,7 +495,7 @@ namespace ZeroUI.Wpf.PropertyGrid
         {
             public bool IsCategory;
             public PropertyCategoryGroup? Category;
-            public ZeroPropertyItem? Property;
+            public PropertyItem? Property;
         }
 
         private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, DpiScale dpi)

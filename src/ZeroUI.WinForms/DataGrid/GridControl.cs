@@ -1345,13 +1345,13 @@ namespace ZeroUI.WinForms.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroListSource<T>(items);
+                var src = new ListSource<T>(items);
                 _columns.AddRange(src.GenerateColumns());
                 DataSource = src;
             }
             else
             {
-                DataSource = new ZeroListSource<T>(items, _columns);
+                DataSource = new ListSource<T>(items, _columns);
             }
         }
 
@@ -1365,13 +1365,13 @@ namespace ZeroUI.WinForms.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroDataTableSource(table);
+                var src = new DataTableSource(table);
                 _columns.AddRange(src.GenerateColumns());
                 DataSource = src;
             }
             else
             {
-                DataSource = new ZeroDataTableSource(table, _columns);
+                DataSource = new DataTableSource(table, _columns);
             }
         }
 
@@ -1385,13 +1385,13 @@ namespace ZeroUI.WinForms.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroDataTableSource(view);
+                var src = new DataTableSource(view);
                 _columns.AddRange(src.GenerateColumns());
                 DataSource = src;
             }
             else
             {
-                DataSource = new ZeroDataTableSource(view, _columns);
+                DataSource = new DataTableSource(view, _columns);
             }
         }
 
@@ -1405,13 +1405,13 @@ namespace ZeroUI.WinForms.DataGrid
 
             if (autoGenerateColumns && _columns.Count == 0)
             {
-                var src = new ZeroDataFrameSource(dataFrame);
+                var src = new DataFrameSource(dataFrame);
                 _columns.AddRange(src.GenerateColumns());
                 DataSource = src;
             }
             else
             {
-                DataSource = new ZeroDataFrameSource(dataFrame, _columns);
+                DataSource = new DataFrameSource(dataFrame, _columns);
             }
         }
 
@@ -1457,7 +1457,7 @@ namespace ZeroUI.WinForms.DataGrid
                 if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IList<>))
                 {
                     var itemType = iface.GetGenericArguments()[0];
-                    var listSourceType = typeof(ZeroListSource<>).MakeGenericType(itemType);
+                    var listSourceType = typeof(ListSource<>).MakeGenericType(itemType);
                     if (autoGenerateColumns && _columns.Count == 0)
                     {
                         var listSource = Activator.CreateInstance(listSourceType, source);
@@ -3792,7 +3792,7 @@ namespace ZeroUI.WinForms.DataGrid
             }
 
             var rows = new List<List<string>>();
-            ZeroClipboardHelper.ParseTsv(text.AsSpan(), (rIdx, cIdx, cellSpan) =>
+            ClipboardHelper.ParseTsv(text.AsSpan(), (rIdx, cIdx, cellSpan) =>
             {
                 while (rows.Count <= rIdx) rows.Add(new List<string>());
                 while (rows[rIdx].Count <= cIdx) rows[rIdx].Add(string.Empty);

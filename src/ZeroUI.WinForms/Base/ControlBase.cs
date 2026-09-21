@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Base
     /// skin lifecycle synchronization with local override capabilities.
     /// </summary>
     [ToolboxItem(false)]
-    public abstract class ZeroControlBase : Control, IZeroSkinnable
+    public abstract class ControlBase : Control, IZeroSkinnable
     {
         private bool _useDefaultSkin = true;
         private ZeroSkin? _customSkin;
@@ -90,7 +90,7 @@ namespace ZeroUI.WinForms.Base
 
         #endregion
 
-        protected ZeroControlBase()
+        protected ControlBase()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -184,4 +184,13 @@ namespace ZeroUI.WinForms.Base
             base.Dispose(disposing);
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="ControlBase"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use ControlBase instead.")]
+    public abstract class ZeroControlBase : ControlBase
+    {
+    }
 }
+

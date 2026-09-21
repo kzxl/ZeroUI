@@ -9,7 +9,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
     /// Generates cell values completely on-the-fly without keeping multi-gigabyte managed objects in RAM.
     /// Memory footprint is virtually ZERO beyond the grid's own index map.
     /// </summary>
-    public sealed class ZeroProceduralSource : IZeroVirtualSource, IZeroSortableSource
+    public sealed class ProceduralSource : IZeroVirtualSource, IZeroSortableSource
     {
 
         private readonly int _totalRowCount;
@@ -64,7 +64,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
             0x00E8E8FF  // Soft Red
         };
 
-        public ZeroProceduralSource(int totalRowCount)
+        public ProceduralSource(int totalRowCount)
         {
             _totalRowCount = Math.Max(0, totalRowCount);
         }
@@ -181,5 +181,20 @@ namespace ZeroUI.Samples.BenchmarkDemo.Data
             }
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="ProceduralSource"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use ProceduralSource instead.")]
+    public class ZeroProceduralSource : IZeroVirtualSource, IZeroSortableSource
+    {
+        private readonly ProceduralSource _inner;
+        public ZeroProceduralSource(int totalRowCount) => _inner = new ProceduralSource(totalRowCount);
+        public int TotalRowCount => _inner.TotalRowCount;
+        public int TotalColumnCount => _inner.TotalColumnCount;
+        public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer) => _inner.GetCellValue(rowIndex, columnIndex, ref buffer);
+        public int CompareRows(int rowA, int rowB, int columnIndex) => _inner.CompareRows(rowA, rowB, columnIndex);
+    }
 }
+
 

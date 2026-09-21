@@ -433,7 +433,7 @@ namespace ZeroUI.WinForms.Editors
             private void StartEyedropper()
             {
                 _owner._dropdown.Close();
-                var overlay = new ZeroEyedropperOverlay(
+                var overlay = new EyedropperOverlay(
                     color =>
                     {
                         _owner.SelectedColor = color;

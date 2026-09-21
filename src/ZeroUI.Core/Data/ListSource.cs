@@ -12,7 +12,7 @@ namespace ZeroUI.Core.Data
     /// Automatically manages compiled property reflection, zero-copy formatting,
     /// type-safe sorting, and in-place editing.
     /// </summary>
-    public class ZeroListSource<T> : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource, IZeroItemSource
+    public class ListSource<T> : IZeroVirtualSource, IZeroSortableSource, IZeroEditableSource, IZeroItemSource
     {
         private readonly IList<T> _items;
         private readonly List<ColumnBinding> _bindings = new List<ColumnBinding>();
@@ -22,13 +22,13 @@ namespace ZeroUI.Core.Data
         public int TotalRowCount => _items.Count;
         public int TotalColumnCount => _bindings.Count;
 
-        public ZeroListSource(IList<T> items)
+        public ListSource(IList<T> items)
         {
             _items = items ?? throw new ArgumentNullException(nameof(items));
             AutoGenerateBindings();
         }
 
-        public ZeroListSource(IList<T> items, IEnumerable<ZeroColumn> columns)
+        public ListSource(IList<T> items, IEnumerable<ZeroColumn> columns)
         {
             _items = items ?? throw new ArgumentNullException(nameof(items));
             if (columns != null)
@@ -288,5 +288,15 @@ namespace ZeroUI.Core.Data
             public Action<T, string>? Setter { get; set; }
             public Comparison<T> Comparer { get; set; } = (_, _) => 0;
         }
+    }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="ListSource{T}"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use ListSource<T> instead.")]
+    public class ZeroListSource<T> : ListSource<T>
+    {
+        public ZeroListSource(IList<T> items) : base(items) { }
+        public ZeroListSource(IList<T> items, IEnumerable<ZeroColumn> columns) : base(items, columns) { }
     }
 }

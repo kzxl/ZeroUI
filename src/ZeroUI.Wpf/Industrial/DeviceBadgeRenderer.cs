@@ -12,7 +12,7 @@ namespace ZeroUI.Wpf.Industrial
     /// LOTO (Lockout/Tagout), and interlock indicator badges.
     /// Renders crisp, scalable vector badges without image assets or heap allocation.
     /// </summary>
-    public static class ZeroDeviceBadgeRenderer
+    public static class DeviceBadgeRenderer
     {
         private const double BadgeSize = 14;
         private const double BadgeSpacing = 2;
@@ -45,7 +45,7 @@ namespace ZeroUI.Wpf.Industrial
         private static readonly Pen ManualBorderPen;
         private static readonly Typeface BadgeFont;
 
-        static ZeroDeviceBadgeRenderer()
+        static DeviceBadgeRenderer()
         {
             ShacklePen = new Pen(new SolidColorBrush(Color.FromRgb(203, 213, 225)), 1.5);
             ShacklePen.Freeze();
@@ -262,6 +262,23 @@ namespace ZeroUI.Wpf.Industrial
             dc.DrawEllipse(ManualBrush, ManualBorderPen, new Point(x + 7, y + 7), 6, 6);
             var mText = new FormattedText("M", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, BadgeFont, 7.5, WhiteBrush, dpi);
             dc.DrawText(mText, new Point(x + 3.2, y + 1.8));
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="DeviceBadgeRenderer"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroDeviceBadgeRenderer is deprecated. Please use DeviceBadgeRenderer instead.")]
+    public static class ZeroDeviceBadgeRenderer
+    {
+        public static void DrawBadges(
+            DrawingContext dc,
+            Rect bounds,
+            DeviceStatusFlags flags,
+            double dpi = 1.0)
+        {
+            DeviceBadgeRenderer.DrawBadges(dc, bounds, flags, dpi);
         }
     }
 }

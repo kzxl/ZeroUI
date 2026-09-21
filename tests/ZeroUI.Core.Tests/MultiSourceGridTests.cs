@@ -24,7 +24,7 @@ namespace ZeroUI.Core.Tests
             dt.Rows.Add(2, "Beta", 88.0, false, now.AddDays(1));
             dt.Rows.Add(3, DBNull.Value, DBNull.Value, DBNull.Value, DBNull.Value);
 
-            var source = new ZeroDataTableSource(dt);
+            var source = new DataTableSource(dt);
 
             Assert.Equal(3, source.TotalRowCount);
             Assert.Equal(5, source.TotalColumnCount);
@@ -73,7 +73,7 @@ namespace ZeroUI.Core.Tests
             var view = dt.DefaultView;
             view.RowFilter = "Status = 'Active'";
 
-            var source = new ZeroDataTableSource(view);
+            var source = new DataTableSource(view);
 
             Assert.Equal(2, source.TotalRowCount);
             var buf = new CellValueBuffer();
@@ -85,7 +85,7 @@ namespace ZeroUI.Core.Tests
         }
 
         [Fact]
-        public void ZeroDataFrameSource_BasicAndCategoricalBinding_WorksAccurately()
+        public void DataFrameSource_BasicAndCategoricalBinding_WorksAccurately()
         {
             var df = new DataFrame();
             df.AddColumn(new DataColumn<int>("Id", new[] { 101, 102, 103 }));
@@ -95,7 +95,7 @@ namespace ZeroUI.Core.Tests
             // Categorize column
             df.Categorize("Category");
 
-            var source = new ZeroDataFrameSource(df);
+            var source = new DataFrameSource(df);
 
             Assert.Equal(3, source.TotalRowCount);
             Assert.Equal(3, source.TotalColumnCount);
@@ -129,11 +129,11 @@ namespace ZeroUI.Core.Tests
         }
 
         [Fact]
-        public void ZeroDataFrameSource_Editing_UpdatesUnderlyingColumn()
+        public void DataFrameSource_Editing_UpdatesUnderlyingColumn()
         {
             var df = new DataFrame();
             df.AddColumn(new DataColumn<int>("Qty", new[] { 10, 20 }));
-            var source = new ZeroDataFrameSource(df);
+            var source = new DataFrameSource(df);
 
             bool success = source.SetCellValue(0, 0, "99");
             Assert.True(success);
@@ -142,6 +142,26 @@ namespace ZeroUI.Core.Tests
             source.GetCellValue(0, 0, ref buf);
             Assert.Equal("99", buf.Text.ToString());
             Assert.Equal(99, df.Column<int>("Qty")[0]);
+        }
+
+        [Fact]
+        public void LegacyAliases_ZeroDataTableSource_And_ZeroDataFrameSource_MaintainBackwardCompatibility()
+        {
+            var dt = new DataTable();
+            dt.Columns.Add("X", typeof(int));
+            dt.Rows.Add(123);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            var legacyDtSource = new ZeroDataTableSource(dt);
+            Assert.IsAssignableFrom<DataTableSource>(legacyDtSource);
+            Assert.Equal(1, legacyDtSource.TotalRowCount);
+
+            var df = new DataFrame();
+            df.AddColumn(new DataColumn<int>("Y", new[] { 456 }));
+            var legacyDfSource = new ZeroDataFrameSource(df);
+            Assert.IsAssignableFrom<DataFrameSource>(legacyDfSource);
+            Assert.Equal(1, legacyDfSource.TotalRowCount);
+#pragma warning restore CS0618
         }
     }
 }

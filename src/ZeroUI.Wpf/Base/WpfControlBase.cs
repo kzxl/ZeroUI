@@ -11,20 +11,20 @@ namespace ZeroUI.Wpf.Base
     /// Provides dynamic theme resource linkage, memory-safe theme lifecycle dispatch,
     /// and local theme override capabilities.
     /// </summary>
-    public abstract class ZeroWpfControlBase : Control, IZeroSkinnable
+    public abstract class WpfControlBase : Control, IZeroSkinnable
     {
         public static readonly DependencyProperty UseDefaultSkinProperty =
             DependencyProperty.Register(
                 nameof(UseDefaultSkin),
                 typeof(bool),
-                typeof(ZeroWpfControlBase),
+                typeof(WpfControlBase),
                 new PropertyMetadata(true, OnSkinPropertyChanged));
 
         public static readonly DependencyProperty CustomSkinProperty =
             DependencyProperty.Register(
                 nameof(CustomSkin),
                 typeof(ZeroSkin),
-                typeof(ZeroWpfControlBase),
+                typeof(WpfControlBase),
                 new PropertyMetadata(null, OnSkinPropertyChanged));
 
         public bool UseDefaultSkin
@@ -41,7 +41,7 @@ namespace ZeroUI.Wpf.Base
 
         public ZeroSkin EffectiveSkin => ZeroSkinManager.ResolveSkin(this);
 
-        protected ZeroWpfControlBase()
+        protected WpfControlBase()
         {
             SetResourceReference(BackgroundProperty, "ZeroUI.BgCard");
             SetResourceReference(ForegroundProperty, "ZeroUI.TextPrimary");
@@ -90,10 +90,18 @@ namespace ZeroUI.Wpf.Base
 
         private static void OnSkinPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ZeroWpfControlBase ctrl)
+            if (d is WpfControlBase ctrl)
             {
                 ctrl.OnThemeChanged();
             }
         }
+    }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="WpfControlBase"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use WpfControlBase instead.")]
+    public abstract class ZeroWpfControlBase : WpfControlBase
+    {
     }
 }

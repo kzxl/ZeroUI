@@ -1043,7 +1043,7 @@
                                 <Border Grid.Row="0" Margin="0,0,0,12" Background="{DynamicResource ZeroUI.BgCard}" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
                                     <DockPanel LastChildFill="False">
                                         <StackPanel DockPanel.Dock="Left">
-                                            <TextBlock Text="🚀 Direct3D 11 to D3D9Ex Shared Texture Bridge (ZeroD3DCanvas)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" />
+                                            <TextBlock Text="🚀 Direct3D 11 to D3D9Ex Shared Texture Bridge (D3DCanvas)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" />
                                             <TextBlock Text="Zero-copy GPU hardware compositing via D3DImage &amp; DXGI shared handle. Sub-millisecond presentation, 60–144 FPS VSync." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,2,0,0" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
@@ -1058,7 +1058,7 @@
                                 </Border>
 
                                 <Border Grid.Row="1" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" Background="#0B0F19" ClipToBounds="True">
-                                    <rend:ZeroD3DCanvas x:Name="DemoD3DCanvas" />
+                                    <rend:D3DCanvas x:Name="DemoD3DCanvas" />
                                 </Border>
                             </Grid>
                         </TabItem>

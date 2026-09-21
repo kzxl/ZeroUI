@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.DataGrid.Repositories
 
         public void SetDataSource<T>(IList<T> items)
         {
-            DataSource = new ZeroListSource<T>(items);
+            DataSource = new ListSource<T>(items);
         }
 
         public virtual Control CreateInPlaceEditor()

@@ -11,7 +11,7 @@ namespace ZeroUI.WinForms.Editors
     /// Freezes a high-performance snapshot of the entire virtual desktop screen,
     /// displaying a real-time magnified 9x9 pixel loupe with hex preview for pixel-perfect color picking.
     /// </summary>
-    internal sealed class ZeroEyedropperOverlay : Form
+    internal class EyedropperOverlay : Form
     {
         private readonly Bitmap? _desktopSnapshot;
         private readonly Action<Color> _onColorSelected;
@@ -19,7 +19,7 @@ namespace ZeroUI.WinForms.Editors
         private Point _currentScreenPos;
         private Color _currentColor = Color.Black;
 
-        public ZeroEyedropperOverlay(Action<Color> onColorSelected, Action onCancelled)
+        public EyedropperOverlay(Action<Color> onColorSelected, Action onCancelled)
         {
             _onColorSelected = onColorSelected;
             _onCancelled = onCancelled;
@@ -230,5 +230,16 @@ namespace ZeroUI.WinForms.Editors
             }
             base.Dispose(disposing);
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="EyedropperOverlay"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroEyedropperOverlay is deprecated. Use EyedropperOverlay instead.")]
+    internal sealed class ZeroEyedropperOverlay : EyedropperOverlay
+    {
+        public ZeroEyedropperOverlay(Action<Color> onColorSelected, Action onCancelled)
+            : base(onColorSelected, onCancelled) { }
     }
 }

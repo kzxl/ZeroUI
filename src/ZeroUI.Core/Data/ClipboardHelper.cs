@@ -13,7 +13,7 @@ namespace ZeroUI.Core.Data
     /// High-performance Tab-Separated Values (TSV) clipboard serialization helper.
     /// Eliminates heap allocations on hot copy/paste paths using ArrayPool and span-based slicing.
     /// </summary>
-    public static class ZeroClipboardHelper
+    public static class ClipboardHelper
     {
         /// <summary>
         /// Formats a 2D string array into standard Windows Clipboard TSV text.
@@ -133,4 +133,17 @@ namespace ZeroUI.Core.Data
             }
         }
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="ClipboardHelper"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use ClipboardHelper instead.")]
+    public static class ZeroClipboardHelper
+    {
+        public static string FormatTsv(string[,] matrix) => ClipboardHelper.FormatTsv(matrix);
+        public static string FormatTsv(int rowCount, int colCount, Func<int, int, string?> cellValueSelector) => ClipboardHelper.FormatTsv(rowCount, colCount, cellValueSelector);
+        public static void ParseTsv(string? tsv, TsvCellSpanCallback cellCallback) => ClipboardHelper.ParseTsv(tsv, cellCallback);
+        public static void ParseTsv(ReadOnlySpan<char> tsv, TsvCellSpanCallback cellCallback) => ClipboardHelper.ParseTsv(tsv, cellCallback);
+    }
 }
+

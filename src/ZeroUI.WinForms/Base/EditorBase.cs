@@ -16,7 +16,7 @@ namespace ZeroUI.WinForms.Base
     /// </summary>
     /// <typeparam name="TValue">The primary strongly-typed value managed by the editor.</typeparam>
     [ToolboxItem(false)]
-    public abstract class ZeroEditorBase<TValue> : ZeroControlBase, IZeroEditor<TValue>
+    public abstract class EditorBase<TValue> : ControlBase, IZeroEditor<TValue>
     {
         private TValue _value = default!;
         private bool _isModified;
@@ -196,7 +196,7 @@ namespace ZeroUI.WinForms.Base
 
         #endregion
 
-        protected ZeroEditorBase()
+        protected EditorBase()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -406,4 +406,13 @@ namespace ZeroUI.WinForms.Base
 
         #endregion
     }
+
+    /// <summary>
+    /// Obsolete alias for <see cref="EditorBase{TValue}"/> to maintain backward compatibility.
+    /// </summary>
+    [Obsolete("Use EditorBase<TValue> instead.")]
+    public abstract class ZeroEditorBase<TValue> : EditorBase<TValue>
+    {
+    }
 }
+

@@ -24,7 +24,7 @@ namespace ZeroUI.WinForms.Navigation
     [ToolboxBitmap(typeof(ZeroIcons), "BreadcrumbControl.bmp")]
     public class BreadcrumbControl : Control
     {
-        private readonly ObservableCollection<ZeroBreadcrumbItem> _items = new ObservableCollection<ZeroBreadcrumbItem>();
+        private readonly ObservableCollection<BreadcrumbItem> _items = new ObservableCollection<BreadcrumbItem>();
         private readonly List<Rectangle> _crumbRects = new List<Rectangle>();
         private readonly List<Rectangle> _chevronRects = new List<Rectangle>();
         private readonly Stack<string> _backHistory = new Stack<string>();
@@ -38,7 +38,7 @@ namespace ZeroUI.WinForms.Navigation
         private int _hoveredCrumbIndex = -1;
         private int _hoveredChevronIndex = -1;
 
-        public event EventHandler<ZeroBreadcrumbItem>? ItemClicked;
+        public event EventHandler<BreadcrumbItem>? ItemClicked;
         public event EventHandler<string>? PathChanged;
         public event EventHandler<int>? ChevronClicked;
 
@@ -76,7 +76,7 @@ namespace ZeroUI.WinForms.Navigation
         [Category("ZeroUI")]
         [Description("Collection of breadcrumb items in the active path.")]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public ObservableCollection<ZeroBreadcrumbItem> Items => _items;
+        public ObservableCollection<BreadcrumbItem> Items => _items;
 
         [Category("ZeroUI")]
         [Description("Delimiter string separating adjacent crumbs.")]
@@ -118,7 +118,7 @@ namespace ZeroUI.WinForms.Navigation
                         for (int i = 0; i < parts.Length; i++)
                         {
                             string part = parts[i].Trim();
-                            _items.Add(new ZeroBreadcrumbItem(part, part));
+                            _items.Add(new BreadcrumbItem(part, part));
                         }
                     }
                     Invalidate();
@@ -173,7 +173,7 @@ namespace ZeroUI.WinForms.Navigation
                 for (int i = 0; i < parts.Length; i++)
                 {
                     string part = parts[i].Trim();
-                    _items.Add(new ZeroBreadcrumbItem(part, part));
+                    _items.Add(new BreadcrumbItem(part, part));
                 }
             }
             Invalidate();
