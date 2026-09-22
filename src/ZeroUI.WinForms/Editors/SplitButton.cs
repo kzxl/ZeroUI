@@ -50,10 +50,15 @@ namespace ZeroUI.WinForms.Editors
             Cursor = Cursors.Hand;
             BackColor = Color.Transparent;
 
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) =>
+            {
+                UpdateRegion();
+                Invalidate();
+            };
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.25f, FontStyle.Regular);
+                UpdateRegion();
                 Invalidate();
             };
         }
@@ -110,6 +115,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _borderRadius = Math.Max(0, value);
+                UpdateRegion();
                 Invalidate();
             }
         }
@@ -209,6 +215,28 @@ namespace ZeroUI.WinForms.Editors
 
         #endregion
 
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            UpdateRegion();
+            Invalidate();
+        }
+
+        private void UpdateRegion()
+        {
+            if (Width <= 0 || Height <= 0) return;
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+            if (effRadius > 0)
+            {
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
+                Region = new Region(path);
+            }
+            else
+            {
+                Region = null;
+            }
+        }
+
         #region Paint Pipeline
 
         protected override void OnThemeChanged(ZeroSkin skin)
@@ -218,57 +246,20 @@ namespace ZeroUI.WinForms.Editors
             Invalidate();
         }
 
-        protected override void OnPaintBackground(PaintEventArgs pevent)
-        {
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
-            bool painted = false;
-
-            if (Parent != null)
-            {
-                try
-                {
-                    var g = pevent.Graphics;
-                    var state = g.Save();
-                    g.TranslateTransform(-Left, -Top);
-                    using (var ppe = new PaintEventArgs(g, new Rectangle(Left, Top, Width, Height)))
-                    {
-                        InvokePaintBackground(Parent, ppe);
-                    }
-                    g.Restore(state);
-                    painted = true;
-                }
-                catch
-                {
-                    painted = false;
-                }
-            }
-
-            if (!painted)
-            {
-                using var brush = new SolidBrush(parentBg);
-                pevent.Graphics.FillRectangle(brush, ClientRectangle);
-            }
-        }
-
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var palette = CurrentPalette;
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
             var (baseBg, fg, border) = GetBaseColors(palette);
 
-            float strokeWidth = 1f;
-            var rectF = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
-
             // 1. Draw Outer Button Container
             if (effRadius > 0)
             {
-                using var path = ZeroUIConfig.CreateRoundedRectangleF(rectF, effRadius);
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
                 using (var brush = new SolidBrush(baseBg))
                 {
                     g.FillPath(brush, path);
@@ -309,7 +300,7 @@ namespace ZeroUI.WinForms.Editors
                 // 4. Draw Outer Border
                 if (border != Color.Transparent)
                 {
-                    using var pen = new Pen(border, strokeWidth);
+                    using var pen = new Pen(border, 1f) { Alignment = PenAlignment.Inset };
                     g.DrawPath(pen, path);
                 }
             }
@@ -348,7 +339,7 @@ namespace ZeroUI.WinForms.Editors
 
                 if (border != Color.Transparent)
                 {
-                    using var pen = new Pen(border, strokeWidth);
+                    using var pen = new Pen(border, 1f) { Alignment = PenAlignment.Inset };
                     g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
                 }
             }
@@ -396,6 +387,9 @@ namespace ZeroUI.WinForms.Editors
                 _ => (palette.Primary, Color.White, Color.Transparent)
             };
         }
+
+        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
+            ZeroUIConfig.CreateRoundedRectangle(rect, radius);
 
         #endregion
     }

@@ -157,23 +157,24 @@ namespace ZeroUI.WinForms.Editors
 
             var palette = CurrentPalette;
 
-            // 1. Fill parent background to eliminate black corner clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
-            using (var brushParent = new SolidBrush(parentBg))
-            {
-                g.FillRectangle(brushParent, ClientRectangle);
-            }
-
-            Rectangle trackRect = new Rectangle(0, 0, Width - 1, Height - 1);
+            Rectangle trackRect = new Rectangle(0, 0, Width, Height);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
 
-            // 2. Draw Track Background
-            using (var trackPath = CreateRoundedRectangle(trackRect, effRadius))
+            // 1. Draw Track Background
+            if (effRadius > 0)
             {
+                using var trackPath = CreateRoundedRectangle(trackRect, effRadius);
                 using var trackBrush = new SolidBrush(palette.HeaderBackground);
                 g.FillPath(trackBrush, trackPath);
-                using var trackBorderPen = new Pen(palette.Border, 1f);
+                using var trackBorderPen = new Pen(palette.Border, 1f) { Alignment = PenAlignment.Inset };
                 g.DrawPath(trackBorderPen, trackPath);
+            }
+            else
+            {
+                using var trackBrush = new SolidBrush(palette.HeaderBackground);
+                g.FillRectangle(trackBrush, trackRect);
+                using var trackBorderPen = new Pen(palette.Border, 1f) { Alignment = PenAlignment.Inset };
+                g.DrawRectangle(trackBorderPen, 0, 0, Width - 1, Height - 1);
             }
 
             if (_items.Length == 0) return;

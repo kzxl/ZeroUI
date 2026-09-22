@@ -62,7 +62,11 @@ namespace ZeroUI.WinForms.Containers
                 _borderColor = ZeroTheme.Colors.Border;
                 Invalidate();
             };
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) =>
+            {
+                UpdateRegion();
+                Invalidate();
+            };
         }
 
         [Category("Appearance")]
@@ -115,7 +119,12 @@ namespace ZeroUI.WinForms.Containers
         public int BorderRadius
         {
             get => _borderRadius;
-            set { _borderRadius = Math.Max(0, value); Invalidate(); }
+            set
+            {
+                _borderRadius = Math.Max(0, value);
+                UpdateRegion();
+                Invalidate();
+            }
         }
 
         [Category("Appearance")]
@@ -132,6 +141,23 @@ namespace ZeroUI.WinForms.Containers
         {
             base.OnResize(eventargs);
             UpdateContentLayout();
+            UpdateRegion();
+            Invalidate();
+        }
+
+        private void UpdateRegion()
+        {
+            if (Width <= 0 || Height <= 0) return;
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+            if (effRadius > 0)
+            {
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
+                Region = new Region(path);
+            }
+            else
+            {
+                Region = null;
+            }
         }
 
         private void UpdateContentLayout()
@@ -150,24 +176,26 @@ namespace ZeroUI.WinForms.Containers
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            // 1. Fill parent background to eliminate black corner clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, ZeroTheme.Colors.Background);
-            using (var brushParent = new SolidBrush(parentBg))
-            {
-                g.FillRectangle(brushParent, ClientRectangle);
-            }
-
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            Rectangle rect = new Rectangle(0, 0, Width, Height);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
 
-            // 2. Draw Card Background & Rounded Border
-            using (var path = CreateRoundedRectangle(rect, effRadius))
+            // 1. Draw Card Background & Rounded Border
+            if (effRadius > 0)
             {
+                using var path = CreateRoundedRectangle(rect, effRadius);
                 using var bgBrush = new SolidBrush(BackColor);
                 g.FillPath(bgBrush, path);
 
-                using var borderPen = new Pen(_borderColor, 1f);
+                using var borderPen = new Pen(_borderColor, 1f) { Alignment = PenAlignment.Inset };
                 g.DrawPath(borderPen, path);
+            }
+            else
+            {
+                using var bgBrush = new SolidBrush(BackColor);
+                g.FillRectangle(bgBrush, rect);
+
+                using var borderPen = new Pen(_borderColor, 1f) { Alignment = PenAlignment.Inset };
+                g.DrawRectangle(borderPen, 0, 0, Width - 1, Height - 1);
             }
 
             // 2. Draw Header Area

@@ -38,10 +38,15 @@ namespace ZeroUI.WinForms.Editors
             Text = "Tag";
             BackColor = Color.Transparent;
 
-            ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
+            ZeroUIConfig.CornerStyleChanged += (s, e) =>
+            {
+                UpdateRegion();
+                Invalidate();
+            };
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 8.5f, FontStyle.Regular);
+                UpdateRegion();
                 Invalidate();
             };
         }
@@ -66,38 +71,33 @@ namespace ZeroUI.WinForms.Editors
         public int BorderRadius
         {
             get => _borderRadius;
-            set { _borderRadius = Math.Max(0, value); Invalidate(); }
+            set
+            {
+                _borderRadius = Math.Max(0, value);
+                UpdateRegion();
+                Invalidate();
+            }
         }
 
-        protected override void OnPaintBackground(PaintEventArgs pevent)
+        protected override void OnResize(EventArgs e)
         {
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
-            bool painted = false;
+            base.OnResize(e);
+            UpdateRegion();
+            Invalidate();
+        }
 
-            if (Parent != null)
+        private void UpdateRegion()
+        {
+            if (Width <= 0 || Height <= 0) return;
+            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
+            if (effRadius > 0)
             {
-                try
-                {
-                    var g = pevent.Graphics;
-                    var state = g.Save();
-                    g.TranslateTransform(-Left, -Top);
-                    using (var ppe = new PaintEventArgs(g, new Rectangle(Left, Top, Width, Height)))
-                    {
-                        InvokePaintBackground(Parent, ppe);
-                    }
-                    g.Restore(state);
-                    painted = true;
-                }
-                catch
-                {
-                    painted = false;
-                }
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
+                Region = new Region(path);
             }
-
-            if (!painted)
+            else
             {
-                using var brush = new SolidBrush(parentBg);
-                pevent.Graphics.FillRectangle(brush, ClientRectangle);
+                Region = null;
             }
         }
 
@@ -105,19 +105,14 @@ namespace ZeroUI.WinForms.Editors
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var (bg, border, fg) = GetTagColors(_tagType, EffectiveSkin.IsDark);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
 
-            float strokeWidth = 1f;
-            var rectF = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
-
             if (effRadius > 0)
             {
-                using var path = ZeroUIConfig.CreateRoundedRectangleF(rectF, effRadius);
+                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
                 using (var brush = new SolidBrush(bg))
                 {
                     g.FillPath(brush, path);
@@ -125,7 +120,7 @@ namespace ZeroUI.WinForms.Editors
 
                 if (border != Color.Transparent)
                 {
-                    using var pen = new Pen(border, strokeWidth);
+                    using var pen = new Pen(border, 1f) { Alignment = PenAlignment.Inset };
                     g.DrawPath(pen, path);
                 }
             }
@@ -138,7 +133,7 @@ namespace ZeroUI.WinForms.Editors
 
                 if (border != Color.Transparent)
                 {
-                    using var pen = new Pen(border, strokeWidth);
+                    using var pen = new Pen(border, 1f) { Alignment = PenAlignment.Inset };
                     g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
                 }
             }

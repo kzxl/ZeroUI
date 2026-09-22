@@ -514,19 +514,12 @@ namespace ZeroUI.WinForms.Editors
 
             var palette = CurrentPalette;
 
-            // 1. Fill parent background to eliminate edge clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
-            using (var brushParent = new SolidBrush(parentBg))
-            {
-                g.FillRectangle(brushParent, ClientRectangle);
-            }
-
             if (_model.Count == 0 || _itemBounds.Count != _model.Count) return;
 
-            Rectangle groupRect = new Rectangle(0, 0, Width - 1, Height - 1);
+            Rectangle groupRect = new Rectangle(0, 0, Width, Height);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
 
-            // 2. Draw Group Outer Background & Clip Path
+            // 1. Draw Group Outer Background & Clip Path
             using (var groupPath = CreateRoundedRectangle(groupRect, effRadius, effRadius, effRadius, effRadius))
             {
                 using var bgBrush = new SolidBrush(palette.Surface);
@@ -661,7 +654,7 @@ namespace ZeroUI.WinForms.Editors
                 g.Clip = oldClip;
 
                 // 4. Draw Outer Group Border cleanly over clipped items
-                using var borderPen = new Pen(palette.Border, 1f);
+                using var borderPen = new Pen(palette.Border, 1f) { Alignment = PenAlignment.Inset };
                 g.DrawPath(borderPen, groupPath);
             }
         }
