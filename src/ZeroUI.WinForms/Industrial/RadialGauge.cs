@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Text;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
@@ -22,7 +21,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("ValueChanged")]
     [Description("High-precision circular industrial dial gauge with needle pointer and threshold zones")]
     [ToolboxBitmap(typeof(ZeroIcons), "RadialGauge.bmp")]
-    public class RadialGauge : Control, IScadaBindable
+    public partial class RadialGauge : ControlBase, IScadaBindable
     {
         private double _minimum = 0.0;
         private double _maximum = 100.0;
@@ -34,6 +33,8 @@ namespace ZeroUI.WinForms.Industrial
         private int _minorTicks = 4;
         private string _title = "Pressure";
         private string _unit = "bar";
+        private string _valueFormat = "0.#";
+        private bool _useTabularReadout = true;
         private bool _enableDamping = true;
         private double _dampingFactor = 0.25;
         private readonly Timer _animationTimer;
@@ -136,6 +137,24 @@ namespace ZeroUI.WinForms.Industrial
             set { _unit = value ?? string.Empty; Invalidate(); }
         }
 
+        [Category("ZeroUI - Appearance")]
+        [Description("Custom format string for the digital readout. Defaults to '0.#'. Callers can specify fixed-precision formats such as '0.0' or '0.00'.")]
+        [DefaultValue("0.#")]
+        public string ValueFormat
+        {
+            get => _valueFormat;
+            set { _valueFormat = value ?? "0.#"; Invalidate(); }
+        }
+
+        [Category("ZeroUI - Appearance")]
+        [Description("Enables tabular digit slot pitch to eliminate horizontal jumping/jitter.")]
+        [DefaultValue(true)]
+        public bool UseTabularReadout
+        {
+            get => _useTabularReadout;
+            set { _useTabularReadout = value; Invalidate(); }
+        }
+
         [Category("ZeroUI - Scale")]
         [Description("Number of major scale subdivisions.")]
         [DefaultValue(10)]
@@ -201,13 +220,6 @@ namespace ZeroUI.WinForms.Industrial
 
         public RadialGauge()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(180, 180);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
@@ -238,184 +250,6 @@ namespace ZeroUI.WinForms.Industrial
                     ValueChanged?.Invoke(this, EventArgs.Empty);
                 }
             };
-
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-
-            float w = Width;
-            float h = Height;
-            float cx = w / 2f;
-            float cy = h / 2f;
-            float radius = Math.Min(cx, cy) - 10f;
-            if (radius < 20f) return;
-
-            var colors = ZeroTheme.Colors;
-
-            // 1. Dial Background Bezel
-            using (var bezelBrush = new SolidBrush(ZeroTheme.IsDark ? Color.FromArgb(24, 26, 32) : Color.FromArgb(248, 249, 251)))
-            {
-                g.FillEllipse(bezelBrush, cx - radius, cy - radius, radius * 2f, radius * 2f);
-            }
-
-            using (var bezelPen = new Pen(colors.Border, 1.5f))
-            {
-                g.DrawEllipse(bezelPen, cx - radius, cy - radius, radius * 2f, radius * 2f);
-            }
-
-            float arcRadius = radius - 14f;
-            var arcRect = new RectangleF(cx - arcRadius, cy - arcRadius, arcRadius * 2f, arcRadius * 2f);
-
-            // 2. Base Track Arc
-            using (var trackPen = new Pen(colors.Border, 6f))
-            {
-                trackPen.StartCap = LineCap.Round;
-                trackPen.EndCap = LineCap.Round;
-                g.DrawArc(trackPen, arcRect, _startAngle, _sweepAngle);
-            }
-
-            // 3. Colored Threshold Bands
-            if (_thresholds.Count > 0)
-            {
-                for (int i = 0; i < _thresholds.Count; i++)
-                {
-                    var t = _thresholds[i];
-                    float tStart = GaugeMath.ValueToAngle(t.From, _minimum, _maximum, _startAngle, _sweepAngle);
-                    float tEnd = GaugeMath.ValueToAngle(t.To, _minimum, _maximum, _startAngle, _sweepAngle);
-                    float tSweep = tEnd - tStart;
-
-                    if (tSweep > 0.5f)
-                    {
-                        Color bandColor = Color.FromArgb((int)t.ArgbColor);
-                        using (var bandPen = new Pen(bandColor, 6f))
-                        {
-                            g.DrawArc(bandPen, arcRect, tStart, tSweep);
-                        }
-                    }
-                }
-            }
-
-            // 4. Tick Marks and Scale Numbers
-            float tickOuterR = arcRadius - 8f;
-            float tickMajorInnerR = tickOuterR - 8f;
-            float tickMinorInnerR = tickOuterR - 4f;
-
-            int totalSteps = _majorTicks * Math.Max(1, _minorTicks);
-            using (var majorPen = new Pen(colors.TextSecondary, 1.5f))
-            using (var minorPen = new Pen(Color.FromArgb(120, colors.TextSecondary), 1f))
-            using (var labelFont = new Font("Segoe UI", 7.5f, FontStyle.Regular))
-            using (var labelBrush = new SolidBrush(colors.TextSecondary))
-            {
-                for (int step = 0; step <= totalSteps; step++)
-                {
-                    float ratio = (float)step / totalSteps;
-                    float angleDeg = _startAngle + ratio * _sweepAngle;
-                    double angleRad = angleDeg * Math.PI / 180.0;
-
-                    float cos = (float)Math.Cos(angleRad);
-                    float sin = (float)Math.Sin(angleRad);
-
-                    bool isMajor = (step % Math.Max(1, _minorTicks) == 0);
-                    float innerR = isMajor ? tickMajorInnerR : tickMinorInnerR;
-                    Pen penToUse = isMajor ? majorPen : minorPen;
-
-                    float x1 = cx + innerR * cos;
-                    float y1 = cy + innerR * sin;
-                    float x2 = cx + tickOuterR * cos;
-                    float y2 = cy + tickOuterR * sin;
-
-                    g.DrawLine(penToUse, x1, y1, x2, y2);
-
-                    // Draw Scale Numbers on Major Ticks
-                    if (isMajor && radius >= 50f)
-                    {
-                        double tickVal = _minimum + ratio * (_maximum - _minimum);
-                        string numStr = tickVal >= 1000 ? $"{tickVal / 1000:0.#}k" : $"{tickVal:0}";
-                        float numR = innerR - 10f;
-                        float nx = cx + numR * cos;
-                        float ny = cy + numR * sin;
-
-                        SizeF sz = g.MeasureString(numStr, labelFont);
-                        g.DrawString(numStr, labelFont, labelBrush, nx - sz.Width / 2f, ny - sz.Height / 2f);
-                    }
-                }
-            }
-
-            // 5. Gauge Title and Readout
-            using (var titleFont = new Font("Segoe UI", 8f, FontStyle.Regular))
-            using (var titleBrush = new SolidBrush(colors.TextSecondary))
-            using (var valFont = new Font("Segoe UI", 11f, FontStyle.Bold))
-            {
-                // Title
-                if (!string.IsNullOrEmpty(_title))
-                {
-                    SizeF tSz = g.MeasureString(_title, titleFont);
-                    g.DrawString(_title, titleFont, titleBrush, cx - tSz.Width / 2f, cy + radius * 0.35f);
-                }
-
-                // Digital Value Readout
-                string valStr = $"{_value:F1} {_unit}".Trim();
-                GaugeSeverity sev = GaugeMath.EvaluateSeverity(_value, _thresholds);
-                Color readoutColor = sev == GaugeSeverity.Critical
-                    ? Color.FromArgb(239, 68, 68)
-                    : (sev == GaugeSeverity.Warning ? Color.FromArgb(245, 158, 11) : colors.TextPrimary);
-
-                using (var valBrush = new SolidBrush(readoutColor))
-                {
-                    SizeF vSz = g.MeasureString(valStr, valFont);
-                    g.DrawString(valStr, valFont, valBrush, cx - vSz.Width / 2f, cy + radius * 0.52f);
-                }
-            }
-
-            // 6. Inertial Needle Pointer
-            float needleAngleDeg = GaugeMath.ValueToAngle(_value, _minimum, _maximum, _startAngle, _sweepAngle);
-            double needleRad = needleAngleDeg * Math.PI / 180.0;
-            float nCos = (float)Math.Cos(needleRad);
-            float nSin = (float)Math.Sin(needleRad);
-            float needleR = arcRadius - 4f;
-
-            float tipX = cx + needleR * nCos;
-            float tipY = cy + needleR * nSin;
-
-            // Needle Polygon (Tapered triangle from base to tip)
-            float baseHalfW = 3.5f;
-            float perpCos = -nSin;
-            float perpSin = nCos;
-
-            PointF[] needlePoly = new PointF[]
-            {
-                new PointF(cx + perpCos * baseHalfW, cy + perpSin * baseHalfW),
-                new PointF(tipX, tipY),
-                new PointF(cx - perpCos * baseHalfW, cy - perpSin * baseHalfW),
-                new PointF(cx - nCos * 8f, cy - nSin * 8f) // Counter-balance tail
-            };
-
-            Color needleColor = Color.FromArgb(239, 68, 68); // Signal Red needle
-            using (var needleBrush = new SolidBrush(needleColor))
-            {
-                g.FillPolygon(needleBrush, needlePoly);
-            }
-
-            // 7. Metallic Center Pivot Cap
-            float capR = 7f;
-            using (var capBrush = new LinearGradientBrush(
-                new RectangleF(cx - capR, cy - capR, capR * 2f, capR * 2f),
-                Color.FromArgb(240, 240, 245),
-                Color.FromArgb(120, 120, 130),
-                45f))
-            {
-                g.FillEllipse(capBrush, cx - capR, cy - capR, capR * 2f, capR * 2f);
-            }
-            using (var capPen = new Pen(Color.FromArgb(90, 90, 100), 1f))
-            {
-                g.DrawEllipse(capPen, cx - capR, cy - capR, capR * 2f, capR * 2f);
-            }
         }
 
         protected override void Dispose(bool disposing)
