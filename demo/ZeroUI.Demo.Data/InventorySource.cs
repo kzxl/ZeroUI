@@ -59,6 +59,7 @@ namespace ZeroUI.Demo.Data
                     buffer.Alignment = CellAlignment.Right;
                     break;
                 case 8:
+                    buffer.DataBarPercent = (float)item.YieldRate;
                     buffer.Text = item.YieldRate.ToString("P0").AsSpan();
                     buffer.Alignment = CellAlignment.Center;
                     break;
@@ -69,6 +70,32 @@ namespace ZeroUI.Demo.Data
                 case 10:
                     buffer.Text = item.Status.AsSpan();
                     buffer.Alignment = CellAlignment.Center;
+                    buffer.HasCustomBackground = true;
+                    if (item.Status == "Passed OQC" || item.Status == "In Warehouse" || item.Status == "Completed")
+                    {
+                        buffer.BackColor = 0x00E8F8E8; // Soft Green
+                        buffer.TextColor = 0x001B692A;
+                    }
+                    else if (item.Status == "Pending IQC" || item.Status == "Pending Inspection")
+                    {
+                        buffer.BackColor = 0x00FFF8E7; // Soft Orange
+                        buffer.TextColor = 0x00A05A00;
+                    }
+                    else if (item.Status == "SMT Feeding")
+                    {
+                        buffer.BackColor = 0x00EBF4FF; // Soft Blue
+                        buffer.TextColor = 0x001B5EBE;
+                    }
+                    else if (item.Status == "QC Quarantine" || item.Status == "On Hold" || item.Status == "Inspection Hold")
+                    {
+                        buffer.BackColor = 0x00F3E8FF; // Soft Purple
+                        buffer.TextColor = 0x006B21A8;
+                    }
+                    else
+                    {
+                        buffer.BackColor = 0x00FEE8E8; // Soft Red
+                        buffer.TextColor = 0x00B3261E;
+                    }
                     break;
             }
         }

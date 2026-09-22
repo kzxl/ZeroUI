@@ -308,7 +308,12 @@ namespace ZeroUI.WinForms.Navigation
             _contentContainer.SuspendLayout();
             for (int i = 0; i < _tabPages.Count; i++)
             {
-                _tabPages[i].Visible = (i == _selectedIndex);
+                bool active = (i == _selectedIndex);
+                _tabPages[i].Visible = active;
+                if (active)
+                {
+                    _tabPages[i].BringToFront();
+                }
             }
             _contentContainer.ResumeLayout(true);
         }
@@ -346,37 +351,29 @@ namespace ZeroUI.WinForms.Navigation
             {
                 _hoveredIndex = hov;
                 _hoveredCloseIndex = hovClose;
-                Cursor = (hov >= 0) ? Cursors.Hand : Cursors.Default;
-                if (_orientation == TabOrientation.Vertical)
-                {
-                    Invalidate(new Rectangle(0, 0, _tabWidth, Height));
-                }
-                else
-                {
-                    Invalidate(new Rectangle(0, 0, Width, _tabHeight));
-                }
+                Cursor = (hovClose >= 0) ? Cursors.Hand : Cursors.Default;
+                Invalidate();
             }
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
-            _hoveredIndex = -1;
-            _hoveredCloseIndex = -1;
-            Cursor = Cursors.Default;
-            if (_orientation == TabOrientation.Vertical)
+            if (!_showHeader) return;
+            if (_hoveredIndex != -1 || _hoveredCloseIndex != -1)
             {
-                Invalidate(new Rectangle(0, 0, _tabWidth, Height));
-            }
-            else
-            {
-                Invalidate(new Rectangle(0, 0, Width, _tabHeight));
+                _hoveredIndex = -1;
+                _hoveredCloseIndex = -1;
+                Cursor = Cursors.Default;
+                Invalidate();
             }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+            if (!_showHeader) return;
+            if (e.Button != MouseButtons.Left) return;
             if (_orientation == TabOrientation.Horizontal && e.Y > _tabHeight) return;
             if (_orientation == TabOrientation.Vertical && e.X > _tabWidth) return;
 
@@ -398,6 +395,8 @@ namespace ZeroUI.WinForms.Navigation
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            if (!_showHeader) return;
+
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;

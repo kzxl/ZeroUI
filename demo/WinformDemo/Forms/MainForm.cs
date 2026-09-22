@@ -149,6 +149,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private ZeroTabControl _subTabsComponents = null!;
         private ZeroTabControl _subTabsScada = null!;
         private ZeroTabControl _subTabsMes = null!;
+        private ZeroTabControl _subTabsNetwork = null!;
 
         // Top Action Controls
         private Label _lblTitle = null!;
@@ -764,6 +765,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             switch (item.Key)
             {
+                // 1. CORE BENCHMARKS & GRIDS
                 case "feat_virtual_10m":
                     _mainNav.SelectedTab = _clusterBenchmark;
                     _subTabsBenchmark.SelectedTab = _tabZero;
@@ -784,12 +786,6 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.BindGrid(_zeroGrid);
                     break;
 
-                case "feat_master_detail":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabMasterDetail;
-                    _optionsPanel.Visible = false;
-                    break;
-
                 case "feat_grouping_summaries":
                     _mainNav.SelectedTab = _clusterBenchmark;
                     _subTabsBenchmark.SelectedTab = _tabZero;
@@ -805,53 +801,63 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.BindGrid(_zeroGrid);
                     break;
 
-                case "feat_zerogrid_table":
-                    _mainNav.SelectedTab = _clusterBenchmark;
-                    _subTabsBenchmark.SelectedTab = _tabZero;
-                    if (_dataset.Length > 1_000_000)
-                    {
-                        LoadDataset(100_000);
-                    }
-                    _optionsPanel.Visible = true;
-                    _optionsPanel.BindGrid(_zeroGrid);
-                    break;
-
                 case "feat_standard_dgv":
                     _mainNav.SelectedTab = _clusterBenchmark;
                     _subTabsBenchmark.SelectedTab = _tabDgv;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_tree_list":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabAdvanced;
+                // 2. INDUSTRIAL DOMAIN VERTICALS
+                case "feat_vert_energy":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 1)
+                        _subTabsIndustrial.SelectedIndex = 1;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_property_grid":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabCommercial;
+                case "feat_vert_petrochem":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 2)
+                        _subTabsIndustrial.SelectedIndex = 2;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_editors_core":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabControls;
+                case "feat_vert_pharma":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 3)
+                        _subTabsIndustrial.SelectedIndex = 3;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_editors_lookup":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabMasterDetail;
+                case "feat_vert_water":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 4)
+                        _subTabsIndustrial.SelectedIndex = 4;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_editors_tokens":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabControls;
+                case "feat_vert_bms":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 5)
+                        _subTabsIndustrial.SelectedIndex = 5;
                     _optionsPanel.Visible = false;
                     break;
 
+                case "feat_vert_life_sciences":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 6)
+                        _subTabsIndustrial.SelectedIndex = 6;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_vert_robotics":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 7)
+                        _subTabsIndustrial.SelectedIndex = 7;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 3. INDUSTRIAL SCADA & TELEMETRY
                 case "feat_scada_synoptic":
                     _mainNav.SelectedTab = _clusterScadaSynoptic;
                     _subTabsScada.SelectedTab = _tabScadaPid;
@@ -870,18 +876,81 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
+                case "feat_scada_tags":
+                    _mainNav.SelectedTab = _clusterScadaSynoptic;
+                    _subTabsScada.SelectedTab = _tabScadaTags;
+                    _optionsPanel.Visible = false;
+                    break;
+
                 case "feat_scada_gauges":
                     _mainNav.SelectedTab = _clusterScadaSynoptic;
                     _subTabsScada.SelectedTab = _tabScadaOverview;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_warehouse_racks":
-                    _mainNav.SelectedTab = _clusterWarehouse;
-                    _subTabsWarehouse.SelectedTab = _tabWhRacks;
+                case "feat_scada_interlock":
+                    _mainNav.SelectedTab = _clusterScadaSynoptic;
+                    _subTabsScada.SelectedTab = _tabIndustrialRuntime;
                     _optionsPanel.Visible = false;
                     break;
 
+                // 4. NETWORK & INFRASTRUCTURE
+                case "feat_net_rack":
+                    _mainNav.SelectedTab = _clusterNetwork;
+                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 0)
+                        _subTabsNetwork.SelectedIndex = 0;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_net_topology":
+                    _mainNav.SelectedTab = _clusterNetwork;
+                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 1)
+                        _subTabsNetwork.SelectedIndex = 1;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_net_chassis":
+                    _mainNav.SelectedTab = _clusterNetwork;
+                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 2)
+                        _subTabsNetwork.SelectedIndex = 2;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_net_ipam":
+                    _mainNav.SelectedTab = _clusterNetwork;
+                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 3)
+                        _subTabsNetwork.SelectedIndex = 3;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_net_fieldbus":
+                    _mainNav.SelectedTab = _clusterNetwork;
+                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 4)
+                        _subTabsNetwork.SelectedIndex = 4;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 5. MES & OPERATIONS
+                case "feat_mes_dashboard":
+                    _mainNav.SelectedTab = _clusterMes;
+                    _subTabsMes.SelectedTab = _tabMes;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_workflow_kanban":
+                    _mainNav.SelectedTab = _clusterMes;
+                    _subTabsMes.SelectedTab = _tabProcessCards;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_workflow_gantt":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 0)
+                        _subTabsIndustrial.SelectedIndex = 0;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 6. WAREHOUSE & LOGISTICS
                 case "feat_barcode_station":
                     _mainNav.SelectedTab = _clusterWarehouse;
                     _subTabsWarehouse.SelectedTab = _tabWhBarcode;
@@ -894,13 +963,22 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_analytics_charts":
-                    _mainNav.SelectedTab = _clusterAnalytics;
+                case "feat_warehouse_racks":
+                    _mainNav.SelectedTab = _clusterWarehouse;
+                    _subTabsWarehouse.SelectedTab = _tabWhRacks;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_analytics_spc":
-                    _mainNav.SelectedTab = _clusterAnalytics;
+                // 7. UI COMPONENT CATALOG
+                case "feat_editors_core":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabControls;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_master_detail":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabMasterDetail;
                     _optionsPanel.Visible = false;
                     break;
 
@@ -910,15 +988,33 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_workflow_kanban":
-                    _mainNav.SelectedTab = _clusterMes;
-                    _subTabsMes.SelectedTab = _tabProcessCards;
+                case "feat_commercial_query":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabCommercial;
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_workflow_gantt":
-                    _mainNav.SelectedTab = _clusterMes;
-                    _subTabsMes.SelectedTab = _tabMes;
+                case "feat_commercial_editors":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabCommercial;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_commercial_wizard":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabCommercial;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_tree_list":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabAdvanced;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_office_pdf":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabOfficeDocs;
                     _optionsPanel.Visible = false;
                     break;
 
@@ -928,9 +1024,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
-                case "feat_office_pdf":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabOfficeDocs;
+                // 8. ANALYTICS & CHARTS
+                case "feat_analytics_charts":
+                    _mainNav.SelectedTab = _clusterAnalytics;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_analytics_spc":
+                    _mainNav.SelectedTab = _clusterAnalytics;
                     _optionsPanel.Visible = false;
                     break;
 
@@ -1177,18 +1278,21 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 RowHeight = 28
             };
 
-            _zeroGrid.Columns.Add(new ZeroColumn("ID", 70, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
-            _zeroGrid.Columns.Add(new ZeroColumn("Item Code", 120, CellAlignment.Left));
-            _zeroGrid.Columns.Add(new ZeroColumn("Item Name / Description", 280, CellAlignment.Left));
-            _zeroGrid.Columns.Add(new ZeroColumn("Quantity", 90, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
-            _zeroGrid.Columns.Add(new ZeroColumn("Unit Price ($)", 130, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
-            _zeroGrid.Columns.Add(new ZeroColumn("Total Amount ($)", 150, CellAlignment.Right) { ColumnType = GridColumnType.Numeric });
+            _zeroGrid.Columns.Add(new ZeroColumn("Active", 60, CellAlignment.Center) { ColumnType = GridColumnType.Boolean });
+            _zeroGrid.Columns.Add(new ZeroColumn("Category", 140, CellAlignment.Left) { AllowGrouping = true });
+            _zeroGrid.Columns.Add(new ZeroColumn("ID", 70, CellAlignment.Right) { ColumnType = GridColumnType.Numeric, ReadOnly = true, IsPinned = true });
+            _zeroGrid.Columns.Add(new ZeroColumn("Item Code", 120, CellAlignment.Left) { ReadOnly = true, IsPinned = true });
+            _zeroGrid.Columns.Add(new ZeroColumn("Item Name / Description", 260, CellAlignment.Left));
+            _zeroGrid.Columns.Add(new ZeroColumn("Quantity", 90, CellAlignment.Right) { ColumnType = GridColumnType.Numeric, Summary = SummaryType.Sum });
+            _zeroGrid.Columns.Add(new ZeroColumn("Unit Price ($)", 115, CellAlignment.Right) { ColumnType = GridColumnType.Numeric, Summary = SummaryType.Average });
+            _zeroGrid.Columns.Add(new ZeroColumn("Total Amount ($)", 135, CellAlignment.Right) { ColumnType = GridColumnType.Numeric, Summary = SummaryType.Sum, ReadOnly = true });
+            _zeroGrid.Columns.Add(new ZeroColumn("Yield %", 95, CellAlignment.Center) { ColumnType = GridColumnType.Numeric });
             _zeroGrid.Columns.Add(new ZeroColumn("Batch No", 120, CellAlignment.Center));
             _zeroGrid.Columns.Add(new ZeroColumn("Status", 130, CellAlignment.Center));
 
             _zeroGrid.CellValidating += (s, e) =>
             {
-                if (e.ColumnIndex == 3) // Quantity
+                if (e.ColumnIndex == 5) // Quantity
                 {
                     if (int.TryParse(e.NewValue, out int q) && q < 0)
                     {
@@ -1243,28 +1347,34 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             if (modelRow < 0 || modelRow >= _zeroGrid.DataSource.TotalRowCount) return;
 
             CellValueBuffer buf = new CellValueBuffer();
-            _zeroGrid.DataSource.GetCellValue(modelRow, 0, ref buf);
-            string id = buf.Text.ToString();
-
             _zeroGrid.DataSource.GetCellValue(modelRow, 1, ref buf);
-            string itemCode = buf.Text.ToString();
+            string category = buf.Text.ToString();
 
             _zeroGrid.DataSource.GetCellValue(modelRow, 2, ref buf);
-            string itemName = buf.Text.ToString();
+            string id = buf.Text.ToString();
 
             _zeroGrid.DataSource.GetCellValue(modelRow, 3, ref buf);
-            string qty = buf.Text.ToString();
+            string itemCode = buf.Text.ToString();
 
             _zeroGrid.DataSource.GetCellValue(modelRow, 4, ref buf);
-            string price = buf.Text.ToString();
+            string itemName = buf.Text.ToString();
 
             _zeroGrid.DataSource.GetCellValue(modelRow, 5, ref buf);
-            string total = buf.Text.ToString();
+            string qty = buf.Text.ToString();
 
             _zeroGrid.DataSource.GetCellValue(modelRow, 6, ref buf);
-            string batchNo = buf.Text.ToString();
+            string price = buf.Text.ToString();
 
             _zeroGrid.DataSource.GetCellValue(modelRow, 7, ref buf);
+            string total = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 8, ref buf);
+            string yield = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 9, ref buf);
+            string batchNo = buf.Text.ToString();
+
+            _zeroGrid.DataSource.GetCellValue(modelRow, 10, ref buf);
             string status = buf.Text.ToString();
 
             _drawer.Title = string.IsNullOrEmpty(itemCode) ? "Material Specification" : itemCode;
@@ -1272,12 +1382,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             _descDrawer.Clear();
             _descDrawer.Add("Record ID", $"#{id}");
+            _descDrawer.Add("Category", category);
             _descDrawer.Add("Part Number", itemCode);
             _descDrawer.Add("Description", itemName);
             _descDrawer.Add("Batch / Lot No", batchNo);
             _descDrawer.Add("Stock Quantity", $"{qty} Units");
             _descDrawer.Add("Unit Cost", $"${price}");
             _descDrawer.Add("Total Valuation", $"${total}");
+            _descDrawer.Add("Yield Rate", yield);
 
             Color statusColor = status.IndexOf("Pass", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("Active", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("Good", StringComparison.OrdinalIgnoreCase) >= 0
                 ? Color.FromArgb(16, 185, 129)
@@ -1310,15 +1422,17 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
                 null, _dgv, new object[] { true });
 
+            _dgv.Columns.Add(new DataGridViewCheckBoxColumn { HeaderText = "Active", Width = 55 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Category", Width = 140 });
             _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "ID", Width = 70 });
             _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Item Code", Width = 120 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Item Name / Description", Width = 280 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Item Name / Description", Width = 260 });
             _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Quantity", Width = 90 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Unit Price ($)", Width = 130 });
-            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Total Amount ($)", Width = 150 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Unit Price ($)", Width = 115 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Total Amount ($)", Width = 135 });
+            _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Yield %", Width = 80 });
             _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Batch No", Width = 120 });
             _dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Status", Width = 130 });
-
 
             _dgv.CellValueNeeded += (s, e) =>
             {
@@ -1327,14 +1441,17 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
                 switch (e.ColumnIndex)
                 {
-                    case 0: e.Value = item.Id; break;
-                    case 1: e.Value = item.ItemCode; break;
-                    case 2: e.Value = item.ItemName; break;
-                    case 3: e.Value = item.Quantity; break;
-                    case 4: e.Value = item.UnitPrice.ToString("N0"); break;
-                    case 5: e.Value = item.TotalAmount.ToString("N0"); break;
-                    case 6: e.Value = item.LotNumber; break;
-                    case 7: e.Value = item.Status; break;
+                    case 0: e.Value = item.IsActive; break;
+                    case 1: e.Value = item.Category; break;
+                    case 2: e.Value = item.Id; break;
+                    case 3: e.Value = item.ItemCode; break;
+                    case 4: e.Value = item.ItemName; break;
+                    case 5: e.Value = item.Quantity; break;
+                    case 6: e.Value = item.UnitPrice.ToString("N2"); break;
+                    case 7: e.Value = item.TotalAmount.ToString("N2"); break;
+                    case 8: e.Value = item.YieldRate.ToString("P0"); break;
+                    case 9: e.Value = item.LotNumber; break;
+                    case 10: e.Value = item.Status; break;
                 }
             };
         }
@@ -5868,7 +5985,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var colors = ZeroTheme.Colors;
             cluster.BackColor = colors.Background;
 
-            var subTabs = new ZeroTabControl
+            _subTabsNetwork = new ZeroTabControl
             {
                 Dock = DockStyle.Fill,
                 Orientation = ZeroTabOrientation.Horizontal,
@@ -6077,12 +6194,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             tabFieldbus.Controls.Add(pnlFbRoot);
 
             // Assemble all subtabs into Cluster 8
-            subTabs.AddTab(tabRackSwitch);
-            subTabs.AddTab(tabTopology);
-            subTabs.AddTab(tabChassis);
-            subTabs.AddTab(tabIpMatrix);
-            subTabs.AddTab(tabFieldbus);
-            cluster.Controls.Add(subTabs);
+            _subTabsNetwork.AddTab(tabRackSwitch);
+            _subTabsNetwork.AddTab(tabTopology);
+            _subTabsNetwork.AddTab(tabChassis);
+            _subTabsNetwork.AddTab(tabIpMatrix);
+            _subTabsNetwork.AddTab(tabFieldbus);
+            cluster.Controls.Add(_subTabsNetwork);
         }
 
         private void InitializeScadaProcessFlow(ZeroTabPage parentTab)

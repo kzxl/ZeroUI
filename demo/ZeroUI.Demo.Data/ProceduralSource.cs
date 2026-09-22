@@ -77,7 +77,7 @@ namespace ZeroUI.Demo.Data
         }
 
         public int TotalRowCount => _totalRowCount;
-        public int TotalColumnCount => 8;
+        public int TotalColumnCount => 11;
 
         public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer)
         {
@@ -88,49 +88,66 @@ namespace ZeroUI.Demo.Data
 
             switch (columnIndex)
             {
-                case 0: // ID
-                    buffer.Text = id.ToString().AsSpan();
-                    buffer.Alignment = CellAlignment.Right;
+                case 0: // Active (Boolean)
+                    buffer.Text = (rowIndex % 3 != 0) ? "true".AsSpan() : "false".AsSpan();
+                    buffer.Alignment = CellAlignment.Center;
                     break;
 
-                case 1: // Item Code
-                    buffer.Text = $"{CodePrefixes[catIdx]}-{id:D7}".AsSpan();
-                    buffer.Alignment = CellAlignment.Left;
-                    break;
-
-                case 2: // Item Name
+                case 1: // Category
                     buffer.Text = Categories[catIdx].AsSpan();
                     buffer.Alignment = CellAlignment.Left;
                     break;
 
-                case 3: // Quantity
+                case 2: // ID
+                    buffer.Text = id.ToString().AsSpan();
+                    buffer.Alignment = CellAlignment.Right;
+                    break;
+
+                case 3: // Item Code
+                    buffer.Text = $"{CodePrefixes[catIdx]}-{id:D7}".AsSpan();
+                    buffer.Alignment = CellAlignment.Left;
+                    break;
+
+                case 4: // Item Name / Description
+                    buffer.Text = Categories[(catIdx + 3) % Categories.Length].AsSpan();
+                    buffer.Alignment = CellAlignment.Left;
+                    break;
+
+                case 5: // Quantity
                     int qty = 100 + ((rowIndex * 37) % 9900);
                     buffer.Text = qty.ToString().AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
 
-                case 4: // Unit Price
+                case 6: // Unit Price ($)
                     double price = 5.50 + ((rowIndex * 19) % 450);
-                    buffer.Text = price.ToString("N0").AsSpan();
+                    buffer.Text = price.ToString("N2").AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
 
-                case 5: // Total Amount
+                case 7: // Total Amount ($)
                     int q = 100 + ((rowIndex * 37) % 9900);
                     double p = 5.50 + ((rowIndex * 19) % 450);
                     double total = q * p;
-                    buffer.Text = total.ToString("N0").AsSpan();
+                    buffer.Text = total.ToString("N2").AsSpan();
                     buffer.Alignment = CellAlignment.Right;
                     break;
 
-                case 6: // Lot Number
+                case 8: // Yield %
+                    float yield = (70f + ((rowIndex * 7) % 30)) / 100f;
+                    buffer.DataBarPercent = yield;
+                    buffer.Text = yield.ToString("P0").AsSpan();
+                    buffer.Alignment = CellAlignment.Center;
+                    break;
+
+                case 9: // Lot Number
                     int lotYear = 24 + ((rowIndex / 1000) % 3);
                     int lotSeq = 1000 + (rowIndex % 9000);
                     buffer.Text = $"LOT-{lotYear}08-{lotSeq:D4}".AsSpan();
                     buffer.Alignment = CellAlignment.Center;
                     break;
 
-                case 7: // Status
+                case 10: // Status
                     int statusIdx = (rowIndex % Statuses.Length);
                     buffer.Text = Statuses[statusIdx].AsSpan();
                     buffer.Alignment = CellAlignment.Center;
@@ -143,7 +160,17 @@ namespace ZeroUI.Demo.Data
 
         public int CompareRows(int rowA, int rowB, int columnIndex)
         {
-            return rowA.CompareTo(rowB);
+            if (rowA == rowB) return 0;
+            return columnIndex switch
+            {
+                0 => (rowA % 3).CompareTo(rowB % 3),
+                1 => string.Compare(Categories[rowA % Categories.Length], Categories[rowB % Categories.Length], StringComparison.OrdinalIgnoreCase),
+                2 => rowA.CompareTo(rowB),
+                5 => ((rowA * 37) % 9900).CompareTo((rowB * 37) % 9900),
+                6 => ((rowA * 19) % 450).CompareTo((rowB * 19) % 450),
+                8 => ((rowA * 7) % 30).CompareTo((rowB * 7) % 30),
+                _ => rowA.CompareTo(rowB)
+            };
         }
 
         public void Sort(int columnIndex, bool ascending)
