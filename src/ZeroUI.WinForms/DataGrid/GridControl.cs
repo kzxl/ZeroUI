@@ -498,9 +498,15 @@ namespace ZeroUI.WinForms.DataGrid
                 _rowIndexMap.ResetIdentity(0);
                 _groupedMap.ResetIdentity(0);
             }
+            if (_enableMasterDetail)
+            {
+                _expandedMasterRows.Clear();
+                ClearDetailControls();
+            }
             _scrollY = 0;
             _selectedVisualRow = -1;
             UpdateScrollBars();
+            UpdateDetailControlsLayout();
             Invalidate();
         }
 
@@ -1939,7 +1945,7 @@ namespace ZeroUI.WinForms.DataGrid
             int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
             int footerH = ShowFooter ? _footerHeight : 0;
             int clientH = ClientSize.Height - topOffset - footerH;
-            int totalH = (totalRows * _rowHeight) + (_enableMasterDetail ? _expandedMasterRows.Count * _detailRowHeight : 0);
+            int totalH = CalculateTotalContentHeight();
             int pinnedW = GetPinnedColumnsWidth();
             int unpinnedW = GetUnpinnedColumnsWidth();
             int scrollableW = Math.Max(0, clientW - pinnedW);
@@ -2386,15 +2392,10 @@ namespace ZeroUI.WinForms.DataGrid
                             _dibSection.FillRectangle(_masterDetailColumnWidth - 1, detailY, 1, detailH, _pinnedBorderColor);
                             _dibSection.FillRectangle(0, detailY + detailH - 1, width, 1, _gridLineColor);
 
-                            GetOrCreateDetailControl(r, modelRow, width, detailY, detailH);
                             currentY += _rowHeight + detailH;
                         }
                         else
                         {
-                            if (_detailControls.TryGetValue(r, out var oldCtrl))
-                            {
-                                oldCtrl.Visible = false;
-                            }
                             currentY += _rowHeight;
                         }
                     }
@@ -2790,6 +2791,7 @@ namespace ZeroUI.WinForms.DataGrid
                 case NativeMethods.WM_SIZE:
                     base.WndProc(ref m);
                     UpdateScrollBars();
+                    UpdateDetailControlsLayout();
                     Invalidate();
                     return;
 
@@ -2810,7 +2812,7 @@ namespace ZeroUI.WinForms.DataGrid
         {
             int action = unchecked((short)(long)wParam);
             int footerH = ShowFooter ? _footerHeight : 0;
-            int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
+            int totalH = CalculateTotalContentHeight();
             int effHeaderH = EffectiveHeaderHeight;
             int maxScroll = Math.Max(0, totalH - (ClientSize.Height - effHeaderH - footerH));
 
@@ -2844,6 +2846,7 @@ namespace ZeroUI.WinForms.DataGrid
 
             UpdateScrollBars();
             if (_isEditing) UpdateInPlaceEditorBounds();
+            UpdateDetailControlsLayout();
             Invalidate();
         }
 
@@ -2885,6 +2888,7 @@ namespace ZeroUI.WinForms.DataGrid
 
             UpdateScrollBars();
             if (_isEditing) UpdateInPlaceEditorBounds();
+            UpdateDetailControlsLayout();
             Invalidate();
         }
 
@@ -2902,7 +2906,7 @@ namespace ZeroUI.WinForms.DataGrid
             }
 
             int footerH = ShowFooter ? _footerHeight : 0;
-            int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
+            int totalH = CalculateTotalContentHeight();
             int effHeaderH = EffectiveHeaderHeight;
             int maxScroll = (_viewType != GridViewType.Table)
                 ? Math.Max(0, _cardLayout.TotalHeight - ClientSize.Height)
@@ -2911,6 +2915,7 @@ namespace ZeroUI.WinForms.DataGrid
             _scrollY = Math.Max(0, Math.Min(maxScroll, _scrollY - scrollDelta));
             UpdateScrollBars();
             if (_isEditing) UpdateInPlaceEditorBounds();
+            UpdateDetailControlsLayout();
             Invalidate();
         }
 
@@ -2974,7 +2979,7 @@ namespace ZeroUI.WinForms.DataGrid
             if (dy != 0)
             {
                 int footerH = ShowFooter ? _footerHeight : 0;
-                int totalH = (_dataSource?.TotalRowCount ?? 0) * _rowHeight;
+                int totalH = CalculateTotalContentHeight();
                 int effHeaderH = EffectiveHeaderHeight;
                 int maxScrollY = (_viewType != GridViewType.Table)
                     ? Math.Max(0, _cardLayout.TotalHeight - ClientSize.Height)
@@ -3007,6 +3012,7 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 UpdateScrollBars();
                 if (_isEditing) UpdateInPlaceEditorBounds();
+                UpdateDetailControlsLayout();
                 Invalidate();
             }
         }
@@ -3200,12 +3206,6 @@ namespace ZeroUI.WinForms.DataGrid
                 }
                 else if (hit.Region == HitRegion.Cell)
                 {
-                    if (_enableMasterDetail && e.X < 24 && hit.RowIndex >= 0)
-                    {
-                        ToggleMasterRow(hit.RowIndex);
-                        return;
-                    }
-
                     if (_groupedMap.HasGrouping && hit.RowIndex < _groupedMap.ActiveCount && _groupedMap[hit.RowIndex].IsGroup)
                     {
                         _groupedMap.ToggleGroup(hit.RowIndex);
@@ -4165,9 +4165,20 @@ namespace ZeroUI.WinForms.DataGrid
         private readonly HashSet<int> _expandedMasterRows = new HashSet<int>();
         private readonly Dictionary<int, Control> _detailControls = new Dictionary<int, Control>();
         private bool _enableMasterDetail = false;
+        private bool _isUpdatingDetailLayout = false;
         private int _detailRowHeight = 140;
         private int _masterDetailColumnWidth = 28;
         private int _bandRowCount = 1;
+
+        public int CalculateTotalContentHeight()
+        {
+            int totalRows = VisualRowCount;
+            if (_viewType != GridViewType.Table)
+            {
+                return _cardLayout.TotalHeight;
+            }
+            return (totalRows * _rowHeight) + (_enableMasterDetail ? _expandedMasterRows.Count * _detailRowHeight : 0);
+        }
 
         public event EventHandler<MasterRowGetChildDataEventArgs>? MasterRowGetChildData;
         public event EventHandler<MasterRowExpandingEventArgs>? MasterRowExpanding;
@@ -4276,9 +4287,9 @@ namespace ZeroUI.WinForms.DataGrid
             return -1;
         }
 
-        private Control? GetOrCreateDetailControl(int visualRow, int modelRow, int totalWidth, int detailY, int detailH)
+        private Control? GetOrCreateDetailControl(int visualRow, int modelRow)
         {
-            if (!_detailControls.TryGetValue(visualRow, out var ctrl) || ctrl.IsDisposed)
+            if (!_detailControls.TryGetValue(visualRow, out var ctrl) || ctrl == null || ctrl.IsDisposed)
             {
                 object? masterRowData = null;
                 if (_dataSource is IZeroItemSource itemSource)
@@ -4301,7 +4312,8 @@ namespace ZeroUI.WinForms.DataGrid
                         RowHeight = Math.Max(20, _rowHeight - 2),
                         HeaderHeight = Math.Max(22, _headerHeight - 4),
                         Font = new Font(Font.FontFamily, Math.Max(8f, Font.Size - 1f)),
-                        ViewType = GridViewType.Table
+                        ViewType = GridViewType.Table,
+                        Dock = DockStyle.None
                     };
                     if (args.ChildColumns != null && args.ChildColumns.Count > 0)
                     {
@@ -4313,6 +4325,7 @@ namespace ZeroUI.WinForms.DataGrid
 
                 if (ctrl != null)
                 {
+                    ctrl.Dock = DockStyle.None;
                     _detailControls[visualRow] = ctrl;
                     if (!Controls.Contains(ctrl))
                     {
@@ -4320,17 +4333,89 @@ namespace ZeroUI.WinForms.DataGrid
                     }
                 }
             }
-
-            if (ctrl != null)
+            else
             {
-                int childX = _masterDetailColumnWidth + 12;
-                int childW = Math.Max(50, totalWidth - childX - 16);
-                int childH = Math.Max(20, detailH - 8);
-                ctrl.SetBounds(childX, detailY + 4, childW, childH);
-                ctrl.Visible = true;
-                ctrl.BringToFront();
+                if (ctrl.Dock != DockStyle.None)
+                {
+                    ctrl.Dock = DockStyle.None;
+                }
             }
             return ctrl;
+        }
+
+        public void UpdateDetailControlsLayout()
+        {
+            if (!_enableMasterDetail || !IsHandleCreated || _isUpdatingDetailLayout) return;
+
+            try
+            {
+                _isUpdatingDetailLayout = true;
+
+                int topOffset = EffectiveHeaderHeight + (_showAutoFilterRow ? _autoFilterRowHeight : 0);
+                int footerH = ShowFooter ? _footerHeight : 0;
+                int viewTop = topOffset;
+                int viewBottom = ClientSize.Height - footerH;
+                int totalWidth = ClientSize.Width;
+
+                var visibleExpandedRows = new HashSet<int>();
+
+                foreach (int visualRow in _expandedMasterRows)
+                {
+                    if (visualRow < 0 || visualRow >= VisualRowCount) continue;
+
+                    int rowTop = topOffset + GetRowY(visualRow) - _scrollY;
+                    int detailY = rowTop + _rowHeight;
+                    int detailH = _detailRowHeight;
+
+                    // Check if detail row intersects with client viewport
+                    if (detailY + detailH > viewTop && detailY < viewBottom)
+                    {
+                        visibleExpandedRows.Add(visualRow);
+
+                        int modelRow = GetModelRowIndex(visualRow);
+                        Control? ctrl = GetOrCreateDetailControl(visualRow, modelRow);
+
+                        if (ctrl != null)
+                        {
+                            int childX = _masterDetailColumnWidth + 12;
+                            int childW = Math.Max(50, totalWidth - childX - 16);
+                            int childH = Math.Max(20, detailH - 8);
+
+                            if (ctrl.Dock != DockStyle.None)
+                            {
+                                ctrl.Dock = DockStyle.None;
+                            }
+
+                            Rectangle targetBounds = new Rectangle(childX, detailY + 4, childW, childH);
+                            if (ctrl.Bounds != targetBounds)
+                            {
+                                ctrl.SetBounds(targetBounds.X, targetBounds.Y, targetBounds.Width, targetBounds.Height);
+                            }
+
+                            if (!ctrl.Visible)
+                            {
+                                ctrl.Visible = true;
+                            }
+                        }
+                    }
+                }
+
+                // Hide detail controls that are collapsed or scrolled out of view
+                foreach (var kvp in _detailControls)
+                {
+                    if (!visibleExpandedRows.Contains(kvp.Key))
+                    {
+                        if (kvp.Value != null && kvp.Value.Visible)
+                        {
+                            kvp.Value.Visible = false;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                _isUpdatingDetailLayout = false;
+            }
         }
 
         public void ClearDetailControls()
@@ -4358,6 +4443,7 @@ namespace ZeroUI.WinForms.DataGrid
                 if (_expandedMasterRows.Add(visualRow))
                 {
                     UpdateScrollBars();
+                    UpdateDetailControlsLayout();
                     Invalidate();
                 }
             }
@@ -4374,6 +4460,7 @@ namespace ZeroUI.WinForms.DataGrid
                 }
                 MasterRowCollapsed?.Invoke(this, new MasterRowCollapsedEventArgs(visualRow, modelRow));
                 UpdateScrollBars();
+                UpdateDetailControlsLayout();
                 Invalidate();
             }
         }

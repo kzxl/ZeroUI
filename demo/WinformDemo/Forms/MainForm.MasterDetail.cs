@@ -180,7 +180,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 {
                     var childGrid = new GridControl
                     {
-                        Dock = DockStyle.Fill,
+                        Dock = DockStyle.None,
                         RowHeight = 30,
                         HeaderHeight = 28,
                         Font = new Font("Segoe UI", 9f)
