@@ -88,6 +88,17 @@ namespace ZeroUI.WinForms.Base
             }
         }
 
+        /// <summary>
+        /// Gets the active DPI scale factor for this control relative to 96 DPI baseline (e.g. 1.0 = 100%, 1.5 = 150%, 2.0 = 200%).
+        /// </summary>
+        [Browsable(false)]
+        public float DpiScale => ZeroDpi.GetScaleFactor(this);
+
+        /// <summary>
+        /// Scales an integer measurement based on the control's effective DPI scale factor.
+        /// </summary>
+        public int ScaleDpi(int value) => ZeroDpi.Scale(value, DpiScale);
+
         #endregion
 
         protected ControlBase()
@@ -171,6 +182,20 @@ namespace ZeroUI.WinForms.Base
             _localPalette = !UseDefaultSkin ? ZeroTheme.CreatePaletteFromSkin(skin) : null;
             BackColor = ColorTranslator.FromHtml(skin.Tokens.BgCard);
             ForeColor = ColorTranslator.FromHtml(skin.Tokens.TextPrimary);
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            OnDpiScaleChanged(factor.Width);
+        }
+
+        /// <summary>
+        /// Invoked when the control's DPI scale factor changes.
+        /// </summary>
+        protected virtual void OnDpiScaleChanged(float scaleFactor)
+        {
+            Invalidate();
         }
 
         protected override void Dispose(bool disposing)

@@ -49,6 +49,22 @@ namespace ZeroUI.WinForms.DataGrid
 
         private IZeroVirtualSource? _dataSource;
         private readonly List<GridBand> _bands = new List<GridBand>();
+        private int _baseHeaderHeight = 28;
+        private int _baseRowHeight = 26;
+        private int _baseAutoFilterRowHeight = 26;
+        private int _baseFooterHeight = 28;
+        private int _baseDetailRowHeight = 140;
+        private int _baseMasterDetailColumnWidth = 28;
+        private int _baseCheckBoxColWidth = 34;
+
+        private float _currentDpiScale = 1.0f;
+
+        /// <summary>
+        /// Gets the active High-DPI Per-Monitor V2 scale factor applied to this GridControl.
+        /// </summary>
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
         private int _headerHeight = 28;
         private int _rowHeight = 26;
         private int _scrollX = 0;
@@ -128,7 +144,8 @@ namespace ZeroUI.WinForms.DataGrid
 
         // CheckBox Selector Column & Drag-and-Drop Reordering
         private bool _showCheckBoxSelectorColumn = false;
-        private const int CheckBoxColWidth = 34;
+        private int _checkBoxColWidth = 34;
+        private int CheckBoxColWidth => _checkBoxColWidth;
         private bool _allowColumnReordering = true;
         private bool _isDraggingColumn = false;
         private int _potentialDragColIndex = -1;
@@ -349,6 +366,100 @@ namespace ZeroUI.WinForms.DataGrid
             }
         }
 
+        #region High-DPI Per-Monitor V2 Dynamic Scaling
+
+        /// <summary>
+        /// Scales an integer measurement based on the grid's effective DPI scale factor.
+        /// </summary>
+        public int ScaleDpi(int value) => ZeroDpi.Scale(value, _currentDpiScale);
+
+        /// <summary>
+        /// Applies High-DPI Per-Monitor V2 scaling to grid metrics (row heights, header heights, column widths).
+        /// </summary>
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            float ratio = scaleFactor / _currentDpiScale;
+            _currentDpiScale = scaleFactor;
+
+            _headerHeight = Math.Max(20, (int)Math.Round(_baseHeaderHeight * scaleFactor));
+            _rowHeight = Math.Max(16, (int)Math.Round(_baseRowHeight * scaleFactor));
+            _autoFilterRowHeight = Math.Max(16, (int)Math.Round(_baseAutoFilterRowHeight * scaleFactor));
+            _footerHeight = Math.Max(20, (int)Math.Round(_baseFooterHeight * scaleFactor));
+            _detailRowHeight = Math.Max(60, (int)Math.Round(_baseDetailRowHeight * scaleFactor));
+            _masterDetailColumnWidth = Math.Max(20, (int)Math.Round(_baseMasterDetailColumnWidth * scaleFactor));
+            _checkBoxColWidth = Math.Max(24, (int)Math.Round(_baseCheckBoxColWidth * scaleFactor));
+
+            if (Math.Abs(ratio - 1.0f) > 0.001f)
+            {
+                foreach (var col in _columns)
+                {
+                    col.Width = Math.Max(30, (int)Math.Round(col.Width * ratio));
+                }
+            }
+
+            if (_hFont != IntPtr.Zero)
+            {
+                NativeMethods.DeleteObject(_hFont);
+                _hFont = IntPtr.Zero;
+            }
+            if (_hHeaderFont != IntPtr.Zero)
+            {
+                NativeMethods.DeleteObject(_hHeaderFont);
+                _hHeaderFont = IntPtr.Zero;
+            }
+            _cachedFont = null;
+
+            UpdateScrollBars();
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            float effectiveFactor = factor.Height > 0f ? factor.Height : factor.Width;
+            if (effectiveFactor > 0f && Math.Abs(effectiveFactor - 1.0f) > 0.001f)
+            {
+                ApplyDpiScaling(_currentDpiScale * effectiveFactor);
+            }
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+            if (_autoFilterEditor != null)
+            {
+                _autoFilterEditor.Font = Font;
+            }
+            if (_inPlaceEditor != null)
+            {
+                _inPlaceEditor.Font = Font;
+            }
+            if (_hFont != IntPtr.Zero)
+            {
+                NativeMethods.DeleteObject(_hFont);
+                _hFont = IntPtr.Zero;
+            }
+            if (_hHeaderFont != IntPtr.Zero)
+            {
+                NativeMethods.DeleteObject(_hHeaderFont);
+                _hHeaderFont = IntPtr.Zero;
+            }
+            _cachedFont = null;
+            Invalidate();
+        }
+
+        #endregion
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public List<ZeroColumn> Columns => _columns;
@@ -587,10 +698,18 @@ namespace ZeroUI.WinForms.DataGrid
             return maxDepth;
         }
 
+        [Category("Appearance")]
+        [DefaultValue(28)]
+        [Description("Header height in pixels.")]
         public int HeaderHeight
         {
             get => _headerHeight;
-            set { _headerHeight = Math.Max(20, value); Invalidate(); }
+            set
+            {
+                _baseHeaderHeight = (int)Math.Round(value / _currentDpiScale);
+                _headerHeight = Math.Max(20, value);
+                Invalidate();
+            }
         }
 
         private GridDensity _density = GridDensity.Middle;
@@ -603,16 +722,26 @@ namespace ZeroUI.WinForms.DataGrid
             set
             {
                 _density = value;
-                _rowHeight = (int)value;
+                _baseRowHeight = (int)value;
+                _rowHeight = Math.Max(16, (int)Math.Round(_baseRowHeight * _currentDpiScale));
                 UpdateScrollBars();
                 Invalidate();
             }
         }
 
+        [Category("Appearance")]
+        [DefaultValue(26)]
+        [Description("Row height in pixels.")]
         public int RowHeight
         {
             get => _rowHeight;
-            set { _rowHeight = Math.Max(16, value); UpdateScrollBars(); Invalidate(); }
+            set
+            {
+                _baseRowHeight = (int)Math.Round(value / _currentDpiScale);
+                _rowHeight = Math.Max(16, value);
+                UpdateScrollBars();
+                Invalidate();
+            }
         }
 
 

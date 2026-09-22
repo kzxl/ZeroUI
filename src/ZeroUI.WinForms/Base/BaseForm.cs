@@ -21,10 +21,32 @@ namespace ZeroUI.WinForms.Base
         public BaseForm()
         {
             DoubleBuffered = true;
+            AutoScaleMode = AutoScaleMode.Dpi;
+            AutoScaleDimensions = new SizeF(96F, 96F);
             Font = ZeroUIConfig.DefaultFont;
 
             ApplyThemeColors();
             ZeroTheme.ThemeChanged += BaseForm_ThemeChanged;
+        }
+
+        private const int WM_DPICHANGED = 0x02E0;
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (m.Msg == WM_DPICHANGED)
+            {
+                OnDpiChangedCore();
+            }
+        }
+
+        /// <summary>
+        /// Invoked when monitor display scaling changes under High-DPI Per-Monitor V2.
+        /// </summary>
+        protected virtual void OnDpiChangedCore()
+        {
+            Invalidate(true);
         }
 
         protected override void OnShown(EventArgs e)

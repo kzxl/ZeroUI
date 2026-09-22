@@ -18,6 +18,7 @@ using ZeroUI.Core.Scada;
 using ZeroUI.Core.Theme;
 using ZeroUI.Samples.BenchmarkDemo.Data;
 using ZeroUI.Samples.BenchmarkDemo.Diagnostics;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Charts;
 using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
@@ -66,7 +67,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
 
 {
-    public sealed partial class MainForm : Form
+    public sealed partial class MainForm : BaseForm
     {
         private readonly PerformanceMonitor _perfMonitor = new PerformanceMonitor();
         private readonly System.Windows.Forms.Timer _hudTimer = new System.Windows.Forms.Timer();
@@ -209,6 +210,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private void InitializeComponents()
         {
             Text = "⚡ ZeroUI vs Standard DataGridView — 1,000,000 Rows Performance Benchmark";
+            AutoScaleMode = AutoScaleMode.Dpi;
+            AutoScaleDimensions = new SizeF(96F, 96F);
             Size = new Size(1280, 800);
             StartPosition = FormStartPosition.CenterScreen;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);

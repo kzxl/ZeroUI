@@ -20,6 +20,8 @@ namespace ZeroUI.WinForms.Base
         public BaseUserControl()
         {
             DoubleBuffered = true;
+            AutoScaleMode = AutoScaleMode.Dpi;
+            AutoScaleDimensions = new SizeF(96F, 96F);
             Font = ZeroUIConfig.DefaultFont;
 
             ApplyThemeColors();
