@@ -173,6 +173,12 @@ namespace ZeroUI.WinForms.DataGrid
         private bool _showFooter = false;
         private int _footerHeight = 28;
 
+        // Visual Options & In-Place Editing
+        private bool _showAlternatingRowColors = true;
+        private bool _showGridLines = true;
+        private bool _allowCellEditing = true;
+        private bool _findHighlightMatches = true;
+
         // Asynchronous Sorting
         private bool _isSorting = false;
         private int _sortingColumnIndex = -1;
@@ -852,6 +858,73 @@ namespace ZeroUI.WinForms.DataGrid
                         _editingAutoFilterCol = -1;
                     }
                     UpdateScrollBars();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        [Description("Enables alternating background colors on odd rows.")]
+        public bool ShowAlternatingRowColors
+        {
+            get => _showAlternatingRowColors;
+            set
+            {
+                if (_showAlternatingRowColors != value)
+                {
+                    _showAlternatingRowColors = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        [Description("Shows horizontal and vertical grid lines between cells.")]
+        public bool ShowGridLines
+        {
+            get => _showGridLines;
+            set
+            {
+                if (_showGridLines != value)
+                {
+                    _showGridLines = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Allows in-place editing of grid cells.")]
+        public bool AllowCellEditing
+        {
+            get => _allowCellEditing;
+            set
+            {
+                if (_allowCellEditing != value)
+                {
+                    _allowCellEditing = value;
+                    if (!value && _isEditing)
+                    {
+                        CommitEdit();
+                    }
+                }
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Highlights text matching the find search filter.")]
+        public bool FindHighlightMatches
+        {
+            get => _findHighlightMatches;
+            set
+            {
+                if (_findHighlightMatches != value)
+                {
+                    _findHighlightMatches = value;
                     Invalidate();
                 }
             }
@@ -1993,7 +2066,7 @@ namespace ZeroUI.WinForms.DataGrid
                             ? _selectedVisualRows.Contains(r)
                             : (r == _selectedVisualRow);
 
-                        uint rowBg = isSelected ? _selectedBgColor : ((r % 2 == 1) ? _altRowBgColor : _rowBgColor);
+                        uint rowBg = isSelected ? _selectedBgColor : ((_showAlternatingRowColors && r % 2 == 1) ? _altRowBgColor : _rowBgColor);
 
                         // Row background
                         _dibSection.FillRectangle(0, currentY, width, _rowHeight, rowBg);
@@ -2085,7 +2158,10 @@ namespace ZeroUI.WinForms.DataGrid
                                 }
 
                                 // Vertical Gridline
-                                _dibSection.FillRectangle(unpinnedX + colW - 1, currentY, 1, _rowHeight, _gridLineColor);
+                                if (_showGridLines)
+                                {
+                                    _dibSection.FillRectangle(unpinnedX + colW - 1, currentY, 1, _rowHeight, _gridLineColor);
+                                }
                             }
 
                             unpinnedX += colW;
@@ -2101,7 +2177,10 @@ namespace ZeroUI.WinForms.DataGrid
                             int gx = (_masterDetailColumnWidth - gSize) / 2;
                             int gy = currentY + (_rowHeight - gSize) / 2;
                             DrawMasterDetailGlyph(gx, gy, gSize, isExp);
-                            _dibSection.FillRectangle(_masterDetailColumnWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            if (_showGridLines)
+                            {
+                                _dibSection.FillRectangle(_masterDetailColumnWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            }
                             pinnedX += _masterDetailColumnWidth;
                         }
 
@@ -2111,7 +2190,10 @@ namespace ZeroUI.WinForms.DataGrid
                             int cbX = pinnedX + (CheckBoxColWidth - cbSize) / 2;
                             int cbY = currentY + (_rowHeight - cbSize) / 2;
                             DrawCheckBoxGlyph(cbX, cbY, cbSize, isSelected ? CheckState.Checked : CheckState.Unchecked);
-                            _dibSection.FillRectangle(pinnedX + CheckBoxColWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            if (_showGridLines)
+                            {
+                                _dibSection.FillRectangle(pinnedX + CheckBoxColWidth - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            }
                             pinnedX += CheckBoxColWidth;
                         }
 
@@ -2198,7 +2280,10 @@ namespace ZeroUI.WinForms.DataGrid
                             }
 
                             // Vertical Gridline
-                            _dibSection.FillRectangle(cellRect.Right - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            if (_showGridLines)
+                            {
+                                _dibSection.FillRectangle(cellRect.Right - 1, currentY, 1, _rowHeight, _gridLineColor);
+                            }
 
                             pinnedX += colW;
                         }
@@ -2212,7 +2297,10 @@ namespace ZeroUI.WinForms.DataGrid
 
                         if (!hasAnyMerge)
                         {
-                            _dibSection.FillRectangle(0, currentY + _rowHeight - 1, width, 1, _gridLineColor);
+                            if (_showGridLines)
+                            {
+                                _dibSection.FillRectangle(0, currentY + _rowHeight - 1, width, 1, _gridLineColor);
+                            }
                         }
                         else
                         {
@@ -3241,7 +3329,10 @@ namespace ZeroUI.WinForms.DataGrid
 
                 if (hit.Region == HitRegion.Cell)
                 {
-                    StartEdit(hit.RowIndex, hit.ColumnIndex);
+                    if (_allowCellEditing)
+                    {
+                        StartEdit(hit.RowIndex, hit.ColumnIndex);
+                    }
                 }
             }
         }
@@ -3756,7 +3847,7 @@ namespace ZeroUI.WinForms.DataGrid
                 Invalidate();
                 e.Handled = true;
             }
-            else if (e.KeyCode == Keys.F2 || (e.KeyCode == Keys.Enter && !_isEditing))
+            else if (_allowCellEditing && (e.KeyCode == Keys.F2 || (e.KeyCode == Keys.Enter && !_isEditing)))
             {
                 if (_selectedVisualRow >= 0 && _selectedVisualRow < _rowIndexMap.ActiveCount)
                 {

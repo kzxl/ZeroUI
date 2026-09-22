@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.DataGrid;
+using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.WinformDemo.Forms
@@ -49,6 +50,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         public event Action? StressTestToggled;
         public event Action<bool>? LiveSimulationToggled;
         public event Action? ExportCsvRequested;
+        public event Action<bool>? FindPanelToggled;
+
+        private string? _savedGridLayout;
 
         public ShowcaseOptionsPanel()
         {
@@ -102,6 +106,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             _chkAutoFilter.Checked = _grid.ShowAutoFilterRow;
             _chkCheckBoxSelector.Checked = _grid.ShowCheckBoxSelectorColumn;
+            _chkGroupPanel.Checked = _grid.ShowGroupPanel;
+            _chkSummaryFooter.Checked = _grid.ShowFooter;
+            _chkAlternatingRows.Checked = _grid.ShowAlternatingRowColors;
+            _chkGridlines.Checked = _grid.ShowGridLines;
+            _chkInPlaceEditing.Checked = _grid.AllowCellEditing;
+            _chkHighlightMatches.Checked = _grid.FindHighlightMatches;
 
             if (_grid.Density == GridDensity.Compact) _rbDensityCompact.Checked = true;
             else if (_grid.Density == GridDensity.Loose) _rbDensityTouch.Checked = true;
@@ -140,11 +150,15 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var gbBehavior = CreateSectionGroup("BEHAVIOR", ref currentY, 175);
             _chkFindPanel = CreateCheckBox("Allow Find Panel", 12, 22, true, val =>
             {
-                // Toggle find panel bar visibility
+                FindPanelToggled?.Invoke(val);
             });
             _chkHighlightMatches = CreateCheckBox("Highlight Find Results", 12, 50, true, val =>
             {
-                _grid?.Invalidate();
+                if (_grid != null)
+                {
+                    _grid.FindHighlightMatches = val;
+                    _grid.Invalidate();
+                }
             });
             _chkAutoFilter = CreateCheckBox("Auto Filter Row", 12, 78, true, val =>
             {
@@ -156,7 +170,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             });
             _chkInPlaceEditing = CreateCheckBox("In-Place Cell Editing", 12, 134, true, val =>
             {
-                _grid?.Invalidate();
+                if (_grid != null) _grid.AllowCellEditing = val;
             });
             gbBehavior.Controls.AddRange(new Control[] { _chkFindPanel, _chkHighlightMatches, _chkAutoFilter, _chkCheckBoxSelector, _chkInPlaceEditing });
             _container.Controls.Add(gbBehavior);
@@ -178,15 +192,27 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             _chkAlternatingRows = CreateCheckBox("Alternating Row Colors", 12, 54, true, val =>
             {
-                _grid?.Invalidate();
+                if (_grid != null)
+                {
+                    _grid.ShowAlternatingRowColors = val;
+                    _grid.Invalidate();
+                }
             });
             _chkGridlines = CreateCheckBox("Show Gridlines", 12, 82, true, val =>
             {
-                _grid?.Invalidate();
+                if (_grid != null)
+                {
+                    _grid.ShowGridLines = val;
+                    _grid.Invalidate();
+                }
             });
-            _chkGroupPanel = CreateCheckBox("Show Group Panel", 12, 110, true, val =>
+            _chkGroupPanel = CreateCheckBox("Show Group Panel", 12, 110, false, val =>
             {
-                // Group panel visibility
+                if (_grid != null)
+                {
+                    _grid.ShowGroupPanel = val;
+                    _grid.Invalidate();
+                }
             });
             _chkSummaryFooter = CreateCheckBox("Show Summary Footer", 12, 138, true, val =>
             {
@@ -240,13 +266,44 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             {
                 if (_grid != null)
                 {
-                    string json = _grid.SaveLayoutToJson();
-                    MessageBox.Show("Saved column layout successfully!", "Layout Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _savedGridLayout = _grid.SaveLayoutToJson();
+                    var pForm = FindForm() ?? ParentForm;
+                    if (pForm != null)
+                    {
+                        ZeroToast.Success(pForm, "Saved column layout successfully!");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Saved column layout successfully!", "Layout Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
             });
             _btnRestoreLayout = CreateButton("🔄 Restore", 132, 92, 114, 26, () =>
             {
-                // Restore
+                var pForm = FindForm() ?? ParentForm;
+                if (_grid != null && !string.IsNullOrEmpty(_savedGridLayout))
+                {
+                    _grid.RestoreLayoutFromJson(_savedGridLayout);
+                    if (pForm != null)
+                    {
+                        ZeroToast.Success(pForm, "Restored column layout successfully!");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Restored column layout successfully!", "Layout Restored", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+                else
+                {
+                    if (pForm != null)
+                    {
+                        ZeroToast.Warning(pForm, "No saved layout found. Please save a layout first.");
+                    }
+                    else
+                    {
+                        MessageBox.Show("No saved layout found. Please save a layout first.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
             });
 
             gbActions.Controls.AddRange(new Control[] { _btnBestFit, _btnExportCsv, _btnSaveLayout, _btnRestoreLayout });

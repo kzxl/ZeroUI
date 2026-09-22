@@ -34,7 +34,7 @@ namespace ZeroUI.WinForms.Navigation
         public bool AutoWidth { get; set; } = true;
         public Padding? CustomPadding { get; set; }
 
-        internal Rectangle Bounds;
+        public Rectangle Bounds { get; internal set; }
 
         public event EventHandler? Click;
 

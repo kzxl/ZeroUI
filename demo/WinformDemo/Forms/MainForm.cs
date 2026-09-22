@@ -445,48 +445,58 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 {
                     if (!string.IsNullOrEmpty(text))
                     {
-                        ToastNotification.Info(this, $"Filter option: {text}");
+                        _lblStatus.Text = $"Filter option: {text}";
                     }
                 });
                 menu.AddSeparator();
                 menu.AddToggle("Checkbox Column", _zeroGrid.ShowCheckBoxSelectorColumn, val =>
                 {
                     _zeroGrid.ShowCheckBoxSelectorColumn = val;
-                    ToastNotification.Info(this, $"Selection Checkbox: {(val ? "Visible" : "Hidden")}");
+                    _lblStatus.Text = $"Selection Checkbox: {(val ? "Visible" : "Hidden")}";
                 }, subtitle: "Enable multi-row checkbox selection");
                 menu.AddToggle("Auto Filter Row", _zeroGrid.ShowAutoFilterRow, val =>
                 {
                     _zeroGrid.ShowAutoFilterRow = val;
-                    ToastNotification.Info(this, $"Auto Filter Row: {(val ? "Enabled" : "Disabled")}");
+                    _lblStatus.Text = $"Auto Filter Row: {(val ? "Enabled" : "Disabled")}";
                 }, subtitle: "Header row instant column filtering");
                 menu.AddSlider("Row Height", 24, 60, _zeroGrid.RowHeight, val =>
                 {
                     _zeroGrid.RowHeight = val;
+                    _lblStatus.Text = $"Grid Row Height: {val}px";
                 }, unit: "px");
                 menu.AddSeparator();
                 menu.AddAction("Best Fit Columns", () =>
                 {
                     _zeroGrid.BestFitColumns();
-                    ToastNotification.Info(this, "Auto-sized all columns to fit content (Best Fit).");
+                    ZeroToast.Info(this, "Auto-sized all columns to fit content (Best Fit).");
                 }, IconKey.AutoLayout);
                 menu.AddAction("Save Column Layout (JSON)", () =>
                 {
                     _savedGridLayout = _zeroGrid.SaveLayoutToJson();
-                    ToastNotification.Success(this, "Saved column layout to JSON.");
+                    ZeroToast.Success(this, "Saved column layout to JSON.");
                 }, IconKey.Save);
                 menu.AddAction("Restore Column Layout (JSON)", () =>
                 {
                     if (!string.IsNullOrEmpty(_savedGridLayout))
                     {
                         _zeroGrid.RestoreLayoutFromJson(_savedGridLayout);
-                        ToastNotification.Success(this, "Restored column layout from JSON.");
+                        ZeroToast.Success(this, "Restored column layout from JSON.");
                     }
                     else
                     {
-                        ToastNotification.Warning(this, "No saved layout found. Save layout first.");
+                        ZeroToast.Warning(this, "No saved layout found. Save layout first.");
                     }
                 }, IconKey.Refresh);
-                var pos = _mainToolbar.PointToScreen(new Point(Math.Max(100, _mainToolbar.Width / 3), _mainToolbar.Height));
+
+                Point pos;
+                if (s is ToolbarItem tbItem && tbItem.Bounds.Width > 0)
+                {
+                    pos = _mainToolbar.PointToScreen(new Point(tbItem.Bounds.Left, tbItem.Bounds.Bottom));
+                }
+                else
+                {
+                    pos = _mainToolbar.PointToScreen(new Point(Math.Max(100, _mainToolbar.Width / 3), _mainToolbar.Height));
+                }
                 menu.Show(pos);
             });
 
@@ -741,6 +751,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _optionsPanel.DatasetLoadRequested += count => LoadDataset(count);
             _optionsPanel.StressTestToggled += () => ToggleStressTest();
             _optionsPanel.ExportCsvRequested += () => _searchBar.TriggerExport();
+            _optionsPanel.FindPanelToggled += val => { if (_searchBar != null) _searchBar.Visible = val; };
             _optionsPanel.BindGrid(_zeroGrid);
 
             // Assembly Form Layout

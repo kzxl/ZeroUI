@@ -38,11 +38,21 @@ namespace ZeroUI.WinForms.Overlays
             AutoSize = false;
             Padding = Padding.Empty;
             Margin = new Padding(4, 2, 4, 2);
+            Size = new Size(c.Width + Margin.Horizontal, c.Height + Margin.Vertical);
 
             ApplyTheme();
             ZeroTheme.ThemeChanged += OnThemeChanged;
 
             AttachFocusGuards(c);
+        }
+
+        public override Size GetPreferredSize(Size constrainingSize)
+        {
+            if (Control != null)
+            {
+                return new Size(Control.Width + Margin.Horizontal, Control.Height + Margin.Vertical);
+            }
+            return base.GetPreferredSize(constrainingSize);
         }
 
         private void AttachFocusGuards(Control parent)
