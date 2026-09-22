@@ -1,19 +1,27 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.DataGrid;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.WinformDemo.Forms
 {
-    public sealed class ShowcaseOptionsPanel : UserControl
+    public sealed class ShowcaseOptionsPanel : BaseUserControl, IZeroDpiScalable
     {
         private readonly Panel _container;
+        private readonly Panel _header;
+        private readonly Label _lblTitle;
         private ZeroGridControl? _grid;
+
+        private float _currentDpiScale = 1.0f;
+        private int _baseWidth = 270;
+        private int _baseHeaderHeight = 44;
 
         // Behavior controls
         private CheckBox _chkFindPanel = null!;
@@ -54,23 +62,48 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
         private string? _savedGridLayout;
 
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            Width = (int)Math.Round(_baseWidth * scaleFactor);
+            if (_header != null) _header.Height = (int)Math.Round(_baseHeaderHeight * scaleFactor);
+            if (_lblTitle != null) _lblTitle.Font = new Font("Segoe UI", 10f * scaleFactor, FontStyle.Bold);
+            BuildOptionsUI();
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
+
         public ShowcaseOptionsPanel()
         {
             DoubleBuffered = true;
             Dock = DockStyle.Right;
-            Width = 270;
+            Width = _baseWidth;
             BackColor = Color.FromArgb(248, 249, 251);
             Padding = new Padding(0);
 
             // Header Banner
-            var header = new Panel
+            _header = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 44,
+                Height = _baseHeaderHeight,
                 BackColor = Color.FromArgb(240, 242, 245),
                 Padding = new Padding(12, 10, 12, 10)
             };
-            var lblTitle = new Label
+            _lblTitle = new Label
             {
                 Dock = DockStyle.Fill,
                 Text = "⚙️ Options & Properties",
@@ -78,7 +111,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 ForeColor = Color.FromArgb(33, 37, 41),
                 TextAlign = ContentAlignment.MiddleLeft
             };
-            header.Controls.Add(lblTitle);
+            _header.Controls.Add(_lblTitle);
 
             _container = new Panel
             {
@@ -89,7 +122,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             Controls.Add(_container);
-            Controls.Add(header);
+            Controls.Add(_header);
 
             BuildOptionsUI();
         }
@@ -143,8 +176,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private void BuildOptionsUI()
         {
             _container.SuspendLayout();
+            _container.Controls.Clear();
 
-            int currentY = 8;
+            int currentY = (int)Math.Round(8 * _currentDpiScale);
 
             // 1. Group: Behavior
             var gbBehavior = CreateSectionGroup("BEHAVIOR", ref currentY, 175);
@@ -219,83 +253,91 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 if (_grid != null) _grid.ShowFooter = val;
             });
 
-            gbAppearance.Controls.AddRange(new Control[] {
-                _rbDensityCompact, _rbDensityNormal, _rbDensityTouch,
-                _chkAlternatingRows, _chkGridlines, _chkGroupPanel, _chkSummaryFooter
-            });
+            gbAppearance.Controls.AddRange(new Control[] { _rbDensityCompact, _rbDensityNormal, _rbDensityTouch, _chkAlternatingRows, _chkGridlines, _chkGroupPanel, _chkSummaryFooter });
             _container.Controls.Add(gbAppearance);
 
-            // 3. Group: Performance & Dataset
-            var gbPerformance = CreateSectionGroup("DATASET & STRESS TEST", ref currentY, 155);
+            // 3. Group: Big Data & Benchmarks
+            var gbData = CreateSectionGroup("BIG DATA & STRESS", ref currentY, 160);
+            _btn100k = CreateButton("100K", 12, 24, 52, 28, () => DatasetLoadRequested?.Invoke(100_000));
+            _btn500k = CreateButton("500K", 68, 24, 52, 28, () => DatasetLoadRequested?.Invoke(500_000));
+            _btn1M = CreateButton("1M", 124, 24, 52, 28, () => DatasetLoadRequested?.Invoke(1_000_000));
+            _btn10M = CreateButton("10M", 180, 24, 52, 28, () => DatasetLoadRequested?.Invoke(10_000_000));
 
-            int btnW = 54;
-            int btnH = 28;
-            _btn100k = CreateButton("100K", 12, 24, btnW, btnH, () => DatasetLoadRequested?.Invoke(100_000));
-            _btn500k = CreateButton("500K", 72, 24, btnW, btnH, () => DatasetLoadRequested?.Invoke(500_000));
-            _btn1M = CreateButton("1M", 132, 24, btnW, btnH, () => DatasetLoadRequested?.Invoke(1_000_000));
-            _btn10M = CreateButton("🔥10M", 192, 24, btnW, btnH, () => DatasetLoadRequested?.Invoke(10_000_000));
-            _btn10M.BackColor = Color.FromArgb(239, 68, 68);
-            _btn10M.ForeColor = Color.White;
-
-            _chkLiveSim = CreateCheckBox("Simulate Live Updates (100Hz)", 12, 62, false, val =>
+            _chkLiveSim = CreateCheckBox("⚡ 60 FPS Realtime Ticks", 12, 60, false, val =>
             {
                 LiveSimulationToggled?.Invoke(val);
             });
 
-            _btnStressTest = CreateButton("🚀 Run Auto-Scroll Stress Test", 12, 94, 234, 32, () =>
+            _btnStressTest = CreateButton("🔥 Auto-Scroll Stress Test", 12, 92, 220, 32, () =>
             {
                 StressTestToggled?.Invoke();
             });
-            _btnStressTest.BackColor = Color.FromArgb(18, 86, 209);
-            _btnStressTest.ForeColor = Color.White;
+            _btnStressTest.BackColor = Color.FromArgb(238, 242, 255);
+            _btnStressTest.ForeColor = Color.FromArgb(79, 70, 229);
 
-            gbPerformance.Controls.AddRange(new Control[] { _btn100k, _btn500k, _btn1M, _btn10M, _chkLiveSim, _btnStressTest });
-            _container.Controls.Add(gbPerformance);
+            gbData.Controls.AddRange(new Control[] { _btn100k, _btn500k, _btn1M, _btn10M, _chkLiveSim, _btnStressTest });
+            _container.Controls.Add(gbData);
 
-            // 4. Group: Actions & Tools
-            var gbActions = CreateSectionGroup("ACTIONS & EXPORT", ref currentY, 130);
-            _btnBestFit = CreateButton("📐 Best Fit Columns", 12, 24, 234, 28, () =>
+            // 4. Group: Actions & Layout
+            var gbActions = CreateSectionGroup("ACTIONS & SERIALIZATION", ref currentY, 130);
+            _btnBestFit = CreateButton("Best Fit Columns", 12, 24, 105, 28, () =>
             {
                 _grid?.BestFitColumns();
             });
-            _btnExportCsv = CreateButton("📊 Export to CSV", 12, 58, 234, 28, () =>
+
+            _btnExportCsv = CreateButton("Export CSV", 127, 24, 105, 28, () =>
             {
                 ExportCsvRequested?.Invoke();
             });
-            _btnSaveLayout = CreateButton("💾 Save Layout", 12, 92, 114, 26, () =>
+
+            _btnSaveLayout = CreateButton("Save Layout", 12, 62, 105, 28, () =>
             {
                 if (_grid != null)
                 {
                     _savedGridLayout = _grid.SaveLayoutToJson();
-                    var pForm = FindForm() ?? ParentForm;
-                    if (pForm != null)
+                    var pForm = FindForm();
+                    if (pForm is BaseForm bf)
                     {
-                        ZeroToast.Success(pForm, "Saved column layout successfully!");
+                        bf.ShowToast("Grid layout saved successfully to memory.", "Layout Saved", ToastType.Success);
+                    }
+                    else if (pForm != null)
+                    {
+                        ZeroToast.Success(pForm, "Grid layout saved successfully to memory.");
                     }
                     else
                     {
-                        MessageBox.Show("Saved column layout successfully!", "Layout Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Grid layout saved successfully to memory.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             });
-            _btnRestoreLayout = CreateButton("🔄 Restore", 132, 92, 114, 26, () =>
+
+            _btnRestoreLayout = CreateButton("Restore Layout", 127, 62, 105, 28, () =>
             {
-                var pForm = FindForm() ?? ParentForm;
                 if (_grid != null && !string.IsNullOrEmpty(_savedGridLayout))
                 {
                     _grid.RestoreLayoutFromJson(_savedGridLayout);
-                    if (pForm != null)
+                    var pForm = FindForm();
+                    if (pForm is BaseForm bf)
                     {
-                        ZeroToast.Success(pForm, "Restored column layout successfully!");
+                        bf.ShowToast("Grid layout restored from memory.", "Layout Restored", ToastType.Info);
+                    }
+                    else if (pForm != null)
+                    {
+                        ZeroToast.Info(pForm, "Grid layout restored from memory.");
                     }
                     else
                     {
-                        MessageBox.Show("Restored column layout successfully!", "Layout Restored", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Grid layout restored from memory.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 else
                 {
-                    if (pForm != null)
+                    var pForm = FindForm();
+                    if (pForm is BaseForm bf)
+                    {
+                        bf.ShowToast("No saved layout found. Please save a layout first.", "Layout Notice", ToastType.Warning);
+                    }
+                    else if (pForm != null)
                     {
                         ZeroToast.Warning(pForm, "No saved layout found. Please save a layout first.");
                     }
@@ -317,12 +359,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var gb = new GroupBox
             {
                 Text = title,
-                Font = new Font("Segoe UI", 8.25f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 8.25f * _currentDpiScale, FontStyle.Bold),
                 ForeColor = Color.FromArgb(100, 110, 125),
-                Location = new Point(4, y),
-                Size = new Size(244, height)
+                Location = new Point((int)Math.Round(4 * _currentDpiScale), y),
+                Size = new Size((int)Math.Round(244 * _currentDpiScale), (int)Math.Round(height * _currentDpiScale))
             };
-            y += height + 10;
+            y += (int)Math.Round((height + 10) * _currentDpiScale);
             return gb;
         }
 
@@ -331,10 +373,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cb = new CheckBox
             {
                 Text = text,
-                Location = new Point(x, y),
+                Location = new Point((int)Math.Round(x * _currentDpiScale), (int)Math.Round(y * _currentDpiScale)),
                 AutoSize = true,
                 Checked = isChecked,
-                Font = new Font("Segoe UI", 9f, FontStyle.Regular),
+                Font = new Font("Segoe UI", 9f * _currentDpiScale, FontStyle.Regular),
                 ForeColor = Color.FromArgb(40, 44, 52),
                 Cursor = Cursors.Hand
             };
@@ -347,10 +389,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var rb = new RadioButton
             {
                 Text = text,
-                Location = new Point(x, y),
+                Location = new Point((int)Math.Round(x * _currentDpiScale), (int)Math.Round(y * _currentDpiScale)),
                 AutoSize = true,
                 Checked = isChecked,
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
+                Font = new Font("Segoe UI", 8.5f * _currentDpiScale, FontStyle.Regular),
                 ForeColor = Color.FromArgb(40, 44, 52),
                 Cursor = Cursors.Hand
             };
@@ -366,10 +408,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var btn = new Button
             {
                 Text = text,
-                Location = new Point(x, y),
-                Size = new Size(width, height),
+                Location = new Point((int)Math.Round(x * _currentDpiScale), (int)Math.Round(y * _currentDpiScale)),
+                Size = new Size((int)Math.Round(width * _currentDpiScale), (int)Math.Round(height * _currentDpiScale)),
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.75f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 8.75f * _currentDpiScale, FontStyle.Bold),
                 BackColor = Color.FromArgb(240, 243, 248),
                 ForeColor = Color.FromArgb(33, 37, 41),
                 Cursor = Cursors.Hand

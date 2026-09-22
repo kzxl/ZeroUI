@@ -1,10 +1,10 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
@@ -57,14 +57,20 @@ namespace ZeroUI.WinForms.Navigation
     [DefaultEvent("ItemSelected")]
     [Description("Enterprise Sidebar Navigation with brand header, categorized items, and collapsible rail")]
     [ToolboxBitmap(typeof(ZeroIcons), "SideNavControl.bmp")]
-    public class SideNavControl : Control
+    public class SideNavControl : Control, IZeroDpiScalable
     {
         private readonly List<SideNavItem> _items = new List<SideNavItem>();
         private int _selectedIndex = 0;
         private int _hoveredIndex = -1;
         private bool _isCollapsed = false;
+        private int _baseExpandedWidth = 230;
+        private int _baseCollapsedWidth = 64;
+        private int _baseHeaderHeight = 56;
+        private int _baseItemHeight = 40;
+        private int _baseCatHeight = 24;
         private int _expandedWidth = 230;
         private int _collapsedWidth = 64;
+        private float _currentDpiScale = 1.0f;
 
         private string _brandLogo = "⚡";
         private string _brandTitle = "ZeroUI Suite";
@@ -76,6 +82,31 @@ namespace ZeroUI.WinForms.Navigation
 
         public event EventHandler<SideNavEventArgs>? ItemSelected;
         public event EventHandler? CollapseChanged;
+
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            _expandedWidth = (int)Math.Round(_baseExpandedWidth * scaleFactor);
+            _collapsedWidth = (int)Math.Round(_baseCollapsedWidth * scaleFactor);
+            Width = _isCollapsed ? _collapsedWidth : _expandedWidth;
+            Font = new Font(Font.FontFamily, 9.5f * scaleFactor, Font.Style);
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
 
         public SideNavControl()
         {
@@ -253,34 +284,34 @@ namespace ZeroUI.WinForms.Navigation
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            int hov = -1;
+            int prevHover = _hoveredIndex;
+            _hoveredIndex = -1;
 
             for (int i = 0; i < _items.Count; i++)
             {
                 if (_items[i].Bounds.Contains(e.Location))
                 {
-                    hov = i;
+                    _hoveredIndex = i;
                     break;
                 }
             }
 
-            if (_hoveredIndex != hov)
+            if (prevHover != _hoveredIndex)
             {
-                _hoveredIndex = hov;
-                Cursor = (hov >= 0 || e.Y < 56) ? Cursors.Hand : Cursors.Default;
-
-                if (_isCollapsed && hov >= 0 && hov != _lastTooltipIndex)
-                {
-                    _lastTooltipIndex = hov;
-                    _toolTip.Show(_items[hov].Title, this, Width + 8, _items[hov].Bounds.Y + 8, 2000);
-                }
-                else if (hov < 0)
-                {
-                    _toolTip.Hide(this);
-                    _lastTooltipIndex = -1;
-                }
-
+                Cursor = (_hoveredIndex >= 0 || e.Y <= (int)Math.Round(_baseHeaderHeight * _currentDpiScale)) ? Cursors.Hand : Cursors.Default;
                 Invalidate();
+            }
+
+            // Show tooltip when collapsed
+            if (_isCollapsed && _hoveredIndex >= 0 && _hoveredIndex != _lastTooltipIndex)
+            {
+                _lastTooltipIndex = _hoveredIndex;
+                _toolTip.SetToolTip(this, _items[_hoveredIndex].Title);
+            }
+            else if (_hoveredIndex < 0 && _lastTooltipIndex >= 0)
+            {
+                _lastTooltipIndex = -1;
+                _toolTip.Hide(this);
             }
         }
 
@@ -299,7 +330,8 @@ namespace ZeroUI.WinForms.Navigation
             base.OnMouseClick(e);
 
             // Toggle collapse when clicking brand header area
-            if (e.Y <= 56)
+            int headerH = (int)Math.Round(_baseHeaderHeight * _currentDpiScale);
+            if (e.Y <= headerH)
             {
                 ToggleCollapse();
                 return;
@@ -340,44 +372,44 @@ namespace ZeroUI.WinForms.Navigation
             }
 
             // 2. Brand Header (Top 56px)
-            Rectangle headerRect = new Rectangle(0, 0, w, 56);
-            var logoFont = ZeroFontCache.Get("Segoe UI Emoji", 15f, FontStyle.Regular);
-            var titleFont = ZeroFontCache.Get("Segoe UI", 10.5f, FontStyle.Bold);
-            var subFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
+            int headerH = (int)Math.Round(_baseHeaderHeight * _currentDpiScale);
+            var logoFont = ZeroFontCache.Get("Segoe UI Emoji", 15f * _currentDpiScale, FontStyle.Regular);
+            var titleFont = ZeroFontCache.Get("Segoe UI", 10.5f * _currentDpiScale, FontStyle.Bold);
+            var subFont = ZeroFontCache.Get("Segoe UI", 7.5f * _currentDpiScale, FontStyle.Regular);
             using (var logoBrush = new SolidBrush(palette.Primary))
             using (var titleBrush = new SolidBrush(palette.TextPrimary))
             using (var subBrush = new SolidBrush(palette.TextSecondary))
             {
                 if (!_isCollapsed)
                 {
-                    g.DrawString(_brandLogo, logoFont, logoBrush, 14, 12);
-                    g.DrawString(_brandTitle, titleFont, titleBrush, 44, 10);
-                    g.DrawString(_brandSubtitle, subFont, subBrush, 45, 30);
+                    g.DrawString(_brandLogo, logoFont, logoBrush, 14 * _currentDpiScale, 12 * _currentDpiScale);
+                    g.DrawString(_brandTitle, titleFont, titleBrush, 44 * _currentDpiScale, 10 * _currentDpiScale);
+                    g.DrawString(_brandSubtitle, subFont, subBrush, 45 * _currentDpiScale, 30 * _currentDpiScale);
                 }
                 else
                 {
                     var logoSz = g.MeasureString(_brandLogo, logoFont);
-                    g.DrawString(_brandLogo, logoFont, logoBrush, (w - logoSz.Width) / 2f, 14);
+                    g.DrawString(_brandLogo, logoFont, logoBrush, (w - logoSz.Width) / 2f, 14 * _currentDpiScale);
                 }
             }
 
             using (var sepPen = new Pen(palette.Border, 1f))
             {
-                g.DrawLine(sepPen, 8, 56, w - 8, 56);
+                g.DrawLine(sepPen, 8 * _currentDpiScale, headerH, w - 8 * _currentDpiScale, headerH);
             }
 
             // 3. Render Items & Category Sections
-            int curY = 66;
+            int curY = headerH + (int)Math.Round(10 * _currentDpiScale);
             string lastCategory = "";
-            int itemH = 40;
-            int paddingX = _isCollapsed ? 6 : 10;
+            int itemH = (int)Math.Round(_baseItemHeight * _currentDpiScale);
+            int paddingX = _isCollapsed ? (int)Math.Round(6 * _currentDpiScale) : (int)Math.Round(10 * _currentDpiScale);
             int itemW = w - (paddingX * 2);
 
-            var catFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
-            var itemFont = ZeroFontCache.Get("Segoe UI", 9.2f, FontStyle.Regular);
-            var itemBold = ZeroFontCache.Get("Segoe UI", 9.2f, FontStyle.Bold);
-            var iconFont = ZeroFontCache.Get("Segoe UI Emoji", 11f, FontStyle.Regular);
-            var badgeFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold);
+            var catFont = ZeroFontCache.Get("Segoe UI", 7.5f * _currentDpiScale, FontStyle.Bold);
+            var itemFont = ZeroFontCache.Get("Segoe UI", 9.2f * _currentDpiScale, FontStyle.Regular);
+            var itemBold = ZeroFontCache.Get("Segoe UI", 9.2f * _currentDpiScale, FontStyle.Bold);
+            var iconFont = ZeroFontCache.Get("Segoe UI Emoji", 11f * _currentDpiScale, FontStyle.Regular);
+            var badgeFont = ZeroFontCache.Get("Segoe UI", 7.5f * _currentDpiScale, FontStyle.Bold);
 
             for (int i = 0; i < _items.Count; i++)
             {
@@ -388,15 +420,15 @@ namespace ZeroUI.WinForms.Navigation
                 {
                     lastCategory = item.Category;
                     using var catBrush = new SolidBrush(Color.FromArgb(148, 163, 184));
-                    g.DrawString(item.Category.ToUpperInvariant(), catFont, catBrush, 16, curY + 4);
-                    curY += 24;
+                    g.DrawString(item.Category.ToUpperInvariant(), catFont, catBrush, 16 * _currentDpiScale, curY + 4 * _currentDpiScale);
+                    curY += (int)Math.Round(_baseCatHeight * _currentDpiScale);
                 }
 
                 item.Bounds = new Rectangle(paddingX, curY, itemW, itemH);
                 bool isSelected = (i == _selectedIndex);
                 bool isHovered = (i == _hoveredIndex);
 
-                int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+                int effRadius = ZeroUIConfig.GetEffectiveRadius((int)Math.Round(6 * _currentDpiScale));
 
                 // Item Shape Background
                 if (isSelected)
@@ -407,7 +439,7 @@ namespace ZeroUI.WinForms.Navigation
 
                     // Left active indicator pill
                     using var indBrush = new SolidBrush(palette.Primary);
-                    using var indPath = ZeroUIConfig.CreateRoundedRectangle(new Rectangle(paddingX + 2, curY + 6, 3, itemH - 12), 2);
+                    using var indPath = ZeroUIConfig.CreateRoundedRectangle(new Rectangle(paddingX + (int)Math.Round(2 * _currentDpiScale), curY + (int)Math.Round(6 * _currentDpiScale), (int)Math.Round(3 * _currentDpiScale), itemH - (int)Math.Round(12 * _currentDpiScale)), (int)Math.Round(2 * _currentDpiScale));
                     g.FillPath(indBrush, indPath);
                 }
                 else if (isHovered)
@@ -418,24 +450,24 @@ namespace ZeroUI.WinForms.Navigation
                 }
 
                 // Render Icon
-                int iconX = _isCollapsed ? (w - 20) / 2 : paddingX + 14;
+                int iconX = _isCollapsed ? (w - (int)Math.Round(20 * _currentDpiScale)) / 2 : paddingX + (int)Math.Round(14 * _currentDpiScale);
                 Color iconColor = isSelected ? palette.Primary : (isHovered ? palette.TextPrimary : palette.TextSecondary);
                 using (var iconBrush = new SolidBrush(iconColor))
                 {
-                    g.DrawString(item.Icon, iconFont, iconBrush, iconX, curY + (itemH - 20) / 2);
+                    g.DrawString(item.Icon, iconFont, iconBrush, iconX, curY + (itemH - (int)Math.Round(20 * _currentDpiScale)) / 2);
                 }
 
                 // Render Text & Badge (only in expanded mode)
                 if (!_isCollapsed)
                 {
-                    int textX = paddingX + 42;
+                    int textX = paddingX + (int)Math.Round(42 * _currentDpiScale);
                     Color textColor = isSelected ? palette.Primary : (isHovered ? palette.TextPrimary : palette.TextSecondary);
                     var curFont = isSelected ? itemBold : itemFont;
 
                     using (var textBrush = new SolidBrush(textColor))
                     using (var sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, LineAlignment = StringAlignment.Center })
                     {
-                        int textMaxW = item.Bounds.Right - textX - (item.BadgeCount > 0 ? 36 : 8);
+                        int textMaxW = item.Bounds.Right - textX - (item.BadgeCount > 0 ? (int)Math.Round(36 * _currentDpiScale) : (int)Math.Round(8 * _currentDpiScale));
                         RectangleF textRect = new RectangleF(textX, curY, textMaxW, itemH);
                         g.DrawString(item.Title, curFont, textBrush, textRect, sf);
                     }
@@ -445,14 +477,14 @@ namespace ZeroUI.WinForms.Navigation
                     {
                         string bStr = item.BadgeCount > 99 ? "99+" : item.BadgeCount.ToString();
                         var bSz = g.MeasureString(bStr, badgeFont);
-                        int bW = Math.Max(18, (int)bSz.Width + 8);
-                        int bH = 16;
-                        int bX = item.Bounds.Right - bW - 8;
+                        int bW = Math.Max((int)Math.Round(18 * _currentDpiScale), (int)bSz.Width + (int)Math.Round(8 * _currentDpiScale));
+                        int bH = (int)Math.Round(16 * _currentDpiScale);
+                        int bX = item.Bounds.Right - bW - (int)Math.Round(8 * _currentDpiScale);
                         var bRect = new Rectangle(bX, curY + (itemH - bH) / 2, bW, bH);
 
                         Color bColor = item.BadgeColor ?? palette.Danger;
                         using var bBrush = new SolidBrush(bColor);
-                        using var bPath = ZeroUIConfig.CreateRoundedRectangle(bRect, 8);
+                        using var bPath = ZeroUIConfig.CreateRoundedRectangle(bRect, (int)Math.Round(8 * _currentDpiScale));
                         g.FillPath(bBrush, bPath);
 
                         using var bTextBrush = new SolidBrush(Color.White);
@@ -461,27 +493,27 @@ namespace ZeroUI.WinForms.Navigation
                     }
                 }
 
-                curY += itemH + 4;
+                curY += itemH + (int)Math.Round(4 * _currentDpiScale);
             }
 
             // 4. Bottom Rail Footer: Collapse hint or status
-            int footerH = 36;
+            int footerH = (int)Math.Round(36 * _currentDpiScale);
             int footerY = h - footerH;
             using (var sepPen = new Pen(palette.Border, 1f))
             {
-                g.DrawLine(sepPen, 8, footerY, w - 8, footerY);
+                g.DrawLine(sepPen, 8 * _currentDpiScale, footerY, w - 8 * _currentDpiScale, footerY);
             }
 
-            var footFont = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
+            var footFont = ZeroFontCache.Get("Segoe UI", 7.5f * _currentDpiScale, FontStyle.Regular);
             using (var footBrush = new SolidBrush(palette.TextSecondary))
             {
                 if (!_isCollapsed)
                 {
-                    g.DrawString("v2.4 Enterprise • Ready", footFont, footBrush, 14, footerY + 10);
+                    g.DrawString("v2.4 Enterprise • Ready", footFont, footBrush, 14 * _currentDpiScale, footerY + 10 * _currentDpiScale);
                 }
                 else
                 {
-                    g.DrawString("⚡", footFont, footBrush, (w - 12) / 2f, footerY + 10);
+                    g.DrawString("⚡", footFont, footBrush, (w - 12 * _currentDpiScale) / 2f, footerY + 10 * _currentDpiScale);
                 }
             }
         }

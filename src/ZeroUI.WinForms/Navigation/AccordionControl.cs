@@ -79,7 +79,7 @@ namespace ZeroUI.WinForms.Navigation
     [Category("ZeroUI - Overlays")]
     [Description("Multi-level collapsible accordion navigation menu with search filtering and badges.")]
     [ToolboxBitmap(typeof(ZeroIcons), "AccordionControl.bmp")]
-    public class AccordionControl : Control
+    public class AccordionControl : Control, IZeroDpiScalable
     {
         private readonly List<AccordionGroup> _groups = new List<AccordionGroup>();
         private AccordionExpandMode _expandMode = AccordionExpandMode.MultipleGroups;
@@ -91,15 +91,44 @@ namespace ZeroUI.WinForms.Navigation
         private Rectangle _clearSearchRect;
         private bool _isSearchFocused = false;
 
+        private int _baseGroupHeaderHeight = 40;
+        private int _baseItemHeight = 32;
+        private int _baseWidth = 260;
         private int _groupHeaderHeight = 40;
         private int _itemHeight = 32;
         private int _scrollY = 0;
         private int _totalContentHeight = 0;
+        private float _currentDpiScale = 1.0f;
 
         private object? _hoveredElement; // Can be AccordionGroup or AccordionItem
         private AccordionItem? _selectedItem;
 
         public event EventHandler<AccordionItem>? SelectedItemChanged;
+
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            _groupHeaderHeight = (int)Math.Round(_baseGroupHeaderHeight * scaleFactor);
+            _itemHeight = (int)Math.Round(_baseItemHeight * scaleFactor);
+            Width = (int)Math.Round(_baseWidth * scaleFactor);
+            Font = new Font(Font.FontFamily, 9.25f * scaleFactor, Font.Style);
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
 
         public AccordionControl()
         {
@@ -112,7 +141,7 @@ namespace ZeroUI.WinForms.Navigation
                 ControlStyles.Selectable, true);
 
             DoubleBuffered = true;
-            Width = 260;
+            Width = _baseWidth;
             Height = 500;
             Font = new Font("Segoe UI", 9.25f, FontStyle.Regular);
 

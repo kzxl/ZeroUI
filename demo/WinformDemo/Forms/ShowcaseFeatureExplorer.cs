@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using ZeroUI.Core.Theme;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.Samples.WinformDemo.Forms
@@ -33,7 +35,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         }
     }
 
-    public sealed class ShowcaseFeatureExplorer : UserControl
+    public sealed class ShowcaseFeatureExplorer : BaseUserControl, IZeroDpiScalable
     {
         private readonly TextBox _txtSearch;
         private readonly Panel _searchContainer;
@@ -42,6 +44,35 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private readonly List<Control> _renderedRows = new List<Control>();
         private readonly ToolTip _toolTip;
         private string _selectedKey = string.Empty;
+
+        private float _currentDpiScale = 1.0f;
+        private int _baseWidth = 340;
+        private int _baseSearchHeight = 44;
+
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            Width = (int)Math.Round(_baseWidth * scaleFactor);
+            _searchContainer.Height = (int)Math.Round(_baseSearchHeight * scaleFactor);
+            _txtSearch.Font = new Font("Segoe UI", 9.5f * scaleFactor, FontStyle.Regular);
+            RenderItems(_allItems);
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
 
         public event Action<ShowcaseFeatureItem>? FeatureSelected;
 
@@ -198,12 +229,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 var lblHeader = new Label
                 {
                     Dock = DockStyle.Top,
-                    Height = 28,
+                    Height = (int)Math.Round(28 * _currentDpiScale),
                     Text = group.Key.ToUpperInvariant(),
-                    Font = new Font("Segoe UI", 8.25f, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 8.25f * _currentDpiScale, FontStyle.Bold),
                     ForeColor = Color.FromArgb(120, 130, 145),
                     TextAlign = ContentAlignment.BottomLeft,
-                    Padding = new Padding(12, 0, 0, 4)
+                    Padding = new Padding((int)Math.Round(12 * _currentDpiScale), 0, 0, (int)Math.Round(4 * _currentDpiScale))
                 };
                 _itemsPanel.Controls.Add(lblHeader);
 
@@ -232,10 +263,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var row = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 34,
+                Height = (int)Math.Round(34 * _currentDpiScale),
                 Tag = item,
                 Cursor = Cursors.Hand,
-                Padding = new Padding(10, 0, 6, 0)
+                Padding = new Padding((int)Math.Round(10 * _currentDpiScale), 0, (int)Math.Round(6 * _currentDpiScale), 0)
             };
 
             bool isSelected = item.Key == _selectedKey;
@@ -245,7 +276,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Text = $"{item.Icon}  {item.Title}",
-                Font = new Font("Segoe UI", 9.25f, isSelected ? FontStyle.Bold : FontStyle.Regular),
+                Font = new Font("Segoe UI", 9.25f * _currentDpiScale, isSelected ? FontStyle.Bold : FontStyle.Regular),
                 ForeColor = isSelected ? Color.FromArgb(18, 86, 209) : Color.FromArgb(33, 37, 41),
                 TextAlign = ContentAlignment.MiddleLeft,
                 AutoEllipsis = true
@@ -257,9 +288,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 lblBadge = new Label
                 {
                     Dock = DockStyle.Right,
-                    Width = 56,
+                    Width = (int)Math.Round(56 * _currentDpiScale),
                     Text = item.Badge,
-                    Font = new Font("Segoe UI", 7.5f, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 7.5f * _currentDpiScale, FontStyle.Bold),
                     ForeColor = item.BadgeColor,
                     TextAlign = ContentAlignment.MiddleRight,
                     Cursor = Cursors.Hand
