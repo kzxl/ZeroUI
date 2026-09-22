@@ -18,5 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZeroUI.Core\ZeroUI.Core.csproj" />
+    <ProjectReference Include="..\..\src\ZeroUI.Historian.Sqlite\ZeroUI.Historian.Sqlite.csproj" />
   </ItemGroup>
 </Project>
