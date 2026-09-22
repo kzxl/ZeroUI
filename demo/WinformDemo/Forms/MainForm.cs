@@ -3797,8 +3797,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
-            // SECTION 1: Visual Query Builder & Enterprise Form Editors (Height = 420)
-            var sec1 = new Panel { Dock = DockStyle.Top, Height = 420, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+            // SECTION 1: Visual Query Builder & Enterprise Form Editors (Height = 440)
+            var sec1 = new Panel { Dock = DockStyle.Top, Height = 440, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Left Card: ZeroFilterControl
             var cardFilter = new ZeroCard
@@ -3878,7 +3878,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Subtitle = "GridLookup, CheckedComboBox, TokenEdit, and ColorPicker"
             };
 
-            var pnlEditors = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12, 8, 12, 8), AutoScroll = true };
+            var pnlEditors = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12, 8, 12, 8), AutoScroll = false };
 
             // Editor 1: GridLookupEdit with Quick-Create Footer
             var lblGridLookup = new Label { Text = "Multi-Column GridLookup (GridLookupEdit with +Add New):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 8) };
@@ -4108,8 +4108,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             sec2.Controls.Add(splitSec2);
             sec2.Controls.Add(cardWizard);
 
-            // SECTION 3: Vector Print Preview & Overlays / Shimmer Skeleton (Height = 350)
-            var sec3 = new Panel { Dock = DockStyle.Top, Height = 350, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
+            // SECTION 3: Vector Print Preview & Overlays / Shimmer Skeleton (Height = 440)
+            var sec3 = new Panel { Dock = DockStyle.Top, Height = 440, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Left Card: ZeroPrintPreview
             var cardPrint = new ZeroCard
@@ -4182,7 +4182,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Subtitle = "60 FPS animated loading states, floating toasts, and modal dialogs"
             };
 
-            var pnlOverlays = new Panel { Dock = DockStyle.Fill, Padding = new Padding(14), AutoScroll = true };
+            var pnlOverlays = new Panel { Dock = DockStyle.Fill, Padding = new Padding(14), AutoScroll = false };
 
             // Shimmer Skeleton Showcase
             var lblSkelTitle = new Label { Text = "Animated Shimmer Loading Placeholders (ZeroSkeleton):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(10, 8) };
@@ -4203,7 +4203,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var lblToastTitle = new Label { Text = "Toast Notifications & Modal Dialog (ZeroToast, ZeroModal):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(10, 150) };
             pnlOverlays.Controls.Add(lblToastTitle);
 
-            var toastFlow = new FlowLayoutPanel { Location = new Point(10, 174), Size = new Size(480, 90), BackColor = Color.Transparent };
+            var toastFlow = new FlowLayoutPanel { Location = new Point(10, 174), Width = 520, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, BackColor = Color.Transparent };
             
             var btnToastSuccess = new ZeroButton { Text = "✔ Success Toast", ButtonStyle = ZeroButtonStyle.Success, Width = 140, Height = 34 };
             btnToastSuccess.Click += (s, e) => ZeroToast.Success(this, "Production batch #8091 successfully released to shopfloor.");
@@ -5944,15 +5944,16 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             {
                 StepNumber = 5,
                 Title = "ZeroToastStackManager (Multi-Toast Stacking & Glide Relocation)",
-                Subtitle = "Non-blocking floating notifications with multi-corner anchor, glide repositioning, FIFO queue, and pause on hover",
-                Height = 130
+                Subtitle = "Non-blocking floating notifications with multi-corner anchor, glide repositioning, FIFO queue, and pause on hover"
             };
 
             var toastFlow = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Padding = new Padding(12),
-                AutoScroll = true
+                AutoScroll = false
             };
 
             var btnToastSuccess = new ZeroButton { Text = "✔ Success Toast", ButtonStyle = ZeroButtonStyle.Success, Size = new Size(150, 34) };
@@ -6014,12 +6015,19 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cardActions = new ZeroCard
             {
                 Dock = DockStyle.Top,
-                Height = 180,
                 StepNumber = 1,
                 Title = "Cabinet & Hardware Controls",
                 Subtitle = "Interactive simulation of physical rack slots and switch ports"
             };
-            var pnlCardBody = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, AutoScroll = true, Padding = new Padding(8) };
+            var pnlCardBody = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                FlowDirection = FlowDirection.LeftToRight,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                AutoScroll = false,
+                Padding = new Padding(8)
+            };
             
             var btnToggleThermal = new ZeroButton { Text = "🌡 Toggle Thermal Gradient", ButtonStyle = ZeroButtonStyle.Primary, Size = new Size(210, 34) };
             btnToggleThermal.Click += (s, e) =>
@@ -6120,12 +6128,19 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cardPsuActions = new ZeroCard
             {
                 Dock = DockStyle.Top,
-                Height = 160,
                 StepNumber = 2,
                 Title = "Hardware Fault Injection & Health Testing",
                 Subtitle = "Simulate redundant PSU power loss, fan failure, and optical link degradation"
             };
-            var pnlPsuBody = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(8) };
+            var pnlPsuBody = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                FlowDirection = FlowDirection.LeftToRight,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                AutoScroll = false,
+                Padding = new Padding(8)
+            };
             
             var btnFailPsu = new ZeroButton { Text = "⚡ Cut PSU 2 Power", ButtonStyle = ZeroButtonStyle.Danger, Size = new Size(180, 34) };
             btnFailPsu.Click += (s, e) =>
@@ -6147,7 +6162,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             pnlPsuBody.Controls.Add(btnFailPsu);
             pnlPsuBody.Controls.Add(btnRestorePsu);
-            cardPsuActions.Controls.Add(pnlPsuBody);
+            cardPsuActions.ContentPanel.Controls.Add(pnlPsuBody);
 
             pnlChassisRoot.Controls.Add(cardPsuActions);
             pnlChassisRoot.Controls.Add(devFaceplate);
@@ -6166,12 +6181,19 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cardFbActions = new ZeroCard
             {
                 Dock = DockStyle.Top,
-                Height = 160,
                 StepNumber = 3,
                 Title = "Fieldbus Fault Injection & Break Localization",
                 Subtitle = "Simulate cable severing between industrial drops (Profinet / EtherCAT)"
             };
-            var pnlFbBody = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(8) };
+            var pnlFbBody = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                FlowDirection = FlowDirection.LeftToRight,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                AutoScroll = false,
+                Padding = new Padding(8)
+            };
             
             var btnBreakCable = new ZeroButton { Text = "✂ Sever Cable (Station 3 -> 4)", ButtonStyle = ZeroButtonStyle.Danger, Size = new Size(240, 34) };
             btnBreakCable.Click += (s, e) =>
@@ -6198,7 +6220,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             pnlFbBody.Controls.Add(btnBreakCable);
             pnlFbBody.Controls.Add(btnRepairCable);
-            cardFbActions.Controls.Add(pnlFbBody);
+            cardFbActions.ContentPanel.Controls.Add(pnlFbBody);
 
             pnlFbRoot.Controls.Add(cardFbActions);
             pnlFbRoot.Controls.Add(fbMonitor);
@@ -7030,15 +7052,16 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cardConsole = new ZeroCard
             {
                 Dock = DockStyle.Top,
-                Height = 110,
                 Title = "Supervisory Process Orchestration, Setpoints & Safety Permissives",
                 StepNumber = 1
             };
             var pnlConsole = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                AutoScroll = true,
-                WrapContents = false,
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                AutoScroll = false,
+                WrapContents = true,
                 Padding = new Padding(8, 6, 8, 6)
             };
 

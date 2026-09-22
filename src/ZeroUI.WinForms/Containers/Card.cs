@@ -31,6 +31,10 @@ namespace ZeroUI.WinForms.Containers
         private readonly Panel _contentPanel;
         private Rectangle _actionRect;
         private bool _isActionHovered = false;
+        private bool _autoFitContent = true;
+        private bool _isAdjustingHeight = false;
+        private bool _isMovingChild = false;
+        private int _lastCalculatedWidth = -1;
 
         public event EventHandler? ActionClicked;
 
@@ -52,10 +56,14 @@ namespace ZeroUI.WinForms.Containers
             {
                 BackColor = Color.Transparent,
                 Location = new Point(12, _headerHeight),
-                Size = new Size(Width - 24, Height - _headerHeight - 12),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+                Size = new Size(Math.Max(10, Width - 24), Math.Max(10, Height - _headerHeight - 12)),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                AutoScroll = false
             };
+            _contentPanel.ControlAdded += OnContentControlAdded;
+            _contentPanel.ControlRemoved += OnContentControlRemoved;
             Controls.Add(_contentPanel);
+
             ZeroTheme.ThemeChanged += (s, e) =>
             {
                 BackColor = ZeroTheme.Colors.CardBackground;
@@ -67,6 +75,25 @@ namespace ZeroUI.WinForms.Containers
                 UpdateRegion();
                 Invalidate();
             };
+        }
+
+        [Category("Layout")]
+        [DefaultValue(true)]
+        [Description("Automatically adjusts the Card height to fully enclose its inner content without clipping or inner scrollbars.")]
+        public bool AutoFitContent
+        {
+            get => _autoFitContent;
+            set
+            {
+                if (_autoFitContent != value)
+                {
+                    _autoFitContent = value;
+                    if (_autoFitContent)
+                    {
+                        AdjustHeightToContent();
+                    }
+                }
+            }
         }
 
         [Category("Appearance")]
@@ -102,6 +129,7 @@ namespace ZeroUI.WinForms.Containers
                 _subtitle = value;
                 _headerHeight = string.IsNullOrEmpty(value) ? 44 : 58;
                 UpdateContentLayout();
+                if (_autoFitContent) AdjustHeightToContent();
                 Invalidate();
             }
         }
@@ -111,7 +139,13 @@ namespace ZeroUI.WinForms.Containers
         public string? ActionText
         {
             get => _actionText;
-            set { _actionText = value; Invalidate(); }
+            set
+            {
+                _actionText = value;
+                UpdateContentLayout();
+                if (_autoFitContent) AdjustHeightToContent();
+                Invalidate();
+            }
         }
 
         [Category("Appearance")]
@@ -137,11 +171,126 @@ namespace ZeroUI.WinForms.Containers
         [Browsable(false)]
         public Panel ContentPanel => _contentPanel;
 
+        protected override void OnControlAdded(ControlEventArgs e)
+        {
+            base.OnControlAdded(e);
+            if (e.Control != null && e.Control != _contentPanel && _contentPanel != null && !_isMovingChild)
+            {
+                Control c = e.Control;
+                _isMovingChild = true;
+                try
+                {
+                    Controls.Remove(c);
+                    _contentPanel.Controls.Add(c);
+                }
+                finally
+                {
+                    _isMovingChild = false;
+                }
+            }
+        }
+
+        private void OnContentControlAdded(object? sender, ControlEventArgs e)
+        {
+            if (e.Control != null)
+            {
+                HookChildLayoutEvents(e.Control);
+                AdjustHeightToContent();
+            }
+        }
+
+        private void OnContentControlRemoved(object? sender, ControlEventArgs e)
+        {
+            if (e.Control != null)
+            {
+                UnhookChildLayoutEvents(e.Control);
+                AdjustHeightToContent();
+            }
+        }
+
+        private void HookChildLayoutEvents(Control c)
+        {
+            c.SizeChanged += OnInnerControlLayoutChanged;
+            c.LocationChanged += OnInnerControlLayoutChanged;
+            c.VisibleChanged += OnInnerControlLayoutChanged;
+
+            if (c is Panel pnl)
+            {
+                pnl.ControlAdded += OnInnerPanelChildAdded;
+                pnl.ControlRemoved += OnInnerPanelChildRemoved;
+                foreach (Control sub in pnl.Controls)
+                {
+                    sub.SizeChanged += OnInnerControlLayoutChanged;
+                    sub.LocationChanged += OnInnerControlLayoutChanged;
+                    sub.VisibleChanged += OnInnerControlLayoutChanged;
+                }
+            }
+        }
+
+        private void UnhookChildLayoutEvents(Control c)
+        {
+            c.SizeChanged -= OnInnerControlLayoutChanged;
+            c.LocationChanged -= OnInnerControlLayoutChanged;
+            c.VisibleChanged -= OnInnerControlLayoutChanged;
+
+            if (c is Panel pnl)
+            {
+                pnl.ControlAdded -= OnInnerPanelChildAdded;
+                pnl.ControlRemoved -= OnInnerPanelChildRemoved;
+                foreach (Control sub in pnl.Controls)
+                {
+                    sub.SizeChanged -= OnInnerControlLayoutChanged;
+                    sub.LocationChanged -= OnInnerControlLayoutChanged;
+                    sub.VisibleChanged -= OnInnerControlLayoutChanged;
+                }
+            }
+        }
+
+        private void OnInnerPanelChildAdded(object? sender, ControlEventArgs e)
+        {
+            if (e.Control != null)
+            {
+                e.Control.SizeChanged += OnInnerControlLayoutChanged;
+                e.Control.LocationChanged += OnInnerControlLayoutChanged;
+                e.Control.VisibleChanged += OnInnerControlLayoutChanged;
+                AdjustHeightToContent();
+            }
+        }
+
+        private void OnInnerPanelChildRemoved(object? sender, ControlEventArgs e)
+        {
+            if (e.Control != null)
+            {
+                e.Control.SizeChanged -= OnInnerControlLayoutChanged;
+                e.Control.LocationChanged -= OnInnerControlLayoutChanged;
+                e.Control.VisibleChanged -= OnInnerControlLayoutChanged;
+                AdjustHeightToContent();
+            }
+        }
+
+        private void OnInnerControlLayoutChanged(object? sender, EventArgs e)
+        {
+            AdjustHeightToContent();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (_autoFitContent)
+            {
+                AdjustHeightToContent();
+            }
+        }
+
         protected override void OnResize(EventArgs eventargs)
         {
             base.OnResize(eventargs);
             UpdateContentLayout();
             UpdateRegion();
+            if (_autoFitContent && Width != _lastCalculatedWidth)
+            {
+                AdjustHeightToContent();
+            }
             Invalidate();
         }
 
@@ -167,6 +316,140 @@ namespace ZeroUI.WinForms.Containers
                 int bottomPadding = string.IsNullOrEmpty(_actionText) ? 12 : 30;
                 _contentPanel.Location = new Point(12, _headerHeight);
                 _contentPanel.Size = new Size(Math.Max(10, Width - 24), Math.Max(10, Height - _headerHeight - bottomPadding));
+            }
+        }
+
+        public void AutoFit()
+        {
+            AdjustHeightToContent();
+        }
+
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            int w = proposedSize.Width > 0 ? proposedSize.Width : Width;
+            int h = _autoFitContent ? CalculatePreferredHeight(w) : Height;
+            return new Size(w, h);
+        }
+
+        public int CalculatePreferredHeight(int proposedWidth = 0)
+        {
+            int w = proposedWidth > 0 ? proposedWidth : Width;
+            int contentWidth = Math.Max(10, w - 24);
+            int bottomPadding = string.IsNullOrEmpty(_actionText) ? 12 : 30;
+
+            if (_contentPanel == null || _contentPanel.Controls.Count == 0)
+            {
+                return _headerHeight + bottomPadding + 30;
+            }
+
+            int maxContentBottom = 0;
+            int dockedHeight = 0;
+
+            foreach (Control c in _contentPanel.Controls)
+            {
+                if (!c.Visible) continue;
+
+                if (c.Dock == DockStyle.Top || c.Dock == DockStyle.Bottom)
+                {
+                    int childH = MeasureControlHeight(c, contentWidth);
+                    dockedHeight += childH + c.Margin.Vertical;
+                }
+                else if (c.Dock == DockStyle.Fill)
+                {
+                    int fillH = MeasureControlHeight(c, contentWidth);
+                    maxContentBottom = Math.Max(maxContentBottom, fillH);
+                }
+                else
+                {
+                    int childH = MeasureControlHeight(c, contentWidth);
+                    int b = c.Top + childH + c.Margin.Bottom;
+                    maxContentBottom = Math.Max(maxContentBottom, b);
+                }
+            }
+
+            int contentHeight = dockedHeight + maxContentBottom;
+            if (contentHeight <= 0) contentHeight = 30;
+
+            return _headerHeight + contentHeight + bottomPadding;
+        }
+
+        private static int MeasureControlHeight(Control c, int availableWidth)
+        {
+            if (c is FlowLayoutPanel flp)
+            {
+                return MeasureFlowLayoutPanelHeight(flp, availableWidth);
+            }
+            if (c is Panel pnl)
+            {
+                int maxInner = 0;
+                foreach (Control inner in pnl.Controls)
+                {
+                    if (!inner.Visible) continue;
+                    int innerH = MeasureControlHeight(inner, Math.Max(10, availableWidth - inner.Left - pnl.Padding.Horizontal));
+                    maxInner = Math.Max(maxInner, inner.Top + innerH + inner.Margin.Bottom);
+                }
+                return Math.Max(c.Height, maxInner + pnl.Padding.Bottom);
+            }
+
+            Size pref = c.GetPreferredSize(new Size(availableWidth, 0));
+            if (pref.Height > 0)
+            {
+                return Math.Max(c.Height, pref.Height);
+            }
+            return c.Height;
+        }
+
+        private static int MeasureFlowLayoutPanelHeight(FlowLayoutPanel flp, int availableWidth)
+        {
+            if (flp.Controls.Count == 0) return flp.Padding.Vertical;
+
+            int curX = flp.Padding.Left;
+            int curY = flp.Padding.Top;
+            int rowHeight = 0;
+            int maxRight = Math.Max(50, availableWidth - flp.Padding.Right);
+
+            foreach (Control item in flp.Controls)
+            {
+                if (!item.Visible) continue;
+
+                int itemW = item.Width + item.Margin.Horizontal;
+                int itemH = item.Height + item.Margin.Vertical;
+
+                if (curX + itemW > maxRight && curX > flp.Padding.Left)
+                {
+                    curX = flp.Padding.Left;
+                    curY += rowHeight;
+                    rowHeight = 0;
+                }
+
+                curX += itemW;
+                rowHeight = Math.Max(rowHeight, itemH);
+            }
+
+            int simulatedH = curY + rowHeight + flp.Padding.Bottom;
+            Size pref = flp.GetPreferredSize(new Size(availableWidth, 0));
+            return Math.Max(pref.Height, simulatedH);
+        }
+
+        private void AdjustHeightToContent()
+        {
+            if (!_autoFitContent || _isAdjustingHeight || Disposing || IsDisposed) return;
+
+            try
+            {
+                _isAdjustingHeight = true;
+                _lastCalculatedWidth = Width;
+                int reqHeight = CalculatePreferredHeight(Width);
+                if (reqHeight > 0 && Math.Abs(Height - reqHeight) > 1)
+                {
+                    Height = reqHeight;
+                    UpdateContentLayout();
+                    UpdateRegion();
+                }
+            }
+            finally
+            {
+                _isAdjustingHeight = false;
             }
         }
 
