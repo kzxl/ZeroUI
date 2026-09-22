@@ -552,7 +552,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = ZeroTabOrientation.Vertical,
-                TabWidth = 230,
+                TabWidth = 260,
                 TabHeight = 46,
                 TabStyle = ZeroTabStyle.Underline,
                 ShowHeader = false
@@ -729,7 +729,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _featureExplorer = new ShowcaseFeatureExplorer
             {
                 Dock = DockStyle.Left,
-                Width = 260
+                Width = 340
             };
             _featureExplorer.FeatureSelected += OnFeatureSelected;
 

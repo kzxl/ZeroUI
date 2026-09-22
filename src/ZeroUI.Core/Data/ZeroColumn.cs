@@ -53,5 +53,12 @@ namespace ZeroUI.Core.Data
             Width = width;
             Alignment = alignment;
         }
+
+        public override string ToString()
+        {
+            if (!string.IsNullOrEmpty(HeaderText)) return HeaderText;
+            if (!string.IsNullOrEmpty(FieldName)) return FieldName;
+            return base.ToString() ?? string.Empty;
+        }
     }
 }

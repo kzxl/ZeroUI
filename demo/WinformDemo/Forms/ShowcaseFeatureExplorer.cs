@@ -40,6 +40,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private readonly Panel _itemsPanel;
         private readonly List<ShowcaseFeatureItem> _allItems = new List<ShowcaseFeatureItem>();
         private readonly List<Control> _renderedRows = new List<Control>();
+        private readonly ToolTip _toolTip;
         private string _selectedKey = string.Empty;
 
         public event Action<ShowcaseFeatureItem>? FeatureSelected;
@@ -48,9 +49,16 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         {
             DoubleBuffered = true;
             Dock = DockStyle.Left;
-            Width = 260;
+            Width = 340;
             BackColor = Color.FromArgb(248, 249, 251);
             Padding = new Padding(0);
+
+            _toolTip = new ToolTip
+            {
+                InitialDelay = 350,
+                ReshowDelay = 100,
+                AutoPopDelay = 6000
+            };
 
             // 1. Search Container
             _searchContainer = new Panel
@@ -227,7 +235,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Height = 34,
                 Tag = item,
                 Cursor = Cursors.Hand,
-                Padding = new Padding(12, 0, 8, 0)
+                Padding = new Padding(10, 0, 6, 0)
             };
 
             bool isSelected = item.Key == _selectedKey;
@@ -243,16 +251,18 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 AutoEllipsis = true
             };
 
+            Label? lblBadge = null;
             if (!string.IsNullOrEmpty(item.Badge))
             {
-                var lblBadge = new Label
+                lblBadge = new Label
                 {
                     Dock = DockStyle.Right,
-                    Width = 65,
+                    Width = 56,
                     Text = item.Badge,
                     Font = new Font("Segoe UI", 7.5f, FontStyle.Bold),
                     ForeColor = item.BadgeColor,
-                    TextAlign = ContentAlignment.MiddleRight
+                    TextAlign = ContentAlignment.MiddleRight,
+                    Cursor = Cursors.Hand
                 };
                 row.Controls.Add(lblBadge);
             }
@@ -268,6 +278,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             row.Click += (s, e) => selectAction();
             lblTitle.Click += (s, e) => selectAction();
+            if (lblBadge != null) lblBadge.Click += (s, e) => selectAction();
 
             row.MouseEnter += (s, e) =>
             {
@@ -279,6 +290,11 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 if (item.Key != _selectedKey)
                     row.BackColor = Color.Transparent;
             };
+
+            string tipText = $"{item.Title}\n[{item.Category}] • {item.Badge}\n\n{item.Description}";
+            _toolTip.SetToolTip(row, tipText);
+            _toolTip.SetToolTip(lblTitle, tipText);
+            if (lblBadge != null) _toolTip.SetToolTip(lblBadge, tipText);
 
             return row;
         }

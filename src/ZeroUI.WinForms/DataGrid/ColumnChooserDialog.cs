@@ -26,8 +26,8 @@ namespace ZeroUI.WinForms.DataGrid
             Text = "Customization";
             FormBorderStyle = FormBorderStyle.SizableToolWindow;
             StartPosition = FormStartPosition.Manual;
-            Size = new Size(240, 320);
-            MinimumSize = new Size(200, 220);
+            Size = new Size(280, 380);
+            MinimumSize = new Size(220, 260);
             TopMost = true;
             ShowInTaskbar = false;
 
@@ -37,12 +37,12 @@ namespace ZeroUI.WinForms.DataGrid
 
             _lblInfo = new Label
             {
-                Text = "Double-click column to show in grid:",
+                Text = "Double-click column to restore in grid:",
                 Dock = DockStyle.Top,
-                Height = 26,
+                Height = 28,
                 Font = new Font("Segoe UI", 8.5f),
                 ForeColor = colors.TextSecondary,
-                Padding = new Padding(6, 6, 6, 2)
+                Padding = new Padding(8, 6, 8, 2)
             };
             Controls.Add(_lblInfo);
 
@@ -53,28 +53,83 @@ namespace ZeroUI.WinForms.DataGrid
                 BackColor = colors.Background,
                 ForeColor = colors.TextPrimary,
                 BorderStyle = BorderStyle.None,
-                IntegralHeight = false
+                IntegralHeight = false,
+                DisplayMember = nameof(ZeroColumn.HeaderText),
+                DrawMode = DrawMode.OwnerDrawFixed,
+                ItemHeight = 30
             };
+
+            _hiddenColumnsList.DrawItem += (s, e) =>
+            {
+                if (e.Index < 0 || e.Index >= _hiddenColumnsList.Items.Count) return;
+                if (_hiddenColumnsList.Items[e.Index] is not ZeroColumn col) return;
+
+                bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+                var g = e.Graphics;
+                var bounds = e.Bounds;
+                var themeColors = ZeroTheme.Colors;
+
+                // 1. Background
+                using (var brushBg = new SolidBrush(isSelected ? Color.FromArgb(228, 236, 252) : themeColors.Background))
+                {
+                    g.FillRectangle(brushBg, bounds);
+                }
+
+                if (isSelected)
+                {
+                    using var penBorder = new Pen(Color.FromArgb(180, 205, 245));
+                    g.DrawRectangle(penBorder, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+                }
+
+                // 2. Icon (▦)
+                using (var brushIcon = new SolidBrush(isSelected ? themeColors.Primary : themeColors.TextSecondary))
+                {
+                    using var fIcon = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+                    g.DrawString("▦", fIcon, brushIcon, bounds.X + 8, bounds.Y + 6);
+                }
+
+                // 3. Column Title Text
+                string title = !string.IsNullOrEmpty(col.HeaderText) ? col.HeaderText : col.FieldName;
+                if (string.IsNullOrWhiteSpace(title)) title = $"Column #{e.Index + 1}";
+
+                using (var brushText = new SolidBrush(isSelected ? Color.FromArgb(18, 86, 209) : themeColors.TextPrimary))
+                {
+                    using var fText = new Font("Segoe UI", 9.25f, isSelected ? FontStyle.Bold : FontStyle.Regular);
+                    var rectText = new Rectangle(bounds.X + 28, bounds.Y, bounds.Width - 36, bounds.Height);
+                    using var sf = new StringFormat { LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter };
+                    g.DrawString(title, fText, brushText, rectText, sf);
+                }
+            };
+
             _hiddenColumnsList.DoubleClick += (s, e) => ShowSelectedColumn();
+            _hiddenColumnsList.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Space)
+                {
+                    ShowSelectedColumn();
+                    e.Handled = true;
+                }
+            };
             Controls.Add(_hiddenColumnsList);
 
             var bottomPanel = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 40,
+                Height = 44,
                 BackColor = colors.Surface,
-                Padding = new Padding(6)
+                Padding = new Padding(8)
             };
 
             _btnShowColumn = new Button
             {
-                Text = "Add Column",
+                Text = "➕ Add Column",
                 Dock = DockStyle.Left,
-                Width = 100,
-                Font = new Font("Segoe UI", 8.5f),
+                Width = 110,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 BackColor = colors.Primary,
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
             };
             _btnShowColumn.FlatAppearance.BorderSize = 0;
             _btnShowColumn.Click += (s, e) => ShowSelectedColumn();
@@ -88,7 +143,8 @@ namespace ZeroUI.WinForms.DataGrid
                 Font = new Font("Segoe UI", 8.5f),
                 BackColor = colors.Background,
                 ForeColor = colors.TextPrimary,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
             };
             _btnShowAll.FlatAppearance.BorderColor = colors.Border;
             _btnShowAll.Click += (s, e) => ShowAllColumns();
@@ -124,6 +180,7 @@ namespace ZeroUI.WinForms.DataGrid
             if (_hiddenColumnsList.SelectedItem is ZeroColumn col)
             {
                 col.IsVisible = true;
+                _grid.UpdateScrollBars();
                 _grid.Invalidate();
                 RefreshColumns();
             }
@@ -135,6 +192,7 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 _grid.Columns[i].IsVisible = true;
             }
+            _grid.UpdateScrollBars();
             _grid.Invalidate();
             RefreshColumns();
         }

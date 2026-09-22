@@ -71,7 +71,7 @@ namespace ZeroUI.WinForms.Navigation
         private int _hoveredIndex = -1;
         private int _hoveredCloseIndex = -1;
         private int _tabHeight = 42;
-        private int _tabWidth = 200;
+        private int _tabWidth = 260;
         private TabStyle _tabStyle = TabStyle.Underline;
         private TabOrientation _orientation = TabOrientation.Horizontal;
         private bool _showHeader = true;
