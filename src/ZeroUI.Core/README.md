@@ -2,11 +2,12 @@
 
 Ultra-high-performance, zero-allocation core runtime, analytical engines, and industrial automation infrastructure for .NET (`netstandard2.0`, `net462`, `net8.0`).
 
-> [!NOTE]
-> **Active Development Notice:** This project is currently in active development. Feedback, suggestions, and contributions from the community are warmly welcome!
+> [!IMPORTANT]
+> **Zero External Dependencies:** `ZeroUI.Core` contains **0 third-party package dependencies**. All memory pools, math decimation, TagEngine, validation, serialization, and state machines run purely on .NET BCL.
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.6.0-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.6-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![Dependencies](https://img.shields.io/badge/dependencies-0%20external-brightgreen.svg)](#-key-features)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
@@ -32,9 +33,10 @@ Ultra-high-performance, zero-allocation core runtime, analytical engines, and in
 * **Runtime Dynamic Localization (`ZeroLocalizer`):** Zero-allocation runtime string localization engine with instant culture hot-switching (`en-US`, `vi-VN`) without restarting the application, cascading fallback resolution, and built-in enterprise dictionaries.
 * **Standardized Editor & Binding Contracts (`IZeroEditor`, `ZeroDataBinder`):** Unified contract (`EditValue`, `IsModified`, `ReadOnly`, `ResetModified()`) enabling fluent two-way binding, dirty state tracking, and validation integration.
 
-### 🏭 Industrial Telemetry, SCADA & Historian
+### 🏭 Industrial Telemetry, SCADA & Decimation
 * **Real-Time Tag Engine (`ZeroTagEngine` v2, `TagStorage`):** High-throughput in-memory tag registry with deadband jitter filtering, OPC DA/UA quality codes (`Good`, `Bad`, `Uncertain`), and multi-worker concurrent updates (>48M writes/s, >244M reads/s).
-* **Embedded SQLite WAL Historian (`SqliteHistorianEngine`):** Ultra-fast time-series telemetry historian leveraging SQLite in WAL mode with daily rolling DB partitions and batch commit workers (>100k records/s).
+* **Cross-Platform Industrial State Machines (`ZeroUI.Core.Industrial`):** Pure platform-neutral state definitions such as `SevenSegmentState`, `SevenSegmentColorProfile`, and `SevenSegmentDisplayMode` providing bitmask encoding/decoding and segment computations shared between WinForms and WPF.
+* **Telemetry Historian Interfaces (`ITelemetryHistorian`, `InMemoryHistorian`):** Extensible time-series persistence contracts. Production SQLite WAL engine is provided via companion package `ZeroUI.Historian.Sqlite`.
 * **Store & Forward Worker (`StoreAndForwardWorker`):** Resilient edge-to-cloud disk caching during network disconnections with auto-draining.
 * **LTTB Decimation (`LttbDecimation`):** Zero-alloc Largest-Triangle-Three-Buckets algorithm compressing 10,000,000 raw points to 2,000 screen pixels in ~29 ms with 0 bytes GC allocated.
 * **TimeSeries Continuous Rollups (`TimeSeriesPyramid`):** Multi-resolution continuous rollups (L0: raw, L1: 100ms, L2: 1s, L3: 10s, L4: 1min, L5: 10min) powering instant $O(\text{screen pixels})$ chart zoom.
@@ -55,7 +57,7 @@ Ultra-high-performance, zero-allocation core runtime, analytical engines, and in
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.Core --version 1.6.0
+dotnet add package ZeroUI.Core --version 1.8.6
 ```
 
 ---

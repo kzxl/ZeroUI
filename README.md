@@ -3,9 +3,9 @@
 > **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
 
 [![ZeroPlatform Tier](https://img.shields.io/badge/ZeroPlatform-Tier%205%20(Presentation%20%26%20Apps)-e11d48.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.4-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.6-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
-[![Unit Tests](https://img.shields.io/badge/tests-554%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
+[![Unit Tests](https://img.shields.io/badge/tests-607%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#-package-matrix)
 [![UI Frame Latency](https://img.shields.io/badge/Frame%20Latency-%3C%204ms%20P95-brightgreen.svg)](docs/BENCHMARKS.md)
 [![GC Allocations](https://img.shields.io/badge/Hot%20Path%20Allocations-0%20B%20(Zero--Alloc)-brightgreen.svg)](docs/BENCHMARKS.md)
@@ -25,11 +25,11 @@
 
 ---
 
-## ⚡ Performance Benchmarks: ZeroGrid vs Native Controls
+## ⚡ Performance Benchmarks: ZeroUI Grid vs Native Controls
 
 Headless and interactive stress-test verified on `.NET 8.0` (x64, Intel Core i7 / 144Hz):
 
-| Metric | Standard DataGridView / WPF DataGrid | ZeroUI (`ZeroGridControl`) | Real-World Advantage |
+| Metric | Standard DataGridView / WPF DataGrid | ZeroUI (`GridControl` / `ZeroGridControl`) | Real-World Advantage |
 | :--- | :---: | :---: | :--- |
 | **100K Rows Viewport Compute** | ~7,400 FPS (0.135 ms) | **24,716 FPS (0.040 ms)** | **3.3x Higher Throughput** |
 | **Hot Render Path GC Allocations** | Thousands of temporary cell objects | **0 B (Zero-Alloc)** | **100% Zero GC Pauses** |
@@ -62,20 +62,23 @@ In-depth technical specifications and architectural documentation are modularize
 | Document | Description |
 | :--- | :--- |
 | 📊 **[Verified Benchmarks](docs/BENCHMARKS.md)** | Frame budgets, 10M rows virtualization, GC allocations, and telemetry throughput. |
-| 🎛️ **[Controls Catalog](docs/CONTROLS_CATALOG.md)** | Full reference for 45+ controls (ZeroGrid, PivotGrid, SCADA, Charts, and Creative Editors). |
+| 🎛️ **[Controls Catalog](docs/CONTROLS_CATALOG.md)** | Full reference for 50+ controls (GridControl, PivotGrid, SCADA, Charts, and Creative Editors). |
+| 🎬 **[Visual Controls Guide & Tour](docs/ZEROUI_CONTROLS_GUIDE.md)** | Architectural guide, in-process live video recordings, and feature tour across all subsystems. |
 | 🎨 **[Theming & Styling](docs/THEMING_AND_STYLING.md)** | Obsidian Dark / Clean Light themes, High-DPI Per-Monitor V2, and single-HWND architecture. |
-| 🏛️ **[Threading Model](docs/standards/threading-model.md)** | Multi-tier pipeline coordination, lock-free TripleBuffer, and UiDispatcher. |
+| 🏛️ **[System Architecture](docs/architecture/system-architecture.md)** | Multi-tier pipeline coordination, lock-free TripleBuffer, decoupled runtime, and renderers. |
+| 📐 **[Control Ecosystem Audit](docs/architecture/control-ecosystem-audit-and-composite-architecture.md)** | Feature gap analysis, composite control standards, and cross-platform shared logic. |
 | 🗺️ **[Development Roadmap](docs/roadmap.md)** | Release milestones, feature requests, and future capabilities. |
 
 ---
 
 ## 📦 Package Matrix
 
-| Package | Targets | Primary Capabilities |
-| :--- | :--- | :--- |
-| **`ZeroUI.Core`** | `netstandard2.0`, `net462`, `net8.0` | High-frequency telemetry triple-buffer, TagEngine v2, PackML state machine, OEE metrics |
-| **`ZeroUI.WinForms`** | `net462`, `net8.0-windows` | 10M+ rows virtual grid, 40+ SCADA/HMI controls, Obsidian dark theme, DIBSection engine |
-| **`ZeroUI.Wpf`** | `net462`, `net8.0-windows` | Zero-alloc WPF virtual grid, industrial styling, and Creative Media Editors Suite |
+| Package | Targets | Primary Capabilities | Dependencies |
+| :--- | :--- | :--- | :--- |
+| **`ZeroUI.Core`** | `netstandard2.0`, `net462`, `net8.0` | High-frequency telemetry triple-buffer, TagEngine v2, PackML state machine, OEE metrics, validation engine, industrial state models (`SevenSegmentState`) | **Zero 3rd-party dependencies** (Pure BCL) |
+| **`ZeroUI.Historian.Sqlite`** | `netstandard2.0`, `net462`, `net8.0` | High-throughput SQLite WAL time-series telemetry storage engine (>100k records/s), rolling partitions, store & forward disk cache | `Microsoft.Data.Sqlite` |
+| **`ZeroUI.WinForms`** | `net462`, `net8.0-windows` | 10M+ rows virtual grid (`GridControl`), 40+ SCADA/HMI controls, Obsidian dark theme, DIBSection unmanaged double-buffering | `ZeroUI.Core` |
+| **`ZeroUI.Wpf`** | `net462`, `net8.0-windows` | Zero-alloc WPF virtual grid (`GridControl`), industrial styling, Creative Media Editors Suite, and D3D11 shared texture bridge | `ZeroUI.Core` |
 
 ---
 
@@ -85,18 +88,19 @@ In-depth technical specifications and architectural documentation are modularize
 using System.Windows.Forms;
 using ZeroUI.WinForms.DataGrid;
 
-var grid = new ZeroGridControl
+// Instantiate high-performance virtual grid (ZeroGridControl legacy alias also supported)
+var grid = new GridControl
 {
     Dock = DockStyle.Fill,
-    RowDensity = ZeroGridRowDensity.Normal,
+    RowDensity = GridRowDensity.Normal,
     AllowUserSorting = true
 };
 this.Controls.Add(grid);
 
 // Define strongly-typed columns
-grid.Columns.Add(new ZeroGridColumn("Id", "ID", 100));
-grid.Columns.Add(new ZeroGridColumn("Timestamp", "Timestamp", 180));
-grid.Columns.Add(new ZeroGridColumn("Temperature", "Temp (°C)", 140));
+grid.Columns.Add(new GridColumn("Id", "ID", 100));
+grid.Columns.Add(new GridColumn("Timestamp", "Timestamp", 180));
+grid.Columns.Add(new GridColumn("Temperature", "Temp (°C)", 140));
 
 // Bind 1,000,000 rows procedurally with 0 bytes GC allocation
 grid.SetProceduralDataSource(rowCount: 1000000, (rowIndex, colIndex) =>
@@ -117,7 +121,7 @@ grid.SetProceduralDataSource(rowCount: 1000000, (rowIndex, colIndex) =>
 ## 🧪 Testing & Quality Assurance
 
 ```bash
-# Run comprehensive automated test suites (554 tests, 100% pass across Core & Desktop UI)
+# Run comprehensive automated test suites (607 tests, 100% pass across Core & Desktop UI)
 dotnet test ZeroUI.slnx
 
 # Launch interactive demonstration suites
@@ -131,6 +135,8 @@ dotnet run --project demo/WpfDemo/WpfDemo.csproj -f net8.0-windows
 
 | Version | Release Date | Key Milestones & Highlights |
 | :--- | :---: | :--- |
+| **`v1.8.6`** | 2026-09-22 | **Zero-Dependency Core & Cross-Platform Control Parity Standard**:<br/>• Decoupled SQLite telemetry historian into dedicated `ZeroUI.Historian.Sqlite` package, achieving 100% zero third-party dependencies in `ZeroUI.Core`.<br/>• Established automated cross-platform parity reflection test suite (`ControlParityInspectionTests`).<br/>• Standardized platform-neutral industrial state machines (`SevenSegmentState` in `ZeroUI.Core.Industrial`) achieving 100% parity across WinForms and WPF.<br/>• 607 automated tests passed (100%). |
+| **`v1.8.5`** | 2026-09-20 | **Industrial Control Normalization & Prefix Removal**:<br/>• Standardized primary control names to clean enterprise identifiers (`GridControl`, `ChartControl`, `SevenSegment`, `LinearGauge`, `ValidationProvider`) per `.project-rule.md`.<br/>• Full backward compatibility preserved via `[Obsolete]` shims. |
 | **`v1.8.0`** | 2026-09-15 | **Creative & Media Controls Suite**:<br/>• Direct-rendered, high-performance visual editors for digital imaging and video grading (`CurveEditor`, `ColorWheelEdit`, `CompareViewerControl`, `HistogramScopeControl`, `CropBoxControl`, `MiniMapNavigator`, `MaskGizmoOverlay`, `FacetedFilterBar`, `HistoryTimelineControl`, `FilmstripScrollerControl`, `DominantPaletteControl`, `ExifTelemetryCard`, `NumericSliderEdit`, `BatchTaskQueueControl`, `ThumbnailGridControl`, `TokenPatternEditor`).<br/>• Zero-allocation graphics primitives for curves, color scopes, and canvas gizmos.<br/>• 529 automated tests passed (100%). |
 | **`v1.7.0`** | 2026-09-12 | **WPF Modernization & High-DPI Per-Monitor V2**:<br/>• Zero-alloc WPF virtual grid adapter.<br/>• High-DPI Per-Monitor V2 dynamic scaling engine.<br/>• Win32 Memory DC unmanaged DIBSection double buffering with zero-copy `BitBlt` presentation. |
 | **`v1.0.0`** | 2026-09-08 | **Initial Industrial Release**:<br/>• 10M+ rows procedural virtual data grid with zero GC allocations.<br/>• 40+ industrial SCADA/HMI controls with Single-HWND architecture.<br/>• Unified theme engine: Obsidian Dark (`#12151C`) and Clean Light modes.<br/>• Centralized 60 FPS ISA-18.2 synchronized animation clock (`ZeroAnimationClock`). |

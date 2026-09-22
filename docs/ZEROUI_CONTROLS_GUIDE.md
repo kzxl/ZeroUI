@@ -1,204 +1,205 @@
 # ZeroUI — Comprehensive Control Catalog & Demo Tour
 
-Tài liệu giới thiệu kiến trúc, tính năng kỹ thuật và hướng dẫn vận hành toàn bộ hệ sinh thái Control của **ZeroUI** (`ZeroPlatform`), đi kèm video animation và hình ảnh trực quan từ ứng dụng Benchmark Demo.
+This document introduces the architecture, technical capabilities, and operational guide for the entire **ZeroUI** (`ZeroPlatform`) control ecosystem, featuring live video animations and screenshots captured directly from the interactive benchmark demo application.
 
 ---
 
-## 🎬 Video Demo & Ghi Hình Chuyển Động Thực Tế
+## 🎬 Live Motion Recordings & Video Demonstrations
 
-### 1. Video Ghi Hình Chuyển Động Trực Tiếp Toàn Diện (In-Process Live Recording - 30s)
-Video ghi lại trực tiếp toàn bộ quá trình ứng dụng đang chạy ở tốc độ 15 FPS, tự hành đi qua **toàn bộ 8 nhóm Tab và tất cả các Subtab nghiệp vụ (21 phân cảnh)**:
+### 1. In-Process Live Motion Recording (30s)
+Direct live recording of the interactive application running at 15 FPS, autonomously navigating through **all 8 tab groups and 21 domain subtab scenes**:
 
-![ZeroUI In-Process Live Motion Recording](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/zeroui_live_recording.gif)
+![ZeroUI In-Process Live Motion Recording](images/zeroui_live_recording.gif)
 
-- **File MP4 quay trực tiếp (1366x850, 15 FPS, 30s):** [zeroui_live_recording.mp4](file:///e:/15.%20Other/dotnet/libs/ZeroPlatform/ZeroUI/docs/images/zeroui_live_recording.mp4)
-- **File GIF chuyển động trực tiếp:** [zeroui_live_recording.gif](file:///e:/15.%20Other/dotnet/libs/ZeroPlatform/ZeroUI/docs/images/zeroui_live_recording.gif)
+- **High-Definition Video Recording (1366x850, 15 FPS, 30s):** [zeroui_live_recording.mp4](images/zeroui_live_recording.mp4)
+- **Live Motion Animation:** [zeroui_live_recording.gif](images/zeroui_live_recording.gif)
 
-#### ⏱️ Chi tiết 21 phân cảnh diễn ra trong video:
-1. `0.0s`: **ZeroGrid** — Cuộn mượt mà tốc độ cao qua 100,000 dòng dữ liệu không sinh rác GC.
-2. `1.7s`: **Standard DataGridView** — Chế độ Virtual Mode chuẩn của Windows Forms.
-3. `2.7s`: **Industrial Verticals** — Trạm xử lý nước & nước thải (Water Treatment Plant).
-4. `4.0s`: **Industrial Verticals** — Phân hệ lọc hóa dầu (Petrochemical Refining).
-5. `5.3s`: **Industrial Verticals** — Nồi lên men y sinh & dược phẩm (Bioreactor Life Sciences).
-6. `6.7s`: **Industrial Verticals** — Hệ thống quản lý tòa nhà thông minh (Smart Building BMS).
-7. `8.0s`: **Industrial Verticals** — Năng lượng tái tạo & lưu trữ pin BESS (Renewable Energy).
-8. `9.3s`: **SCADA Closed-Loop** — Quy trình phản ứng mẻ vòng lặp kín (Bơm quay 2950 RPM, van, ống dẫn lưu chất, bồn 3D, gia nhiệt).
-9. `10.7s`: **SCADA Closed-Loop** — Kích hoạt xung áp suất đột biến và báo động động học thời gian thực.
-10. `11.7s`: **SCADA P&ID** — Sơ đồ dòng quy trình công nghệ P&ID tương tác.
-11. `13.0s`: **SCADA ISA-18.2** — Lưới quản lý báo động chuẩn ISA-18.2 & Faceplate chỉnh thông số PID.
-12. `14.3s`: **Plant Overview** — Giám sát toàn cảnh nhà máy & giao diện HMI Mimics.
-13. `15.7s`: **Network & IT/OT** — Bản đồ sơ đồ mạng, kiểm tra ping viễn thông & băng thông.
-14. `17.0s`: **MES Production** — Bảng điều khiển nhà máy thông minh, đồng hồ OEE và nhịp sản xuất Takt Timer.
-15. `18.3s`: **MES Kanban** — Thẻ quy trình sản xuất điện tử (Process Flow Cards).
-16. `19.7s`: **WMS Workstation** — Trạm nhận hàng, quét mã vạch và phân bổ lô hàng FIFO/FEFO.
-17. `21.0s`: **WMS Storage Racks** — Mô phỏng trực quan hệ thống giá kệ kho nhiều tầng và ô vị trí pallet.
-18. `22.3s`: **Analytics & Charts** — Doanh thu theo quý, Donut phân bổ chi phí có KPI tâm, và biểu đồ SPC Box-and-Whisker.
-19. `23.7s`: **UI Components: Core** — DatePicker zoom 3 cấp (Ngày ↔ Tháng ↔ Năm), ô nhập chip TokenEdit, ColorPicker, Range Slider.
-20. `25.0s`: **UI Components: Enterprise** — Hộp chọn GridLookup gắn virtual grid và Wizard hướng dẫn cài đặt.
-21. `26.3s`: **UI Components: Data BOM** — Cây phân cấp đa mức BOM TreeList với checkbox 3 trạng thái.
-22. `27.7s`: **Obsidian Dark Mode** — Toàn cảnh trung tâm điều khiển SCADA chuyển sang giao diện tối bóng đêm sang trọng.
-
-### 2. Video Trình Chiếu Toàn Cảnh Hệ Sinh Thái (Full Ecosystem Showcase)
-Video và animation trình chiếu trọn vẹn từng màn hình nghiệp vụ (MES, WMS, SCADA, Charts, Grid, Editors):
-
-![ZeroUI Full Ecosystem Demo Showcase](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/zeroui_demo_showcase.gif)
-
-- **File MP4 độ phân giải cao (1080p, 60 FPS):** [zeroui_demo_showcase.mp4](file:///e:/15.%20Other/dotnet/libs/ZeroPlatform/ZeroUI/docs/images/zeroui_demo_showcase.mp4)
-- **File GIF trình chiếu:** [zeroui_demo_showcase.gif](file:///e:/15.%20Other/dotnet/libs/ZeroPlatform/ZeroUI/docs/images/zeroui_demo_showcase.gif)
+#### ⏱️ Breakdown of the 21 Video Scenes:
+1. `0.0s`: **GridControl** — High-speed silky scroll across 100,000 data rows with zero GC allocations.
+2. `1.7s`: **Standard DataGridView** — Baseline comparison with native Windows Forms virtual mode.
+3. `2.7s`: **Industrial Verticals** — Water & Wastewater Treatment Plant (`ClarifierBasin`, dosing skids).
+4. `4.0s`: **Industrial Verticals** — Petrochemical Refining (`DistillationColumn`, ESD matrix).
+5. `5.3s`: **Industrial Verticals** — Bioreactor Life Sciences (`BioreactorVessel`, CIP validation).
+6. `6.7s`: **Industrial Verticals** — Smart Building BMS (`AhuSchematic`, Chiller plant).
+7. `8.0s`: **Industrial Verticals** — Renewable Energy & Battery Storage (`BessRackMonitor`, Solar PV matrix).
+8. `9.3s`: **SCADA Closed-Loop** — Continuous chemical batch reaction (2950 RPM pump, control valves, fluid pipes, 3D tank, heating).
+9. `10.7s`: **SCADA Closed-Loop** — Pressure spike injection and dynamic alarm triggering.
+10. `11.7s`: **SCADA P&ID** — Interactive process flow synoptic canvas.
+11. `13.0s`: **SCADA ISA-18.2** — Industrial alarm management grid and PID controller faceplate.
+12. `14.3s`: **Plant Overview** — High-level facility overview and HMI telemetry mimics.
+13. `15.7s`: **Network & IT/OT** — Network topology graph, live ping latency sparklines, and bandwidth meters.
+14. `17.0s`: **MES Production** — Smart factory KPI dashboard, real-time OEE gauges, and Takt time countdown.
+15. `18.3s`: **MES Kanban** — Electronic shopfloor Kanban dispatching cards.
+16. `19.7s`: **WMS Workstation** — Inbound receiving station, USB wedge barcode scanner, and FIFO/FEFO lot selector.
+17. `21.0s`: **WMS Storage Racks** — Visual 2D high-bay storage rack system with pallet bin states.
+18. `22.3s`: **Analytics & Charts** — Quarterly revenue bar chart, center-KPI donut chart, and Six Sigma SPC Box-and-Whisker chart.
+19. `23.7s`: **Form Editors: Core** — 3-tier zoom DateEdit (Days ↔ Months ↔ Years), TokenEdit chip tags, ColorPickEdit, and RangeControl.
+20. `25.0s`: **Form Editors: Enterprise** — Paginated GridLookupEdit with embedded virtual grid, and multi-step WizardControl.
+21. `26.3s`: **Form Editors: Data BOM** — Hierarchical multi-level TreeList with tri-state cascading checkboxes.
+22. `27.7s`: **Obsidian Dark Mode** — Full SCADA control room view dynamically switching to Obsidian Dark (`#12151C`).
 
 ---
 
-## 🚀 Cách Chạy Demo Trực Tiếp Trên Máy Tính
+### 2. Full Ecosystem Showcase Animation
+Comprehensive tour across all business domains (MES, WMS, SCADA, Charts, Grid, Editors):
 
-Để trực tiếp tương tác, kiểm tra tốc độ cuộn 10 triệu dòng, thử nghiệm các control P&ID và đổi 9 skin giao diện, bạn chạy một trong các lệnh sau trong Terminal (PowerShell):
+![ZeroUI Full Ecosystem Demo Showcase](images/zeroui_demo_showcase.gif)
+
+- **High-Definition Video (1080p, 60 FPS):** [zeroui_demo_showcase.mp4](images/zeroui_demo_showcase.mp4)
+- **Showcase Animation:** [images/zeroui_demo_showcase.gif](images/zeroui_demo_showcase.gif)
+
+---
+
+## 🚀 Running the Interactive Demos Locally
+
+To test 10-million-row virtualization, P&ID synoptics, and instant theme switching, run the following commands in PowerShell:
 
 ```powershell
-# 1. Chạy qua script điều hướng tự động
-.\run-zeroui-demo.ps1 -Demo winforms
+# 1. Run interactive WinForms demo suite
+dotnet run --project demo/WinformDemo/WinformDemo.csproj -f net8.0-windows
 
-# 2. Hoặc khởi chạy trực tiếp qua dotnet CLI
-dotnet run --project "ZeroUI\src\ZeroUI.Samples.WinformDemo\ZeroUI.Samples.WinformDemo.csproj" -c Debug
+# 2. Run interactive WPF showcase
+dotnet run --project demo/WpfDemo/WpfDemo.csproj -f net8.0-windows
 
-# Or run the headless CLI performance benchmark:
-dotnet run --project "ZeroUI\src\ZeroUI.Samples.WinformDemo\ZeroUI.Samples.WinformDemo.csproj" -c Debug -- --benchmark
+# 3. Run headless CLI performance benchmark
+dotnet run --project demo/WinformDemo/WinformDemo.csproj -f net8.0-windows -- --benchmark
 ```
 
 ---
 
-## 🏛️ Danh Mục & Giới Thiệu Chi Tiết Các Control
+## 🏛️ Comprehensive Subsystem Breakdown
 
-ZeroUI được thiết kế theo triết lý **Zero-Allocation**, kiến trúc **Single-HWND** (chỉ 1 handle Win32 duy nhất cho toàn bộ grid, triệt tiêu lỗi rò rỉ GDI handle), và tối ưu render bằng bộ đệm kép Win32 Memory DC DIBSection.
-
----
-
-### 1. Phân Hệ Big Data Virtual Grid & OLAP Matrix
-
-![01. ZeroGrid Virtual DataGrid Benchmark](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/01_zerogrid_benchmark.png)
-
-#### Các Control tiêu biểu:
-- **`ZeroGridControl` (`ZeroUI.WinForms.DataGrid`):**
-  - **Khả năng tải:** Render mượt mà **10,000,000+ dòng dữ liệu** ở tốc độ 60–120 FPS.
-  - **Zero-Allocation:** Vòng lặp tính toán viewport (`VirtualViewport2D`) và bộ đệm cell (`CellValueBuffer`) hoàn toàn không sinh rác GC Gen0.
-  - **Sắp xếp & Lọc cực nhanh:** Thuật toán tráo con trỏ index (`RowIndexMap`) cho phép sort 1 triệu dòng trong ~80ms; bộ lọc tìm kiếm tức thì debounced 150ms.
-  - **Mật độ hiển thị (`RowDensity`):** Hỗ trợ chuyển đổi linh hoạt giữa `Compact` (24px), `Normal` (28px) và `Comfortable` (36px).
-  - **Streaming Export:** Xuất file CSV tốc độ >1,100,000 dòng/giây trực tiếp từ bộ đệm bộ nhớ mà không gây lag giao diện.
-- **`PivotGridControl` / `ZeroPivotGrid` (`ZeroUI.WinForms.PivotGrid`):**
-  - Ma trận tổng hợp đa chiều OLAP (Cross-tab Matrix) nhóm dữ liệu theo các chiều Hàng (Row) và Cột (Column).
-  - Tự động tính toán tổng con (Sub-totals), tổng lớn (Grand totals) với các hàm `Sum`, `Count`, `Average`, `Min`, `Max`.
-  - Hỗ trợ cây phân cấp thu gọn/mở rộng drill-down (`▶`/`▼`).
-- **`ZeroFilterControl` & `FilterCriteria`:**
-  - Trình dựng câu truy vấn điều kiện trực quan dạng cây logic (`AND`, `OR`, `NOT AND`, `NOT OR`), tự động sinh biểu thức SQL WHERE.
+ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWND Architecture** (1 Win32 window handle per composite view to prevent handle exhaustion), and an unmanaged **Win32 Memory DC DIBSection double-buffering** presentation pipeline.
 
 ---
 
-### 2. Phân Hệ Thiết Bị Công Nghiệp P&ID, SCADA & Chế Tạo (MES)
+### 1. Big Data Virtual Grid & OLAP Matrix Subsystem
 
-![09. Industrial, SCADA & MES Hardware Control Suite](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/09_industrial_hero_showcase.png)
+![01. ZeroGrid Virtual DataGrid Benchmark](images/01_zerogrid_benchmark.png)
 
-![13. SCADA Field Actuators, Sensors & Safety Controls](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/13_scada_actuators_composite.png)
-
-#### Các Control tiêu biểu:
-- **`ZeroTank3D`:** Bồn chứa chất lỏng 3D hiển thị thể tích thực tế (`CurrentLevelLiters`), dung tích thiết kế (`CapacityLiters`), hiệu ứng sóng chất lỏng và hiển thị tên dung môi (IPA, Axit, Nước cất).
-- **`ZeroLedTower`:** Đèn tháp Andon chuẩn nhà máy thông minh với 4 tầng LED độc lập (`Red`, `Amber`, `Green`, `Blue`) hỗ trợ các trạng thái `On`, `Off`, `BlinkFast`, `BlinkSlow`.
-- **`ZeroSevenSegment`:** Đồng hồ hiển thị LED 7 đoạn điện tử mô phỏng hiển thị cân kỹ thuật số, nhiệt độ lò nung với màu sắc neon tùy biến.
-- **`ZeroLinearGauge` & `ZeroGauge`:**
-  - Đồng hồ đo áp suất / lưu lượng dạng thanh tuyến tính hoặc mặt cung tròn xuyên tâm (Radial Dial Gauge).
-  - Hiển thị kim đo mượt, dải vạch chia màu cảnh báo (Green/Yellow/Red) và tính toán tỷ lệ OEE (%).
-- **`ZeroTaktTimer`:** Đồng hồ đếm ngược nhịp sản xuất (Takt Time) với vòng tiến độ trực quan, cảnh báo quá nhịp cho dây chuyền lắp ráp.
-- **`ZeroIndustrialMotor`, `ZeroIndustrialPump`, `ZeroIndustrialFan`:**
-  - Động cơ không đồng bộ, bơm ly tâm, quạt thông gió công nghiệp với hiệu ứng cánh quạt / rotor quay mượt mà theo tốc độ RPM thực tế.
-- **`ZeroIndustrialHeater` & `ZeroIndustrialValve`:**
-  - Lò gia nhiệt hiển thị thanh nhiệt đỏ và nhiệt độ setpoint.
-  - Van điều khiển (Control Valve, Solenoid Valve) hiển thị góc mở thực tế từ 0% đến 100%.
-- **`ZeroPneumaticCylinder` & `ZeroConveyorBelt`:**
-  - Xy lanh khí nén 2 chiều hiển thị hành trình co duỗi piston theo phần trăm (`ExtensionPercent`).
-  - Băng tải con lăn công nghiệp hiển thị hướng chạy, tốc độ mét/phút và dòng sản phẩm di chuyển.
-- **`ZeroIndustrialSensor`:** Cảm biến quang học, điện cảm, điện dung với đèn LED trạng thái kích hoạt.
-- **`ZeroProductionCounter`:** Bảng điện tử hiển thị kế hoạch sản lượng (Plan, Actual, NG, Chênh lệch).
-- **`ZeroInterlockIndicator` & `ZeroCommandButton`:**
-  - Đèn tín hiệu liên động an toàn (Interlock Permissive).
-  - Nút bấm lệnh điều khiển công nghiệp có cơ chế chống bấm nhầm (yêu cầu nhấn giữ `PressAndHoldSeconds`).
+#### Key Controls:
+- **`GridControl` (`ZeroUI.WinForms.DataGrid` / `ZeroUI.Wpf.DataGrid`):**
+  * **Scale:** Smoothly renders **10,000,000+ virtual rows** at 60–144 FPS.
+  * **Zero Allocation:** Hot render loops (`VirtualViewport2D`, `CellValueBuffer`) produce **0 bytes GC Gen0 churn**.
+  * **Pointer-Swap Indexing:** `RowIndexMap` sorts 1,000,000 rows in ~80ms; debounced instant search (150ms).
+  * **Row Density (`RowDensity`):** Instant switching between `Compact` (24px), `Normal` (28px), and `Comfortable` (36px).
+  * **Streaming Export:** Exports CSV/XLSX at >1,100,000 rows/sec directly from memory buffers.
+- **`PivotGridControl` (`ZeroUI.WinForms.PivotGrid` / `ZeroUI.Wpf.PivotGrid`):**
+  * Multidimensional OLAP cross-tab matrix grouping tabular data across Row and Column dimensions.
+  * Computes automated sub-totals, grand totals, and measure aggregations (`Sum`, `Count`, `Average`, `Min`, `Max`).
+  * Features collapsible tree headers (`▶`/`▼`) with virtualized viewport culling.
+- **`FilterControl` & `FilterCriteria`:**
+  * Visual query builder rendering boolean condition trees (`AND`, `OR`, `NOT AND`, `NOT OR`) with automated SQL `WHERE` generation.
 
 ---
 
-### 3. Phân Hệ Giám Sát Quy Trình SCADA & Vòng Lặp Kín (Closed-Loop)
+### 2. Industrial P&ID, SCADA & Manufacturing (MES) Subsystem
 
-![12. SCADA Closed-Loop Simulation](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/12_scada_closed_loop_simulation.png)
+![09. Industrial, SCADA & MES Hardware Control Suite](images/09_industrial_hero_showcase.png)
 
-![08. Obsidian Dark SCADA Process](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/08_dark_theme_scada.png)
+![13. SCADA Field Actuators, Sensors & Safety Controls](images/13_scada_actuators_composite.png)
 
-#### Các Control tiêu biểu:
-- **`ZeroAlarmGrid`:** Lưới quản lý cảnh báo thời gian thực chuẩn ISA-18.2 với các mức độ nghiêm trọng (`Critical`, `High`, `Medium`, `Low`), hỗ trợ xác nhận cảnh báo (`Acknowledge`) và tạm hoãn (`Shelve`).
-- **`ZeroTrendChart`:** Bộ ghi đồ thị dao động ký / xu hướng thời gian thực 60 FPS, sử dụng cấu trúc bộ đệm tròn (`RingBuffer`), vẽ cùng lúc nhiều kênh đo với ngưỡng giới hạn trên/dưới (USL/LSL) và con trỏ đo crosshair.
-- **`ZeroPipeFlow`:** Đường ống dẫn động học với các hạt dòng chảy hạt lưu chất (Liquid/Gas) chuyển động theo tốc độ và áp suất thực tế.
-- **`ZeroTreeList`:** Cây danh mục phân cấp ảo nhiều cấp cột, tích hợp checkbox 3 trạng thái (`Unchecked`, `Checked`, `Indeterminate`) phù hợp cho cây thiết bị nhà máy hoặc BOM sản phẩm.
-
----
-
-### 4. Phân Hệ Quản Lý Kho Vận (WMS) & Vị Trí Kệ Hàng (Racks)
-
-![05. WMS Warehouse Rack Center](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/05_wms_warehouse_rack.png)
-
-#### Các Control tiêu biểu:
-- **`ZeroWarehouseRack` (`ZeroUI.WinForms.Warehouse`):**
-  - Mô phỏng trực quan hệ thống giá kệ kho hàng (Dãy - Khung - Tầng - Ô vị trí pallet).
-  - Hiển thị mã vạch vị trí (Bin Location Code), loại hàng hóa, tải trọng tối đa.
-  - Phân chia màu sắc cảnh báo tỷ lệ chiếm dụng (Trống, Đang chứa, Đầy, Khóa bảo trì).
-  - Tương tác nhấp chuột để chọn ô hàng, xem chi tiết lô (Lot No, Ngày nhập, Trọng lượng).
-
----
-
-### 5. Phân Hệ Biểu Đồ Thống Kê & Báo Cáo Doanh Nghiệp (BI Charts)
-
-![10. Business Charts Dashboard](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/10_business_charts_dashboard.png)
-
-![11. Charts Hero Showcase](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/11_charts_hero_showcase.png)
-
-#### Các Control tiêu biểu:
-- **`ZeroBarChart`:** Biểu đồ cột nhóm (Grouped Column), cột xếp chồng (Stacked Bar) hiển thị doanh thu so với mục tiêu ngân sách.
-- **`ZeroPieChart`:** Biểu đồ tròn và bánh Donut với tiêu đề và giá trị KPI tổng hợp nổi bật ở tâm.
-- **`ZeroLineChart`:** Biểu đồ đường mượt (Spline Area) với dải màu chuyển sắc gradient thể hiện xu hướng biến thiên.
-- **`ZeroBoxPlotChart`:** Biểu đồ hộp và râu (Box-and-Whisker) chuyên sâu cho quản trị chất lượng thống kê (SPC), hiển thị giá trị Min, Max, Tứ phân vị Q1, Trung vị Median, Q3, điểm dị biệt Outliers và các đường ngưỡng dung sai USL / LSL.
-- **Candlestick, Radar, Funnel, Waterfall Charts:** Bộ biểu đồ nến tài chính, biểu đồ mạng nhện đa tiêu chí, biểu đồ phễu chuyển đổi và biểu đồ thác nước phân tích biến động.
+#### Key Controls:
+- **`SevenSegment`:**
+  * Precision digital LED display with 100% feature parity across WinForms and WPF.
+  * Backed by platform-agnostic `SevenSegmentState` (`ZeroUI.Core.Industrial`) with hardware bitmask decoding (`0x7F` mapping).
+  * Supports configurable digit count, decimal points, colons, negative signs, italic slant angles, unlit ghost segments, and standardized color presets (`Green`, `Amber`, `Red`, `Cyan`, `Blue`, `White`).
+- **`LinearGauge` & `RadialGauge`:**
+  * Linear vertical/horizontal thermometer gauges and circular Bourdon tube dial gauges (180° / 270° sweep).
+  * Subpixel anti-aliased needles, magnetic needle damping (`GaugeMath`), color warning threshold bands (Green, Amber, Red), and direct telemetry binding via `IScadaBindable`.
+- **`Tank3D`:** Cylindrical fluid vessel displaying actual volume (`CurrentLevelLiters`), capacity (`CapacityLiters`), wave gradient physics, and medium labels (IPA, Acid, DI Water).
+- **`LedTowerControl`:** 4-tier industrial Andon signal tower (`Red`, `Amber`, `Green`, `Blue`) supporting `On`, `Off`, `BlinkFast`, and `BlinkSlow` synchronized to `ZeroAnimationClock`.
+- **`IndustrialMotor`, `IndustrialPump`, `IndustrialFan`:**
+  * Asynchronous motors, centrifugal pumps, and industrial ventilation fans with smooth rotor/impeller animations synchronized to actual RPM.
+- **`IndustrialHeater` & `IndustrialValve`:**
+  * Radiant heating elements with thermal gradients and setpoint indicators.
+  * Proportional control and solenoid valves with real-time angle indication (0–100%).
+- **`PneumaticCylinder` & `ConveyorBelt`:**
+  * Double-acting pneumatic cylinders with stroke extension percentages (`ExtensionPercent`) and limit switches.
+  * Industrial roller conveyors with configurable speed (m/min) and product index flow.
+- **`TaktTimer`:** Production takt countdown timer with visual progress ring and cycle time alerts.
+- **`ProductionCounter`:** Electronic shopfloor scoreboard displaying Plan, Actual, NG, and Variance metrics.
 
 ---
 
-### 6. Phân Hệ Editors Hiện Đại & Điều Hướng Nâng Cao
+### 3. Closed-Loop SCADA Process Supervision Subsystem
 
-![02. UI Components & Editors Showcase](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/02_components_showcase.png)
+![12. SCADA Closed-Loop Simulation](images/12_scada_closed_loop_simulation.png)
 
-![07. Multi-Tier Zoom DatePicker](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/07_datepicker_multitier_zoom.png)
+![08. Obsidian Dark SCADA Process](images/08_dark_theme_scada.png)
 
-#### Các Control tiêu biểu:
-- **`ZeroDatePicker` & `ZeroDateRangePicker`:**
-  - Lịch chọn ngày thông minh hỗ trợ thu phóng 3 cấp độ mượt mà không nhấp nháy: **Ngày (Days) ↔ Tháng (Months) ↔ Năm (Years)** khi nhấp chuột vào header.
-  - Hỗ trợ các phím tắt chọn nhanh dải ngày (Hôm nay, Tuần này, Tháng này, Quý này).
-- **`ZeroGridLookup`:** Hộp chọn dropdown nhiều cột tích hợp sẵn lưới ảo `ZeroGridControl`, hỗ trợ gõ tìm kiếm lọc dữ liệu tức thì trên hàng trăm ngàn dòng danh mục vật tư/khách hàng.
-- **`ZeroCheckedComboBox`:** Dropdown chọn nhiều mục với checkbox, tóm tắt số lượng mục đã chọn.
-- **`ZeroTokenEdit`:** Ô nhập liệu dạng thẻ chip (tags/badges) có thể xóa bằng phím Backspace hoặc nút `x`.
-- **`ZeroColorPicker`:** Bảng chọn màu ma trận mẫu cùng bộ điều khiển mã HEX/RGB chuyên nghiệp.
-- **`RangeControl` / `DateTimeRangeSlider`:** Thanh trượt khoảng 2 đầu thumb tương tác trực tiếp trên biểu đồ tần suất (histogram) hoặc sparkline nền.
-- **`ZeroValidationProvider` & `ZeroErrorProvider`:**
-  - Bộ kiểm tra hợp lệ dữ liệu biểu mẫu hỗ trợ cú pháp Fluent (`NotEmpty`, `Range`, `Regex`, `Email`, `Custom`).
-  - Hiển thị badge cảnh báo nhấp nháy mượt mà, viền đỏ ô lỗi và tự động cuộn đến control lỗi đầu tiên.
+#### Key Controls:
+- **`AlarmGrid`:** Real-time alarm monitoring grid adhering strictly to the ISA-18.2 standard with severity levels (`Critical`, `High`, `Medium`, `Low`), operator acknowledgment, and shelving.
+- **`TrendChart`:** 60 FPS real-time oscilloscope streaming multiple telemetry channels via lock-free ring buffers (`ZeroTripleBuffer`), upper/lower specification limits (USL/LSL), and LTTB peak decimation.
+- **`PipeFlow`:** Dynamic fluid pipe lines with pulsating animated particle flows simulating liquid/gas velocity and pressure.
+- **`TreeList`:** Virtual hierarchical multi-column tree with tri-state cascading checkboxes (`Unchecked`, `Checked`, `Indeterminate`) for plant asset breakdowns and product BOMs.
 
 ---
 
-### 7. Phân Hệ Layout, Docking Đa Màn Hình & Hệ Thống Theme
+### 4. Smart Warehouse (WMS) & High-Bay Rack Subsystem
 
-![04. SCADA & Smart Factory Hub](C:/Users/phong.vo/.gemini/antigravity-ide/brain/c427bc97-8da4-42a7-b275-0decc5babb11/images/04_scada_smart_factory.png)
+![05. WMS Warehouse Rack Center](images/05_wms_warehouse_rack.png)
 
-#### Các Control tiêu biểu:
-- **`ZeroDockManager` & `ZeroFloatingWindow`:**
-  - Hệ thống docking đa vùng (Trái, Phải, Trên, Dưới, Document tabs giữa), hỗ trợ kéo thả tách cửa sổ trôi nổi (`Floating`) ra các màn hình phụ.
-  - Tự động lưu và khôi phục bố cục qua JSON thuần túy (`ZeroWorkspaceSerializer`).
-- **`ZeroOptimizedPanel`:** Panel thẻ bo tròn thông minh sử dụng kỹ thuật 9-slice shadow atlas, triệt tiêu độ trễ làm bóng GDI+ mà vẫn giữ độ sắc nét chữ tối đa.
-- **`ZeroSideNav` & `ZeroToolbar`:** Thanh điều hướng dọc thu gọn thông minh và thanh công cụ ribbon chống đè nút (collision guard).
-- **9 Bộ Theme / Skin tích hợp sẵn:**
-  - `obsidian_dark` (Mặc định cho phòng điều khiển SCADA)
-  - `clean_light` (Giao diện phẳng sáng hiện đại)
-  - `nordic_slate` (Tông xám Bắc Âu thanh lịch)
-  - `cyberpunk_neon` (Tông Neon công nghệ cao)
-  - `emerald_industrial` (Tông xanh lục công nghiệp)
-  - `solar_amber` (Tông vàng hổ phách năng lượng)
-  - `amethyst_violet`, `crimson_ruby`, `oled_midnight`.
+#### Key Controls:
+- **`WarehouseRack` (`ZeroUI.WinForms.Warehouse`):**
+  * Interactive 2D visualization of high-bay warehouse racks (Aisle - Bay - Level - Bin position).
+  * Displays bin location barcodes, cargo classifications, and max weight capacity.
+  * Color-coded occupancy statuses (Empty, Occupied, Full, Maintenance Locked).
+  * Interactive click selection to inspect lot metadata (Lot No, Inbound Date, Weight).
+- **`BarcodeScanControl`:** High-speed workstation scanner handler with USB wedge delta detection (<35ms), duplicate scan protection, and audio feedback.
+- **`LotSelector`:** Automated FIFO and FEFO lot allocation engine with quarantine locks.
+
+---
+
+### 5. Business Intelligence & Statistical Analytics Charts
+
+![10. Business Charts Dashboard](images/10_business_charts_dashboard.png)
+
+![11. Charts Hero Showcase](images/11_charts_hero_showcase.png)
+
+#### Key Controls:
+- **`ChartControl` / `BarChart`:** Grouped and stacked column/bar charts comparing revenue against targets.
+- **`PieChart`:** Full Pie and Donut distribution charts with centered KPI summary metrics.
+- **`LineChart`:** Catmull-Rom spline trend charts with vertical gradient fills and hover markers.
+- **`BoxPlotChart`:** Six Sigma Statistical Process Control (SPC) Box-and-Whisker chart displaying Min, Max, Q1, Median, Q3, outliers, and USL/LSL tolerance limits.
+- **Financial & Flow Charts:** Candlestick OHLC charts, multi-axis Radar charts, conversion Funnel/Pyramid charts, and Waterfall variance charts.
+
+---
+
+### 6. Modern Enterprise Editors & Advanced Navigation
+
+![02. UI Components & Editors Showcase](images/02_components_showcase.png)
+
+![07. Multi-Tier Zoom DatePicker](images/07_datepicker_multitier_zoom.png)
+
+#### Key Controls:
+- **`DateEdit` & `DateRangePicker`:**
+  * Multi-tier zoom navigation calendar: **Days ↔ Months ↔ Years** without screen flicker.
+  * Quick-select presets (Today, This Week, This Month, This Quarter).
+- **`GridLookupEdit`:** Multi-column dropdown editor embedding a virtual data grid for instant filtering across 100k+ master records.
+- **`CheckedComboBoxEdit`:** Multi-select dropdown with checkbox items and search.
+- **`TokenEdit`:** Tag/badge chip editor with keyboard navigation and dismiss buttons.
+- **`ColorPickEdit`:** Swatch palette matrix with HEX/RGB inputs.
+- **`RangeControl` / `DateTimeRangeSlider`:** Dual-thumb range selector with background distribution histogram.
+- **`ValidationProvider`:** Declarative fluent validation engine with pulsing vector error badges, warning icons, and automatic scroll-to-error.
+
+---
+
+### 7. Layout, Docking, Windowing & Theme System
+
+![04. SCADA & Smart Factory Hub](images/04_scada_smart_factory.png)
+
+#### Key Controls:
+- **`DockManager` & `FloatingWindow`:**
+  * Multi-zone docking layout (Left, Right, Top, Bottom, Document tabs) supporting floating detached windows across secondary monitors.
+  * Zero-dependency layout persistence via JSON (`WorkspaceSerializer`).
+- **`OptimizedPanel`:** 9-slice cached shadow panel eliminating GDI+ convolution latency while maintaining native text clarity.
+- **`ToolbarControl` & `SideNavControl`:** Vertical collapsible sidebar and anti-aliased action toolbar with collision guard.
+- **9 Built-in Theme Skins:**
+  * `obsidian_dark` (Default for SCADA control centers)
+  * `clean_light` (Flat modern light theme)
+  * `nordic_slate` (Scandinavian neutral slate)
+  * `cyberpunk_neon` (High-contrast tech neon)
+  * `emerald_industrial` (Precision green industrial)
+  * `solar_amber` (Amber energy theme)
+  * `amethyst_violet`, `crimson_ruby`, `oled_midnight`.

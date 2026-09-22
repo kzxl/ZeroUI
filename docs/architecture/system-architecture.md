@@ -29,13 +29,18 @@ graph TD
         TripleBuf["ZeroTripleBuffer<T> (Lock-Free State Swapper)"]
     end
 
-    subgraph CoreLayer["ZeroUI.Core (.NET Standard 2.0)"]
+    subgraph CoreLayer["ZeroUI.Core (.NET Standard 2.0 - Zero External Dependencies)"]
         VEngine["Virtualization & Culling Engine (VirtualViewport2D, PrefixSumArray)"]
         SceneGraph["Scene Graph & Spatial Index (ZeroScene, GridSpatialIndex)"]
         DataEngine["Tag Storage & Engine (TagStorage, ZeroTagEngine)"]
-        HistorianEngine["Historian & Rollup Pyramid (SqliteHistorian, TimeSeriesPyramid)"]
+        IndustrialState["Industrial State Models (SevenSegmentState, Color Profiles)"]
+        HistorianEngine["Historian Contracts & Rollups (ITelemetryHistorian, TimeSeriesPyramid)"]
         Comms["Industrial Connectors (ModbusAddressPlanner, S7)"]
         MemPool["Buffer Pools & Memory Management (ZeroMemory, ZeroBufferPool)"]
+    end
+
+    subgraph HistorianStorage["Pluggable Storage (ZeroUI.Historian.Sqlite)"]
+        SqliteEngine["SqliteHistorianEngine (WAL Mode, Daily Rolling DBs)"]
     end
 
     AppWinForms --> ControlsLayer
@@ -47,6 +52,7 @@ graph TD
     WF_Adapter --> RuntimeLayer
     WPF_Adapter --> RuntimeLayer
     RuntimeLayer --> CoreLayer
+    CoreLayer -.-> HistorianStorage
 ```
 
 ---
@@ -54,7 +60,7 @@ graph TD
 ## 2. Layer Breakdown
 
 ### Layer 1: ZeroUI.Core (.NET Standard 2.0)
-The Core layer contains **zero references** to `System.Windows.Forms` or `PresentationFramework`. It is 100% portable across .NET Framework 4.6.2, modern .NET 8/9, Linux edge containers, and headless console daemons.
+The Core layer contains **zero external 3rd-party dependencies** and **zero references** to `System.Windows.Forms` or `PresentationFramework`. It is 100% portable across .NET Framework 4.6.2, modern .NET 8/9, Linux edge containers, and headless console daemons.
 
 Key Subsystems & Components:
 * **`VirtualViewport2D` & `PrefixSumArray`**: Computes visible row and column ranges with $O(\log N)$ binary search lookup without generating heap allocations.
@@ -62,7 +68,8 @@ Key Subsystems & Components:
 * **`ZeroRuntime`**: Deterministic master scheduler coordinating PLC (10ms), Logic (10ms), Telemetry (16ms), UI (16ms), Historian (100ms), Cleanup (1s), and Health (5s) cycles.
 * **`ScadaPipelineCoordinator` & `ZeroTripleBuffer<T>`**: 3-Tier decoupled pipeline isolating high-frequency (10kHz) field ingestion and calculations from UI frame rendering.
 * **`TagStorage` & `ZeroTagEngine`**: Contiguous unboxed array tag registry with atomic dirty bitmasking and inverted index listeners (>48M writes/s, >244M reads/s).
-* **`TimeSeriesPyramid` & `LttbDecimation`**: Continuous multi-resolution rollups (L0: raw, L1: 100ms, L2: 1s, L3: 10s, L4: 1min, L5: 10min) powering instant $O(\text{screen pixels})$ chart zoom.
+* **`ZeroUI.Core.Industrial` State Models (`SevenSegmentState`)**: Platform-neutral bitmask decoder, character map (`0x7F`), and color profiles ensuring identical state calculation between WinForms and WPF.
+* **`ITelemetryHistorian` & `TimeSeriesPyramid`**: High-performance time-series abstractions and continuous multi-resolution rollups (L0: raw, L1: 100ms, L2: 1s, L3: 10s, L4: 1min, L5: 10min) powering instant $O(\text{screen pixels})$ chart zoom. Embedded SQLite WAL storage is provided via companion package `ZeroUI.Historian.Sqlite`.
 * **`ZeroScene` & `GridSpatialIndex`**: Platform-agnostic 2D scene graph enabling hierarchical mimic topologies and viewport culling.
 * **`WorkerQueue<T>`**: Lock-free channel and ring-buffer worker queue featuring `QueueBackpressureMode.LatestPerKey` for telemetry conflation.
 * **`ModbusAddressPlanner`**: Industrial address optimizer coalescing disjoint register tags into contiguous MBAP block reads (up to 98.3% network packet reduction).
@@ -72,7 +79,7 @@ Key Subsystems & Components:
 ### Layer 2: Platform Adapters
 
 #### A. WinForms Adapter (`ZeroUI.WinForms`)
-* **Single-HWND Policy:** Composite controls (`ZeroGridControl`, `ZeroPlantMimicCanvas`, `ZeroToolbar`, `ZeroAccordion`) render within **exactly one `HWND`**, eliminating child control handle leaks.
+* **Single-HWND Policy:** Composite controls (`GridControl`, `PlantMimicCanvas`, `ToolbarControl`, `AccordionControl`) render within **exactly one `HWND`**, eliminating child control handle leaks.
 * **`ZeroAnimationClock`:** Centralized 60 FPS ticker driving all visual animations, pulses, and ISA-18.2 compliant alarm blinks via lock-free Copy-On-Write snapshot arrays, completely eliminating distributed timers.
 * **Direct Render Dispatch:** Employs Win32 `MemoryDIBSection` double-buffered GDI rasterization with `ExtTextOutW` subpixel ClearType rendering and sub-millisecond `BitBlt` (or Direct2D GPU acceleration).
 * **Flicker-Free Window Styles:** Intercepts `WM_ERASEBKGND` and enforces `WS_CLIPCHILDREN | WS_CLIPSIBLINGS`.

@@ -42,7 +42,7 @@ Standard WinForms controls suffer from GDI handle churn caused by repeatedly rec
 
 WinForms applications that nest dozens of panels, groupboxes, and buttons quickly exhaust the Win32 OS handle limit (10,000 handles), resulting in catastrophic application crashes.
 
-Composite controls in ZeroUI (`ZeroGridControl`, `ZeroSteps`, `ZeroToolbar`, `ZeroTimeline`, `ZeroSideNav`):
+Composite controls in ZeroUI (`GridControl`, `StepsControl`, `ToolbarControl`, `TimelineControl`, `SideNavControl`):
 - Maintain **exactly 1 top-level Win32 window handle (`HWND`)**.
 - All internal child elements, buttons, tabs, and headers are virtual vector nodes rendered inside the single HWND.
 - Eliminates Win32 handle leaks, window clipping glitches, and child-window paint synchronization lag.

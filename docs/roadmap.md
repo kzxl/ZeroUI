@@ -20,6 +20,10 @@
 | **Phase 16** | **Pharmaceutical, Biotech & Batch Processing (Tier P3)** | FDA 21 CFR Part 11 & ISA-88 Compliance | **Completed** | `SfcBatchTracker` (ISA-88 procedural batch SFC), `BioreactorVessel` (Sanitary bioreactor with DO/pH/impeller), `CipValidationMatrix` (4-TACT validation), `CleanroomEnvHud` (ISO Class 5-8 particles & delta P). |
 | **Phase 17** | **Oil & Gas, Refining & Petrochemicals (Tier P3)** | Continuous Petrochemical Refining & Safety | **Completed** | `DistillationColumn` (Multi-tray thermal/pressure profiles), `EsdMatrix` (SIL 1-4 Cause & Effect safety matrix), `PipelinePigMonitor` (Intelligent pig acoustic tracking & wall anomalies). |
 | **Phase 18** | **Vector PDF & CAD Schematic Reader (Tier P3)** | Document & Office Viewers | **Completed** | `PdfViewerControl` (Multi-page continuous vector reader, 25%-400% zoom, full-text search with highlights, pure C# FlateDecode `PdfParser`, CAD/SOP `PdfSampleGenerator`, WinForms & WPF). |
+| **Phase 19** | **Spreadsheet & Tabular Calculation (Tier P3)** | Office & Financial Matrix | **Completed** | `SpreadsheetControl` (Zero-dependency sparse matrix worksheet engine, recursive descent formula evaluator, interactive formula bar, WinForms & WPF). |
+| **Phase 20** | **Creative & Media Controls Suite (v1.8.0)** | Digital Imaging & Video Grading | **Completed** | 15 direct-rendered visual editors (`CurveEditor`, `ColorWheelEdit`, `CompareViewerControl`, `HistogramScopeControl`, `CropBoxControl`, `MiniMapNavigator`, `MaskGizmoOverlay`, `ThumbnailGridControl`). |
+| **Phase 21** | **Core SQLite Historian Decoupling (v1.8.6)** | Architectural Decoupling & Storage | **Completed** | Extracted `ZeroUI.Historian.Sqlite`, eliminating external dependencies from `ZeroUI.Core` (100% Pure BCL). |
+| **Phase 22** | **Cross-Platform Control Parity & Shared Logic (v1.8.6)** | Multi-Framework Unification | **Completed** | Automated parity reflection test suite (`ControlParityInspectionTests`), `SevenSegmentState` platform-neutral core state, 100% parity across WinForms & WPF. |
 
 ---
 
@@ -150,7 +154,7 @@
 
 ## 3. Future Enhancements & Proposals Catalog
 
-For detailed architectural evaluations, design trade-offs, and implementation specifications, refer to [ZeroUI Proposals Catalog — Section 8](file:///e:/15.%20Other/dotnet/libs/ZeroUI/docs/proposals.md#8-prioritized-enterprise-control-proposals-ranked-catalog).
+For detailed architectural evaluations, design trade-offs, and implementation specifications, refer to [ZeroUI Proposals Catalog — Section 8](proposals.md#8-prioritized-enterprise-control-proposals-ranked-catalog).
 
 ### Upcoming Phases Overview (Prioritized Execution Tiers)
 
@@ -196,4 +200,14 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 
 #### Phase 19: Spreadsheet & Tabular Calculation Suite (Tier P3 — COMPLETED)
 - **`SpreadsheetControl` MVP (Rank #25 / Proposal 8.10):** Completed. Zero-dependency sparse matrix worksheet engine with 64-bit composite indexing, recursive descent formula evaluator (`SUM`, `AVERAGE`, `MIN`, `MAX`, `COUNT`, `IF`, arithmetic expressions, parentheses, circular dependency cycle detection `#CIRCULAR!`), embedded interactive Formula Bar with active cell address HUD, vector row/column headers with drag-resizing dividers, in-place cell editing, factory costing BOM & Six Sigma quality SPC sample generators, and reactive `ZeroTheme` & `ZeroWpfTheme` skinning across WinForms and WPF.
-- **Master Proposals Catalog Completion:** 25/25 Proposals (100%) delivered, multi-targeted for `netstandard2.0`, `net462`, and `net8.0-windows` with 334/334 unit tests passing.
+
+#### Phase 20: Creative & Media Controls Suite (v1.8.0 — COMPLETED)
+- **Direct-Rendered Creative Editors:** 15 high-performance visual editors for digital imaging and video grading (`CurveEditor`, `ColorWheelEdit`, `CompareViewerControl`, `HistogramScopeControl`, `CropBoxControl`, `MiniMapNavigator`, `MaskGizmoOverlay`, `FacetedFilterBar`, `HistoryTimelineControl`, `FilmstripScrollerControl`, `DominantPaletteControl`, `ExifTelemetryCard`, `NumericSliderEdit`, `BatchTaskQueueControl`, `ThumbnailGridControl`, `TokenPatternEditor`).
+
+#### Phase 21: Core SQLite Historian Decoupling (v1.8.6 — COMPLETED)
+- **Zero-Dependency Architecture:** Decoupled `SqliteHistorianEngine` from `ZeroUI.Core` into `ZeroUI.Historian.Sqlite`, achieving 100% pure .NET BCL compliance with zero 3rd-party dependencies in `ZeroUI.Core`.
+
+#### Phase 22: Cross-Platform Control Parity & Shared Logic (v1.8.6 — COMPLETED)
+- **Automated Parity Reflection Testing:** Created `ControlParityInspectionTests` validating property/event synchronization across 166 control pairs.
+- **Golden Spike Industrial Parity (`SevenSegment`):** Extracted `SevenSegmentState` into `ZeroUI.Core.Industrial`, achieving 100% property and rendering parity between WinForms and WPF.
+- **Test Suite Verification:** 607/607 unit tests passing (100%) across `ZeroUI.Core.Tests` (539) and `ZeroUI.Desktop.Tests` (68).
