@@ -40,19 +40,25 @@ namespace ZeroUI.WinForms.Editors
 
         public SimpleButton()
         {
+            SetStyle(
+                ControlStyles.UserPaint |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
+
             Size = new Size(130, 36);
             Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             Cursor = Cursors.Hand;
+            BackColor = Color.Transparent;
 
             ZeroUIConfig.CornerStyleChanged += (s, e) =>
             {
-                UpdateRegion();
                 Invalidate();
             };
             ZeroUIConfig.FontChanged += (s, e) =>
             {
                 Font = new Font(ZeroUIConfig.DefaultFont.FontFamily, 9.5f, FontStyle.Bold);
-                UpdateRegion();
                 Invalidate();
             };
         }
@@ -60,6 +66,7 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnThemeChanged(ZeroSkin skin)
         {
             base.OnThemeChanged(skin);
+            BackColor = Color.Transparent;
             Invalidate();
         }
 
@@ -79,7 +86,6 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 _borderRadius = Math.Max(0, value);
-                UpdateRegion();
                 Invalidate();
             }
         }
@@ -161,22 +167,39 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
-            UpdateRegion();
+            Region = null;
             Invalidate();
         }
 
-        private void UpdateRegion()
+        protected override void OnPaintBackground(PaintEventArgs pevent)
         {
-            if (Width <= 0 || Height <= 0) return;
-            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
-            if (effRadius > 0)
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
+            bool painted = false;
+
+            if (Parent != null)
             {
-                using var path = CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
-                Region = new Region(path);
+                try
+                {
+                    var g = pevent.Graphics;
+                    var state = g.Save();
+                    g.TranslateTransform(-Left, -Top);
+                    using (var ppe = new PaintEventArgs(g, new Rectangle(Left, Top, Width, Height)))
+                    {
+                        InvokePaintBackground(Parent, ppe);
+                    }
+                    g.Restore(state);
+                    painted = true;
+                }
+                catch
+                {
+                    painted = false;
+                }
             }
-            else
+
+            if (!painted)
             {
-                Region = null;
+                using var brush = new SolidBrush(parentBg);
+                pevent.Graphics.FillRectangle(brush, ClientRectangle);
             }
         }
 
@@ -184,59 +207,73 @@ namespace ZeroUI.WinForms.Editors
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var (bg, fg, border) = GetColors();
-
-            // 1. Fill parent background to eliminate black corner artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
-            using (var brushParent = new SolidBrush(parentBg))
-            {
-                g.FillRectangle(brushParent, ClientRectangle);
-            }
-
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
 
-            // Draw Button Body
-            using (var path = CreateRoundedRectangle(rect, effRadius))
+            float strokeWidth = 1f;
+            var rectF = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
+
+            // 1. Draw Button Body & Border
+            if (effRadius > 0)
             {
-                using var brush = new SolidBrush(bg);
-                g.FillPath(brush, path);
+                using var path = ZeroUIConfig.CreateRoundedRectangleF(rectF, effRadius);
+                using (var brush = new SolidBrush(bg))
+                {
+                    g.FillPath(brush, path);
+                }
 
                 if (border != Color.Transparent)
                 {
-                    using var pen = new Pen(border, 1f);
+                    using var pen = new Pen(border, strokeWidth);
                     g.DrawPath(pen, path);
                 }
             }
+            else
+            {
+                using (var brush = new SolidBrush(bg))
+                {
+                    g.FillRectangle(brush, 0, 0, Width, Height);
+                }
 
-            // Draw Button Text
+                if (border != Color.Transparent)
+                {
+                    using var pen = new Pen(border, strokeWidth);
+                    g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+                }
+            }
+
+            // 2. Draw Button Text
+            var textRect = new Rectangle(0, 0, Width, Height);
             TextRenderer.DrawText(
                 g,
                 Text,
                 Font,
-                rect,
+                textRect,
                 fg,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
 
-            // Draw Optional Badge
+            // 3. Draw Optional Badge
             if (!string.IsNullOrEmpty(_badgeText))
             {
                 Size badgeSize = TextRenderer.MeasureText(_badgeText, Font);
                 int badgeW = Math.Max(18, badgeSize.Width + 6);
                 int badgeH = 18;
-                Rectangle badgeRect = new Rectangle(Width - badgeW - 6, (Height - badgeH) / 2, badgeW, badgeH);
+                var badgeRectF = new RectangleF(Width - badgeW - 6.5f, (Height - badgeH) / 2f - 0.5f, badgeW, badgeH);
 
-                using var badgePath = CreateRoundedRectangle(badgeRect, 9);
+                using var badgePath = ZeroUIConfig.CreateRoundedRectangleF(badgeRectF, 9f);
                 using var badgeBg = new SolidBrush(Color.FromArgb(220, 38, 38));
                 g.FillPath(badgeBg, badgePath);
 
+                var badgeTextRect = new Rectangle(Width - badgeW - 6, (Height - badgeH) / 2, badgeW, badgeH);
                 TextRenderer.DrawText(
                     g,
                     _badgeText,
                     new Font("Segoe UI", 7.5f, FontStyle.Bold),
-                    badgeRect,
+                    badgeTextRect,
                     Color.White,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
             }

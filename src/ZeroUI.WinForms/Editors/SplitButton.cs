@@ -38,9 +38,17 @@ namespace ZeroUI.WinForms.Editors
 
         public SplitButton()
         {
+            SetStyle(
+                ControlStyles.UserPaint |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
+
             Size = new Size(140, 36);
             Font = new Font("Segoe UI", 9.25f, FontStyle.Regular);
             Cursor = Cursors.Hand;
+            BackColor = Color.Transparent;
 
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
@@ -206,38 +214,112 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnThemeChanged(ZeroSkin skin)
         {
             base.OnThemeChanged(skin);
+            BackColor = Color.Transparent;
             Invalidate();
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
+            bool painted = false;
+
+            if (Parent != null)
+            {
+                try
+                {
+                    var g = pevent.Graphics;
+                    var state = g.Save();
+                    g.TranslateTransform(-Left, -Top);
+                    using (var ppe = new PaintEventArgs(g, new Rectangle(Left, Top, Width, Height)))
+                    {
+                        InvokePaintBackground(Parent, ppe);
+                    }
+                    g.Restore(state);
+                    painted = true;
+                }
+                catch
+                {
+                    painted = false;
+                }
+            }
+
+            if (!painted)
+            {
+                using var brush = new SolidBrush(parentBg);
+                pevent.Graphics.FillRectangle(brush, ClientRectangle);
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var palette = CurrentPalette;
-
-            // 1. Fill parent background to eliminate edge clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, palette.Background);
-            using (var brushParent = new SolidBrush(parentBg))
-            {
-                g.FillRectangle(brushParent, ClientRectangle);
-            }
-
-            Rectangle fullRect = new Rectangle(0, 0, Width - 1, Height - 1);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
-
             var (baseBg, fg, border) = GetBaseColors(palette);
 
-            // 2. Draw Outer Button Container
-            using (var path = ZeroUIConfig.CreateRoundedRectangle(fullRect, effRadius))
+            float strokeWidth = 1f;
+            var rectF = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
+
+            // 1. Draw Outer Button Container
+            if (effRadius > 0)
             {
+                using var path = ZeroUIConfig.CreateRoundedRectangleF(rectF, effRadius);
                 using (var brush = new SolidBrush(baseBg))
                 {
                     g.FillPath(brush, path);
                 }
 
-                // 3. Highlight Sub-zones if hovered or pressed
+                // 2. Highlight Sub-zones if hovered or pressed (clipped to path to prevent corner bleed)
+                if (Enabled)
+                {
+                    int splitX = Width - _splitWidth;
+                    var clipState = g.Save();
+                    g.SetClip(path);
+
+                    if (_isActionHovered || _isActionPressed)
+                    {
+                        Color actionHighlight = _isActionPressed ? Color.FromArgb(40, 0, 0, 0) : Color.FromArgb(20, 255, 255, 255);
+                        using var hBrush = new SolidBrush(actionHighlight);
+                        g.FillRectangle(hBrush, new RectangleF(0, 0, splitX, Height));
+                    }
+
+                    if (_isDropDownHovered || _isDropDownPressed)
+                    {
+                        Color dropHighlight = _isDropDownPressed ? Color.FromArgb(40, 0, 0, 0) : Color.FromArgb(20, 255, 255, 255);
+                        using var hBrush = new SolidBrush(dropHighlight);
+                        g.FillRectangle(hBrush, new RectangleF(splitX, 0, _splitWidth, Height));
+                    }
+
+                    // 3. Draw 1px Divider
+                    Color divColor = _buttonStyle == ZeroButtonStyle.Secondary
+                        ? palette.Border
+                        : Color.FromArgb(80, 255, 255, 255);
+
+                    using var divPen = new Pen(divColor, 1f);
+                    g.DrawLine(divPen, splitX, 4, splitX, Height - 5);
+
+                    g.Restore(clipState);
+                }
+
+                // 4. Draw Outer Border
+                if (border != Color.Transparent)
+                {
+                    using var pen = new Pen(border, strokeWidth);
+                    g.DrawPath(pen, path);
+                }
+            }
+            else
+            {
+                using (var brush = new SolidBrush(baseBg))
+                {
+                    g.FillRectangle(brush, 0, 0, Width, Height);
+                }
+
                 if (Enabled)
                 {
                     int splitX = Width - _splitWidth;
@@ -256,7 +338,6 @@ namespace ZeroUI.WinForms.Editors
                         g.FillRectangle(hBrush, new Rectangle(splitX, 0, _splitWidth, Height));
                     }
 
-                    // 4. Draw 1px Divider
                     Color divColor = _buttonStyle == ZeroButtonStyle.Secondary
                         ? palette.Border
                         : Color.FromArgb(80, 255, 255, 255);
@@ -265,15 +346,14 @@ namespace ZeroUI.WinForms.Editors
                     g.DrawLine(divPen, splitX, 4, splitX, Height - 5);
                 }
 
-                // 5. Draw Outer Border
                 if (border != Color.Transparent)
                 {
-                    using var pen = new Pen(border, 1f);
-                    g.DrawPath(pen, path);
+                    using var pen = new Pen(border, strokeWidth);
+                    g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
                 }
             }
 
-            // 6. Draw Action Zone Content (Icon + Text)
+            // 5. Draw Action Zone Content (Icon + Text)
             string actionText = string.IsNullOrEmpty(_iconGlyph)
                 ? Text
                 : $"{_iconGlyph}  {Text}".Trim();
@@ -287,7 +367,7 @@ namespace ZeroUI.WinForms.Editors
                 fg,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
 
-            // 7. Draw DropDown Chevron ▾
+            // 6. Draw DropDown Chevron ▾
             Rectangle dropTextRect = new Rectangle(Width - _splitWidth, 0, _splitWidth, Height);
             TextRenderer.DrawText(
                 g,

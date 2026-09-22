@@ -26,9 +26,17 @@ namespace ZeroUI.WinForms.Editors
 
         public TagControl()
         {
+            SetStyle(
+                ControlStyles.UserPaint |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
+
             Size = new Size(80, 24);
             Font = new Font("Segoe UI", 8.5f, FontStyle.Regular);
             Text = "Tag";
+            BackColor = Color.Transparent;
 
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
@@ -41,6 +49,7 @@ namespace ZeroUI.WinForms.Editors
         protected override void OnThemeChanged(ZeroSkin skin)
         {
             base.OnThemeChanged(skin);
+            BackColor = Color.Transparent;
             Invalidate();
         }
 
@@ -60,38 +69,86 @@ namespace ZeroUI.WinForms.Editors
             set { _borderRadius = Math.Max(0, value); Invalidate(); }
         }
 
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
+            bool painted = false;
+
+            if (Parent != null)
+            {
+                try
+                {
+                    var g = pevent.Graphics;
+                    var state = g.Save();
+                    g.TranslateTransform(-Left, -Top);
+                    using (var ppe = new PaintEventArgs(g, new Rectangle(Left, Top, Width, Height)))
+                    {
+                        InvokePaintBackground(Parent, ppe);
+                    }
+                    g.Restore(state);
+                    painted = true;
+                }
+                catch
+                {
+                    painted = false;
+                }
+            }
+
+            if (!painted)
+            {
+                using var brush = new SolidBrush(parentBg);
+                pevent.Graphics.FillRectangle(brush, ClientRectangle);
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             var (bg, border, fg) = GetTagColors(_tagType, EffectiveSkin.IsDark);
-
-            // 1. Fill parent background to eliminate black corner clipping artifacts
-            Color parentBg = ZeroUIConfig.GetParentBackground(this, CurrentPalette.Background);
-            using (var brushParent = new SolidBrush(parentBg))
-            {
-                g.FillRectangle(brushParent, ClientRectangle);
-            }
-
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
             int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
 
-            using (var path = CreateRoundedRectangle(rect, effRadius))
-            {
-                using var brush = new SolidBrush(bg);
-                g.FillPath(brush, path);
+            float strokeWidth = 1f;
+            var rectF = new RectangleF(0.5f, 0.5f, Width - 1f, Height - 1f);
 
-                using var pen = new Pen(border, 1f);
-                g.DrawPath(pen, path);
+            if (effRadius > 0)
+            {
+                using var path = ZeroUIConfig.CreateRoundedRectangleF(rectF, effRadius);
+                using (var brush = new SolidBrush(bg))
+                {
+                    g.FillPath(brush, path);
+                }
+
+                if (border != Color.Transparent)
+                {
+                    using var pen = new Pen(border, strokeWidth);
+                    g.DrawPath(pen, path);
+                }
+            }
+            else
+            {
+                using (var brush = new SolidBrush(bg))
+                {
+                    g.FillRectangle(brush, 0, 0, Width, Height);
+                }
+
+                if (border != Color.Transparent)
+                {
+                    using var pen = new Pen(border, strokeWidth);
+                    g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+                }
             }
 
+            var textRect = new Rectangle(0, 0, Width, Height);
             TextRenderer.DrawText(
                 g,
                 Text,
                 Font,
-                rect,
+                textRect,
                 fg,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
         }
