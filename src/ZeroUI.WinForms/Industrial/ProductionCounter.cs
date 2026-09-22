@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -12,18 +14,19 @@ namespace ZeroUI.WinForms.Industrial
 {
     /// <summary>
     /// Industrial 4-field production scoreboard (Plan, Actual, NG, Remaining)
-    /// with an integrated target completion progress bar and SCADA tag telemetry synchronization.
+    /// with an integrated target completion progress bar, Per-Monitor V2 High-DPI scaling, and SCADA tag telemetry synchronization.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial production counter scoreboard displaying Plan, Actual, NG, and Remaining")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroProductionCounter.bmp")]
-    public class ProductionCounter : Control, IScadaBindable
+    public class ProductionCounter : ControlBase, IScadaBindable
     {
         private int _plan = 2500;
         private int _actual = 2140;
         private int _ng = 18;
         private string _title = "SHIFT PRODUCTION TARGET";
+        private string _percentFormat = "0.#";
         private bool _isHovered;
 
         [Category("SCADA Telemetry")]
@@ -61,41 +64,33 @@ namespace ZeroUI.WinForms.Industrial
             set { _title = value ?? ""; Invalidate(); }
         }
 
+        [Category("Appearance")]
+        [Description("Custom format string for the completion percentage readout. Defaults to '0.#'.")]
+        [DefaultValue("0.#")]
+        public string PercentFormat
+        {
+            get => _percentFormat;
+            set { _percentFormat = value ?? "0.#"; Invalidate(); }
+        }
+
         public int Remaining => Math.Max(0, _plan - _actual);
         public double CompletionPercent => Math.Min(100.0, (_actual / (double)_plan) * 100.0);
 
         public ProductionCounter()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(320, 110);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
         }
 
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            if (!ZeroDesignHelper.IsInDesignMode(this))
-            {
-                ZeroTagEngine.RegisterBindable(this);
-            }
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            base.OnHandleDestroyed(e);
-            ZeroTagEngine.UnregisterBindable(this);
-        }
-
         public void OnTagValueChanged(IScadaTag tag)
         {
             if (tag == null) return;
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => OnTagValueChanged(tag)));
+                return;
+            }
             if (int.TryParse(tag.Value?.ToString(), out var act))
             {
                 Actual = act;
@@ -105,11 +100,33 @@ namespace ZeroUI.WinForms.Industrial
         protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _isHovered = true; Invalidate(); }
         protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _isHovered = false; Invalidate(); }
 
+        private string FormatPercent(double pct)
+        {
+            string fmt = _percentFormat;
+            if (string.IsNullOrWhiteSpace(fmt)) return pct.ToString("0.#", CultureInfo.InvariantCulture) + "%";
+
+            try
+            {
+                if (fmt.Contains("{0"))
+                {
+                    return string.Format(CultureInfo.InvariantCulture, fmt, pct);
+                }
+                return pct.ToString(fmt, CultureInfo.InvariantCulture) + "%";
+            }
+            catch
+            {
+                return pct.ToString("0.#", CultureInfo.InvariantCulture) + "%";
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
+            base.OnPaint(e);
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
+            float scale = DpiScale;
             bool isDark = ZeroTheme.IsDark;
             Color panelBg = isDark ? Color.FromArgb(15, 23, 42) : Color.White;
             Color borderCol = _isHovered ? Color.FromArgb(59, 130, 246) : (isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(226, 232, 240));
@@ -117,9 +134,9 @@ namespace ZeroUI.WinForms.Industrial
             Color textSecondary = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
 
             // 1. Container
-            var rect = new RectangleF(1f, 1f, Width - 3f, Height - 3f);
+            var rect = new RectangleF(1f * scale, 1f * scale, Width - 3f * scale, Height - 3f * scale);
             using (var bgBrush = new SolidBrush(panelBg))
-            using (var borderPen = new Pen(borderCol, 1.2f))
+            using (var borderPen = new Pen(borderCol, _isHovered ? 2f * scale : 1.2f * scale))
             {
                 g.FillRectangle(bgBrush, rect);
                 g.DrawRectangle(borderPen, rect.X, rect.Y, rect.Width, rect.Height);
@@ -129,13 +146,13 @@ namespace ZeroUI.WinForms.Industrial
             using (var titleFont = new Font(Font.FontFamily, 8f, FontStyle.Bold))
             using (var titleBrush = new SolidBrush(textSecondary))
             {
-                g.DrawString(_title, titleFont, titleBrush, 10f, 6f);
+                g.DrawString(_title, titleFont, titleBrush, 10f * scale, 6f * scale);
 
-                string pctStr = $"{CompletionPercent:0.#}%";
+                string pctStr = FormatPercent(CompletionPercent);
                 var pctSize = g.MeasureString(pctStr, titleFont);
                 using (var pctBrush = new SolidBrush(Color.FromArgb(34, 197, 94)))
                 {
-                    g.DrawString(pctStr, titleFont, pctBrush, Width - pctSize.Width - 10f, 6f);
+                    g.DrawString(pctStr, titleFont, pctBrush, Width - pctSize.Width - 10f * scale, 6f * scale);
                 }
             }
 
@@ -149,8 +166,8 @@ namespace ZeroUI.WinForms.Industrial
                 Color.FromArgb(245, 158, 11)  // Amber
             };
 
-            float colW = (Width - 20f) / 4f;
-            float topY = 26f;
+            float colW = (Width - 20f * scale) / 4f;
+            float topY = 26f * scale;
 
             using (var hFont = new Font(Font.FontFamily, 7f, FontStyle.Bold))
             using (var vFont = new Font("Segoe UI", 12f, FontStyle.Bold))
@@ -158,20 +175,20 @@ namespace ZeroUI.WinForms.Industrial
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    float cx = 10f + i * colW;
+                    float cx = 10f * scale + i * colW;
                     g.DrawString(headers[i], hFont, hBrush, cx, topY);
 
                     using (var vBrush = new SolidBrush(colors[i]))
                     {
-                        g.DrawString(values[i], vFont, vBrush, cx, topY + 14f);
+                        g.DrawString(values[i], vFont, vBrush, cx, topY + 14f * scale);
                     }
                 }
             }
 
             // 4. Target Progress Bar at Bottom
-            float barY = Height - 14f;
-            float barH = 6f;
-            var barTrackRect = new RectangleF(10f, barY, Width - 20f, barH);
+            float barY = Height - 14f * scale;
+            float barH = 6f * scale;
+            var barTrackRect = new RectangleF(10f * scale, barY, Width - 20f * scale, barH);
             using (var trackBrush = new SolidBrush(isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(226, 232, 240)))
             {
                 g.FillRectangle(trackBrush, barTrackRect);

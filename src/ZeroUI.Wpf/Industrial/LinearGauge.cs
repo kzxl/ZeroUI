@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
 using ZeroUI.Core.Scada;
 using ZeroUI.Wpf.Theme;
@@ -14,7 +12,7 @@ namespace ZeroUI.Wpf.Industrial
     /// Features multi-zone scale thresholds (Normal, Warning, Critical), graduations with tick marks,
     /// inertial damping, and direct binding to SCADA telemetry tags via <see cref="IScadaBindable"/>.
     /// </summary>
-    public class LinearGauge : FrameworkElement, IScadaBindable
+    public partial class LinearGauge : FrameworkElement, IScadaBindable
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(
@@ -57,6 +55,20 @@ namespace ZeroUI.Wpf.Industrial
                 typeof(bool),
                 typeof(LinearGauge),
                 new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ValueFormatProperty =
+            DependencyProperty.Register(
+                nameof(ValueFormat),
+                typeof(string),
+                typeof(LinearGauge),
+                new FrameworkPropertyMetadata("0.#", FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty UseTabularReadoutProperty =
+            DependencyProperty.Register(
+                nameof(UseTabularReadout),
+                typeof(bool),
+                typeof(LinearGauge),
+                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         private double _indicatedValue = 65.0;
         private double _targetValue = 65.0;
@@ -103,6 +115,26 @@ namespace ZeroUI.Wpf.Industrial
         {
             get => (bool)GetValue(IsHorizontalProperty);
             set => SetValue(IsHorizontalProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the custom format string for the digital readout.
+        /// Defaults to "0.#". Callers can specify fixed-precision formats such as "0.0" or "0.00" to avoid jitter.
+        /// </summary>
+        public string ValueFormat
+        {
+            get => (string)GetValue(ValueFormatProperty);
+            set => SetValue(ValueFormatProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets whether to use tabular character slot pitch to eliminate horizontal jumping/jitter.
+        /// Defaults to true.
+        /// </summary>
+        public bool UseTabularReadout
+        {
+            get => (bool)GetValue(UseTabularReadoutProperty);
+            set => SetValue(UseTabularReadoutProperty, value);
         }
 
         public bool EnableDamping
@@ -200,111 +232,6 @@ namespace ZeroUI.Wpf.Industrial
                 _animationTimer?.Stop();
                 InvalidateVisual();
                 ValueChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        #if NETFRAMEWORK
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush);
-        }
-        #else
-        private static FormattedText CreateFormattedText(string text, Typeface typeface, double fontSize, Brush brush, double pixelsPerDip = 1.0)
-        {
-            return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
-        }
-        #endif
-
-        protected override void OnRender(DrawingContext dc)
-        {
-            base.OnRender(dc);
-
-            double w = ActualWidth;
-            double h = ActualHeight;
-            if (w <= 0 || h <= 0) return;
-
-            #if NETFRAMEWORK
-            double dpi = 1.0;
-            #else
-            double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-            #endif
-
-            // Background Card
-            dc.DrawRectangle(ZeroWpfTheme.BgCard, null, new Rect(0, 0, w, h));
-            dc.DrawRectangle(null, ZeroWpfTheme.BorderPen, new Rect(0.5, 0.5, w - 1, h - 1));
-
-            // Title
-            var titleFt = CreateFormattedText(Title, ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextSecondary, dpi);
-            dc.DrawText(titleFt, new Point(12, 10));
-
-            double range = Math.Max(1.0, Maximum - Minimum);
-            double clampedVal = Math.Max(Minimum, Math.Min(Maximum, _indicatedValue));
-            double ratio = (clampedVal - Minimum) / range;
-
-            // Pick fill brush based on threshold ranges or severity
-            GaugeSeverity sev = GaugeMath.EvaluateSeverity(clampedVal, _thresholds);
-            Brush fillBrush = sev switch
-            {
-                GaugeSeverity.Critical => ZeroWpfTheme.DangerAccent,
-                GaugeSeverity.Warning => ZeroWpfTheme.WarningAccent,
-                _ => ZeroWpfTheme.PrimaryAccent
-            };
-
-            if (IsHorizontal)
-            {
-                double trackX = 12;
-                double trackY = 32;
-                double trackW = Math.Max(10, w - 24);
-                double trackH = 14;
-
-                // Track
-                dc.DrawRoundedRectangle(ZeroWpfTheme.BgInput, null, new Rect(trackX, trackY, trackW, trackH), 4, 4);
-
-                // Fill
-                if (ratio > 0)
-                {
-                    dc.DrawRoundedRectangle(fillBrush, null, new Rect(trackX, trackY, trackW * ratio, trackH), 4, 4);
-                }
-
-                // Readout
-                var valFt = CreateFormattedText($"{clampedVal:0.#} {Unit}", ZeroWpfTheme.BoldTypeface, 12.0, ZeroWpfTheme.TextPrimary, dpi);
-                dc.DrawText(valFt, new Point(trackX, trackY + trackH + 6));
-            }
-            else
-            {
-                // Vertical Bar
-                double barW = 22;
-                double barX = 24;
-                double barTop = 32;
-                double barH = Math.Max(10, h - 68);
-
-                // Track
-                dc.DrawRoundedRectangle(ZeroWpfTheme.BgInput, null, new Rect(barX, barTop, barW, barH), 4, 4);
-
-                // Fill from bottom up
-                if (ratio > 0)
-                {
-                    double fillH = barH * ratio;
-                    dc.DrawRoundedRectangle(fillBrush, null, new Rect(barX, barTop + barH - fillH, barW, fillH), 4, 4);
-                }
-
-                // Ticks on the right
-                int ticks = 5;
-                for (int i = 0; i <= ticks; i++)
-                {
-                    double tRatio = (double)i / ticks;
-                    double ty = barTop + barH - tRatio * barH;
-                    double tVal = Minimum + tRatio * range;
-
-                    dc.DrawLine(ZeroWpfTheme.GridLinePen, new Point(barX + barW + 4, ty), new Point(barX + barW + 10, ty));
-
-                    var tFt = CreateFormattedText($"{tVal:0}", ZeroWpfTheme.RegularTypeface, 9.0, ZeroWpfTheme.TextMuted, dpi);
-                    dc.DrawText(tFt, new Point(barX + barW + 14, ty - tFt.Height / 2.0));
-                }
-
-                // Digital readout at bottom
-                var valFt = CreateFormattedText($"{clampedVal:0.#} {Unit}", ZeroWpfTheme.BoldTypeface, 12.0, ZeroWpfTheme.TextPrimary, dpi);
-                dc.DrawText(valFt, new Point(w / 2.0 - valFt.Width / 2.0, h - 26));
             }
         }
     }

@@ -1,58 +1,41 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
     /// <summary>
-    /// Industrial Linear Level & Pressure Gauge for SCADA / MES telemetry (Tank level, temperature, pressure, flow).
-    /// Features multi-zone scale thresholds (Normal, Warning, Critical), graduations with tick marks, and value badges.
+    /// Industrial Linear Level and Pressure Gauge for SCADA telemetry.
+    /// Features multi-zone scale thresholds (Normal, Warning, Critical), graduations with tick marks,
+    /// dynamic High-DPI Per-Monitor V2 scaling, and direct binding to SCADA telemetry tags via <see cref="IScadaBindable"/>.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Value")]
     [Description("Industrial Linear Level and Pressure Gauge for SCADA telemetry")]
     [ToolboxBitmap(typeof(ZeroIcons), "LinearGauge.bmp")]
-    public class LinearGauge : Control, IScadaBindable
+    public partial class LinearGauge : ControlBase, IScadaBindable
     {
         private float _value = 65f;
         private float _minimum = 0f;
         private float _maximum = 100f;
         private string _title = "Pressure";
         private string _unit = "Bar";
+        private string _valueFormat = "0.#";
+        private bool _useTabularReadout = true;
         private float _warningThreshold = 75f;
         private float _criticalThreshold = 90f;
         private string? _boundTagPath;
 
         public LinearGauge()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(200, 70);
             BackColor = Color.Transparent;
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
-        }
-
-        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-            }
-            base.Dispose(disposing);
         }
 
         [Category("Data")]
@@ -99,6 +82,24 @@ namespace ZeroUI.WinForms.Industrial
             set { _unit = value ?? ""; Invalidate(); }
         }
 
+        [Category("Appearance")]
+        [Description("Custom format string for the telemetry value. Defaults to '0.#'. Callers can specify fixed-precision formats such as '0.0' or '0.00'.")]
+        [DefaultValue("0.#")]
+        public string ValueFormat
+        {
+            get => _valueFormat;
+            set { _valueFormat = value ?? "0.#"; Invalidate(); }
+        }
+
+        [Category("Appearance")]
+        [Description("Enables tabular digit slot pitch to eliminate horizontal jumping/jitter.")]
+        [DefaultValue(true)]
+        public bool UseTabularReadout
+        {
+            get => _useTabularReadout;
+            set { _useTabularReadout = value; Invalidate(); }
+        }
+
         [Category("Thresholds")]
         [DefaultValue(75f)]
         public float WarningThreshold
@@ -115,9 +116,9 @@ namespace ZeroUI.WinForms.Industrial
             set { _criticalThreshold = value; Invalidate(); }
         }
 
-        [Category("ZeroUI - SCADA")]
-        [Description("Direct SCADA telemetry tag binding path.")]
-        [DefaultValue(null)]
+        #region IScadaBindable
+
+        [Category("SCADA")]
         public string? BoundTagPath
         {
             get => _boundTagPath;
@@ -128,93 +129,17 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (tag != null)
             {
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new Action(() => OnTagValueChanged(tag)));
+                    return;
+                }
+
                 Value = tag.GetValue<float>();
             }
         }
 
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            var g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-
-            var theme = ZeroTheme.Colors;
-            int w = Width;
-            int h = Height;
-
-            // 1. Header: Title + Current Value Readout
-            using var titleFont = new Font("Segoe UI", 9f, FontStyle.Bold);
-            using var titleBrush = new SolidBrush(theme.TextPrimary);
-            g.DrawString(_title, titleFont, titleBrush, 2, 2);
-
-            Color statusColor = (_value >= _criticalThreshold)
-                ? Color.FromArgb(239, 68, 68)   // Red
-                : (_value >= _warningThreshold)
-                    ? Color.FromArgb(245, 158, 11) // Amber
-                    : Color.FromArgb(16, 185, 129); // Green
-
-            string valText = $"{_value:F1} {_unit}";
-            using var valFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
-            using var valBrush = new SolidBrush(statusColor);
-            var valSize = g.MeasureString(valText, valFont);
-            g.DrawString(valText, valFont, valBrush, w - valSize.Width - 4, 2);
-
-            // 2. Main Gauge Bar Dimensions
-            int barY = 26;
-            int barH = 14;
-            int barW = w - 8;
-            int barX = 4;
-
-            // Track Background
-            var trackRect = new Rectangle(barX, barY, barW, barH);
-            using (var trackPath = CreateRoundedRectangle(trackRect, 4))
-            using (var trackBrush = new SolidBrush(theme.Border))
-            {
-                g.FillPath(trackBrush, trackPath);
-            }
-
-            // Fill Level
-            float range = _maximum - _minimum;
-            float ratio = range > 0 ? (_value - _minimum) / range : 0f;
-            int fillW = Math.Max(4, (int)(barW * ratio));
-
-            var fillRect = new Rectangle(barX, barY, fillW, barH);
-            using (var fillPath = CreateRoundedRectangle(fillRect, 4))
-            using (var fillBrush = new LinearGradientBrush(new Point(barX, barY), new Point(barX + barW, barY), Color.FromArgb(16, 185, 129), Color.FromArgb(239, 68, 68)))
-            {
-                g.FillPath(fillBrush, fillPath);
-            }
-
-            // Glass Sheen Highlight on Top Half
-            using (var sheenBrush = new SolidBrush(Color.FromArgb(50, Color.White)))
-            {
-                g.FillRectangle(sheenBrush, barX, barY, fillW, barH / 2);
-            }
-
-            // 3. Graduations & Scale Ticks
-            int tickY = barY + barH + 4;
-            using var tickPen = new Pen(theme.Border, 1f);
-            using var tickFont = new Font("Segoe UI", 7.5f);
-            using var tickBrush = new SolidBrush(theme.TextSecondary);
-
-            int tickSteps = 4;
-            for (int i = 0; i <= tickSteps; i++)
-            {
-                float stepRatio = (float)i / tickSteps;
-                int tx = barX + (int)(barW * stepRatio);
-                g.DrawLine(tickPen, tx, tickY, tx, tickY + 4);
-
-                float stepVal = _minimum + (range * stepRatio);
-                string stepStr = $"{stepVal:F0}";
-                var textSize = g.MeasureString(stepStr, tickFont);
-                float textX = Math.Max(0, tx - (textSize.Width / 2));
-                if (i == tickSteps) textX = Math.Min(w - textSize.Width, textX);
-                g.DrawString(stepStr, tickFont, tickBrush, textX, tickY + 6);
-            }
-        }
-
-        private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
-            ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+        #endregion
     }
 
     /// <summary>

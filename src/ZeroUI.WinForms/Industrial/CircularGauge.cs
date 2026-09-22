@@ -2,45 +2,38 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
 {
-
     /// <summary>
-    /// Modern anti-aliased circular gauge/meter for OEE, Yield rate, and equipment efficiency.
+    /// Modern anti-aliased circular gauge/meter for OEE, Yield rate, and equipment efficiency
+    /// with Per-Monitor V2 High-DPI scaling and configurable readout formatting.
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroGauge.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Value")]
     [Description("Circular gauge meter for OEE, Yield, and equipment efficiency")]
-    public class CircularGauge : Control
+    public class CircularGauge : ControlBase
     {
-
         private float _value = 85f; // 0 to 100
         private string _title = "OEE Rate";
         private string _suffix = "%";
+        private string _valueFormat = "0.0";
         private int _thickness = 8;
         private Color _gaugeColor = Color.FromArgb(16, 185, 129);  // Emerald
         private Color _trackColor = Color.FromArgb(229, 231, 235); // Gray track
 
         public CircularGauge()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(110, 110);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
-
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
         }
 
         [Category("Data")]
@@ -72,6 +65,15 @@ namespace ZeroUI.WinForms.Industrial
         }
 
         [Category("Appearance")]
+        [Description("Custom format string for the center readout value. Defaults to '0.0'.")]
+        [DefaultValue("0.0")]
+        public string ValueFormat
+        {
+            get => _valueFormat;
+            set { _valueFormat = value ?? "0.0"; Invalidate(); }
+        }
+
+        [Category("Appearance")]
         [DefaultValue(8)]
         public int Thickness
         {
@@ -93,26 +95,48 @@ namespace ZeroUI.WinForms.Industrial
             set { _trackColor = value; Invalidate(); }
         }
 
+        private string FormatValue(float val)
+        {
+            string fmt = _valueFormat;
+            if (string.IsNullOrWhiteSpace(fmt)) return val.ToString("0.0", CultureInfo.InvariantCulture) + _suffix;
+
+            try
+            {
+                if (fmt.Contains("{0"))
+                {
+                    return string.Format(CultureInfo.InvariantCulture, fmt, val) + _suffix;
+                }
+                return val.ToString(fmt, CultureInfo.InvariantCulture) + _suffix;
+            }
+            catch
+            {
+                return val.ToString("0.0", CultureInfo.InvariantCulture) + _suffix;
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
+            base.OnPaint(e);
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            int pad = _thickness + 2;
-            int size = Math.Min(Width, Height) - (pad * 2);
+            float scale = DpiScale;
+            float effThickness = Math.Max(2f, _thickness * scale);
+            float pad = effThickness + 2f * scale;
+            float size = Math.Min(Width, Height) - (pad * 2f);
             if (size <= 0) return;
 
-            int x = (Width - size) / 2;
-            int y = (Height - size) / 2 - 4;
-            Rectangle arcRect = new Rectangle(x, y, size, size);
+            float x = (Width - size) / 2f;
+            float y = (Height - size) / 2f - (4f * scale);
+            var arcRect = new RectangleF(x, y, size, size);
 
-            // 1. Draw Background Track Ring (240 degrees arch or full 360)
+            // 1. Draw Background Track Ring (270 degrees arch)
             float startAngle = 135f;
             float sweepLength = 270f;
-            Color effTrackColor = _trackColor != Color.FromArgb(229, 231, 235) ? _trackColor : ZeroTheme.Colors.Border;
+            Color effTrackColor = _trackColor != Color.FromArgb(229, 231, 235) ? _trackColor : CurrentPalette.Border;
 
-            using (var trackPen = new Pen(effTrackColor, _thickness))
+            using (var trackPen = new Pen(effTrackColor, effThickness))
             {
                 trackPen.StartCap = LineCap.Round;
                 trackPen.EndCap = LineCap.Round;
@@ -123,24 +147,24 @@ namespace ZeroUI.WinForms.Industrial
             float activeSweep = (_value / 100f) * sweepLength;
             if (activeSweep > 0.5f)
             {
-                using var gaugePen = new Pen(_gaugeColor, _thickness);
+                using var gaugePen = new Pen(_gaugeColor, effThickness);
                 gaugePen.StartCap = LineCap.Round;
                 gaugePen.EndCap = LineCap.Round;
                 g.DrawArc(gaugePen, arcRect, startAngle, activeSweep);
             }
 
             // 3. Draw Center Value & Title
-            string valText = $"{_value:F1}{_suffix}";
-            using var valFont = new Font("Segoe UI", 12.5f, FontStyle.Bold);
+            string valText = FormatValue(_value);
+            using var valFont = new Font("Segoe UI", 12.5f * scale, FontStyle.Bold);
             Size valSize = TextRenderer.MeasureText(g, valText, valFont);
-            Rectangle valRect = new Rectangle(0, y + (size / 2) - valSize.Height / 2 - 4, Width, valSize.Height);
-            TextRenderer.DrawText(g, valText, valFont, valRect, ZeroTheme.Colors.TextPrimary, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            Rectangle valRect = new Rectangle(0, (int)(y + (size / 2f) - valSize.Height / 2f - (4f * scale)), Width, valSize.Height);
+            TextRenderer.DrawText(g, valText, valFont, valRect, CurrentPalette.TextPrimary, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
             if (!string.IsNullOrEmpty(_title))
             {
-                using var titleFont = new Font("Segoe UI", 7.5f, FontStyle.Regular);
-                Rectangle titleRect = new Rectangle(0, valRect.Bottom - 2, Width, 16);
-                TextRenderer.DrawText(g, _title, titleFont, titleRect, ZeroTheme.Colors.TextSecondary, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
+                using var titleFont = new Font("Segoe UI", 7.5f * scale, FontStyle.Regular);
+                Rectangle titleRect = new Rectangle(0, valRect.Bottom - (int)(2f * scale), Width, (int)(16f * scale));
+                TextRenderer.DrawText(g, _title, titleFont, titleRect, CurrentPalette.TextSecondary, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
             }
         }
     }

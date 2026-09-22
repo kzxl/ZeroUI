@@ -1,10 +1,12 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -12,13 +14,13 @@ namespace ZeroUI.WinForms.Industrial
 {
     /// <summary>
     /// High-contrast industrial digital telemetry readout panel with configurable engineering units,
-    /// 4-tier alarm threshold color transitions (LowLow, Low, High, HighHigh), and direct SCADA tag binding.
+    /// 4-tier alarm threshold color transitions (LowLow, Low, High, HighHigh), dynamic High-DPI scaling, and direct SCADA tag binding.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial digital telemetry readout indicator with alarm threshold coloring")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDigitalIndicator.bmp")]
-    public class DigitalIndicator : Control, IScadaBindable
+    public class DigitalIndicator : ControlBase, IScadaBindable
     {
         private double _value = 48.7;
         private string _unit = "bar";
@@ -99,51 +101,54 @@ namespace ZeroUI.WinForms.Industrial
 
         public DigitalIndicator()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
-            Size = new Size(130, 65);
+            Size = new Size(130, 56);
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
         }
 
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            if (!ZeroDesignHelper.IsInDesignMode(this))
-            {
-                ZeroTagEngine.RegisterBindable(this);
-            }
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            base.OnHandleDestroyed(e);
-            ZeroTagEngine.UnregisterBindable(this);
-        }
-
         public void OnTagValueChanged(IScadaTag tag)
         {
-            if (tag == null) return;
-            if (double.TryParse(tag.Value?.ToString(), out var v))
+            if (tag != null)
             {
-                Value = v;
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new Action(() => OnTagValueChanged(tag)));
+                    return;
+                }
+                Value = tag.GetValue<double>();
             }
         }
 
         protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _isHovered = true; Invalidate(); }
         protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _isHovered = false; Invalidate(); }
 
+        private string FormatValue(double val)
+        {
+            string fmt = _format;
+            if (string.IsNullOrWhiteSpace(fmt)) return val.ToString("0.0", CultureInfo.InvariantCulture);
+
+            try
+            {
+                if (fmt.Contains("{0"))
+                {
+                    return string.Format(CultureInfo.InvariantCulture, fmt, val);
+                }
+                return val.ToString(fmt, CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+                return val.ToString("0.0", CultureInfo.InvariantCulture);
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
+            base.OnPaint(e);
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
+            float scale = DpiScale;
             bool isDark = ZeroTheme.IsDark;
             Color panelBg = isDark ? Color.FromArgb(15, 23, 42) : Color.FromArgb(248, 250, 252);
             Color borderColor = isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(203, 213, 225);
@@ -172,9 +177,9 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 1. Industrial Beveled Panel
-            var panelRect = new RectangleF(1f, 1f, Width - 3f, Height - 3f);
+            var panelRect = new RectangleF(1f * scale, 1f * scale, Width - 3f * scale, Height - 3f * scale);
             using (var bgBrush = new SolidBrush(panelBg))
-            using (var borderPen = new Pen(borderColor, _isHovered ? 2f : 1.2f))
+            using (var borderPen = new Pen(borderColor, _isHovered ? 2f * scale : 1.2f * scale))
             {
                 g.FillRectangle(bgBrush, panelRect);
                 g.DrawRectangle(borderPen, panelRect.X, panelRect.Y, panelRect.Width, panelRect.Height);
@@ -184,22 +189,22 @@ namespace ZeroUI.WinForms.Industrial
             using (var labelFont = new Font(Font.FontFamily, 7.5f, FontStyle.Bold))
             using (var labelBrush = new SolidBrush(labelColor))
             {
-                g.DrawString(_tagLabel, labelFont, labelBrush, 6f, 5f);
+                g.DrawString(_tagLabel, labelFont, labelBrush, 6f * scale, 5f * scale);
             }
 
             // 3. Digital Readout Value (Center-Left large numbers)
-            string valText = _value.ToString(_format);
+            string valText = FormatValue(_value);
             using (var numFont = new Font("Segoe UI", 16f, FontStyle.Bold))
             using (var numBrush = new SolidBrush(valueColor))
             {
-                g.DrawString(valText, numFont, numBrush, 5f, 22f);
+                g.DrawString(valText, numFont, numBrush, 5f * scale, 20f * scale);
 
                 // 4. Engineering Unit (Placed next to value)
                 var valSize = g.MeasureString(valText, numFont);
                 using (var unitFont = new Font(Font.FontFamily, 8.5f, FontStyle.Regular))
                 using (var unitBrush = new SolidBrush(labelColor))
                 {
-                    g.DrawString(_unit, unitFont, unitBrush, 7f + valSize.Width, 31f);
+                    g.DrawString(_unit, unitFont, unitBrush, (7f * scale) + valSize.Width, 29f * scale);
                 }
             }
         }
