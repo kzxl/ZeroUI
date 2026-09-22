@@ -62,7 +62,7 @@ namespace ZeroUI.WinForms.Navigation
     [DefaultProperty("SelectedIndex")]
     [Description("Modern flat TabControl container with Horizontal/Vertical orientations, Underline/Pill styles and notification badges")]
     [ToolboxBitmap(typeof(ZeroIcons), "TabControlEx.bmp")]
-    public class TabControlEx : Control
+    public class TabControlEx : Control, IZeroDpiScalable
     {
         private readonly List<TabPageEx> _tabPages = new List<TabPageEx>();
         private readonly Panel _contentContainer;
@@ -70,6 +70,9 @@ namespace ZeroUI.WinForms.Navigation
         private int _selectedIndex = -1;
         private int _hoveredIndex = -1;
         private int _hoveredCloseIndex = -1;
+        private int _baseTabHeight = 42;
+        private int _baseTabWidth = 260;
+        private float _currentDpiScale = 1.0f;
         private int _tabHeight = 42;
         private int _tabWidth = 260;
         private TabStyle _tabStyle = TabStyle.Underline;
@@ -78,6 +81,47 @@ namespace ZeroUI.WinForms.Navigation
 
         public event EventHandler? SelectedIndexChanged;
         public event EventHandler<TabPageEx>? TabClosed;
+
+        /// <summary>
+        /// Gets the active High-DPI Per-Monitor V2 scale factor applied to this TabControl.
+        /// </summary>
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        /// <summary>
+        /// Applies High-DPI Per-Monitor V2 scaling to TabControl metrics (TabWidth, TabHeight, and container layout).
+        /// </summary>
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            _tabHeight = Math.Max(24, (int)Math.Round(_baseTabHeight * scaleFactor));
+            _tabWidth = Math.Max(40, (int)Math.Round(_baseTabWidth * scaleFactor));
+
+            UpdateContainerBounds();
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            float effectiveFactor = factor.Height > 0f ? factor.Height : factor.Width;
+            if (effectiveFactor > 0f && Math.Abs(effectiveFactor - 1.0f) > 0.001f)
+            {
+                ApplyDpiScaling(_currentDpiScale * effectiveFactor);
+            }
+        }
 
         public TabControlEx()
         {
@@ -152,8 +196,9 @@ namespace ZeroUI.WinForms.Navigation
             get => _tabWidth;
             set
             {
-                if (_tabWidth != value && value >= 60)
+                if (_tabWidth != value && value >= 30)
                 {
+                    _baseTabWidth = (int)Math.Round(value / _currentDpiScale);
                     _tabWidth = value;
                     if (_orientation == TabOrientation.Vertical)
                     {
@@ -171,8 +216,9 @@ namespace ZeroUI.WinForms.Navigation
             get => _tabHeight;
             set
             {
-                if (_tabHeight != value && value >= 24)
+                if (_tabHeight != value && value >= 16)
                 {
+                    _baseTabHeight = (int)Math.Round(value / _currentDpiScale);
                     _tabHeight = value;
                     if (_orientation == TabOrientation.Horizontal)
                     {

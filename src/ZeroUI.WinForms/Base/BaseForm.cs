@@ -29,6 +29,20 @@ namespace ZeroUI.WinForms.Base
             ZeroTheme.ThemeChanged += BaseForm_ThemeChanged;
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            if (!DesignMode)
+            {
+                float factor = ZeroDpi.GetScaleFactor(this);
+                if (Math.Abs(factor - 1.0f) > 0.001f)
+                {
+                    ZeroDpi.ScaleControlHierarchy(this, factor);
+                }
+            }
+        }
+
         private const int WM_DPICHANGED = 0x02E0;
 
         protected override void WndProc(ref Message m)
@@ -37,6 +51,14 @@ namespace ZeroUI.WinForms.Base
 
             if (m.Msg == WM_DPICHANGED)
             {
+                var suggested = ZeroDpi.GetSuggestedBounds(m.LParam);
+                if (!suggested.IsEmpty)
+                {
+                    Bounds = suggested;
+                }
+
+                float factor = ZeroDpi.GetScaleFactor(this);
+                ZeroDpi.ScaleControlHierarchy(this, factor);
                 OnDpiChangedCore();
             }
         }

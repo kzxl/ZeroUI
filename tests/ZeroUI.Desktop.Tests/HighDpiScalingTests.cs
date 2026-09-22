@@ -1,11 +1,16 @@
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Xunit;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Containers;
 using ZeroUI.WinForms.DataGrid;
+using ZeroUI.WinForms.Industrial;
+using ZeroUI.WinForms.Navigation;
 using ZeroUI.WinForms.Theme;
+using Card = ZeroUI.WinForms.Containers.Card;
 
 namespace ZeroUI.Desktop.Tests
 {
@@ -72,6 +77,140 @@ namespace ZeroUI.Desktop.Tests
                 // Loose density: 36 base * 2.0 = 72
                 grid.Density = GridDensity.Loose;
                 Assert.Equal(72, grid.RowHeight);
+            });
+        }
+
+        [Fact]
+        public void TabControlEx_ApplyDpiScaling_ScalesTabDimensions()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var tab = new TabControlEx
+                {
+                    Orientation = TabOrientation.Vertical,
+                    TabWidth = 140,
+                    TabHeight = 42
+                };
+
+                tab.ApplyDpiScaling(2.0f);
+
+                Assert.Equal(280, tab.TabWidth);
+                Assert.Equal(84, tab.TabHeight);
+                Assert.Equal(2.0f, tab.DpiScale);
+            });
+        }
+
+        [Fact]
+        public void ToolbarControl_ApplyDpiScaling_ScalesHeightAndItemMetrics()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var toolbar = new ToolbarControl
+                {
+                    Height = 44,
+                    ItemHeight = 32
+                };
+
+                toolbar.ApplyDpiScaling(2.0f);
+
+                Assert.Equal(88, toolbar.Height);
+                Assert.Equal(64, toolbar.ItemHeight);
+                Assert.Equal(2.0f, toolbar.DpiScale);
+            });
+        }
+
+        [Fact]
+        public void GridSearchBar_ApplyDpiScaling_ScalesHeightAndControls()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var searchBar = new GridSearchBar();
+                Assert.Equal(48, searchBar.Height);
+
+                searchBar.ApplyDpiScaling(2.0f);
+
+                Assert.Equal(96, searchBar.Height);
+                Assert.Equal(2.0f, searchBar.DpiScale);
+            });
+        }
+
+        [Fact]
+        public void Card_ApplyDpiScaling_ScalesHeaderHeightAndBorderRadiusAndPadding()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var card = new Card();
+                card.ApplyDpiScaling(2.0f);
+
+                Assert.Equal(24, card.Padding.Left);
+                Assert.Equal(24, card.Padding.Top);
+                Assert.Equal(2.0f, card.DpiScale);
+            });
+        }
+
+        [Fact]
+        public void CommandButton_ApplyDpiScaling_ScalesSizeAndFont()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var btn = new CommandButton();
+                Assert.Equal(160, btn.Width);
+                Assert.Equal(48, btn.Height);
+
+                btn.ApplyDpiScaling(2.0f);
+
+                Assert.Equal(320, btn.Width);
+                Assert.Equal(96, btn.Height);
+                Assert.Equal(19f, btn.Font.Size); // 9.5 * 2.0 = 19
+                Assert.Equal(2.0f, btn.DpiScale);
+            });
+        }
+
+        [Fact]
+        public void SetpointInput_ApplyDpiScaling_ScalesDimensions()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var sp = new SetpointInput();
+                Assert.Equal(150, sp.Width);
+                Assert.Equal(60, sp.Height);
+
+                sp.ApplyDpiScaling(2.0f);
+
+                Assert.Equal(300, sp.Width);
+                Assert.Equal(120, sp.Height);
+                Assert.Equal(2.0f, sp.DpiScale);
+            });
+        }
+
+        [Fact]
+        public void ScaleControlHierarchy_ScalesNestedControlsRecursively()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var form = new BaseForm();
+                var card = new Card();
+                var tab = new TabControlEx { Orientation = TabOrientation.Vertical, TabWidth = 140, TabHeight = 42 };
+                var toolbar = new ToolbarControl { Height = 44, ItemHeight = 32 };
+                var cmdBtn = new CommandButton();
+                var sp = new SetpointInput();
+
+                card.Controls.Add(cmdBtn);
+                card.Controls.Add(sp);
+                form.Controls.Add(card);
+                form.Controls.Add(tab);
+                form.Controls.Add(toolbar);
+
+                ZeroDpi.ScaleControlHierarchy(form, 2.0f);
+
+                Assert.Equal(280, tab.TabWidth);
+                Assert.Equal(84, tab.TabHeight);
+                Assert.Equal(88, toolbar.Height);
+                Assert.Equal(64, toolbar.ItemHeight);
+                Assert.Equal(320, cmdBtn.Width);
+                Assert.Equal(96, cmdBtn.Height);
+                Assert.Equal(300, sp.Width);
+                Assert.Equal(120, sp.Height);
             });
         }
 

@@ -16,14 +16,87 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultEvent("ExportClicked")]
     [Description("Integrated search bar and toolbar for GridControl")]
-    public class GridSearchBar : Panel
+    public class GridSearchBar : Panel, IZeroDpiScalable
     {
-
         private GridControl? _grid;
         private readonly SearchControl _searchBox;
         private readonly Label _lblMatchCount;
         private readonly SimpleButton _btnDensity;
         private readonly SimpleButton _btnExport;
+
+        private int _baseHeight = 48;
+        private int _baseSearchWidth = 320;
+        private float _currentDpiScale = 1.0f;
+
+        /// <summary>
+        /// Gets the active High-DPI Per-Monitor V2 scale factor applied to this SearchBar.
+        /// </summary>
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        /// <summary>
+        /// Applies High-DPI Per-Monitor V2 scaling to GridSearchBar metrics (Height, SearchBox width, and button bounds).
+        /// </summary>
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            Height = Math.Max(32, (int)Math.Round(_baseHeight * scaleFactor));
+            Padding = new Padding(
+                (int)Math.Round(12 * scaleFactor),
+                (int)Math.Round(7 * scaleFactor),
+                (int)Math.Round(12 * scaleFactor),
+                (int)Math.Round(7 * scaleFactor));
+
+            if (_searchBox != null)
+            {
+                _searchBox.Location = new Point((int)Math.Round(12 * scaleFactor), (int)Math.Round(7 * scaleFactor));
+                _searchBox.Width = (int)Math.Round(_baseSearchWidth * scaleFactor);
+                _searchBox.ApplyDpiScaling(scaleFactor);
+            }
+
+            if (_lblMatchCount != null)
+            {
+                _lblMatchCount.Location = new Point((int)Math.Round(345 * scaleFactor), (int)Math.Round(14 * scaleFactor));
+            }
+
+            if (_btnDensity != null)
+            {
+                _btnDensity.Size = new Size((int)Math.Round(135 * scaleFactor), (int)Math.Round(32 * scaleFactor));
+                _btnDensity.Location = new Point(Width - (int)Math.Round(270 * scaleFactor), (int)Math.Round(8 * scaleFactor));
+                _btnDensity.ApplyDpiScaling(scaleFactor);
+            }
+
+            if (_btnExport != null)
+            {
+                _btnExport.Size = new Size((int)Math.Round(110 * scaleFactor), (int)Math.Round(32 * scaleFactor));
+                _btnExport.Location = new Point(Width - (int)Math.Round(125 * scaleFactor), (int)Math.Round(8 * scaleFactor));
+                _btnExport.ApplyDpiScaling(scaleFactor);
+            }
+
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            float effectiveFactor = factor.Height > 0f ? factor.Height : factor.Width;
+            if (effectiveFactor > 0f && Math.Abs(effectiveFactor - 1.0f) > 0.001f)
+            {
+                ApplyDpiScaling(_currentDpiScale * effectiveFactor);
+            }
+        }
 
         public event EventHandler? ExportClicked;
 

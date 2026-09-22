@@ -1,12 +1,13 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -32,7 +33,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Two-stage high-reliability SCADA command button with interlocks and hold confirmation")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroCommandButton.bmp")]
-    public class CommandButton : Control, IAnimationFrameListener
+    public class CommandButton : ControlBase, IAnimationFrameListener
     {
         private CommandButtonAction _action = CommandButtonAction.Start;
         private string _commandText = "START";
@@ -41,6 +42,11 @@ namespace ZeroUI.WinForms.Industrial
         private bool _isInterlocked = false;
         private string _interlockReason = "";
         private string? _targetTagPath;
+
+        private int _baseWidth = 160;
+        private int _baseHeight = 48;
+        private float _baseFontSize = 9.5f;
+        private float _baseCornerRadius = 6f;
 
         private bool _isHovered = false;
         private bool _isPressed = false;
@@ -238,6 +244,15 @@ namespace ZeroUI.WinForms.Industrial
         protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _isHovered = true; Invalidate(); }
         protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _isHovered = false; _isPressed = false; _heldElapsedSeconds = 0f; Invalidate(); }
 
+        protected override void OnApplyDpiScaling(float scaleFactor, float factorRatio)
+        {
+            base.OnApplyDpiScaling(scaleFactor, factorRatio);
+            Width = (int)Math.Round(_baseWidth * scaleFactor);
+            Height = (int)Math.Round(_baseHeight * scaleFactor);
+            Font = new Font(Font.FontFamily, _baseFontSize * scaleFactor, Font.Style);
+            Invalidate();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
@@ -274,10 +289,13 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 1. Button Rounded Background
-            var rect = new RectangleF(2f, 2f, Width - 4f, Height - 4f);
-            using (var path = CreateRoundedRectanglePath(rect, 6f))
+            float radius = _baseCornerRadius * DpiScale;
+            float penWidth = (_isHovered && !_isInterlocked ? 2f : 1.2f) * DpiScale;
+            float pad = penWidth;
+            var rect = new RectangleF(pad, pad, Width - pad * 2f, Height - pad * 2f);
+            using (var path = CreateRoundedRectanglePath(rect, radius))
             using (var brush = new SolidBrush(btnBg))
-            using (var pen = new Pen(btnBorder, _isHovered && !_isInterlocked ? 2f : 1.2f))
+            using (var pen = new Pen(btnBorder, penWidth))
             {
                 g.FillPath(brush, path);
                 g.DrawPath(pen, path);

@@ -131,23 +131,39 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
-        protected override void OnResize(EventArgs e)
+        private int _baseHeight = 34;
+
+        protected override void OnApplyDpiScaling(float scaleFactor, float factorRatio)
         {
-            base.OnResize(e);
+            base.OnApplyDpiScaling(scaleFactor, factorRatio);
+            Height = Math.Max(24, (int)Math.Round(_baseHeight * scaleFactor));
+            UpdateTextBoxBounds();
+        }
+
+        private void UpdateTextBoxBounds()
+        {
             if (_textBox != null)
             {
-                _textBox.Location = new Point(10, (Height - _textBox.PreferredHeight) / 2);
-                _textBox.Width = Width - 36;
+                int leftPad = (int)Math.Round(10 * DpiScale);
+                int clearBtnW = (int)Math.Round(28 * DpiScale);
+                _textBox.Location = new Point(leftPad, (Height - _textBox.PreferredHeight) / 2);
+                _textBox.Width = Math.Max(10, Width - leftPad - clearBtnW);
             }
         }
 
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+            UpdateTextBoxBounds();
+        }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
 
+            int clearBtnW = (int)Math.Round(28 * DpiScale);
             // Click Clear Button
-            if (!string.IsNullOrEmpty(_textBox.Text) && e.X >= Width - 28 && e.X <= Width - 8)
+            if (!string.IsNullOrEmpty(_textBox.Text) && e.X >= Width - clearBtnW && e.X <= Width - (int)Math.Round(6 * DpiScale))
             {
                 _textBox.Clear();
                 _textBox.Focus();

@@ -15,18 +15,20 @@ namespace ZeroUI.WinForms.Containers
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Title")]
     [Description("Modern container card with rounded corners, optional Step Badge, and Title")]
-    public class Card : Panel
+    public class Card : Panel, IZeroDpiScalable
     {
-
         private int? _stepNumber = 1;
         private Color _badgeColor = Color.FromArgb(79, 70, 229); // Indigo Accent
         private string _title = "Card Title";
         private string? _subtitle;
         private string? _actionText;
         private Color _actionColor = Color.FromArgb(22, 119, 255);
+        private int _baseBorderRadius = 8;
         private int _borderRadius = 8;
         private Color _borderColor = Color.FromArgb(229, 231, 235);
+        private int _baseHeaderHeight = 44;
         private int _headerHeight = 44;
+        private float _currentDpiScale = 1.0f;
 
         private readonly Panel _contentPanel;
         private Rectangle _actionRect;
@@ -37,6 +39,54 @@ namespace ZeroUI.WinForms.Containers
         private int _lastCalculatedWidth = -1;
 
         public event EventHandler? ActionClicked;
+
+        /// <summary>
+        /// Gets the active High-DPI Per-Monitor V2 scale factor applied to this Card.
+        /// </summary>
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        /// <summary>
+        /// Applies High-DPI Per-Monitor V2 scaling to Card metrics (HeaderHeight, BorderRadius, Padding, and ContentPanel).
+        /// </summary>
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            _headerHeight = (int)Math.Round(_baseHeaderHeight * scaleFactor);
+            _borderRadius = (int)Math.Round(_baseBorderRadius * scaleFactor);
+            Padding = new Padding((int)Math.Round(12 * scaleFactor));
+
+            UpdateContentLayout();
+            UpdateRegion();
+            if (_autoFitContent) AdjustHeightToContent();
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+            if (_autoFitContent)
+            {
+                AdjustHeightToContent();
+            }
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            float effectiveFactor = factor.Height > 0f ? factor.Height : factor.Width;
+            if (effectiveFactor > 0f && Math.Abs(effectiveFactor - 1.0f) > 0.001f)
+            {
+                ApplyDpiScaling(_currentDpiScale * effectiveFactor);
+            }
+        }
 
         public Card()
         {
@@ -127,7 +177,8 @@ namespace ZeroUI.WinForms.Containers
             set
             {
                 _subtitle = value;
-                _headerHeight = string.IsNullOrEmpty(value) ? 44 : 58;
+                _baseHeaderHeight = string.IsNullOrEmpty(value) ? 44 : 58;
+                _headerHeight = (int)Math.Round(_baseHeaderHeight * _currentDpiScale);
                 UpdateContentLayout();
                 if (_autoFitContent) AdjustHeightToContent();
                 Invalidate();
@@ -155,6 +206,7 @@ namespace ZeroUI.WinForms.Containers
             get => _borderRadius;
             set
             {
+                _baseBorderRadius = (int)Math.Round(value / _currentDpiScale);
                 _borderRadius = Math.Max(0, value);
                 UpdateRegion();
                 Invalidate();
@@ -273,14 +325,6 @@ namespace ZeroUI.WinForms.Containers
             AdjustHeightToContent();
         }
 
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            if (_autoFitContent)
-            {
-                AdjustHeightToContent();
-            }
-        }
 
         protected override void OnResize(EventArgs eventargs)
         {
@@ -313,9 +357,10 @@ namespace ZeroUI.WinForms.Containers
         {
             if (_contentPanel != null)
             {
-                int bottomPadding = string.IsNullOrEmpty(_actionText) ? 12 : 30;
-                _contentPanel.Location = new Point(12, _headerHeight);
-                _contentPanel.Size = new Size(Math.Max(10, Width - 24), Math.Max(10, Height - _headerHeight - bottomPadding));
+                int sidePad = (int)Math.Round(12 * _currentDpiScale);
+                int bottomPadding = (int)Math.Round((string.IsNullOrEmpty(_actionText) ? 12 : 30) * _currentDpiScale);
+                _contentPanel.Location = new Point(sidePad, _headerHeight);
+                _contentPanel.Size = new Size(Math.Max(10, Width - (sidePad * 2)), Math.Max(10, Height - _headerHeight - bottomPadding));
             }
         }
 
@@ -482,15 +527,15 @@ namespace ZeroUI.WinForms.Containers
             }
 
             // 2. Draw Header Area
-            int currentX = 14;
-            int headerCenterY = string.IsNullOrEmpty(_subtitle) ? _headerHeight / 2 : 20;
+            int currentX = (int)Math.Round(14 * _currentDpiScale);
+            int headerCenterY = string.IsNullOrEmpty(_subtitle) ? _headerHeight / 2 : (int)Math.Round(20 * _currentDpiScale);
 
             // Draw Step Badge
             if (_stepNumber.HasValue)
             {
-                int badgeSize = 22;
+                int badgeSize = (int)Math.Round(22 * _currentDpiScale);
                 Rectangle badgeRect = new Rectangle(currentX, headerCenterY - (badgeSize / 2), badgeSize, badgeSize);
-                using (var badgePath = CreateRoundedRectangle(badgeRect, 4))
+                using (var badgePath = CreateRoundedRectangle(badgeRect, (int)Math.Round(4 * _currentDpiScale)))
                 {
                     using var badgeBrush = new SolidBrush(_badgeColor);
                     g.FillPath(badgeBrush, badgePath);
@@ -499,25 +544,25 @@ namespace ZeroUI.WinForms.Containers
                 TextRenderer.DrawText(
                     g,
                     _stepNumber.Value.ToString(),
-                    new Font("Segoe UI", 9f, FontStyle.Bold),
+                    new Font("Segoe UI", 9f * _currentDpiScale, FontStyle.Bold),
                     badgeRect,
                     Color.White,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
-                currentX += badgeSize + 8;
+                currentX += badgeSize + (int)Math.Round(8 * _currentDpiScale);
             }
 
             // Draw Title
-            using var titleFont = new Font("Segoe UI", 10.5f, FontStyle.Bold);
+            using var titleFont = new Font("Segoe UI", 10.5f * _currentDpiScale, FontStyle.Bold);
             Size titleSize = TextRenderer.MeasureText(g, _title, titleFont);
-            Rectangle titleRect = new Rectangle(currentX, headerCenterY - (titleSize.Height / 2), Width - currentX - 16, titleSize.Height);
+            Rectangle titleRect = new Rectangle(currentX, headerCenterY - (titleSize.Height / 2), Math.Max(10, Width - currentX - (int)Math.Round(16 * _currentDpiScale)), titleSize.Height);
             TextRenderer.DrawText(g, _title, titleFont, titleRect, ZeroTheme.Colors.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
 
             // Draw Subtitle (if available)
             if (!string.IsNullOrEmpty(_subtitle))
             {
-                using var subFont = new Font("Segoe UI", 8.5f, FontStyle.Regular);
-                Rectangle subRect = new Rectangle(currentX, titleRect.Bottom + 2, Width - currentX - 16, 20);
+                using var subFont = new Font("Segoe UI", 8.5f * _currentDpiScale, FontStyle.Regular);
+                Rectangle subRect = new Rectangle(currentX, titleRect.Bottom + (int)Math.Round(2 * _currentDpiScale), Math.Max(10, Width - currentX - (int)Math.Round(16 * _currentDpiScale)), (int)Math.Round(20 * _currentDpiScale));
                 TextRenderer.DrawText(g, _subtitle, subFont, subRect, ZeroTheme.Colors.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 

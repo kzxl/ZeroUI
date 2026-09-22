@@ -80,6 +80,8 @@ namespace ZeroUI.WinForms.Editors
             set { _style = value; Invalidate(); }
         }
 
+        private int _baseBorderRadius = 6;
+
         [Category("Appearance")]
         [DefaultValue(6)]
         public int BorderRadius
@@ -87,10 +89,18 @@ namespace ZeroUI.WinForms.Editors
             get => _borderRadius;
             set
             {
+                _baseBorderRadius = (int)Math.Round(value / DpiScale);
                 _borderRadius = Math.Max(0, value);
                 UpdateRegion();
                 Invalidate();
             }
+        }
+
+        protected override void OnApplyDpiScaling(float scaleFactor, float factorRatio)
+        {
+            base.OnApplyDpiScaling(scaleFactor, factorRatio);
+            _borderRadius = Math.Max(0, (int)Math.Round(_baseBorderRadius * scaleFactor));
+            UpdateRegion();
         }
 
         [Category("Appearance")]

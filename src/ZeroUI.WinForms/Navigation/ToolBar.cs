@@ -102,15 +102,56 @@ namespace ZeroUI.WinForms.Navigation
     [Category("ZeroUI - Overlays")]
     [Description("Flat enterprise action toolbar with buttons, dividers, and elastic spacers")]
     [ToolboxBitmap(typeof(ZeroIcons), "ToolbarControl.bmp")]
-    public class ToolbarControl : Control
+    public class ToolbarControl : Control, IZeroDpiScalable
     {
-
         private readonly List<ToolbarItem> _items = new List<ToolbarItem>();
         private Color _borderColor = Color.FromArgb(229, 231, 235);
+        private int _baseHeight = 44;
+        private int _baseItemHeight = 32;
+        private float _currentDpiScale = 1.0f;
         private int _itemHeight = 32;
         private ToolbarItem? _hoveredItem;
         private ToolbarItem? _pressedItem;
         private readonly ToolTip _toolTip = new ToolTip();
+
+        /// <summary>
+        /// Gets the active High-DPI Per-Monitor V2 scale factor applied to this Toolbar.
+        /// </summary>
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        /// <summary>
+        /// Applies High-DPI Per-Monitor V2 scaling to Toolbar metrics (Height, ItemHeight, and layout).
+        /// </summary>
+        public void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+
+            Height = Math.Max(28, (int)Math.Round(_baseHeight * scaleFactor));
+            _itemHeight = Math.Max(20, (int)Math.Round(_baseItemHeight * scaleFactor));
+            Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+            float effectiveFactor = factor.Height > 0f ? factor.Height : factor.Width;
+            if (effectiveFactor > 0f && Math.Abs(effectiveFactor - 1.0f) > 0.001f)
+            {
+                ApplyDpiScaling(_currentDpiScale * effectiveFactor);
+            }
+        }
 
         public ToolbarControl()
         {
@@ -152,7 +193,12 @@ namespace ZeroUI.WinForms.Navigation
         public int ItemHeight
         {
             get => _itemHeight;
-            set { _itemHeight = Math.Max(24, value); Invalidate(); }
+            set
+            {
+                _baseItemHeight = (int)Math.Round(value / _currentDpiScale);
+                _itemHeight = Math.Max(20, value);
+                Invalidate();
+            }
         }
 
         [Category("Appearance")]

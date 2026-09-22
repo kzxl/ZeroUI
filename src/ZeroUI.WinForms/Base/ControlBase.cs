@@ -13,13 +13,14 @@ namespace ZeroUI.WinForms.Base
     /// skin lifecycle synchronization with local override capabilities.
     /// </summary>
     [ToolboxItem(false)]
-    public abstract class ControlBase : Control, IZeroSkinnable
+    public abstract class ControlBase : Control, IZeroSkinnable, IZeroDpiScalable
     {
         private bool _useDefaultSkin = true;
         private ZeroSkin? _customSkin;
         private readonly Action<ZeroSkin> _skinChangedHandler;
         private readonly EventHandler _themeChangedHandler;
         private bool _isDisposed;
+        private float _currentDpiScale = 1.0f;
 
         #region Properties & Skinnable Contract
 
@@ -92,12 +93,43 @@ namespace ZeroUI.WinForms.Base
         /// Gets the active DPI scale factor for this control relative to 96 DPI baseline (e.g. 1.0 = 100%, 1.5 = 150%, 2.0 = 200%).
         /// </summary>
         [Browsable(false)]
-        public float DpiScale => ZeroDpi.GetScaleFactor(this);
+        public float DpiScale => _currentDpiScale;
 
         /// <summary>
         /// Scales an integer measurement based on the control's effective DPI scale factor.
         /// </summary>
-        public int ScaleDpi(int value) => ZeroDpi.Scale(value, DpiScale);
+        public int ScaleDpi(int value) => ZeroDpi.Scale(value, _currentDpiScale);
+
+        /// <summary>
+        /// Scales a Size structure based on the control's effective DPI scale factor.
+        /// </summary>
+        public Size ScaleDpi(Size size) => ZeroDpi.Scale(size, _currentDpiScale);
+
+        /// <summary>
+        /// Scales a Padding structure based on the control's effective DPI scale factor.
+        /// </summary>
+        public Padding ScaleDpi(Padding padding) => ZeroDpi.Scale(padding, _currentDpiScale);
+
+        /// <summary>
+        /// Applies High-DPI Per-Monitor V2 scaling to this control and invalidates the surface.
+        /// </summary>
+        public virtual void ApplyDpiScaling(float scaleFactor)
+        {
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            float ratio = scaleFactor / _currentDpiScale;
+            _currentDpiScale = scaleFactor;
+
+            OnApplyDpiScaling(scaleFactor, ratio);
+            Invalidate();
+        }
+
+        /// <summary>
+        /// Invoked when the control's DPI scale factor is applied or modified.
+        /// Override in derived controls to rescale internal dimension metrics (e.g., margins, paddings, item heights).
+        /// </summary>
+        protected virtual void OnApplyDpiScaling(float scaleFactor, float factorRatio)
+        {
+        }
 
         #endregion
 
@@ -155,6 +187,11 @@ namespace ZeroUI.WinForms.Base
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            float factor = ZeroDpi.GetScaleFactor(this);
+            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
+            {
+                ApplyDpiScaling(factor);
+            }
             OnThemeChanged(EffectiveSkin);
             Invalidate();
         }
@@ -187,6 +224,11 @@ namespace ZeroUI.WinForms.Base
         protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
         {
             base.ScaleControl(factor, specified);
+            float effectiveFactor = factor.Height > 0f ? factor.Height : factor.Width;
+            if (effectiveFactor > 0f && Math.Abs(effectiveFactor - 1.0f) > 0.001f)
+            {
+                ApplyDpiScaling(_currentDpiScale * effectiveFactor);
+            }
             OnDpiScaleChanged(factor.Width);
         }
 

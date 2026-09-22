@@ -139,5 +139,73 @@ namespace ZeroUI.WinForms.Theme
                 Scale(padding.Right, factor),
                 Scale(padding.Bottom, factor));
         }
+
+        /// <summary>
+        /// Recursively scales all controls in the hierarchy that implement IZeroDpiScalable.
+        /// </summary>
+        public static void ScaleControlHierarchy(Control root, float factor)
+        {
+            if (root == null) return;
+            if (factor <= 0f) factor = 1.0f;
+
+            ScaleControlHierarchyCore(root, factor);
+        }
+
+        private static void ScaleControlHierarchyCore(Control control, float factor)
+        {
+            if (control is IZeroDpiScalable scalable)
+            {
+                scalable.ApplyDpiScaling(factor);
+            }
+
+            foreach (Control child in control.Controls)
+            {
+                ScaleControlHierarchyCore(child, factor);
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+
+            public Rectangle ToRectangle() => new Rectangle(Left, Top, Right - Left, Bottom - Top);
+        }
+
+        /// <summary>
+        /// Extracts the suggested window bounds from WM_DPICHANGED lParam pointer.
+        /// </summary>
+        public static Rectangle GetSuggestedBounds(IntPtr lParam)
+        {
+            if (lParam == IntPtr.Zero) return Rectangle.Empty;
+            try
+            {
+                var rect = Marshal.PtrToStructure<RECT>(lParam);
+                return rect.ToRectangle();
+            }
+            catch
+            {
+                return Rectangle.Empty;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Contract for ZeroUI WinForms controls capable of dynamic Per-Monitor V2 DPI scaling.
+    /// </summary>
+    public interface IZeroDpiScalable
+    {
+        /// <summary>
+        /// Gets the current DPI scale factor applied to this control.
+        /// </summary>
+        float DpiScale { get; }
+
+        /// <summary>
+        /// Applies the specified DPI scale factor to internal drawing and layout metrics.
+        /// </summary>
+        void ApplyDpiScaling(float scaleFactor);
     }
 }

@@ -32,6 +32,15 @@ namespace ZeroUI.WinForms.Base
         {
             base.OnHandleCreated(e);
 
+            if (!DesignMode)
+            {
+                float factor = ZeroDpi.GetScaleFactor(this);
+                if (Math.Abs(factor - 1.0f) > 0.001f)
+                {
+                    ZeroDpi.ScaleControlHierarchy(this, factor);
+                }
+            }
+
             if (!_hasInitialized && !DesignMode)
             {
                 _hasInitialized = true;

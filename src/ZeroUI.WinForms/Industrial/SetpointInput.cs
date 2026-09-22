@@ -1,10 +1,11 @@
 using System;
-
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 using ZeroUI.WinForms.Theme;
 
@@ -18,7 +19,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial setpoint input control with on-screen numeric keypad support")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSetpointInput.bmp")]
-    public class SetpointInput : Control, IScadaBindable
+    public class SetpointInput : ControlBase, IScadaBindable
     {
         private double _setpointValue = 50.0;
         private double _minValue = 0.0;
@@ -26,6 +27,9 @@ namespace ZeroUI.WinForms.Industrial
         private string _unit = "°C";
         private string _tagLabel = "TEMP SP";
         private bool _isHovered;
+
+        private int _baseWidth = 150;
+        private int _baseHeight = 60;
 
         [Category("SCADA Telemetry")]
         public string? BoundTagPath { get; set; }
@@ -140,6 +144,14 @@ namespace ZeroUI.WinForms.Industrial
         protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _isHovered = true; Invalidate(); }
         protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); _isHovered = false; Invalidate(); }
 
+        protected override void OnApplyDpiScaling(float scaleFactor, float factorRatio)
+        {
+            base.OnApplyDpiScaling(scaleFactor, factorRatio);
+            Width = (int)Math.Round(_baseWidth * scaleFactor);
+            Height = (int)Math.Round(_baseHeight * scaleFactor);
+            Invalidate();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
@@ -148,52 +160,56 @@ namespace ZeroUI.WinForms.Industrial
             bool isDark = ZeroTheme.IsDark;
             Color panelBg = isDark ? Color.FromArgb(15, 23, 42) : Color.White;
             Color borderCol = _isHovered ? Color.FromArgb(59, 130, 246) : (isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(203, 213, 225));
-            Color textCol = isDark ? Color.FromArgb(248, 250, 252) : Color.FromArgb(15, 23, 42);
             Color labelCol = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
             Color valCol = isDark ? Color.FromArgb(245, 158, 11) : Color.FromArgb(217, 119, 6); // Amber
 
+            float factor = DpiScale;
+            float penWidth = (_isHovered ? 2f : 1.2f) * factor;
+            float pad = penWidth;
+
             // 1. Outer Box
-            var rect = new RectangleF(1f, 1f, Width - 3f, Height - 3f);
+            var rect = new RectangleF(pad, pad, Width - pad * 2f, Height - pad * 2f);
             using (var bgBrush = new SolidBrush(panelBg))
-            using (var borderPen = new Pen(borderCol, _isHovered ? 2f : 1.2f))
+            using (var borderPen = new Pen(borderCol, penWidth))
             {
                 g.FillRectangle(bgBrush, rect);
                 g.DrawRectangle(borderPen, rect.X, rect.Y, rect.Width, rect.Height);
             }
 
             // 2. Tag Label (Top Left)
-            using (var fontTag = new Font(Font.FontFamily, 7.5f, FontStyle.Bold))
+            using (var fontTag = new Font(Font.FontFamily, 7.5f * factor, FontStyle.Bold))
             using (var brushTag = new SolidBrush(labelCol))
             {
-                g.DrawString(_tagLabel, fontTag, brushTag, 6f, 4f);
+                g.DrawString(_tagLabel, fontTag, brushTag, 6f * factor, 4f * factor);
 
                 // Range descriptor (Top Right)
                 string rangeStr = $"[{_minValue:0.#} - {_maxValue:0.#}]";
                 var rangeSize = g.MeasureString(rangeStr, fontTag);
-                g.DrawString(rangeStr, fontTag, brushTag, Width - rangeSize.Width - 6f, 4f);
+                g.DrawString(rangeStr, fontTag, brushTag, Width - rangeSize.Width - 6f * factor, 4f * factor);
             }
 
             // 3. Setpoint Value
             string valStr = $"{_setpointValue:0.##}";
-            using (var valFont = new Font("Segoe UI", 15f, FontStyle.Bold))
+            using (var valFont = new Font("Segoe UI", 15f * factor, FontStyle.Bold))
             using (var brushVal = new SolidBrush(valCol))
             {
-                g.DrawString(valStr, valFont, brushVal, 6f, 20f);
+                g.DrawString(valStr, valFont, brushVal, 6f * factor, 20f * factor);
 
                 // Unit
                 var valSize = g.MeasureString(valStr, valFont);
-                using (var unitFont = new Font(Font.FontFamily, 8.5f, FontStyle.Regular))
+                using (var unitFont = new Font(Font.FontFamily, 8.5f * factor, FontStyle.Regular))
                 using (var brushUnit = new SolidBrush(labelCol))
                 {
-                    g.DrawString(_unit, unitFont, brushUnit, 8f + valSize.Width, 27f);
+                    g.DrawString(_unit, unitFont, brushUnit, 8f * factor + valSize.Width, 27f * factor);
                 }
             }
 
             // 4. Edit pencil hint icon (Bottom Right)
-            using (var iconFont = new Font(Font.FontFamily, 7.5f, FontStyle.Regular))
+            using (var iconFont = new Font(Font.FontFamily, 7.5f * factor, FontStyle.Regular))
             using (var iconBrush = new SolidBrush(labelCol))
             {
-                g.DrawString("✎ TAP", iconFont, iconBrush, Width - 38f, Height - 18f);
+                var tapSize = g.MeasureString("✎ TAP", iconFont);
+                g.DrawString("✎ TAP", iconFont, iconBrush, Width - tapSize.Width - 6f * factor, Height - tapSize.Height - 4f * factor);
             }
         }
     }
