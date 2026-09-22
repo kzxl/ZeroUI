@@ -151,6 +151,36 @@ namespace ZeroUI.Wpf.Industrial
 
         public List<GaugeThresholdRange> Thresholds => _thresholds;
 
+        public double WarningThreshold
+        {
+            get
+            {
+                var r = _thresholds.Find(t => t.Severity == GaugeSeverity.Warning);
+                return r?.From ?? (Maximum * 0.75);
+            }
+            set
+            {
+                _thresholds.RemoveAll(t => t.Severity == GaugeSeverity.Warning);
+                _thresholds.Add(new GaugeThresholdRange(value, CriticalThreshold, GaugeSeverity.Warning, 0xFFFFAA00, "Warning"));
+                InvalidateVisual();
+            }
+        }
+
+        public double CriticalThreshold
+        {
+            get
+            {
+                var r = _thresholds.Find(t => t.Severity == GaugeSeverity.Critical);
+                return r?.From ?? (Maximum * 0.90);
+            }
+            set
+            {
+                _thresholds.RemoveAll(t => t.Severity == GaugeSeverity.Critical);
+                _thresholds.Add(new GaugeThresholdRange(value, Maximum, GaugeSeverity.Critical, 0xFFFF3333, "Critical"));
+                InvalidateVisual();
+            }
+        }
+
         #region IScadaBindable Implementation
 
         public string? BoundTagPath { get; set; }

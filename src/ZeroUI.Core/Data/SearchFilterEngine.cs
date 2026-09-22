@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ZeroPrimitives.Validation;
 
 namespace ZeroUI.Core.Data
 {
@@ -17,13 +18,24 @@ namespace ZeroUI.Core.Data
 
     /// <summary>
     /// High-performance multi-term search filtering and tokenization engine.
-    /// Designed for high-capacity BOMs, inventory lookups, and fast multi-column filtering.
+    /// Harnesses sovereign Tier-0 <see cref="VietnameseSearchNormalizer"/> for unaccented Vietnamese search.
     /// </summary>
     public class SearchFilterEngine
     {
         private readonly List<string> _tokens = new List<string>();
+        private readonly List<string> _normalizedTokens = new List<string>();
         private SearchTokenMatchMode _matchMode = SearchTokenMatchMode.All;
         private string _rawQuery = string.Empty;
+        private bool _enableVietnameseNormalization = true;
+
+        /// <summary>
+        /// Gets or sets whether Vietnamese diacritics are normalized (e.g. 'may' matches 'máy').
+        /// </summary>
+        public bool EnableVietnameseNormalization
+        {
+            get => _enableVietnameseNormalization;
+            set => _enableVietnameseNormalization = value;
+        }
 
         /// <summary>
         /// Gets the current token matching mode (default is All / AND).
@@ -56,6 +68,7 @@ namespace ZeroUI.Core.Data
         public void SetQuery(string? query)
         {
             _tokens.Clear();
+            _normalizedTokens.Clear();
             _rawQuery = query ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(_rawQuery))
@@ -68,6 +81,7 @@ namespace ZeroUI.Core.Data
                 if (token.Length > 0 && !_tokens.Contains(token))
                 {
                     _tokens.Add(token);
+                    _normalizedTokens.Add(VietnameseSearchNormalizer.ToSearchKeyword(token));
                 }
             }
         }
@@ -82,13 +96,19 @@ namespace ZeroUI.Core.Data
             if (_tokens.Count == 0) return true;
             if (string.IsNullOrEmpty(targetText)) return false;
 
+            string? normalizedTarget = _enableVietnameseNormalization ? VietnameseSearchNormalizer.ToSearchKeyword(targetText!) : null;
+
             if (_matchMode == SearchTokenMatchMode.All)
             {
                 for (int i = 0; i < _tokens.Count; i++)
                 {
-                    if (targetText!.IndexOf(_tokens[i], StringComparison.OrdinalIgnoreCase) < 0)
+                    string token = _tokens[i];
+                    if (targetText!.IndexOf(token, StringComparison.OrdinalIgnoreCase) < 0)
                     {
-                        return false;
+                        if (normalizedTarget == null || normalizedTarget.IndexOf(_normalizedTokens[i], StringComparison.OrdinalIgnoreCase) < 0)
+                        {
+                            return false;
+                        }
                     }
                 }
                 return true;
@@ -97,7 +117,9 @@ namespace ZeroUI.Core.Data
             {
                 for (int i = 0; i < _tokens.Count; i++)
                 {
-                    if (targetText!.IndexOf(_tokens[i], StringComparison.OrdinalIgnoreCase) >= 0)
+                    string token = _tokens[i];
+                    if (targetText!.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        (normalizedTarget != null && normalizedTarget.IndexOf(_normalizedTokens[i], StringComparison.OrdinalIgnoreCase) >= 0))
                     {
                         return true;
                     }
@@ -122,14 +144,19 @@ namespace ZeroUI.Core.Data
                 for (int t = 0; t < _tokens.Count; t++)
                 {
                     string token = _tokens[t];
+                    string normToken = _normalizedTokens[t];
                     bool found = false;
                     for (int c = 0; c < columnValues.Count; c++)
                     {
                         string val = columnValues[c];
-                        if (val != null && val.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (val != null)
                         {
-                            found = true;
-                            break;
+                            if (val.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                (_enableVietnameseNormalization && VietnameseSearchNormalizer.ToSearchKeyword(val).IndexOf(normToken, StringComparison.OrdinalIgnoreCase) >= 0))
+                            {
+                                found = true;
+                                break;
+                            }
                         }
                     }
                     if (!found) return false;
@@ -142,12 +169,17 @@ namespace ZeroUI.Core.Data
                 for (int t = 0; t < _tokens.Count; t++)
                 {
                     string token = _tokens[t];
+                    string normToken = _normalizedTokens[t];
                     for (int c = 0; c < columnValues.Count; c++)
                     {
                         string val = columnValues[c];
-                        if (val != null && val.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (val != null)
                         {
-                            return true;
+                            if (val.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                (_enableVietnameseNormalization && VietnameseSearchNormalizer.ToSearchKeyword(val).IndexOf(normToken, StringComparison.OrdinalIgnoreCase) >= 0))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }

@@ -195,6 +195,42 @@ namespace ZeroUI.WinForms.Industrial
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<GaugeThresholdRange> Thresholds => _thresholds;
 
+        [Category("ZeroUI - Scale")]
+        [Description("Scale value where warning zone begins.")]
+        [DefaultValue(75.0)]
+        public double WarningThreshold
+        {
+            get
+            {
+                var r = _thresholds.Find(t => t.Severity == GaugeSeverity.Warning);
+                return r?.From ?? (_maximum * 0.75);
+            }
+            set
+            {
+                _thresholds.RemoveAll(t => t.Severity == GaugeSeverity.Warning);
+                _thresholds.Add(new GaugeThresholdRange(value, DangerThreshold, GaugeSeverity.Warning, 0xFFFFAA00, "Warning"));
+                Invalidate();
+            }
+        }
+
+        [Category("ZeroUI - Scale")]
+        [Description("Scale value where danger/critical zone begins.")]
+        [DefaultValue(90.0)]
+        public double DangerThreshold
+        {
+            get
+            {
+                var r = _thresholds.Find(t => t.Severity == GaugeSeverity.Critical);
+                return r?.From ?? (_maximum * 0.90);
+            }
+            set
+            {
+                _thresholds.RemoveAll(t => t.Severity == GaugeSeverity.Critical);
+                _thresholds.Add(new GaugeThresholdRange(value, _maximum, GaugeSeverity.Critical, 0xFFFF3333, "Danger"));
+                Invalidate();
+            }
+        }
+
         #region IScadaBindable Implementation
 
         [Category("ZeroUI - SCADA")]

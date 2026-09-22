@@ -116,6 +116,41 @@ namespace ZeroUI.WinForms.Industrial
             set { _criticalThreshold = value; Invalidate(); }
         }
 
+        private bool _isHorizontal = false;
+        private bool _enableDamping = false;
+        private double _dampingFactor = 0.25;
+        private readonly System.Collections.Generic.List<GaugeThresholdRange> _thresholds = new System.Collections.Generic.List<GaugeThresholdRange>();
+
+        [Category("Appearance")]
+        [Description("Specifies whether the gauge is rendered horizontally or vertically.")]
+        [DefaultValue(false)]
+        public bool IsHorizontal
+        {
+            get => _isHorizontal;
+            set { _isHorizontal = value; Invalidate(); }
+        }
+
+        [Category("Behavior")]
+        [Description("Enables inertial needle/bar damping.")]
+        [DefaultValue(false)]
+        public bool EnableDamping
+        {
+            get => _enableDamping;
+            set => _enableDamping = value;
+        }
+
+        [Category("Behavior")]
+        [Description("Inertial damping coefficient (0.01 to 1.0).")]
+        [DefaultValue(0.25)]
+        public double DampingFactor
+        {
+            get => _dampingFactor;
+            set => _dampingFactor = Math.Max(0.01, Math.Min(1.0, value));
+        }
+
+        [Browsable(false)]
+        public System.Collections.Generic.List<GaugeThresholdRange> Thresholds => _thresholds;
+
         #region IScadaBindable
 
         [Category("SCADA")]
