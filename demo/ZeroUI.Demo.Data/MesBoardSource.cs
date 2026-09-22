@@ -2,7 +2,7 @@ using System;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 
-namespace ZeroUI.Samples.BenchmarkDemo.Data
+namespace ZeroUI.Demo.Data
 {
     public struct BoardMaterialItem
     {

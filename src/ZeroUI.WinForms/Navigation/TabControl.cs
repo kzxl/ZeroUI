@@ -74,6 +74,7 @@ namespace ZeroUI.WinForms.Navigation
         private int _tabWidth = 200;
         private TabStyle _tabStyle = TabStyle.Underline;
         private TabOrientation _orientation = TabOrientation.Horizontal;
+        private bool _showHeader = true;
 
         public event EventHandler? SelectedIndexChanged;
         public event EventHandler<TabPageEx>? TabClosed;
@@ -122,6 +123,22 @@ namespace ZeroUI.WinForms.Navigation
                 if (_orientation != value)
                 {
                     _orientation = value;
+                    UpdateContainerBounds();
+                    Invalidate();
+                }
+            }
+        }
+
+        [Category("Appearance")]
+        [DefaultValue(true)]
+        public bool ShowHeader
+        {
+            get => _showHeader;
+            set
+            {
+                if (_showHeader != value)
+                {
+                    _showHeader = value;
                     UpdateContainerBounds();
                     Invalidate();
                 }
@@ -206,7 +223,25 @@ namespace ZeroUI.WinForms.Navigation
         }
 
         [Browsable(false)]
-        public TabPageEx? SelectedTab => (_selectedIndex >= 0 && _selectedIndex < _tabPages.Count) ? _tabPages[_selectedIndex] : null;
+        public TabPageEx? SelectedTab
+        {
+            get => (_selectedIndex >= 0 && _selectedIndex < _tabPages.Count) ? _tabPages[_selectedIndex] : null;
+            set
+            {
+                if (value == null)
+                {
+                    SelectedIndex = -1;
+                }
+                else
+                {
+                    int index = _tabPages.IndexOf(value);
+                    if (index >= 0)
+                    {
+                        SelectedIndex = index;
+                    }
+                }
+            }
+        }
 
         public TabPageEx AddTab(string title, string icon = "", int badgeCount = 0)
         {
@@ -249,6 +284,13 @@ namespace ZeroUI.WinForms.Navigation
         {
             if (_contentContainer == null) return;
 
+            if (!_showHeader)
+            {
+                _contentContainer.Location = new Point(0, 0);
+                _contentContainer.Size = new Size(Width, Height);
+                return;
+            }
+
             if (_orientation == TabOrientation.Vertical)
             {
                 _contentContainer.Location = new Point(_tabWidth, 0);
@@ -280,6 +322,7 @@ namespace ZeroUI.WinForms.Navigation
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            if (!_showHeader) return;
             if (_orientation == TabOrientation.Horizontal && e.Y > _tabHeight) return;
             if (_orientation == TabOrientation.Vertical && e.X > _tabWidth) return;
 

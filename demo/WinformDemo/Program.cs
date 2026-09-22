@@ -11,8 +11,8 @@ using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Theme;
 using ZeroUI.Core.Virtualization;
-using ZeroUI.Samples.BenchmarkDemo.Data;
-using ZeroUI.Samples.BenchmarkDemo.Forms;
+using ZeroUI.Demo.Data;
+using ZeroUI.Samples.WinformDemo.Forms;
 using ZeroUI.WinForms.Charts;
 using ZeroUI.WinForms.Charts.Model;
 using ZeroUI.WinForms.DataGrid;
@@ -21,7 +21,7 @@ using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 
-namespace ZeroUI.Samples.BenchmarkDemo
+namespace ZeroUI.Samples.WinformDemo
 
 {
     internal static class Program

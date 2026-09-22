@@ -16,8 +16,8 @@ using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Theme;
-using ZeroUI.Samples.BenchmarkDemo.Data;
-using ZeroUI.Samples.BenchmarkDemo.Diagnostics;
+using ZeroUI.Demo.Data;
+using ZeroUI.Samples.WinformDemo.Diagnostics;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Charts;
 using ZeroUI.WinForms.Charts.Model;
@@ -63,7 +63,7 @@ using ZeroUI.Core.Spreadsheet;
 using ZeroUI.Core.Scada.Safety;
 using ZeroUI.Core.Notification;
 
-namespace ZeroUI.Samples.BenchmarkDemo.Forms
+namespace ZeroUI.Samples.WinformDemo.Forms
 
 
 {
@@ -139,10 +139,16 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
         private System.Windows.Forms.Timer? _industrialRuntimeTimer;
         private string? _savedGridLayout;
 
-
-
-
-
+        // DevExpress-Standard Showcase Subsystems
+        private ShowcaseFeatureExplorer _featureExplorer = null!;
+        private ShowcaseOptionsPanel _optionsPanel = null!;
+        private Panel _bottomDescriptionBar = null!;
+        private Label _lblFeatureTitle = null!;
+        private Label _lblFeatureDescription = null!;
+        private string _activeFeatureCode = "";
+        private ZeroTabControl _subTabsComponents = null!;
+        private ZeroTabControl _subTabsScada = null!;
+        private ZeroTabControl _subTabsMes = null!;
 
         // Top Action Controls
         private Label _lblTitle = null!;
@@ -209,7 +215,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
         private void InitializeComponents()
         {
-            Text = "⚡ ZeroUI vs Standard DataGridView — 1,000,000 Rows Performance Benchmark";
+            Text = "⚡ ZeroUI Demo Center — Enterprise & Industrial Controls Showcase";
             AutoScaleMode = AutoScaleMode.Dpi;
             AutoScaleDimensions = new SizeF(96F, 96F);
             Size = new Size(1280, 800);
@@ -217,46 +223,73 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.FromArgb(245, 246, 250);
 
-            // 1. Top Action Panel
+            // 1. Top DevExpress-Style Showcase Banner
             _topPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 54,
+                Height = 56,
                 BackColor = Color.FromArgb(24, 26, 40),
-                Padding = new Padding(12, 10, 12, 10)
+                Padding = new Padding(14, 8, 14, 8)
             };
+
+            var brandBadge = new Label
+            {
+                Text = "⚡ ZERO UI",
+                BackColor = Color.FromArgb(18, 86, 209),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                AutoSize = false,
+                Size = new Size(88, 26),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Location = new Point(14, 15)
+            };
+            _topPanel.Controls.Add(brandBadge);
 
             _lblTitle = new Label
             {
-                Text = "⚡ ZeroUI Benchmark Suite",
+                Text = "DEMO CENTER — ENTERPRISE SUITE & SCADA",
                 ForeColor = ZeroTheme.Colors.TextPrimary,
-                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11.5f, FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(12, 14)
+                Location = new Point(108, 10)
             };
             _topPanel.Controls.Add(_lblTitle);
 
-            int btnX = 280;
-            _btn100k = CreateActionButton("100K Rows", btnX, () => LoadDataset(100_000));
-            btnX += 110;
-            _btn500k = CreateActionButton("500K Rows", btnX, () => LoadDataset(500_000));
-            btnX += 110;
-            _btn1M = CreateActionButton("1M Rows", btnX, () => LoadDataset(1_000_000));
-            btnX += 110;
-            _btn10M = CreateActionButton("🔥 10M Rows", btnX, () => LoadDataset(10_000_000));
+            var lblSubtitle = new Label
+            {
+                Text = "High-Performance Virtual Grid, Industrial Process Mimics, & Enterprise Components",
+                ForeColor = Color.FromArgb(150, 160, 180),
+                Font = new Font("Segoe UI", 8.25f, FontStyle.Regular),
+                AutoSize = true,
+                Location = new Point(110, 32)
+            };
+            _topPanel.Controls.Add(lblSubtitle);
+
+            int btnX = 540;
+            _btn100k = CreateActionButton("100K", btnX, () => LoadDataset(100_000));
+            _btn100k.Size = new Size(68, 30);
+            btnX += 74;
+            _btn500k = CreateActionButton("500K", btnX, () => LoadDataset(500_000));
+            _btn500k.Size = new Size(68, 30);
+            btnX += 74;
+            _btn1M = CreateActionButton("1M", btnX, () => LoadDataset(1_000_000));
+            _btn1M.Size = new Size(68, 30);
+            btnX += 74;
+            _btn10M = CreateActionButton("🔥 10M", btnX, () => LoadDataset(10_000_000));
+            _btn10M.Size = new Size(76, 30);
             _btn10M.BackColor = ZeroTheme.Colors.Danger;
             _btn10M.ForeColor = Color.White;
-            btnX += 130;
+            btnX += 82;
 
             _btnAutoScroll = new Button
             {
-                Text = "🚀 Run Auto-Scroll Stress Test (10s)",
-                Location = new Point(btnX, 10),
-                Size = new Size(270, 34),
+                Text = "🚀 Stress Test",
+                Location = new Point(btnX, 13),
+                Size = new Size(130, 30),
                 BackColor = ZeroTheme.Colors.Primary,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
             _btnAutoScroll.FlatAppearance.BorderSize = 0;
@@ -268,21 +301,20 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _topPanel.Controls.Add(_btn1M);
             _topPanel.Controls.Add(_btn10M);
 
-
-            // 2. Metric HUD Panel
+            // 2. Metric HUD Sub-Panel (Integrated into Bottom Description Bar)
             _hudPanel = new Panel
             {
-                Dock = DockStyle.Top,
-                Height = 44,
-                BackColor = Color.FromArgb(17, 19, 31),
-                Padding = new Padding(12, 8, 12, 8)
+                Dock = DockStyle.Right,
+                Width = 500,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0, 4, 8, 4)
             };
 
-            _lblStatus = CreateMetricLabel("Data: Ready", 12);
-            _lblFps = CreateMetricLabel("FPS: --", 240);
-            _lblLatency = CreateMetricLabel("Latency: -- ms", 400);
-            _lblRam = CreateMetricLabel("RAM: -- MB", 560);
-            _lblGc = CreateMetricLabel("GC Gen0: --", 730);
+            _lblStatus = CreateMetricLabel("Data: Ready", 10);
+            _lblFps = CreateMetricLabel("FPS: --", 120);
+            _lblLatency = CreateMetricLabel("Latency: -- ms", 200);
+            _lblRam = CreateMetricLabel("RAM: -- MB", 310);
+            _lblGc = CreateMetricLabel("GC Gen0: --", 405);
 
             _hudPanel.Controls.Add(_lblStatus);
             _hudPanel.Controls.Add(_lblFps);
@@ -290,13 +322,70 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _hudPanel.Controls.Add(_lblRam);
             _hudPanel.Controls.Add(_lblGc);
 
-            // 2.5. ZeroToolbar (Modern Enterprise Action Bar)
+            // 2.1. Bottom Feature Description & Telemetry Bar
+            _bottomDescriptionBar = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 56,
+                BackColor = Color.FromArgb(24, 26, 40),
+                Padding = new Padding(14, 6, 14, 6)
+            };
+
+            var descTextContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent
+            };
+
+            _lblFeatureTitle = new Label
+            {
+                Dock = DockStyle.Top,
+                Height = 22,
+                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+                ForeColor = Color.White,
+                Text = "⚡ Virtual Grid (10M Rows)"
+            };
+
+            _lblFeatureDescription = new Label
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
+                ForeColor = Color.FromArgb(170, 180, 195),
+                Text = "ZeroUI GridControl achieves zero-allocation high-frequency scrolling over 10,000,000 records."
+            };
+
+            descTextContainer.Controls.Add(_lblFeatureDescription);
+            descTextContainer.Controls.Add(_lblFeatureTitle);
+
+            _bottomDescriptionBar.Controls.Add(descTextContainer);
+            _bottomDescriptionBar.Controls.Add(_hudPanel);
+
+            // 2.5. ZeroToolbar (Modern DevExpress Enterprise Action Bar)
             _mainToolbar = new ZeroToolbar
             {
                 Dock = DockStyle.Top,
                 Height = 42,
                 BackColor = Color.White
             };
+
+            _mainToolbar.AddButton("Previous", "◀", (s, e) => _featureExplorer?.SelectPrevious());
+            _mainToolbar.AddButton("Next", "▶", (s, e) => _featureExplorer?.SelectNext());
+            _mainToolbar.AddSeparator();
+
+            _mainToolbar.AddButton("View C# Code", "</>", (s, e) =>
+            {
+                var dlg = new ShowcaseCodeDialog(_lblFeatureTitle?.Text ?? "Feature", _activeFeatureCode);
+                dlg.ShowDialog(this);
+            });
+
+            _mainToolbar.AddButton("Options", "⚙️", (s, e) =>
+            {
+                if (_optionsPanel != null)
+                {
+                    _optionsPanel.Visible = !_optionsPanel.Visible;
+                }
+            });
+            _mainToolbar.AddSeparator();
 
             var btnNew = _mainToolbar.AddButton("New Order", "➕", (s, e) =>
             {
@@ -464,7 +553,8 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 Orientation = ZeroTabOrientation.Vertical,
                 TabWidth = 230,
                 TabHeight = 46,
-                TabStyle = ZeroTabStyle.Underline
+                TabStyle = ZeroTabStyle.Underline,
+                ShowHeader = false
             };
 
             // Cluster 1: Core Benchmarks
@@ -484,7 +574,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             // Cluster 2: MES Production
             _clusterMes = new ZeroTabPage("MES & Smart Factory", "🏭") { BadgeCount = 3 };
-            var subTabsMes = new ZeroTabControl
+            _subTabsMes = new ZeroTabControl
             {
                 Dock = DockStyle.Fill,
                 Orientation = ZeroTabOrientation.Horizontal,
@@ -493,9 +583,9 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             };
             _tabMes = new ZeroTabPage("Live Production Dashboard", "🏭");
             _tabProcessCards = new ZeroTabPage("MOP & Work Order Cards", "📋");
-            subTabsMes.AddTab(_tabMes);
-            subTabsMes.AddTab(_tabProcessCards);
-            _clusterMes.Controls.Add(subTabsMes);
+            _subTabsMes.AddTab(_tabMes);
+            _subTabsMes.AddTab(_tabProcessCards);
+            _clusterMes.Controls.Add(_subTabsMes);
 
             // Cluster 3: Warehouse & Logistics Suite
             _clusterWarehouse = new ZeroTabPage("Warehouse & Logistics", "📦") { BadgeCount = 4 };
@@ -525,7 +615,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
 
             // Cluster 6: UI Component Catalog
             _clusterComponents = new ZeroTabPage("UI Component Catalog", "🎨");
-            var subTabsComponents = new ZeroTabControl
+            _subTabsComponents = new ZeroTabControl
             {
                 Dock = DockStyle.Fill,
                 Orientation = ZeroTabOrientation.Horizontal,
@@ -538,17 +628,17 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabAdvanced = new ZeroTabPage("Data Hierarchy & BOM", "🌳");
             _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐");
             _tabMasterDetail = new ZeroTabPage("Master-Detail & In-Place LookUp", "📑");
-            subTabsComponents.AddTab(_tabControls);
-            subTabsComponents.AddTab(_tabCommercial);
-            subTabsComponents.AddTab(_tabOfficeDocs);
-            subTabsComponents.AddTab(_tabAdvanced);
-            subTabsComponents.AddTab(_tabLayout);
-            subTabsComponents.AddTab(_tabMasterDetail);
-            _clusterComponents.Controls.Add(subTabsComponents);
+            _subTabsComponents.AddTab(_tabControls);
+            _subTabsComponents.AddTab(_tabCommercial);
+            _subTabsComponents.AddTab(_tabOfficeDocs);
+            _subTabsComponents.AddTab(_tabAdvanced);
+            _subTabsComponents.AddTab(_tabLayout);
+            _subTabsComponents.AddTab(_tabMasterDetail);
+            _clusterComponents.Controls.Add(_subTabsComponents);
 
             // Cluster 7: SCADA Process & P&ID Synoptic (Phased Real-Time Automation)
             _clusterScadaSynoptic = new ZeroTabPage("SCADA Process & P&ID", "🏭");
-            var subTabsScada = new ZeroTabControl
+            _subTabsScada = new ZeroTabControl
             {
                 Dock = DockStyle.Fill,
                 Orientation = ZeroTabOrientation.Horizontal,
@@ -561,13 +651,13 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             _tabScadaTags = new ZeroTabPage("Phase 3: Real-Time Tag Engine", "⚡");
             _tabScadaOverview = new ZeroTabPage("Phase 4: Plant Overview & HMI", "🎛️");
             _tabIndustrialRuntime = new ZeroTabPage("Phase 5: Industrial Edge Runtime", "⚙️");
-            subTabsScada.AddTab(_tabScadaClosedLoop);
-            subTabsScada.AddTab(_tabScadaPid);
-            subTabsScada.AddTab(_tabScadaAlarms);
-            subTabsScada.AddTab(_tabScadaTags);
-            subTabsScada.AddTab(_tabScadaOverview);
-            subTabsScada.AddTab(_tabIndustrialRuntime);
-            _clusterScadaSynoptic.Controls.Add(subTabsScada);
+            _subTabsScada.AddTab(_tabScadaClosedLoop);
+            _subTabsScada.AddTab(_tabScadaPid);
+            _subTabsScada.AddTab(_tabScadaAlarms);
+            _subTabsScada.AddTab(_tabScadaTags);
+            _subTabsScada.AddTab(_tabScadaOverview);
+            _subTabsScada.AddTab(_tabIndustrialRuntime);
+            _clusterScadaSynoptic.Controls.Add(_subTabsScada);
 
             // Cluster 8: Network & IT/OT Infrastructure (Phase 12 Suite)
             _clusterNetwork = new ZeroTabPage("Network & Infrastructure", "🌐") { BadgeCount = 6 };
@@ -634,12 +724,221 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
                 }
             };
 
+            // Setup DevExpress-Style Feature Explorer & Options Panel
+            _featureExplorer = new ShowcaseFeatureExplorer
+            {
+                Dock = DockStyle.Left,
+                Width = 260
+            };
+            _featureExplorer.FeatureSelected += OnFeatureSelected;
+
+            _optionsPanel = new ShowcaseOptionsPanel
+            {
+                Dock = DockStyle.Right,
+                Width = 270
+            };
+            _optionsPanel.DatasetLoadRequested += count => LoadDataset(count);
+            _optionsPanel.StressTestToggled += () => ToggleStressTest();
+            _optionsPanel.ExportCsvRequested += () => _searchBar.TriggerExport();
+            _optionsPanel.BindGrid(_zeroGrid);
+
             // Assembly Form Layout
             Controls.Add(_drawer);
             Controls.Add(_mainNav);
+            Controls.Add(_optionsPanel);
+            Controls.Add(_featureExplorer);
+            Controls.Add(_bottomDescriptionBar);
             Controls.Add(_mainToolbar);
-            Controls.Add(_hudPanel);
             Controls.Add(_topPanel);
+
+            _featureExplorer.SelectFeature("feat_virtual_10m");
+        }
+
+        private void OnFeatureSelected(ShowcaseFeatureItem item)
+        {
+            if (item == null) return;
+
+            if (_lblFeatureTitle != null) _lblFeatureTitle.Text = $"{item.Icon} {item.Title}";
+            if (_lblFeatureDescription != null) _lblFeatureDescription.Text = item.Description;
+            _activeFeatureCode = item.CodeSnippet;
+
+            switch (item.Key)
+            {
+                case "feat_virtual_10m":
+                    _mainNav.SelectedTab = _clusterBenchmark;
+                    _subTabsBenchmark.SelectedTab = _tabZero;
+                    if (_dataset.Length != 10_000_000)
+                    {
+                        LoadDataset(10_000_000);
+                    }
+                    _optionsPanel.Visible = true;
+                    _optionsPanel.BindGrid(_zeroGrid);
+                    break;
+
+                case "feat_autofilter":
+                    _mainNav.SelectedTab = _clusterBenchmark;
+                    _subTabsBenchmark.SelectedTab = _tabZero;
+                    _zeroGrid.ShowAutoFilterRow = true;
+                    if (_searchBar != null) _searchBar.Visible = true;
+                    _optionsPanel.Visible = true;
+                    _optionsPanel.BindGrid(_zeroGrid);
+                    break;
+
+                case "feat_master_detail":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabMasterDetail;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_grouping_summaries":
+                    _mainNav.SelectedTab = _clusterBenchmark;
+                    _subTabsBenchmark.SelectedTab = _tabZero;
+                    _zeroGrid.ShowGroupPanel = true;
+                    _optionsPanel.Visible = true;
+                    _optionsPanel.BindGrid(_zeroGrid);
+                    break;
+
+                case "feat_banded_headers":
+                    _mainNav.SelectedTab = _clusterBenchmark;
+                    _subTabsBenchmark.SelectedTab = _tabZero;
+                    _optionsPanel.Visible = true;
+                    _optionsPanel.BindGrid(_zeroGrid);
+                    break;
+
+                case "feat_zerogrid_table":
+                    _mainNav.SelectedTab = _clusterBenchmark;
+                    _subTabsBenchmark.SelectedTab = _tabZero;
+                    if (_dataset.Length > 1_000_000)
+                    {
+                        LoadDataset(100_000);
+                    }
+                    _optionsPanel.Visible = true;
+                    _optionsPanel.BindGrid(_zeroGrid);
+                    break;
+
+                case "feat_standard_dgv":
+                    _mainNav.SelectedTab = _clusterBenchmark;
+                    _subTabsBenchmark.SelectedTab = _tabDgv;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_tree_list":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabAdvanced;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_property_grid":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabCommercial;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_editors_core":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabControls;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_editors_lookup":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabMasterDetail;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_editors_tokens":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabControls;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_scada_synoptic":
+                    _mainNav.SelectedTab = _clusterScadaSynoptic;
+                    _subTabsScada.SelectedTab = _tabScadaPid;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_scada_pid":
+                    _mainNav.SelectedTab = _clusterScadaSynoptic;
+                    _subTabsScada.SelectedTab = _tabScadaClosedLoop;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_scada_alarms":
+                    _mainNav.SelectedTab = _clusterScadaSynoptic;
+                    _subTabsScada.SelectedTab = _tabScadaAlarms;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_scada_gauges":
+                    _mainNav.SelectedTab = _clusterScadaSynoptic;
+                    _subTabsScada.SelectedTab = _tabScadaOverview;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_warehouse_racks":
+                    _mainNav.SelectedTab = _clusterWarehouse;
+                    _subTabsWarehouse.SelectedTab = _tabWhRacks;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_barcode_station":
+                    _mainNav.SelectedTab = _clusterWarehouse;
+                    _subTabsWarehouse.SelectedTab = _tabWhBarcode;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_warehouse_lot":
+                    _mainNav.SelectedTab = _clusterWarehouse;
+                    _subTabsWarehouse.SelectedTab = _tabWhLot;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_analytics_charts":
+                    _mainNav.SelectedTab = _clusterAnalytics;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_analytics_spc":
+                    _mainNav.SelectedTab = _clusterAnalytics;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_nav_ribbon":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabLayout;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_workflow_kanban":
+                    _mainNav.SelectedTab = _clusterMes;
+                    _subTabsMes.SelectedTab = _tabProcessCards;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_workflow_gantt":
+                    _mainNav.SelectedTab = _clusterMes;
+                    _subTabsMes.SelectedTab = _tabMes;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_office_spreadsheet":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabOfficeDocs;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                case "feat_office_pdf":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabOfficeDocs;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                default:
+                    _mainNav.SelectedTab = _clusterBenchmark;
+                    _subTabsBenchmark.SelectedTab = _tabZero;
+                    break;
+            }
         }
 
         public void SelectTabByIndex(int index)
@@ -733,6 +1032,14 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             this.BackColor = colors.Background;
             if (_topPanel != null) _topPanel.BackColor = colors.HeaderBackground;
             if (_hudPanel != null) _hudPanel.BackColor = colors.Background;
+            if (_bottomDescriptionBar != null)
+            {
+                _bottomDescriptionBar.BackColor = skin.IsDark ? Color.FromArgb(20, 22, 32) : Color.FromArgb(240, 242, 246);
+            }
+            if (_lblFeatureTitle != null) _lblFeatureTitle.ForeColor = colors.TextPrimary;
+            if (_lblFeatureDescription != null) _lblFeatureDescription.ForeColor = colors.TextSecondary;
+            if (_featureExplorer != null) _featureExplorer.ApplyTheme(skin);
+
             if (_mainToolbar != null)
             {
                 _mainToolbar.BackColor = colors.Surface;
@@ -2069,7 +2376,7 @@ namespace ZeroUI.Samples.BenchmarkDemo.Forms
             gridBoard.Columns.Add(new ZeroColumn("Partlist Qty", 100, CellAlignment.Right));
             gridBoard.Columns.Add(new ZeroColumn("Raw Stock", 120, CellAlignment.Right));
             gridBoard.Columns.Add(new ZeroColumn("WIP Stock", 120, CellAlignment.Right));
-            gridBoard.DataSource = new ZeroUI.Samples.BenchmarkDemo.Data.MesBoardSource();
+            gridBoard.DataSource = new ZeroUI.Demo.Data.MesBoardSource();
             cardBoard.ContentPanel.Controls.Add(gridBoard);
 
             // Splitter 1

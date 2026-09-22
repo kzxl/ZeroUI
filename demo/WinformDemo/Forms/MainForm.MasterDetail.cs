@@ -13,7 +13,7 @@ using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 using ZeroTabPage = ZeroUI.WinForms.Navigation.ZeroTabPage;
 
-namespace ZeroUI.Samples.BenchmarkDemo.Forms
+namespace ZeroUI.Samples.WinformDemo.Forms
 {
     public sealed partial class MainForm
     {

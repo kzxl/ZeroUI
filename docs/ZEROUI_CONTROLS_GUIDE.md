@@ -57,10 +57,10 @@ Video và animation trình chiếu trọn vẹn từng màn hình nghiệp vụ 
 .\run-zeroui-demo.ps1 -Demo winforms
 
 # 2. Hoặc khởi chạy trực tiếp qua dotnet CLI
-dotnet run --project "ZeroUI\src\ZeroUI.Samples.BenchmarkDemo\ZeroUI.Samples.BenchmarkDemo.csproj" -c Debug
+dotnet run --project "ZeroUI\src\ZeroUI.Samples.WinformDemo\ZeroUI.Samples.WinformDemo.csproj" -c Debug
 
-# 3. Chạy chế độ Headless Benchmark đo đạc hiệu năng CPU / RAM / GC
-dotnet run --project "ZeroUI\src\ZeroUI.Samples.BenchmarkDemo\ZeroUI.Samples.BenchmarkDemo.csproj" -c Debug -- --benchmark
+# Or run the headless CLI performance benchmark:
+dotnet run --project "ZeroUI\src\ZeroUI.Samples.WinformDemo\ZeroUI.Samples.WinformDemo.csproj" -c Debug -- --benchmark
 ```
 
 ---

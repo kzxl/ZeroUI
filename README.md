@@ -120,8 +120,9 @@ grid.SetProceduralDataSource(rowCount: 1000000, (rowIndex, colIndex) =>
 # Run comprehensive automated test suites (554 tests, 100% pass across Core & Desktop UI)
 dotnet test ZeroUI.slnx
 
-# Launch interactive demonstration suite
-dotnet run --project src/ZeroUI.Samples.BenchmarkDemo/ZeroUI.Samples.BenchmarkDemo.csproj -f net8.0-windows
+# Launch interactive demonstration suites
+dotnet run --project demo/WinformDemo/WinformDemo.csproj -f net8.0-windows
+dotnet run --project demo/WpfDemo/WpfDemo.csproj -f net8.0-windows
 ```
 
 ---

@@ -14,7 +14,7 @@ using ZeroUI.Core.Data;
 using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Water;
 
-namespace ZeroUI.Samples.BenchmarkDemo.Forms
+namespace ZeroUI.Samples.WinformDemo.Forms
 {
     public sealed partial class MainForm
     {

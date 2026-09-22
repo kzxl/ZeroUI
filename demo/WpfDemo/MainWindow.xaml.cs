@@ -16,7 +16,7 @@ using ZeroUI.Core.Memory;
 using ZeroUI.Core.Automation;
 using ZeroUI.Core.Pivot;
 using ZeroUI.Core.Range;
-using ZeroUI.Samples.WpfDemo.Data;
+using ZeroUI.Demo.Data;
 using ZeroUI.Wpf.Range;
 using ZeroUI.Wpf.Charts.Model;
 using ZeroUI.Wpf.Editors;
@@ -41,7 +41,7 @@ namespace ZeroUI.Samples.WpfDemo
 {
     public partial class MainWindow : Window
     {
-        private WpfInventorySource? _inventorySource;
+        private InventorySource? _inventorySource;
         private DispatcherTimer? _telemetryTimer;
         private DispatcherTimer? _scadaSimTimer;
         private bool _isSimulating = true;
@@ -389,8 +389,8 @@ namespace ZeroUI.Samples.WpfDemo
         private void LoadData(int count)
         {
             var sw = Stopwatch.StartNew();
-            var items = WpfInventorySource.Generate(count);
-            _inventorySource = new WpfInventorySource(items);
+            var items = InventorySource.Generate(count);
+            _inventorySource = new InventorySource(items);
             VirtualGrid.DataSource = _inventorySource;
             sw.Stop();
 

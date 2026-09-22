@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace ZeroUI.Samples.BenchmarkDemo.Diagnostics
+namespace ZeroUI.Samples.WinformDemo.Diagnostics
 {
     public sealed class PerformanceMonitor
     {
