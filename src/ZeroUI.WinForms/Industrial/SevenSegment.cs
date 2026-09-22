@@ -2,44 +2,37 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ZeroUI.Core.Industrial;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
 
 namespace ZeroUI.WinForms.Industrial
 {
-    /// <summary>
-    /// Preset color palettes for industrial 7-segment displays.
-    /// </summary>
+    // Shims forwarding to Core for binary & source compatibility
     public enum SevenSegmentColorPreset
     {
-        Custom,
-        NeonEmerald,
-        NeonCyan,
-        NeonAmber,
-        NeonRed,
-        CrispWhite,
-        UltraViolet
+        Custom = ZeroUI.Core.Industrial.SevenSegmentColorPreset.Custom,
+        NeonEmerald = ZeroUI.Core.Industrial.SevenSegmentColorPreset.NeonEmerald,
+        NeonCyan = ZeroUI.Core.Industrial.SevenSegmentColorPreset.NeonCyan,
+        NeonAmber = ZeroUI.Core.Industrial.SevenSegmentColorPreset.NeonAmber,
+        NeonRed = ZeroUI.Core.Industrial.SevenSegmentColorPreset.NeonRed,
+        CrispWhite = ZeroUI.Core.Industrial.SevenSegmentColorPreset.CrispWhite,
+        UltraViolet = ZeroUI.Core.Industrial.SevenSegmentColorPreset.UltraViolet
     }
 
-    /// <summary>
-    /// Display mode for leading zeros in numeric values.
-    /// </summary>
     public enum LeadingZeroDisplayMode
     {
-        Blank,
-        DimmedGhost,
-        LitZero
+        Blank = ZeroUI.Core.Industrial.LeadingZeroDisplayMode.Blank,
+        DimmedGhost = ZeroUI.Core.Industrial.LeadingZeroDisplayMode.DimmedGhost,
+        LitZero = ZeroUI.Core.Industrial.LeadingZeroDisplayMode.LitZero
     }
 
-    /// <summary>
-    /// Frame and bezel styling for the LED acrylic enclosure.
-    /// </summary>
     public enum SevenSegmentFrameStyle
     {
-        RecessedBezel,
-        AcrylicGlass,
-        Borderless
+        RecessedBezel = ZeroUI.Core.Industrial.SevenSegmentFrameStyle.RecessedBezel,
+        AcrylicGlass = ZeroUI.Core.Industrial.SevenSegmentFrameStyle.AcrylicGlass,
+        Borderless = ZeroUI.Core.Industrial.SevenSegmentFrameStyle.Borderless
     }
 
     /// <summary>

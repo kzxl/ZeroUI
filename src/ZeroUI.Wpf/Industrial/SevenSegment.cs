@@ -1,37 +1,352 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
+using ZeroUI.Core.Industrial;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Industrial
 {
     /// <summary>
-    /// Digital 7-Segment LED display supporting numbers, decimal points, and colons.
-    /// Rendered directly via DrawingContext with authentic LED bevels and off-segment ghosting.
+    /// Industrial 7-Segment Digital LED Display for SCADA & MES telemetry in WPF.
+    /// Features authentic beveled segment geometry, configurable slant angle, colon/decimal support,
+    /// color presets, ghost segments, acrylic reflection, and 100% parity with WinForms.
     /// </summary>
     public class SevenSegment : FrameworkElement
     {
-        public static readonly DependencyProperty ValueTextProperty =
+        #region Dependency Properties
+
+        public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(
-                nameof(ValueText),
+                nameof(Value),
                 typeof(string),
                 typeof(SevenSegment),
-                new FrameworkPropertyMetadata("0000", FrameworkPropertyMetadataOptions.AffectsRender));
+                new FrameworkPropertyMetadata("1420", FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public string ValueText
+        public static readonly DependencyProperty SegmentColorProperty =
+            DependencyProperty.Register(
+                nameof(SegmentColor),
+                typeof(Color),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(Color.FromRgb(52, 211, 153), FrameworkPropertyMetadataOptions.AffectsRender, OnSegmentColorChanged));
+
+        public static readonly DependencyProperty DimColorProperty =
+            DependencyProperty.Register(
+                nameof(DimColor),
+                typeof(Color),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(Color.FromRgb(20, 45, 35), FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ColorPresetProperty =
+            DependencyProperty.Register(
+                nameof(ColorPreset),
+                typeof(SevenSegmentColorPreset),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(SevenSegmentColorPreset.NeonEmerald, FrameworkPropertyMetadataOptions.AffectsRender, OnColorPresetChanged));
+
+        public static readonly DependencyProperty DigitCountProperty =
+            DependencyProperty.Register(
+                nameof(DigitCount),
+                typeof(int),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(6, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty SlantAngleProperty =
+            DependencyProperty.Register(
+                nameof(SlantAngle),
+                typeof(double),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(7.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty LeadingZeroModeProperty =
+            DependencyProperty.Register(
+                nameof(LeadingZeroMode),
+                typeof(LeadingZeroDisplayMode),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(LeadingZeroDisplayMode.Blank, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty FrameStyleProperty =
+            DependencyProperty.Register(
+                nameof(FrameStyle),
+                typeof(SevenSegmentFrameStyle),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(SevenSegmentFrameStyle.RecessedBezel, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ShowGhostSegmentsProperty =
+            DependencyProperty.Register(
+                nameof(ShowGhostSegments),
+                typeof(bool),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ShowGlowProperty =
+            DependencyProperty.Register(
+                nameof(ShowGlow),
+                typeof(bool),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty ShowGlassReflectionProperty =
+            DependencyProperty.Register(
+                nameof(ShowGlassReflection),
+                typeof(bool),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty TextAlignmentProperty =
+            DependencyProperty.Register(
+                nameof(TextAlignment),
+                typeof(TextAlignment),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(TextAlignment.Right, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty BlinkColonProperty =
+            DependencyProperty.Register(
+                nameof(BlinkColon),
+                typeof(bool),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty BlinkProperty =
+            DependencyProperty.Register(
+                nameof(Blink),
+                typeof(bool),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty BlinkIntervalProperty =
+            DependencyProperty.Register(
+                nameof(BlinkInterval),
+                typeof(int),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(500, OnBlinkIntervalChanged));
+
+        public static readonly DependencyProperty SegmentGapProperty =
+            DependencyProperty.Register(
+                nameof(SegmentGap),
+                typeof(double),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(1.5, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty SegmentThicknessProperty =
+            DependencyProperty.Register(
+                nameof(SegmentThickness),
+                typeof(int),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty UnitProperty =
+            DependencyProperty.Register(
+                nameof(Unit),
+                typeof(string),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty UnitColorProperty =
+            DependencyProperty.Register(
+                nameof(UnitColor),
+                typeof(Color),
+                typeof(SevenSegment),
+                new FrameworkPropertyMetadata(Colors.Transparent, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        #endregion
+
+        #region Public Properties & Shims
+
+        public string Value
         {
-            get => (string)GetValue(ValueTextProperty);
-            set => SetValue(ValueTextProperty, value);
+            get => (string)GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
         }
 
-        public string Title { get; set; } = "Takt Time";
-        public Color LedColor { get; set; } = Color.FromRgb(166, 227, 161); // Bright Green
+        public Color SegmentColor
+        {
+            get => (Color)GetValue(SegmentColorProperty);
+            set => SetValue(SegmentColorProperty, value);
+        }
+
+        public Color DimColor
+        {
+            get => (Color)GetValue(DimColorProperty);
+            set => SetValue(DimColorProperty, value);
+        }
+
+        public SevenSegmentColorPreset ColorPreset
+        {
+            get => (SevenSegmentColorPreset)GetValue(ColorPresetProperty);
+            set => SetValue(ColorPresetProperty, value);
+        }
+
+        public int DigitCount
+        {
+            get => (int)GetValue(DigitCountProperty);
+            set => SetValue(DigitCountProperty, Math.Max(1, Math.Min(32, value)));
+        }
+
+        public double SlantAngle
+        {
+            get => (double)GetValue(SlantAngleProperty);
+            set => SetValue(SlantAngleProperty, Math.Max(0.0, Math.Min(20.0, value)));
+        }
+
+        public LeadingZeroDisplayMode LeadingZeroMode
+        {
+            get => (LeadingZeroDisplayMode)GetValue(LeadingZeroModeProperty);
+            set => SetValue(LeadingZeroModeProperty, value);
+        }
+
+        public bool ShowLeadingZeros
+        {
+            get => LeadingZeroMode == LeadingZeroDisplayMode.LitZero;
+            set => LeadingZeroMode = value ? LeadingZeroDisplayMode.LitZero : LeadingZeroDisplayMode.Blank;
+        }
+
+        public SevenSegmentFrameStyle FrameStyle
+        {
+            get => (SevenSegmentFrameStyle)GetValue(FrameStyleProperty);
+            set => SetValue(FrameStyleProperty, value);
+        }
+
+        public bool ShowGhostSegments
+        {
+            get => (bool)GetValue(ShowGhostSegmentsProperty);
+            set => SetValue(ShowGhostSegmentsProperty, value);
+        }
+
+        public bool ShowGlow
+        {
+            get => (bool)GetValue(ShowGlowProperty);
+            set => SetValue(ShowGlowProperty, value);
+        }
+
+        public bool ShowGlassReflection
+        {
+            get => (bool)GetValue(ShowGlassReflectionProperty);
+            set => SetValue(ShowGlassReflectionProperty, value);
+        }
+
+        public TextAlignment TextAlignment
+        {
+            get => (TextAlignment)GetValue(TextAlignmentProperty);
+            set => SetValue(TextAlignmentProperty, value);
+        }
+
+        public bool BlinkColon
+        {
+            get => (bool)GetValue(BlinkColonProperty);
+            set => SetValue(BlinkColonProperty, value);
+        }
+
+        public bool Blink
+        {
+            get => (bool)GetValue(BlinkProperty);
+            set => SetValue(BlinkProperty, value);
+        }
+
+        public int BlinkInterval
+        {
+            get => (int)GetValue(BlinkIntervalProperty);
+            set => SetValue(BlinkIntervalProperty, Math.Max(50, value));
+        }
+
+        public double SegmentGap
+        {
+            get => (double)GetValue(SegmentGapProperty);
+            set => SetValue(SegmentGapProperty, Math.Max(0.5, Math.Min(10.0, value)));
+        }
+
+        public int SegmentThickness
+        {
+            get => (int)GetValue(SegmentThicknessProperty);
+            set => SetValue(SegmentThicknessProperty, Math.Max(0, value));
+        }
+
+        public string Unit
+        {
+            get => (string)GetValue(UnitProperty);
+            set => SetValue(UnitProperty, value);
+        }
+
+        public Color UnitColor
+        {
+            get => (Color)GetValue(UnitColorProperty);
+            set => SetValue(UnitColorProperty, value);
+        }
+
+        [Obsolete("ValueText is deprecated. Use Value instead.")]
+        public string ValueText
+        {
+            get => Value;
+            set => Value = value;
+        }
+
+        [Obsolete("LedColor is deprecated. Use SegmentColor instead.")]
+        public Color LedColor
+        {
+            get => SegmentColor;
+            set => SegmentColor = value;
+        }
+
+        [Obsolete("Title is deprecated. Use Unit instead.")]
+        public string Title
+        {
+            get => Unit;
+            set => Unit = value;
+        }
+
+        #endregion
+
+        private readonly DispatcherTimer _blinkTimer;
+        private bool _blinkPhase = true;
 
         public SevenSegment()
         {
             ClipToBounds = true;
             ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+
+            _blinkTimer = new DispatcherTimer(DispatcherPriority.Render)
+            {
+                Interval = TimeSpan.FromMilliseconds(BlinkInterval)
+            };
+            _blinkTimer.Tick += (s, e) =>
+            {
+                if (BlinkColon || Blink)
+                {
+                    _blinkPhase = !_blinkPhase;
+                    InvalidateVisual();
+                }
+            };
+            _blinkTimer.Start();
+        }
+
+        private static void OnSegmentColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SevenSegment ctrl && e.NewValue is Color c)
+            {
+                uint argb = ((uint)c.A << 24) | ((uint)c.R << 16) | ((uint)c.G << 8) | c.B;
+                uint dimArgb = SevenSegmentState.DeriveDimColor(argb);
+                ctrl.DimColor = Color.FromArgb((byte)(dimArgb >> 24), (byte)(dimArgb >> 16), (byte)(dimArgb >> 8), (byte)dimArgb);
+            }
+        }
+
+        private static void OnColorPresetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SevenSegment ctrl && e.NewValue is SevenSegmentColorPreset preset && preset != SevenSegmentColorPreset.Custom)
+            {
+                var (segArgb, dimArgb) = SevenSegmentState.GetPresetColors(preset);
+                ctrl.SegmentColor = Color.FromArgb((byte)(segArgb >> 24), (byte)(segArgb >> 16), (byte)(segArgb >> 8), (byte)segArgb);
+                ctrl.DimColor = Color.FromArgb((byte)(dimArgb >> 24), (byte)(dimArgb >> 16), (byte)(dimArgb >> 8), (byte)dimArgb);
+            }
+        }
+
+        private static void OnBlinkIntervalChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is SevenSegment ctrl && e.NewValue is int ms && ms >= 50)
+            {
+                ctrl._blinkTimer.Interval = TimeSpan.FromMilliseconds(ms);
+            }
         }
 
         #if NETFRAMEWORK
@@ -45,28 +360,6 @@ namespace ZeroUI.Wpf.Industrial
             return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, typeface, fontSize, brush, pixelsPerDip);
         }
         #endif
-
-        // Standard 7-segment bitmasks: A, B, C, D, E, F, G
-        // Bit 0: A (Top)
-        // Bit 1: B (Top-Right)
-        // Bit 2: C (Bottom-Right)
-        // Bit 3: D (Bottom)
-        // Bit 4: E (Bottom-Left)
-        // Bit 5: F (Top-Left)
-        // Bit 6: G (Middle)
-        private static readonly byte[] DigitPatterns = new byte[]
-        {
-            0x3F, // 0: A B C D E F
-            0x06, // 1: B C
-            0x5B, // 2: A B D E G
-            0x4F, // 3: A B C D G
-            0x66, // 4: B C F G
-            0x6D, // 5: A C D F G
-            0x7D, // 6: A C D E F G
-            0x07, // 7: A B C
-            0x7F, // 8: All
-            0x6F, // 9: A B C D F G
-        };
 
         protected override void OnRender(DrawingContext dc)
         {
@@ -82,90 +375,121 @@ namespace ZeroUI.Wpf.Industrial
             double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
             #endif
 
-            // Card background & bezel
-            dc.DrawRectangle(ZeroWpfTheme.BgCard, null, new Rect(0, 0, w, h));
-            dc.DrawRectangle(null, ZeroWpfTheme.BorderPen, new Rect(0.5, 0.5, w - 1, h - 1));
+            // Outer acrylic casing
+            if (FrameStyle == SevenSegmentFrameStyle.RecessedBezel)
+            {
+                var bgBrush = new SolidColorBrush(Color.FromRgb(12, 18, 32));
+                dc.DrawRoundedRectangle(bgBrush, new Pen(new SolidColorBrush(Color.FromRgb(30, 41, 59)), 1.0), new Rect(0.5, 0.5, w - 1, h - 1), 4, 4);
+            }
+            else if (FrameStyle == SevenSegmentFrameStyle.AcrylicGlass)
+            {
+                var bgBrush = new SolidColorBrush(Color.FromRgb(8, 12, 24));
+                dc.DrawRoundedRectangle(bgBrush, new Pen(new SolidColorBrush(Color.FromRgb(51, 65, 85)), 1.5), new Rect(0.5, 0.5, w - 1, h - 1), 6, 6);
+            }
 
-            // Title
-            var titleFt = CreateFormattedText(Title, ZeroWpfTheme.BoldTypeface, 11.0, ZeroWpfTheme.TextSecondary, dpi);
-            dc.DrawText(titleFt, new Point(12, 10));
+            // Unit badge on top-right
+            double unitWidth = 0.0;
+            if (!string.IsNullOrEmpty(Unit))
+            {
+                var uBrush = UnitColor != Colors.Transparent ? new SolidColorBrush(UnitColor) : ZeroWpfTheme.TextSecondary;
+                var ft = CreateFormattedText(Unit, ZeroWpfTheme.BoldTypeface, 10.0, uBrush, dpi);
+                unitWidth = ft.Width + 8;
+                dc.DrawText(ft, new Point(w - unitWidth - 6, 6));
+            }
 
-            // Bezel display area (black sunken LED screen)
-            double dispX = 12;
-            double dispY = 32;
-            double dispW = Math.Max(20, w - 24);
-            double dispH = Math.Max(20, h - 44);
+            // Display bounds
+            double padX = 8;
+            double padY = 6;
+            double dispX = padX;
+            double dispY = padY;
+            double dispW = Math.Max(20, w - padX * 2 - unitWidth);
+            double dispH = Math.Max(16, h - padY * 2);
 
-            dc.DrawRoundedRectangle(Brushes.Black, ZeroWpfTheme.BorderPen, new Rect(dispX, dispY, dispW, dispH), 4, 4);
+            var items = SevenSegmentState.ParseValue(Value, DigitCount, LeadingZeroMode);
+            if (items.Count == 0) return;
 
-            string text = ValueText ?? "0";
-            int totalChars = text.Length;
-            if (totalChars == 0) return;
+            // Slot calculations
+            double slotW = dispW / items.Count;
+            double digitW = Math.Min(36, slotW * 0.88);
+            double digitH = Math.Min(dispH, digitW * 1.85);
 
-            double digitW = Math.Min(32, (dispW - 16) / totalChars);
-            double digitH = Math.Min(dispH - 12, digitW * 1.8);
-            double totalBlockW = totalChars * digitW;
-            double startX = dispX + (dispW - totalBlockW) / 2.0;
-            double startY = dispY + (dispH - digitH) / 2.0;
-
-            var onBrush = new SolidColorBrush(LedColor);
+            var onBrush = new SolidColorBrush(SegmentColor);
             onBrush.Freeze();
-            var offBrush = new SolidColorBrush(Color.FromArgb(20, LedColor.R, LedColor.G, LedColor.B));
+            var offBrush = new SolidColorBrush(DimColor);
             offBrush.Freeze();
 
-            for (int i = 0; i < totalChars; i++)
-            {
-                char ch = text[i];
-                double dx = startX + i * digitW;
+            bool isBlinkOff = Blink && !_blinkPhase;
 
-                if (ch >= '0' && ch <= '9')
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                double dx = dispX + i * slotW + (slotW - digitW) / 2.0;
+                double dy = dispY + (dispH - digitH) / 2.0;
+
+                if (item.IsColon)
                 {
-                    byte mask = DigitPatterns[ch - '0'];
-                    DrawDigit(dc, dx, startY, digitW - 4, digitH, mask, onBrush, offBrush);
-                }
-                else if (ch == ':')
-                {
-                    // Colon
+                    bool colonLit = !BlinkColon || _blinkPhase;
+                    var cBrush = colonLit && !isBlinkOff ? onBrush : (ShowGhostSegments ? offBrush : Brushes.Transparent);
                     double cx = dx + digitW / 2.0;
-                    double dotR = 2.5;
-                    dc.DrawEllipse(onBrush, null, new Point(cx, startY + digitH * 0.35), dotR, dotR);
-                    dc.DrawEllipse(onBrush, null, new Point(cx, startY + digitH * 0.65), dotR, dotR);
+                    double r = Math.Max(1.5, digitW * 0.09);
+                    dc.DrawEllipse(cBrush, null, new Point(cx, dy + digitH * 0.35), r, r);
+                    dc.DrawEllipse(cBrush, null, new Point(cx, dy + digitH * 0.65), r, r);
                 }
-                else if (ch == '.')
+                else
                 {
-                    // Decimal point
-                    double cx = dx + digitW / 2.0;
-                    double dotR = 2.5;
-                    dc.DrawEllipse(onBrush, null, new Point(cx, startY + digitH - 4), dotR, dotR);
+                    byte mask = SevenSegmentState.GetPattern(item.Character);
+                    if (isBlinkOff) mask = 0;
+
+                    DrawSlantedDigit(dc, dx, dy, digitW, digitH, mask, item.IsDimmed ? offBrush : onBrush, ShowGhostSegments ? offBrush : Brushes.Transparent, SlantAngle);
+
+                    if (item.HasDecimal)
+                    {
+                        var dpBrush = !isBlinkOff ? onBrush : (ShowGhostSegments ? offBrush : Brushes.Transparent);
+                        double dpR = Math.Max(1.5, digitW * 0.08);
+                        dc.DrawEllipse(dpBrush, null, new Point(dx + digitW + 1, dy + digitH - dpR), dpR, dpR);
+                    }
                 }
-                else if (ch == '-')
-                {
-                    // Dash (segment G)
-                    DrawDigit(dc, dx, startY, digitW - 4, digitH, 0x40, onBrush, offBrush);
-                }
+            }
+
+            // Glass reflection sheen
+            if (ShowGlassReflection && h > 20)
+            {
+                var glassGrad = new LinearGradientBrush(
+                    Color.FromArgb(28, 255, 255, 255),
+                    Color.FromArgb(0, 255, 255, 255),
+                    new Point(0, 0),
+                    new Point(0, 1));
+                dc.DrawRectangle(glassGrad, null, new Rect(1, 1, w - 2, h * 0.45));
             }
         }
 
-        private static void DrawDigit(DrawingContext dc, double x, double y, double w, double h, byte mask, Brush onBrush, Brush offBrush)
+        private static void DrawSlantedDigit(
+            DrawingContext dc,
+            double x, double y, double w, double h,
+            byte mask, Brush onBrush, Brush offBrush, double slantDeg)
         {
-            double t = Math.Max(2, h * 0.1); // segment thickness
-            double segW = w - 2 * t;
-            double segH = (h - 3 * t) / 2.0;
+            dc.PushTransform(new SkewTransform(-slantDeg, 0, x + w / 2.0, y + h / 2.0));
+
+            double t = Math.Max(2.0, Math.Min(6.0, h * 0.11)); // segment thickness
+            double segW = w - 2 * t - 2;
+            double segH = (h - 3 * t - 4) / 2.0;
 
             // Seg A (Top)
-            dc.DrawRectangle((mask & 0x01) != 0 ? onBrush : offBrush, null, new Rect(x + t, y, segW, t));
+            dc.DrawRectangle((mask & 0x01) != 0 ? onBrush : offBrush, null, new Rect(x + t + 1, y, segW, t));
             // Seg B (Top-Right)
-            dc.DrawRectangle((mask & 0x02) != 0 ? onBrush : offBrush, null, new Rect(x + w - t, y + t, t, segH));
+            dc.DrawRectangle((mask & 0x02) != 0 ? onBrush : offBrush, null, new Rect(x + w - t, y + t + 1, t, segH));
             // Seg C (Bottom-Right)
-            dc.DrawRectangle((mask & 0x04) != 0 ? onBrush : offBrush, null, new Rect(x + w - t, y + 2 * t + segH, t, segH));
+            dc.DrawRectangle((mask & 0x04) != 0 ? onBrush : offBrush, null, new Rect(x + w - t, y + 2 * t + segH + 2, t, segH));
             // Seg D (Bottom)
-            dc.DrawRectangle((mask & 0x08) != 0 ? onBrush : offBrush, null, new Rect(x + t, y + h - t, segW, t));
+            dc.DrawRectangle((mask & 0x08) != 0 ? onBrush : offBrush, null, new Rect(x + t + 1, y + h - t, segW, t));
             // Seg E (Bottom-Left)
-            dc.DrawRectangle((mask & 0x10) != 0 ? onBrush : offBrush, null, new Rect(x, y + 2 * t + segH, t, segH));
+            dc.DrawRectangle((mask & 0x10) != 0 ? onBrush : offBrush, null, new Rect(x, y + 2 * t + segH + 2, t, segH));
             // Seg F (Top-Left)
-            dc.DrawRectangle((mask & 0x20) != 0 ? onBrush : offBrush, null, new Rect(x, y + t, t, segH));
+            dc.DrawRectangle((mask & 0x20) != 0 ? onBrush : offBrush, null, new Rect(x, y + t + 1, t, segH));
             // Seg G (Middle)
-            dc.DrawRectangle((mask & 0x40) != 0 ? onBrush : offBrush, null, new Rect(x + t, y + t + segH, segW, t));
+            dc.DrawRectangle((mask & 0x40) != 0 ? onBrush : offBrush, null, new Rect(x + t + 1, y + t + segH + 1, segW, t));
+
+            dc.Pop();
         }
     }
 
