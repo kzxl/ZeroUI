@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ZeroGraphics.Core" Version="1.0.1" />
-    <PackageReference Include="ZeroGraphics.DirectX" Version="1.0.1" />
-    <PackageReference Include="ZeroGraphics.Direct2D" Version="1.0.1" />
-    <PackageReference Include="ZeroGraphics.Waveform" Version="1.0.1" />
+    <PackageReference Include="ZeroGraphics.Core" Version="1.5.0" />
+    <PackageReference Include="ZeroGraphics.DirectX" Version="1.5.0" />
+    <PackageReference Include="ZeroGraphics.Direct2D" Version="1.5.0" />
+    <PackageReference Include="ZeroGraphics.Waveform" Version="1.5.0" />
   </ItemGroup>
 
   <ItemGroup>

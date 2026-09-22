@@ -3,7 +3,7 @@
 > **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
 
 [![ZeroPlatform Tier](https://img.shields.io/badge/ZeroPlatform-Tier%205%20(Presentation%20%26%20Apps)-e11d48.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.1-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.4-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
 [![Unit Tests](https://img.shields.io/badge/tests-554%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#-package-matrix)
@@ -139,6 +139,29 @@ dotnet run --project src/ZeroUI.Samples.BenchmarkDemo/ZeroUI.Samples.BenchmarkDe
 ## 🌐 Part of the ZeroPlatform Ecosystem
 
 ZeroUI is the user interface and SCADA visualization pillar of the **[ZeroPlatform](https://github.com/kzxl/ZeroPlatform)** suite — unifying 12 sovereign subsystems including `ZeroGraphics`, `ZeroPipeline`, `ZeroTensor`, `ZeroComm`, and `ZeroStorage`.
+
+---
+
+## 🏛️ Ecosystem Architectural Alignment
+
+ZeroUI is a sovereign member of **Tier 5 (Presentation & Orchestration)** within the **ZeroPlatform** industrial automation ecosystem.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Tier 5: Presentation & Orchestration (ZeroUI)            │
+└────────────────────────────┬─────────────────────────────┘
+                             │ consumes
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+┌───────────────────┐ ┌──────────────┐ ┌───────────────────┐
+│ Tier 0: Primitives│ │ Tier 1: Data │ │ Tier 4: Graphics  │
+│ (ZeroPrimitives)  │ │ (ZeroData)   │ │ (ZeroGraphics)    │
+└───────────────────┘ └──────────────┘ └───────────────────┘
+```
+
+- **Upstream Ingestion**: Consumes Tier 0 foundational primitives (`ZeroPrimitives.Core 1.3.0`), Tier 1 high-speed columnar data buffers (`ZeroData.Core 1.3.0`), and Tier 4 GPU/2D rendering infrastructure (`ZeroGraphics.* 1.5.0`).
+- **Strict DAG Conformance**: Zero references to orchestrators or applications.
+- **Packaging & CI/CD**: Standardized under `Company = ZeroPlatform`, `Authors = Phong Võ`, `<ZeroTier>5</ZeroTier>`.
 
 ---
 

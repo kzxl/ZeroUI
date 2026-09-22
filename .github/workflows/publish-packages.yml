@@ -3,6 +3,9 @@ name: Publish NuGet Packages (GitHub & NuGet.org)
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -23,6 +26,12 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+          source-url: https://nuget.pkg.github.com/kzxl/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Core Tests
+        run: dotnet test tests/ZeroUI.Core.Tests/ZeroUI.Core.Tests.csproj -c Release --verbosity normal
 
       - name: Pack ZeroUI.Core
         run: dotnet pack src/ZeroUI.Core/ZeroUI.Core.csproj -c Release -o nupkgs
