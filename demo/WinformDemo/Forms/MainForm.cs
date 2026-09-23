@@ -27,6 +27,9 @@ using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Feedback;
 using ZeroUI.WinForms.Containers;
 using ZeroUI.WinForms.Data;
+using ZeroUI.Core.Barcode;
+using ZeroUI.Core.Pivot;
+using ZeroUI.WinForms.PivotGrid;
 using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Layout;
 using ZeroUI.WinForms.Navigation;
@@ -47,6 +50,8 @@ using ZeroStepStatus = ZeroUI.WinForms.Workflow.ZeroStepStatus;
 using ZeroStepGlyph = ZeroUI.WinForms.Workflow.ZeroStepGlyph;
 using ZeroListView = ZeroUI.WinForms.Data.ZeroListView;
 using ZeroTreeNode = ZeroUI.WinForms.Data.ZeroTreeNode;
+using BarcodeBox = ZeroUI.WinForms.Editors.BarcodeBox;
+using TabPageEx = ZeroUI.WinForms.Navigation.TabPageEx;
 using System.Drawing.Printing;
 using ZeroUI.WinForms.Warehouse;
 using ZeroUI.WinForms.Warehouse.Models;
@@ -120,6 +125,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private ZeroTabPage _tabCharts = null!;
         private ZeroTabPage _tabLayout = null!;
         private ZeroTabPage _tabMasterDetail = null!;
+        private ZeroTabPage _tabPivot = null!;
 
         private ZeroGridControl _zeroGrid = null!;
         private DataGridView _dgv = null!;
@@ -681,7 +687,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             Controls.Add(_mainToolbar);
             Controls.Add(_topPanel);
 
-            _featureExplorer.SelectFeature("feat_editors_core");
+            _featureExplorer.SelectFeature("feat_components");
         }
 
         private void OnFeatureSelected(ShowcaseFeatureItem item)
@@ -694,7 +700,25 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             switch (item.Key)
             {
-                // 1. DATA & GRIDS (Consolidated)
+                // 1. UI COMPONENT CATALOG & EDITORS
+                case "feat_components":
+                case "feat_editors_core":
+                case "feat_commercial_suite":
+                case "feat_commercial_query":
+                case "feat_commercial_editors":
+                case "feat_commercial_wizard":
+                case "feat_office_docs":
+                case "feat_office_pdf":
+                case "feat_office_spreadsheet":
+                case "feat_tree_list":
+                case "feat_nav_ribbon":
+                case "feat_master_detail":
+                case "feat_pivot":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 2. DATA & GRIDS
                 case "feat_datagrid":
                 case "feat_virtual_10m":
                 case "feat_autofilter":
@@ -720,224 +744,70 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
-                // 2. INDUSTRIAL DOMAIN VERTICALS
-                case "feat_vert_energy":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 1)
-                        _subTabsIndustrial.SelectedIndex = 1;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_vert_petrochem":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 2)
-                        _subTabsIndustrial.SelectedIndex = 2;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_vert_pharma":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 3)
-                        _subTabsIndustrial.SelectedIndex = 3;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_vert_water":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 4)
-                        _subTabsIndustrial.SelectedIndex = 4;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_vert_bms":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 5)
-                        _subTabsIndustrial.SelectedIndex = 5;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_vert_life_sciences":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 6)
-                        _subTabsIndustrial.SelectedIndex = 6;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_vert_robotics":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 7)
-                        _subTabsIndustrial.SelectedIndex = 7;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                // 3. INDUSTRIAL SCADA & TELEMETRY
-                case "feat_scada_synoptic":
-                    _mainNav.SelectedTab = _clusterScadaSynoptic;
-                    _subTabsScada.SelectedTab = _tabScadaPid;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_scada_pid":
-                    _mainNav.SelectedTab = _clusterScadaSynoptic;
-                    _subTabsScada.SelectedTab = _tabScadaClosedLoop;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_scada_alarms":
-                    _mainNav.SelectedTab = _clusterScadaSynoptic;
-                    _subTabsScada.SelectedTab = _tabScadaAlarms;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_scada_tags":
-                    _mainNav.SelectedTab = _clusterScadaSynoptic;
-                    _subTabsScada.SelectedTab = _tabScadaTags;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_scada_gauges":
-                    _mainNav.SelectedTab = _clusterScadaSynoptic;
-                    _subTabsScada.SelectedTab = _tabScadaOverview;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_scada_interlock":
-                    _mainNav.SelectedTab = _clusterScadaSynoptic;
-                    _subTabsScada.SelectedTab = _tabIndustrialRuntime;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                // 4. NETWORK & INFRASTRUCTURE
-                case "feat_net_rack":
-                    _mainNav.SelectedTab = _clusterNetwork;
-                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 0)
-                        _subTabsNetwork.SelectedIndex = 0;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_net_topology":
-                    _mainNav.SelectedTab = _clusterNetwork;
-                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 1)
-                        _subTabsNetwork.SelectedIndex = 1;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_net_chassis":
-                    _mainNav.SelectedTab = _clusterNetwork;
-                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 2)
-                        _subTabsNetwork.SelectedIndex = 2;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_net_ipam":
-                    _mainNav.SelectedTab = _clusterNetwork;
-                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 3)
-                        _subTabsNetwork.SelectedIndex = 3;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_net_fieldbus":
-                    _mainNav.SelectedTab = _clusterNetwork;
-                    if (_subTabsNetwork != null && _subTabsNetwork.TabPages.Count > 4)
-                        _subTabsNetwork.SelectedIndex = 4;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                // 5. MES & OPERATIONS
-                case "feat_mes_dashboard":
-                    _mainNav.SelectedTab = _clusterMes;
-                    _subTabsMes.SelectedTab = _tabMes;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_workflow_kanban":
-                    _mainNav.SelectedTab = _clusterMes;
-                    _subTabsMes.SelectedTab = _tabProcessCards;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_workflow_gantt":
-                    _mainNav.SelectedTab = _clusterIndustrial;
-                    if (_subTabsIndustrial != null && _subTabsIndustrial.TabPages.Count > 0)
-                        _subTabsIndustrial.SelectedIndex = 0;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                // 6. WAREHOUSE & LOGISTICS
-                case "feat_barcode_station":
-                    _mainNav.SelectedTab = _clusterWarehouse;
-                    _subTabsWarehouse.SelectedTab = _tabWhBarcode;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_warehouse_lot":
-                    _mainNav.SelectedTab = _clusterWarehouse;
-                    _subTabsWarehouse.SelectedTab = _tabWhLot;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_warehouse_racks":
-                    _mainNav.SelectedTab = _clusterWarehouse;
-                    _subTabsWarehouse.SelectedTab = _tabWhRacks;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                // 7. UI COMPONENT CATALOG
-                case "feat_editors_core":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabControls;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_master_detail":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabMasterDetail;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_nav_ribbon":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabLayout;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_commercial_suite":
-                case "feat_commercial_query":
-                case "feat_commercial_editors":
-                case "feat_commercial_wizard":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabCommercial;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_tree_list":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabAdvanced;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                case "feat_office_docs":
-                case "feat_office_pdf":
-                case "feat_office_spreadsheet":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabOfficeDocs;
-                    _optionsPanel.Visible = false;
-                    break;
-
-                // 8. ANALYTICS & CHARTS
+                // 3. ANALYTICS & CHARTS
+                case "feat_analytics":
                 case "feat_analytics_charts":
-                    _mainNav.SelectedTab = _clusterAnalytics;
-                    _optionsPanel.Visible = false;
-                    break;
-
                 case "feat_analytics_spc":
                     _mainNav.SelectedTab = _clusterAnalytics;
                     _optionsPanel.Visible = false;
                     break;
 
+                // 4. MES & OPERATIONS
+                case "feat_mes":
+                case "feat_mes_dashboard":
+                case "feat_workflow_kanban":
+                    _mainNav.SelectedTab = _clusterMes;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 5. WAREHOUSE & LOGISTICS
+                case "feat_warehouse":
+                case "feat_barcode_station":
+                case "feat_warehouse_lot":
+                case "feat_warehouse_racks":
+                    _mainNav.SelectedTab = _clusterWarehouse;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 6. SCADA PROCESS & P&ID
+                case "feat_scada":
+                case "feat_scada_synoptic":
+                case "feat_scada_pid":
+                case "feat_scada_alarms":
+                case "feat_scada_tags":
+                case "feat_scada_gauges":
+                case "feat_scada_interlock":
+                    _mainNav.SelectedTab = _clusterScadaSynoptic;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 7. NETWORK & INFRASTRUCTURE
+                case "feat_network":
+                case "feat_net_rack":
+                case "feat_net_topology":
+                case "feat_net_chassis":
+                case "feat_net_ipam":
+                case "feat_net_fieldbus":
+                    _mainNav.SelectedTab = _clusterNetwork;
+                    _optionsPanel.Visible = false;
+                    break;
+
+                // 8. INDUSTRIAL DOMAIN VERTICALS
+                case "feat_industrial":
+                case "feat_workflow_gantt":
+                case "feat_vert_energy":
+                case "feat_vert_petrochem":
+                case "feat_vert_pharma":
+                case "feat_vert_water":
+                case "feat_vert_bms":
+                case "feat_vert_life_sciences":
+                case "feat_vert_robotics":
+                    _mainNav.SelectedTab = _clusterIndustrial;
+                    _optionsPanel.Visible = false;
+                    break;
+
                 default:
                     _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabControls;
                     _optionsPanel.Visible = false;
                     break;
             }
@@ -1224,13 +1094,15 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _tabControls = new ZeroTabPage("Core Input Controls", "🎛️", _ => InitializeComponentsShowcase());
             _tabCommercial = new ZeroTabPage("Enterprise Commercial Suite", "🏢", _ => InitializeCommercialSuite());
             _tabOfficeDocs = new ZeroTabPage("Office & Technical Documents", "📄", p => InitializeOfficeDocsSuite(p));
-            _tabAdvanced = new ZeroTabPage("Data Hierarchy & BOM", "🌳", _ => InitializeAdvancedSuite());
+            _tabAdvanced = new ZeroTabPage("Data Hierarchy & Property Inspector", "🌳", _ => InitializeAdvancedSuite());
+            _tabPivot = new ZeroTabPage("Cross-Tab Pivot Grid", "📊", p => InitializePivotGridShowcase(p));
             _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐", p => InitializeLayoutShowcase(p));
             _tabMasterDetail = new ZeroTabPage("Master-Detail & In-Place LookUp", "📑", p => InitializeMasterDetailDemo(p));
             _subTabsComponents.AddTab(_tabControls);
             _subTabsComponents.AddTab(_tabCommercial);
             _subTabsComponents.AddTab(_tabOfficeDocs);
             _subTabsComponents.AddTab(_tabAdvanced);
+            _subTabsComponents.AddTab(_tabPivot);
             _subTabsComponents.AddTab(_tabLayout);
             _subTabsComponents.AddTab(_tabMasterDetail);
             cluster.Controls.Add(_subTabsComponents);
@@ -2384,7 +2256,287 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             rightPanel.Controls.Add(_showcaseLog);
             rightPanel.Controls.Add(topLogBar);
 
+            // Middle Panel: Advanced Enterprise Specialized Editors
+            var midPanel = new Panel
+            {
+                Name = "midShowcasePanel",
+                Dock = DockStyle.Left,
+                Width = 470,
+                Padding = new Padding(20),
+                AutoScroll = true,
+                BackColor = colors.Surface
+            };
+
+            // Section 18: ButtonEdit
+            var lblBtnEditTitle = new Label
+            {
+                Text = "18. ButtonEdit (Action Buttons: Browse, Copy, Clear)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, 16)
+            };
+            midPanel.Controls.Add(lblBtnEditTitle);
+
+            int midY = 48;
+            var btnEdit = new ButtonEdit
+            {
+                Location = new Point(16, midY),
+                Size = new Size(410, 34),
+                Text = @"C:\ZeroPlatform\Firmware\controller_v2.bin",
+                FileFilter = "Binary Files (*.bin)|*.bin|Config Files (*.json;*.xml)|*.json;*.xml|All Files (*.*)|*.*",
+                DialogTitle = "Select Firmware Binary File"
+            };
+            btnEdit.AddButton(EditorButtonKind.Copy, "Copy to clipboard");
+            btnEdit.AddButton(EditorButtonKind.Clear, "Clear input");
+            btnEdit.ButtonClick += (s, e) =>
+            {
+                if (e.Kind == EditorButtonKind.Copy)
+                {
+                    try { Clipboard.SetText(btnEdit.Text); } catch { }
+                    ZeroToast.Success(this, "Copied file path to clipboard!");
+                }
+                else if (e.Kind == EditorButtonKind.Clear)
+                {
+                    btnEdit.Text = "";
+                    ZeroToast.Info(this, "Cleared file path.");
+                }
+            };
+            midPanel.Controls.Add(btnEdit);
+
+            // Section 19: CalcEdit (Mini-Calculator Popup & Currency)
+            midY += 50;
+            var lblCalcTitle = new Label
+            {
+                Text = "19. CalcEdit (Popup Calculator & Currency Format)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, midY)
+            };
+            midPanel.Controls.Add(lblCalcTitle);
+
+            midY += 30;
+            var calcEdit = new CalcEdit
+            {
+                Location = new Point(16, midY),
+                Size = new Size(195, 34),
+                Value = 18450.75m,
+                DisplayFormat = "C2"
+            };
+            calcEdit.ValueChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Calculator value: {calcEdit.Value:C2}");
+            };
+
+            // Section 20: ColorPickEdit (Dropdown Color Swatch & Palette)
+            var colorPick = new ColorPickEdit
+            {
+                Location = new Point(225, midY),
+                Size = new Size(200, 34),
+                SelectedColor = Color.FromArgb(79, 70, 229)
+            };
+            colorPick.ColorChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Selected color: #{colorPick.SelectedColor.R:X2}{colorPick.SelectedColor.G:X2}{colorPick.SelectedColor.B:X2}");
+            };
+            midPanel.Controls.Add(calcEdit);
+            midPanel.Controls.Add(colorPick);
+
+            // Section 21: RatingControl (Star Quality & Defect Severity)
+            midY += 50;
+            var lblRatingTitle = new Label
+            {
+                Text = "20. RatingControl (Quality & Defect Rating 0.5 Step)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, midY)
+            };
+            midPanel.Controls.Add(lblRatingTitle);
+
+            midY += 30;
+            var ratingCtrl = new RatingControl
+            {
+                Location = new Point(16, midY),
+                Size = new Size(195, 34),
+                Value = 4.5m
+            };
+            ratingCtrl.ValueChanged += (s, e) =>
+            {
+                ZeroToast.Success(this, $"Quality rating: {ratingCtrl.Value:0.0} / 5.0 Stars");
+            };
+            midPanel.Controls.Add(ratingCtrl);
+
+            // Section 22: RangeSlider (Dual-Thumb Min/Max Thermal Range)
+            midY += 50;
+            var lblRangeTitle = new Label
+            {
+                Text = "21. RangeSlider (Dual-Thumb Min/Max Thermal Range)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, midY)
+            };
+            midPanel.Controls.Add(lblRangeTitle);
+
+            midY += 30;
+            var rangeSlider = new RangeSlider
+            {
+                Location = new Point(16, midY),
+                Size = new Size(410, 38),
+                Minimum = 0,
+                Maximum = 120,
+                LowerValue = 25,
+                UpperValue = 85,
+                Suffix = " °C"
+            };
+            midPanel.Controls.Add(rangeSlider);
+
+            // Section 23: TimeSpanEdit & IPAddressEdit
+            midY += 50;
+            var lblTimeSpanTitle = new Label
+            {
+                Text = "22. TimeSpanEdit & IPAddressEdit (Cycle Time & PLC IP)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, midY)
+            };
+            midPanel.Controls.Add(lblTimeSpanTitle);
+
+            midY += 30;
+            var timeSpanEdit = new TimeSpanEdit
+            {
+                Location = new Point(16, midY),
+                Size = new Size(195, 34),
+                Value = TimeSpan.FromHours(7.5)
+            };
+            timeSpanEdit.ValueChanged += (s, val) =>
+            {
+                ZeroToast.Info(this, $"Cycle duration: {val:hh\\:mm\\:ss}");
+            };
+
+            var ipEdit = new IPAddressEdit
+            {
+                Location = new Point(225, midY),
+                Size = new Size(200, 34),
+                Text = "192.168.10.45"
+            };
+            ipEdit.EditValueChanged += (s, e) =>
+            {
+                ZeroToast.Info(this, $"PLC IP Address: {ipEdit.Text}");
+            };
+            midPanel.Controls.Add(timeSpanEdit);
+            midPanel.Controls.Add(ipEdit);
+
+            // Section 24: HyperlinkEdit (Interactive URL & Browser Launch)
+            midY += 50;
+            var lblLinkTitle = new Label
+            {
+                Text = "23. HyperlinkEdit (Interactive URL & Action Link)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, midY)
+            };
+            midPanel.Controls.Add(lblLinkTitle);
+
+            midY += 30;
+            var linkEdit = new HyperlinkEdit
+            {
+                Location = new Point(16, midY),
+                Size = new Size(410, 34),
+                TargetUrl = "https://github.com/kzxl/ZeroUI",
+                DisplayText = "ZeroUI Industrial Framework Repository ↗"
+            };
+            linkEdit.HyperlinkClick += (s, e) =>
+            {
+                ZeroToast.Info(this, $"Navigating to: {linkEdit.TargetUrl}");
+            };
+            midPanel.Controls.Add(linkEdit);
+
+            // Section 25: BarcodeBox (Pure Vector 1D Barcode & 2D QR Code)
+            midY += 50;
+            var lblBarcodeTitle = new Label
+            {
+                Text = "24. BarcodeBox (Pure Vector Code 128 & QR Code)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, midY)
+            };
+            midPanel.Controls.Add(lblBarcodeTitle);
+
+            midY += 30;
+            var barcode128 = new BarcodeBox
+            {
+                Location = new Point(16, midY),
+                Size = new Size(220, 75),
+                Text = "LOT-2026-X9",
+                Symbology = BarcodeSymbology.Code128,
+                ShowText = true
+            };
+            var barcodeQr = new BarcodeBox
+            {
+                Location = new Point(250, midY),
+                Size = new Size(75, 75),
+                Text = "https://github.com/kzxl/ZeroUI",
+                Symbology = BarcodeSymbology.QrCode,
+                ShowText = false
+            };
+            midPanel.Controls.Add(barcode128);
+            midPanel.Controls.Add(barcodeQr);
+
+            // Section 26: PictureEdit (Vector Avatar & Image Frame with Lightbox Zoom)
+            midY += 88;
+            var lblPicTitle = new Label
+            {
+                Text = "25. PictureEdit (Vector Avatar with Lightbox Preview)",
+                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+                ForeColor = colors.TextPrimary,
+                AutoSize = true,
+                Location = new Point(16, midY)
+            };
+            midPanel.Controls.Add(lblPicTitle);
+
+            midY += 30;
+            var pic1 = new PictureEdit
+            {
+                Location = new Point(16, midY),
+                Size = new Size(60, 60),
+                IsCircle = true,
+                FallbackText = "PV",
+                Status = AvatarStatus.Online,
+                EnableZoomPreview = true
+            };
+            var pic2 = new PictureEdit
+            {
+                Location = new Point(90, midY),
+                Size = new Size(60, 60),
+                IsCircle = false,
+                FallbackText = "QC",
+                Status = AvatarStatus.Busy,
+                EnableZoomPreview = true
+            };
+            var pic3 = new PictureEdit
+            {
+                Location = new Point(164, midY),
+                Size = new Size(60, 60),
+                IsCircle = true,
+                FallbackText = "OP",
+                Status = AvatarStatus.Away,
+                EnableZoomPreview = true
+            };
+            midPanel.Controls.Add(pic1);
+            midPanel.Controls.Add(pic2);
+            midPanel.Controls.Add(pic3);
+
+            var midSpacer = new Label { Location = new Point(16, midY + 70), Size = new Size(410, 20), Text = "" };
+            midPanel.Controls.Add(midSpacer);
+
             _tabControls.Controls.Add(rightPanel);
+            _tabControls.Controls.Add(midPanel);
             _tabControls.Controls.Add(leftPanel);
 
             // Simulation timer: add a log entry every 600ms
@@ -4590,9 +4742,53 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 ZeroToast.Success(this, $"Selected {totalChecked} BOM items ready for assembly work order dispatch!");
             };
 
+            var propGrid = new PropertyGridControl
+            {
+                Dock = DockStyle.Fill
+            };
+            var defaultInspection = new BomComponentInspection(
+                "ASM-9000",
+                "Industrial IoT Gateway Controller Main Assy",
+                "Main Assembly",
+                "Foxconn Precision Co.",
+                24.80m,
+                3200,
+                true,
+                4.9m,
+                "-40°C to +85°C"
+            );
+            propGrid.SelectedObject = defaultInspection;
+
+            var tabSuite = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                TabStyle = ZeroTabStyle.Underline
+            };
+            TabPageEx? pagePropGrid = null;
             treeBom.NodeSelected += (s, node) =>
             {
-                ZeroToast.Info(this, $"BOM: {node.Text} {(string.IsNullOrEmpty(node.SubText) ? "" : "• " + node.SubText)}");
+                string code = node.Text.Contains(":") ? node.Text.Split(':')[0].Trim() : node.Text;
+                string desc = node.Text.Contains(":") ? node.Text.Substring(node.Text.IndexOf(':') + 1).Trim() : node.Text;
+                string cat = !string.IsNullOrEmpty(node.Badge) ? node.Badge : "Sub-Assembly";
+                decimal cost = node.SubText.Contains("$") ? 8.50m : 2.40m;
+                int qty = node.SubText.Contains("PCS") ? 12450 : 2500;
+
+                propGrid.SelectedObject = new BomComponentInspection(
+                    code,
+                    desc,
+                    cat,
+                    "Foxconn Precision Co.",
+                    cost,
+                    qty,
+                    true,
+                    4.8m,
+                    "-40°C to +85°C"
+                );
+                if (pagePropGrid != null)
+                {
+                    tabSuite.SelectedTab = pagePropGrid;
+                }
+                ZeroToast.Info(this, $"Inspecting component properties: {code}");
             };
 
             cardBom.ContentPanel.Controls.Add(treeBom);
@@ -4669,12 +4865,6 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Size = new Size(260, 32),
                 Items = new[] { "Underline", "Pill", "Card" },
                 SelectedIndex = 0
-            };
-
-            var tabSuite = new ZeroTabControl
-            {
-                Dock = DockStyle.Fill,
-                TabStyle = ZeroTabStyle.Underline
             };
 
             segStyle.SelectedIndexChanged += (s, e) =>
@@ -4933,6 +5123,11 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             pageImageModal.Controls.Add(pnlImgModal);
 
+            // Page 5: Property Inspector (ZeroPropertyGrid)
+            pagePropGrid = tabSuite.AddTab("Property Inspector", "🔍");
+            pagePropGrid.Padding = new Padding(8);
+            pagePropGrid.Controls.Add(propGrid);
+
             cardTabs.ContentPanel.Controls.Add(tabSuite);
             cardTabs.ContentPanel.Controls.Add(tabTools);
 
@@ -4957,6 +5152,188 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             bodyPanel.BringToFront();
 
             _tabAdvanced.Controls.Add(mainContainer);
+        }
+
+        private void InitializePivotGridShowcase(ZeroTabPage parent)
+        {
+            parent.BackColor = ZeroTheme.Colors.Background;
+            parent.Padding = new Padding(12);
+
+            var banner = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "📊 MULTIDIMENSIONAL CROSS-TAB OLAP REPORTING (ZeroPivotGrid)",
+                Message = "ZeroPivotGrid enables instant multidimensional pivot analysis with dynamic RowArea, ColumnArea, and DataArea aggregations (Sum, Average, Count), hierarchical drill-down, and built-in Field Chooser dialog."
+            };
+
+            var topToolbar = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 44,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0, 6, 0, 6)
+            };
+
+            var pivotGrid = new PivotGridControl
+            {
+                Dock = DockStyle.Fill,
+                RowHeaderWidth = 160,
+                CellWidth = 115,
+                CellHeight = 28
+            };
+
+            var btnFieldChooser = new ZeroButton
+            {
+                Location = new Point(0, 4),
+                Size = new Size(160, 34),
+                Text = "📋 Field Chooser",
+                ButtonStyle = ZeroButtonStyle.Primary
+            };
+            btnFieldChooser.Click += (s, e) => pivotGrid.ShowFieldList();
+
+            var btnExport = new ZeroButton
+            {
+                Location = new Point(170, 4),
+                Size = new Size(140, 34),
+                Text = "📊 Export CSV",
+                ButtonStyle = ZeroButtonStyle.Secondary
+            };
+            btnExport.Click += (s, e) => ZeroToast.Success(this, "Cross-tab pivot dataset exported to CSV successfully.");
+
+            var btnResetPivot = new ZeroButton
+            {
+                Location = new Point(320, 4),
+                Size = new Size(120, 34),
+                Text = "🔄 Reset Layout",
+                ButtonStyle = ZeroButtonStyle.Ghost
+            };
+
+            topToolbar.Controls.Add(btnResetPivot);
+            topToolbar.Controls.Add(btnExport);
+            topToolbar.Controls.Add(btnFieldChooser);
+
+            // Setup multi-dimensional manufacturing data
+            var records = GenerateManufacturingPivotData();
+            pivotGrid.DataSource = records;
+
+            // Configure default pivot fields
+            pivotGrid.AddField("Plant", PivotArea.RowArea, "Plant / Facility");
+            pivotGrid.AddField("Line", PivotArea.RowArea, "Production Line");
+            pivotGrid.AddField("Shift", PivotArea.ColumnArea, "Work Shift");
+            pivotGrid.AddField("OutputQty", PivotArea.DataArea, "Total Output (PCS)", PivotSummaryType.Sum);
+            pivotGrid.AddField("DefectCount", PivotArea.DataArea, "Defect Units", PivotSummaryType.Sum);
+            pivotGrid.AddField("YieldRate", PivotArea.DataArea, "Yield %", PivotSummaryType.Average);
+
+            btnResetPivot.Click += (s, e) =>
+            {
+                pivotGrid.Fields.Clear();
+                pivotGrid.AddField("Plant", PivotArea.RowArea, "Plant / Facility");
+                pivotGrid.AddField("Line", PivotArea.RowArea, "Production Line");
+                pivotGrid.AddField("Shift", PivotArea.ColumnArea, "Work Shift");
+                pivotGrid.AddField("OutputQty", PivotArea.DataArea, "Total Output (PCS)", PivotSummaryType.Sum);
+                pivotGrid.AddField("DefectCount", PivotArea.DataArea, "Defect Units", PivotSummaryType.Sum);
+                pivotGrid.AddField("YieldRate", PivotArea.DataArea, "Yield %", PivotSummaryType.Average);
+                pivotGrid.RefreshData();
+                ZeroToast.Info(this, "Pivot fields reset to default cross-tab layout.");
+            };
+
+            var card = new ZeroCard
+            {
+                Dock = DockStyle.Fill,
+                Title = "Production & Quality Cross-Tab OLAP Matrix",
+                Subtitle = "Aggregating 1,200 production batches across facilities, lines, and shifts"
+            };
+            card.ContentPanel.Controls.Add(pivotGrid);
+
+            var spacer = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
+
+            parent.Controls.Add(card);
+            parent.Controls.Add(spacer);
+            parent.Controls.Add(topToolbar);
+            parent.Controls.Add(banner);
+        }
+
+        private static List<ManufacturingPivotRecord> GenerateManufacturingPivotData()
+        {
+            var list = new List<ManufacturingPivotRecord>(1200);
+            string[] plants = { "Plant Alpha (Texas)", "Plant Beta (Munich)", "Plant Gamma (Tokyo)" };
+            string[] lines = { "Line 01 (SMT)", "Line 02 (THT)", "Line 03 (AOI)", "Line 04 (Final Box)" };
+            string[] shifts = { "Morning (06:00-14:00)", "Evening (14:00-22:00)", "Night (22:00-06:00)" };
+            string[] families = { "IoT Gateways", "PLC Modules", "Industrial Sensors", "BESS Controllers" };
+
+            var rnd = new Random(42);
+            for (int i = 0; i < 1200; i++)
+            {
+                int outQty = rnd.Next(250, 1500);
+                int defects = rnd.Next(0, 12);
+                double yieldVal = Math.Round((1.0 - (double)defects / outQty) * 100, 2);
+                list.Add(new ManufacturingPivotRecord
+                {
+                    Plant = plants[rnd.Next(plants.Length)],
+                    Line = lines[rnd.Next(lines.Length)],
+                    Shift = shifts[rnd.Next(shifts.Length)],
+                    ProductFamily = families[rnd.Next(families.Length)],
+                    OutputQty = outQty,
+                    DefectCount = defects,
+                    YieldRate = yieldVal
+                });
+            }
+            return list;
+        }
+
+        public sealed class ManufacturingPivotRecord
+        {
+            public string Plant { get; set; } = "";
+            public string Line { get; set; } = "";
+            public string Shift { get; set; } = "";
+            public string ProductFamily { get; set; } = "";
+            public int OutputQty { get; set; }
+            public int DefectCount { get; set; }
+            public double YieldRate { get; set; }
+        }
+
+        public sealed class BomComponentInspection
+        {
+            [System.ComponentModel.Category("1. Component Information"), System.ComponentModel.Description("Standard engineering part identifier")]
+            public string PartNumber { get; set; }
+
+            [System.ComponentModel.Category("1. Component Information"), System.ComponentModel.Description("Full description of the component")]
+            public string Description { get; set; }
+
+            [System.ComponentModel.Category("1. Component Information"), System.ComponentModel.Description("Assembly classification level")]
+            public string Category { get; set; }
+
+            [System.ComponentModel.Category("2. Procurement & Supply"), System.ComponentModel.Description("Primary approved manufacturing vendor")]
+            public string Supplier { get; set; }
+
+            [System.ComponentModel.Category("2. Procurement & Supply"), System.ComponentModel.Description("Standard component unit price in USD")]
+            public decimal UnitCost { get; set; }
+
+            [System.ComponentModel.Category("2. Procurement & Supply"), System.ComponentModel.Description("Current available inventory in stock")]
+            public int StockQuantity { get; set; }
+
+            [System.ComponentModel.Category("3. Quality & Compliance"), System.ComponentModel.Description("RoHS-3 and REACH environmental compliance")]
+            public bool RoHSCompliant { get; set; }
+
+            [System.ComponentModel.Category("3. Quality & Compliance"), System.ComponentModel.Description("Incoming QA audit quality rating score (0.0 to 5.0)")]
+            public decimal QualityRating { get; set; }
+
+            [System.ComponentModel.Category("4. Engineering Specs"), System.ComponentModel.Description("Rated operating ambient temperature range")]
+            public string OperatingTemp { get; set; }
+
+            public BomComponentInspection(string partNumber, string description, string category, string supplier, decimal unitCost, int stockQty, bool rohs, decimal qualityRating, string operatingTemp)
+            {
+                PartNumber = partNumber;
+                Description = description;
+                Category = category;
+                Supplier = supplier;
+                UnitCost = unitCost;
+                StockQuantity = stockQty;
+                RoHSCompliant = rohs;
+                QualityRating = qualityRating;
+                OperatingTemp = operatingTemp;
+            }
         }
 
         private Panel CreateParamBox(string label, decimal initialVal, string unit, decimal step, decimal min, decimal max, int decimals = 1)

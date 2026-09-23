@@ -171,9 +171,26 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
         public void SelectFeature(string key)
         {
-            // Normalize legacy / sub-feature alias keys
+            // Normalize legacy / sub-feature alias keys to their parent subsystems
             switch (key?.ToLowerInvariant())
             {
+                case "feat_components":
+                case "feat_editors_core":
+                case "feat_commercial_suite":
+                case "feat_commercial_query":
+                case "feat_commercial_editors":
+                case "feat_commercial_wizard":
+                case "feat_office_docs":
+                case "feat_office_pdf":
+                case "feat_office_spreadsheet":
+                case "feat_tree_list":
+                case "feat_nav_ribbon":
+                case "feat_master_detail":
+                case "feat_pivot":
+                    key = "feat_components";
+                    break;
+
+                case "feat_datagrid":
                 case "feat_virtual_10m":
                 case "feat_autofilter":
                 case "feat_grouping_summaries":
@@ -181,14 +198,55 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 case "feat_standard_dgv":
                     key = "feat_datagrid";
                     break;
-                case "feat_commercial_query":
-                case "feat_commercial_editors":
-                case "feat_commercial_wizard":
-                    key = "feat_commercial_suite";
+
+                case "feat_mes":
+                case "feat_mes_dashboard":
+                case "feat_workflow_kanban":
+                    key = "feat_mes";
                     break;
-                case "feat_office_pdf":
-                case "feat_office_spreadsheet":
-                    key = "feat_office_docs";
+
+                case "feat_warehouse":
+                case "feat_barcode_station":
+                case "feat_warehouse_lot":
+                case "feat_warehouse_racks":
+                    key = "feat_warehouse";
+                    break;
+
+                case "feat_scada":
+                case "feat_scada_synoptic":
+                case "feat_scada_pid":
+                case "feat_scada_alarms":
+                case "feat_scada_tags":
+                case "feat_scada_gauges":
+                case "feat_scada_interlock":
+                    key = "feat_scada";
+                    break;
+
+                case "feat_network":
+                case "feat_net_rack":
+                case "feat_net_topology":
+                case "feat_net_chassis":
+                case "feat_net_ipam":
+                case "feat_net_fieldbus":
+                    key = "feat_network";
+                    break;
+
+                case "feat_industrial":
+                case "feat_workflow_gantt":
+                case "feat_vert_energy":
+                case "feat_vert_petrochem":
+                case "feat_vert_pharma":
+                case "feat_vert_water":
+                case "feat_vert_bms":
+                case "feat_vert_life_sciences":
+                case "feat_vert_robotics":
+                    key = "feat_industrial";
+                    break;
+
+                case "feat_analytics":
+                case "feat_analytics_charts":
+                case "feat_analytics_spc":
+                    key = "feat_analytics";
                     break;
             }
 
@@ -459,275 +517,86 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         {
             _allItems.Clear();
 
-            // 1. UI COMPONENT CATALOG (DEFAULT CLUSTER)
+            // 1. GIAO DIỆN & DỮ LIỆU
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_editors_core", "Core UI Controls & Inputs", "Component Catalog", "🎛️", "INPUTS", Color.FromArgb(59, 130, 246),
-                "ZeroButton, ZeroProgressBar, ZeroSearchBox, ZeroSwitch, ZeroTag, ZeroSegmented, ZeroStatistic, ZeroInput, Badge, and InfoBar.",
-                @"// Core UI Controls & Inputs
-var btn = new ZeroButton { ButtonStyle = ZeroButtonStyle.Primary };
-var prog = new ZeroProgressBar { Value = 78 };
-var sw = new ZeroSwitch { Checked = true };
-var badge = new ZeroBadge { Text = ""NEW"" };"
+                "feat_components", "UI Components & Editors", "Giao Diện & Dữ Liệu", "🎨", "CATALOG", Color.FromArgb(59, 130, 246),
+                "Thư viện điều khiển toàn diện: ButtonEdit, CalcEdit, ColorPick, Rating, RangeSlider, PictureEdit, TreeList, PropertyGrid, PivotGrid, FilterControl, Wizard, v.v.",
+                @"// ZeroUI Components & Editors Suite
+var btnEdit = new ButtonEdit();
+var calc = new CalcEdit { Value = 18450.75m };
+var rating = new RatingControl { Value = 4.5m };
+var propGrid = new PropertyGridControl();
+var pivotGrid = new PivotGridControl();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_commercial_suite", "Enterprise Commercial Suite", "Component Catalog", "🏢", "COMMERCIAL", Color.FromArgb(16, 185, 129),
-                "Visual Query Builder (FilterControl), GridLookUp, SearchLookUp, CheckedComboBox, TokenEdit, and Multi-Step Process Wizard.",
-                @"// Visual Query Builder & Enterprise Editors
-var filter = new ZeroFilterControl();
-filter.AvailableFields.AddRange(new[] { ""PartNumber"", ""Category"", ""UnitCost"" });
-var wizard = new ZeroWizard();
-wizard.Pages.Add(new ZeroWizardPage(""Work Order"", ""Configure order""));"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_office_docs", "Office & Technical Documents", "Component Catalog", "📄", "DOCS", Color.FromArgb(239, 68, 68),
-                "High-fidelity vector PDF reader (continuous scroll, bookmarks, 25-400% zoom) and full-featured spreadsheet calculation engine.",
-                @"// Vector PDF Viewer & Spreadsheet Engine
-var pdf = new PdfViewerControl();
-pdf.LoadDocument(""Report.pdf"");
-var sheet = new SpreadsheetControl();
-sheet.SetCellValue(""A1"", 100);
-sheet.SetCellFormula(""A2"", ""=A1 * 1.15"");"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_tree_list", "Multi-Level BOM TreeList", "Component Catalog", "🌳", "TREE", Color.FromArgb(20, 184, 166),
-                "Industrial Bill of Materials (BOM) multi-column virtual tree explorer with collapsible parent-child nodes and check selection.",
-                @"// Multi-Level BOM TreeList
-var tree = new ZeroTreeList();
-tree.Columns.Add(""Component"");
-tree.LoadHierarchy(bomNodes);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_nav_ribbon", "Ribbon & Layout Workspaces", "Component Catalog", "🧭", "LAYOUT", Color.FromArgb(99, 102, 241),
-                "DevExpress-style RibbonControl, Accordion sidebar explorer, Breadcrumb bar, and high-performance SplitContainers.",
-                @"// Ribbon & Navigation
-var ribbon = new RibbonControl();
-var page = ribbon.AddPage(""Home"");"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_master_detail", "Master-Detail Grid Hierarchy", "Component Catalog", "📑", "HIERARCHY", Color.FromArgb(139, 92, 246),
-                "Expandable nested hierarchical rows with independent schemas, lookups, and sub-summaries.",
-                @"// Master-Detail DataGrid
-grid.EnableMasterDetail = true;
-grid.DetailRowHeight = 160;"
-            ));
-
-            // 2. DATA & GRIDS
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_datagrid", "Virtual DataGrid (ZeroGrid)", "Data & Grids", "⚡", "10M ROWS", Color.FromArgb(16, 185, 129),
-                "Zero-allocation high-frequency scrolling over up to 10M records with auto-filtering, grouping, summaries, banded headers, and DGV comparison tab.",
-                @"// Initialize Virtual DataGrid
+                "feat_datagrid", "DataGrid & Benchmarks", "Giao Diện & Dữ Liệu", "⚡", "10M ROWS", Color.FromArgb(16, 185, 129),
+                "Lưới dữ liệu Zero-allocation cuộn mượt mà lên tới 10,000,000 dòng với Auto-filter, Grouping, Summaries, Banded Headers và so sánh DataGridView.",
+                @"// Initialize High-Volume Virtual DataGrid
 var grid = new ZeroGridControl();
 grid.VirtualMode = true;
 grid.RowCount = 10_000_000;
 grid.ShowAutoFilterRow = true;
 grid.ShowFindPanel = true;
-grid.ShowGroupPanel = true;
-grid.ApplyDpiScaling(ZeroDpi.GetScaleFactor(this));"
+grid.ShowGroupPanel = true;"
             ));
 
-            // 3. ANALYTICS & CHARTS
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_analytics_charts", "High-Speed Waveforms & Trends", "Analytics & Charts", "📈", "100kHz", Color.FromArgb(139, 92, 246),
-                "Real-time 100,000 points/second hardware-accelerated waveform scope and multi-axis trend charting.",
-                @"var chart = new TrendChart();
+                "feat_analytics", "Analytics & Trends", "Giao Diện & Dữ Liệu", "📊", "ANALYTICS", Color.FromArgb(99, 102, 241),
+                "Biểu đồ dạng sóng thời gian thực 100kHz, đồ thị xu hướng đa trục, kiểm soát chất lượng thống kê SPC Six Sigma (UCL, CL, LCL).",
+                @"// Real-Time Waveforms & SPC Charts
+var chart = new TrendChart();
 chart.AddSeries(""Pressure"", SeriesType.FastLine);
-chart.FeedRealtimeData(pressureVal);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_analytics_spc", "SPC Quality & Six Sigma Charts", "Analytics & Charts", "📊", "SPC/SQC", Color.FromArgb(59, 130, 246),
-                "Statistical Process Control charts with UCL, LCL, Center Line, and Nelson Rules evaluation.",
-                @"var spc = new SpcChart();
+var spc = new SpcChart();
 spc.SetLimits(ucl: 15.2, cl: 14.0, lcl: 12.8);"
             ));
 
-            // 4. INDUSTRIAL SCADA & TELEMETRY
+            // 2. VẬN HÀNH & KHO VẬN
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_scada_synoptic", "P&ID Process Mimic", "SCADA & Telemetry", "🏭", "SYNOPTIC", Color.FromArgb(239, 68, 68),
-                "Animated P&ID distillation plant mimic with live tank levels, rotating pumps, flow pipes, and sensor transmitters.",
-                @"var synoptic = new PlantMimicCanvas();
-synoptic.AddTank(""TK-101"", level: 76.5);
-synoptic.AddPump(""P-101A"", rpm: 1450);
-synoptic.StartAnimation();"
+                "feat_mes", "MES & Smart Factory", "Vận Hành & Kho Vận", "🏭", "OPERATIONS", Color.FromArgb(245, 158, 11),
+                "Hệ thống điều hành sản xuất thời gian thực: MES Telemetry HUD, OEE 88.4%, Takt Time Pacing, Smart Kanban Board với ràng buộc WIP.",
+                @"// MES Operations & Kanban Board
+var mesHud = new MesTelemetryHud();
+mesHud.UpdateOee(availability: 0.94, performance: 0.96, quality: 0.98);
+var kanban = new KanbanBoard();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_scada_pid", "Closed-Loop Reaction Process", "SCADA & Telemetry", "🔄", "CLOSED-LOOP", Color.FromArgb(245, 158, 11),
-                "Real-time feedback loop controller with Setpoint (SP), Process Variable (PV), and Control Variable (CV).",
-                @"var pid = new PidFaceplate();
-pid.BindController(pidLoop);"
+                "feat_warehouse", "Warehouse & Logistics", "Vận Hành & Kho Vận", "📦", "LOGISTICS", Color.FromArgb(16, 185, 129),
+                "Trạm tiếp nhận mã vạch GS1-128, truy xuất nguồn gốc lô hàng FEFO/FIFO, mô hình hóa trực quan kệ hàng 2D/3D (WMS).",
+                @"// Warehouse Workstation & Traceability
+var scanner = new BarcodeScanControl();
+var timeline = new StockMovementTimeline();
+var rack = new WarehouseRack();"
+            ));
+
+            // 3. TỰ ĐỘNG HÓA & HẠ TẦNG
+            _allItems.Add(new ShowcaseFeatureItem(
+                "feat_scada", "SCADA Process & P&ID", "Tự Động Hóa & Hạ Tầng", "🔄", "AUTOMATION", Color.FromArgb(239, 68, 68),
+                "Sơ đồ mô phỏng công nghệ P&ID, điều khiển vòng lặp kín Closed-Loop PID, quản lý cảnh báo ISA-18.2, động cơ OPC-UA 200 Hz.",
+                @"// SCADA Synoptic & ISA-18.2 Alarms
+var synoptic = new PlantMimicCanvas();
+var pid = new PidFaceplate();
+var alarmGrid = new AlarmGrid();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_scada_alarms", "ISA-18.2 Alarm Banner & PID", "SCADA & Telemetry", "🚨", "ISA-18.2", Color.FromArgb(239, 68, 68),
-                "Strict industrial alarm lifecycle management: Unacknowledged, Acknowledged, Cleared, and Suppressed.",
-                @"var alarmGrid = new AlarmGrid();
-alarmGrid.BindManager(isaAlarmManager);"
+                "feat_network", "Network & Infrastructure", "Tự Động Hóa & Hạ Tầng", "🌐", "INFRASTRUCTURE", Color.FromArgb(6, 182, 212),
+                "Tủ rack thiết bị 19\" 42U, Switch Faceplate 48 cổng, bản đồ topo mạng động, ma trận IPAM /24, chẩn đoán ngắt tuyến Fieldbus.",
+                @"// Network & IT/OT Infrastructure
+var devRack = new DeviceRack { ShowThermalOverlay = true };
+var netTopo = new NetworkTopology();
+var ipMatrix = new IpMatrix();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_scada_tags", "OPC-UA Realtime Tag Engine", "SCADA & Telemetry", "⚡", "200 Hz", Color.FromArgb(6, 182, 212),
-                "High-frequency 200 Hz telemetry monitor streaming over 1,000 tags with deadband filtering and quality flags.",
-                @"var tagEngine = new TagEngineMonitor();
-tagEngine.Subscribe(""ns=2;s=Line1.Speed"", 200 /* Hz */);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_scada_gauges", "Substation SCADA & Energy Mimic", "SCADA & Telemetry", "⏱️", "SUBSTATION", Color.FromArgb(16, 185, 129),
-                "110kV Substation Single-Line Mimic, circuit breakers, bus voltages, power factor and digital telemetry meters.",
-                @"var substation = new SubstationMimic();
-substation.SetBreakerState(""CB-101"", BreakerState.Closed);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_scada_interlock", "Telemetry & Safety Interlock", "SCADA & Telemetry", "🛡️", "SAFETY", Color.FromArgb(225, 29, 72),
-                "High-speed vibration FFT spectrum analysis, temperature telemetry, and SIL safety interlock matrix.",
-                @"var interlock = new SafetyInterlockMatrix();
-interlock.EvaluatePermissives();"
-            ));
-
-            // 5. INDUSTRIAL DOMAIN VERTICALS
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_workflow_gantt", "Industrial Gantt Scheduler", "Industrial Verticals", "📅", "GANTT", Color.FromArgb(139, 92, 246),
-                "Multi-stage machine scheduling, task dependencies, critical path calculation, and milestone tracking.",
-                @"var gantt = new GanttControl();
-gantt.AddTask(""Order Intake"", DateTime.Today, DateTime.Today.AddDays(3));"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_vert_energy", "Energy & Smart Grid", "Industrial Verticals", "⚡", "SLD/BESS", Color.FromArgb(6, 182, 212),
-                "Single-Line Diagram, 16-Cell BESS Rack telemetry, and 16-String Solar PV array monitoring.",
-                @"var sld = new SingleLineDiagram { Dock = DockStyle.Fill };
-var bess = new BessRackMonitor();
-var solar = new SolarPvMatrix();"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_vert_petrochem", "Oil & Gas / Petrochem", "Industrial Verticals", "🛢️", "DISTILL", Color.FromArgb(249, 115, 22),
-                "Fractional Distillation Column with tray temperatures, SIS Cause & Effect Matrix, and Pipeline PIG Tracker.",
-                @"var column = new DistillationColumn();
-var esdMatrix = new EsdMatrix();
-var pigMonitor = new PipelinePigMonitor();"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_vert_pharma", "Pharma & Biotech (ISA-88)", "Industrial Verticals", "💊", "ISA-88", Color.FromArgb(168, 85, 247),
-                "Sanitary Bioreactor Vessel, ISO Cleanroom Cascade HUD, ISA-88 Batch SFC Tracker, and CIP/SIP 4-TACT Matrix.",
-                @"var bioreactor = new BioreactorVessel();
-var cleanroom = new CleanroomEnvHud();
-var sfc = new SfcBatchTracker();
-var cip = new CipValidationMatrix();"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_vert_water", "Water & Wastewater", "Industrial Verticals", "💧", "SCADA", Color.FromArgb(14, 165, 233),
-                "Circular Clarifier Basin, Chemical Dosing Skid with active dosing pumps, and Hydraulic Gradient Chart.",
-                @"var clarifier = new ClarifierBasin();
-var dosing = new ChemicalDosingSkid();
-var hydraulic = new HydraulicGradientChart();"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_vert_bms", "BMS & HVAC Automation", "Industrial Verticals", "🏢", "HVAC", Color.FromArgb(34, 197, 94),
-                "Variable Air Volume AHU Schematic, Chiller Plant COP performance curves, and 7-Day Zone Temperature Scheduler.",
-                @"var ahu = new AhuSchematic();
-var chiller = new ChillerPlant();
-var scheduler = new ZoneScheduler();"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_vert_life_sciences", "Life Sciences & Lab", "Industrial Verticals", "🔬", "LAB", Color.FromArgb(139, 92, 246),
-                "96/384 Microplate Reader heatmap, Centrifuge RCF Monitor, and -80°C Ultra-Low Cold Chain MKT Tracker.",
-                @"var reader = new MicroplateReader();
-var centrifuge = new CentrifugeMonitor();
-var coldChain = new ColdChainTracker();"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_vert_robotics", "Robotics & Intralogistics", "Industrial Verticals", "🤖", "AGV/ASRS", Color.FromArgb(245, 158, 11),
-                "Real-time AGV Fleet Path Canvas, ASRS High-Bay Stacker Crane Visualizer, and Conveyor Merge Sorter Matrix.",
-                @"var fleet = new AgvFleetCanvas();
-var crane = new AsrsCraneVisualizer();
-var conveyor = new ConveyorMergeMatrix();"
-            ));
-
-            // 6. MES & OPERATIONS
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_mes_dashboard", "MES Operations & Telemetry", "MES Operations", "📊", "OEE", Color.FromArgb(59, 130, 246),
-                "Real-time factory telemetry with live OEE gauge (88.4%), Takt time pacing, cycle counters, and PLC status.",
-                @"var mesHud = new MesTelemetryHud();
-mesHud.UpdateOee(availability: 0.94, performance: 0.96, quality: 0.98);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_workflow_kanban", "Smart Factory Kanban Board", "MES Operations", "📋", "KANBAN", Color.FromArgb(245, 158, 11),
-                "Interactive production card lanes with WIP constraints, order progress, and technician assignment.",
-                @"var kanban = new KanbanBoard();
-kanban.AddLane(""Ready"", Color.LightGray);
-kanban.AddLane(""In Progress"", Color.SkyBlue);"
-            ));
-
-            // 7. WAREHOUSE & LOGISTICS
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_barcode_station", "Receiving & Barcode Station", "Warehouse Suite", "📦", "SCANNER", Color.FromArgb(59, 130, 246),
-                "Rapid GS1-128 and 2D Datamatrix barcode ingestion station with instant verification and PO matching.",
-                @"var scanner = new BarcodeScanControl();
-scanner.OnBarcodeScanned += code => VerifyInboundPO(code);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_warehouse_lot", "FEFO/FIFO Lot Traceability", "Warehouse Suite", "📋", "LOT-TRACE", Color.FromArgb(245, 158, 11),
-                "Material traceability timeline, batch expiration alerts, and comprehensive stock movement audit logs.",
-                @"var timeline = new StockMovementTimeline();
-timeline.LoadAuditTrail(lotNumber);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_warehouse_racks", "Visual Warehouse Rack 3D/2D", "Warehouse Suite", "🏢", "WMS", Color.FromArgb(16, 185, 129),
-                "Interactive visual warehouse rack matrix with bin occupancy levels, weight limits, and hazardous flags.",
-                @"var rack = new WarehouseRack();
-rack.LoadZoneLayout(""ZONE-A"", bayCount: 12, tierCount: 5);"
-            ));
-
-            // 8. NETWORK & INFRASTRUCTURE
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_net_rack", "19\" 42U Server Rack & Switch", "Network & Infra", "🗄️", "42U/PoE", Color.FromArgb(59, 130, 246),
-                "Interactive 42U equipment cabinet with thermal heatmaps, server blade installation, and 48-port switch faceplate.",
-                @"var devRack = new DeviceRack { ShowThermalOverlay = true };
-var swFaceplate = new SwitchFaceplate();"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_net_topology", "Network Topology Canvas & Flows", "Network & Infra", "🕸️", "TOPOLOGY", Color.FromArgb(99, 102, 241),
-                "Dynamic network node topology with layered hierarchical and circular ring layout algorithms and animated packet flows.",
-                @"var netTopo = new NetworkTopology();
-netTopo.Engine.ApplyHierarchicalLayout(netTopo.Width, netTopo.Height);"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_net_chassis", "Chassis Health & Optical DDM", "Network & Infra", "🖥️", "CHASSIS", Color.FromArgb(249, 115, 22),
-                "Modular device chassis with dual redundant hot-swap PSUs, tachometer fan modules, and SFP+ DDM optical diagnostics.",
-                @"var devFaceplate = new DeviceFaceplate();
-devFaceplate.Profile.Psu2.Status = PsuHealthStatus.Normal;"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_net_ipam", "2D IPAM Subnet Matrix", "Network & Infra", "🌐", "/24 IPAM", Color.FromArgb(16, 185, 129),
-                "Complete /24 IPv4 address allocation grid with color-coded status tiles, ping latency sparklines, and DHCP leases.",
-                @"var ipMatrix = new IpMatrix();
-ipMatrix.ScanSubnet(""192.168.1.0/24"");"
-            ));
-
-            _allItems.Add(new ShowcaseFeatureItem(
-                "feat_net_fieldbus", "Fieldbus & Break Locator", "Network & Infra", "🔌", "FIELDBUS", Color.FromArgb(239, 68, 68),
-                "Industrial fieldbus daisy-chain line monitor (Profinet / EtherCAT) with real-time cable break localization.",
-                @"var fbMonitor = new FieldbusMonitor();
-fbMonitor.Network.SimulateBreak(stationIndex: 3);"
+                "feat_industrial", "Industrial Verticals", "Tự Động Hóa & Hạ Tầng", "⚙️", "VERTICALS", Color.FromArgb(139, 92, 246),
+                "8 giải pháp chuyên sâu: Lịch Gantt, Năng lượng & Smart Grid, Dầu khí, Dược phẩm ISA-88, Xử lý nước, HVAC/BMS, Lab & Robot AGV/ASRS.",
+                @"// Industrial Domain Solutions
+var gantt = new GanttControl();
+var sld = new SingleLineDiagram();
+var column = new DistillationColumn();
+var bioreactor = new BioreactorVessel();"
             ));
 
             _selectedKey = _allItems[0].Key;
