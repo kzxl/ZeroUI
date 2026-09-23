@@ -35,6 +35,16 @@ namespace ZeroUI.WinForms.Navigation
         public Color? BadgeColor { get; set; }
         public bool Closable { get; set; } = false;
 
+        /// <summary>
+        /// Optional delegate to lazily initialize tab contents when this page is first selected.
+        /// </summary>
+        public Action<TabPageEx>? LazyInitializer { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the tab page content has already been initialized.
+        /// </summary>
+        public bool IsInitialized { get; set; } = false;
+
         internal Rectangle HeaderBounds { get; set; }
         internal Rectangle CloseButtonBounds { get; set; }
 
@@ -48,6 +58,11 @@ namespace ZeroUI.WinForms.Navigation
         {
             Title = title;
             Icon = icon;
+        }
+
+        public TabPageEx(string title, string icon, Action<TabPageEx> lazyInitializer) : this(title, icon)
+        {
+            LazyInitializer = lazyInitializer;
         }
     }
 
@@ -296,6 +311,13 @@ namespace ZeroUI.WinForms.Navigation
             return page;
         }
 
+        public TabPageEx AddLazyTab(string title, string icon, Action<TabPageEx> initializer, int badgeCount = 0)
+        {
+            var page = new TabPageEx(title, icon, initializer) { BadgeCount = badgeCount };
+            AddTab(page);
+            return page;
+        }
+
         public void AddTab(TabPageEx page)
         {
             _tabPages.Add(page);
@@ -355,10 +377,23 @@ namespace ZeroUI.WinForms.Navigation
             for (int i = 0; i < _tabPages.Count; i++)
             {
                 bool active = (i == _selectedIndex);
-                _tabPages[i].Visible = active;
+                var page = _tabPages[i];
+                page.Visible = active;
                 if (active)
                 {
-                    _tabPages[i].BringToFront();
+                    if (!page.IsInitialized && page.LazyInitializer != null)
+                    {
+                        page.IsInitialized = true;
+                        try
+                        {
+                            page.LazyInitializer(page);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[TabControlEx] Error initializing lazy tab '{page.Title}': {ex}");
+                        }
+                    }
+                    page.BringToFront();
                 }
             }
             _contentContainer.ResumeLayout(true);
@@ -751,6 +786,7 @@ namespace ZeroUI.WinForms.Navigation
     {
         public ZeroTabPage() : base() { }
         public ZeroTabPage(string title, string icon = "") : base(title, icon) { }
+        public ZeroTabPage(string title, string icon, Action<TabPageEx> lazyInitializer) : base(title, icon, lazyInitializer) { }
     }
 
     [Obsolete("Use TabControlEx instead.")]

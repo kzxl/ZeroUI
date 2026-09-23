@@ -5,12 +5,15 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZeroUI.Core.Localization;
 using ZeroUI.Core.Pdf;
 using ZeroUI.WinForms.Data;
 using ZeroUI.WinForms.Editors;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Reporting
@@ -466,17 +469,44 @@ namespace ZeroUI.WinForms.Reporting
 
         public void LoadDocument(string filePath)
         {
+            _ = LoadDocumentAsync(filePath);
+        }
+
+        public async Task<bool> LoadDocumentAsync(string filePath, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath)) return false;
+
+            LoadingOverlayHandle? overlay = null;
             try
             {
-                Document = PdfParser.Parse(filePath);
+                overlay = LoadingOverlay.Show(
+                    _canvasHost,
+                    "Loading PDF Document...",
+                    $"Parsing {Path.GetFileName(filePath)}",
+                    canCancel: false);
+
+                var doc = await Task.Run(() => PdfParser.Parse(filePath), cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested) return false;
+
+                Document = doc;
+                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Could not load PDF document:\n" + ex.Message, "PDF Load Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    MessageBox.Show("Could not load PDF document:\n" + ex.Message, "PDF Load Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                return false;
+            }
+            finally
+            {
+                overlay?.Dispose();
             }
         }
 
-        public void OpenFileDialogPrompt()
+        public async void OpenFileDialogPrompt()
         {
             using var ofd = new OpenFileDialog
             {
@@ -486,7 +516,7 @@ namespace ZeroUI.WinForms.Reporting
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                LoadDocument(ofd.FileName);
+                await LoadDocumentAsync(ofd.FileName);
             }
         }
 

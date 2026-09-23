@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ZeroUI.Core.Common;
@@ -583,122 +584,35 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _subTabsBenchmark.AddTab(_tabDgv);
             _clusterBenchmark.Controls.Add(_subTabsBenchmark);
 
-            // Cluster 2: MES Production
-            _clusterMes = new ZeroTabPage("MES & Smart Factory", "🏭") { BadgeCount = 3 };
-            _subTabsMes = new ZeroTabControl
-            {
-                Dock = DockStyle.Fill,
-                Orientation = ZeroTabOrientation.Horizontal,
-                TabHeight = 36,
-                TabStyle = ZeroTabStyle.Pill
-            };
-            _tabMes = new ZeroTabPage("Live Production Dashboard", "🏭");
-            _tabProcessCards = new ZeroTabPage("MOP & Work Order Cards", "📋");
-            _subTabsMes.AddTab(_tabMes);
-            _subTabsMes.AddTab(_tabProcessCards);
-            _clusterMes.Controls.Add(_subTabsMes);
+            // Cluster 2: MES Production (Lazy)
+            _clusterMes = new ZeroTabPage("MES & Smart Factory", "🏭", page => InitializeMesCluster(page)) { BadgeCount = 3 };
 
-            // Cluster 3: Warehouse & Logistics Suite
-            _clusterWarehouse = new ZeroTabPage("Warehouse & Logistics", "📦") { BadgeCount = 4 };
-            _subTabsWarehouse = new ZeroTabControl
-            {
-                Dock = DockStyle.Fill,
-                Orientation = ZeroTabOrientation.Horizontal,
-                TabHeight = 36,
-                TabStyle = ZeroTabStyle.Pill
-            };
-            _tabWhBarcode = new ZeroTabPage("Receiving & Barcode Station", "🔍");
-            _tabWhLot = new ZeroTabPage("FIFO/FEFO Lot Allocation", "📋");
-            _tabWhRacks = new ZeroTabPage("Storage Racks & Tanks", "🏢");
-            _tabWms = _tabWhRacks;
-            _subTabsWarehouse.AddTab(_tabWhBarcode);
-            _subTabsWarehouse.AddTab(_tabWhLot);
-            _subTabsWarehouse.AddTab(_tabWhRacks);
-            _clusterWarehouse.Controls.Add(_subTabsWarehouse);
+            // Cluster 3: Warehouse & Logistics Suite (Lazy)
+            _clusterWarehouse = new ZeroTabPage("Warehouse & Logistics", "📦", page => InitializeWarehouseCluster(page)) { BadgeCount = 4 };
 
-            // Cluster 4: SCADA & Telemetry
-            _clusterScada = new ZeroTabPage("SCADA & Telemetry", "🔬");
+            // Cluster 4: SCADA & Telemetry (Lazy)
+            _clusterScada = new ZeroTabPage("SCADA & Telemetry", "🔬", _ => InitializeScadaHub());
             _tabScada = _clusterScada;
 
-            // Cluster 5: Analytics & Charts
-            _clusterAnalytics = new ZeroTabPage("Analytics & Charts", "📊");
+            // Cluster 5: Analytics & Charts (Lazy)
+            _clusterAnalytics = new ZeroTabPage("Analytics & Charts", "📊", _ => InitializeChartsDashboard());
             _tabCharts = _clusterAnalytics;
 
-            // Cluster 6: UI Component Catalog
-            _clusterComponents = new ZeroTabPage("UI Component Catalog", "🎨");
-            _subTabsComponents = new ZeroTabControl
-            {
-                Dock = DockStyle.Fill,
-                Orientation = ZeroTabOrientation.Horizontal,
-                TabHeight = 36,
-                TabStyle = ZeroTabStyle.Pill
-            };
-            _tabControls = new ZeroTabPage("Core Input Controls", "🎛️");
-            _tabCommercial = new ZeroTabPage("Enterprise Commercial Suite", "🏢");
-            _tabOfficeDocs = new ZeroTabPage("Office & Technical Documents", "📄");
-            _tabAdvanced = new ZeroTabPage("Data Hierarchy & BOM", "🌳");
-            _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐");
-            _tabMasterDetail = new ZeroTabPage("Master-Detail & In-Place LookUp", "📑");
-            _subTabsComponents.AddTab(_tabControls);
-            _subTabsComponents.AddTab(_tabCommercial);
-            _subTabsComponents.AddTab(_tabOfficeDocs);
-            _subTabsComponents.AddTab(_tabAdvanced);
-            _subTabsComponents.AddTab(_tabLayout);
-            _subTabsComponents.AddTab(_tabMasterDetail);
-            _clusterComponents.Controls.Add(_subTabsComponents);
+            // Cluster 6: UI Component Catalog (Lazy)
+            _clusterComponents = new ZeroTabPage("UI Component Catalog", "🎨", page => InitializeComponentsCluster(page));
 
-            // Cluster 7: SCADA Process & P&ID Synoptic (Phased Real-Time Automation)
-            _clusterScadaSynoptic = new ZeroTabPage("SCADA Process & P&ID", "🏭");
-            _subTabsScada = new ZeroTabControl
-            {
-                Dock = DockStyle.Fill,
-                Orientation = ZeroTabOrientation.Horizontal,
-                TabHeight = 36,
-                TabStyle = ZeroTabStyle.Pill
-            };
-            _tabScadaClosedLoop = new ZeroTabPage("Closed-Loop Batch Process", "🔄");
-            _tabScadaPid = new ZeroTabPage("Phase 1: P&ID Process Flow", "🔄");
-            _tabScadaAlarms = new ZeroTabPage("Phase 2: ISA-18.2 Alarms & PID", "🚨");
-            _tabScadaTags = new ZeroTabPage("Phase 3: Real-Time Tag Engine", "⚡");
-            _tabScadaOverview = new ZeroTabPage("Phase 4: Plant Overview & HMI", "🎛️");
-            _tabIndustrialRuntime = new ZeroTabPage("Phase 5: Industrial Edge Runtime", "⚙️");
-            _subTabsScada.AddTab(_tabScadaClosedLoop);
-            _subTabsScada.AddTab(_tabScadaPid);
-            _subTabsScada.AddTab(_tabScadaAlarms);
-            _subTabsScada.AddTab(_tabScadaTags);
-            _subTabsScada.AddTab(_tabScadaOverview);
-            _subTabsScada.AddTab(_tabIndustrialRuntime);
-            _clusterScadaSynoptic.Controls.Add(_subTabsScada);
+            // Cluster 7: SCADA Process & P&ID Synoptic (Phased Real-Time Automation - Lazy)
+            _clusterScadaSynoptic = new ZeroTabPage("SCADA Process & P&ID", "🏭", page => InitializeScadaSynopticCluster(page));
 
-            // Cluster 8: Network & IT/OT Infrastructure (Phase 12 Suite)
-            _clusterNetwork = new ZeroTabPage("Network & Infrastructure", "🌐") { BadgeCount = 6 };
-            InitializeNetworkInfrastructure(_clusterNetwork);
+            // Cluster 8: Network & IT/OT Infrastructure (Phase 12 Suite - Lazy)
+            _clusterNetwork = new ZeroTabPage("Network & Infrastructure", "🌐", page => InitializeNetworkInfrastructure(page)) { BadgeCount = 6 };
 
-            // Cluster 9: Industrial Domain Verticals (Phases 13, 15, 16, 17)
-            _clusterIndustrial = new ZeroTabPage("Industrial Verticals", "🏭") { BadgeCount = 7 };
-            InitializeIndustrialVerticals(_clusterIndustrial);
+            // Cluster 9: Industrial Domain Verticals (Phases 13, 15, 16, 17 - Lazy)
+            _clusterIndustrial = new ZeroTabPage("Industrial Verticals", "🏭", page => InitializeIndustrialVerticals(page)) { BadgeCount = 7 };
 
-            // Build individual cluster views
+            // Build benchmark views (active suite at startup)
             InitializeZeroGrid();
             InitializeDataGridView();
-            InitializeComponentsShowcase();
-            InitializeMesDashboard();
-            InitializeProcessCards(_tabProcessCards);
-            InitializeScadaHub();
-            InitializeWmsCenter();
-            InitializeCommercialSuite();
-            InitializeOfficeDocsSuite(_tabOfficeDocs);
-            InitializeAdvancedSuite();
-            InitializeChartsDashboard();
-            InitializeWarehouseWorkstation();
-            InitializeLayoutShowcase(_tabLayout);
-            InitializeMasterDetailDemo(_tabMasterDetail);
-            InitializeScadaClosedLoopProcess(_tabScadaClosedLoop);
-            InitializeScadaProcessFlow(_tabScadaPid);
-            InitializeScadaAlarmsAndPid(_tabScadaAlarms);
-            InitializeScadaTagEngineMonitor(_tabScadaTags);
-            InitializeScadaHmiOverview(_tabScadaOverview);
-            InitializeIndustrialRuntimeOverview(_tabIndustrialRuntime);
 
             _tabZero.Controls.Add(_zeroGrid);
             _tabZero.Controls.Add(_pagination);
@@ -1256,6 +1170,96 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
         }
 
+        private void InitializeMesCluster(ZeroTabPage cluster)
+        {
+            _subTabsMes = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabMes = new ZeroTabPage("Live Production Dashboard", "🏭", _ => InitializeMesDashboard());
+            _tabProcessCards = new ZeroTabPage("MOP & Work Order Cards", "📋", p => InitializeProcessCards(p));
+            _subTabsMes.AddTab(_tabMes);
+            _subTabsMes.AddTab(_tabProcessCards);
+            cluster.Controls.Add(_subTabsMes);
+        }
+
+        private void InitializeWarehouseCluster(ZeroTabPage cluster)
+        {
+            _subTabsWarehouse = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            void InitWhWorkstation()
+            {
+                if (_tabWhBarcode != null && _tabWhBarcode.IsInitialized) return;
+                if (_tabWhBarcode != null) _tabWhBarcode.IsInitialized = true;
+                if (_tabWhLot != null) _tabWhLot.IsInitialized = true;
+                InitializeWarehouseWorkstation();
+            }
+            _tabWhBarcode = new ZeroTabPage("Receiving & Barcode Station", "🔍", _ => InitWhWorkstation());
+            _tabWhLot = new ZeroTabPage("FIFO/FEFO Lot Allocation", "📋", _ => InitWhWorkstation());
+            _tabWhRacks = new ZeroTabPage("Storage Racks & Tanks", "🏢", _ => InitializeWmsCenter());
+            _tabWms = _tabWhRacks;
+            _subTabsWarehouse.AddTab(_tabWhBarcode);
+            _subTabsWarehouse.AddTab(_tabWhLot);
+            _subTabsWarehouse.AddTab(_tabWhRacks);
+            cluster.Controls.Add(_subTabsWarehouse);
+        }
+
+        private void InitializeComponentsCluster(ZeroTabPage cluster)
+        {
+            _subTabsComponents = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabControls = new ZeroTabPage("Core Input Controls", "🎛️", _ => InitializeComponentsShowcase());
+            _tabCommercial = new ZeroTabPage("Enterprise Commercial Suite", "🏢", _ => InitializeCommercialSuite());
+            _tabOfficeDocs = new ZeroTabPage("Office & Technical Documents", "📄", p => InitializeOfficeDocsSuite(p));
+            _tabAdvanced = new ZeroTabPage("Data Hierarchy & BOM", "🌳", _ => InitializeAdvancedSuite());
+            _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐", p => InitializeLayoutShowcase(p));
+            _tabMasterDetail = new ZeroTabPage("Master-Detail & In-Place LookUp", "📑", p => InitializeMasterDetailDemo(p));
+            _subTabsComponents.AddTab(_tabControls);
+            _subTabsComponents.AddTab(_tabCommercial);
+            _subTabsComponents.AddTab(_tabOfficeDocs);
+            _subTabsComponents.AddTab(_tabAdvanced);
+            _subTabsComponents.AddTab(_tabLayout);
+            _subTabsComponents.AddTab(_tabMasterDetail);
+            cluster.Controls.Add(_subTabsComponents);
+        }
+
+        private void InitializeScadaSynopticCluster(ZeroTabPage cluster)
+        {
+            _subTabsScada = new ZeroTabControl
+            {
+                Dock = DockStyle.Fill,
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
+            };
+            _tabScadaClosedLoop = new ZeroTabPage("Closed-Loop Batch Process", "🔄", p => InitializeScadaClosedLoopProcess(p));
+            _tabScadaPid = new ZeroTabPage("Phase 1: P&ID Process Flow", "🔄", p => InitializeScadaProcessFlow(p));
+            _tabScadaAlarms = new ZeroTabPage("Phase 2: ISA-18.2 Alarms & PID", "🚨", p => InitializeScadaAlarmsAndPid(p));
+            _tabScadaTags = new ZeroTabPage("Phase 3: Real-Time Tag Engine", "⚡", p => InitializeScadaTagEngineMonitor(p));
+            _tabScadaOverview = new ZeroTabPage("Phase 4: Plant Overview & HMI", "🎛️", p => InitializeScadaHmiOverview(p));
+            _tabIndustrialRuntime = new ZeroTabPage("Phase 5: Industrial Edge Runtime", "⚙️", p => InitializeIndustrialRuntimeOverview(p));
+            _subTabsScada.AddTab(_tabScadaClosedLoop);
+            _subTabsScada.AddTab(_tabScadaPid);
+            _subTabsScada.AddTab(_tabScadaAlarms);
+            _subTabsScada.AddTab(_tabScadaTags);
+            _subTabsScada.AddTab(_tabScadaOverview);
+            _subTabsScada.AddTab(_tabIndustrialRuntime);
+            cluster.Controls.Add(_subTabsScada);
+        }
+
         private void InitializeZeroGrid()
         {
             _zeroGrid = new ZeroGridControl
@@ -1443,14 +1447,13 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
         }
 
-        private void LoadDataset(int count)
+        private async void LoadDataset(int count)
         {
             if (_isStressTesting)
             {
                 ToggleStressTest();
             }
 
-            Cursor = Cursors.WaitCursor;
             _lblStatus.Text = $"Data: Generating {count:N0} rows...";
 
             Stopwatch sw = Stopwatch.StartNew();
@@ -1472,7 +1475,6 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 catch { }
 
                 sw.Stop();
-                Cursor = Cursors.Default;
                 _pagination.TotalRows = count;
                 _searchBar.UpdateCountBadge();
                 _baselineGen0 = GC.CollectionCount(0);
@@ -1482,7 +1484,20 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 return;
             }
 
-            _dataset = MockDataGenerator.Generate(count);
+            // Show animated LoadingOverlay on _zeroGrid
+            var overlay = LoadingOverlay.Show(_zeroGrid, $"Loading {count:N0} Records...", "Generating high-performance dataset in background");
+
+            InventoryItem[] items;
+            try
+            {
+                items = await Task.Run(() => MockDataGenerator.Generate(count));
+            }
+            finally
+            {
+                overlay.Close();
+            }
+
+            _dataset = items;
             _zeroSource = new InventorySource(_dataset);
 
             // Bind to ZeroGrid (Executes in <1ms)
@@ -1502,8 +1517,6 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             }
 
             sw.Stop();
-            Cursor = Cursors.Default;
-
 
             _pagination.TotalRows = count;
             _searchBar.UpdateCountBadge();
@@ -1511,7 +1524,6 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _lblStatus.Text = $"Data: {count:N0} rows (Loaded in {sw.ElapsedMilliseconds} ms)";
             _scrollFrames = 0;
             _scrollStopwatch.Restart();
-
         }
 
 
