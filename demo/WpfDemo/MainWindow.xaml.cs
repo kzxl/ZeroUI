@@ -616,6 +616,52 @@ namespace ZeroUI.Samples.WpfDemo
             donutSeries.AddPoint("WIP Processing (10%)", 100);
             donutSeries.AddPoint("Safety Reserve (8%)", 80);
             DonutChart.Series.Add(donutSeries);
+
+            // 5. Statistical & Relational Charts Suite
+            SetupStatisticalCharts();
+        }
+
+        private void SetupStatisticalCharts()
+        {
+            if (DemoHistogramChart != null)
+            {
+                DemoHistogramChart.Title = "Component Tolerance Distribution (Sturges Bins)";
+                DemoHistogramChart.XAxisTitle = "Dimension Offset (μm)";
+                DemoHistogramChart.YAxisTitle = "Frequency Count";
+                DemoHistogramChart.BinCount = 12;
+                DemoHistogramChart.ShowNormalCurve = true;
+                DemoHistogramChart.LoadSampleData();
+            }
+
+            if (DemoScatterChart != null)
+            {
+                DemoScatterChart.Title = "Torque vs. Tensile Yield Regression (OLS)";
+                DemoScatterChart.XAxisTitle = "RPM (x100)";
+                DemoScatterChart.YAxisTitle = "Yield Stress (MPa)";
+                DemoScatterChart.ShowRegressionLine = true;
+                DemoScatterChart.LoadSampleData();
+            }
+
+            if (DemoSunburstChart != null)
+            {
+                DemoSunburstChart.Title = "Global Corporate Capital & Supply Chain";
+                DemoSunburstChart.InnerHoleRatio = 0.25;
+                DemoSunburstChart.LoadSampleData();
+            }
+
+            if (DemoLollipopChart != null)
+            {
+                DemoLollipopChart.Title = "Regional Supply Chain Fulfillment Ranking";
+                DemoLollipopChart.Orientation = ZeroUI.Core.Analytics.LollipopOrientation.Horizontal;
+                DemoLollipopChart.ShowValueLabels = true;
+                DemoLollipopChart.LoadSampleData();
+            }
+        }
+
+        private void BtnReloadStatsDemo_Click(object sender, RoutedEventArgs e)
+        {
+            SetupStatisticalCharts();
+            ToastNotification.Info(this, "Regenerated sample datasets for Histogram, Scatter, Sunburst, and Lollipop charts.");
         }
 
         private void ComboSkinSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)

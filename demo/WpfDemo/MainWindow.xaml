@@ -1284,6 +1284,61 @@
                                 </ScrollViewer>
                             </Grid>
                         </TabItem>
+
+                        <!-- Sub-Tab 6.7: Statistical & Relational Analytics (Histogram, Scatter, Sunburst, Lollipop) -->
+                        <TabItem Header="🔬 Statistical &amp; Relational Analytics">
+                            <Grid Margin="16">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Header Banner -->
+                                <Border Grid.Row="0" Margin="0,0,0,12" Background="{DynamicResource ZeroUI.BgCard}" Padding="14,10,14,10" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
+                                    <DockPanel LastChildFill="False">
+                                        <StackPanel DockPanel.Dock="Left">
+                                            <TextBlock Text="🔬 Advanced Statistical, Relational &amp; Hierarchical Analytics" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" />
+                                            <TextBlock Text="Continuous Sturges &amp; Gaussian histograms, Bivariate OLS regression scatter &amp; bubble plots, Radial sunburst partitions, and Stephen Few lollipop benchmarks." FontSize="11.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                            <Button x:Name="BtnReloadStatsDemo" Click="BtnReloadStatsDemo_Click" Content="🔄 Regenerate Sample Datasets" Height="28" Padding="12,0,12,0" Cursor="Hand" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- 2x2 Grid of Advanced Charts -->
+                                <Grid Grid.Row="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Chart 1: Histogram Chart -->
+                                    <ind:GridCard Grid.Row="0" Grid.Column="0" HeaderText="Continuous Distribution &amp; Gaussian Fit" SubtitleText="Sturges frequency bins with Gaussian normal curve overlay" Margin="0,0,10,10">
+                                        <chart:HistogramChart x:Name="DemoHistogramChart" Margin="0,4,0,0" />
+                                    </ind:GridCard>
+
+                                    <!-- Chart 2: Scatter & Bubble Chart -->
+                                    <ind:GridCard Grid.Row="0" Grid.Column="1" HeaderText="Bivariate Correlation &amp; Regression" SubtitleText="Cartesian points, bubble magnitudes &amp; OLS trendline (y = mx + b)" Margin="0,0,0,10">
+                                        <chart:ScatterChart x:Name="DemoScatterChart" Margin="0,4,0,0" />
+                                    </ind:GridCard>
+
+                                    <!-- Chart 3: Sunburst Chart -->
+                                    <ind:GridCard Grid.Row="1" Grid.Column="0" HeaderText="Hierarchical Radial Partition (Sunburst)" SubtitleText="Multi-tiered 360° annular sectors with polar hit-testing" Margin="0,0,10,0">
+                                        <chart:SunburstChart x:Name="DemoSunburstChart" Margin="0,4,0,0" />
+                                    </ind:GridCard>
+
+                                    <!-- Chart 4: Lollipop Chart -->
+                                    <ind:GridCard Grid.Row="1" Grid.Column="1" HeaderText="Category Benchmark Ranking (Lollipop)" SubtitleText="High-density thin stems &amp; circular dot markers" Margin="0,0,0,0">
+                                        <chart:LollipopChart x:Name="DemoLollipopChart" Margin="0,4,0,0" />
+                                    </ind:GridCard>
+                                </Grid>
+                            </Grid>
+                        </TabItem>
                     </TabControl>
                 </TabItem>
 

@@ -6358,6 +6358,126 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             bannerSpacerFlow.BringToFront();
             tableFlow.BringToFront();
 
+            // -------------------------------------------------------------
+            // SUB-TAB 6: Statistical, Relational & Partition Analytics (Histogram, Scatter, Sunburst, Lollipop)
+            // -------------------------------------------------------------
+            var panelStatistical = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = ZeroTheme.Colors.Background,
+                Padding = new Padding(16)
+            };
+
+            var bannerStat = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "🔬 Advanced Statistical, Relational & Hierarchical Partition Analytics",
+                Message = "Continuous Sturges & Gaussian distribution histograms, Bivariate OLS linear regression scatter & bubble plots, Multi-tier radial sunburst partitions, and Stephen Few lollipop benchmarks.",
+                Height = 62
+            };
+            var bannerSpacerStat = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            var tableStat = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 2,
+                BackColor = Color.Transparent
+            };
+            tableStat.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            tableStat.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            tableStat.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
+            tableStat.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
+
+            // Card 1: Histogram Chart
+            var cardHistogram = new ZeroCard
+            {
+                Title = "Continuous Distribution & Gaussian Fit (Histogram)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 6, 6)
+            };
+            var histogramChart = new HistogramChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Assembly Tolerance & Variance Distribution (N=300)",
+                XAxisTitle = "Dimension Offset (μm)",
+                YAxisTitle = "Frequency Count",
+                BarColor = Color.FromArgb(59, 130, 246),
+                CurveColor = Color.FromArgb(239, 68, 68),
+                BinCount = 12,
+                ShowNormalCurve = true
+            };
+            histogramChart.LoadSampleData();
+            cardHistogram.ContentPanel.Controls.Add(histogramChart);
+
+            // Card 2: Scatter & Bubble Chart
+            var cardScatter = new ZeroCard
+            {
+                Title = "Bivariate Correlation & Bubble Regression (Scatter)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(6, 0, 0, 6)
+            };
+            var scatterChart = new ScatterChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Torque vs. Yield Tensile Strength Analysis",
+                XAxisTitle = "Motor Speed (RPM x100)",
+                YAxisTitle = "Stress Tolerance (MPa)",
+                ShowRegressionLine = true
+            };
+            scatterChart.LoadSampleData();
+            cardScatter.ContentPanel.Controls.Add(scatterChart);
+
+            // Card 3: Sunburst Chart
+            var cardSunburst = new ZeroCard
+            {
+                Title = "Hierarchical Multi-Tier Radial Partition (Sunburst)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 6, 6, 0)
+            };
+            var sunburstChart = new SunburstChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Global Supply Chain & Cost Allocation",
+                InnerHoleRatio = 0.25
+            };
+            sunburstChart.LoadSampleData();
+            cardSunburst.ContentPanel.Controls.Add(sunburstChart);
+
+            // Card 4: Lollipop Chart
+            var cardLollipop = new ZeroCard
+            {
+                Title = "High-Density Category Benchmark Comparison (Lollipop)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(6, 6, 0, 0)
+            };
+            var lollipopChart = new LollipopChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Regional Fulfilment Efficiency Ranking",
+                Orientation = LollipopOrientation.Horizontal,
+                DotColor = Color.FromArgb(16, 185, 129),
+                StemColor = Color.FromArgb(148, 163, 184),
+                DotRadius = 7f,
+                ShowValueLabels = true
+            };
+            lollipopChart.LoadSampleData();
+            cardLollipop.ContentPanel.Controls.Add(lollipopChart);
+
+            tableStat.Controls.Add(cardHistogram, 0, 0);
+            tableStat.Controls.Add(cardScatter, 1, 0);
+            tableStat.Controls.Add(cardSunburst, 0, 1);
+            tableStat.Controls.Add(cardLollipop, 1, 1);
+
+            panelStatistical.Controls.Add(tableStat);
+            panelStatistical.Controls.Add(bannerSpacerStat);
+            panelStatistical.Controls.Add(bannerStat);
+
+            bannerStat.BringToFront();
+            bannerSpacerStat.BringToFront();
+            tableStat.BringToFront();
+
             // Assemble Modular Sub-tabs
             var subTabsCharts = new ZeroTabControl
             {
@@ -6382,11 +6502,15 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var tabFlowQuality = new ZeroTabPage("Flow, Hierarchy & Quality", "📊");
             tabFlowQuality.Controls.Add(panelFlowQuality);
 
+            var tabStatisticalRelational = new ZeroTabPage("Statistical & Relational Analytics", "🔬");
+            tabStatisticalRelational.Controls.Add(panelStatistical);
+
             subTabsCharts.AddTab(tabExecOverview);
             subTabsCharts.AddTab(tabTrendStudio);
             subTabsCharts.AddTab(tabRadarDiagnostics);
             subTabsCharts.AddTab(tabBridgesSub);
             subTabsCharts.AddTab(tabFlowQuality);
+            subTabsCharts.AddTab(tabStatisticalRelational);
 
             _tabCharts.Controls.Add(subTabsCharts);
         }
