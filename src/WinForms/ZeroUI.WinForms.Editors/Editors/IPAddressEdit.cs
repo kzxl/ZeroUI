@@ -211,10 +211,16 @@ namespace ZeroUI.WinForms.Editors
         {
             base.OnThemeChanged(skin);
             BackColor = ZeroTheme.Colors.Surface;
-            for (int i = 0; i < 4; i++)
+            if (_octets != null)
             {
-                _octets[i].BackColor = ZeroTheme.Colors.Surface;
-                _octets[i].ForeColor = ZeroTheme.Colors.TextPrimary;
+                for (int i = 0; i < 4; i++)
+                {
+                    if (_octets[i] != null)
+                    {
+                        _octets[i].BackColor = ZeroTheme.Colors.Surface;
+                        _octets[i].ForeColor = ZeroTheme.Colors.TextPrimary;
+                    }
+                }
             }
             Invalidate();
         }

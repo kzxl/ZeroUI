@@ -39,15 +39,15 @@ namespace ZeroUI.WinForms.Editors
 
         public CalcEdit()
         {
-            Size = new Size(160, 32);
-            Value = 0m;
-
             _innerBox = new TextBox
             {
                 BorderStyle = BorderStyle.None,
                 TextAlign = HorizontalAlignment.Right,
                 Multiline = false
             };
+
+            Size = new Size(160, 32);
+            Value = 0m;
 
             _innerBox.GotFocus += (s, e) =>
             {
@@ -177,7 +177,7 @@ namespace ZeroUI.WinForms.Editors
             set
             {
                 base.ReadOnly = value;
-                _innerBox.ReadOnly = value;
+                if (_innerBox != null) _innerBox.ReadOnly = value;
                 Invalidate();
             }
         }
@@ -207,6 +207,8 @@ namespace ZeroUI.WinForms.Editors
 
         private void PerformLayoutCustom()
         {
+            if (_innerBox == null) return;
+
             int btnWidth = _showCalculatorButton ? 28 : 0;
             _calcButtonRect = new Rectangle(Width - btnWidth - 3, 3, btnWidth, Math.Max(0, Height - 6));
 
@@ -420,7 +422,7 @@ namespace ZeroUI.WinForms.Editors
 
         protected virtual void FormatText()
         {
-            if (_innerBox.Focused) return;
+            if (_innerBox == null || _innerBox.Focused) return;
 
             if (!string.IsNullOrEmpty(_displayFormat))
             {
