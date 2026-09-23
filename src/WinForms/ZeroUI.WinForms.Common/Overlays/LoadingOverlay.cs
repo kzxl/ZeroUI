@@ -30,6 +30,8 @@ namespace ZeroUI.WinForms.Overlays
         public void SetDescription(string description) => LoadingOverlay.SetDescription(_targetControl, description);
         public void SetProgress(int? percentage) => LoadingOverlay.SetProgress(_targetControl, percentage);
 
+        public void Close() => Dispose();
+
         public void Dispose()
         {
             if (!_disposed)

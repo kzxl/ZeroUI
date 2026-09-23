@@ -786,7 +786,7 @@ namespace ZeroUI.WinForms.Navigation
     {
         public ZeroTabPage() : base() { }
         public ZeroTabPage(string title, string icon = "") : base(title, icon) { }
-        public ZeroTabPage(string title, string icon, Action<TabPageEx> lazyInitializer) : base(title, icon, lazyInitializer) { }
+        public ZeroTabPage(string title, string icon, Action<ZeroTabPage> lazyInitializer) : base(title, icon, p => lazyInitializer((ZeroTabPage)p)) { }
     }
 
     [Obsolete("Use TabControlEx instead.")]
