@@ -5987,7 +5987,212 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             bannerBridges.BringToFront();
             bannerSpacerBridges.BringToFront();
-            rowBridges.BringToFront();
+            // -------------------------------------------------------------
+            // SUB-TAB 2: Industrial Multi-Pen Trend & Telemetry Studio
+            // -------------------------------------------------------------
+            var panelTrendStudio = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = ZeroTheme.Colors.Background,
+                Padding = new Padding(16)
+            };
+
+            var bannerTrend = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "⚡ Industrial Multi-Pen Trend & Telemetry Analytics Studio",
+                Message = "Multi-Y axes synchronized waveform engine with LTTB decimation (1M+ points at 60 FPS), interactive Dual-Cursor delta analysis (ΔT, ΔY), time presets (1m..24h), and live channel statistics.",
+                Height = 62
+            };
+            var bannerSpacerTrend = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            var trendContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(15, 23, 42)
+            };
+
+            var studio = new TrendStudio { Dock = DockStyle.Fill };
+
+            // Add 4 realistic industrial telemetry pens
+            var penTemp = studio.AddPen("Reactor Temp", "°C", Color.FromArgb(239, 68, 68), TrendYAxisPosition.Left1);
+            penTemp.AutoScale = false;
+            penTemp.ManualMin = 0;
+            penTemp.ManualMax = 250;
+            penTemp.HighAlarmLimit = 220;
+
+            var penPress = studio.AddPen("Vessel Pressure", "Bar", Color.FromArgb(6, 182, 212), TrendYAxisPosition.Left2);
+            penPress.AutoScale = false;
+            penPress.ManualMin = 0;
+            penPress.ManualMax = 16;
+            penPress.HighAlarmLimit = 12.5;
+
+            var penRpm = studio.AddPen("Turbine Speed", "RPM", Color.FromArgb(168, 85, 247), TrendYAxisPosition.Right1);
+            penRpm.AutoScale = false;
+            penRpm.ManualMin = 0;
+            penRpm.ManualMax = 1800;
+
+            var penFlow = studio.AddPen("Coolant Flow", "L/min", Color.FromArgb(245, 158, 11), TrendYAxisPosition.Right2);
+            penFlow.AutoScale = false;
+            penFlow.ManualMin = 0;
+            penFlow.ManualMax = 80;
+            penFlow.LowAlarmLimit = 15;
+
+            // Pre-fill 5 minutes of historical telemetry (300 seconds)
+            DateTime now = DateTime.Now;
+            var simRnd = new Random(101);
+            double curTemp = 185.0;
+            double curPress = 6.2;
+            double curRpm = 1450.0;
+            double curFlow = 42.0;
+
+            var ptsTemp = new List<TrendDataPoint>(300);
+            var ptsPress = new List<TrendDataPoint>(300);
+            var ptsRpm = new List<TrendDataPoint>(300);
+            var ptsFlow = new List<TrendDataPoint>(300);
+
+            for (int i = 300; i >= 0; i--)
+            {
+                DateTime t = now.AddSeconds(-i);
+                curTemp += (simRnd.NextDouble() - 0.49) * 1.5;
+                curPress += (simRnd.NextDouble() - 0.50) * 0.15;
+                curRpm += (simRnd.NextDouble() - 0.50) * 12.0;
+                curFlow += (simRnd.NextDouble() - 0.50) * 0.8;
+
+                curTemp = Math.Max(150, Math.Min(230, curTemp));
+                curPress = Math.Max(2, Math.Min(14, curPress));
+                curRpm = Math.Max(1200, Math.Min(1700, curRpm));
+                curFlow = Math.Max(20, Math.Min(70, curFlow));
+
+                ptsTemp.Add(new TrendDataPoint(t, curTemp));
+                ptsPress.Add(new TrendDataPoint(t, curPress));
+                ptsRpm.Add(new TrendDataPoint(t, curRpm));
+                ptsFlow.Add(new TrendDataPoint(t, curFlow));
+            }
+
+            penTemp.AddPoints(ptsTemp);
+            penPress.AddPoints(ptsPress);
+            penRpm.AddPoints(ptsRpm);
+            penFlow.AddPoints(ptsFlow);
+
+            // Add sample event annotations
+            studio.AddAnnotation(now.AddSeconds(-240), "Batch #B84 Started", "Polymer reaction phase initiated", Color.FromArgb(16, 185, 129), "🚀");
+            studio.AddAnnotation(now.AddSeconds(-120), "Catalyst Feed Injected", "Secondary feed valve opened", Color.FromArgb(59, 130, 246), "🧪");
+
+            // Interactive Simulation Bar
+            var simBar = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                BackColor = Color.FromArgb(30, 41, 59),
+                Padding = new Padding(8, 5, 8, 5)
+            };
+
+            var btnSpike = new ZeroButton
+            {
+                Text = "🔥 Inject Thermal Spike (+35°C)",
+                ButtonStyle = ZeroButtonStyle.Danger,
+                Dock = DockStyle.Left,
+                Width = 220
+            };
+            btnSpike.Click += (s, e) =>
+            {
+                curTemp += 35.0;
+                studio.AddAnnotation(DateTime.Now, "Thermal Spike", "Emergency cooling engaged", Color.FromArgb(239, 68, 68), "🔥");
+                ZeroToast.Warning(this, "Thermal Excursion: Reactor Core Temp spiked to " + curTemp.ToString("F1") + "°C!");
+            };
+
+            var btnOscillate = new ZeroButton
+            {
+                Text = "🌊 Pressure Oscillation (Test ΔT)",
+                ButtonStyle = ZeroButtonStyle.Primary,
+                Dock = DockStyle.Left,
+                Width = 230
+            };
+            double oscPhase = 0;
+            bool isOscillating = false;
+            btnOscillate.Click += (s, e) =>
+            {
+                isOscillating = !isOscillating;
+                btnOscillate.Text = isOscillating ? "⏹ Stop Oscillation" : "🌊 Pressure Oscillation (Test ΔT)";
+                ZeroToast.Info(this, isOscillating ? "Pressure 0.5Hz resonance oscillation started!" : "Pressure returned to baseline.");
+            };
+
+            var btnAddNote = new ZeroButton
+            {
+                Text = "🏷️ Add Event Flag",
+                ButtonStyle = ZeroButtonStyle.Secondary,
+                Dock = DockStyle.Left,
+                Width = 140
+            };
+            btnAddNote.Click += (s, e) =>
+            {
+                studio.AddAnnotation(DateTime.Now, "Operator Marker", "Checkpoint verified", Color.FromArgb(139, 92, 246), "📌");
+                ZeroToast.Success(this, "Event annotation pinned to timeline.");
+            };
+
+            simBar.Controls.Add(btnAddNote);
+            var simSpacer2 = new Panel { Dock = DockStyle.Left, Width = 8, BackColor = Color.Transparent };
+            simBar.Controls.Add(simSpacer2);
+            simBar.Controls.Add(btnOscillate);
+            var simSpacer1 = new Panel { Dock = DockStyle.Left, Width = 8, BackColor = Color.Transparent };
+            simBar.Controls.Add(simSpacer1);
+            simBar.Controls.Add(btnSpike);
+
+            trendContainer.Controls.Add(studio);
+            trendContainer.Controls.Add(simBar);
+
+            panelTrendStudio.Controls.Add(trendContainer);
+            panelTrendStudio.Controls.Add(bannerSpacerTrend);
+            panelTrendStudio.Controls.Add(bannerTrend);
+
+            bannerTrend.BringToFront();
+            bannerSpacerTrend.BringToFront();
+            trendContainer.BringToFront();
+
+            // Background Telemetry Simulation Timer (5 Hz)
+            var simTimer = new System.Windows.Forms.Timer { Interval = 200 };
+            simTimer.Tick += (s, e) =>
+            {
+                if (!studio.IsLiveFollow) return;
+
+                DateTime t = DateTime.Now;
+
+                // Drift back toward baseline if spiked
+                if (curTemp > 188.0) curTemp -= 0.6;
+                else curTemp += (simRnd.NextDouble() - 0.49) * 0.8;
+
+                if (isOscillating)
+                {
+                    oscPhase += 0.4;
+                    curPress = 8.0 + Math.Sin(oscPhase) * 3.5;
+                }
+                else
+                {
+                    curPress += (simRnd.NextDouble() - 0.50) * 0.12;
+                    curPress = Math.Max(3.0, Math.Min(12.0, curPress));
+                }
+
+                curRpm += (simRnd.NextDouble() - 0.50) * 15.0;
+                curRpm = Math.Max(1300, Math.Min(1650, curRpm));
+
+                curFlow += (simRnd.NextDouble() - 0.50) * 0.6;
+                curFlow = Math.Max(25, Math.Min(65, curFlow));
+
+                penTemp.AddPoint(t, curTemp);
+                penPress.AddPoint(t, curPress);
+                penRpm.AddPoint(t, curRpm);
+                penFlow.AddPoint(t, curFlow);
+
+                studio.UpdateLiveStream();
+            };
+            simTimer.Start();
+            panelTrendStudio.Disposed += (s, e) =>
+            {
+                simTimer.Stop();
+                simTimer.Dispose();
+            };
 
             // Assemble Modular Sub-tabs
             var subTabsCharts = new ZeroTabControl
@@ -6001,6 +6206,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var tabExecOverview = new ZeroTabPage("Executive Overview", "📈");
             tabExecOverview.Controls.Add(mainContainer);
 
+            var tabTrendStudio = new ZeroTabPage("Industrial Trend Studio", "⚡");
+            tabTrendStudio.Controls.Add(panelTrendStudio);
+
             var tabRadarDiagnostics = new ZeroTabPage("Radar & Candlestick Analytics", "🎯");
             tabRadarDiagnostics.Controls.Add(panelRadar);
 
@@ -6008,6 +6216,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             tabBridgesSub.Controls.Add(panelBridges);
 
             subTabsCharts.AddTab(tabExecOverview);
+            subTabsCharts.AddTab(tabTrendStudio);
             subTabsCharts.AddTab(tabRadarDiagnostics);
             subTabsCharts.AddTab(tabBridgesSub);
 
