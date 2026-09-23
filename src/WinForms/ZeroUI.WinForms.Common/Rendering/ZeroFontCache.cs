@@ -55,6 +55,18 @@ namespace ZeroUI.WinForms.Rendering
         public static Font Get(string family, float size, FontStyle style = FontStyle.Regular)
         {
             var key = new FontKey(family ?? "Segoe UI", size, style);
+            if (_cache.TryGetValue(key, out var cachedFont))
+            {
+                try
+                {
+                    _ = cachedFont.Height;
+                    return cachedFont;
+                }
+                catch (Exception)
+                {
+                    _cache.TryRemove(key, out _);
+                }
+            }
             return _cache.GetOrAdd(key, k => new Font(k.Family, k.Size, k.Style));
         }
 

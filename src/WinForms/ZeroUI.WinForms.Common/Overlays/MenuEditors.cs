@@ -163,7 +163,7 @@ namespace ZeroUI.WinForms.Overlays
             // 3. Clear button or placeholder
             if (string.IsNullOrEmpty(_textBox.Text) && !_textBox.Focused)
             {
-                using var fontPlace = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Italic);
+                var fontPlace = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Italic);
                 using var brushPlace = new SolidBrush(Color.FromArgb(130, palette.TextSecondary));
                 g.DrawString(_placeholder, fontPlace, brushPlace, 32, (Height - 16) / 2);
             }
@@ -318,17 +318,17 @@ namespace ZeroUI.WinForms.Overlays
             int textX = 10;
             if (string.IsNullOrEmpty(_subtitle))
             {
-                using var fontTitle = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Regular);
+                var fontTitle = ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Regular);
                 using var brushTitle = new SolidBrush(palette.TextPrimary);
                 g.DrawString(_title, fontTitle, brushTitle, textX, (Height - 16) / 2);
             }
             else
             {
-                using var fontTitle = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
+                var fontTitle = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
                 using var brushTitle = new SolidBrush(palette.TextPrimary);
                 g.DrawString(_title, fontTitle, brushTitle, textX, 5);
 
-                using var fontSub = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
+                var fontSub = ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Regular);
                 using var brushSub = new SolidBrush(palette.TextSecondary);
                 g.DrawString(_subtitle, fontSub, brushSub, textX, 22);
             }
@@ -512,14 +512,14 @@ namespace ZeroUI.WinForms.Overlays
             var palette = ZeroTheme.Colors;
 
             // 1. Header: Title on left, Value readout on right
-            using (var fontTitle = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold))
+            var fontTitle = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var brushTitle = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString(_title, fontTitle, brushTitle, 10, 5);
             }
 
             string valText = $"{_value}{_unit}";
-            using (var fontVal = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold))
+            var fontVal = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var brushVal = new SolidBrush(palette.Primary))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Far };
@@ -836,7 +836,7 @@ namespace ZeroUI.WinForms.Overlays
             var palette = ZeroTheme.Colors;
 
             // 1. Label on left
-            using (var fontLabel = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold))
+            var fontLabel = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var brushLabel = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString(_label, fontLabel, brushLabel, 10, (Height - 16) / 2);
@@ -877,7 +877,7 @@ namespace ZeroUI.WinForms.Overlays
             }
 
             // Value text
-            using (var fontVal = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold))
+            var fontVal = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var brushVal = new SolidBrush(palette.TextPrimary))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
