@@ -282,20 +282,55 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 AutoEllipsis = true
             };
 
-            Label? lblBadge = null;
+            Panel? pnlBadge = null;
             if (!string.IsNullOrEmpty(item.Badge))
             {
-                lblBadge = new Label
+                var badgeFont = new Font("Segoe UI", 7.25f * _currentDpiScale, FontStyle.Bold);
+                Size textSize = TextRenderer.MeasureText(item.Badge, badgeFont, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+                int hPad = (int)Math.Round(10 * _currentDpiScale);
+                int pillW = Math.Max((int)Math.Round(36 * _currentDpiScale), textSize.Width + hPad);
+                int containerW = pillW + (int)Math.Round(6 * _currentDpiScale);
+
+                pnlBadge = new Panel
                 {
                     Dock = DockStyle.Right,
-                    Width = (int)Math.Round(56 * _currentDpiScale),
-                    Text = item.Badge,
-                    Font = new Font("Segoe UI", 7.5f * _currentDpiScale, FontStyle.Bold),
-                    ForeColor = item.BadgeColor,
-                    TextAlign = ContentAlignment.MiddleRight,
+                    Width = containerW,
+                    BackColor = Color.Transparent,
                     Cursor = Cursors.Hand
                 };
-                row.Controls.Add(lblBadge);
+
+                pnlBadge.Paint += (s, pe) =>
+                {
+                    var g = pe.Graphics;
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+                    int pillH = (int)Math.Round(18 * _currentDpiScale);
+                    int pillY = (pnlBadge.Height - pillH) / 2;
+                    int pillX = pnlBadge.Width - pillW - (int)Math.Round(2 * _currentDpiScale);
+                    var pillRect = new Rectangle(pillX, pillY, pillW, pillH);
+
+                    // 1. Soft pill background
+                    int radius = (int)Math.Round(4 * _currentDpiScale);
+                    using var path = CreateRoundedRectanglePath(pillRect, radius);
+                    using var bgBrush = new SolidBrush(Color.FromArgb(28, item.BadgeColor));
+                    g.FillPath(bgBrush, path);
+
+                    // 2. Subtle outline border
+                    using var borderPen = new Pen(Color.FromArgb(60, item.BadgeColor), 1f);
+                    g.DrawPath(borderPen, path);
+
+                    // 3. Centered, single-line text (guaranteed never to wrap)
+                    TextRenderer.DrawText(
+                        g,
+                        item.Badge,
+                        badgeFont,
+                        pillRect,
+                        item.BadgeColor,
+                        TextFormatFlags.SingleLine | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+                };
+
+                row.Controls.Add(pnlBadge);
             }
 
             row.Controls.Add(lblTitle);
@@ -309,25 +344,63 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             row.Click += (s, e) => selectAction();
             lblTitle.Click += (s, e) => selectAction();
-            if (lblBadge != null) lblBadge.Click += (s, e) => selectAction();
+            if (pnlBadge != null) pnlBadge.Click += (s, e) => selectAction();
 
-            row.MouseEnter += (s, e) =>
+            void OnHover()
             {
                 if (item.Key != _selectedKey)
                     row.BackColor = Color.FromArgb(240, 243, 248);
-            };
-            row.MouseLeave += (s, e) =>
+            }
+            void OnLeave()
             {
                 if (item.Key != _selectedKey)
-                    row.BackColor = Color.Transparent;
-            };
+                {
+                    Point pt = row.PointToClient(Cursor.Position);
+                    if (!row.ClientRectangle.Contains(pt))
+                    {
+                        row.BackColor = Color.Transparent;
+                    }
+                }
+            }
+
+            row.MouseEnter += (s, e) => OnHover();
+            lblTitle.MouseEnter += (s, e) => OnHover();
+            row.MouseLeave += (s, e) => OnLeave();
+            lblTitle.MouseLeave += (s, e) => OnLeave();
+            if (pnlBadge != null)
+            {
+                pnlBadge.MouseEnter += (s, e) => OnHover();
+                pnlBadge.MouseLeave += (s, e) => OnLeave();
+            }
 
             string tipText = $"{item.Title}\n[{item.Category}] • {item.Badge}\n\n{item.Description}";
             _toolTip.SetToolTip(row, tipText);
             _toolTip.SetToolTip(lblTitle, tipText);
-            if (lblBadge != null) _toolTip.SetToolTip(lblBadge, tipText);
+            if (pnlBadge != null) _toolTip.SetToolTip(pnlBadge, tipText);
 
             return row;
+        }
+
+        private static GraphicsPath CreateRoundedRectanglePath(Rectangle rect, int radius)
+        {
+            var path = new GraphicsPath();
+            if (rect.Width <= 0 || rect.Height <= 0) return path;
+
+            int diameter = radius * 2;
+            if (diameter > rect.Width) diameter = rect.Width;
+            if (diameter > rect.Height) diameter = rect.Height;
+
+            var arc = new Rectangle(rect.X, rect.Y, diameter, diameter);
+
+            path.AddArc(arc, 180, 90);
+            arc.X = rect.Right - diameter;
+            path.AddArc(arc, 270, 90);
+            arc.Y = rect.Bottom - diameter;
+            path.AddArc(arc, 0, 90);
+            arc.X = rect.Left;
+            path.AddArc(arc, 90, 90);
+            path.CloseFigure();
+            return path;
         }
 
         private void HighlightSelectedRow()
@@ -342,7 +415,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     {
                         if (child is Label lbl && child.Dock == DockStyle.Fill)
                         {
-                            lbl.Font = new Font("Segoe UI", 9.25f, isSelected ? FontStyle.Bold : FontStyle.Regular);
+                            lbl.Font = new Font("Segoe UI", 9.25f * _currentDpiScale, isSelected ? FontStyle.Bold : FontStyle.Regular);
                             lbl.ForeColor = isSelected ? Color.FromArgb(18, 86, 209) : Color.FromArgb(33, 37, 41);
                         }
                     }
