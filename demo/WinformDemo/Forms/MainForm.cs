@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using ZeroUI.Core.Analytics;
 using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Editors;
@@ -6194,6 +6195,169 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 simTimer.Dispose();
             };
 
+            // -------------------------------------------------------------
+            // SUB-TAB 5: Flow, Hierarchy & Quality Analytics (Sankey, Treemap, Bullet, Pareto)
+            // -------------------------------------------------------------
+            var panelFlowQuality = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = ZeroTheme.Colors.Background,
+                Padding = new Padding(16)
+            };
+
+            var bannerFlow = new ZeroAlertBanner
+            {
+                Dock = DockStyle.Top,
+                Severity = ZeroAlertSeverity.Info,
+                Title = "📊 Advanced Flow, Squarified Hierarchy, Benchmarks & Quality Charts",
+                Message = "Multi-column Sankey process flows, Squarified Treemap asset allocation, Stephen Few linear Bullet KPI benchmarks, and Pareto 80/20 root cause defect analysis.",
+                Height = 62
+            };
+            var bannerSpacerFlow = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
+
+            var tableFlow = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 2,
+                BackColor = Color.Transparent
+            };
+            tableFlow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            tableFlow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50f));
+            tableFlow.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
+            tableFlow.RowStyles.Add(new RowStyle(SizeType.Percent, 50f));
+
+            // Card 1: Sankey Chart
+            var cardSankey = new ZeroCard
+            {
+                Title = "Energy & Process Flow Distribution (Sankey)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 6, 6)
+            };
+            var sankeyChart = new SankeyChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Energy Generation & Consumption Grid Flow",
+                ValueSuffix = " GWh"
+            };
+            sankeyChart.AddNode("Solar Array", Color.FromArgb(245, 158, 11), 0);
+            sankeyChart.AddNode("Wind Turbines", Color.FromArgb(14, 165, 233), 0);
+            sankeyChart.AddNode("Hydro Plant", Color.FromArgb(59, 130, 246), 0);
+            sankeyChart.AddNode("BESS Storage", Color.FromArgb(16, 185, 129), 1);
+            sankeyChart.AddNode("High-Voltage Grid", Color.FromArgb(168, 85, 247), 1);
+            sankeyChart.AddNode("Heavy Industry", Color.FromArgb(239, 68, 68), 2);
+            sankeyChart.AddNode("Commercial Facilities", Color.FromArgb(249, 115, 22), 2);
+            sankeyChart.AddNode("Residential Dist", Color.FromArgb(16, 185, 129), 2);
+
+            sankeyChart.AddLink("Solar Array", "BESS Storage", 45);
+            sankeyChart.AddLink("Solar Array", "High-Voltage Grid", 75);
+            sankeyChart.AddLink("Wind Turbines", "BESS Storage", 60);
+            sankeyChart.AddLink("Wind Turbines", "High-Voltage Grid", 50);
+            sankeyChart.AddLink("Hydro Plant", "High-Voltage Grid", 80);
+            sankeyChart.AddLink("BESS Storage", "Heavy Industry", 65);
+            sankeyChart.AddLink("BESS Storage", "Commercial Facilities", 40);
+            sankeyChart.AddLink("High-Voltage Grid", "Heavy Industry", 70);
+            sankeyChart.AddLink("High-Voltage Grid", "Commercial Facilities", 55);
+            sankeyChart.AddLink("High-Voltage Grid", "Residential Dist", 80);
+            cardSankey.ContentPanel.Controls.Add(sankeyChart);
+
+            // Card 2: Treemap Chart
+            var cardTreemap = new ZeroCard
+            {
+                Title = "Asset Allocation & Proportional Breakdown (Squarified Treemap)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(6, 0, 0, 6)
+            };
+            var treemapChart = new TreemapChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Corporate Capital & Asset Allocation",
+                ValuePrefix = "$"
+            };
+            treemapChart.AddItem("US Large Cap", 4200, Color.FromArgb(59, 130, 246), "Equities");
+            treemapChart.AddItem("Tech Growth", 2500, Color.FromArgb(99, 102, 241), "Equities");
+            treemapChart.AddItem("Emerging Mkts", 1800, Color.FromArgb(14, 165, 233), "Equities");
+            treemapChart.AddItem("Treasury Bonds 10Y", 1900, Color.FromArgb(16, 185, 129), "Fixed Income");
+            treemapChart.AddItem("Corp Bonds A+", 1400, Color.FromArgb(5, 150, 105), "Fixed Income");
+            treemapChart.AddItem("Physical Gold", 950, Color.FromArgb(245, 158, 11), "Commodities");
+            treemapChart.AddItem("Crude Oil Reserves", 650, Color.FromArgb(217, 119, 6), "Commodities");
+            treemapChart.AddItem("Cash & Equivalents", 800, Color.FromArgb(100, 116, 139), "Liquidity");
+            cardTreemap.ContentPanel.Controls.Add(treemapChart);
+
+            // Card 3: Bullet Chart
+            var cardBullet = new ZeroCard
+            {
+                Title = "Executive KPI Performance Benchmarks (Stephen Few Bullet Graph)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 6, 6, 0)
+            };
+            var bulletChart = new BulletChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "Executive Operations & Financial Performance",
+                LeftLabelWidth = 170
+            };
+            var bRevenue = new BulletItem("Revenue", "USD (thousands)", 285, 260, 320, 0);
+            bRevenue.Ranges.Add(new BulletRange("Poor", 160));
+            bRevenue.Ranges.Add(new BulletRange("Satisfactory", 240));
+            bRevenue.Ranges.Add(new BulletRange("Good", 320));
+            bulletChart.Items.Add(bRevenue);
+
+            var bMargin = new BulletItem("Operating Margin", "% of gross revenue", 24.5, 22.0, 30, 0);
+            bMargin.Ranges.Add(new BulletRange("Poor", 15));
+            bMargin.Ranges.Add(new BulletRange("Satisfactory", 20));
+            bMargin.Ranges.Add(new BulletRange("Good", 30));
+            bulletChart.Items.Add(bMargin);
+
+            var bOtif = new BulletItem("On-Time In-Full", "Supply chain fulfillment %", 95.8, 94.0, 100, 0);
+            bOtif.Ranges.Add(new BulletRange("Poor", 80));
+            bOtif.Ranges.Add(new BulletRange("Satisfactory", 92));
+            bOtif.Ranges.Add(new BulletRange("Good", 100));
+            bulletChart.Items.Add(bOtif);
+
+            var bCsat = new BulletItem("CSAT Score", "Quarterly customer rating %", 91.2, 88.0, 100, 0);
+            bCsat.Ranges.Add(new BulletRange("Poor", 70));
+            bCsat.Ranges.Add(new BulletRange("Satisfactory", 85));
+            bCsat.Ranges.Add(new BulletRange("Good", 100));
+            bulletChart.Items.Add(bCsat);
+            cardBullet.ContentPanel.Controls.Add(bulletChart);
+
+            // Card 4: Pareto Chart
+            var cardPareto = new ZeroCard
+            {
+                Title = "Defect Quality Distribution & 80/20 Vital Few (Pareto)",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(6, 6, 0, 0)
+            };
+            var paretoChart = new ParetoChart
+            {
+                Dock = DockStyle.Fill,
+                Title = "SMT Assembly Line Defect Pareto Analysis",
+                CutoffPercentage = 80.0
+            };
+            paretoChart.Items.Add(new ParetoItem("Surface Scratch", 142));
+            paretoChart.Items.Add(new ParetoItem("Dimension Variance", 89));
+            paretoChart.Items.Add(new ParetoItem("Packaging Crushed", 56));
+            paretoChart.Items.Add(new ParetoItem("Missing Label", 34));
+            paretoChart.Items.Add(new ParetoItem("Burr & Flashing", 21));
+            paretoChart.Items.Add(new ParetoItem("Solder Bridge", 14));
+            paretoChart.Items.Add(new ParetoItem("Color Mismatch", 8));
+            paretoChart.Items.Add(new ParetoItem("Contamination", 5));
+            cardPareto.ContentPanel.Controls.Add(paretoChart);
+
+            tableFlow.Controls.Add(cardSankey, 0, 0);
+            tableFlow.Controls.Add(cardTreemap, 1, 0);
+            tableFlow.Controls.Add(cardBullet, 0, 1);
+            tableFlow.Controls.Add(cardPareto, 1, 1);
+
+            panelFlowQuality.Controls.Add(tableFlow);
+            panelFlowQuality.Controls.Add(bannerSpacerFlow);
+            panelFlowQuality.Controls.Add(bannerFlow);
+
+            bannerFlow.BringToFront();
+            bannerSpacerFlow.BringToFront();
+            tableFlow.BringToFront();
+
             // Assemble Modular Sub-tabs
             var subTabsCharts = new ZeroTabControl
             {
@@ -6215,10 +6379,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var tabBridgesSub = new ZeroTabPage("Funnel & Waterfall Bridges", "📉");
             tabBridgesSub.Controls.Add(panelBridges);
 
+            var tabFlowQuality = new ZeroTabPage("Flow, Hierarchy & Quality", "📊");
+            tabFlowQuality.Controls.Add(panelFlowQuality);
+
             subTabsCharts.AddTab(tabExecOverview);
             subTabsCharts.AddTab(tabTrendStudio);
             subTabsCharts.AddTab(tabRadarDiagnostics);
             subTabsCharts.AddTab(tabBridgesSub);
+            subTabsCharts.AddTab(tabFlowQuality);
 
             _tabCharts.Controls.Add(subTabsCharts);
         }
