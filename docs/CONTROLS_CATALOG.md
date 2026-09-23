@@ -30,7 +30,9 @@ A complete reference catalog of enterprise and industrial controls provided by Z
 
 ---
 
-## 2. Analytics & Business Charts Subsystem (`ZeroUI.WinForms.Charts`)
+## 2. Analytics & Business Charts Subsystem (`ZeroUI.WinForms.Charts` / `ZeroUI.Wpf.Charts`)
+
+All specialized analytics charts are built upon a decoupled Clean Architecture: **100% mathematical logic and layout calculation** reside in platform-agnostic `ZeroUI.Core.Analytics` engines, while thin presentation view layers render via GDI+ (`ZeroUI.WinForms.Charts`) and `DrawingContext`/`StreamGeometry` (`ZeroUI.Wpf.Charts`).
 
 * **`ChartControl`** *(Legacy alias: `ZeroChart`)*:
   * Universal multi-series chart engine supporting Cartesian (Column, Bar, Line, Spline, Area) and Polar (Pie, Donut) visualizations with subpixel antialiasing, automatic human-friendly $Y$-axis rounding, interactive cursor crosshairs, halo tooltips, and clickable legends.
@@ -40,6 +42,22 @@ A complete reference catalog of enterprise and industrial controls provided by Z
   * Specialized Line and Area trend chart featuring smooth Catmull-Rom spline curves (`IsCurved = true`), vertical translucent area gradient fills with bottom fade, point markers, and interactive hover tooltips.
 * **`PieChart`** *(Legacy alias: `ZeroPieChart`)*:
   * Categorical distribution chart supporting full Pie and Donut rings (`IsDonut = true`, `DonutHoleRatio = 0.58f`), center KPI summary metrics, radial hover slice explosion, and percentage calculations.
+* **`HistogramChart`** *(New in v1.9.0)*:
+  * Continuous statistical distribution histogram powered by `HistogramEngine`. Supports automated binning via Sturges' rule ($k = \lceil \log_2(n) + 1 \rceil$), statistical distribution moments (Mean $\mu$, StdDev $\sigma$), and parametric Gaussian normal distribution PDF bell curve overlay with hover tooltips.
+* **`ScatterChart`** *(New in v1.9.0)*:
+  * Cartesian bivariate correlation and 3D Bubble plot powered by `ScatterPlotEngine`. Computes Ordinary Least Squares (OLS) linear regression trendlines ($y = mx + b$), correlation coefficient $R^2$, and magnitude bubble area scaling with alpha transparency blending.
+* **`SunburstChart`** *(New in v1.9.0)*:
+  * Multi-tiered hierarchical radial partition diagram powered by `SunburstLayoutEngine`. Partitions $360^\circ$ circular angular sectors across recursive tree depths with polar coordinate hit-testing and central overview breadcrumbs.
+* **`LollipopChart`** *(New in v1.9.0)*:
+  * High-density comparison chart powered by `LollipopEngine`. Features thin stem lines, circular dot marker heads, horizontal and vertical orientation modes, and baseline vector alignments.
+* **`TreemapChart`** *(New in v1.9.0)*:
+  * Squarified Treemap partition chart powered by `TreemapEngine` (Bruls-Huizing-van Wijk algorithm). Renders multi-category asset allocation and nested hierarchical proportional weights.
+* **`SankeyChart`** *(New in v1.9.0)*:
+  * Energy and process flow vector chart powered by `SankeyLayoutEngine`. Resolves multi-column flow stages, node heights, and smooth cubic Bézier flow ribbons with dynamic hover highlighting.
+* **`BulletChart`** *(New in v1.9.0)*:
+  * Stephen Few linear bullet graph powered by `BulletBenchmarkEngine`. Benchmarks dense executive KPIs against comparative targets and qualitative threshold ranges (`Poor`, `Satisfactory`, `Good`).
+* **`ParetoChart`** *(New in v1.9.0)*:
+  * Quality root cause distribution chart powered by `ParetoEngine`. Computes Juran's 80/20 rule, sorting defect frequencies, plotting cumulative percentage curves, and delineating the "Vital Few" from the "Useful Many".
 * **`CandlestickChart`** *(Legacy alias: `ZeroCandlestickChart`)*:
   * High-performance OHLC candlestick chart with volume histogram, moving average (MA) curve, and interactive crosshair HUD.
 * **`BoxPlotChart`** *(Legacy alias: `ZeroBoxPlotChart`)*:

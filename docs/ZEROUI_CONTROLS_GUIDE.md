@@ -55,13 +55,18 @@ Comprehensive tour across all business domains (MES, WMS, SCADA, Charts, Grid, E
 To test 10-million-row virtualization, P&ID synoptics, and instant theme switching, run the following commands in PowerShell:
 
 ```powershell
-# 1. Run interactive WinForms demo suite
+# 1. Quick Interactive Launcher (Menu-driven)
+.\run-demo.bat
+# or via PowerShell:
+.\scripts\run-demo.ps1 -Target Both
+
+# 2. Run interactive WinForms demo suite
 dotnet run --project demo/WinformDemo/WinformDemo.csproj -f net8.0-windows
 
-# 2. Run interactive WPF showcase
+# 3. Run interactive WPF showcase
 dotnet run --project demo/WpfDemo/WpfDemo.csproj -f net8.0-windows
 
-# 3. Run headless CLI performance benchmark
+# 4. Run headless CLI performance benchmark
 dotnet run --project demo/WinformDemo/WinformDemo.csproj -f net8.0-windows -- --benchmark
 ```
 
