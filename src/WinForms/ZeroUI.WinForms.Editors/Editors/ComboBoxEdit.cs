@@ -266,8 +266,9 @@ namespace ZeroUI.WinForms.Editors
             int popH = visibleCount * _itemHeight + 4;
             int popW = Math.Max(Width, 160);
 
-            _listControl.RefreshList();
+            _listControl.Size = new Size(popW, popH);
             _dropdown.ShowDropDown(this, popW, popH);
+            _listControl.RefreshList();
         }
 
         public void CloseDropDown()
@@ -496,6 +497,12 @@ namespace ZeroUI.WinForms.Editors
                 };
             }
 
+            protected override void OnResize(EventArgs e)
+            {
+                base.OnResize(e);
+                UpdateScrollBar();
+            }
+
             public void UpdateTheme()
             {
                 var palette = _owner.CurrentPalette;
@@ -503,27 +510,34 @@ namespace ZeroUI.WinForms.Editors
                 Invalidate();
             }
 
-            public void RefreshList()
+            private void UpdateScrollBar()
             {
-                _scrollOffset = 0;
                 int count = _owner.Items.Count;
-                int visibleCount = Height / _itemHeight;
+                int visibleCount = Height > 0 ? (Height / _itemHeight) : Math.Min(count, _owner.MaxDropDownItems);
 
-                if (count > visibleCount)
+                if (count > visibleCount && visibleCount > 0)
                 {
                     _vScrollBar.Visible = true;
                     _vScrollBar.Maximum = count - visibleCount;
                     _vScrollBar.LargeChange = 1;
-                    _vScrollBar.Value = 0;
+                    _vScrollBar.Value = Math.Max(0, Math.Min(_vScrollBar.Maximum, _scrollOffset));
                 }
                 else
                 {
                     _vScrollBar.Visible = false;
+                    _scrollOffset = 0;
                 }
+            }
+
+            public void RefreshList()
+            {
+                _scrollOffset = 0;
+                UpdateScrollBar();
 
                 if (_owner.SelectedIndex >= 0)
                 {
                     _hoveredIndex = _owner.SelectedIndex;
+                    int visibleCount = Height > 0 ? (Height / _itemHeight) : Math.Min(_owner.Items.Count, _owner.MaxDropDownItems);
                     if (_hoveredIndex >= visibleCount && _vScrollBar.Visible)
                     {
                         _scrollOffset = Math.Min(_vScrollBar.Maximum, _hoveredIndex - visibleCount + 1);
