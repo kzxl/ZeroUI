@@ -112,12 +112,12 @@ namespace ZeroUI.Wpf.Theme
             const string xaml = @"
 <ResourceDictionary xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
                     xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
-                    xmlns:edit=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf""
-                    xmlns:editors=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf""
-                    xmlns:ind=""clr-namespace:ZeroUI.Wpf.Industrial;assembly=ZeroUI.Wpf""
-                    xmlns:layout=""clr-namespace:ZeroUI.Wpf.Layout;assembly=ZeroUI.Wpf""
-                    xmlns:feed=""clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf""
-                    xmlns:ovl=""clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf"">
+                    xmlns:edit=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf.Editors""
+                    xmlns:editors=""clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf.Editors""
+                    xmlns:ind=""clr-namespace:ZeroUI.Wpf.Industrial;assembly=ZeroUI.Wpf.Industrial""
+                    xmlns:layout=""clr-namespace:ZeroUI.Wpf.Layout;assembly=ZeroUI.Wpf.Common""
+                    xmlns:feed=""clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf.Common""
+                    xmlns:ovl=""clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf.Common"">
 
     <!-- 0. DEFAULT TEXTBLOCK FOREGROUND STYLE -->
     <Style TargetType=""{x:Type TextBlock}"">
