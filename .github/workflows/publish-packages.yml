@@ -33,14 +33,8 @@ jobs:
       - name: Run Core Tests
         run: dotnet test tests/ZeroUI.Core.Tests/ZeroUI.Core.Tests.csproj -c Release --verbosity normal
 
-      - name: Pack ZeroUI.Core
-        run: dotnet pack src/ZeroUI.Core/ZeroUI.Core.csproj -c Release -o nupkgs
-
-      - name: Pack ZeroUI.WinForms
-        run: dotnet pack src/ZeroUI.WinForms/ZeroUI.WinForms.csproj -c Release -o nupkgs
-
-      - name: Pack ZeroUI.Wpf
-        run: dotnet pack src/ZeroUI.Wpf/ZeroUI.Wpf.csproj -c Release -o nupkgs
+      - name: Pack All ZeroUI Packages
+        run: dotnet pack ZeroUI.slnx -c Release -o nupkgs
 
       # 1. Push to GitHub Packages
       - name: Push to GitHub Packages
