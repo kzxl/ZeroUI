@@ -261,14 +261,15 @@ namespace ZeroUI.WinForms.Editors
             }
 
             // 3. Draw Button Text (offset if badge exists so they never collide!)
-            var textRect = new Rectangle(6, 0, Width - 12 - (badgeSpace > 0 ? badgeSpace - 4 : 0), Height);
+            int hPad = Width <= 36 ? 2 : 6;
+            var textRect = new Rectangle(hPad, 0, Math.Max(0, Width - (hPad * 2) - (badgeSpace > 0 ? badgeSpace - 4 : 0)), Height);
             TextRenderer.DrawText(
                 g,
                 Text,
                 Font,
                 textRect,
                 fg,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
         }
 
         private (Color bg, Color fg, Color border) GetColors()

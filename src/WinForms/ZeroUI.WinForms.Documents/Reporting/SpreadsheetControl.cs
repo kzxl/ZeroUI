@@ -328,15 +328,15 @@ namespace ZeroUI.WinForms.Reporting
             _btnAutoSum = new SimpleButton
             {
                 Location = new Point(332, 6),
-                Size = new Size(58, 26),
+                Size = new Size(64, 26),
                 Text = "∑ Sum"
             };
             _btnAutoSum.Click += (s, e) => InsertAutoSum();
 
             _btnRecalc = new SimpleButton
             {
-                Location = new Point(394, 6),
-                Size = new Size(58, 26),
+                Location = new Point(402, 6),
+                Size = new Size(64, 26),
                 Text = "⚡ Calc"
             };
             _btnRecalc.Click += (s, e) =>
@@ -348,32 +348,32 @@ namespace ZeroUI.WinForms.Reporting
 
             _btnFreeze = new SimpleButton
             {
-                Location = new Point(456, 6),
-                Size = new Size(74, 26),
+                Location = new Point(472, 6),
+                Size = new Size(80, 26),
                 Text = "❄ Freeze"
             };
             _btnFreeze.Click += (s, e) => ToggleFreezePanes();
 
             _btnCurrency = new SimpleButton
             {
-                Location = new Point(534, 6),
-                Size = new Size(30, 26),
+                Location = new Point(558, 6),
+                Size = new Size(32, 26),
                 Text = "$"
             };
             _btnCurrency.Click += (s, e) => SetActiveCellFormat(SpreadsheetFormatType.Currency);
 
             _btnPercent = new SimpleButton
             {
-                Location = new Point(568, 6),
-                Size = new Size(30, 26),
+                Location = new Point(594, 6),
+                Size = new Size(32, 26),
                 Text = "%"
             };
             _btnPercent.Click += (s, e) => SetActiveCellFormat(SpreadsheetFormatType.Percentage);
 
             _btnSampleBom = new SimpleButton
             {
-                Location = new Point(604, 6),
-                Size = new Size(114, 26),
+                Location = new Point(634, 6),
+                Size = new Size(122, 26),
                 Text = "🏭 Costing BOM"
             };
             _btnSampleBom.Click += (s, e) =>
@@ -383,8 +383,8 @@ namespace ZeroUI.WinForms.Reporting
 
             _btnSampleQc = new SimpleButton
             {
-                Location = new Point(722, 6),
-                Size = new Size(118, 26),
+                Location = new Point(762, 6),
+                Size = new Size(128, 26),
                 Text = "🔬 QC Inspection"
             };
             _btnSampleQc.Click += (s, e) =>

@@ -233,34 +233,34 @@ namespace ZeroUI.WinForms.Reporting
             const int btnH = 28;
 
             // Open Document
-            _btnOpen = new SimpleButton { Text = "📂 Open", Left = btnX, Top = btnY, Width = 68, Height = btnH };
+            _btnOpen = new SimpleButton { Text = "📂 Open", Left = btnX, Top = btnY, Width = 78, Height = btnH };
             _btnOpen.Click += (s, e) => OpenFileDialogPrompt();
-            btnX += 74;
+            btnX += 84;
 
             // Print Document
-            _btnPrint = new SimpleButton { Text = "🖨️ Print", Left = btnX, Top = btnY, Width = 68, Height = btnH };
+            _btnPrint = new SimpleButton { Text = "🖨️ Print", Left = btnX, Top = btnY, Width = 78, Height = btnH };
             _btnPrint.Click += (s, e) => PrintDocument();
-            btnX += 74;
+            btnX += 84;
 
             // Bookmarks / Outline Sidebar Toggle
-            _btnBookmarks = new SimpleButton { Text = "📑 Outline", Left = btnX, Top = btnY, Width = 84, Height = btnH };
+            _btnBookmarks = new SimpleButton { Text = "📑 Outline", Left = btnX, Top = btnY, Width = 112, Height = btnH };
             _btnBookmarks.Click += (s, e) => ToggleBookmarksSidebar();
-            btnX += 90;
+            btnX += 118;
 
             // Page Navigation: First, Prev, Next, Last
-            _btnFirstPage = new SimpleButton { Text = "|<", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnFirstPage = new SimpleButton { Text = "⏮", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnFirstPage.Click += (s, e) => CurrentPageIndex = 0;
-            btnX += 32;
+            btnX += 36;
 
-            _btnPrevPage = new SimpleButton { Text = "<", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnPrevPage = new SimpleButton { Text = "◀", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnPrevPage.Click += (s, e) => CurrentPageIndex--;
-            btnX += 32;
+            btnX += 36;
 
             _lblPageInfo = new Label
             {
                 Text = "Page 1 of 3",
                 Left = btnX,
-                Top = btnY + 5,
+                Top = btnY + 4,
                 Width = 95,
                 Height = 20,
                 TextAlign = ContentAlignment.MiddleCenter,
@@ -269,27 +269,27 @@ namespace ZeroUI.WinForms.Reporting
             };
             btnX += 100;
 
-            _btnNextPage = new SimpleButton { Text = ">", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnNextPage = new SimpleButton { Text = "▶", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnNextPage.Click += (s, e) => CurrentPageIndex++;
-            btnX += 32;
+            btnX += 36;
 
-            _btnLastPage = new SimpleButton { Text = ">|", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnLastPage = new SimpleButton { Text = "⏭", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnLastPage.Click += (s, e) => CurrentPageIndex = _document.PageCount - 1;
-            btnX += 38;
+            btnX += 42;
 
             // View Mode Toggle
-            _btnViewMode = new SimpleButton { Text = "📜 Continuous", Left = btnX, Top = btnY, Width = 96, Height = btnH };
+            _btnViewMode = new SimpleButton { Text = "📜 Continuous", Left = btnX, Top = btnY, Width = 116, Height = btnH };
             _btnViewMode.Click += (s, e) => ViewMode = (_viewMode == PdfViewMode.ContinuousScroll) ? PdfViewMode.SinglePage : PdfViewMode.ContinuousScroll;
-            btnX += 102;
+            btnX += 122;
 
             // Zoom Controls
-            _btnZoomOut = new SimpleButton { Text = "➖", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnZoomOut = new SimpleButton { Text = "−", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnZoomOut.Click += (s, e) => Zoom *= 0.85;
-            btnX += 32;
+            btnX += 36;
 
-            _btnZoomIn = new SimpleButton { Text = "➕", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnZoomIn = new SimpleButton { Text = "+", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnZoomIn.Click += (s, e) => Zoom *= 1.15;
-            btnX += 32;
+            btnX += 36;
 
             _comboZoom = new ComboBox
             {
@@ -307,16 +307,16 @@ namespace ZeroUI.WinForms.Reporting
             _comboZoom.SelectedIndexChanged += ComboZoom_SelectedIndexChanged;
             btnX += 98;
 
-            _btnFitWidth = new SimpleButton { Text = "↔ Fit Width", Left = btnX, Top = btnY, Width = 84, Height = btnH };
+            _btnFitWidth = new SimpleButton { Text = "↔ Fit Width", Left = btnX, Top = btnY, Width = 88, Height = btnH };
             _btnFitWidth.Click += (s, e) => ApplyFitWidth();
-            btnX += 90;
+            btnX += 94;
 
-            _btnFitPage = new SimpleButton { Text = "⛶ Fit Page", Left = btnX, Top = btnY, Width = 78, Height = btnH };
+            _btnFitPage = new SimpleButton { Text = "⛶ Fit Page", Left = btnX, Top = btnY, Width = 82, Height = btnH };
             _btnFitPage.Click += (s, e) => ApplyFitPage();
-            btnX += 84;
+            btnX += 88;
 
             // Search Box & Buttons
-            _txtSearch = new TextEdit { Left = btnX, Top = btnY, Width = 110, Height = btnH, Text = "" };
+            _txtSearch = new TextEdit { Left = btnX, Top = btnY, Width = 115, Height = btnH, Text = "" };
             _txtSearch.KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
@@ -326,15 +326,15 @@ namespace ZeroUI.WinForms.Reporting
                     e.SuppressKeyPress = true;
                 }
             };
-            btnX += 114;
+            btnX += 120;
 
-            _btnSearchPrev = new SimpleButton { Text = "▲", Left = btnX, Top = btnY, Width = 26, Height = btnH };
+            _btnSearchPrev = new SimpleButton { Text = "▲", Left = btnX, Top = btnY, Width = 28, Height = btnH };
             _btnSearchPrev.Click += (s, e) => StepSearch(-1);
-            btnX += 28;
+            btnX += 32;
 
-            _btnSearchNext = new SimpleButton { Text = "▼", Left = btnX, Top = btnY, Width = 26, Height = btnH };
+            _btnSearchNext = new SimpleButton { Text = "▼", Left = btnX, Top = btnY, Width = 28, Height = btnH };
             _btnSearchNext.Click += (s, e) => StepSearch(1);
-            btnX += 30;
+            btnX += 34;
 
             _lblSearchCount = new Label
             {

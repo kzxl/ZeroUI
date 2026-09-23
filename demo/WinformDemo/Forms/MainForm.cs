@@ -4262,17 +4262,18 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
-            var splitDocs = new ZeroSplitContainer
+            var subTabsDocs = new ZeroTabControl
             {
                 Dock = DockStyle.Fill,
-                Orientation = Orientation.Vertical,
-                SplitterDistance = 640,
-                SplitterWidth = 8,
-                MinSizePanel1 = 300,
-                MinSizePanel2 = 300
+                Orientation = ZeroTabOrientation.Horizontal,
+                TabHeight = 36,
+                TabStyle = ZeroTabStyle.Pill
             };
 
-            // Left: Vector PDF Document & CAD Schematic Reader
+            var tabPdf = new ZeroTabPage("Vector PDF & CAD Schematic Reader", "📑");
+            var tabSpreadsheet = new ZeroTabPage("Vector Spreadsheet & Formula Engine", "📊");
+
+            // Sub-Tab 1: Vector PDF Document & CAD Schematic Reader
             var cardPdf = new ZeroCard
             {
                 Dock = DockStyle.Fill,
@@ -4286,9 +4287,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 ShowBookmarksSidebar = true
             };
             cardPdf.ContentPanel.Controls.Add(pdfViewer);
-            splitDocs.Panel1.Controls.Add(cardPdf);
+            tabPdf.Controls.Add(cardPdf);
 
-            // Right: Vector Spreadsheet & Formula Engine
+            // Sub-Tab 2: Vector Spreadsheet & Formula Engine
             var cardSheet = new ZeroCard
             {
                 Dock = DockStyle.Fill,
@@ -4301,15 +4302,18 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Fill
             };
             cardSheet.ContentPanel.Controls.Add(spreadsheet);
-            splitDocs.Panel2.Controls.Add(cardSheet);
+            tabSpreadsheet.Controls.Add(cardSheet);
 
-            mainContainer.Controls.Add(splitDocs);
+            subTabsDocs.AddTab(tabPdf);
+            subTabsDocs.AddTab(tabSpreadsheet);
+
+            mainContainer.Controls.Add(subTabsDocs);
             mainContainer.Controls.Add(bannerSpacer);
             mainContainer.Controls.Add(banner);
 
             banner.BringToFront();
             bannerSpacer.BringToFront();
-            splitDocs.BringToFront();
+            subTabsDocs.BringToFront();
 
             parent.Controls.Add(mainContainer);
         }
