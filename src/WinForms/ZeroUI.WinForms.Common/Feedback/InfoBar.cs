@@ -1,0 +1,44 @@
+using System;
+using System.ComponentModel;
+using System.Drawing;
+using ZeroUI.WinForms.Icons;
+
+namespace ZeroUI.WinForms.Feedback
+{
+    public enum InfoBarSeverity
+    {
+        Info = 0,
+        Success = 1,
+        Warning = 2,
+        Error = 3
+    }
+
+    /// <summary>
+    /// Modern in-window banner notification alert matching WinUI 3 / Fluent standards.
+    /// Provides 100% parity with WPF InfoBar control.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Feedback")]
+    [DefaultProperty("Title")]
+    [DefaultEvent("Closed")]
+    [Description("Modern in-window banner notification alert matching WinUI 3 standards")]
+    [ToolboxBitmap(typeof(ZeroIcons), "ZeroAlertBanner.bmp")]
+    public class InfoBar : AlertBanner
+    {
+        [Category("Appearance")]
+        [DefaultValue(InfoBarSeverity.Info)]
+        public new InfoBarSeverity Severity
+        {
+            get => (InfoBarSeverity)(int)base.Severity;
+            set => base.Severity = (ZeroAlertSeverity)(int)value;
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        public bool IsOpen
+        {
+            get => Visible;
+            set => Visible = value;
+        }
+    }
+}

@@ -2,8 +2,24 @@
   <Folder Name="/src/">
     <Project Path="src/ZeroUI.Core/ZeroUI.Core.csproj" />
     <Project Path="src/ZeroUI.Historian.Sqlite/ZeroUI.Historian.Sqlite.csproj" />
-    <Project Path="src/ZeroUI.WinForms/ZeroUI.WinForms.csproj" />
-    <Project Path="src/ZeroUI.Wpf/ZeroUI.Wpf.csproj" />
+  </Folder>
+  <Folder Name="/src/WinForms/">
+    <Project Path="src/WinForms/ZeroUI.WinForms.Common/ZeroUI.WinForms.Common.csproj" />
+    <Project Path="src/WinForms/ZeroUI.WinForms.Editors/ZeroUI.WinForms.Editors.csproj" />
+    <Project Path="src/WinForms/ZeroUI.WinForms.Data/ZeroUI.WinForms.Data.csproj" />
+    <Project Path="src/WinForms/ZeroUI.WinForms.Charts/ZeroUI.WinForms.Charts.csproj" />
+    <Project Path="src/WinForms/ZeroUI.WinForms.Industrial/ZeroUI.WinForms.Industrial.csproj" />
+    <Project Path="src/WinForms/ZeroUI.WinForms.Documents/ZeroUI.WinForms.Documents.csproj" />
+    <Project Path="src/WinForms/ZeroUI.WinForms/ZeroUI.WinForms.csproj" />
+  </Folder>
+  <Folder Name="/src/Wpf/">
+    <Project Path="src/Wpf/ZeroUI.Wpf.Common/ZeroUI.Wpf.Common.csproj" />
+    <Project Path="src/Wpf/ZeroUI.Wpf.Editors/ZeroUI.Wpf.Editors.csproj" />
+    <Project Path="src/Wpf/ZeroUI.Wpf.Data/ZeroUI.Wpf.Data.csproj" />
+    <Project Path="src/Wpf/ZeroUI.Wpf.Charts/ZeroUI.Wpf.Charts.csproj" />
+    <Project Path="src/Wpf/ZeroUI.Wpf.Industrial/ZeroUI.Wpf.Industrial.csproj" />
+    <Project Path="src/Wpf/ZeroUI.Wpf.Documents/ZeroUI.Wpf.Documents.csproj" />
+    <Project Path="src/Wpf/ZeroUI.Wpf/ZeroUI.Wpf.csproj" />
   </Folder>
   <Folder Name="/demo/">
     <Project Path="demo/ZeroUI.Demo.Data/ZeroUI.Demo.Data.csproj" />

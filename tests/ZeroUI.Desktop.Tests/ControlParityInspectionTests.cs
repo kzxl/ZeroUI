@@ -23,8 +23,24 @@ namespace ZeroUI.Desktop.Tests
         [Fact]
         public void AuditCommonControlsParity_GeneratesComprehensiveReport()
         {
-            var winformsAssembly = typeof(ZeroUI.WinForms.Base.ControlBase).Assembly;
-            var wpfAssembly = typeof(ZeroUI.Wpf.Base.WpfControlBase).Assembly;
+            var winformsAssemblies = new[]
+            {
+                typeof(ZeroUI.WinForms.Base.ControlBase).Assembly,
+                typeof(ZeroUI.WinForms.Editors.TextEdit).Assembly,
+                typeof(ZeroUI.WinForms.DataGrid.GridControl).Assembly,
+                typeof(ZeroUI.WinForms.Charts.ChartControl).Assembly,
+                typeof(ZeroUI.WinForms.Industrial.LinearGauge).Assembly,
+                typeof(ZeroUI.WinForms.Reporting.PdfViewerControl).Assembly
+            };
+            var wpfAssemblies = new[]
+            {
+                typeof(ZeroUI.Wpf.Base.WpfControlBase).Assembly,
+                typeof(ZeroUI.Wpf.Editors.TextEdit).Assembly,
+                typeof(ZeroUI.Wpf.DataGrid.GridControl).Assembly,
+                typeof(ZeroUI.Wpf.Charts.ChartControl).Assembly,
+                typeof(ZeroUI.Wpf.Industrial.LinearGauge).Assembly,
+                typeof(ZeroUI.Wpf.Reporting.PdfViewerControl).Assembly
+            };
 
             var baseWfPropNames = typeof(Control).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Select(p => p.Name).ToHashSet();
@@ -35,18 +51,25 @@ namespace ZeroUI.Desktop.Tests
             baseWfPropNames.UnionWith(new[] { "DpiScale", "AutoScaleDimensions", "CurrentAutoScaleDimensions", "CustomSkin", "EffectiveSkin", "UseDefaultSkin" });
             baseWpfPropNames.UnionWith(new[] { "ClipToBounds" });
 
-            var wfControls = winformsAssembly.GetExportedTypes()
+            var wfControls = winformsAssemblies
+                .SelectMany(a => a.GetExportedTypes())
                 .Where(t => !t.IsAbstract && typeof(Control).IsAssignableFrom(t))
                 .GroupBy(t => t.Name)
                 .ToDictionary(g => g.Key, g => g.OrderBy(t => t.GetCustomAttribute<ObsoleteAttribute>() != null ? 1 : 0).First());
 
-            var wpfControls = wpfAssembly.GetExportedTypes()
+            var wpfControls = wpfAssemblies
+                .SelectMany(a => a.GetExportedTypes())
                 .Where(t => !t.IsAbstract && typeof(FrameworkElement).IsAssignableFrom(t))
                 .GroupBy(t => t.Name)
                 .ToDictionary(g => g.Key, g => g.OrderBy(t => t.GetCustomAttribute<ObsoleteAttribute>() != null ? 1 : 0).First());
 
             var commonNames = wfControls.Keys.Intersect(wpfControls.Keys).OrderBy(n => n).ToList();
-            _output.WriteLine($"Discovered {commonNames.Count} common control pairs between WinForms and WPF.\n");
+            var onlyWf = wfControls.Keys.Except(wpfControls.Keys).OrderBy(n => n).ToList();
+            var onlyWpf = wpfControls.Keys.Except(wfControls.Keys).OrderBy(n => n).ToList();
+
+            _output.WriteLine($"Discovered {commonNames.Count} common control pairs between WinForms and WPF.");
+            _output.WriteLine($"Controls ONLY in WinForms ({onlyWf.Count}): {string.Join(", ", onlyWf)}");
+            _output.WriteLine($"Controls ONLY in WPF ({onlyWpf.Count}): {string.Join(", ", onlyWpf)}\n");
 
             var reportBuilder = new StringBuilder();
             reportBuilder.AppendLine("# Cross-Platform Control Parity Audit Report");

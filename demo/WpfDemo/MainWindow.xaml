@@ -1,32 +1,34 @@
 <Window x:Class="ZeroUI.Samples.WpfDemo.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:grid="clr-namespace:ZeroUI.Wpf.DataGrid;assembly=ZeroUI.Wpf"
-        xmlns:chart="clr-namespace:ZeroUI.Wpf.Charts;assembly=ZeroUI.Wpf"
-        xmlns:ind="clr-namespace:ZeroUI.Wpf.Industrial;assembly=ZeroUI.Wpf"
-        xmlns:wh="clr-namespace:ZeroUI.Wpf.Warehouse;assembly=ZeroUI.Wpf"
-        xmlns:edit="clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf"
-        xmlns:tree="clr-namespace:ZeroUI.Wpf.TreeList;assembly=ZeroUI.Wpf"
-        xmlns:prop="clr-namespace:ZeroUI.Wpf.PropertyGrid;assembly=ZeroUI.Wpf"
-        xmlns:nav="clr-namespace:ZeroUI.Wpf.Navigation;assembly=ZeroUI.Wpf"
-        xmlns:dock="clr-namespace:ZeroUI.Wpf.Docking;assembly=ZeroUI.Wpf"
-        xmlns:diag="clr-namespace:ZeroUI.Wpf.Diagram;assembly=ZeroUI.Wpf"
-        xmlns:feed="clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf"
-        xmlns:overlay="clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf"
-        xmlns:layout="clr-namespace:ZeroUI.Wpf.Layout;assembly=ZeroUI.Wpf"
-        xmlns:report="clr-namespace:ZeroUI.Wpf.Reporting;assembly=ZeroUI.Wpf"
-        xmlns:pivot="clr-namespace:ZeroUI.Wpf.PivotGrid;assembly=ZeroUI.Wpf"
-        xmlns:range="clr-namespace:ZeroUI.Wpf.Range;assembly=ZeroUI.Wpf"
-        xmlns:energy="clr-namespace:ZeroUI.Wpf.Energy;assembly=ZeroUI.Wpf"
-        xmlns:petro="clr-namespace:ZeroUI.Wpf.Petrochem;assembly=ZeroUI.Wpf"
-        xmlns:proc="clr-namespace:ZeroUI.Wpf.Process;assembly=ZeroUI.Wpf"
-        xmlns:water="clr-namespace:ZeroUI.Wpf.Water;assembly=ZeroUI.Wpf"
-        xmlns:bms="clr-namespace:ZeroUI.Wpf.Bms;assembly=ZeroUI.Wpf"
-        xmlns:life="clr-namespace:ZeroUI.Wpf.LifeSciences;assembly=ZeroUI.Wpf"
-        xmlns:log="clr-namespace:ZeroUI.Wpf.Logistics;assembly=ZeroUI.Wpf"
-        xmlns:net="clr-namespace:ZeroUI.Wpf.Network;assembly=ZeroUI.Wpf"
-        xmlns:rend="clr-namespace:ZeroUI.Wpf.Rendering;assembly=ZeroUI.Wpf"
-        xmlns:opt="clr-namespace:ZeroUI.Wpf.Rendering.Optimizer;assembly=ZeroUI.Wpf"
+        xmlns:grid="clr-namespace:ZeroUI.Wpf.DataGrid;assembly=ZeroUI.Wpf.Data"
+        xmlns:chart="clr-namespace:ZeroUI.Wpf.Charts;assembly=ZeroUI.Wpf.Charts"
+        xmlns:ind="clr-namespace:ZeroUI.Wpf.Industrial;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:wh="clr-namespace:ZeroUI.Wpf.Warehouse;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:edit="clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf.Editors"
+        xmlns:tree="clr-namespace:ZeroUI.Wpf.TreeList;assembly=ZeroUI.Wpf.Data"
+        xmlns:prop="clr-namespace:ZeroUI.Wpf.PropertyGrid;assembly=ZeroUI.Wpf.Data"
+        xmlns:nav="clr-namespace:ZeroUI.Wpf.Navigation;assembly=ZeroUI.Wpf.Common"
+        xmlns:dock="clr-namespace:ZeroUI.Wpf.Docking;assembly=ZeroUI.Wpf.Common"
+        xmlns:diag="clr-namespace:ZeroUI.Wpf.Diagram;assembly=ZeroUI.Wpf.Charts"
+        xmlns:feed="clr-namespace:ZeroUI.Wpf.Feedback;assembly=ZeroUI.Wpf.Common"
+        xmlns:overlay="clr-namespace:ZeroUI.Wpf.Overlays;assembly=ZeroUI.Wpf.Common"
+        xmlns:layout="clr-namespace:ZeroUI.Wpf.Layout;assembly=ZeroUI.Wpf.Common"
+        xmlns:report="clr-namespace:ZeroUI.Wpf.Reporting;assembly=ZeroUI.Wpf.Documents"
+        xmlns:pivot="clr-namespace:ZeroUI.Wpf.PivotGrid;assembly=ZeroUI.Wpf.Data"
+        xmlns:range="clr-namespace:ZeroUI.Wpf.Range;assembly=ZeroUI.Wpf.Editors"
+        xmlns:energy="clr-namespace:ZeroUI.Wpf.Energy;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:petro="clr-namespace:ZeroUI.Wpf.Petrochem;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:proc="clr-namespace:ZeroUI.Wpf.Process;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:water="clr-namespace:ZeroUI.Wpf.Water;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:bms="clr-namespace:ZeroUI.Wpf.Bms;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:life="clr-namespace:ZeroUI.Wpf.LifeSciences;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:log="clr-namespace:ZeroUI.Wpf.Logistics;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:net="clr-namespace:ZeroUI.Wpf.Network;assembly=ZeroUI.Wpf.Industrial"
+        xmlns:rend="clr-namespace:ZeroUI.Wpf.Rendering;assembly=ZeroUI.Wpf.Common"
+        xmlns:opt="clr-namespace:ZeroUI.Wpf.Rendering.Optimizer;assembly=ZeroUI.Wpf.Common"
+        xmlns:btn="clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf.Common"
+        xmlns:dataedit="clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf.Data"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="920" Width="1440"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -1300,11 +1302,11 @@
                                     <!-- 1. Buttons Section -->
                                     <TextBlock Text="1. Button Variants" FontSize="14.5" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,10" />
                                     <WrapPanel Margin="0,0,0,24">
-                                        <edit:SimpleButton Variant="Primary" Content="Primary CTA" Margin="0,0,10,10" />
-                                        <edit:SimpleButton Variant="Secondary" Content="Secondary Action" Margin="0,0,10,10" />
-                                        <edit:SimpleButton Variant="Success" Content="✔ Approved" Margin="0,0,10,10" />
-                                        <edit:SimpleButton Variant="Danger" Content="✖ Terminate" Margin="0,0,10,10" />
-                                        <edit:SimpleButton Variant="Ghost" Content="Ghost Button" Margin="0,0,10,10" />
+                                        <btn:SimpleButton Variant="Primary" Content="Primary CTA" Margin="0,0,10,10" />
+                                        <btn:SimpleButton Variant="Secondary" Content="Secondary Action" Margin="0,0,10,10" />
+                                        <btn:SimpleButton Variant="Success" Content="✔ Approved" Margin="0,0,10,10" />
+                                        <btn:SimpleButton Variant="Danger" Content="✖ Terminate" Margin="0,0,10,10" />
+                                        <btn:SimpleButton Variant="Ghost" Content="Ghost Button" Margin="0,0,10,10" />
                                         <Button Content="Standard WPF Button (Themed)" Height="32" Padding="12,0,12,0" Margin="0,0,10,10" />
                                         <Button Content="Disabled State" IsEnabled="False" Height="32" Padding="12,0,12,0" Margin="0,0,10,10" />
                                     </WrapPanel>
@@ -1645,11 +1647,11 @@
                                         <StackPanel Margin="0,8,0,0">
                                             <!-- 1. ZeroGridLookup -->
                                             <TextBlock Text="Material &amp; Asset Lookup (Embedded Virtual DataGrid + Quick-Create Footer)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:SearchLookUpEdit x:Name="DemoGridLookup" Height="34" Margin="0,0,0,10" Placeholder="Select material or component..." ShowAddNewButton="True" AddNewButtonText="➕ Quick Add Material" />
+                                            <dataedit:SearchLookUpEdit x:Name="DemoGridLookup" Height="34" Margin="0,0,0,10" Placeholder="Select material or component..." ShowAddNewButton="True" AddNewButtonText="➕ Quick Add Material" />
 
                                             <!-- 1b. High-Capacity SearchLookUpEdit -->
                                             <TextBlock Text="High-Capacity Search Lookup (SearchLookUpEdit with Paginated Search)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
-                                            <edit:SearchLookUpEdit x:Name="DemoSearchLookup" Height="34" Margin="0,0,0,10" Placeholder="Search 5,000 industrial assets..." />
+                                            <dataedit:SearchLookUpEdit x:Name="DemoSearchLookup" Height="34" Margin="0,0,0,10" Placeholder="Search 5,000 industrial assets..." />
 
                                             <!-- 2. ZeroCheckedComboBox -->
                                             <TextBlock Text="Assigned Access Roles &amp; Factory Zones (Multi-Select Checkboxes)" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
@@ -2016,7 +2018,7 @@
                                                         <Button Content="Messages" Height="34" Padding="12,0,12,0" />
                                                     </feed:Badge>
                                                     <feed:Badge IsDot="True" Status="Online" Margin="0,0,20,10">
-                                                        <edit:SimpleButton Content="PLC Live Feed" />
+                                                        <btn:SimpleButton Content="PLC Live Feed" />
                                                     </feed:Badge>
                                                 </WrapPanel>
                                             </StackPanel>
