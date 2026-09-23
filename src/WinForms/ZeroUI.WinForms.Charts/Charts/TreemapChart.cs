@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.Core.Analytics;
 using ZeroUI.Core.Layout;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
@@ -14,28 +14,8 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.Charts
 {
     /// <summary>
-    /// Represents an individual item / partition tile in a TreemapChart.
-    /// </summary>
-    public class TreemapItem
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
-        public string Label { get; set; }
-        public double Value { get; set; }
-        public Color Color { get; set; }
-        public string Category { get; set; }
-
-        public TreemapItem(string label, double value, Color color, string category = "")
-        {
-            Label = label;
-            Value = value;
-            Color = color;
-            Category = category;
-        }
-    }
-
-    /// <summary>
     /// High-performance Squarified Treemap chart for nested proportional and hierarchical data visualization.
-    /// Uses Bruls-Huizing-van Wijk algorithm to maintain optimal tile aspect ratios near 1:1.
+    /// Thin WinForms View layer rendering tiles computed by ZeroUI.Core.Analytics.TreemapEngine.
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "TreemapChart.bmp")]
@@ -98,7 +78,15 @@ namespace ZeroUI.WinForms.Charts
 
         public TreemapItem AddItem(string label, double value, Color color, string category = "")
         {
-            var item = new TreemapItem(label, value, color, category);
+            var item = new TreemapItem(label, value, category, (uint)color.ToArgb());
+            _items.Add(item);
+            Invalidate();
+            return item;
+        }
+
+        public TreemapItem AddItem(string label, double value, string category = "")
+        {
+            var item = new TreemapItem(label, value, category);
             _items.Add(item);
             Invalidate();
             return item;
@@ -140,8 +128,8 @@ namespace ZeroUI.WinForms.Charts
                 return;
             }
 
-            // Compute squarified layout
-            _computedLayout = SquarifiedTreeMap.Layout(_items, x => x.Value, plotRect.Width, plotRect.Height, padding: 3.0);
+            // Compute squarified layout via Core TreemapEngine
+            _computedLayout = TreemapEngine.ComputeLayout(_items, 0, 0, plotRect.Width, plotRect.Height, padding: 3.0);
             double totalWeight = _items.Sum(x => Math.Max(0.0, x.Value));
 
             using var labelFont = new Font(Font.FontFamily, 8.5f, FontStyle.Bold);
@@ -162,7 +150,7 @@ namespace ZeroUI.WinForms.Charts
                 bool isHover = i == _hoverIndex;
 
                 // Tile Background with gradient
-                Color baseColor = r.Item.Color;
+                Color baseColor = r.Item.ColorRgba.ToColor(Color.FromArgb(79, 70, 229));
                 Color topColor = isHover ? ControlPaint.Light(baseColor, 0.25f) : baseColor;
                 Color botColor = ControlPaint.Dark(baseColor, 0.15f);
 

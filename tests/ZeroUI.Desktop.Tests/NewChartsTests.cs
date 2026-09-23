@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Xunit;
+using ZeroUI.Core.Analytics;
 using ZeroUI.WinForms.Charts;
 
 namespace ZeroUI.Desktop.Tests
@@ -15,10 +16,10 @@ namespace ZeroUI.Desktop.Tests
             using (var chart = new TreemapChart())
             {
                 chart.Size = new Size(600, 400);
-                chart.Items.Add(new TreemapItem("Equities", 500, Color.Blue, "Assets"));
-                chart.Items.Add(new TreemapItem("Bonds", 300, Color.Green, "Assets"));
-                chart.Items.Add(new TreemapItem("Real Estate", 150, Color.Orange, "Assets"));
-                chart.Items.Add(new TreemapItem("Cash", 50, Color.Gray, "Liquidity"));
+                chart.AddItem("Equities", 500, Color.Blue, "Assets");
+                chart.AddItem("Bonds", 300, Color.Green, "Assets");
+                chart.AddItem("Real Estate", 150, Color.Orange, "Assets");
+                chart.AddItem("Cash", 50, Color.Gray, "Liquidity");
 
                 Assert.Equal(4, chart.Items.Count);
 
@@ -39,18 +40,18 @@ namespace ZeroUI.Desktop.Tests
             using (var chart = new SankeyChart())
             {
                 chart.Size = new Size(700, 450);
-                chart.Nodes.Add(new SankeyNode("Solar", Color.Gold, 0));
-                chart.Nodes.Add(new SankeyNode("Wind", Color.SkyBlue, 0));
-                chart.Nodes.Add(new SankeyNode("Grid Storage", Color.DarkCyan, 1));
-                chart.Nodes.Add(new SankeyNode("Direct Use", Color.LimeGreen, 1));
-                chart.Nodes.Add(new SankeyNode("Industry", Color.SteelBlue, 2));
+                chart.AddNode("Solar", Color.Gold, 0);
+                chart.AddNode("Wind", Color.SkyBlue, 0);
+                chart.AddNode("Grid Storage", Color.DarkCyan, 1);
+                chart.AddNode("Direct Use", Color.LimeGreen, 1);
+                chart.AddNode("Industry", Color.SteelBlue, 2);
 
-                chart.Links.Add(new SankeyLink("Solar", "Grid Storage", 40));
-                chart.Links.Add(new SankeyLink("Solar", "Direct Use", 60));
-                chart.Links.Add(new SankeyLink("Wind", "Grid Storage", 50));
-                chart.Links.Add(new SankeyLink("Wind", "Direct Use", 30));
-                chart.Links.Add(new SankeyLink("Grid Storage", "Industry", 90));
-                chart.Links.Add(new SankeyLink("Direct Use", "Industry", 90));
+                chart.AddLink("Solar", "Grid Storage", 40);
+                chart.AddLink("Solar", "Direct Use", 60);
+                chart.AddLink("Wind", "Grid Storage", 50);
+                chart.AddLink("Wind", "Direct Use", 30);
+                chart.AddLink("Grid Storage", "Industry", 90);
+                chart.AddLink("Direct Use", "Industry", 90);
 
                 Assert.Equal(5, chart.Nodes.Count);
                 Assert.Equal(6, chart.Links.Count);

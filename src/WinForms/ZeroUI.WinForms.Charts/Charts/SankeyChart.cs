@@ -6,44 +6,15 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.Core.Analytics;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
 {
-    public class SankeyNode
-    {
-        public string Name { get; set; }
-        public Color Color { get; set; }
-        public int Column { get; set; }
-
-        public SankeyNode(string name, Color color, int column = 0)
-        {
-            Name = name;
-            Color = color;
-            Column = column;
-        }
-    }
-
-    public class SankeyLink
-    {
-        public string Source { get; set; }
-        public string Target { get; set; }
-        public double Value { get; set; }
-        public Color? Color { get; set; }
-
-        public SankeyLink(string source, string target, double value, Color? color = null)
-        {
-            Source = source;
-            Target = target;
-            Value = value;
-            Color = color;
-        }
-    }
-
     /// <summary>
     /// Interactive Sankey diagram for visualizing energy, cost, material, and process flows.
-    /// Features smooth cubic Bézier flow ribbons with proportional ribbon widths and node highlighting.
+    /// Thin WinForms View layer rendering topology and Bézier flow ribbons computed by ZeroUI.Core.Analytics.SankeyLayoutEngine.
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "SankeyChart.bmp")]
@@ -60,6 +31,7 @@ namespace ZeroUI.WinForms.Charts
         private int _nodeWidth = 18;
         private int _hoverLinkIndex = -1;
         private string? _hoverNodeName = null;
+        private SankeyLayoutResult? _lastLayout = null;
 
         public List<SankeyNode> Nodes => _nodes;
         public List<SankeyLink> Links => _links;
@@ -101,7 +73,15 @@ namespace ZeroUI.WinForms.Charts
 
         public SankeyNode AddNode(string name, Color color, int column = 0)
         {
-            var node = new SankeyNode(name, color, column);
+            var node = new SankeyNode(name, column, (uint)color.ToArgb());
+            _nodes.Add(node);
+            Invalidate();
+            return node;
+        }
+
+        public SankeyNode AddNode(string name, int column = 0)
+        {
+            var node = new SankeyNode(name, column);
             _nodes.Add(node);
             Invalidate();
             return node;
@@ -109,7 +89,7 @@ namespace ZeroUI.WinForms.Charts
 
         public SankeyLink AddLink(string source, string target, double value, Color? color = null)
         {
-            var link = new SankeyLink(source, target, value, color);
+            var link = new SankeyLink(source, target, value, color.HasValue ? (uint?)color.Value.ToArgb() : null);
             _links.Add(link);
             Invalidate();
             return link;
@@ -119,6 +99,7 @@ namespace ZeroUI.WinForms.Charts
         {
             _nodes.Clear();
             _links.Clear();
+            _lastLayout = null;
             Invalidate();
         }
 
@@ -144,7 +125,7 @@ namespace ZeroUI.WinForms.Charts
                 g.DrawString(_title, titleFont, titleBrush, 10, 8);
             }
 
-            var plotRect = new Rectangle(20, titleHeight + 10, Width - 40, Height - titleHeight - 30);
+            var plotRect = new Rectangle(50, titleHeight + 10, Width - 100, Height - titleHeight - 30);
             if (plotRect.Width <= 50 || plotRect.Height <= 50 || _nodes.Count == 0)
             {
                 using var muted = new SolidBrush(Color.Gray);
@@ -152,110 +133,55 @@ namespace ZeroUI.WinForms.Charts
                 return;
             }
 
-            // Compute columns
-            int maxCol = _nodes.Max(n => n.Column);
-            int colCount = Math.Max(1, maxCol + 1);
+            // Compute layout via Core SankeyLayoutEngine
+            _lastLayout = SankeyLayoutEngine.Compute(_nodes, _links);
+            if (_lastLayout.Nodes.Count == 0) return;
 
-            // Compute in/out volume per node
-            var inVolume = new Dictionary<string, double>();
-            var outVolume = new Dictionary<string, double>();
-
-            foreach (var n in _nodes)
+            // Map computed nodes to screen rectangles
+            var nodeRectMap = new Dictionary<string, RectangleF>(StringComparer.OrdinalIgnoreCase);
+            foreach (var cn in _lastLayout.Nodes)
             {
-                inVolume[n.Name] = 0;
-                outVolume[n.Name] = 0;
-            }
-
-            foreach (var l in _links)
-            {
-                if (outVolume.ContainsKey(l.Source)) outVolume[l.Source] += l.Value;
-                if (inVolume.ContainsKey(l.Target)) inVolume[l.Target] += l.Value;
-            }
-
-            var nodeVolume = new Dictionary<string, double>();
-            foreach (var n in _nodes)
-            {
-                nodeVolume[n.Name] = Math.Max(inVolume[n.Name], outVolume[n.Name]);
-            }
-
-            // Layout columns and nodes
-            var nodeRects = new Dictionary<string, RectangleF>();
-            float colSpacing = colCount > 1 ? (plotRect.Width - _nodeWidth) / (float)(colCount - 1) : 0;
-
-            for (int col = 0; col < colCount; col++)
-            {
-                var colNodes = _nodes.Where(n => n.Column == col).ToList();
-                double colTotal = colNodes.Sum(n => nodeVolume[n.Name]);
-                if (colTotal <= 0) colTotal = 1;
-
-                float availH = plotRect.Height - (colNodes.Count - 1) * 16f;
-                float curY = plotRect.Top;
-                float x = plotRect.Left + col * colSpacing;
-
-                foreach (var n in colNodes)
-                {
-                    float h = Math.Max(12f, (float)((nodeVolume[n.Name] / colTotal) * availH));
-                    nodeRects[n.Name] = new RectangleF(x, curY, _nodeWidth, h);
-                    curY += h + 16f;
-                }
-            }
-
-            // Track offsets for multiple links connecting to the same node
-            var sourceOutOffset = new Dictionary<string, float>();
-            var targetInOffset = new Dictionary<string, float>();
-            foreach (var n in _nodes)
-            {
-                sourceOutOffset[n.Name] = 0f;
-                targetInOffset[n.Name] = 0f;
+                float nx = (float)(plotRect.Left + cn.NormalizedX * (plotRect.Width - _nodeWidth));
+                float ny = (float)(plotRect.Top + cn.NormalizedY * plotRect.Height);
+                float nh = (float)(cn.NormalizedHeight * plotRect.Height);
+                nodeRectMap[cn.Node.Name] = new RectangleF(nx, ny, _nodeWidth, Math.Max(10f, nh));
             }
 
             // 1. Draw Flow Ribbons
-            for (int i = 0; i < _links.Count; i++)
+            for (int i = 0; i < _lastLayout.Ribbons.Count; i++)
             {
-                var link = _links[i];
-                if (!nodeRects.TryGetValue(link.Source, out var srcRect) ||
-                    !nodeRects.TryGetValue(link.Target, out var dstRect))
+                var ribbon = _lastLayout.Ribbons[i];
+                if (!nodeRectMap.TryGetValue(ribbon.SourceNode.Node.Name, out var srcRect) ||
+                    !nodeRectMap.TryGetValue(ribbon.TargetNode.Node.Name, out var dstRect))
+                {
                     continue;
-
-                double srcTotal = outVolume[link.Source];
-                double dstTotal = inVolume[link.Target];
-
-                float linkSrcH = srcTotal > 0 ? (float)((link.Value / srcTotal) * srcRect.Height) : 10f;
-                float linkDstH = dstTotal > 0 ? (float)((link.Value / dstTotal) * dstRect.Height) : 10f;
-
-                float y1 = srcRect.Top + sourceOutOffset[link.Source];
-                float y2 = dstRect.Top + targetInOffset[link.Target];
-
-                sourceOutOffset[link.Source] += linkSrcH;
-                targetInOffset[link.Target] += linkDstH;
+                }
 
                 float x1 = srcRect.Right;
                 float x2 = dstRect.Left;
                 float dx = (x2 - x1) * 0.5f;
 
+                float y1_top = (float)(plotRect.Top + ribbon.SourceY0 * plotRect.Height);
+                float y1_bot = (float)(plotRect.Top + ribbon.SourceY1 * plotRect.Height);
+                float y2_top = (float)(plotRect.Top + ribbon.TargetY0 * plotRect.Height);
+                float y2_bot = (float)(plotRect.Top + ribbon.TargetY1 * plotRect.Height);
+
                 bool isHovered = (i == _hoverLinkIndex) ||
-                                 (_hoverNodeName != null && (_hoverNodeName == link.Source || _hoverNodeName == link.Target));
+                                 (_hoverNodeName != null && (_hoverNodeName == ribbon.SourceNode.Node.Name || _hoverNodeName == ribbon.TargetNode.Node.Name));
 
-                var srcNode = _nodes.FirstOrDefault(n => n.Name == link.Source);
-                var dstNode = _nodes.FirstOrDefault(n => n.Name == link.Target);
-                Color c1 = link.Color ?? srcNode?.Color ?? Color.FromArgb(79, 70, 229);
-                Color c2 = link.Color ?? dstNode?.Color ?? Color.FromArgb(16, 185, 129);
-
+                Color c1 = ribbon.Link.ColorRgba.ToColor(ribbon.SourceNode.Node.ColorRgba.ToColor(Color.FromArgb(79, 70, 229)));
+                Color c2 = ribbon.Link.ColorRgba.ToColor(ribbon.TargetNode.Node.ColorRgba.ToColor(Color.FromArgb(16, 185, 129)));
                 int alpha = isHovered ? 180 : 85;
 
                 using (var path = new GraphicsPath())
                 {
-                    // Top curve
-                    path.AddBezier(x1, y1, x1 + dx, y1, x2 - dx, y2, x2, y2);
-                    // Right vertical
-                    path.AddLine(x2, y2, x2, y2 + linkDstH);
-                    // Bottom curve (reversed)
-                    path.AddBezier(x2, y2 + linkDstH, x2 - dx, y2 + linkDstH, x1 + dx, y1 + linkSrcH, x1, y1 + linkSrcH);
-                    // Left vertical
+                    path.AddBezier(x1, y1_top, x1 + dx, y1_top, x2 - dx, y2_top, x2, y2_top);
+                    path.AddLine(x2, y2_top, x2, y2_bot);
+                    path.AddBezier(x2, y2_bot, x2 - dx, y2_bot, x1 + dx, y1_bot, x1, y1_bot);
                     path.CloseFigure();
 
                     using var ribbonBrush = new LinearGradientBrush(
-                        new PointF(x1, y1), new PointF(x2, y2),
+                        new PointF(x1, y1_top), new PointF(x2, y2_top),
                         Color.FromArgb(alpha, c1), Color.FromArgb(alpha, c2));
                     g.FillPath(ribbonBrush, path);
 
@@ -270,17 +196,19 @@ namespace ZeroUI.WinForms.Charts
             // 2. Draw Nodes
             using var font = new Font(Font.FontFamily, 8f, FontStyle.Bold);
             using var fontSub = new Font(Font.FontFamily, 7.5f, FontStyle.Regular);
-            using var whiteBrush = new SolidBrush(Color.White);
             using var textBrush = new SolidBrush(textColor);
             using var mutedBrush = new SolidBrush(mutedColor);
 
-            foreach (var n in _nodes)
+            int totalCols = _lastLayout.ColumnCount;
+
+            foreach (var cn in _lastLayout.Nodes)
             {
-                if (!nodeRects.TryGetValue(n.Name, out var nr)) continue;
+                if (!nodeRectMap.TryGetValue(cn.Node.Name, out var nr)) continue;
 
-                bool isHighlighted = (_hoverNodeName == n.Name);
+                bool isHighlighted = (_hoverNodeName == cn.Node.Name);
+                Color nodeColor = cn.Node.ColorRgba.ToColor(Color.FromArgb(79, 70, 229));
 
-                using (var nb = new SolidBrush(n.Color))
+                using (var nb = new SolidBrush(nodeColor))
                 {
                     g.FillRectangle(nb, nr);
                 }
@@ -290,8 +218,8 @@ namespace ZeroUI.WinForms.Charts
                     g.DrawRectangle(np, nr.X, nr.Y, nr.Width, nr.Height);
                 }
 
-                // Node text label (placed left for rightmost nodes, right for left nodes)
-                bool isRightSide = n.Column >= colCount / 2;
+                // Node text label
+                bool isRightSide = totalCols > 1 && cn.Node.Column >= totalCols / 2;
                 float tx = isRightSide ? nr.Right + 6 : nr.Left - 6;
                 var sf = new StringFormat
                 {
@@ -299,8 +227,8 @@ namespace ZeroUI.WinForms.Charts
                     LineAlignment = StringAlignment.Center
                 };
 
-                string label = $"{n.Name}";
-                string val = $"{nodeVolume[n.Name]:N0}{_valueSuffix}";
+                string label = cn.Node.Name;
+                string val = $"{cn.EffectiveValue:N0}{_valueSuffix}";
 
                 g.DrawString(label, font, textBrush, tx, nr.Top + nr.Height / 2 - 6, sf);
                 g.DrawString(val, fontSub, mutedBrush, tx, nr.Top + nr.Height / 2 + 7, sf);
@@ -310,13 +238,54 @@ namespace ZeroUI.WinForms.Charts
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            // Simple hit-test on nodes
+            if (_lastLayout == null) return;
+
             string? foundNode = null;
-            // Let's check nodes proximity
-            // Repaint if hover changes
+            int titleHeight = string.IsNullOrEmpty(_title) ? 6 : 30;
+            var plotRect = new Rectangle(50, titleHeight + 10, Width - 100, Height - titleHeight - 30);
+
+            foreach (var cn in _lastLayout.Nodes)
+            {
+                float nx = (float)(plotRect.Left + cn.NormalizedX * (plotRect.Width - _nodeWidth));
+                float ny = (float)(plotRect.Top + cn.NormalizedY * plotRect.Height);
+                float nh = (float)(cn.NormalizedHeight * plotRect.Height);
+                var rect = new RectangleF(nx, ny, _nodeWidth, Math.Max(10f, nh));
+
+                if (rect.Contains(e.Location))
+                {
+                    foundNode = cn.Node.Name;
+                    break;
+                }
+            }
+
             if (foundNode != _hoverNodeName)
             {
                 _hoverNodeName = foundNode;
+                Invalidate();
+
+                if (_hoverNodeName != null)
+                {
+                    var cn = _lastLayout.Nodes.FirstOrDefault(n => n.Node.Name == _hoverNodeName);
+                    if (cn != null)
+                    {
+                        string tip = $"{cn.Node.Name}\nInflow: {cn.InValue:N0}{_valueSuffix}\nOutflow: {cn.OutValue:N0}{_valueSuffix}";
+                        _toolTip.SetToolTip(this, tip);
+                    }
+                }
+                else
+                {
+                    _toolTip.SetToolTip(this, null);
+                }
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            if (_hoverNodeName != null)
+            {
+                _hoverNodeName = null;
+                _toolTip.SetToolTip(this, null);
                 Invalidate();
             }
         }

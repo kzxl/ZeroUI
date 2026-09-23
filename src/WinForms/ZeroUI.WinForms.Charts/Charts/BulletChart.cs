@@ -4,64 +4,16 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using System.Globalization;
-using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.Core.Analytics;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
 {
     /// <summary>
-    /// Represents a qualitative performance threshold band in a Bullet graph (e.g., Poor, Satisfactory, Good).
-    /// </summary>
-    public class BulletRange
-    {
-        public string Name { get; set; } = string.Empty;
-        public double EndValue { get; set; }
-        public Color? CustomColor { get; set; }
-
-        public BulletRange(string name, double endValue, Color? customColor = null)
-        {
-            Name = name;
-            EndValue = endValue;
-            CustomColor = customColor;
-        }
-    }
-
-    /// <summary>
-    /// Represents a single KPI metric entry displayed within a BulletChart.
-    /// </summary>
-    public class BulletItem
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Subtitle { get; set; } = string.Empty;
-        public double Minimum { get; set; }
-        public double Maximum { get; set; } = 100;
-        public double ActualValue { get; set; }
-        public double TargetValue { get; set; }
-        public double? ComparativeValue { get; set; }
-        public List<BulletRange> Ranges { get; } = new List<BulletRange>();
-        public Color? BarColor { get; set; }
-        public Color? TargetColor { get; set; }
-        public object? Tag { get; set; }
-
-        public BulletItem() { }
-
-        public BulletItem(string title, string subtitle, double actual, double target, double max = 100, double min = 0)
-        {
-            Title = title;
-            Subtitle = subtitle;
-            ActualValue = actual;
-            TargetValue = target;
-            Maximum = max;
-            Minimum = min;
-        }
-    }
-
-    /// <summary>
     /// Stephen Few's Bullet Graph control engineered for high-density executive KPI dashboards.
-    /// Replaces cluttered circular gauges with compact linear qualitative ranges, performance bars, and target markers.
+    /// Thin WinForms View layer rendering qualitative thresholds and progress computed by ZeroUI.Core.Analytics.BulletBenchmarkEngine.
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "BulletChart.bmp")]
@@ -79,9 +31,9 @@ namespace ZeroUI.WinForms.Charts
         private bool _showAxisTicks = true;
         private bool _showValueLabels = true;
         private int _leftLabelWidth = 160;
-        private Color _barColor = Color.FromArgb(30, 41, 59); // Slate-800 or Slate-100 in Dark
-        private Color _targetMarkerColor = Color.FromArgb(239, 68, 68); // Red-500
-        private Color _comparativeMarkerColor = Color.FromArgb(59, 130, 246); // Blue-500
+        private Color _barColor = Color.FromArgb(30, 41, 59);
+        private Color _targetMarkerColor = Color.FromArgb(239, 68, 68);
+        private Color _comparativeMarkerColor = Color.FromArgb(59, 130, 246);
 
         public List<BulletItem> Items => _items;
 
@@ -90,7 +42,7 @@ namespace ZeroUI.WinForms.Charts
         public string Title
         {
             get => _title;
-            set { _title = value; Invalidate(); }
+            set { _title = value ?? ""; Invalidate(); }
         }
 
         [Category("Appearance")]
@@ -98,7 +50,7 @@ namespace ZeroUI.WinForms.Charts
         public string ValuePrefix
         {
             get => _valuePrefix;
-            set { _valuePrefix = value; Invalidate(); }
+            set { _valuePrefix = value ?? ""; Invalidate(); }
         }
 
         [Category("Appearance")]
@@ -106,7 +58,7 @@ namespace ZeroUI.WinForms.Charts
         public string ValueSuffix
         {
             get => _valueSuffix;
-            set { _valueSuffix = value; Invalidate(); }
+            set { _valueSuffix = value ?? ""; Invalidate(); }
         }
 
         [Category("Appearance")]
@@ -256,28 +208,21 @@ namespace ZeroUI.WinForms.Charts
                 var labelRect = new Rectangle(leftMargin, rowY, _leftLabelWidth - 10, rowHeight);
                 DrawItemLabels(g, item, labelRect, textPrimary, textSecondary);
 
+                // Compute normalized metrics via Core BulletBenchmarkEngine
+                var metrics = BulletBenchmarkEngine.Compute(item);
+
                 // Qualitative ranges (Background bands)
-                var resolvedRanges = GetResolvedRanges(item);
-                double rangeSpan = Math.Max(0.001, item.Maximum - item.Minimum);
-
-                double prevEnd = item.Minimum;
-                for (int r = 0; r < resolvedRanges.Count; r++)
+                for (int r = 0; r < metrics.Ranges.Count; r++)
                 {
-                    var range = resolvedRanges[r];
-                    double startVal = Math.Max(item.Minimum, prevEnd);
-                    double endVal = Math.Min(item.Maximum, range.EndValue);
-                    if (endVal > startVal)
-                    {
-                        float rx = chartX + (float)((startVal - item.Minimum) / rangeSpan * chartWidth);
-                        float rw = (float)((endVal - startVal) / rangeSpan * chartWidth);
+                    var range = metrics.Ranges[r];
+                    float rx = chartX + (float)(range.NormalizedStart * chartWidth);
+                    float rw = (float)((range.NormalizedEnd - range.NormalizedStart) * chartWidth);
 
-                        Color bandColor = range.CustomColor ?? GetDefaultRangeColor(r, resolvedRanges.Count, isDark);
-                        using (var brush = new SolidBrush(bandColor))
-                        {
-                            g.FillRectangle(brush, rx, trackY, rw, trackHeight);
-                        }
+                    Color bandColor = range.ColorRgba.ToColor(GetDefaultRangeColor(r, metrics.Ranges.Count, isDark));
+                    using (var brush = new SolidBrush(bandColor))
+                    {
+                        g.FillRectangle(brush, rx, trackY, rw, trackHeight);
                     }
-                    prevEnd = endVal;
                 }
 
                 // Grid / Axis ticks along track
@@ -292,13 +237,12 @@ namespace ZeroUI.WinForms.Charts
                 // Actual value bar (centered horizontally inside track, thinner height)
                 int barHeight = Math.Max(6, trackHeight / 2);
                 int barY = trackY + (trackHeight - barHeight) / 2;
-
-                double actualClamped = Math.Max(item.Minimum, Math.Min(item.Maximum, item.ActualValue));
-                float actualWidth = (float)((actualClamped - item.Minimum) / rangeSpan * chartWidth);
+                float actualWidth = (float)(metrics.NormalizedActual * chartWidth);
 
                 if (actualWidth > 0)
                 {
-                    Color barCol = item.BarColor ?? (isDark ? Color.FromArgb(226, 232, 240) : _barColor);
+                    Color defaultBar = isDark ? Color.FromArgb(226, 232, 240) : _barColor;
+                    Color barCol = item.BarColorRgba.ToColor(defaultBar);
                     using (var brush = new SolidBrush(barCol))
                     {
                         g.FillRectangle(brush, chartX, barY, actualWidth, barHeight);
@@ -306,9 +250,9 @@ namespace ZeroUI.WinForms.Charts
                 }
 
                 // Comparative marker (optional prior period line)
-                if (item.ComparativeValue.HasValue)
+                if (metrics.NormalizedComparative.HasValue)
                 {
-                    float compX = chartX + (float)((item.ComparativeValue.Value - item.Minimum) / rangeSpan * chartWidth);
+                    float compX = chartX + (float)(metrics.NormalizedComparative.Value * chartWidth);
                     using (var compPen = new Pen(_comparativeMarkerColor, 2f))
                     {
                         g.DrawLine(compPen, compX, trackY - 1, compX, trackY + trackHeight + 1);
@@ -316,9 +260,9 @@ namespace ZeroUI.WinForms.Charts
                 }
 
                 // Target marker (prominent vertical line spanning past track)
-                float targetX = chartX + (float)((item.TargetValue - item.Minimum) / rangeSpan * chartWidth);
+                float targetX = chartX + (float)(metrics.NormalizedTarget * chartWidth);
                 int markerExtend = 3;
-                Color targetCol = item.TargetColor ?? _targetMarkerColor;
+                Color targetCol = item.TargetColorRgba.ToColor(_targetMarkerColor);
                 using (var targetPen = new Pen(targetCol, 3f))
                 {
                     g.DrawLine(targetPen, targetX, trackY - markerExtend, targetX, trackY + trackHeight + markerExtend);
@@ -361,34 +305,16 @@ namespace ZeroUI.WinForms.Charts
             }
         }
 
-        private List<BulletRange> GetResolvedRanges(BulletItem item)
-        {
-            if (item.Ranges != null && item.Ranges.Count > 0)
-                return item.Ranges;
-
-            // Default 3-tier qualitative thresholds: 60% (Poor), 85% (Satisfactory), 100% (Good)
-            double span = item.Maximum - item.Minimum;
-            return new List<BulletRange>
-            {
-                new BulletRange("Poor", item.Minimum + span * 0.60),
-                new BulletRange("Satisfactory", item.Minimum + span * 0.85),
-                new BulletRange("Good", item.Maximum)
-            };
-        }
-
         private Color GetDefaultRangeColor(int index, int total, bool isDark)
         {
-            // Stephen Few qualitative shaded grayscale/neutral steps
             if (isDark)
             {
-                // Dark mode: darker bands for lower performance, lighter for higher
                 int[] baseGrays = { 30, 48, 70, 95 };
                 int gray = baseGrays[Math.Min(index, baseGrays.Length - 1)];
                 return Color.FromArgb(gray, gray, gray + 4);
             }
             else
             {
-                // Light mode: lighter gray for good, darker gray for poor
                 int[] baseGrays = { 210, 228, 242, 248 };
                 int gray = baseGrays[Math.Min(index, baseGrays.Length - 1)];
                 return Color.FromArgb(gray, gray, gray);
@@ -430,10 +356,10 @@ namespace ZeroUI.WinForms.Charts
                 if (_hoverItemIndex >= 0 && _hoverItemIndex < itemsToRender.Count)
                 {
                     var item = itemsToRender[_hoverItemIndex];
-                    double pctOfTarget = item.TargetValue > 0 ? (item.ActualValue / item.TargetValue * 100.0) : 0;
+                    var metrics = BulletBenchmarkEngine.Compute(item);
                     string tooltip = $"{item.Title} ({item.Subtitle})\n" +
                                      $"Actual: {_valuePrefix}{item.ActualValue:N1}{_valueSuffix}\n" +
-                                     $"Target: {_valuePrefix}{item.TargetValue:N1}{_valueSuffix} ({pctOfTarget:F1}% of target)\n" +
+                                     $"Target: {_valuePrefix}{item.TargetValue:N1}{_valueSuffix} ({metrics.PercentOfTarget:F1}% of target)\n" +
                                      $"Range: {item.Minimum:N0} - {item.Maximum:N0}";
                     _toolTip.SetToolTip(this, tooltip);
                 }
@@ -453,15 +379,6 @@ namespace ZeroUI.WinForms.Charts
                 _toolTip.SetToolTip(this, null);
                 Invalidate();
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _toolTip?.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

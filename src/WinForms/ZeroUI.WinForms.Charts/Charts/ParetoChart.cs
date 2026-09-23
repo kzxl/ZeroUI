@@ -4,51 +4,17 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using ZeroUI.Core.Analytics;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Charts
 {
     /// <summary>
-    /// Represents an individual defect category or frequency metric in a ParetoChart.
-    /// </summary>
-    public class ParetoItem
-    {
-        public string Category { get; set; } = string.Empty;
-        public double Value { get; set; }
-        public Color? CustomColor { get; set; }
-        public object? Tag { get; set; }
-
-        public ParetoItem() { }
-
-        public ParetoItem(string category, double value, Color? customColor = null)
-        {
-            Category = category;
-            Value = value;
-            CustomColor = customColor;
-        }
-    }
-
-    /// <summary>
-    /// Internal computed row for Pareto analysis.
-    /// </summary>
-    internal class ParetoComputedRow
-    {
-        public ParetoItem Item { get; set; } = null!;
-        public double CumulativeValue { get; set; }
-        public double Percentage { get; set; }
-        public double CumulativePercentage { get; set; }
-        public RectangleF BarRect { get; set; }
-        public PointF PointOnLine { get; set; }
-    }
-
-    /// <summary>
     /// Quality engineering Pareto Chart implementing the 80/20 rule (Juran / Pareto Principle).
-    /// Combines descending defect frequency bars on Left Y-axis with a cumulative percentage line on Right Y-axis,
-    /// complete with an 80% vital-few threshold cutoff line.
+    /// Thin WinForms View layer rendering frequency bars, cumulative spline, and 80% cutoff computed by ZeroUI.Core.Analytics.ParetoEngine.
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ParetoChart.bmp")]
@@ -69,7 +35,9 @@ namespace ZeroUI.WinForms.Charts
         private Color _barColor = Color.FromArgb(79, 70, 229);       // Indigo-600
         private Color _lineColor = Color.FromArgb(245, 158, 11);     // Amber-500
         private Color _cutoffLineColor = Color.FromArgb(239, 68, 68); // Red-500
-        private List<ParetoComputedRow> _computedRows = new List<ParetoComputedRow>();
+
+        private List<(ParetoResultRow Row, RectangleF BarRect, PointF PointOnLine)> _renderedRows =
+            new List<(ParetoResultRow Row, RectangleF BarRect, PointF PointOnLine)>();
 
         public List<ParetoItem> Items => _items;
 
@@ -78,7 +46,7 @@ namespace ZeroUI.WinForms.Charts
         public string Title
         {
             get => _title;
-            set { _title = value; Invalidate(); }
+            set { _title = value ?? ""; Invalidate(); }
         }
 
         [Category("Behavior")]
@@ -194,32 +162,11 @@ namespace ZeroUI.WinForms.Charts
             var sourceItems = _items.Count > 0 ? _items : GetPreviewItems();
             if (sourceItems.Count == 0) return;
 
-            // Sort descending by value for Pareto analysis
-            var sorted = sourceItems.Where(x => x.Value > 0).OrderByDescending(x => x.Value).ToList();
-            if (sorted.Count == 0) return;
+            // Execute evaluation via Core ParetoEngine
+            var analysis = ParetoEngine.Compute(sourceItems, _cutoffPercentage);
+            if (analysis.Rows.Count == 0) return;
 
-            double totalSum = sorted.Sum(x => x.Value);
-            double runningSum = 0;
-
-            _computedRows = new List<ParetoComputedRow>();
-            for (int i = 0; i < sorted.Count; i++)
-            {
-                var itm = sorted[i];
-                runningSum += itm.Value;
-                _computedRows.Add(new ParetoComputedRow
-                {
-                    Item = itm,
-                    CumulativeValue = runningSum,
-                    Percentage = (itm.Value / totalSum) * 100.0,
-                    CumulativePercentage = (runningSum / totalSum) * 100.0
-                });
-            }
-
-            // Vital few statistic
-            int vitalFewCount = _computedRows.Count(r => r.CumulativePercentage <= _cutoffPercentage || (r.CumulativePercentage > _cutoffPercentage && (_computedRows.IndexOf(r) == 0 || _computedRows[_computedRows.IndexOf(r) - 1].CumulativePercentage < _cutoffPercentage)));
-            vitalFewCount = Math.Max(1, vitalFewCount);
-
-            string statSummary = $"Total: {totalSum:N0} defects  •  Vital Few: Top {vitalFewCount} of {_computedRows.Count} categories reach {_cutoffPercentage:N0}%";
+            string statSummary = $"Total: {analysis.TotalSum:N0} defects  •  Vital Few: Top {analysis.VitalFewCount} of {analysis.Rows.Count} categories reach {_cutoffPercentage:N0}%";
             using (var statFont = new Font(Font.FontFamily, 8f, FontStyle.Regular))
             using (var statBrush = new SolidBrush(textSecondary))
             {
@@ -235,8 +182,8 @@ namespace ZeroUI.WinForms.Charts
             int chartWidth = Math.Max(50, Width - leftMargin - rightMargin);
             int chartHeight = Math.Max(50, Height - chartY - bottomMargin);
 
-            // Compute Y-Axis scales
-            double maxFreq = sorted[0].Value * 1.15; // 15% head room
+            // Compute Y-Axis scale
+            double maxFreq = analysis.Rows[0].Item.Value * 1.15;
             if (maxFreq <= 0) maxFreq = 10;
 
             // Draw horizontal grid lines (0%, 25%, 50%, 75%, 100%)
@@ -287,26 +234,32 @@ namespace ZeroUI.WinForms.Charts
             }
 
             // Draw Bars
-            int n = _computedRows.Count;
+            int n = analysis.Rows.Count;
             float slotWidth = (float)chartWidth / n;
             float barWidth = Math.Max(6, slotWidth * 0.65f);
 
+            _renderedRows = new List<(ParetoResultRow Row, RectangleF BarRect, PointF PointOnLine)>(n);
             var polyPoints = new List<PointF>();
 
             for (int i = 0; i < n; i++)
             {
-                var row = _computedRows[i];
+                var row = analysis.Rows[i];
                 float slotCenterX = chartX + (i + 0.5f) * slotWidth;
                 float barX = slotCenterX - (barWidth / 2f);
 
                 float barH = (float)((row.Item.Value / maxFreq) * chartHeight);
                 float barY = chartY + chartHeight - barH;
+                var barRect = new RectangleF(barX, barY, barWidth, barH);
 
-                row.BarRect = new RectangleF(barX, barY, barWidth, barH);
+                float ptY = chartY + chartHeight - (float)((row.CumulativePercentage / 100.0) * chartHeight);
+                var pointOnLine = new PointF(slotCenterX, ptY);
+                polyPoints.Add(pointOnLine);
+
+                _renderedRows.Add((row, barRect, pointOnLine));
 
                 // Bar fill
                 bool isHovered = (i == _hoverIndex);
-                Color fillCol = row.Item.CustomColor ?? _barColor;
+                Color fillCol = row.Item.ColorRgba.ToColor(_barColor);
                 if (isHovered)
                 {
                     fillCol = ControlPaint.Light(fillCol, 0.25f);
@@ -314,13 +267,13 @@ namespace ZeroUI.WinForms.Charts
 
                 using (var brush = new SolidBrush(fillCol))
                 {
-                    g.FillRectangle(brush, row.BarRect);
+                    g.FillRectangle(brush, barRect);
                 }
 
                 // Bar top border
                 using (var pen = new Pen(ControlPaint.Light(fillCol, 0.4f), 1f))
                 {
-                    g.DrawRectangle(pen, row.BarRect.X, row.BarRect.Y, row.BarRect.Width, row.BarRect.Height);
+                    g.DrawRectangle(pen, barRect.X, barRect.Y, barRect.Width, barRect.Height);
                 }
 
                 // Bar Value Label on top
@@ -334,11 +287,6 @@ namespace ZeroUI.WinForms.Charts
                         g.DrawString(valStr, vFont, vBrush, new RectangleF(barX - 4, barY - 14, barWidth + 8, 14), sf);
                     }
                 }
-
-                // Cumulative % Point (Right Axis)
-                float ptY = chartY + chartHeight - (float)((row.CumulativePercentage / 100.0) * chartHeight);
-                row.PointOnLine = new PointF(slotCenterX, ptY);
-                polyPoints.Add(row.PointOnLine);
 
                 // Category X-Axis Label
                 using (var catFont = new Font(Font.FontFamily, 7.5f, FontStyle.Regular))
@@ -376,7 +324,6 @@ namespace ZeroUI.WinForms.Charts
                         g.FillEllipse(fillBrush, pt.X - r, pt.Y - r, r * 2, r * 2);
                         g.DrawEllipse(dotPen, pt.X - r, pt.Y - r, r * 2, r * 2);
 
-                        // Highlight hover point with filled dot
                         if (isHovered)
                         {
                             using (var centerBrush = new SolidBrush(_lineColor))
@@ -404,12 +351,12 @@ namespace ZeroUI.WinForms.Charts
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (_computedRows.Count == 0) return;
+            if (_renderedRows.Count == 0) return;
 
             int newHover = -1;
-            for (int i = 0; i < _computedRows.Count; i++)
+            for (int i = 0; i < _renderedRows.Count; i++)
             {
-                var row = _computedRows[i];
+                var row = _renderedRows[i];
                 var hitRect = new RectangleF(row.BarRect.X - 4, 0, row.BarRect.Width + 8, Height);
                 if (hitRect.Contains(e.Location))
                 {
@@ -423,13 +370,14 @@ namespace ZeroUI.WinForms.Charts
                 _hoverIndex = newHover;
                 Invalidate();
 
-                if (_hoverIndex >= 0 && _hoverIndex < _computedRows.Count)
+                if (_hoverIndex >= 0 && _hoverIndex < _renderedRows.Count)
                 {
-                    var row = _computedRows[_hoverIndex];
-                    string tooltip = $"{row.Item.Category}\n" +
-                                     $"Defect Count: {row.Item.Value:N0}\n" +
-                                     $"Individual Share: {row.Percentage:F1}%\n" +
-                                     $"Cumulative: {row.CumulativePercentage:F1}%";
+                    var item = _renderedRows[_hoverIndex].Row;
+                    string tooltip = $"{item.Item.Category}\n" +
+                                     $"Defect Count: {item.Item.Value:N0}\n" +
+                                     $"Individual Share: {item.Percentage:F1}%\n" +
+                                     $"Cumulative: {item.CumulativePercentage:F1}%" +
+                                     (item.IsVitalFew ? " (Vital Few 80%)" : "");
                     _toolTip.SetToolTip(this, tooltip);
                 }
                 else
@@ -448,15 +396,6 @@ namespace ZeroUI.WinForms.Charts
                 _toolTip.SetToolTip(this, null);
                 Invalidate();
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _toolTip?.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }
