@@ -517,10 +517,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         {
             _allItems.Clear();
 
-            // 1. GIAO DIỆN & DỮ LIỆU
+            // 1. UI & DATA
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_components", "UI Components & Editors", "Giao Diện & Dữ Liệu", "🎨", "CATALOG", Color.FromArgb(59, 130, 246),
-                "Thư viện điều khiển toàn diện: ButtonEdit, CalcEdit, ColorPick, Rating, RangeSlider, PictureEdit, TreeList, PropertyGrid, PivotGrid, FilterControl, Wizard, v.v.",
+                "feat_components", "UI Components & Editors", "UI & Data", "🎨", "CATALOG", Color.FromArgb(59, 130, 246),
+                "Comprehensive control suite: ButtonEdit, CalcEdit, ColorPick, Rating, RangeSlider, PictureEdit, TreeList, PropertyGrid, PivotGrid, FilterControl, Wizard, etc.",
                 @"// ZeroUI Components & Editors Suite
 var btnEdit = new ButtonEdit();
 var calc = new CalcEdit { Value = 18450.75m };
@@ -530,8 +530,8 @@ var pivotGrid = new PivotGridControl();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_datagrid", "DataGrid & Benchmarks", "Giao Diện & Dữ Liệu", "⚡", "10M ROWS", Color.FromArgb(16, 185, 129),
-                "Lưới dữ liệu Zero-allocation cuộn mượt mà lên tới 10,000,000 dòng với Auto-filter, Grouping, Summaries, Banded Headers và so sánh DataGridView.",
+                "feat_datagrid", "DataGrid & Benchmarks", "UI & Data", "⚡", "10M ROWS", Color.FromArgb(16, 185, 129),
+                "Zero-allocation virtual data grid smoothly scrolling up to 10,000,000 rows with Auto-filter, Grouping, Summaries, Banded Headers, and standard DataGridView comparison.",
                 @"// Initialize High-Volume Virtual DataGrid
 var grid = new ZeroGridControl();
 grid.VirtualMode = true;
@@ -542,8 +542,8 @@ grid.ShowGroupPanel = true;"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_analytics", "Analytics & Trends", "Giao Diện & Dữ Liệu", "📊", "ANALYTICS", Color.FromArgb(99, 102, 241),
-                "Biểu đồ dạng sóng thời gian thực 100kHz, đồ thị xu hướng đa trục, kiểm soát chất lượng thống kê SPC Six Sigma (UCL, CL, LCL).",
+                "feat_analytics", "Analytics & Trends", "UI & Data", "📊", "ANALYTICS", Color.FromArgb(99, 102, 241),
+                "100kHz real-time waveform charts, multi-axis trend graphs, and Six Sigma SPC statistical process control (UCL, CL, LCL).",
                 @"// Real-Time Waveforms & SPC Charts
 var chart = new TrendChart();
 chart.AddSeries(""Pressure"", SeriesType.FastLine);
@@ -551,10 +551,10 @@ var spc = new SpcChart();
 spc.SetLimits(ucl: 15.2, cl: 14.0, lcl: 12.8);"
             ));
 
-            // 2. VẬN HÀNH & KHO VẬN
+            // 2. OPERATIONS & LOGISTICS
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_mes", "MES & Smart Factory", "Vận Hành & Kho Vận", "🏭", "OPERATIONS", Color.FromArgb(245, 158, 11),
-                "Hệ thống điều hành sản xuất thời gian thực: MES Telemetry HUD, OEE 88.4%, Takt Time Pacing, Smart Kanban Board với ràng buộc WIP.",
+                "feat_mes", "MES & Smart Factory", "Operations & Logistics", "🏭", "OPERATIONS", Color.FromArgb(245, 158, 11),
+                "Real-time manufacturing execution: MES Telemetry HUD, OEE 88.4%, Takt Time Pacing, Smart Kanban Board with WIP limits.",
                 @"// MES Operations & Kanban Board
 var mesHud = new MesTelemetryHud();
 mesHud.UpdateOee(availability: 0.94, performance: 0.96, quality: 0.98);
@@ -562,18 +562,18 @@ var kanban = new KanbanBoard();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_warehouse", "Warehouse & Logistics", "Vận Hành & Kho Vận", "📦", "LOGISTICS", Color.FromArgb(16, 185, 129),
-                "Trạm tiếp nhận mã vạch GS1-128, truy xuất nguồn gốc lô hàng FEFO/FIFO, mô hình hóa trực quan kệ hàng 2D/3D (WMS).",
+                "feat_warehouse", "Warehouse & Logistics", "Operations & Logistics", "📦", "LOGISTICS", Color.FromArgb(16, 185, 129),
+                "GS1-128 barcode receiving station, FEFO/FIFO lot traceability, and 2D/3D visual warehouse rack modeling (WMS).",
                 @"// Warehouse Workstation & Traceability
 var scanner = new BarcodeScanControl();
 var timeline = new StockMovementTimeline();
 var rack = new WarehouseRack();"
             ));
 
-            // 3. TỰ ĐỘNG HÓA & HẠ TẦNG
+            // 3. AUTOMATION & INFRASTRUCTURE
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_scada", "SCADA Process & P&ID", "Tự Động Hóa & Hạ Tầng", "🔄", "AUTOMATION", Color.FromArgb(239, 68, 68),
-                "Sơ đồ mô phỏng công nghệ P&ID, điều khiển vòng lặp kín Closed-Loop PID, quản lý cảnh báo ISA-18.2, động cơ OPC-UA 200 Hz.",
+                "feat_scada", "SCADA Process & P&ID", "Automation & Infrastructure", "🔄", "AUTOMATION", Color.FromArgb(239, 68, 68),
+                "P&ID process mimic canvas, Closed-Loop PID tuning, ISA-18.2 alarm management, and 200 Hz OPC-UA engine.",
                 @"// SCADA Synoptic & ISA-18.2 Alarms
 var synoptic = new PlantMimicCanvas();
 var pid = new PidFaceplate();
@@ -581,8 +581,8 @@ var alarmGrid = new AlarmGrid();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_network", "Network & Infrastructure", "Tự Động Hóa & Hạ Tầng", "🌐", "INFRASTRUCTURE", Color.FromArgb(6, 182, 212),
-                "Tủ rack thiết bị 19\" 42U, Switch Faceplate 48 cổng, bản đồ topo mạng động, ma trận IPAM /24, chẩn đoán ngắt tuyến Fieldbus.",
+                "feat_network", "Network & Infrastructure", "Automation & Infrastructure", "🌐", "INFRASTRUCTURE", Color.FromArgb(6, 182, 212),
+                "19\" 42U equipment rack, 48-port switch faceplate, dynamic network topology, IPAM /24 matrix, and Fieldbus line diagnostics.",
                 @"// Network & IT/OT Infrastructure
 var devRack = new DeviceRack { ShowThermalOverlay = true };
 var netTopo = new NetworkTopology();
@@ -590,8 +590,8 @@ var ipMatrix = new IpMatrix();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
-                "feat_industrial", "Industrial Verticals", "Tự Động Hóa & Hạ Tầng", "⚙️", "VERTICALS", Color.FromArgb(139, 92, 246),
-                "8 giải pháp chuyên sâu: Lịch Gantt, Năng lượng & Smart Grid, Dầu khí, Dược phẩm ISA-88, Xử lý nước, HVAC/BMS, Lab & Robot AGV/ASRS.",
+                "feat_industrial", "Industrial Verticals", "Automation & Infrastructure", "⚙️", "VERTICALS", Color.FromArgb(139, 92, 246),
+                "8 domain verticals: Gantt schedule, Energy & Smart Grid, Oil & Gas, Pharma ISA-88, Water Treatment, HVAC/BMS, Lab & AGV/ASRS Robotics.",
                 @"// Industrial Domain Solutions
 var gantt = new GanttControl();
 var sld = new SingleLineDiagram();

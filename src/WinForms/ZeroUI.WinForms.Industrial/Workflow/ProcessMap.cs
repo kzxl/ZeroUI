@@ -1590,10 +1590,10 @@ namespace ZeroUI.WinForms.Workflow
             float curX = r.X;
             return new (RectangleF Rect, ControlBarButton Btn, IconKey Icon, string Text, bool IsActive, bool HasBadge)[]
             {
-                (new RectangleF(curX, r.Y, 68, r.Height), ControlBarButton.View, IconKey.Document, "Xem", !_isDesignMode, false),
-                (new RectangleF(curX += 68, r.Y, 86, r.Height), ControlBarButton.Design, IconKey.Edit, "Thiết kế", _isDesignMode, false),
-                (new RectangleF(curX += 86, r.Y, 64, r.Height), ControlBarButton.Save, IconKey.Save, "Lưu", false, _isDirty),
-                (new RectangleF(curX += 64, r.Y, 86, r.Height), ControlBarButton.Reset, IconKey.Refresh, "Mặc định", false, false)
+                (new RectangleF(curX, r.Y, 68, r.Height), ControlBarButton.View, IconKey.Document, "View", !_isDesignMode, false),
+                (new RectangleF(curX += 68, r.Y, 86, r.Height), ControlBarButton.Design, IconKey.Edit, "Design", _isDesignMode, false),
+                (new RectangleF(curX += 86, r.Y, 64, r.Height), ControlBarButton.Save, IconKey.Save, "Save", false, _isDirty),
+                (new RectangleF(curX += 64, r.Y, 86, r.Height), ControlBarButton.Reset, IconKey.Refresh, "Reset", false, false)
             };
         }
 

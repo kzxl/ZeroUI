@@ -143,8 +143,8 @@ namespace ZeroUI.WinForms.Containers
 
             // Set sample texts for design time
             SetTexts(
-                "Mã phiếu: PO-2026-001\r\nNhà cung cấp: Công ty TNHH Nhựa Toàn Cầu\r\nSố tiền: 15,000,000 ₫\r\nTrạng thái: Chờ duyệt",
-                "Mã phiếu: PO-2026-001\r\nNhà cung cấp: Công ty TNHH Nhựa Toàn Cầu\r\nSố tiền: 18,500,000 ₫\r\nGhi chú: Bổ sung VAT 10%\r\nTrạng thái: Đã duyệt"
+                "Document: PO-2026-001\r\nVendor: Global Polymer Co., Ltd.\r\nAmount: $15,000.00\r\nStatus: Pending Approval",
+                "Document: PO-2026-001\r\nVendor: Global Polymer Co., Ltd.\r\nAmount: $18,500.00\r\nNotes: Added 10% VAT & Freight\r\nStatus: Approved"
             );
 
             ApplyThemeStyles();

@@ -184,7 +184,7 @@ namespace ZeroUI.Wpf.Process
             }
         }
 
-        public void CreateLaneFromSelectedNodes(string title = "1. KINH DOANH & THIẾT KẾ (SALES / R&D)")
+        public void CreateLaneFromSelectedNodes(string title = "1. SALES & R&D ENGINEERING")
         {
             var targets = new List<ProcessFlowNode>();
             if (_selectedNode != null) targets.Add(_selectedNode);

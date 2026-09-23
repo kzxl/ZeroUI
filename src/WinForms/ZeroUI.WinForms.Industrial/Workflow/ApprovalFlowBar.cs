@@ -78,10 +78,10 @@ namespace ZeroUI.WinForms.Workflow
             _toolTip.AutoPopDelay = 8000;
 
             // Default sample steps for design-time preview
-            _steps.Add(new ApprovalStep("Tạo phiếu", "Nguyễn Văn A", ApprovalStepStatus.Approved, "NV Kho") { ApprovalDate = DateTime.Now.AddHours(-3) });
-            _steps.Add(new ApprovalStep("Trưởng bộ phận", "Trần Văn B", ApprovalStepStatus.Approved, "TP Kế hoạch") { ApprovalDate = DateTime.Now.AddHours(-1) });
-            _steps.Add(new ApprovalStep("Kế toán trưởng", "Lê Thị C", ApprovalStepStatus.Pending, "Kế toán trưởng"));
-            _steps.Add(new ApprovalStep("Ban Giám Đốc", "Phạm Văn D", ApprovalStepStatus.Pending, "Giám đốc điều hành"));
+            _steps.Add(new ApprovalStep("Create Request", "John Doe", ApprovalStepStatus.Approved, "Warehouse Staff") { ApprovalDate = DateTime.Now.AddHours(-3) });
+            _steps.Add(new ApprovalStep("Dept Manager", "Jane Smith", ApprovalStepStatus.Approved, "Planning Lead") { ApprovalDate = DateTime.Now.AddHours(-1) });
+            _steps.Add(new ApprovalStep("Chief Accountant", "Robert Johnson", ApprovalStepStatus.Pending, "Chief Accountant"));
+            _steps.Add(new ApprovalStep("Executive Board", "Emily Davis", ApprovalStepStatus.Pending, "Chief Executive Officer"));
         }
 
         [Browsable(false)]
@@ -284,7 +284,7 @@ namespace ZeroUI.WinForms.Workflow
                 // Text: Approver & Time
                 string subtitle = !string.IsNullOrEmpty(step.ApproverName)
                     ? (step.ApprovalDate.HasValue ? $"{step.ApproverName} ({step.ApprovalDate.Value:dd/MM HH:mm})" : step.ApproverName)
-                    : (step.Status == ApprovalStepStatus.Pending ? "Chờ duyệt..." : "");
+                    : (step.Status == ApprovalStepStatus.Pending ? "Pending..." : "");
 
                 if (!string.IsNullOrEmpty(subtitle))
                 {
@@ -371,10 +371,10 @@ namespace ZeroUI.WinForms.Workflow
                 {
                     var s = _steps[_hoverIndex];
                     string tip = $"{s.Title} [{s.Status}]{Environment.NewLine}" +
-                                 $"Người duyệt: {(string.IsNullOrEmpty(s.ApproverName) ? "(Chưa duyệt)" : s.ApproverName)}" +
+                                 $"Approver: {(string.IsNullOrEmpty(s.ApproverName) ? "(Pending)" : s.ApproverName)}" +
                                  $"{(string.IsNullOrEmpty(s.ApproverRole) ? "" : $" - {s.ApproverRole}")}{Environment.NewLine}" +
-                                 $"Thời gian: {(s.ApprovalDate.HasValue ? s.ApprovalDate.Value.ToString("dd/MM/yyyy HH:mm:ss") : "(Chưa có)")}" +
-                                 $"{(string.IsNullOrEmpty(s.Comment) ? "" : $"{Environment.NewLine}Ý kiến: {s.Comment}")}";
+                                 $"Time: {(s.ApprovalDate.HasValue ? s.ApprovalDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "(None)")}" +
+                                 $"{(string.IsNullOrEmpty(s.Comment) ? "" : $"{Environment.NewLine}Comment: {s.Comment}")}";
                     _toolTip.SetToolTip(this, tip);
                     Cursor = Cursors.Hand;
                 }
