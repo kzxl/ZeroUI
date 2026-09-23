@@ -209,8 +209,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _autoScrollTimer.Interval = 16; // ~60 Hz tick
             _autoScrollTimer.Tick += AutoScrollTick;
 
-            // Defer initial dataset generation to Shown event for instant 0ms window popup
-            Shown += (s, e) => LoadDataset(100_000);
+            // Defer initial dataset generation until user explicitly navigates to DataGrid
+            // Shown += (s, e) => LoadDataset(100_000);
         }
 
 
@@ -722,7 +722,11 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             {
                 _scrollFrames = 0;
                 _scrollStopwatch.Restart();
-                if (_subTabsBenchmark.SelectedTab == _tabDgv && _dgv.RowCount != _dataset.Length && _dataset.Length > 0)
+                if (_subTabsBenchmark.SelectedTab == _tabZero && _dataset.Length == 0)
+                {
+                    LoadDataset(100_000);
+                }
+                else if (_subTabsBenchmark.SelectedTab == _tabDgv && _dgv.RowCount != _dataset.Length && _dataset.Length > 0)
                 {
                     try
                     {
@@ -763,7 +767,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             Controls.Add(_mainToolbar);
             Controls.Add(_topPanel);
 
-            _featureExplorer.SelectFeature("feat_virtual_10m");
+            _featureExplorer.SelectFeature("feat_editors_core");
         }
 
         private void OnFeatureSelected(ShowcaseFeatureItem item)
@@ -776,38 +780,18 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             switch (item.Key)
             {
-                // 1. CORE BENCHMARKS & GRIDS
+                // 1. DATA & GRIDS (Consolidated)
+                case "feat_datagrid":
                 case "feat_virtual_10m":
-                    _mainNav.SelectedTab = _clusterBenchmark;
-                    _subTabsBenchmark.SelectedTab = _tabZero;
-                    if (_dataset.Length != 10_000_000)
-                    {
-                        LoadDataset(10_000_000);
-                    }
-                    _optionsPanel.Visible = true;
-                    _optionsPanel.BindGrid(_zeroGrid);
-                    break;
-
                 case "feat_autofilter":
-                    _mainNav.SelectedTab = _clusterBenchmark;
-                    _subTabsBenchmark.SelectedTab = _tabZero;
-                    _zeroGrid.ShowAutoFilterRow = true;
-                    if (_searchBar != null) _searchBar.Visible = true;
-                    _optionsPanel.Visible = true;
-                    _optionsPanel.BindGrid(_zeroGrid);
-                    break;
-
                 case "feat_grouping_summaries":
-                    _mainNav.SelectedTab = _clusterBenchmark;
-                    _subTabsBenchmark.SelectedTab = _tabZero;
-                    _zeroGrid.ShowGroupPanel = true;
-                    _optionsPanel.Visible = true;
-                    _optionsPanel.BindGrid(_zeroGrid);
-                    break;
-
                 case "feat_banded_headers":
                     _mainNav.SelectedTab = _clusterBenchmark;
                     _subTabsBenchmark.SelectedTab = _tabZero;
+                    if (_dataset.Length == 0)
+                    {
+                        LoadDataset(100_000);
+                    }
                     _optionsPanel.Visible = true;
                     _optionsPanel.BindGrid(_zeroGrid);
                     break;
@@ -815,6 +799,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 case "feat_standard_dgv":
                     _mainNav.SelectedTab = _clusterBenchmark;
                     _subTabsBenchmark.SelectedTab = _tabDgv;
+                    if (_dataset.Length == 0)
+                    {
+                        LoadDataset(100_000);
+                    }
                     _optionsPanel.Visible = false;
                     break;
 
@@ -999,18 +987,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
+                case "feat_commercial_suite":
                 case "feat_commercial_query":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabCommercial;
-                    _optionsPanel.Visible = false;
-                    break;
-
                 case "feat_commercial_editors":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabCommercial;
-                    _optionsPanel.Visible = false;
-                    break;
-
                 case "feat_commercial_wizard":
                     _mainNav.SelectedTab = _clusterComponents;
                     _subTabsComponents.SelectedTab = _tabCommercial;
@@ -1023,12 +1002,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
+                case "feat_office_docs":
                 case "feat_office_pdf":
-                    _mainNav.SelectedTab = _clusterComponents;
-                    _subTabsComponents.SelectedTab = _tabOfficeDocs;
-                    _optionsPanel.Visible = false;
-                    break;
-
                 case "feat_office_spreadsheet":
                     _mainNav.SelectedTab = _clusterComponents;
                     _subTabsComponents.SelectedTab = _tabOfficeDocs;
@@ -1047,8 +1022,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     break;
 
                 default:
-                    _mainNav.SelectedTab = _clusterBenchmark;
-                    _subTabsBenchmark.SelectedTab = _tabZero;
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabControls;
+                    _optionsPanel.Visible = false;
                     break;
             }
         }
