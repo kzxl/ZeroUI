@@ -89,6 +89,53 @@ namespace ZeroUI.Desktop.Tests
         }
 
         [Fact]
+        public void WinForms_GridControl_VirtualMode_TenMillionRows_ShouldInitializeAndOperateInstantly()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var grid = new GridControl();
+                grid.SelectionMode = ZeroGridSelectionMode.MultiRow;
+                var col1 = new ZeroColumn("Col1", "Col 1", 100);
+                col1.Summary = SummaryType.Sum;
+                grid.Columns.Add(col1);
+                grid.Columns.Add(new ZeroColumn("Col2", "Col 2", 150));
+
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var mockSource = new MockVirtualSource(10_000_000, 2);
+                grid.DataSource = mockSource;
+                sw.Stop();
+
+                // Binding 10M rows must take less than 100ms with identity virtualization
+                Assert.True(sw.ElapsedMilliseconds < 100, $"Binding took {sw.ElapsedMilliseconds}ms, expected < 100ms");
+                Assert.Equal(10_000_000, grid.VisualRowCount);
+                Assert.Equal(0, grid.GetModelRowIndex(0));
+                Assert.Equal(5_000_000, grid.GetModelRowIndex(5_000_000));
+                Assert.Equal(9_999_999, grid.GetModelRowIndex(9_999_999));
+
+                // Virtual selection must be O(1) instantaneous
+                sw.Restart();
+                grid.SelectAllRows();
+                sw.Stop();
+                Assert.True(sw.ElapsedMilliseconds < 50, $"SelectAll took {sw.ElapsedMilliseconds}ms, expected < 50ms");
+                Assert.Equal(10_000_000, grid.SelectedRowCount);
+                Assert.True(grid.IsVisualRowSelected(0));
+                Assert.True(grid.IsVisualRowSelected(5_000_000));
+                Assert.True(grid.IsVisualRowSelected(9_999_999));
+
+                grid.ClearRowSelection();
+                Assert.Equal(0, grid.SelectedRowCount);
+                Assert.False(grid.IsVisualRowSelected(5_000_000));
+
+                // Summary for 10M rows must not block UI thread (returns "Calculating..." immediately)
+                sw.Restart();
+                string summaryText = grid.GetColumnSummaryText(0);
+                sw.Stop();
+                Assert.True(sw.ElapsedMilliseconds < 50, $"Summary query took {sw.ElapsedMilliseconds}ms, expected < 50ms");
+                Assert.Equal("Calculating...", summaryText);
+            });
+        }
+
+        [Fact]
         public void WinForms_GridControl_Filtering_ShouldFilterRows()
         {
             StaTestRunner.Run(() =>

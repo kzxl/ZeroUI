@@ -102,6 +102,7 @@ namespace ZeroUI.Core.Virtualization
     {
         private VisualRowEntry[] _map;
         private int _activeCount;
+        private bool _isIdentity;
 
         private readonly List<GroupRowInfo> _allGroups = new List<GroupRowInfo>();
         private readonly List<GroupRowInfo> _rootGroups = new List<GroupRowInfo>();
@@ -110,8 +111,10 @@ namespace ZeroUI.Core.Virtualization
         {
             _map = new VisualRowEntry[initialCapacity];
             _activeCount = 0;
+            _isIdentity = true;
         }
 
+        public bool IsIdentity => _isIdentity;
         public int ActiveCount => _activeCount;
         public bool HasGrouping => _rootGroups.Count > 0;
         public IReadOnlyList<GroupRowInfo> RootGroups => _rootGroups;
@@ -119,9 +122,13 @@ namespace ZeroUI.Core.Virtualization
         public VisualRowEntry this[int visualIndex]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _map[visualIndex];
+            get => _isIdentity ? VisualRowEntry.CreateData(visualIndex, 0) : _map[visualIndex];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => _map[visualIndex] = value;
+            set
+            {
+                if (_isIdentity) EnsureMaterialized();
+                _map[visualIndex] = value;
+            }
         }
 
         public void EnsureCapacity(int count)
@@ -133,20 +140,26 @@ namespace ZeroUI.Core.Virtualization
             }
         }
 
+        public void EnsureMaterialized()
+        {
+            if (!_isIdentity) return;
+            EnsureCapacity(_activeCount);
+            for (int i = 0; i < _activeCount; i++)
+            {
+                _map[i] = VisualRowEntry.CreateData(i, 0);
+            }
+            _isIdentity = false;
+        }
+
         /// <summary>
-        /// Resets the index map to a flat 1:1 identity projection (no grouping).
+        /// Resets the index map to a flat 1:1 identity projection (no grouping) in O(1) time without allocations.
         /// </summary>
         public void ResetIdentity(int totalDataRows)
         {
             _allGroups.Clear();
             _rootGroups.Clear();
-            EnsureCapacity(totalDataRows);
-            _activeCount = totalDataRows;
-
-            for (int i = 0; i < totalDataRows; i++)
-            {
-                _map[i] = VisualRowEntry.CreateData(i, 0);
-            }
+            _activeCount = Math.Max(0, totalDataRows);
+            _isIdentity = true;
         }
 
         /// <summary>
@@ -232,6 +245,7 @@ namespace ZeroUI.Core.Virtualization
             }
 
             _activeCount = writePointer;
+            _isIdentity = false;
         }
 
         private void FlattenGroupRecursive(GroupRowInfo group, ref int writePointer)
