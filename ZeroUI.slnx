@@ -11,6 +11,7 @@
     <Project Path="src/WinForms/ZeroUI.WinForms.Industrial/ZeroUI.WinForms.Industrial.csproj" />
     <Project Path="src/WinForms/ZeroUI.WinForms.Documents/ZeroUI.WinForms.Documents.csproj" />
     <Project Path="src/WinForms/ZeroUI.WinForms.Media/ZeroUI.WinForms.Media.csproj" />
+    <Project Path="src/WinForms/ZeroUI.WinForms.Design/ZeroUI.WinForms.Design.csproj" />
     <Project Path="src/WinForms/ZeroUI.WinForms/ZeroUI.WinForms.csproj" />
   </Folder>
   <Folder Name="/src/Wpf/">
