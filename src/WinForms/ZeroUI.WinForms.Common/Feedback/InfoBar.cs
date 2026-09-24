@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Feedback
     [DefaultEvent("Closed")]
     [Description("Modern in-window banner notification alert matching WinUI 3 standards")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroAlertBanner.bmp")]
-    public class InfoBar : AlertBanner
+    public class ZInfoBar : AlertBanner
     {
         [Category("Appearance")]
         [DefaultValue(InfoBarSeverity.Info)]
@@ -41,4 +41,18 @@ namespace ZeroUI.WinForms.Feedback
             set => Visible = value;
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZInfoBar"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("InfoBar is deprecated and will be removed in 5 release cycles. Please migrate to ZInfoBar instead.")]
+    [ToolboxItem(false)]
+    public class InfoBar : ZInfoBar
+    {
+    }
+
+    #endregion
 }

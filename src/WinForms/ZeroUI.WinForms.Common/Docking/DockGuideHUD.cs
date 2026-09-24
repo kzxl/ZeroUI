@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Docking
     /// </summary>
     internal class DockGuideHUD : Control
     {
-        private readonly DockManager _manager;
+        private readonly ZDockManager _manager;
         private DockPosition? _hoveredPosition;
 
         private Rectangle _centerRect;
@@ -24,7 +24,7 @@ namespace ZeroUI.WinForms.Docking
 
         public DockPosition? HoveredPosition => _hoveredPosition;
 
-        public DockGuideHUD(DockManager manager)
+        public DockGuideHUD(ZDockManager manager)
         {
             _manager = manager;
             SetStyle(

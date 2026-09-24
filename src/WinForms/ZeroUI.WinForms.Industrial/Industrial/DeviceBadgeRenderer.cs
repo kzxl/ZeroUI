@@ -11,7 +11,7 @@ namespace ZeroUI.WinForms.Industrial
     /// LOTO (Lockout/Tagout), and interlock indicator badges.
     /// Renders crisp, scalable vector icons without image assets or heap allocation.
     /// </summary>
-    public static class DeviceBadgeRenderer
+    public static class ZDeviceBadgeRenderer
     {
         private const int BadgeSize = 14;
         private const int BadgeSpacing = 2;
@@ -264,10 +264,10 @@ namespace ZeroUI.WinForms.Industrial
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="DeviceBadgeRenderer"/>.
+    /// Legacy alias for <see cref="ZDeviceBadgeRenderer"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroDeviceBadgeRenderer is deprecated. Please use DeviceBadgeRenderer instead.")]
+    [Obsolete("ZeroDeviceBadgeRenderer is deprecated and will be removed in 5 release cycles. Please migrate to ZDeviceBadgeRenderer instead.")]
     public static class ZeroDeviceBadgeRenderer
     {
         public static void DrawBadges(
@@ -277,7 +277,7 @@ namespace ZeroUI.WinForms.Industrial
             bool isDark,
             ContentAlignment alignment = ContentAlignment.TopRight)
         {
-            DeviceBadgeRenderer.DrawBadges(g, bounds, flags, isDark, alignment);
+            ZDeviceBadgeRenderer.DrawBadges(g, bounds, flags, isDark, alignment);
         }
     }
 }

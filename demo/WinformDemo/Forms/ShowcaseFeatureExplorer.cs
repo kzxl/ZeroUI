@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -522,11 +522,11 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 "feat_components", "UI Components & Editors", "UI & Data", "🎨", "CATALOG", Color.FromArgb(59, 130, 246),
                 "Comprehensive control suite: ButtonEdit, CalcEdit, ColorPick, Rating, RangeSlider, PictureEdit, TreeList, PropertyGrid, PivotGrid, FilterControl, Wizard, etc.",
                 @"// ZeroUI Components & Editors Suite
-var btnEdit = new ButtonEdit();
-var calc = new CalcEdit { Value = 18450.75m };
-var rating = new RatingControl { Value = 4.5m };
+var btnEdit = new ZButtonEdit();
+var calc = new ZCalcEdit { Value = 18450.75m };
+var rating = new ZRatingControl { Value = 4.5m };
 var propGrid = new PropertyGridControl();
-var pivotGrid = new PivotGridControl();"
+var pivotGrid = new ZPivotGrid();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
@@ -545,9 +545,9 @@ grid.ShowGroupPanel = true;"
                 "feat_analytics", "Analytics & Trends", "UI & Data", "📊", "ANALYTICS", Color.FromArgb(99, 102, 241),
                 "100kHz real-time waveform charts, multi-axis trend graphs, and Six Sigma SPC statistical process control (UCL, CL, LCL).",
                 @"// Real-Time Waveforms & SPC Charts
-var chart = new TrendChart();
+var chart = new ZTrendChart();
 chart.AddSeries(""Pressure"", SeriesType.FastLine);
-var spc = new SpcChart();
+var spc = new ZSpcChart();
 spc.SetLimits(ucl: 15.2, cl: 14.0, lcl: 12.8);"
             ));
 
@@ -558,7 +558,7 @@ spc.SetLimits(ucl: 15.2, cl: 14.0, lcl: 12.8);"
                 @"// MES Operations & Kanban Board
 var mesHud = new MesTelemetryHud();
 mesHud.UpdateOee(availability: 0.94, performance: 0.96, quality: 0.98);
-var kanban = new KanbanBoard();"
+var kanban = new ZKanbanBoard();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
@@ -566,8 +566,8 @@ var kanban = new KanbanBoard();"
                 "GS1-128 barcode receiving station, FEFO/FIFO lot traceability, and 2D/3D visual warehouse rack modeling (WMS).",
                 @"// Warehouse Workstation & Traceability
 var scanner = new BarcodeScanControl();
-var timeline = new StockMovementTimeline();
-var rack = new WarehouseRack();"
+var timeline = new ZStockMovementTimeline();
+var rack = new ZWarehouseRack();"
             ));
 
             // 3. AUTOMATION & INFRASTRUCTURE
@@ -575,28 +575,28 @@ var rack = new WarehouseRack();"
                 "feat_scada", "SCADA Process & P&ID", "Automation & Infrastructure", "🔄", "AUTOMATION", Color.FromArgb(239, 68, 68),
                 "P&ID process mimic canvas, Closed-Loop PID tuning, ISA-18.2 alarm management, and 200 Hz OPC-UA engine.",
                 @"// SCADA Synoptic & ISA-18.2 Alarms
-var synoptic = new PlantMimicCanvas();
-var pid = new PidFaceplate();
-var alarmGrid = new AlarmGrid();"
+var synoptic = new ZPlantMimicCanvas();
+var pid = new ZPidFaceplate();
+var alarmGrid = new ZAlarmGrid();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
                 "feat_network", "Network & Infrastructure", "Automation & Infrastructure", "🌐", "INFRASTRUCTURE", Color.FromArgb(6, 182, 212),
                 "19\" 42U equipment rack, 48-port switch faceplate, dynamic network topology, IPAM /24 matrix, and Fieldbus line diagnostics.",
                 @"// Network & IT/OT Infrastructure
-var devRack = new DeviceRack { ShowThermalOverlay = true };
-var netTopo = new NetworkTopology();
-var ipMatrix = new IpMatrix();"
+var devRack = new ZDeviceRack { ShowThermalOverlay = true };
+var netTopo = new ZNetworkTopology();
+var ipMatrix = new ZIpMatrix();"
             ));
 
             _allItems.Add(new ShowcaseFeatureItem(
                 "feat_industrial", "Industrial Verticals", "Automation & Infrastructure", "⚙️", "VERTICALS", Color.FromArgb(139, 92, 246),
                 "8 domain verticals: Gantt schedule, Energy & Smart Grid, Oil & Gas, Pharma ISA-88, Water Treatment, HVAC/BMS, Lab & AGV/ASRS Robotics.",
                 @"// Industrial Domain Solutions
-var gantt = new GanttControl();
+var gantt = new ZGantt();
 var sld = new SingleLineDiagram();
-var column = new DistillationColumn();
-var bioreactor = new BioreactorVessel();"
+var column = new ZDistillationColumn();
+var bioreactor = new ZBioreactorVessel();"
             ));
 
             _selectedKey = _allItems[0].Key;

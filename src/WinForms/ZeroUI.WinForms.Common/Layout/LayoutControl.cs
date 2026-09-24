@@ -115,7 +115,7 @@ namespace ZeroUI.WinForms.Layout
     [Category("ZeroUI - Layout")]
     [Description("Automated form layout builder with smart label-control binding, responsive columns, and collapsible groups.")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTablePanel.bmp")]
-    public class LayoutControl : Panel
+    public class ZLayoutControl : Panel
     {
         private readonly List<LayoutControlGroup> _groups = new List<LayoutControlGroup>();
 
@@ -126,7 +126,7 @@ namespace ZeroUI.WinForms.Layout
         private int _groupPadding = 12;
         private bool _isLayoutSuspended = false;
 
-        public LayoutControl()
+        public ZLayoutControl()
         {
             AutoScroll = true;
             DoubleBuffered = true;
@@ -475,4 +475,18 @@ namespace ZeroUI.WinForms.Layout
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZLayoutControl"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("LayoutControl is deprecated and will be removed in 5 release cycles. Please migrate to ZLayoutControl instead.")]
+    [ToolboxItem(false)]
+    public class LayoutControl : ZLayoutControl
+    {
+    }
+
+    #endregion
 }

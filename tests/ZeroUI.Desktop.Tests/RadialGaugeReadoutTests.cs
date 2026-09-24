@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Reflection;
 using Xunit;
 using WpfRadialGauge = ZeroUI.Wpf.Industrial.RadialGauge;
-using WinFormsRadialGauge = ZeroUI.WinForms.Industrial.RadialGauge;
+using WinFormsRadialGauge = ZeroUI.WinForms.Industrial.ZRadialGauge;
 
 namespace ZeroUI.Desktop.Tests
 {

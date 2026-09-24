@@ -42,7 +42,7 @@ namespace ZeroUI.WinForms.Data
     [DefaultEvent("ItemSelected")]
     [Description("High-throughput log viewer and virtual list view")]
     [ToolboxBitmap(typeof(ZeroIcons), "ListViewControl.bmp")]
-    public class ListViewControl : Control
+    public class ZListView : Control
     {
 
         private readonly List<LogEntry> _entries = new List<LogEntry>(10000);
@@ -59,7 +59,7 @@ namespace ZeroUI.WinForms.Data
 
         public event EventHandler<LogEntry>? ItemSelected;
 
-        public ListViewControl()
+        public ZListView()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -318,4 +318,18 @@ namespace ZeroUI.WinForms.Data
     public class ZeroListView : ListViewControl
     {
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZListView"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ListViewControl is deprecated and will be removed in 5 release cycles. Please migrate to ZListView instead.")]
+    [ToolboxItem(false)]
+    public class ListViewControl : ZListView
+    {
+    }
+
+    #endregion
 }

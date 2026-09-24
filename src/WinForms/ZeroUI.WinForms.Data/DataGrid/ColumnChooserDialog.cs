@@ -13,13 +13,13 @@ namespace ZeroUI.WinForms.DataGrid
     /// </summary>
     public class ColumnChooserDialog : Form
     {
-        private readonly GridControl _grid;
+        private readonly ZGrid _grid;
         private readonly ListBox _hiddenColumnsList;
         private readonly Button _btnShowColumn;
         private readonly Button _btnShowAll;
         private readonly Label _lblInfo;
 
-        public ColumnChooserDialog(GridControl grid)
+        public ColumnChooserDialog(ZGrid grid)
         {
             _grid = grid ?? throw new ArgumentNullException(nameof(grid));
 

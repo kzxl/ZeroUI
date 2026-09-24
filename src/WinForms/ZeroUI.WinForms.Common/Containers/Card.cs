@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Containers
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Title")]
     [Description("Modern container card with rounded corners, optional Step Badge, and Title")]
-    public class Card : Panel, IZeroDpiScalable
+    public class ZCard : Panel, IZeroDpiScalable
     {
         private int? _stepNumber = 1;
         private Color _badgeColor = Color.FromArgb(79, 70, 229); // Indigo Accent
@@ -88,7 +88,7 @@ namespace ZeroUI.WinForms.Containers
             }
         }
 
-        public Card()
+        public ZCard()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -626,12 +626,26 @@ namespace ZeroUI.WinForms.Containers
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="Card"/>.
+    /// Legacy alias for <see cref="ZCard"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroCard is deprecated. Please use Card instead.")]
+    [Obsolete("ZeroCard is deprecated and will be removed in 5 release cycles. Please migrate to ZCard instead.")]
     [ToolboxItem(false)]
-    public class ZeroCard : Card
+    public class ZeroCard : ZCard
     {
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZCard"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("Card is deprecated and will be removed in 5 release cycles. Please migrate to ZCard instead.")]
+    [ToolboxItem(false)]
+    public class Card : ZCard
+    {
+    }
+
+    #endregion
 }

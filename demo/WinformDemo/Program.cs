@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -628,7 +628,7 @@ namespace ZeroUI.Samples.WinformDemo
                 g.DrawString("⚡ ZeroUI — Industrial, SCADA & MES Hardware Control Suite", titleFont, titleBrush, 20, 14);
 
                 // 1. ZeroLedTower
-                var tower = new ZeroLedTower { Size = new Size(80, 220), RedLight = LedState.Off, AmberLight = LedState.Off, GreenLight = LedState.On, BlueLight = LedState.Off };
+                var tower = new ZLedTower { Size = new Size(80, 220), RedLight = LedState.Off, AmberLight = LedState.Off, GreenLight = LedState.On, BlueLight = LedState.Off };
                 tower.CreateControl();
                 using (var bmp = new Bitmap(80, 220))
                 {
@@ -639,7 +639,7 @@ namespace ZeroUI.Samples.WinformDemo
                 tower.Dispose();
 
                 // 2. ZeroTank3D
-                var tank = new ZeroTank3D { Size = new Size(170, 220), CapacityLiters = 10000f, CurrentLevelLiters = 7200f, TankName = "Chemical Tank", FluidName = "Solvent IPA 99%" };
+                var tank = new ZTank3D { Size = new Size(170, 220), CapacityLiters = 10000f, CurrentLevelLiters = 7200f, TankName = "Chemical Tank", FluidName = "Solvent IPA 99%" };
                 tank.CreateControl();
                 using (var bmp = new Bitmap(170, 220))
                 {
@@ -650,7 +650,7 @@ namespace ZeroUI.Samples.WinformDemo
                 tank.Dispose();
 
                 // 3. ZeroSevenSegment
-                var seg = new ZeroSevenSegment { Size = new Size(210, 56), Value = "1248.5", SegmentColor = Color.FromArgb(6, 182, 212) };
+                var seg = new ZSevenSegment { Size = new Size(210, 56), Value = "1248.5", SegmentColor = Color.FromArgb(6, 182, 212) };
                 seg.CreateControl();
                 using (var bmp = new Bitmap(210, 56))
                 {
@@ -661,7 +661,7 @@ namespace ZeroUI.Samples.WinformDemo
                 seg.Dispose();
 
                 // 4. ZeroLinearGauge
-                var gauge = new ZeroLinearGauge { Size = new Size(210, 68), Value = 74.2f, Unit = "Bar", Title = "Hydraulic Line Pressure" };
+                var gauge = new ZLinearGauge { Size = new Size(210, 68), Value = 74.2f, Unit = "Bar", Title = "Hydraulic Line Pressure" };
                 gauge.CreateControl();
                 using (var bmp = new Bitmap(210, 68))
                 {
@@ -683,7 +683,7 @@ namespace ZeroUI.Samples.WinformDemo
                 dial.Dispose();
 
                 // 6. ZeroTaktTimer
-                var takt = new ZeroTaktTimer { Size = new Size(140, 160), TargetTaktSeconds = 30f };
+                var takt = new ZTaktTimer { Size = new Size(140, 160), TargetTaktSeconds = 30f };
                 takt.CreateControl();
                 using (var bmp = new Bitmap(140, 160))
                 {
@@ -804,7 +804,7 @@ namespace ZeroUI.Samples.WinformDemo
 
                 // Row 1: Pneumatic Cylinder, Conveyor Belt, Sensor, Scoreboard, Interlock, Command Button
                 // 1. ZeroPneumaticCylinder
-                var cyl = new ZeroPneumaticCylinder { Size = new Size(190, 80), ExtensionPercent = 70.0, TagLabel = "CYL-301 DOSING", State = CylinderState.Moving };
+                var cyl = new ZPneumaticCylinder { Size = new Size(190, 80), ExtensionPercent = 70.0, TagLabel = "CYL-301 DOSING", State = CylinderState.Moving };
                 cyl.CreateControl();
                 using (var bmp = new Bitmap(190, 80))
                 {
@@ -815,7 +815,7 @@ namespace ZeroUI.Samples.WinformDemo
                 cyl.Dispose();
 
                 // 2. ZeroConveyorBelt
-                var cv = new ZeroConveyorBelt { Size = new Size(220, 85), SpeedMpm = 28.0, TagLabel = "CV-401 PACK LINE", State = ConveyorState.Running };
+                var cv = new ZConveyorBelt { Size = new Size(220, 85), SpeedMpm = 28.0, TagLabel = "CV-401 PACK LINE", State = ConveyorState.Running };
                 cv.CreateControl();
                 using (var bmp = new Bitmap(220, 85))
                 {
@@ -826,7 +826,7 @@ namespace ZeroUI.Samples.WinformDemo
                 cv.Dispose();
 
                 // 3. ZeroIndustrialSensor
-                var sensor = new ZeroIndustrialSensor { Size = new Size(75, 75), TagLabel = "PE-401", SensorType = SensorType.Photoelectric, State = SensorState.Active };
+                var sensor = new ZIndustrialSensor { Size = new Size(75, 75), TagLabel = "PE-401", SensorType = SensorType.Photoelectric, State = SensorState.Active };
                 sensor.CreateControl();
                 using (var bmp = new Bitmap(75, 75))
                 {
@@ -837,7 +837,7 @@ namespace ZeroUI.Samples.WinformDemo
                 sensor.Dispose();
 
                 // 4. ZeroProductionCounter
-                var counter = new ZeroProductionCounter { Size = new Size(260, 95), Title = "SHIFT PRODUCTION TARGET", Plan = 5000, Actual = 4320, NG = 14 };
+                var counter = new ZProductionCounter { Size = new Size(260, 95), Title = "SHIFT PRODUCTION TARGET", Plan = 5000, Actual = 4320, NG = 14 };
                 counter.CreateControl();
                 using (var bmp = new Bitmap(260, 95))
                 {
@@ -848,7 +848,7 @@ namespace ZeroUI.Samples.WinformDemo
                 counter.Dispose();
 
                 // 5. ZeroInterlockIndicator & ZeroCommandButton
-                var interlock = new ZeroInterlockIndicator { Size = new Size(185, 42), TagLabel = "SAFETY PERMISSIVE" };
+                var interlock = new ZInterlockIndicator { Size = new Size(185, 42), TagLabel = "SAFETY PERMISSIVE" };
                 interlock.CreateControl();
                 using (var bmp = new Bitmap(185, 42))
                 {
@@ -858,7 +858,7 @@ namespace ZeroUI.Samples.WinformDemo
                 }
                 interlock.Dispose();
 
-                var cmdBtn = new ZeroCommandButton { Size = new Size(185, 42), Action = CommandButtonAction.Start, CommandText = "START BATCH", PressAndHoldSeconds = 0.5f };
+                var cmdBtn = new ZCommandButton { Size = new Size(185, 42), Action = CommandButtonAction.Start, CommandText = "START BATCH", PressAndHoldSeconds = 0.5f };
                 cmdBtn.CreateControl();
                 using (var bmp = new Bitmap(185, 42))
                 {
@@ -869,7 +869,7 @@ namespace ZeroUI.Samples.WinformDemo
 
                 // Row 2: Motor, Pump, Valve, Heater, Fan, Digital Indicator, Gauge
                 // 6. ZeroIndustrialMotor
-                var motor = new ZeroIndustrialMotor { Size = new Size(125, 76), TagLabel = "M-201 AGITATOR", SpeedRpm = 1450.0, State = ZeroMotorState.Running };
+                var motor = new ZIndustrialMotor { Size = new Size(125, 76), TagLabel = "M-201 AGITATOR", SpeedRpm = 1450.0, State = ZeroMotorState.Running };
                 motor.CreateControl();
                 using (var bmp = new Bitmap(125, 76))
                 {
@@ -880,7 +880,7 @@ namespace ZeroUI.Samples.WinformDemo
                 motor.Dispose();
 
                 // 7. ZeroIndustrialPump
-                var pump = new ZeroIndustrialPump { Size = new Size(95, 95), TagLabel = "P-101 FEED", SpeedRpm = 2950.0, State = ZeroPumpState.Running };
+                var pump = new ZIndustrialPump { Size = new Size(95, 95), TagLabel = "P-101 FEED", SpeedRpm = 2950.0, State = ZeroPumpState.Running };
                 pump.CreateControl();
                 using (var bmp = new Bitmap(95, 95))
                 {
@@ -891,7 +891,7 @@ namespace ZeroUI.Samples.WinformDemo
                 pump.Dispose();
 
                 // 8. ZeroIndustrialValve
-                var valve = new ZeroIndustrialValve { Size = new Size(80, 85), TagLabel = "FCV-101", ValveType = ZeroValveType.ControlValve, State = ZeroValveState.Open, PositionPercent = 85.0 };
+                var valve = new ZIndustrialValve { Size = new Size(80, 85), TagLabel = "FCV-101", ValveType = ZeroValveType.ControlValve, State = ZeroValveState.Open, PositionPercent = 85.0 };
                 valve.CreateControl();
                 using (var bmp = new Bitmap(80, 85))
                 {
@@ -902,7 +902,7 @@ namespace ZeroUI.Samples.WinformDemo
                 valve.Dispose();
 
                 // 9. ZeroIndustrialHeater
-                var heater = new ZeroIndustrialHeater { Size = new Size(130, 80), TagLabel = "HT-201 HEATER", TemperatureC = 178.5, SetpointC = 185.0, State = ZeroHeaterState.Heating };
+                var heater = new ZIndustrialHeater { Size = new Size(130, 80), TagLabel = "HT-201 HEATER", TemperatureC = 178.5, SetpointC = 185.0, State = ZeroHeaterState.Heating };
                 heater.CreateControl();
                 using (var bmp = new Bitmap(130, 80))
                 {
@@ -913,7 +913,7 @@ namespace ZeroUI.Samples.WinformDemo
                 heater.Dispose();
 
                 // 10. ZeroIndustrialFan
-                var fan = new ZeroIndustrialFan { Size = new Size(130, 80), TagLabel = "FN-201 COOLING", SpeedRpm = 1600.0, State = ZeroFanState.Running };
+                var fan = new ZIndustrialFan { Size = new Size(130, 80), TagLabel = "FN-201 COOLING", SpeedRpm = 1600.0, State = ZeroFanState.Running };
                 fan.CreateControl();
                 using (var bmp = new Bitmap(130, 80))
                 {
@@ -924,7 +924,7 @@ namespace ZeroUI.Samples.WinformDemo
                 fan.Dispose();
 
                 // 11. ZeroDigitalIndicator
-                var digital = new ZeroDigitalIndicator { Size = new Size(155, 95), TagLabel = "REACTOR CORE", Unit = "°C", Value = 178.5, Format = "0.0" };
+                var digital = new ZDigitalIndicator { Size = new Size(155, 95), TagLabel = "REACTOR CORE", Unit = "°C", Value = 178.5, Format = "0.0" };
                 digital.CreateControl();
                 using (var bmp = new Bitmap(155, 95))
                 {

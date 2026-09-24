@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Industrial Multi-Pen Trend and Telemetry Analytics Studio")]
-    public class TrendStudio : BaseUserControl, IZeroDpiScalable
+    public class ZTrendStudio : BaseUserControl, IZeroDpiScalable
     {
         private readonly Panel _toolbarPanel;
         private readonly TrendPlot _plot;
@@ -69,7 +69,7 @@ namespace ZeroUI.WinForms.Charts
             set => _plot.TimeWindow = value;
         }
 
-        public TrendStudio()
+        public ZTrendStudio()
         {
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
             Size = new Size(800, 520);
@@ -406,4 +406,18 @@ namespace ZeroUI.WinForms.Charts
             Invalidate();
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZTrendStudio"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("TrendStudio is deprecated and will be removed in 5 release cycles. Please migrate to ZTrendStudio instead.")]
+    [ToolboxItem(false)]
+    public class TrendStudio : ZTrendStudio
+    {
+    }
+
+    #endregion
 }

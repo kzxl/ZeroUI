@@ -2021,7 +2021,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             leftPanel.Controls.Add(lblRadioTitle);
 
             radioY += 30;
-            var radioGroup = new ZeroRadioGroup
+            var radioGroup = new ZRadioGroup
             {
                 Location = new Point(16, radioY),
                 Size = new Size(390, 32),
@@ -2083,7 +2083,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             leftPanel.Controls.Add(lblMemoTitle);
 
             memoY += 30;
-            var memoEdit = new ZeroMemoEdit
+            var memoEdit = new ZMemoEdit
             {
                 Location = new Point(16, memoY),
                 Size = new Size(390, 80),
@@ -2283,7 +2283,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             midPanel.Controls.Add(lblBtnEditTitle);
 
             int midY = 48;
-            var btnEdit = new ButtonEdit
+            var btnEdit = new ZButtonEdit
             {
                 Location = new Point(16, midY),
                 Size = new Size(410, 34),
@@ -2321,7 +2321,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             midPanel.Controls.Add(lblCalcTitle);
 
             midY += 30;
-            var calcEdit = new CalcEdit
+            var calcEdit = new ZCalcEdit
             {
                 Location = new Point(16, midY),
                 Size = new Size(195, 34),
@@ -2334,7 +2334,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Section 20: ColorPickEdit (Dropdown Color Swatch & Palette)
-            var colorPick = new ColorPickEdit
+            var colorPick = new ZColorPicker
             {
                 Location = new Point(225, midY),
                 Size = new Size(200, 34),
@@ -2360,7 +2360,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             midPanel.Controls.Add(lblRatingTitle);
 
             midY += 30;
-            var ratingCtrl = new RatingControl
+            var ratingCtrl = new ZRating
             {
                 Location = new Point(16, midY),
                 Size = new Size(195, 34),
@@ -2385,7 +2385,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             midPanel.Controls.Add(lblRangeTitle);
 
             midY += 30;
-            var rangeSlider = new RangeSlider
+            var rangeSlider = new ZRangeSlider
             {
                 Location = new Point(16, midY),
                 Size = new Size(410, 38),
@@ -2410,7 +2410,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             midPanel.Controls.Add(lblTimeSpanTitle);
 
             midY += 30;
-            var timeSpanEdit = new TimeSpanEdit
+            var timeSpanEdit = new ZTimeSpanEdit
             {
                 Location = new Point(16, midY),
                 Size = new Size(195, 34),
@@ -2421,7 +2421,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 ZeroToast.Info(this, $"Cycle duration: {val:hh\\:mm\\:ss}");
             };
 
-            var ipEdit = new IPAddressEdit
+            var ipEdit = new ZIPAddressEdit
             {
                 Location = new Point(225, midY),
                 Size = new Size(200, 34),
@@ -2447,7 +2447,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             midPanel.Controls.Add(lblLinkTitle);
 
             midY += 30;
-            var linkEdit = new HyperlinkEdit
+            var linkEdit = new ZHyperlinkEdit
             {
                 Location = new Point(16, midY),
                 Size = new Size(410, 34),
@@ -2505,7 +2505,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             midPanel.Controls.Add(lblPicTitle);
 
             midY += 30;
-            var pic1 = new PictureEdit
+            var pic1 = new ZPictureEdit
             {
                 Location = new Point(16, midY),
                 Size = new Size(60, 60),
@@ -2514,7 +2514,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Status = AvatarStatus.Online,
                 EnableZoomPreview = true
             };
-            var pic2 = new PictureEdit
+            var pic2 = new ZPictureEdit
             {
                 Location = new Point(90, midY),
                 Size = new Size(60, 60),
@@ -2523,7 +2523,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Status = AvatarStatus.Busy,
                 EnableZoomPreview = true
             };
-            var pic3 = new PictureEdit
+            var pic3 = new ZPictureEdit
             {
                 Location = new Point(164, midY),
                 Size = new Size(60, 60),
@@ -2585,7 +2585,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             // TOP ACTION TOOLBAR: Scanner & Live Simulator
             var rowToolbar = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 8) };
             
-            var statusBadge = new ZeroStatusBadge
+            var statusBadge = new ZStatusBadge
             {
                 Location = new Point(4, 8),
                 Size = new Size(160, 24),
@@ -2766,10 +2766,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Title = "Lot Genealogy & Traceability",
                 Dock = DockStyle.Fill
             };
-            var timeline = new ZeroTimeline { Dock = DockStyle.Fill, ItemSpacing = 40 };
-            timeline.Add("Raw Material Inward", "07:30", "Lot BOA437 & BOA541 OQC Verified", ZeroTimelineStatus.Completed);
-            timeline.Add("SMT Feeder Load", "08:15", "420 chips picked and placed", ZeroTimelineStatus.Completed);
-            timeline.Add("Wave Solder & Assy", "09:40", "Assembly Line 01 in progress", ZeroTimelineStatus.InProgress);
+            var timeline = new ZTimeline { Dock = DockStyle.Fill, ItemSpacing = 40 };
+            timeline.Add("Raw Material Inward", "07:30", "Lot BOA437 & BOA541 OQC Verified", TimelineStatus.Completed);
+            timeline.Add("SMT Feeder Load", "08:15", "420 chips picked and placed", TimelineStatus.Completed);
+            timeline.Add("Wave Solder & Assy", "09:40", "Assembly Line 01 in progress", TimelineStatus.InProgress);
             cardTimeline.ContentPanel.Controls.Add(timeline);
 
             row3.Controls.Add(cardTimeline);
@@ -2783,8 +2783,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             int simQc = 0;
             int simWh = 0;
 
-            ZeroSevenSegment? segOutput = null;
-            ZeroLinearGauge? gaugePressure = null;
+            ZSevenSegment? segOutput = null;
+            ZLinearGauge? gaugePressure = null;
 
             void ProcessScan(string barcode)
             {
@@ -2793,12 +2793,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 if (simQc >= 2) simWh += 1;
 
                 string now = DateTime.Now.ToString("HH:mm:ss");
-                _mesSteps.UpdateStep("ASSY", simAssy, now, ZeroStepStatus.Completed);
-                _mesSteps.UpdateStep("QC", simQc, now, ZeroStepStatus.InProgress);
-                _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? ZeroStepStatus.InProgress : ZeroStepStatus.Waiting);
+                _mesSteps.UpdateStep("ASSY", simAssy, now, StepsControlStatus.Completed);
+                _mesSteps.UpdateStep("QC", simQc, now, StepsControlStatus.InProgress);
+                _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? StepsControlStatus.InProgress : StepsControlStatus.Waiting);
 
                 descSummary.SetValue("Target / Actual Inward", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
-                timeline.Add($"Barcode {barcode}", now, "Station scan verified", ZeroTimelineStatus.Completed);
+                timeline.Add($"Barcode {barcode}", now, "Station scan verified", TimelineStatus.Completed);
                 if (segOutput != null) segOutput.Value = (1420 + simWh).ToString("D6");
                 if (gaugePressure != null) gaugePressure.Value = 72.5f + (simWh % 12);
                 ZeroToast.Success(this, $"Scanned: {barcode} | Assembly: {simAssy}, Inward: {simWh}");
@@ -2813,12 +2813,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 if (simQc >= 4) simWh += 3;
 
                 string now = DateTime.Now.ToString("HH:mm:ss");
-                _mesSteps.UpdateStep("ASSY", simAssy, now, ZeroStepStatus.Completed);
-                _mesSteps.UpdateStep("QC", simQc, now, ZeroStepStatus.InProgress);
-                _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? ZeroStepStatus.InProgress : ZeroStepStatus.Waiting);
+                _mesSteps.UpdateStep("ASSY", simAssy, now, StepsControlStatus.Completed);
+                _mesSteps.UpdateStep("QC", simQc, now, StepsControlStatus.InProgress);
+                _mesSteps.UpdateStep("WH", simWh, now, simWh > 0 ? StepsControlStatus.InProgress : StepsControlStatus.Waiting);
 
                 descSummary.SetValue("Target / Actual Inward", $"100 / {simWh}", Color.FromArgb(17, 24, 39));
-                timeline.Add("PLC Signal Batch", now, $"Batch sync completed (+{simWh} units)", ZeroTimelineStatus.Completed);
+                timeline.Add("PLC Signal Batch", now, $"Batch sync completed (+{simWh} units)", TimelineStatus.Completed);
                 if (segOutput != null) segOutput.Value = (1420 + simWh).ToString("D6");
                 if (gaugePressure != null) gaugePressure.Value = 72.5f + (simWh % 12);
                 ZeroToast.Success(this, $"PLC Signal: Assembly: {simAssy}, QC: {simQc}, Inward: {simWh}");
@@ -2837,7 +2837,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Width = 280
             };
 
-            var andonTower = new ZeroLedTower
+            var andonTower = new ZLedTower
             {
                 Location = new Point(14, 6),
                 Size = new Size(54, 120),
@@ -2908,7 +2908,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             var lblTakt = new Label { Text = "Target Takt Time (sec):", Location = new Point(10, 4), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
-            var segTakt = new ZeroSevenSegment
+            var segTakt = new ZSevenSegment
             {
                 Location = new Point(10, 20),
                 Size = new Size(340, 34),
@@ -2921,7 +2921,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             var lblActual = new Label { Text = "Actual Batch Output (pcs):", Location = new Point(10, 56), AutoSize = true, Font = new Font("Segoe UI", 8.5f, FontStyle.Bold) };
-            segOutput = new ZeroSevenSegment
+            segOutput = new ZSevenSegment
             {
                 Location = new Point(10, 72),
                 Size = new Size(340, 34),
@@ -3028,7 +3028,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Fill
             };
 
-            gaugePressure = new ZeroLinearGauge
+            gaugePressure = new ZLinearGauge
             {
                 Location = new Point(12, 4),
                 Size = new Size(260, 50),
@@ -3042,7 +3042,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 CriticalThreshold = 105
             };
 
-            var gaugeTemp = new ZeroLinearGauge
+            var gaugeTemp = new ZLinearGauge
             {
                 Location = new Point(285, 4),
                 Size = new Size(260, 50),
@@ -3136,7 +3136,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var spacerCards = new Panel { Dock = DockStyle.Top, Height = 14, BackColor = Color.Transparent };
 
             // Card 2: ZeroWorkflowCard (Step 3: Production Line Workflow)
-            var cardWorkflow = new ZeroWorkflowCard
+            var cardWorkflow = new ZWorkflowCard
             {
                 Dock = DockStyle.Top,
                 Height = 160,
@@ -3148,9 +3148,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 FooterText = "Click stage node to inspect details or advance workflow step"
             };
 
-            cardWorkflow.AddStage("assembly", "Assembly Line", 1250, "17:10", ZeroStepStatus.Completed, ZeroStepGlyph.Gear);
-            cardWorkflow.AddStage("qc", "QC Inspection", 1242, "17:15", ZeroStepStatus.InProgress, ZeroStepGlyph.Checkmark);
-            cardWorkflow.AddStage("inward", "Finished Goods Inward", 0, "--", ZeroStepStatus.Waiting, ZeroStepGlyph.Warehouse);
+            cardWorkflow.AddStage("assembly", "Assembly Line", 1250, "17:10", StepsControlStatus.Completed, StepsControlGlyph.Gear);
+            cardWorkflow.AddStage("qc", "QC Inspection", 1242, "17:15", StepsControlStatus.InProgress, StepsControlGlyph.Checkmark);
+            cardWorkflow.AddStage("inward", "Finished Goods Inward", 0, "--", StepsControlStatus.Waiting, StepsControlGlyph.Warehouse);
 
             cardWorkflow.StageClicked += (s, ev) =>
             {
@@ -3188,12 +3188,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Info,
                 Title = "🔬 SCADA & Smart Factory Hub — Real-Time Control & Telemetry Station",
-                Message = "Integrated 60 FPS oscilloscope (ZeroTrendChart), Lean cycle pacing (ZeroTaktTimer), AOI defect matrix (ZeroDefectMatrix), PLC I/O monitor (ZeroPlcIoMonitor), and SLA touch Andon pad (ZeroAndonCallPad).",
+                Message = "Integrated 60 FPS oscilloscope (ZTrendChart), Lean cycle pacing (ZTaktTimer), AOI defect matrix (ZDefectMatrix), PLC I/O monitor (ZPlcIoMonitor), and SLA touch Andon pad (ZAndonCallPad).",
                 Height = 62
             };
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
-            // ROW 1: Real-time Oscilloscope (TrendChart) + Lean Takt Countdown Ring (TaktTimer)
+            // ROW 1: Real-time Oscilloscope (ZTrendChart) + Lean Takt Countdown Ring (ZTaktTimer)
             var row1 = new Panel { Dock = DockStyle.Top, Height = 220, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Card 1A: Trend Chart
@@ -3205,7 +3205,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Width = 560
             };
 
-            var trendChart = new ZeroTrendChart
+            var trendChart = new ZTrendChart
             {
                 Dock = DockStyle.Fill,
                 Title = "Ch1: Hydraulic Pressure (Bar) | Ch2: Oven Temperature (°C)",
@@ -3243,7 +3243,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Fill
             };
 
-            var taktTimer = new ZeroTaktTimer
+            var taktTimer = new ZTaktTimer
             {
                 Dock = DockStyle.Left,
                 Width = 180,
@@ -3278,7 +3278,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             row1.Controls.Add(split1);
             row1.Controls.Add(cardTrend);
 
-            // ROW 2: AOI Defect Matrix (DefectMatrix) + PLC I/O Registers (PlcIoMonitor)
+            // ROW 2: AOI Defect Matrix (ZDefectMatrix) + PLC I/O Registers (ZPlcIoMonitor)
             var row2 = new Panel { Dock = DockStyle.Top, Height = 220, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Card 2A: Defect Matrix
@@ -3290,7 +3290,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Width = 520
             };
 
-            var defectMatrix = new ZeroDefectMatrix
+            var defectMatrix = new ZDefectMatrix
             {
                 Dock = DockStyle.Fill,
                 Title = "SMT Carrier Panel #SN-94812 — AOI Station 03 Camera"
@@ -3326,7 +3326,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Fill
             };
 
-            var plcMonitor = new ZeroPlcIoMonitor
+            var plcMonitor = new ZPlcIoMonitor
             {
                 Dock = DockStyle.Fill,
                 DigitalInputs = 0x00A5,
@@ -3351,7 +3351,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Width = 480
             };
 
-            var andonPad = new ZeroAndonCallPad
+            var andonPad = new ZAndonCallPad
             {
                 Dock = DockStyle.Fill
             };
@@ -3530,12 +3530,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Success,
                 Title = "📦 WMS & Quality Inspection Center — Smart Warehouse & Six Sigma QC",
-                Message = "Integrated 2D Smart Warehouse Storage Rack (ZeroWarehouseRack), 3D Industrial Tank (ZeroTank3D), SPC X-Bar Chart (ZeroSpcChart), and Electronic Kanban Dispatching Board (ZeroKanbanBoard).",
+                Message = "Integrated 2D Smart Warehouse Storage Rack (ZWarehouseRack), 3D Industrial Tank (ZTank3D), SPC X-Bar Chart (ZSpcChart), and Electronic Kanban Dispatching Board (ZKanbanBoard).",
                 Height = 62
             };
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
-            // ROW 1: Smart Warehouse Storage Rack (WarehouseRack) + Industrial 3D Fluid Tank (Tank3D)
+            // ROW 1: Smart Warehouse Storage Rack (ZWarehouseRack) + Industrial 3D Fluid Tank (ZTank3D)
             var row1 = new Panel { Dock = DockStyle.Top, Height = 310, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Card 1A: Warehouse Rack
@@ -3547,7 +3547,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Width = 560
             };
 
-            var rack = new ZeroWarehouseRack
+            var rack = new ZWarehouseRack
             {
                 Dock = DockStyle.Fill,
                 Bays = 5,
@@ -3585,7 +3585,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Fill
             };
 
-            var tank = new ZeroTank3D
+            var tank = new ZTank3D
             {
                 Dock = DockStyle.Left,
                 Width = 190,
@@ -3623,7 +3623,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             row1.Controls.Add(split1);
             row1.Controls.Add(cardRack);
 
-            // ROW 2: Statistical Process Control (SpcChart) + Electronic Kanban Board (KanbanBoard)
+            // ROW 2: Statistical Process Control (ZSpcChart) + Electronic Kanban Board (ZKanbanBoard)
             var row2 = new Panel { Dock = DockStyle.Top, Height = 280, BackColor = Color.Transparent, Padding = new Padding(0, 0, 0, 10) };
 
             // Card 2A: SPC Chart
@@ -3635,7 +3635,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Width = 560
             };
 
-            var spcChart = new ZeroSpcChart
+            var spcChart = new ZSpcChart
             {
                 Dock = DockStyle.Fill,
                 NominalTarget = 12.000f,
@@ -3674,7 +3674,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Fill
             };
 
-            var kanban = new ZeroKanbanBoard
+            var kanban = new ZKanbanBoard
             {
                 Dock = DockStyle.Fill
             };
@@ -3794,7 +3794,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             var splitWh1 = new Panel { Dock = DockStyle.Left, Width = 16, BackColor = Color.Transparent };
 
-            var inventoryCard = new ZeroInventoryCard
+            var inventoryCard = new ZInventoryCard
             {
                 Dock = DockStyle.Left,
                 Width = 360
@@ -3806,7 +3806,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             // Row 2: Stock Movement Timeline
             var row2 = new Panel { Dock = DockStyle.Top, Height = 290, BackColor = Color.Transparent };
-            var timeline = new ZeroStockMovementTimeline
+            var timeline = new ZStockMovementTimeline
             {
                 Dock = DockStyle.Fill
             };
@@ -3866,7 +3866,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
             var lotSpacer = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
 
-            var lotSelector = new ZeroLotSelector
+            var lotSelector = new ZLotSelector
             {
                 Dock = DockStyle.Top,
                 Height = 320,
@@ -3936,7 +3936,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Success,
                 Title = "🏢 ENTERPRISE COMMERCIAL CONTROL SUITE (100% HARDWARE ACCELERATED)",
-                Message = "ZeroUI features 8 commercial-grade controls with Zero external dependencies: Visual Query Builder (ZeroFilterControl), Embedded GridLookup (ZeroGridLookup), Multi-Select CheckedComboBox (ZeroCheckedComboBox), Tag/Chip Editor (ZeroTokenEdit), Color Swatch Picker (ZeroColorPicker), Sequential Workflow Wizard (ZeroWizard), Six Sigma Outlier SPC Chart (ZeroBoxPlotChart), Vector Print Preview (ZeroPrintPreview), 60 FPS Shimmer Loading (ZeroSkeleton), and Non-Intrusive Overlays (ZeroToast & ZeroModal)."
+                Message = "ZeroUI features 8 commercial-grade controls with Zero external dependencies: Visual Query Builder (ZeroFilterControl), Embedded GridLookup (ZeroGridLookup), Multi-Select CheckedComboBox (ZeroCheckedComboBox), Tag/Chip Editor (ZTokenEdit), Color Swatch Picker (ZeroColorPicker), Sequential Workflow Wizard (ZeroWizard), Six Sigma Outlier SPC Chart (ZeroBoxPlotChart), Vector Print Preview (ZeroPrintPreview), 60 FPS Shimmer Loading (ZeroSkeleton), and Non-Intrusive Overlays (ZeroToast & ZeroModal)."
             };
 
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
@@ -4107,8 +4107,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Editor 4: TokenEdit with Auto-Complete
-            var lblTokenEdit = new Label { Text = "Tag & Chip Editor (TokenEdit with Auto-Complete):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 194) };
-            var tokenEdit = new TokenEdit
+            var lblTokenEdit = new Label { Text = "Tag & Chip Editor (ZTokenEdit with Auto-Complete):", Font = new Font("Segoe UI", 8.5f, FontStyle.Bold), ForeColor = ZeroTheme.Colors.TextPrimary, AutoSize = true, Location = new Point(8, 194) };
+            var tokenEdit = new ZTokenEdit
             {
                 Location = new Point(8, 214),
                 Width = 480,
@@ -4445,11 +4445,11 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cardPdf = new ZeroCard
             {
                 Dock = DockStyle.Fill,
-                Title = "Vector PDF & CAD Schematic Reader (PdfViewerControl)",
+                Title = "Vector PDF & CAD Schematic Reader (ZPdfViewer)",
                 Subtitle = "Continuous vector scroll, outline bookmarks, full-text search & zoom (25%–400%)",
                 StepNumber = 1
             };
-            var pdfViewer = new PdfViewerControl
+            var pdfViewer = new ZPdfViewer
             {
                 Dock = DockStyle.Fill,
                 ShowBookmarksSidebar = true
@@ -4461,11 +4461,11 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cardSheet = new ZeroCard
             {
                 Dock = DockStyle.Fill,
-                Title = "Vector Spreadsheet & Formula Engine (SpreadsheetControl)",
+                Title = "Vector Spreadsheet & Formula Engine (ZSpreadsheet)",
                 Subtitle = "Sparse matrix, interactive Formula Bar, live =SUM/AVERAGE/IF calculations, freeze panes & costing BOM",
                 StepNumber = 2
             };
-            var spreadsheet = new SpreadsheetControl
+            var spreadsheet = new ZSpreadsheet
             {
                 Dock = DockStyle.Fill
             };
@@ -4507,7 +4507,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             var bannerSpacer = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
-            // 2. Top Filter Bar (DateRangePicker, Lookup, NumericBox, Button)
+            // 2. Top Filter Bar (ZDateRangePicker, Lookup, NumericBox, Button)
             var topBar = new Panel
             {
                 Dock = DockStyle.Top,
@@ -4516,7 +4516,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Padding = new Padding(0, 4, 0, 8)
             };
 
-            var dtRange = new ZeroDateRangePicker
+            var dtRange = new ZDateRangePicker
             {
                 Location = new Point(0, 4),
                 Width = 260,
@@ -4618,7 +4618,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var cardBom = new ZeroCard
             {
                 Dock = DockStyle.Fill,
-                Title = "Multi-Level BOM Tree Structure (ZeroTreeList)",
+                Title = "Multi-Level BOM Tree Structure (ZTreeList)",
                 Subtitle = "Component hierarchy virtualization, expandable chevrons, tri-state checkboxes"
             };
 
@@ -4666,7 +4666,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             bomTools.Controls.Add(btnExpandAll);
             bomTools.Controls.Add(txtBomSearch);
 
-            var treeBom = new ZeroTreeList
+            var treeBom = new ZTreeList
             {
                 Dock = DockStyle.Fill,
                 ShowCheckBoxes = true,
@@ -5167,7 +5167,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             {
                 Dock = DockStyle.Top,
                 Severity = ZeroAlertSeverity.Info,
-                Title = "📊 MULTIDIMENSIONAL CROSS-TAB OLAP REPORTING (ZeroPivotGrid)",
+                Title = "📊 MULTIDIMENSIONAL CROSS-TAB OLAP REPORTING (ZPivotGrid)",
                 Message = "ZeroPivotGrid enables instant multidimensional pivot analysis with dynamic RowArea, ColumnArea, and DataArea aggregations (Sum, Average, Count), hierarchical drill-down, and built-in Field Chooser dialog."
             };
 
@@ -5179,7 +5179,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Padding = new Padding(0, 6, 0, 6)
             };
 
-            var pivotGrid = new PivotGridControl
+            var pivotGrid = new ZPivotGrid
             {
                 Dock = DockStyle.Fill,
                 RowHeaderWidth = 160,
@@ -6881,9 +6881,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             // 1. Rack & Switch Faceplate
             var tabRackSwitch = new ZeroTabPage("19\" Rack & Switch Faceplate", "🗄️");
             var pnlRackRoot = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(12) };
-            var devRack = new DeviceRack { Dock = DockStyle.Left, Width = 340, ShowThermalOverlay = true };
+            var devRack = new ZDeviceRack { Dock = DockStyle.Left, Width = 340, ShowThermalOverlay = true };
             var pnlSwitchContainer = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(12, 0, 0, 0) };
-            var swFaceplate = new SwitchFaceplate { Dock = DockStyle.Top, Height = 170 };
+            var swFaceplate = new ZSwitchFaceplate { Dock = DockStyle.Top, Height = 170 };
             
             var cardActions = new ZeroCard
             {
@@ -6961,7 +6961,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             // 2. Interactive Network Topology Canvas
             var tabTopology = new ZeroTabPage("Network Topology & Pulse Flows", "🕸️");
-            var netTopo = new NetworkTopology { Dock = DockStyle.Fill };
+            var netTopo = new ZNetworkTopology { Dock = DockStyle.Fill };
             var pnlTopoBar = new Panel { Dock = DockStyle.Top, Height = 42, BackColor = Color.FromArgb(20, 24, 33), Padding = new Padding(8, 4, 8, 4) };
             
             var btnFit = new ZeroButton { Text = "🔍 Reset Zoom (100%)", ButtonStyle = ZeroButtonStyle.Secondary, Location = new Point(8, 5), Size = new Size(160, 32) };
@@ -6996,7 +6996,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             // 3. Chassis Health HUD & Optical DDM
             var tabChassis = new ZeroTabPage("Chassis Health & Optical DDM", "🖥️");
             var pnlChassisRoot = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(16), AutoScroll = true };
-            var devFaceplate = new DeviceFaceplate { Dock = DockStyle.Top, Height = 340 };
+            var devFaceplate = new ZDeviceFaceplate { Dock = DockStyle.Top, Height = 340 };
             
             var cardPsuActions = new ZeroCard
             {
@@ -7043,13 +7043,13 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             // 4. IPAM Subnet Matrix & Latency Sparklines
             var tabIpMatrix = new ZeroTabPage("2D IPAM Subnet Matrix", "🌐");
-            var ipMatrix = new IpMatrix { Dock = DockStyle.Fill };
+            var ipMatrix = new ZIpMatrix { Dock = DockStyle.Fill };
             tabIpMatrix.Controls.Add(ipMatrix);
 
             // 5. Industrial Fieldbus & Cable Break Locator
             var tabFieldbus = new ZeroTabPage("Fieldbus & Break Locator", "🔌");
             var pnlFbRoot = new Panel { Dock = DockStyle.Fill, BackColor = colors.Background, Padding = new Padding(16), AutoScroll = true };
-            var fbMonitor = new FieldbusMonitor { Dock = DockStyle.Top, Height = 250 };
+            var fbMonitor = new ZFieldbusMonitor { Dock = DockStyle.Top, Height = 250 };
             
             var cardFbActions = new ZeroCard
             {
@@ -7128,12 +7128,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Height = 62,
                 Severity = ZeroAlertSeverity.Info,
                 Title = "🏭 PHASE 1: DYNAMIC P&ID PROCESS FLOW SIMULATION",
-                Message = "Simulates dynamic fluid piping (ZeroPipeFlow), 60 FPS centrifugal pump (ZeroIndustrialPump), control valve (ZeroIndustrialValve) connecting dual 3D tanks (ZeroTank3D), pressure gauge (ZeroGauge), and telemetry oscilloscope (ZeroTrendChart)."
+                Message = "Simulates dynamic fluid piping (ZPipeFlow), 60 FPS centrifugal pump (ZIndustrialPump), control valve (ZIndustrialValve) connecting dual 3D tanks (ZTank3D), pressure gauge (ZeroGauge), and telemetry oscilloscope (ZTrendChart)."
             };
             var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
             // Pre-declare pump and valve for quickBar interaction & OSHA LOTO interlocking
-            var pump = new ZeroIndustrialPump
+            var pump = new ZIndustrialPump
             {
                 Location = new Point(255, 130),
                 Size = new Size(84, 88),
@@ -7143,7 +7143,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 BoundTagPath = "Line1.Pump.Running"
             };
 
-            var valve = new ZeroIndustrialValve
+            var valve = new ZIndustrialValve
             {
                 Location = new Point(410, 140),
                 Size = new Size(56, 64),
@@ -7208,14 +7208,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             var btnPidFlyout = new ZeroButton
             {
-                Text = "🎛️ Tune Loop (ZeroPidFlyout)",
+                Text = "🎛️ Tune Loop (ZPidFlyout)",
                 ButtonStyle = ZeroButtonStyle.Primary,
                 Location = new Point(710, 4),
                 Size = new Size(205, 32)
             };
             btnPidFlyout.Click += (s, e) =>
             {
-                var flyout = new ZeroPidFlyout
+                var flyout = new ZPidFlyout
                 {
                     LoopTag = "PIC-101",
                     LoopDescription = "Primary Supply Pressure Loop",
@@ -7273,7 +7273,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var pidCanvas = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
 
             // Tank 101 (Supply)
-            var tank1 = new ZeroTank3D
+            var tank1 = new ZTank3D
             {
                 Location = new Point(20, 20),
                 Size = new Size(140, 220),
@@ -7284,7 +7284,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Pipe 1 (Tank to Pump)
-            var pipe1 = new ZeroPipeFlow
+            var pipe1 = new ZPipeFlow
             {
                 Location = new Point(160, 160),
                 Size = new Size(95, 24),
@@ -7294,7 +7294,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Pipe 2 (Pump to Valve)
-            var pipe2 = new ZeroPipeFlow
+            var pipe2 = new ZPipeFlow
             {
                 Location = new Point(339, 160),
                 Size = new Size(70, 24),
@@ -7304,7 +7304,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Pipe 3 (Valve to Gauge)
-            var pipe3 = new ZeroPipeFlow
+            var pipe3 = new ZPipeFlow
             {
                 Location = new Point(467, 160),
                 Size = new Size(60, 24),
@@ -7324,7 +7324,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Pipe 4 (Gauge to Tank 2)
-            var pipe4 = new ZeroPipeFlow
+            var pipe4 = new ZPipeFlow
             {
                 Location = new Point(672, 160),
                 Size = new Size(70, 24),
@@ -7334,7 +7334,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Tank 102 (Discharge)
-            var tank2 = new ZeroTank3D
+            var tank2 = new ZTank3D
             {
                 Location = new Point(744, 20),
                 Size = new Size(140, 220),
@@ -7344,8 +7344,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 FluidColor = Color.FromArgb(16, 185, 129)
             };
 
-            // Orthogonal Multi-Segment Recirculation Loop (ZeroPolylinePipeFlow)
-            var returnPolyPipe = new ZeroPolylinePipeFlow
+            // Orthogonal Multi-Segment Recirculation Loop (ZPolylinePipeFlow)
+            var returnPolyPipe = new ZPolylinePipeFlow
             {
                 Location = new Point(90, 245),
                 Size = new Size(730, 45),
@@ -7377,7 +7377,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
             var spacer3 = new Panel { Dock = DockStyle.Top, Height = 12, BackColor = Color.Transparent };
 
-            // 4. Real-time Telemetry Oscilloscope Strip Chart (ZeroTrendChart)
+            // 4. Real-time Telemetry Oscilloscope Strip Chart (ZTrendChart)
             var cardTrend = new ZeroCard
             {
                 Dock = DockStyle.Top,
@@ -7386,7 +7386,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 StepNumber = 2
             };
 
-            var trendChart = new ZeroTrendChart
+            var trendChart = new ZTrendChart
             {
                 Dock = DockStyle.Fill,
                 Title = "Ch1: Pipe Pressure (PSI) | Ch2: Fluid Flow Velocity (m/s x 20)",
@@ -7446,7 +7446,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Height = 62,
                 Severity = ZeroAlertSeverity.Warning,
                 Title = "🚨 PHASE 2: ISA-18.2 ALARM ANNUNCIATOR & CLOSED-LOOP PID CONTROLLER",
-                Message = "Standardized ISA-18.2 industrial alarm sequence state machine (ZeroAnnunciatorGrid) combined with single-loop PID controller faceplate (ZeroPidFaceplate) tracking live PV vs SP deviation."
+                Message = "Standardized ISA-18.2 industrial alarm sequence state machine (ZAnnunciatorGrid) combined with single-loop PID controller faceplate (ZPidFaceplate) tracking live PV vs SP deviation."
             };
             var spacer1 = new Panel { Dock = DockStyle.Top, Height = 10, BackColor = Color.Transparent };
 
@@ -7462,7 +7462,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 StepNumber = 1
             };
 
-            var annunciator = new ZeroAnnunciatorGrid
+            var annunciator = new ZAnnunciatorGrid
             {
                 Dock = DockStyle.Fill
             };
@@ -7504,7 +7504,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 StepNumber = 2
             };
 
-            var pidFaceplate = new ZeroPidFaceplate
+            var pidFaceplate = new ZPidFaceplate
             {
                 Location = new Point(16, 12),
                 Size = new Size(290, 320),
@@ -7744,7 +7744,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Padding = new Padding(8)
             };
 
-            var btnStart = new ZeroCommandButton
+            var btnStart = new ZCommandButton
             {
                 Action = CommandButtonAction.Start,
                 CommandText = "START LINE 1",
@@ -7753,7 +7753,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
             btnStart.CommandExecuted += (s, e) => ZeroToast.Success(this, "Line 1 startup sequence engaged!");
 
-            var btnEStop = new ZeroCommandButton
+            var btnEStop = new ZCommandButton
             {
                 Action = CommandButtonAction.EmergencyStop,
                 CommandText = "EMERGENCY STOP",
@@ -7762,7 +7762,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
             btnEStop.CommandExecuted += (s, e) => ZeroToast.Warning(this, "EMERGENCY STOP EXECUTED!");
 
-            var spInput = new ZeroSetpointInput
+            var spInput = new ZSetpointInput
             {
                 TagLabel = "BOILER SP",
                 SetpointValue = 185.0,
@@ -7771,12 +7771,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Unit = "°C"
             };
 
-            var modeSel = new ZeroModeSelector
+            var modeSel = new ZModeSelector
             {
                 SelectedMode = MachineControlMode.Auto
             };
 
-            var interlock = new ZeroInterlockIndicator
+            var interlock = new ZInterlockIndicator
             {
                 TagLabel = "SAFETY INTERLOCK"
             };
@@ -7807,14 +7807,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Padding = new Padding(8)
             };
 
-            var motor = new ZeroIndustrialMotor { SpeedRpm = 1450.0, Direction = ZeroMotorDirection.Forward };
-            var fan = new ZeroIndustrialFan { SpeedRpm = 1200.0 };
-            var heater = new ZeroIndustrialHeater { TemperatureC = 185.4, SetpointC = 200.0 };
-            var cyl = new ZeroPneumaticCylinder { ExtensionPercent = 75.0 };
-            var conveyor = new ZeroConveyorBelt { SpeedMpm = 28.0 };
-            var sensor = new ZeroIndustrialSensor { State = SensorState.Active };
-            var digital = new ZeroDigitalIndicator { Value = 48.7, Unit = "bar", TagLabel = "MAIN STEAM" };
-            var flow = new ZeroFlowIndicator { Velocity = 2.0, IsFlowing = true };
+            var motor = new ZIndustrialMotor { SpeedRpm = 1450.0, Direction = ZeroMotorDirection.Forward };
+            var fan = new ZIndustrialFan { SpeedRpm = 1200.0 };
+            var heater = new ZIndustrialHeater { TemperatureC = 185.4, SetpointC = 200.0 };
+            var cyl = new ZPneumaticCylinder { ExtensionPercent = 75.0 };
+            var conveyor = new ZConveyorBelt { SpeedMpm = 28.0 };
+            var sensor = new ZIndustrialSensor { State = SensorState.Active };
+            var digital = new ZDigitalIndicator { Value = 48.7, Unit = "bar", TagLabel = "MAIN STEAM" };
+            var flow = new ZFlowIndicator { Velocity = 2.0, IsFlowing = true };
 
             pnlAct.Controls.Add(motor);
             pnlAct.Controls.Add(fan);
@@ -7845,8 +7845,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             var machineCard = new ZeroMachineCard { MachineId = "CNC-04", OeePercent = 88.5, SpeedRpm = 12000.0 };
-            var prodCounter = new ZeroProductionCounter { Plan = 2500, Actual = 2140, NG = 18 };
-            var shiftStatus = new ZeroShiftStatus { ShiftName = "SHIFT A (DAY)", OperatorName = "David Nguyen" };
+            var prodCounter = new ZProductionCounter { Plan = 2500, Actual = 2140, NG = 18 };
+            var shiftStatus = new ZShiftStatus { ShiftName = "SHIFT A (DAY)", OperatorName = "David Nguyen" };
             var sparkline = new ZeroSparkline(40) { LineColor = Color.FromArgb(56, 189, 248), Size = new Size(160, 110) };
             for (int i = 0; i < 35; i++) sparkline.AddValue(40f + (float)Math.Sin(i * 0.4) * 20f);
 
@@ -7866,7 +7866,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Title = "ISA-18.2 Standard Alarm Management Grid (Active / Acknowledged / Shelved)",
                 StepNumber = 4
             };
-            var alarmGrid = new ZeroAlarmGrid
+            var alarmGrid = new ZAlarmGrid
             {
                 Dock = DockStyle.Fill,
                 OperatorName = "Alex Thorne"
@@ -7938,14 +7938,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Padding = new Padding(8, 6, 8, 6)
             };
 
-            var badgeStatus = new ZeroStatusBadge
+            var badgeStatus = new ZStatusBadge
             {
                 Status = ZeroStatusType.Idle,
                 Text = "READY / IDLE",
                 Size = new Size(160, 36)
             };
 
-            var btnStartBatch = new ZeroCommandButton
+            var btnStartBatch = new ZCommandButton
             {
                 Action = CommandButtonAction.Start,
                 CommandText = "START BATCH",
@@ -7954,7 +7954,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Size = new Size(130, 44)
             };
 
-            var btnHoldBatch = new ZeroCommandButton
+            var btnHoldBatch = new ZCommandButton
             {
                 Action = CommandButtonAction.Stop,
                 CommandText = "HOLD BATCH",
@@ -7963,7 +7963,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Size = new Size(120, 44)
             };
 
-            var btnResetBatch = new ZeroCommandButton
+            var btnResetBatch = new ZCommandButton
             {
                 Action = CommandButtonAction.Reset,
                 CommandText = "RESET BATCH",
@@ -7972,7 +7972,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Size = new Size(120, 44)
             };
 
-            var btnEStop = new ZeroCommandButton
+            var btnEStop = new ZCommandButton
             {
                 Action = CommandButtonAction.EmergencyStop,
                 CommandText = "EMERGENCY STOP",
@@ -7981,7 +7981,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Size = new Size(150, 44)
             };
 
-            var spTargetTemp = new ZeroSetpointInput
+            var spTargetTemp = new ZSetpointInput
             {
                 TagLabel = "REACTION SP",
                 SetpointValue = 175.0,
@@ -7991,7 +7991,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Size = new Size(130, 44)
             };
 
-            var spDoseVolume = new ZeroSetpointInput
+            var spDoseVolume = new ZSetpointInput
             {
                 TagLabel = "DOSE VOL",
                 SetpointValue = 250.0,
@@ -8001,13 +8001,13 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Size = new Size(130, 44)
             };
 
-            var modeSelector = new ZeroModeSelector
+            var modeSelector = new ZModeSelector
             {
                 SelectedMode = MachineControlMode.Auto,
                 Size = new Size(175, 44)
             };
 
-            var safetyInterlock = new ZeroInterlockIndicator
+            var safetyInterlock = new ZInterlockIndicator
             {
                 TagLabel = "SAFETY PERMISSIVE",
                 Size = new Size(160, 44)
@@ -8039,7 +8039,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
             var pnlReactor = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
 
-            var tankSupply = new ZeroTank3D
+            var tankSupply = new ZTank3D
             {
                 Location = new Point(16, 14),
                 Size = new Size(135, 225),
@@ -8050,7 +8050,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 FluidColor = Color.FromArgb(6, 182, 212)
             };
 
-            var pipeInlet1 = new ZeroPipeFlow
+            var pipeInlet1 = new ZPipeFlow
             {
                 Location = new Point(151, 140),
                 Size = new Size(60, 24),
@@ -8059,7 +8059,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 IsFlowing = false
             };
 
-            var pumpFeed = new ZeroIndustrialPump
+            var pumpFeed = new ZIndustrialPump
             {
                 Location = new Point(211, 110),
                 Size = new Size(84, 88),
@@ -8069,7 +8069,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 State = ZeroPumpState.Stopped
             };
 
-            var pipeInlet2 = new ZeroPipeFlow
+            var pipeInlet2 = new ZPipeFlow
             {
                 Location = new Point(295, 140),
                 Size = new Size(50, 24),
@@ -8078,7 +8078,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 IsFlowing = false
             };
 
-            var valveInflow = new ZeroIndustrialValve
+            var valveInflow = new ZIndustrialValve
             {
                 Location = new Point(345, 120),
                 Size = new Size(56, 64),
@@ -8088,7 +8088,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 PositionPercent = 0.0
             };
 
-            var pipeInlet3 = new ZeroPipeFlow
+            var pipeInlet3 = new ZPipeFlow
             {
                 Location = new Point(401, 140),
                 Size = new Size(50, 24),
@@ -8097,7 +8097,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 IsFlowing = false
             };
 
-            var tankReactor = new ZeroTank3D
+            var tankReactor = new ZTank3D
             {
                 Location = new Point(451, 14),
                 Size = new Size(140, 225),
@@ -8108,7 +8108,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 FluidColor = Color.FromArgb(245, 158, 11)
             };
 
-            var motorAgitator = new ZeroIndustrialMotor
+            var motorAgitator = new ZIndustrialMotor
             {
                 Location = new Point(601, 14),
                 Size = new Size(115, 72),
@@ -8117,7 +8117,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 State = ZeroMotorState.Stopped
             };
 
-            var heater = new ZeroIndustrialHeater
+            var heater = new ZIndustrialHeater
             {
                 Location = new Point(601, 90),
                 Size = new Size(115, 72),
@@ -8127,7 +8127,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 State = ZeroHeaterState.Off
             };
 
-            var fanCooling = new ZeroIndustrialFan
+            var fanCooling = new ZIndustrialFan
             {
                 Location = new Point(601, 166),
                 Size = new Size(115, 72),
@@ -8145,7 +8145,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Value = 14.7f
             };
 
-            var indicatorTemp = new ZeroDigitalIndicator
+            var indicatorTemp = new ZDigitalIndicator
             {
                 Location = new Point(726, 140),
                 Size = new Size(130, 95),
@@ -8181,7 +8181,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
             var pnlPackaging = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
 
-            var pipeDischarge = new ZeroPipeFlow
+            var pipeDischarge = new ZPipeFlow
             {
                 Location = new Point(16, 75),
                 Size = new Size(80, 24),
@@ -8190,7 +8190,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 IsFlowing = false
             };
 
-            var valveDischarge = new ZeroIndustrialValve
+            var valveDischarge = new ZIndustrialValve
             {
                 Location = new Point(96, 55),
                 Size = new Size(56, 64),
@@ -8199,7 +8199,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 ValveType = ZeroValveType.TwoWaySolenoid
             };
 
-            var cylDosing = new ZeroPneumaticCylinder
+            var cylDosing = new ZPneumaticCylinder
             {
                 Location = new Point(160, 40),
                 Size = new Size(180, 80),
@@ -8208,7 +8208,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 State = CylinderState.Retracted
             };
 
-            var sensorArrival = new ZeroIndustrialSensor
+            var sensorArrival = new ZIndustrialSensor
             {
                 Location = new Point(350, 42),
                 Size = new Size(75, 75),
@@ -8217,7 +8217,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 State = SensorState.Inactive
             };
 
-            var conveyorBelt = new ZeroConveyorBelt
+            var conveyorBelt = new ZConveyorBelt
             {
                 Location = new Point(435, 38),
                 Size = new Size(220, 85),
@@ -8226,7 +8226,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 State = ConveyorState.Stopped
             };
 
-            var counterProduction = new ZeroProductionCounter
+            var counterProduction = new ZProductionCounter
             {
                 Location = new Point(665, 30),
                 Size = new Size(260, 100),
@@ -8268,7 +8268,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 StepNumber = 4
             };
 
-            var trendChart = new ZeroTrendChart
+            var trendChart = new ZTrendChart
             {
                 Dock = DockStyle.Fill,
                 Title = "Batch Dynamics Stream: Temp (°C) | Pressure (PSI) | Reactor Level (%) | Line Output (BPM)",
@@ -8732,10 +8732,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Padding = new Padding(8)
             };
 
-            var badgeScheduler = new ZeroStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Running, Text = "SCHEDULER: 100 Hz | 0 Overruns" };
-            var badgeBus = new ZeroStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Processing, Text = "BUS: 0 updates/s" };
-            var badgeStore = new ZeroStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Running, Text = "STORE: 5 Active Tags (O(1))" };
-            var badgeAlarms = new ZeroStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Running, Text = "ALARMS: Normal (0 Active)" };
+            var badgeScheduler = new ZStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Running, Text = "SCHEDULER: 100 Hz | 0 Overruns" };
+            var badgeBus = new ZStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Processing, Text = "BUS: 0 updates/s" };
+            var badgeStore = new ZStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Running, Text = "STORE: 5 Active Tags (O(1))" };
+            var badgeAlarms = new ZStatusBadge { Size = new Size(250, 36), Status = ZeroStatusType.Running, Text = "ALARMS: Normal (0 Active)" };
 
             pnlKpi.Controls.Add(badgeScheduler);
             pnlKpi.Controls.Add(badgeBus);
@@ -8764,7 +8764,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Title = "Plant Process Synoptic Mimic (ZeroScene Graph & Single-HWND Canvas)",
                 StepNumber = 2
             };
-            var canvas = new ZeroPlantMimicCanvas
+            var canvas = new ZPlantMimicCanvas
             {
                 Dock = DockStyle.Fill,
                 ZoomFactor = 1.0f
@@ -8898,10 +8898,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 AutoScroll = true,
                 Padding = new Padding(4)
             };
-            var annTempHH = new ZeroStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "TEMP HH (265°C): OK" };
-            var annTempH = new ZeroStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "TEMP H (225°C): OK" };
-            var annPressHH = new ZeroStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "PRESS HH (10.5 bar): OK" };
-            var annPressH = new ZeroStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "PRESS H (8.5 bar): OK" };
+            var annTempHH = new ZStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "TEMP HH (265°C): OK" };
+            var annTempH = new ZStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "TEMP H (225°C): OK" };
+            var annPressHH = new ZStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "PRESS HH (10.5 bar): OK" };
+            var annPressH = new ZStatusBadge { Size = new Size(200, 30), Status = ZeroStatusType.Running, Text = "PRESS H (8.5 bar): OK" };
 
             pnlAnnunciator.Controls.Add(annTempHH);
             pnlAnnunciator.Controls.Add(annTempH);
@@ -8921,7 +8921,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 StepNumber = 4
             };
             var pnlHistContent = new Panel { Dock = DockStyle.Fill, Padding = new Padding(6) };
-            var trendChart = new ZeroTrendChart
+            var trendChart = new ZTrendChart
             {
                 Dock = DockStyle.Fill,
                 Title = "Live Pipeline Streams (Ring Buffer Ingest)",

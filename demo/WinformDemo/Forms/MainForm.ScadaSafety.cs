@@ -42,7 +42,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var spacerBanner = new Panel { Dock = DockStyle.Top, Height = 8, BackColor = Color.Transparent };
 
             // 2. Top ISA-18.2 Alarm Banner Ticker
-            var alarmBanner = new AlarmBannerControl
+            var alarmBanner = new ZAlarmBanner
             {
                 Dock = DockStyle.Top,
                 Height = 36,
@@ -91,7 +91,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Location = new Point(14, 12)
             };
 
-            var eStop = new EmergencyStopControl
+            var eStop = new ZEmergencyStop
             {
                 Location = new Point(14, 38),
                 Size = new Size(130, 130),
@@ -107,7 +107,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Location = new Point(155, 40)
             };
 
-            var interlock = new InterlockIndicator
+            var interlock = new ZInterlockIndicator
             {
                 Location = new Point(155, 70),
                 Size = new Size(140, 42),
@@ -158,7 +158,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Location = new Point(14, 208)
             };
 
-            var lightCurtain = new LightCurtainBar
+            var lightCurtain = new ZLightCurtainBar
             {
                 Location = new Point(14, 234),
                 Size = new Size(160, 240),
@@ -241,7 +241,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             };
 
             // Section 1: Central 12-Tile Annunciator Matrix
-            var annunciator = new AnnunciatorGrid
+            var annunciator = new ZAnnunciatorGrid
             {
                 Location = new Point(12, 10),
                 Size = new Size(480, 210),
@@ -317,10 +317,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Location = new Point(12, 280)
             };
 
-            var ledMaster = new MultiStateLed { Location = new Point(14, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "SYSTEM" };
-            var ledEStop = new MultiStateLed { Location = new Point(80, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "E-STOP" };
-            var ledCurtain = new MultiStateLed { Location = new Point(146, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "CURTAIN" };
-            var ledInterlock = new MultiStateLed { Location = new Point(212, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "INTERLOCK" };
+            var ledMaster = new ZMultiStateLed { Location = new Point(14, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "SYSTEM" };
+            var ledEStop = new ZMultiStateLed { Location = new Point(80, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "E-STOP" };
+            var ledCurtain = new ZMultiStateLed { Location = new Point(146, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "CURTAIN" };
+            var ledInterlock = new ZMultiStateLed { Location = new Point(212, 304), Size = new Size(60, 72), State = MultiStateLedState.Normal, Label = "INTERLOCK" };
 
             var btnLampTest = new SimpleButton
             {
@@ -331,7 +331,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Cursor = Cursors.Hand
             };
 
-            var meterHydraulic = new EdgewiseMeter
+            var meterHydraulic = new ZEdgewiseMeter
             {
                 Location = new Point(12, 388),
                 Size = new Size(270, 68),

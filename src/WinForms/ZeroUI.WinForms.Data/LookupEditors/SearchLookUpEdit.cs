@@ -28,7 +28,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Placeholder")]
     [Description("High-capacity enterprise search lookup with persistent header search and virtual grid.")]
     [ToolboxBitmap(typeof(ZeroIcons), "SearchLookUpEdit.bmp")]
-    public class SearchLookUpEdit : ControlBase, IZeroEditor
+    public class ZSearchLookUpEdit : ControlBase, IZeroEditor
     {
         private readonly DropDownHost _dropdown;
         private readonly Panel _popupContainer;
@@ -327,7 +327,7 @@ namespace ZeroUI.WinForms.Editors
 
         #endregion
 
-        public SearchLookUpEdit()
+        public ZSearchLookUpEdit()
         {
             Size = new Size(280, 36);
             Cursor = Cursors.Hand;
@@ -1114,4 +1114,18 @@ namespace ZeroUI.WinForms.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZSearchLookUpEdit"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("SearchLookUpEdit is deprecated and will be removed in 5 release cycles. Please migrate to ZSearchLookUpEdit instead.")]
+    [ToolboxItem(false)]
+    public class SearchLookUpEdit : ZSearchLookUpEdit
+    {
+    }
+
+    #endregion
 }

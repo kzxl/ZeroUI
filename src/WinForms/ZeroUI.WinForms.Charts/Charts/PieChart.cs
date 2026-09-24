@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Pie and Donut distribution chart")]
-    public class PieChart : ChartControl
+    public class ZPieChart : ChartControl
     {
         private bool _isDonut = true;
 
@@ -30,12 +30,12 @@ namespace ZeroUI.WinForms.Charts
             }
         }
 
-        public PieChart()
+        public ZPieChart()
         {
             ChartType = ChartType.Donut;
         }
 
-        public PieChart AddSlice(string label, double value, Color? color = null)
+        public ZPieChart AddSlice(string label, double value, Color? color = null)
         {
             if (Series.Count == 0)
             {
@@ -63,12 +63,12 @@ namespace ZeroUI.WinForms.Charts
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="PieChart"/>.
+    /// Legacy alias for <see cref="ZPieChart"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroPieChart is deprecated. Please use PieChart instead.")]
+    [Obsolete("ZeroPieChart is deprecated and will be removed in 5 release cycles. Please migrate to ZPieChart instead.")]
     [ToolboxItem(false)]
-    public class ZeroPieChart : PieChart
+    public class ZeroPieChart : ZPieChart
     {
         public new ZeroUI.WinForms.Charts.Model.ZeroChartLegendPosition LegendPosition
         {
@@ -82,4 +82,18 @@ namespace ZeroUI.WinForms.Charts
             set => base.ChartType = (ZeroUI.WinForms.Charts.Model.ChartType)value;
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZPieChart"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("PieChart is deprecated and will be removed in 5 release cycles. Please migrate to ZPieChart instead.")]
+    [ToolboxItem(false)]
+    public class PieChart : ZPieChart
+    {
+    }
+
+    #endregion
 }

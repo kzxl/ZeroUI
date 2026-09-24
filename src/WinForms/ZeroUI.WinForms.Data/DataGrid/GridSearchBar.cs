@@ -18,7 +18,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Description("Integrated search bar and toolbar for GridControl")]
     public class GridSearchBar : Panel, IZeroDpiScalable
     {
-        private GridControl? _grid;
+        private ZGrid? _grid;
         private readonly SearchControl _searchBox;
         private readonly Label _lblMatchCount;
         private readonly SimpleButton _btnDensity;
@@ -191,7 +191,7 @@ namespace ZeroUI.WinForms.DataGrid
             ExportClicked?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AttachToGrid(GridControl grid)
+        public void AttachToGrid(ZGrid grid)
         {
             _grid = grid;
             UpdateCountBadge();

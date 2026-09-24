@@ -24,7 +24,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultEvent("SelectionChanged")]
     [Description("Enterprise multi-column dropdown lookup with embedded virtual DataGrid and search")]
     [ToolboxBitmap(typeof(ZeroIcons), "GridLookupEdit.bmp")]
-    public class GridLookupEdit : ControlBase, IZeroEditor
+    public class ZGridLookupEdit : ControlBase, IZeroEditor
     {
         private readonly DropDownHost _dropdown;
         private readonly Panel _popupContainer;
@@ -169,7 +169,7 @@ namespace ZeroUI.WinForms.Editors
         [Browsable(false)]
         public GridControl Grid => _grid;
 
-        public GridLookupEdit()
+        public ZGridLookupEdit()
         {
             Size = new Size(260, 36);
             Cursor = Cursors.Hand;
@@ -495,4 +495,18 @@ namespace ZeroUI.WinForms.Editors
     public class ZeroGridLookup : GridLookupEdit
     {
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZGridLookupEdit"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("GridLookupEdit is deprecated and will be removed in 5 release cycles. Please migrate to ZGridLookupEdit instead.")]
+    [ToolboxItem(false)]
+    public class GridLookupEdit : ZGridLookupEdit
+    {
+    }
+
+    #endregion
 }

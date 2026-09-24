@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Arranges child controls into a single horizontal or vertical line with smooth layout calculation.")]
-    public class StackPanel : Panel
+    public class ZStackPanel : Panel
     {
         private StackOrientation _orientation = StackOrientation.Vertical;
         private StackAlignment _alignment = StackAlignment.Stretch;
@@ -36,7 +36,7 @@ namespace ZeroUI.WinForms.Layout
         private int _borderWidth = 0;
         private bool _isPerformingLayout = false;
 
-        public StackPanel()
+        public ZStackPanel()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -307,7 +307,21 @@ namespace ZeroUI.WinForms.Layout
 
     [Obsolete("Use StackPanel instead.")]
     [ToolboxItem(false)]
-    public class ZeroStackPanel : StackPanel
+    public class ZeroStackPanel : ZStackPanel
     {
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZStackPanel"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("StackPanel is deprecated and will be removed in 5 release cycles. Please migrate to ZStackPanel instead.")]
+    [ToolboxItem(false)]
+    public class StackPanel : ZStackPanel
+    {
+    }
+
+    #endregion
 }

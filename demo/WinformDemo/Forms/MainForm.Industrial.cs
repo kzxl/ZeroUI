@@ -13,6 +13,7 @@ using ZeroUI.WinForms.Theme;
 using ZeroUI.Core.Data;
 using ZeroUI.WinForms.Industrial;
 using ZeroUI.WinForms.Water;
+using ZeroUI.WinForms.Workflow;
 
 namespace ZeroUI.Samples.WinformDemo.Forms
 {
@@ -72,7 +73,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Orientation = Orientation.Vertical,
                 SplitterDistance = 540
             };
-            splitPetro.Panel1.Controls.Add(new DistillationColumn { Dock = DockStyle.Fill });
+            splitPetro.Panel1.Controls.Add(new ZDistillationColumn { Dock = DockStyle.Fill });
 
             var tabsPetroRight = new ZeroTabControl
             {
@@ -82,9 +83,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 TabStyle = ZeroTabStyle.Underline
             };
             var tabEsd = new ZeroTabPage("SIS Cause & Effect Matrix", "🚨");
-            tabEsd.Controls.Add(new EsdMatrix { Dock = DockStyle.Fill });
+            tabEsd.Controls.Add(new ZEsdMatrix { Dock = DockStyle.Fill });
             var tabPig = new ZeroTabPage("Pipeline PIG Tracking", "🔍");
-            tabPig.Controls.Add(new PipelinePigMonitor { Dock = DockStyle.Fill });
+            tabPig.Controls.Add(new ZPipelinePigMonitor { Dock = DockStyle.Fill });
 
             tabsPetroRight.AddTab(tabEsd);
             tabsPetroRight.AddTab(tabPig);
@@ -109,9 +110,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 TabStyle = ZeroTabStyle.Underline
             };
             var tabBioreactor = new ZeroTabPage("Sanitary Bioreactor Vessel", "🔬");
-            tabBioreactor.Controls.Add(new BioreactorVessel { Dock = DockStyle.Fill });
+            tabBioreactor.Controls.Add(new ZBioreactorVessel { Dock = DockStyle.Fill });
             var tabCleanroom = new ZeroTabPage("ISO Cleanroom Cascade", "🛡️");
-            tabCleanroom.Controls.Add(new CleanroomEnvHud { Dock = DockStyle.Fill });
+            tabCleanroom.Controls.Add(new ZCleanroomEnvHud { Dock = DockStyle.Fill });
             tabsPharmaLeft.AddTab(tabBioreactor);
             tabsPharmaLeft.AddTab(tabCleanroom);
             splitPharma.Panel1.Controls.Add(tabsPharmaLeft);
@@ -124,9 +125,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 TabStyle = ZeroTabStyle.Underline
             };
             var tabSfc = new ZeroTabPage("ISA-88 Batch SFC Tracker", "📋");
-            tabSfc.Controls.Add(new SfcBatchTracker { Dock = DockStyle.Fill });
+            tabSfc.Controls.Add(new ZSfcBatchTracker { Dock = DockStyle.Fill });
             var tabCip = new ZeroTabPage("CIP/SIP 4 TACT Matrix", "🧼");
-            tabCip.Controls.Add(new CipValidationMatrix { Dock = DockStyle.Fill });
+            tabCip.Controls.Add(new ZCipValidationMatrix { Dock = DockStyle.Fill });
             tabsPharmaRight.AddTab(tabSfc);
             tabsPharmaRight.AddTab(tabCip);
             splitPharma.Panel2.Controls.Add(tabsPharmaRight);
@@ -149,10 +150,10 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Orientation = Orientation.Vertical,
                 SplitterDistance = 520
             };
-            splitWaterTop.Panel1.Controls.Add(new ClarifierBasin { Dock = DockStyle.Fill });
-            splitWaterTop.Panel2.Controls.Add(new ChemicalDosingSkid { Dock = DockStyle.Fill });
+            splitWaterTop.Panel1.Controls.Add(new ZClarifierBasin { Dock = DockStyle.Fill });
+            splitWaterTop.Panel2.Controls.Add(new ZChemicalDosingSkid { Dock = DockStyle.Fill });
             splitWater.Panel1.Controls.Add(splitWaterTop);
-            splitWater.Panel2.Controls.Add(new HydraulicGradientChart { Dock = DockStyle.Fill });
+            splitWater.Panel2.Controls.Add(new ZHydraulicGradientChart { Dock = DockStyle.Fill });
 
             pnlWater.Controls.Add(splitWater);
             tabWater.Controls.Add(pnlWater);
@@ -195,7 +196,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Orientation = Orientation.Vertical,
                 SplitterDistance = 530
             };
-            splitLife.Panel1.Controls.Add(new MicroplateReader { Dock = DockStyle.Fill });
+            splitLife.Panel1.Controls.Add(new ZMicroplateReader { Dock = DockStyle.Fill });
 
             var tabsLifeRight = new ZeroTabControl
             {
@@ -205,9 +206,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 TabStyle = ZeroTabStyle.Underline
             };
             var tabCentrifuge = new ZeroTabPage("Centrifuge RCF Monitor", "🌀");
-            tabCentrifuge.Controls.Add(new CentrifugeMonitor { Dock = DockStyle.Fill });
+            tabCentrifuge.Controls.Add(new ZCentrifugeMonitor { Dock = DockStyle.Fill });
             var tabCold = new ZeroTabPage("-80°C Cold Chain MKT", "🧊");
-            tabCold.Controls.Add(new ColdChainTracker { Dock = DockStyle.Fill });
+            tabCold.Controls.Add(new ZColdChainTracker { Dock = DockStyle.Fill });
             tabsLifeRight.AddTab(tabCentrifuge);
             tabsLifeRight.AddTab(tabCold);
             splitLife.Panel2.Controls.Add(tabsLifeRight);
@@ -224,7 +225,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Orientation = Orientation.Vertical,
                 SplitterDistance = 530
             };
-            splitLogistics.Panel1.Controls.Add(new AgvFleetCanvas { Dock = DockStyle.Fill });
+            splitLogistics.Panel1.Controls.Add(new ZAgvFleetCanvas { Dock = DockStyle.Fill });
 
             var tabsLogisticsRight = new ZeroTabControl
             {
@@ -234,9 +235,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 TabStyle = ZeroTabStyle.Underline
             };
             var tabAsrs = new ZeroTabPage("ASRS Stacker Crane", "🏗️");
-            tabAsrs.Controls.Add(new AsrsCraneVisualizer { Dock = DockStyle.Fill });
+            tabAsrs.Controls.Add(new ZAsrsCraneVisualizer { Dock = DockStyle.Fill });
             var tabConveyor = new ZeroTabPage("Conveyor High-Speed Sorter", "📦");
-            tabConveyor.Controls.Add(new ConveyorMergeMatrix { Dock = DockStyle.Fill });
+            tabConveyor.Controls.Add(new ZConveyorMergeMatrix { Dock = DockStyle.Fill });
             tabsLogisticsRight.AddTab(tabAsrs);
             tabsLogisticsRight.AddTab(tabConveyor);
             splitLogistics.Panel2.Controls.Add(tabsLogisticsRight);
@@ -247,7 +248,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             // 8. Production Scheduling Gantt & Dispatch (MES)
             var tabGantt = new ZeroTabPage("MES Gantt Schedule", "📅");
             var pnlGantt = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12) };
-            var gantt = new GanttControl
+            var gantt = new ZGantt
             {
                 Dock = DockStyle.Fill,
                 ShowCriticalPath = true,

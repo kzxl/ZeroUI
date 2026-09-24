@@ -20,7 +20,7 @@ namespace ZeroUI.WinForms.Layout
     [DefaultEvent("OrderChanged")]
     [Description("Responsive card container with auto-wrapping and interactive drag reordering")]
     [ToolboxBitmap(typeof(ZeroIcons), "FlowLayoutControl.bmp")]
-    public class FlowLayoutControl : Panel
+    public class ZFlowLayout : Panel
     {
         private int _hGap = 8;
         private int _vGap = 8;
@@ -83,7 +83,7 @@ namespace ZeroUI.WinForms.Layout
 
         #endregion
 
-        public FlowLayoutControl()
+        public ZFlowLayout()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -298,4 +298,18 @@ namespace ZeroUI.WinForms.Layout
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZFlowLayout"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("FlowLayoutControl is deprecated and will be removed in 5 release cycles. Please migrate to ZFlowLayout instead.")]
+    [ToolboxItem(false)]
+    public class FlowLayoutControl : ZFlowLayout
+    {
+    }
+
+    #endregion
 }

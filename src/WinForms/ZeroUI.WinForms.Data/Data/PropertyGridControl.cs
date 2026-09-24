@@ -21,7 +21,7 @@ namespace ZeroUI.WinForms.Data
     [DefaultEvent("PropertyValueChanged")]
     [Description("Enterprise property inspector with categories, search filter, and in-place editors")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPropertyGrid.bmp")]
-    public class PropertyGridControl : Control
+    public class ZPropertyGrid : Control
     {
         private readonly PropertyModel _model = new PropertyModel();
         private readonly Panel _searchPanel;
@@ -50,7 +50,7 @@ namespace ZeroUI.WinForms.Data
             }
         }
 
-        public PropertyGridControl()
+        public ZPropertyGrid()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -268,7 +268,7 @@ namespace ZeroUI.WinForms.Data
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="PropertyGridControl"/>.
+    /// Legacy alias for <see cref="ZPropertyGrid"/>.
     /// Preserved for backward compatibility.
     /// </summary>
     [Obsolete("ZeroPropertyGrid is deprecated. Please use PropertyGridControl instead.")]
@@ -276,4 +276,18 @@ namespace ZeroUI.WinForms.Data
     public class ZeroPropertyGrid : PropertyGridControl
     {
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZPropertyGrid"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("PropertyGridControl is deprecated and will be removed in 5 release cycles. Please migrate to ZPropertyGrid instead.")]
+    [ToolboxItem(false)]
+    public class PropertyGridControl : ZPropertyGrid
+    {
+    }
+
+    #endregion
 }

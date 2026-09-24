@@ -12,7 +12,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Column and Bar comparison chart")]
-    public class BarChart : ChartControl
+    public class ZBarChart : ChartControl
     {
         private bool _isHorizontal = false;
         private bool _isStacked = false;
@@ -41,7 +41,7 @@ namespace ZeroUI.WinForms.Charts
             }
         }
 
-        public BarChart()
+        public ZBarChart()
         {
             ChartType = ChartType.Column;
         }
@@ -68,12 +68,12 @@ namespace ZeroUI.WinForms.Charts
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="BarChart"/>.
+    /// Legacy alias for <see cref="ZBarChart"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroBarChart is deprecated. Please use BarChart instead.")]
+    [Obsolete("ZeroBarChart is deprecated and will be removed in 5 release cycles. Please migrate to ZBarChart instead.")]
     [ToolboxItem(false)]
-    public class ZeroBarChart : BarChart
+    public class ZeroBarChart : ZBarChart
     {
         public new ZeroUI.WinForms.Charts.Model.ZeroChartLegendPosition LegendPosition
         {
@@ -87,4 +87,18 @@ namespace ZeroUI.WinForms.Charts
             set => base.ChartType = (ZeroUI.WinForms.Charts.Model.ChartType)value;
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZBarChart"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("BarChart is deprecated and will be removed in 5 release cycles. Please migrate to ZBarChart instead.")]
+    [ToolboxItem(false)]
+    public class BarChart : ZBarChart
+    {
+    }
+
+    #endregion
 }

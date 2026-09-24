@@ -67,7 +67,7 @@ namespace ZeroUI.WinForms.Layout
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Positions child controls within a flexible rows and columns grid structure.")]
-    public class TablePanel : Panel
+    public class ZTablePanel : Panel
     {
         private readonly List<TableColumnDefinition> _columns = new List<TableColumnDefinition>();
         private readonly List<TableRowDefinition> _rows = new List<TableRowDefinition>();
@@ -78,7 +78,7 @@ namespace ZeroUI.WinForms.Layout
         private Color _gridLineColor = Color.FromArgb(46, 52, 78);
         private bool _isPerformingLayout = false;
 
-        public TablePanel()
+        public ZTablePanel()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -383,7 +383,21 @@ namespace ZeroUI.WinForms.Layout
 
     [Obsolete("Use TablePanel instead.")]
     [ToolboxItem(false)]
-    public class ZeroTablePanel : TablePanel
+    public class ZeroTablePanel : ZTablePanel
     {
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZTablePanel"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("TablePanel is deprecated and will be removed in 5 release cycles. Please migrate to ZTablePanel instead.")]
+    [ToolboxItem(false)]
+    public class TablePanel : ZTablePanel
+    {
+    }
+
+    #endregion
 }

@@ -2,10 +2,10 @@ using System;
 using System.Reflection;
 using Xunit;
 using WpfLinearGauge = ZeroUI.Wpf.Industrial.LinearGauge;
-using WinFormsLinearGauge = ZeroUI.WinForms.Industrial.LinearGauge;
-using WinFormsProductionCounter = ZeroUI.WinForms.Industrial.ProductionCounter;
-using WinFormsCircularGauge = ZeroUI.WinForms.Industrial.CircularGauge;
-using WinFormsPidFaceplate = ZeroUI.WinForms.Industrial.PidFaceplate;
+using WinFormsLinearGauge = ZeroUI.WinForms.Industrial.ZLinearGauge;
+using WinFormsProductionCounter = ZeroUI.WinForms.Industrial.ZProductionCounter;
+using WinFormsCircularGauge = ZeroUI.WinForms.Industrial.ZCircularGauge;
+using WinFormsPidFaceplate = ZeroUI.WinForms.Industrial.ZPidFaceplate;
 using ZeroUI.WinForms.Base;
 using ZeroUI.Core.Scada;
 

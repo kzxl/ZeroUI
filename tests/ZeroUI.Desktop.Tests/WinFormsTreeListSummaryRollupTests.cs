@@ -174,9 +174,8 @@ namespace ZeroUI.Desktop.Tests
                     Assert.Equal(TreeListDropPosition.AsChild, e.Position);
                 };
 
-                // Simulate drop child1 as child of root2
                 // Reflection call or internal ExecuteDrop
-                var method = typeof(TreeList).GetMethod("ExecuteDrop",
+                var method = typeof(ZTreeList).GetMethod("ExecuteDrop",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 Assert.NotNull(method);
 

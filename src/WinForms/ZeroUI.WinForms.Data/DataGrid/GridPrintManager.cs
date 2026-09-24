@@ -16,7 +16,7 @@ namespace ZeroUI.WinForms.DataGrid
     /// </summary>
     public sealed class GridPrintManager : IDisposable
     {
-        private readonly GridControl _grid;
+        private readonly ZGrid _grid;
         private int _currentPrintRow = 0;
         private int _pageNumber = 1;
         private PrintDocument? _printDocument;
@@ -27,7 +27,7 @@ namespace ZeroUI.WinForms.DataGrid
         public int RowHeight { get; set; } = 22;
         public int HeaderHeight { get; set; } = 26;
 
-        public GridPrintManager(GridControl grid)
+        public GridPrintManager(ZGrid grid)
         {
             _grid = grid ?? throw new ArgumentNullException(nameof(grid));
         }

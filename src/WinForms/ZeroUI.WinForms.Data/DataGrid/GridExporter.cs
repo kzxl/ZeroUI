@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.DataGrid
     {
         public static Task<int> ExportToXlsxAsync(
             IZeroVirtualSource dataSource,
-            GridControl grid,
+            ZGrid grid,
             string filePath,
             string sheetName = "Sheet1",
             IProgress<int>? progress = null,
@@ -35,7 +35,7 @@ namespace ZeroUI.WinForms.DataGrid
 
         public static Task<int> ExportToCsvAsync(
             IZeroVirtualSource dataSource,
-            GridControl grid,
+            ZGrid grid,
             string filePath,
             IProgress<int>? progress = null,
             CancellationToken cancellationToken = default)
@@ -61,7 +61,7 @@ namespace ZeroUI.WinForms.DataGrid
     {
         public static Task<int> ExportToXlsxAsync(
             IZeroVirtualSource dataSource,
-            GridControl grid,
+            ZGrid grid,
             string filePath,
             string sheetName = "Sheet1",
             IProgress<int>? progress = null,
@@ -70,7 +70,7 @@ namespace ZeroUI.WinForms.DataGrid
 
         public static Task<int> ExportToCsvAsync(
             IZeroVirtualSource dataSource,
-            GridControl grid,
+            ZGrid grid,
             string filePath,
             IProgress<int>? progress = null,
             CancellationToken cancellationToken = default) =>

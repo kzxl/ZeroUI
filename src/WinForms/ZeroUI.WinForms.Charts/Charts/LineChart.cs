@@ -12,7 +12,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Line and Area trend chart")]
-    public class LineChart : ChartControl
+    public class ZLineChart : ChartControl
     {
         private bool _isCurved = true;
         private bool _isArea = true;
@@ -41,7 +41,7 @@ namespace ZeroUI.WinForms.Charts
             }
         }
 
-        public LineChart()
+        public ZLineChart()
         {
             ChartType = ChartType.SplineArea;
         }
@@ -68,12 +68,12 @@ namespace ZeroUI.WinForms.Charts
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="LineChart"/>.
+    /// Legacy alias for <see cref="ZLineChart"/>.
     /// Preserved for backward compatibility.
     /// </summary>
-    [Obsolete("ZeroLineChart is deprecated. Please use LineChart instead.")]
+    [Obsolete("ZeroLineChart is deprecated and will be removed in 5 release cycles. Please migrate to ZLineChart instead.")]
     [ToolboxItem(false)]
-    public class ZeroLineChart : LineChart
+    public class ZeroLineChart : ZLineChart
     {
         public new ZeroUI.WinForms.Charts.Model.ZeroChartLegendPosition LegendPosition
         {
@@ -87,4 +87,18 @@ namespace ZeroUI.WinForms.Charts
             set => base.ChartType = (ZeroUI.WinForms.Charts.Model.ChartType)value;
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZLineChart"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("LineChart is deprecated and will be removed in 5 release cycles. Please migrate to ZLineChart instead.")]
+    [ToolboxItem(false)]
+    public class LineChart : ZLineChart
+    {
+    }
+
+    #endregion
 }
