@@ -55,6 +55,23 @@ namespace ZeroUI.WinForms.Editors
 
         #region Properties
 
+        [Category("Layout")]
+        [DefaultValue(false)]
+        [Browsable(true)]
+        [Description("Automatically resizes the label based on its text and font content.")]
+        public override bool AutoSize
+        {
+            get => base.AutoSize;
+            set
+            {
+                base.AutoSize = value;
+                if (value)
+                {
+                    Size = GetPreferredSize(Size.Empty);
+                }
+            }
+        }
+
         [Category("Appearance")]
         [DefaultValue(true)]
         [Description("Indicates whether text that exceeds the label boundary is automatically trimmed with an ellipsis (...).")]

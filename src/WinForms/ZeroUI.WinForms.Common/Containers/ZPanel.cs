@@ -243,6 +243,19 @@ namespace ZeroUI.WinForms.Containers
             }
         }
 
+        public override Rectangle DisplayRectangle
+        {
+            get
+            {
+                int borderW = (_borderStyle != PanelBorderStyle.None && _borderThickness > 0) ? (int)Math.Ceiling(_borderThickness) : 0;
+                int padLeft = Padding.Left + borderW;
+                int padRight = Padding.Right + borderW;
+                int padTop = Padding.Top + borderW;
+                int padBottom = Padding.Bottom + borderW;
+                return new Rectangle(padLeft, padTop, Math.Max(0, Width - padLeft - padRight), Math.Max(0, Height - padTop - padBottom));
+            }
+        }
+
         [Browsable(false)]
         public float DpiScale => _currentDpiScale;
 

@@ -193,6 +193,70 @@ namespace ZeroUI.WinForms.Editors
             set => _innerBox.MaxLength = value;
         }
 
+        [Browsable(false)]
+        public int SelectionStart
+        {
+            get => _innerBox.SelectionStart;
+            set => _innerBox.SelectionStart = value;
+        }
+
+        [Browsable(false)]
+        public int SelectionLength
+        {
+            get => _innerBox.SelectionLength;
+            set => _innerBox.SelectionLength = value;
+        }
+
+        [Browsable(false)]
+        public string SelectedText
+        {
+            get => _innerBox.SelectedText;
+            set => _innerBox.SelectedText = value;
+        }
+
+        [Browsable(false)]
+        public string[] Lines
+        {
+            get => _innerBox.Lines;
+            set => _innerBox.Lines = value;
+        }
+
+
+        /// <summary>
+        /// Appends text to the current contents of the text box.
+        /// </summary>
+        public void AppendText(string text) => _innerBox.AppendText(text);
+
+        /// <summary>
+        /// Copies the current selection in the text box to the Clipboard.
+        /// </summary>
+        public void Copy() => _innerBox.Copy();
+
+        /// <summary>
+        /// Moves the current selection in the text box to the Clipboard.
+        /// </summary>
+        public void Cut() => _innerBox.Cut();
+
+        /// <summary>
+        /// Replaces the current selection in the text box with the contents of the Clipboard.
+        /// </summary>
+        public void Paste() => _innerBox.Paste();
+
+        /// <summary>
+        /// Undoes the last edit operation in the text box.
+        /// </summary>
+        public void Undo() => _innerBox.Undo();
+
+        /// <summary>
+        /// Scrolls the contents of the control to the current caret position.
+        /// </summary>
+        public void ScrollToCaret() => _innerBox.ScrollToCaret();
+
+        /// <summary>
+        /// Sets input focus to the inner text editor.
+        /// </summary>
+        public new bool Focus() => _innerBox.Focus();
+
         public TextEdit()
         {
             BackColor = Color.Transparent;

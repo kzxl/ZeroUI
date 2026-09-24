@@ -88,6 +88,53 @@ namespace ZeroUI.WinForms.Editors
             set { _showPercentage = value; Invalidate(); }
         }
 
+        private int _step = 10;
+
+        [Category("Behavior")]
+        [DefaultValue(10)]
+        [Description("The amount by which to increment the current value when the PerformStep method is called.")]
+        public int Step
+        {
+            get => _step;
+            set => _step = value;
+        }
+
+        /// <summary>
+        /// Advances the current position of the progress bar by the amount of the Step property.
+        /// </summary>
+        public void PerformStep()
+        {
+            Value = Math.Min(_maximum, _value + _step);
+        }
+
+        /// <summary>
+        /// Advances the current position of the progress bar by the specified amount.
+        /// </summary>
+        public void Increment(int value)
+        {
+            Value = Math.Min(_maximum, _value + value);
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(ProgressBarStyle.Blocks)]
+        [Description("The manner in which progress should be indicated on the progress bar.")]
+        public ProgressBarStyle Style
+        {
+            get => _isIndeterminate ? ProgressBarStyle.Marquee : ProgressBarStyle.Blocks;
+            set => IsIndeterminate = (value == ProgressBarStyle.Marquee);
+        }
+
+        private int _marqueeAnimationSpeed = 100;
+
+        [Category("Behavior")]
+        [DefaultValue(100)]
+        [Description("The time period, in milliseconds, that it takes the marquee blocks to scroll across the progress bar.")]
+        public int MarqueeAnimationSpeed
+        {
+            get => _marqueeAnimationSpeed;
+            set => _marqueeAnimationSpeed = value;
+        }
+
         [Category("Behavior")]
         [DefaultValue(false)]
         public bool IsIndeterminate

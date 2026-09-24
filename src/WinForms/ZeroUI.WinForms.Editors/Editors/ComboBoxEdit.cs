@@ -668,7 +668,7 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Backward-compatibility alias for <see cref="ComboBoxEdit"/>.
     /// </summary>
-    [Obsolete("ZeroComboBox is deprecated. Use ComboBoxEdit instead.")]
+    [Obsolete("ZeroComboBox is deprecated and will be removed in 5 release cycles. Please migrate to ZComboBox instead.")]
     [ToolboxItem(false)]
     public class ZeroComboBox : ComboBoxEdit
     {

@@ -101,7 +101,7 @@ namespace ZeroUI.WinForms.Editors
         }
 
         [Category("Appearance")]
-        [DefaultValue("ZeroCheckBox")]
+        [DefaultValue("CheckBox")]
 #pragma warning disable CS8765, CS8764
         public override string Text
         {
@@ -184,9 +184,20 @@ namespace ZeroUI.WinForms.Editors
             }
         }
 
+        private bool _autoCheck = true;
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        [Description("Gets or sets a value indicating whether the Checked or CheckState value and the check box's appearance are automatically changed when the check box is clicked.")]
+        public bool AutoCheck
+        {
+            get => _autoCheck;
+            set => _autoCheck = value;
+        }
+
         public void Toggle()
         {
-            if (ReadOnly || !Enabled) return;
+            if (ReadOnly || !Enabled || !_autoCheck) return;
 
             if (_threeState)
             {

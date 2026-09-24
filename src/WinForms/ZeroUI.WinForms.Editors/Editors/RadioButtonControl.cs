@@ -56,7 +56,7 @@ namespace ZeroUI.WinForms.Editors
         }
 
         [Category("Appearance")]
-        [DefaultValue("ZeroRadioButton")]
+        [DefaultValue("RadioButton")]
 #pragma warning disable CS8765, CS8764
         public override string Text
         {
