@@ -23,6 +23,7 @@ namespace ZeroUI.WinForms.PivotGrid
     [DefaultEvent("CellClick")]
     [Description("Multidimensional cross-tab OLAP reporting grid with dynamic grouping, aggregations, and grand totals")]
     [ToolboxBitmap(typeof(ZeroIcons), "PivotGridControl.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Data.ZPivotGridDesigner, ZeroUI.WinForms.Design")]
     public class ZPivotGrid : Control
     {
         private readonly PivotEngine _engine = new PivotEngine();
@@ -102,7 +103,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 ControlStyles.SupportsTransparentBackColor, true);
             DoubleBuffered = true;
             BackColor = ZeroTheme.Colors.Surface;
-            Size = new Size(650, 420);
+
 
             _vScrollBar = new VScrollBar
             {
@@ -224,6 +225,7 @@ namespace ZeroUI.WinForms.PivotGrid
 
         private void UpdateScrollBars()
         {
+            if (_vScrollBar == null || _hScrollBar == null) return;
             if (_model == null)
             {
                 _vScrollBar.Visible = false;

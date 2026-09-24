@@ -260,5 +260,73 @@ namespace ZeroUI.Desktop.Tests
             Assert.Equal(UITypeEditorEditStyle.DropDown, editor.GetEditStyle(null));
             Assert.True(editor.GetPaintValueSupported(null));
         }
+
+        [Fact]
+        public void ZTreeList_InitialState_HasEmptyColumns()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var treeList = new ZeroUI.WinForms.Data.ZTreeList();
+                Assert.NotNull(treeList.Columns);
+                Assert.Empty(treeList.Columns);
+            });
+        }
+
+        [Fact]
+        public void ZTreeList_HasDesignerAttributeRegistered()
+        {
+            var attributes = TypeDescriptor.GetAttributes(typeof(ZeroUI.WinForms.Data.ZTreeList));
+            var designerAttr = attributes.OfType<DesignerAttribute>().FirstOrDefault();
+            Assert.NotNull(designerAttr);
+            Assert.Contains("ZTreeListDesigner", designerAttr.DesignerTypeName);
+        }
+
+        [Fact]
+        public void ZTreeListActionList_ManipulatesPropertiesCorrectly()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var treeList = new ZeroUI.WinForms.Data.ZTreeList();
+                var actionList = new ZTreeListActionList(treeList);
+
+                actionList.KeyFieldName = "Id";
+                actionList.ParentFieldName = "ParentId";
+                actionList.ShowCheckBoxes = false;
+                actionList.ShowLines = true;
+                actionList.ShowColumnHeaders = true;
+
+                Assert.Equal("Id", treeList.KeyFieldName);
+                Assert.Equal("ParentId", treeList.ParentFieldName);
+                Assert.False(treeList.ShowCheckBoxes);
+                Assert.True(treeList.ShowLines);
+                Assert.True(treeList.ShowColumnHeaders);
+            });
+        }
+
+        [Fact]
+        public void ZPivotGrid_HasDesignerAttributeRegistered()
+        {
+            var attributes = TypeDescriptor.GetAttributes(typeof(ZeroUI.WinForms.PivotGrid.ZPivotGrid));
+            var designerAttr = attributes.OfType<DesignerAttribute>().FirstOrDefault();
+            Assert.NotNull(designerAttr);
+            Assert.Contains("ZPivotGridDesigner", designerAttr.DesignerTypeName);
+        }
+
+        [Fact]
+        public void ZPivotGridActionList_ReturnsExpectedActionItems()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var pivot = new ZeroUI.WinForms.PivotGrid.ZPivotGrid();
+                var actionList = new ZPivotGridActionList(pivot);
+                var items = actionList.GetSortedActionItems();
+
+                Assert.NotNull(items);
+                Assert.NotEmpty(items);
+
+                actionList.Dock = DockStyle.Fill;
+                Assert.Equal(DockStyle.Fill, pivot.Dock);
+            });
+        }
     }
 }

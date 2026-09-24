@@ -99,9 +99,35 @@ namespace ZeroUI.WinForms.Design.Forms
                 Margin = new Padding(0, 0, 10, 0)
             };
 
+            var btnExportCs = new Button
+            {
+                Text = "⚡ Export C# Setup",
+                Width = 140,
+                Height = 32,
+                Dock = DockStyle.Left,
+                BackColor = Color.FromArgb(79, 70, 229),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnExportCs.FlatAppearance.BorderSize = 0;
+            btnExportCs.Click += (s, e) => ShowGeneratedCSharp();
+
+            var btnExportXaml = new Button
+            {
+                Text = "Export XAML",
+                Width = 110,
+                Height = 32,
+                Dock = DockStyle.Left,
+                Margin = new Padding(8, 0, 0, 0)
+            };
+            btnExportXaml.Click += (s, e) => ShowGeneratedXaml();
+
             pnlBottom.Controls.Add(_btnCancel);
             pnlBottom.Controls.Add(new Label { Width = 10, Dock = DockStyle.Right });
             pnlBottom.Controls.Add(_btnOk);
+            pnlBottom.Controls.Add(btnExportCs);
+            pnlBottom.Controls.Add(new Label { Width = 10, Dock = DockStyle.Left });
+            pnlBottom.Controls.Add(btnExportXaml);
 
             // Main Split
             var split = new SplitContainer
@@ -270,6 +296,50 @@ namespace ZeroUI.WinForms.Design.Forms
         private void ApplyChanges()
         {
             _chart.Invalidate();
+        }
+
+        private void ShowGeneratedCSharp()
+        {
+            string chartTypeName = _lstChartTypes.SelectedIndex switch
+            {
+                1 => "ChartType.Line",
+                2 => "ChartType.Area",
+                3 => "ChartType.Pie",
+                _ => "ChartType.Column"
+            };
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("// ZeroUI Chart Setup (C#)");
+            sb.AppendLine($"chart.ChartType = {chartTypeName};");
+            sb.AppendLine($"chart.Title = \"{_txtChartTitle.Text}\";");
+            sb.AppendLine($"chart.ShowTooltips = {_chkShowTooltip.Checked.ToString().ToLower()};");
+            sb.AppendLine($"chart.ShowCrosshair = {_chkShowCrosshair.Checked.ToString().ToLower()};");
+            sb.AppendLine($"chart.LegendPosition = {(_chkShowLegend.Checked ? "ChartLegendPosition.Top" : "ChartLegendPosition.None")};");
+
+            using var dlg = new CodeExportForm("ZeroUI Chart - Generated C# Setup Code", "C#", sb.ToString());
+            dlg.ShowDialog(this);
+        }
+
+        private void ShowGeneratedXaml()
+        {
+            string chartTypeName = _lstChartTypes.SelectedIndex switch
+            {
+                1 => "Line",
+                2 => "Area",
+                3 => "Pie",
+                _ => "Column"
+            };
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("<!-- ZeroUI Chart Control (WPF XAML) -->");
+            sb.AppendLine($"<z:ZChart ChartType=\"{chartTypeName}\"");
+            sb.AppendLine($"         Title=\"{_txtChartTitle.Text}\"");
+            sb.AppendLine($"         ShowTooltips=\"{_chkShowTooltip.Checked.ToString().ToLower()}\"");
+            sb.AppendLine($"         ShowCrosshair=\"{_chkShowCrosshair.Checked.ToString().ToLower()}\"");
+            sb.AppendLine($"         LegendPosition=\"{(_chkShowLegend.Checked ? "Top" : "None")}\" />");
+
+            using var dlg = new CodeExportForm("ZeroUI Chart - Generated XAML Template", "XAML", sb.ToString());
+            dlg.ShowDialog(this);
         }
     }
 }

@@ -206,6 +206,7 @@ namespace ZeroUI.WinForms.Data
     [DefaultEvent("NodeSelected")]
     [Description("High-performance virtualized hierarchical Tree and BOM TreeList control")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTreeList.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Data.ZTreeListDesigner, ZeroUI.WinForms.Design")]
     public partial class ZTreeList : Control
     {
         private readonly List<ZeroTreeNode> _nodes = new List<ZeroTreeNode>();

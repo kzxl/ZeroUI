@@ -134,9 +134,35 @@ namespace ZeroUI.WinForms.Design.Forms
                 Margin = new Padding(0, 0, 10, 0)
             };
 
+            var btnExportCs = new Button
+            {
+                Text = "⚡ Export C# Setup",
+                Width = 140,
+                Height = 32,
+                Dock = DockStyle.Left,
+                BackColor = Color.FromArgb(79, 70, 229),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnExportCs.FlatAppearance.BorderSize = 0;
+            btnExportCs.Click += (s, e) => ShowGeneratedCSharp();
+
+            var btnExportXaml = new Button
+            {
+                Text = "Export XAML",
+                Width = 110,
+                Height = 32,
+                Dock = DockStyle.Left,
+                Margin = new Padding(8, 0, 0, 0)
+            };
+            btnExportXaml.Click += (s, e) => ShowGeneratedXaml();
+
             pnlBottom.Controls.Add(_btnCancel);
             pnlBottom.Controls.Add(new Label { Width = 10, Dock = DockStyle.Right });
             pnlBottom.Controls.Add(_btnOk);
+            pnlBottom.Controls.Add(btnExportCs);
+            pnlBottom.Controls.Add(new Label { Width = 10, Dock = DockStyle.Left });
+            pnlBottom.Controls.Add(btnExportXaml);
 
             // Main Split
             var splitMain = new SplitContainer
@@ -441,6 +467,47 @@ namespace ZeroUI.WinForms.Design.Forms
                 });
             }
             _grid.Invalidate();
+        }
+
+        private void ShowGeneratedCSharp()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("// ZeroUI DataGrid Column Setup (C#)");
+            sb.AppendLine("grid.Columns.Clear();");
+            foreach (var col in _workingColumns)
+            {
+                string alignStr = col.Alignment switch
+                {
+                    HorizontalAlignment.Center => "CellAlignment.Center",
+                    HorizontalAlignment.Right => "CellAlignment.Right",
+                    _ => "CellAlignment.Left"
+                };
+                sb.AppendLine($"grid.Columns.Add(new ZeroColumn(\"{col.FieldName}\", \"{col.Caption}\", {col.Width}, {alignStr}) {{ IsVisible = {col.IsVisible.ToString().ToLower()} }});");
+            }
+
+            using var dlg = new CodeExportForm("ZeroUI Grid - Generated C# Setup Code", "C#", sb.ToString());
+            dlg.ShowDialog(this);
+        }
+
+        private void ShowGeneratedXaml()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("<!-- ZeroUI DataGrid Columns (WPF XAML) -->");
+            sb.AppendLine("<z:ZGrid.Columns>");
+            foreach (var col in _workingColumns)
+            {
+                string alignStr = col.Alignment switch
+                {
+                    HorizontalAlignment.Center => "Center",
+                    HorizontalAlignment.Right => "Right",
+                    _ => "Left"
+                };
+                sb.AppendLine($"    <z:ZeroColumn FieldName=\"{col.FieldName}\" HeaderText=\"{col.Caption}\" Width=\"{col.Width}\" Alignment=\"{alignStr}\" IsVisible=\"{col.IsVisible.ToString().ToLower()}\" />");
+            }
+            sb.AppendLine("</z:ZGrid.Columns>");
+
+            using var dlg = new CodeExportForm("ZeroUI Grid - Generated XAML Template", "XAML", sb.ToString());
+            dlg.ShowDialog(this);
         }
 
         private class GridColumnDefinition
