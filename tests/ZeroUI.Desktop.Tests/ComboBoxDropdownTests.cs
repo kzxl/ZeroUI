@@ -27,7 +27,7 @@ namespace ZeroUI.Desktop.Tests
                 combo.ShowDropDown();
 
                 // Check internal list control scrollbar
-                var field = typeof(ComboBoxEdit).GetField("_listControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var field = typeof(ZComboBox).GetField("_listControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 Assert.NotNull(field);
                 var listControl = (Control)field.GetValue(combo)!;
                 var vScrollBar = listControl.Controls.OfType<VScrollBar>().FirstOrDefault();
