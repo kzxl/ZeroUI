@@ -13,7 +13,7 @@ namespace ZeroUI.Wpf.Editors
     /// Modern connected button group (Action Cluster / Action Strip) for WPF with vector rendering,
     /// seamless border geometry, toggle grouping, and dynamic theme reactivity.
     /// </summary>
-    public class ButtonGroup : FrameworkElement
+    public class ZButtonGroup : FrameworkElement
     {
         private readonly ButtonGroupModel _model = new ButtonGroupModel();
         private readonly List<Rect> _itemBounds = new List<Rect>();
@@ -23,19 +23,19 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(ButtonGroup),
+            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(ZButtonGroup),
                 new FrameworkPropertyMetadata(6.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty SelectionModeProperty =
-            DependencyProperty.Register(nameof(SelectionMode), typeof(ButtonGroupSelectionMode), typeof(ButtonGroup),
+            DependencyProperty.Register(nameof(SelectionMode), typeof(ButtonGroupSelectionMode), typeof(ZButtonGroup),
                 new FrameworkPropertyMetadata(ButtonGroupSelectionMode.None, OnSelectionModeChanged));
 
         public static readonly DependencyProperty SizeModeProperty =
-            DependencyProperty.Register(nameof(SizeMode), typeof(ButtonGroupSizeMode), typeof(ButtonGroup),
+            DependencyProperty.Register(nameof(SizeMode), typeof(ButtonGroupSizeMode), typeof(ZButtonGroup),
                 new FrameworkPropertyMetadata(ButtonGroupSizeMode.AutoFit, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ItemPaddingHorizontalProperty =
-            DependencyProperty.Register(nameof(ItemPaddingHorizontal), typeof(double), typeof(ButtonGroup),
+            DependencyProperty.Register(nameof(ItemPaddingHorizontal), typeof(double), typeof(ZButtonGroup),
                 new FrameworkPropertyMetadata(16.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
 
         #endregion
@@ -77,7 +77,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public ButtonGroup()
+        public ZButtonGroup()
         {
             Cursor = Cursors.Hand;
             Focusable = true;
@@ -96,7 +96,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnSelectionModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ButtonGroup group)
+            if (d is ZButtonGroup group)
             {
                 group._model.SelectionMode = (ButtonGroupSelectionMode)e.NewValue;
             }
@@ -594,5 +594,21 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZButtonGroup"/>.
+    /// </summary>
+    [Obsolete("ButtonGroup is deprecated and will be removed in 5 release cycles. Please migrate to ZButtonGroup instead.")]
+    public class ButtonGroup : ZButtonGroup
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZButtonGroup"/>.
+    /// </summary>
+    [Obsolete("ZeroButtonGroup is deprecated and will be removed in 5 release cycles. Please migrate to ZButtonGroup instead.")]
+    public class ZeroButtonGroup : ZButtonGroup
+    {
     }
 }
