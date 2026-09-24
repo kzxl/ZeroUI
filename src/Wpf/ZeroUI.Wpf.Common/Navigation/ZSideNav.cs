@@ -64,7 +64,7 @@ namespace ZeroUI.Wpf.Navigation
     /// Supports brand header, category section grouping, notification badges,
     /// collapsible rail mode (240px ⇄ 64px), and automatic view switching.
     /// </summary>
-    public class SideNav : ZeroWpfControlBase
+    public class ZSideNav : ZeroWpfControlBase
     {
         private readonly ObservableCollection<SideNavItem> _items = new ObservableCollection<SideNavItem>();
         private StackPanel? _itemsStack;
@@ -79,16 +79,16 @@ namespace ZeroUI.Wpf.Navigation
         private int _selectedIndex = 0;
 
         public static readonly DependencyProperty IsCollapsedProperty =
-            DependencyProperty.Register(nameof(IsCollapsed), typeof(bool), typeof(SideNav), new PropertyMetadata(false, OnIsCollapsedChanged));
+            DependencyProperty.Register(nameof(IsCollapsed), typeof(bool), typeof(ZSideNav), new PropertyMetadata(false, OnIsCollapsedChanged));
 
         public static readonly DependencyProperty BrandTitleProperty =
-            DependencyProperty.Register(nameof(BrandTitle), typeof(string), typeof(SideNav), new PropertyMetadata("ZeroUI Suite", OnBrandPropertyChanged));
+            DependencyProperty.Register(nameof(BrandTitle), typeof(string), typeof(ZSideNav), new PropertyMetadata("ZeroUI Suite", OnBrandPropertyChanged));
 
         public static readonly DependencyProperty BrandSubtitleProperty =
-            DependencyProperty.Register(nameof(BrandSubtitle), typeof(string), typeof(SideNav), new PropertyMetadata("Enterprise Station", OnBrandPropertyChanged));
+            DependencyProperty.Register(nameof(BrandSubtitle), typeof(string), typeof(ZSideNav), new PropertyMetadata("Enterprise Station", OnBrandPropertyChanged));
 
         public static readonly DependencyProperty BrandLogoProperty =
-            DependencyProperty.Register(nameof(BrandLogo), typeof(string), typeof(SideNav), new PropertyMetadata("⚡", OnBrandPropertyChanged));
+            DependencyProperty.Register(nameof(BrandLogo), typeof(string), typeof(ZSideNav), new PropertyMetadata("⚡", OnBrandPropertyChanged));
 
         public bool IsCollapsed
         {
@@ -144,7 +144,7 @@ namespace ZeroUI.Wpf.Navigation
         public event EventHandler<SideNavEventArgs>? ItemSelected;
         public event EventHandler? CollapseChanged;
 
-        public SideNav()
+        public ZSideNav()
         {
             Background = ZeroWpfTheme.BgCard;
             BorderBrush = ZeroWpfTheme.BorderDefault;
@@ -479,10 +479,26 @@ namespace ZeroUI.Wpf.Navigation
     }
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="SideNav"/>.
+    /// Backward-compatibility alias for <see cref="ZSideNav"/>.
     /// </summary>
-    [Obsolete("ZeroSideNav is deprecated. Use SideNav instead.")]
-    public class ZeroSideNav : SideNav
+    [Obsolete("SideNav is deprecated and will be removed in 5 release cycles. Please migrate to ZSideNav instead.")]
+    public class SideNav : ZSideNav
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZSideNav"/>.
+    /// </summary>
+    [Obsolete("ZeroSideNav is deprecated and will be removed in 5 release cycles. Please migrate to ZSideNav instead.")]
+    public class ZeroSideNav : ZSideNav
+    {
+    }
+
+    /// <summary>
+    /// Alias for <see cref="ZSideNav"/> providing parity with WinForms SideNavControl.
+    /// </summary>
+    [Obsolete("SideNavControl is deprecated and will be removed in 5 release cycles. Please migrate to ZSideNav instead.")]
+    public class SideNavControl : ZSideNav
     {
     }
 }

@@ -12,10 +12,10 @@ namespace ZeroUI.Wpf.Navigation
     public class WizardPageValidatingEventArgs : CancelEventArgs
     {
         public int PageIndex { get; }
-        public WizardPage Page { get; }
+        public ZWizardPage Page { get; }
         public string? ErrorMessage { get; set; }
 
-        public WizardPageValidatingEventArgs(int pageIndex, WizardPage page)
+        public WizardPageValidatingEventArgs(int pageIndex, ZWizardPage page)
         {
             PageIndex = pageIndex;
             Page = page;
@@ -27,22 +27,22 @@ namespace ZeroUI.Wpf.Navigation
     /// </summary>
     public class WpfWizardPageValidatingEventArgs : WizardPageValidatingEventArgs
     {
-        public WpfWizardPageValidatingEventArgs(int pageIndex, WizardPage page) : base(pageIndex, page) { }
+        public WpfWizardPageValidatingEventArgs(int pageIndex, ZWizardPage page) : base(pageIndex, page) { }
     }
 
     /// <summary>
     /// Represents an individual step/page container in a Wizard sequence for WPF.
     /// </summary>
-    public class WizardPage : ContentControl
+    public class ZWizardPage : ContentControl
     {
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register(nameof(Title), typeof(string), typeof(WizardPage), new PropertyMetadata("Step Title"));
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(ZWizardPage), new PropertyMetadata("Step Title"));
 
         public static readonly DependencyProperty SubtitleProperty =
-            DependencyProperty.Register(nameof(Subtitle), typeof(string), typeof(WizardPage), new PropertyMetadata("Configure this step."));
+            DependencyProperty.Register(nameof(Subtitle), typeof(string), typeof(ZWizardPage), new PropertyMetadata("Configure this step."));
 
         public static readonly DependencyProperty IconProperty =
-            DependencyProperty.Register(nameof(Icon), typeof(string), typeof(WizardPage), new PropertyMetadata("📋"));
+            DependencyProperty.Register(nameof(Icon), typeof(string), typeof(ZWizardPage), new PropertyMetadata("📋"));
 
         public string Title
         {
@@ -82,9 +82,18 @@ namespace ZeroUI.Wpf.Navigation
     }
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="WizardPage"/>.
+    /// Backward-compatibility alias for <see cref="ZWizardPage"/>.
     /// </summary>
-    public class ZeroWizardPage : WizardPage
+    [Obsolete("WizardPage is deprecated and will be removed in 5 release cycles. Please migrate to ZWizardPage instead.")]
+    public class WizardPage : ZWizardPage
+    {
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZWizardPage"/>.
+    /// </summary>
+    [Obsolete("ZeroWizardPage is deprecated and will be removed in 5 release cycles. Please migrate to ZWizardPage instead.")]
+    public class ZeroWizardPage : ZWizardPage
     {
     }
 
@@ -93,9 +102,9 @@ namespace ZeroUI.Wpf.Navigation
     /// Guides users through sequential configuration steps with step indicators,
     /// per-step validation, back/next/finish navigation, and dark/light theming.
     /// </summary>
-    public class WizardControl : Control
+    public class ZWizard : Control
     {
-        private readonly ObservableCollection<WizardPage> _pages = new ObservableCollection<WizardPage>();
+        private readonly ObservableCollection<ZWizardPage> _pages = new ObservableCollection<ZWizardPage>();
         private int _currentStep = 0;
 
         private TextBlock? _titleBlock;
@@ -108,7 +117,7 @@ namespace ZeroUI.Wpf.Navigation
         private Button? _btnFinish;
         private Button? _btnCancel;
 
-        public ObservableCollection<WizardPage> Pages => _pages;
+        public ObservableCollection<ZWizardPage> Pages => _pages;
 
         public int CurrentStep
         {
@@ -129,12 +138,12 @@ namespace ZeroUI.Wpf.Navigation
 
         private Border? _rootBorder;
 
-        static WizardControl()
+        static ZWizard()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(WizardControl), new FrameworkPropertyMetadata(typeof(WizardControl)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZWizard), new FrameworkPropertyMetadata(typeof(ZWizard)));
         }
 
-        public WizardControl()
+        public ZWizard()
         {
             Background = ZeroWpfTheme.BgCard;
             BorderBrush = ZeroWpfTheme.BorderDefault;
@@ -451,17 +460,33 @@ namespace ZeroUI.Wpf.Navigation
             }
         }
 
-        public void AddPage(WizardPage page)
+        public void AddPage(ZWizardPage page)
         {
             _pages.Add(page);
         }
     }
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="WizardControl"/>.
+    /// Backward-compatibility alias for <see cref="ZWizard"/>.
     /// </summary>
-    [Obsolete("ZeroWizard is deprecated. Use WizardControl instead.")]
-    public class ZeroWizard : WizardControl
+    [Obsolete("WizardControl is deprecated and will be removed in 5 release cycles. Please migrate to ZWizard instead.")]
+    public class WizardControl : ZWizard
     {
+        static WizardControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(WizardControl), new FrameworkPropertyMetadata(typeof(ZWizard)));
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZWizard"/>.
+    /// </summary>
+    [Obsolete("ZeroWizard is deprecated and will be removed in 5 release cycles. Please migrate to ZWizard instead.")]
+    public class ZeroWizard : ZWizard
+    {
+        static ZeroWizard()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroWizard), new FrameworkPropertyMetadata(typeof(ZWizard)));
+        }
     }
 }

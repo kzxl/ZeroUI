@@ -15,7 +15,7 @@ namespace ZeroUI.Wpf.Navigation
     /// Interactive hierarchical path navigator supporting segmented crumb buttons,
     /// chevrons, direct path string editing, back/forward history, and theme reactivity.
     /// </summary>
-    public class BreadcrumbControl : FrameworkElement
+    public class ZBreadcrumb : FrameworkElement
     {
         private readonly ObservableCollection<BreadcrumbItem> _items = new ObservableCollection<BreadcrumbItem>();
         private readonly Stack<string> _backHistory = new Stack<string>();
@@ -289,10 +289,18 @@ namespace ZeroUI.Wpf.Navigation
     }
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="BreadcrumbControl"/>.
+    /// Backward-compatibility alias for <see cref="ZBreadcrumb"/>.
     /// </summary>
-    [Obsolete("ZeroBreadcrumb is deprecated. Use BreadcrumbControl instead.")]
-    public class ZeroBreadcrumb : BreadcrumbControl
+    [Obsolete("BreadcrumbControl is deprecated and will be removed in 5 release cycles. Please migrate to ZBreadcrumb instead.")]
+    public class BreadcrumbControl : ZBreadcrumb
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZBreadcrumb"/>.
+    /// </summary>
+    [Obsolete("ZeroBreadcrumb is deprecated and will be removed in 5 release cycles. Please migrate to ZBreadcrumb instead.")]
+    public class ZeroBreadcrumb : ZBreadcrumb
     {
     }
 }
