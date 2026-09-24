@@ -299,5 +299,128 @@ namespace ZeroUI.Desktop.Tests
                 onPaintMethod.Invoke(viewer, new object[] { pe });
             });
         }
+
+        [Fact]
+        public void Wpf_ZAnnotationCanvas_AddAndBurn_WorksCorrectly()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var canvas = new ZeroUI.Wpf.Media.ZAnnotationCanvas
+                {
+                    Width = 400,
+                    Height = 300
+                };
+
+                var item = new ZeroUI.Wpf.Media.VisualAnnotationItem
+                {
+                    ShapeType = AnnotationShapeType.BoundingBox,
+                    Severity = AnnotationSeverity.Defect,
+                    Label = "Scratch #1",
+                    StartPoint = new System.Windows.Point(20, 20),
+                    EndPoint = new System.Windows.Point(100, 80)
+                };
+
+                canvas.Annotations.Add(item);
+                Assert.Single(canvas.Annotations);
+                Assert.Equal("Scratch #1", canvas.Annotations[0].Label);
+
+                var src = CreateTestWpfBitmap(200, 200);
+                var burned = canvas.BurnAnnotationsToBitmap(src);
+                Assert.NotNull(burned);
+                Assert.Equal(200, burned.PixelWidth);
+                Assert.Equal(200, burned.PixelHeight);
+            });
+        }
+
+        [Fact]
+        public void Wpf_ZMeasurementRuler_Calculations_AreAccurate()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var ruler = new ZeroUI.Wpf.Media.ZMeasurementRuler
+                {
+                    CalibrationFactor = 0.5,
+                    Unit = MeasurementUnit.Millimeter,
+                    Mode = MeasurementMode.LinearDistance
+                };
+
+                Assert.Equal(0.5, ruler.CalibrationFactor);
+                Assert.Equal(MeasurementUnit.Millimeter, ruler.Unit);
+            });
+        }
+
+        [Fact]
+        public void Wpf_ZWatermarkOverlay_Burn_ProducesValidBitmap()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var watermark = new ZeroUI.Wpf.Media.ZWatermarkOverlay
+                {
+                    WatermarkText = "TEST WATERMARK",
+                    WatermarkOpacity = 0.3,
+                    Placement = WatermarkPlacement.Center
+                };
+
+                var src = CreateTestWpfBitmap(300, 200);
+                var result = watermark.BurnWatermarkToBitmap(src);
+                Assert.NotNull(result);
+                Assert.Equal(300, result.PixelWidth);
+                Assert.Equal(200, result.PixelHeight);
+            });
+        }
+
+        [Fact]
+        public void Wpf_ZVideoPlayer_Commands_ExecuteSafely()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var player = new ZeroUI.Wpf.Media.ZVideoPlayer();
+                Assert.Equal(MediaPlaybackState.Stopped, player.PlaybackState);
+                Assert.Equal(0.8, player.Volume);
+                Assert.False(player.IsMuted);
+
+                player.Volume = 0.5;
+                Assert.Equal(0.5, player.Volume);
+                player.IsMuted = true;
+                Assert.True(player.IsMuted);
+            });
+        }
+
+        [Fact]
+        public void Wpf_ZAudioWaveform_Properties_AndProgress_Work()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var wf = new ZeroUI.Wpf.Media.ZAudioWaveform();
+                Assert.Equal(0.0, wf.Progress);
+                wf.Progress = 0.75;
+                Assert.Equal(0.75, wf.Progress);
+
+                wf.WaveformData = new float[] { 0.1f, 0.5f, 0.8f, 0.3f };
+                Assert.Equal(4, wf.WaveformData.Count);
+            });
+        }
+
+        [Fact]
+        public void Wpf_ZDocumentDeskew_Binarize_WorksCorrectly()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var deskew = new ZeroUI.Wpf.Media.ZDocumentDeskew
+                {
+                    DeskewAngle = 5.0,
+                    IsBinarizationEnabled = true,
+                    Threshold = 120
+                };
+
+                var src = CreateTestWpfBitmap(100, 100);
+                deskew.Source = src;
+                var processed = deskew.GetProcessedBitmap();
+                Assert.NotNull(processed);
+                Assert.Equal(100, processed.PixelWidth);
+                Assert.Equal(100, processed.PixelHeight);
+            });
+        }
     }
 }
+

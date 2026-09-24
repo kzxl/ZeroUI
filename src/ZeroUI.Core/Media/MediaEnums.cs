@@ -79,4 +79,80 @@ namespace ZeroUI.Core.Media
         ColorProbe = 1 << 5,
         All = Toolbar | StatusBar | MiniMap | PixelGrid | Loupe | ColorProbe
     }
+
+    /// <summary>
+    /// Supported visual annotation primitive types for inspection &amp; QC tagging.
+    /// </summary>
+    public enum AnnotationShapeType : byte
+    {
+        BoundingBox = 0,
+        Arrow = 1,
+        Line = 2,
+        Ellipse = 3,
+        TextCallout = 4,
+        Highlighter = 5,
+        BlurPixelate = 6
+    }
+
+    /// <summary>
+    /// Quality inspection severity levels for defect tagging.
+    /// </summary>
+    public enum AnnotationSeverity : byte
+    {
+        Info = 0,
+        Ok = 1,
+        Warning = 2,
+        Defect = 3,
+        Critical = 4
+    }
+
+    /// <summary>
+    /// Measurement physical calibration units.
+    /// </summary>
+    public enum MeasurementUnit : byte
+    {
+        Pixel = 0,
+        Millimeter = 1,
+        Micrometer = 2,
+        Centimeter = 3,
+        Inch = 4
+    }
+
+    /// <summary>
+    /// Measurement modes for interactive precision calipers.
+    /// </summary>
+    public enum MeasurementMode : byte
+    {
+        LinearDistance = 0,
+        ThreePointAngle = 1,
+        PolygonArea = 2,
+        CaliperGauge = 3
+    }
+
+    /// <summary>
+    /// Watermark anchor placement presets.
+    /// </summary>
+    public enum WatermarkPlacement : byte
+    {
+        TopLeft = 0,
+        TopCenter = 1,
+        TopRight = 2,
+        MiddleLeft = 3,
+        Center = 4,
+        MiddleRight = 5,
+        BottomLeft = 6,
+        BottomCenter = 7,
+        BottomRight = 8,
+        DiagonalTiled = 9
+    }
+
+    /// <summary>
+    /// Media playback operational states.
+    /// </summary>
+    public enum MediaPlaybackState : byte
+    {
+        Stopped = 0,
+        Playing = 1,
+        Paused = 2
+    }
 }
