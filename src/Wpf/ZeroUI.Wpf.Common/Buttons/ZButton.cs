@@ -29,20 +29,20 @@ namespace ZeroUI.Wpf.Editors
     /// <summary>
     /// Modern styled button adhering to AgentOption WPF UI standards.
     /// </summary>
-    public class SimpleButton : Button
+    public class ZButton : Button
     {
         public static readonly DependencyProperty VariantProperty =
             DependencyProperty.Register(
                 nameof(Variant),
                 typeof(ButtonVariant),
-                typeof(SimpleButton),
+                typeof(ZButton),
                 new FrameworkPropertyMetadata(ButtonVariant.Primary, OnVariantChanged));
 
         public static readonly DependencyProperty CornerRadiusProperty =
             DependencyProperty.Register(
                 nameof(CornerRadius),
                 typeof(CornerRadius),
-                typeof(SimpleButton),
+                typeof(ZButton),
                 new FrameworkPropertyMetadata(new CornerRadius(6)));
 
         public ButtonVariant Variant
@@ -57,7 +57,7 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(CornerRadiusProperty, value);
         }
 
-        public SimpleButton()
+        public ZButton()
         {
             Height = 32;
             Padding = new Thickness(14, 6, 14, 6);
@@ -72,7 +72,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnVariantChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SimpleButton btn) btn.ApplyStyle();
+            if (d is ZButton btn) btn.ApplyStyle();
         }
 
         private void ApplyStyle()
@@ -114,11 +114,19 @@ namespace ZeroUI.Wpf.Editors
     }
 
     /// <summary>
-    /// Legacy alias for SimpleButton.
+    /// Backward-compatibility alias for <see cref="ZButton"/>.
+    /// </summary>
+    [Obsolete("SimpleButton is deprecated and will be removed in 5 release cycles. Please migrate to ZButton instead.")]
+    public class SimpleButton : ZButton
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZButton"/>.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [Obsolete("ZeroButton is deprecated. Use SimpleButton instead.")]
-    public class ZeroButton : SimpleButton
+    [Obsolete("ZeroButton is deprecated and will be removed in 5 release cycles. Please migrate to ZButton instead.")]
+    public class ZeroButton : ZButton
     {
     }
 }
