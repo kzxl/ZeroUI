@@ -17,11 +17,11 @@ namespace ZeroUI.WinForms.Charts
     [Category("ZeroUI - Charts & Analytics")]
     public class ZTrendPenTable : Control
     {
-        private TrendPlot? _plot;
+        private ZTrendPlot? _plot;
         private int _rowHeight = 28;
         private int _headerHeight = 26;
 
-        public TrendPlot? Plot
+        public ZTrendPlot? Plot
         {
             get => _plot;
             set

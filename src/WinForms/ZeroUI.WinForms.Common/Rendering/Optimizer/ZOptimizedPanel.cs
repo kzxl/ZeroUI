@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Rendering.Optimizer
     /// Preserves crisp ClearType typography for child controls while delivering modern elevated card aesthetics.
     /// </summary>
     [ToolboxItem(true)]
-    public class OptimizedPanel : Panel
+    public class ZOptimizedPanel : Panel
     {
         private float _elevation = 6f;
         private float _blurRadius = 12f;
@@ -88,7 +88,7 @@ namespace ZeroUI.WinForms.Rendering.Optimizer
         [Browsable(false)]
         public RenderDecision LastDecision { get; private set; }
 
-        public OptimizedPanel()
+        public ZOptimizedPanel()
         {
             SetStyle(
                 ControlStyles.AllPaintingInWmPaint |
@@ -218,13 +218,27 @@ namespace ZeroUI.WinForms.Rendering.Optimizer
         }
     }
 
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
-    /// Legacy alias for <see cref="OptimizedPanel"/>.
-    /// Preserved for backward compatibility.
+    /// Legacy alias for <see cref="ZOptimizedPanel"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
     /// </summary>
-    [Obsolete("ZeroOptimizedPanel is deprecated. Please use OptimizedPanel instead.")]
+    [Obsolete("OptimizedPanel is deprecated and will be removed in 5 release cycles. Please migrate to ZOptimizedPanel instead.")]
     [ToolboxItem(false)]
-    public class ZeroOptimizedPanel : OptimizedPanel
+    public class OptimizedPanel : ZOptimizedPanel
     {
     }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZOptimizedPanel"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroOptimizedPanel is deprecated. Please use ZOptimizedPanel instead.")]
+    [ToolboxItem(false)]
+    public class ZeroOptimizedPanel : ZOptimizedPanel
+    {
+    }
+
+    #endregion
 }
