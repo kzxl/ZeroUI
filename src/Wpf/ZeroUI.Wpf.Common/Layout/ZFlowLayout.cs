@@ -12,34 +12,34 @@ namespace ZeroUI.Wpf.Layout
     /// into dynamic rows based on viewport width. Features animated drag-and-drop tile reordering
     /// and JSON layout state serialization for customizable plant dashboards.
     /// </summary>
-    public class FlowLayoutControl : Panel
+    public class ZFlowLayout : Panel
     {
         public static readonly DependencyProperty HGapProperty =
             DependencyProperty.Register(
                 nameof(HGap),
                 typeof(double),
-                typeof(FlowLayoutControl),
+                typeof(ZFlowLayout),
                 new FrameworkPropertyMetadata(8.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
 
         public static readonly DependencyProperty VGapProperty =
             DependencyProperty.Register(
                 nameof(VGap),
                 typeof(double),
-                typeof(FlowLayoutControl),
+                typeof(ZFlowLayout),
                 new FrameworkPropertyMetadata(8.0, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
 
         public static readonly DependencyProperty AllowDragReorderingProperty =
             DependencyProperty.Register(
                 nameof(AllowDragReordering),
                 typeof(bool),
-                typeof(FlowLayoutControl),
+                typeof(ZFlowLayout),
                 new FrameworkPropertyMetadata(true));
 
         public static readonly DependencyProperty DragThresholdProperty =
             DependencyProperty.Register(
                 nameof(DragThreshold),
                 typeof(double),
-                typeof(FlowLayoutControl),
+                typeof(ZFlowLayout),
                 new FrameworkPropertyMetadata(6.0));
 
         private UIElement? _draggedElement = null;
@@ -281,5 +281,21 @@ namespace ZeroUI.Wpf.Layout
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZFlowLayout"/>.
+    /// </summary>
+    [Obsolete("FlowLayoutControl is deprecated and will be removed in 5 release cycles. Please migrate to ZFlowLayout instead.")]
+    public class FlowLayoutControl : ZFlowLayout
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZFlowLayout"/>.
+    /// </summary>
+    [Obsolete("ZeroFlowLayout is deprecated and will be removed in 5 release cycles. Please migrate to ZFlowLayout instead.")]
+    public class ZeroFlowLayout : ZFlowLayout
+    {
     }
 }

@@ -14,7 +14,7 @@ namespace ZeroUI.Wpf.Layout
     /// High-performance collapsible tool card container designed for studio workflows (ZStack, ZVision).
     /// Features GPU elevation, customizable icon/header, accordion expand/collapse toggling, and zero-allocation visual hierarchy.
     /// </summary>
-    public class CollapsibleToolCard : HeaderedContentControl, IZeroSkinnable
+    public class ZCollapsibleToolCard : HeaderedContentControl, IZeroSkinnable
     {
         private Border? _rootBorder;
         private Button? _headerButton;
@@ -24,31 +24,31 @@ namespace ZeroUI.Wpf.Layout
         #region Dependency Properties
 
         public static readonly DependencyProperty HeaderGlyphProperty =
-            DependencyProperty.Register(nameof(HeaderGlyph), typeof(string), typeof(CollapsibleToolCard),
+            DependencyProperty.Register(nameof(HeaderGlyph), typeof(string), typeof(ZCollapsibleToolCard),
                 new PropertyMetadata(string.Empty));
 
         public static readonly DependencyProperty IsExpandedProperty =
-            DependencyProperty.Register(nameof(IsExpanded), typeof(bool), typeof(CollapsibleToolCard),
+            DependencyProperty.Register(nameof(IsExpanded), typeof(bool), typeof(ZCollapsibleToolCard),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsMeasure, OnIsExpandedChanged));
 
         public static readonly DependencyProperty ElevationProperty =
-            DependencyProperty.Register(nameof(Elevation), typeof(int), typeof(CollapsibleToolCard),
+            DependencyProperty.Register(nameof(Elevation), typeof(int), typeof(ZCollapsibleToolCard),
                 new PropertyMetadata(1, OnElevationChanged));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(CollapsibleToolCard),
+            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(ZCollapsibleToolCard),
                 new PropertyMetadata(new CornerRadius(8), OnCornerRadiusChanged));
 
         public static readonly DependencyProperty HeaderBackgroundProperty =
-            DependencyProperty.Register(nameof(HeaderBackground), typeof(Brush), typeof(CollapsibleToolCard),
+            DependencyProperty.Register(nameof(HeaderBackground), typeof(Brush), typeof(ZCollapsibleToolCard),
                 new PropertyMetadata(null));
 
         public static readonly DependencyProperty AccentBrushProperty =
-            DependencyProperty.Register(nameof(AccentBrush), typeof(Brush), typeof(CollapsibleToolCard),
+            DependencyProperty.Register(nameof(AccentBrush), typeof(Brush), typeof(ZCollapsibleToolCard),
                 new PropertyMetadata(null));
 
         public static readonly DependencyProperty ToggleCommandProperty =
-            DependencyProperty.Register(nameof(ToggleCommand), typeof(ICommand), typeof(CollapsibleToolCard),
+            DependencyProperty.Register(nameof(ToggleCommand), typeof(ICommand), typeof(ZCollapsibleToolCard),
                 new PropertyMetadata(null));
 
         #endregion
@@ -56,10 +56,10 @@ namespace ZeroUI.Wpf.Layout
         #region Events
 
         public static readonly RoutedEvent ExpandedEvent =
-            EventManager.RegisterRoutedEvent(nameof(Expanded), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(CollapsibleToolCard));
+            EventManager.RegisterRoutedEvent(nameof(Expanded), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ZCollapsibleToolCard));
 
         public static readonly RoutedEvent CollapsedEvent =
-            EventManager.RegisterRoutedEvent(nameof(Collapsed), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(CollapsibleToolCard));
+            EventManager.RegisterRoutedEvent(nameof(Collapsed), RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ZCollapsibleToolCard));
 
         public event RoutedEventHandler Expanded
         {
@@ -127,12 +127,12 @@ namespace ZeroUI.Wpf.Layout
 
         #endregion
 
-        static CollapsibleToolCard()
+        static ZCollapsibleToolCard()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(CollapsibleToolCard), new FrameworkPropertyMetadata(typeof(CollapsibleToolCard)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZCollapsibleToolCard), new FrameworkPropertyMetadata(typeof(ZCollapsibleToolCard)));
         }
 
-        public CollapsibleToolCard()
+        public ZCollapsibleToolCard()
         {
             SetResourceReference(BackgroundProperty, "ZeroUI.BgCard");
             SetResourceReference(BorderBrushProperty, "ZeroUI.BorderDefault");
@@ -302,7 +302,7 @@ namespace ZeroUI.Wpf.Layout
 
         private static void OnIsExpandedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is CollapsibleToolCard card)
+            if (d is ZCollapsibleToolCard card)
             {
                 bool expanded = (bool)e.NewValue;
                 if (card._arrowBlock != null)
@@ -320,7 +320,7 @@ namespace ZeroUI.Wpf.Layout
 
         private static void OnElevationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is CollapsibleToolCard card && card._rootBorder != null)
+            if (d is ZCollapsibleToolCard card && card._rootBorder != null)
             {
                 RenderOptimizer.SetElevation(card._rootBorder, (int)e.NewValue);
             }
@@ -328,7 +328,7 @@ namespace ZeroUI.Wpf.Layout
 
         private static void OnCornerRadiusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is CollapsibleToolCard card && card._rootBorder != null)
+            if (d is ZCollapsibleToolCard card && card._rootBorder != null)
             {
                 card._rootBorder.CornerRadius = (CornerRadius)e.NewValue;
             }
@@ -339,6 +339,30 @@ namespace ZeroUI.Wpf.Layout
             if (skin == null) throw new ArgumentNullException(nameof(skin));
             CustomSkin = skin;
             UseDefaultSkin = false;
+        }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZCollapsibleToolCard"/>.
+    /// </summary>
+    [Obsolete("CollapsibleToolCard is deprecated and will be removed in 5 release cycles. Please migrate to ZCollapsibleToolCard instead.")]
+    public class CollapsibleToolCard : ZCollapsibleToolCard
+    {
+        static CollapsibleToolCard()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(CollapsibleToolCard), new FrameworkPropertyMetadata(typeof(ZCollapsibleToolCard)));
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZCollapsibleToolCard"/>.
+    /// </summary>
+    [Obsolete("ZeroCollapsibleToolCard is deprecated and will be removed in 5 release cycles. Please migrate to ZCollapsibleToolCard instead.")]
+    public class ZeroCollapsibleToolCard : ZCollapsibleToolCard
+    {
+        static ZeroCollapsibleToolCard()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroCollapsibleToolCard), new FrameworkPropertyMetadata(typeof(ZCollapsibleToolCard)));
         }
     }
 }

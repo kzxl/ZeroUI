@@ -28,16 +28,16 @@ namespace ZeroUI.Wpf.Feedback
     /// Provides smooth gradient shimmer waves imitating UI cards, text, and avatars
     /// while asynchronous data requests resolve.
     /// </summary>
-    public class SkeletonControl : Control
+    public class ZSkeleton : Control
     {
         private Rectangle? _rectShape;
         private Ellipse? _circleShape;
 
         public static readonly DependencyProperty ShapeProperty =
-            DependencyProperty.Register(nameof(Shape), typeof(SkeletonShape), typeof(SkeletonControl), new PropertyMetadata(SkeletonShape.RoundedRectangle, OnShapeChanged));
+            DependencyProperty.Register(nameof(Shape), typeof(SkeletonShape), typeof(ZSkeleton), new PropertyMetadata(SkeletonShape.RoundedRectangle, OnShapeChanged));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(SkeletonControl), new PropertyMetadata(new CornerRadius(4), OnCornerRadiusChanged));
+            DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(ZSkeleton), new PropertyMetadata(new CornerRadius(4), OnCornerRadiusChanged));
 
         public SkeletonShape Shape
         {
@@ -51,12 +51,12 @@ namespace ZeroUI.Wpf.Feedback
             set => SetValue(CornerRadiusProperty, value);
         }
 
-        static SkeletonControl()
+        static ZSkeleton()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(SkeletonControl), new FrameworkPropertyMetadata(typeof(SkeletonControl)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZSkeleton), new FrameworkPropertyMetadata(typeof(ZSkeleton)));
         }
 
-        public SkeletonControl()
+        public ZSkeleton()
         {
             Height = 24;
             Width = 160;
@@ -144,7 +144,7 @@ namespace ZeroUI.Wpf.Feedback
 
         private static void OnShapeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SkeletonControl s)
+            if (d is ZSkeleton s)
             {
                 var shape = (SkeletonShape)e.NewValue;
                 if (s._rectShape != null) s._rectShape.Visibility = (shape == SkeletonShape.Circle) ? Visibility.Collapsed : Visibility.Visible;
@@ -154,7 +154,7 @@ namespace ZeroUI.Wpf.Feedback
 
         private static void OnCornerRadiusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is SkeletonControl s && s._rectShape != null)
+            if (d is ZSkeleton s && s._rectShape != null)
             {
                 var cr = (CornerRadius)e.NewValue;
                 s._rectShape.RadiusX = cr.TopLeft;
@@ -164,10 +164,26 @@ namespace ZeroUI.Wpf.Feedback
     }
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="SkeletonControl"/>.
+    /// Backward-compatibility alias for <see cref="ZSkeleton"/>.
     /// </summary>
-    [Obsolete("ZeroSkeleton is deprecated. Use SkeletonControl instead.")]
-    public class ZeroSkeleton : SkeletonControl
+    [Obsolete("SkeletonControl is deprecated and will be removed in 5 release cycles. Please migrate to ZSkeleton instead.")]
+    public class SkeletonControl : ZSkeleton
     {
+        static SkeletonControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(SkeletonControl), new FrameworkPropertyMetadata(typeof(ZSkeleton)));
+        }
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZSkeleton"/>.
+    /// </summary>
+    [Obsolete("ZeroSkeleton is deprecated and will be removed in 5 release cycles. Please migrate to ZSkeleton instead.")]
+    public class ZeroSkeleton : ZSkeleton
+    {
+        static ZeroSkeleton()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroSkeleton), new FrameworkPropertyMetadata(typeof(ZSkeleton)));
+        }
     }
 }
