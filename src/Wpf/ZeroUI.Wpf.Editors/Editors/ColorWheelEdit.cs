@@ -146,7 +146,7 @@ namespace ZeroUI.Wpf.Editors
 
         /// <summary>
         /// Fired when Hue or Saturation changes via user interaction.
-        /// Passes (hue 0..360, sat 0..1) tuple for 100% backward compatibility with ZeroVision.
+        /// Passes (hue 0..360, sat 0..1) tuple for 100% backward compatibility with ZVision.
         /// </summary>
         public event EventHandler<(float hue, float sat)>? ColorChanged;
 

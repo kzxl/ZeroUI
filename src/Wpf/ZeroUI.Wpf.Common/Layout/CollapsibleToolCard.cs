@@ -11,7 +11,7 @@ using ZeroUI.Wpf.Theme;
 namespace ZeroUI.Wpf.Layout
 {
     /// <summary>
-    /// High-performance collapsible tool card container designed for studio workflows (ZeroStack, ZeroVision).
+    /// High-performance collapsible tool card container designed for studio workflows (ZStack, ZVision).
     /// Features GPU elevation, customizable icon/header, accordion expand/collapse toggling, and zero-allocation visual hierarchy.
     /// </summary>
     public class CollapsibleToolCard : HeaderedContentControl, IZeroSkinnable
