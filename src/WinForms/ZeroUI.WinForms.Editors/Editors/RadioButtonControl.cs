@@ -373,7 +373,7 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Backward-compatibility alias for <see cref="RadioButtonControl"/>.
     /// </summary>
-    [Obsolete("ZeroRadioButton is deprecated. Use RadioButtonControl instead.")]
+    [Obsolete("ZeroRadioButton is deprecated and will be removed in 5 release cycles. Please migrate to ZRadioButton instead.")]
     [ToolboxItem(false)]
     public class ZeroRadioButton : RadioButtonControl
     {

@@ -781,7 +781,33 @@ namespace ZeroUI.WinForms.Navigation
         Vertical = TabOrientation.Vertical
     }
 
-    [Obsolete("Use TabPageEx instead.")]
+    /// <summary>
+    /// Modern anti-aliased flat TabControl and container for ZeroUI.
+    /// Canonical drop-in replacement for standard <see cref="System.Windows.Forms.TabControl"/>.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Overlays & Navigation")]
+    [DefaultEvent("SelectedIndexChanged")]
+    [DefaultProperty("SelectedIndex")]
+    [Description("Modern theme-aware TabControl adhering to the canonical Z-prefix standard")]
+    [ToolboxBitmap(typeof(ZeroIcons), "TabControlEx.bmp")]
+    public class ZTabControl : TabControlEx
+    {
+    }
+
+    /// <summary>
+    /// Represents an individual tab page container inside <see cref="ZTabControl"/>.
+    /// </summary>
+    public class ZTabPage : TabPageEx
+    {
+        public ZTabPage() : base() { }
+        public ZTabPage(string title, string icon = "") : base(title, icon) { }
+        public ZTabPage(string title, string icon, Action<TabPageEx> lazyInitializer) : base(title, icon, lazyInitializer) { }
+    }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    [Obsolete("ZeroTabPage is deprecated and will be removed in 5 release cycles. Please migrate to ZTabPage instead.")]
     public class ZeroTabPage : TabPageEx
     {
         public ZeroTabPage() : base() { }
@@ -789,7 +815,7 @@ namespace ZeroUI.WinForms.Navigation
         public ZeroTabPage(string title, string icon, Action<ZeroTabPage> lazyInitializer) : base(title, icon, p => lazyInitializer((ZeroTabPage)p)) { }
     }
 
-    [Obsolete("Use TabControlEx instead.")]
+    [Obsolete("ZeroTabControl is deprecated and will be removed in 5 release cycles. Please migrate to ZTabControl instead.")]
     [ToolboxItem(false)]
     public class ZeroTabControl : TabControlEx
     {
@@ -805,4 +831,6 @@ namespace ZeroUI.WinForms.Navigation
             set => base.Orientation = (TabOrientation)value;
         }
     }
+
+    #endregion
 }

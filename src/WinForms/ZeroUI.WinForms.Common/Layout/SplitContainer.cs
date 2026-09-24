@@ -418,15 +418,39 @@ namespace ZeroUI.WinForms.Layout
         }
     }
 
-    [Obsolete("Use SplitterPanelControl instead.")]
+    /// <summary>
+    /// Modern anti-aliased SplitContainer for ZeroUI.
+    /// Canonical drop-in replacement for standard <see cref="System.Windows.Forms.SplitContainer"/>.
+    /// </summary>
+    [ToolboxItem(true)]
+    [Category("ZeroUI - Layout")]
+    [Description("Splits the control display area into two resizable panels with Z-prefix standard.")]
+    [ToolboxBitmap(typeof(ZeroIcons), "SplitContainerControl.bmp")]
+    public class ZSplitContainer : SplitContainerControl
+    {
+    }
+
+    /// <summary>
+    /// Lightweight child panel for <see cref="ZSplitContainer"/>.
+    /// </summary>
+    [ToolboxItem(false)]
+    public class ZSplitterPanel : SplitterPanelControl
+    {
+    }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    [Obsolete("ZeroSplitterPanel is deprecated and will be removed in 5 release cycles. Please migrate to ZSplitterPanel instead.")]
     [ToolboxItem(false)]
     public class ZeroSplitterPanel : SplitterPanelControl
     {
     }
 
-    [Obsolete("Use SplitContainerControl instead.")]
+    [Obsolete("ZeroSplitContainer is deprecated and will be removed in 5 release cycles. Please migrate to ZSplitContainer instead.")]
     [ToolboxItem(false)]
     public class ZeroSplitContainer : SplitContainerControl
     {
     }
+
+    #endregion
 }

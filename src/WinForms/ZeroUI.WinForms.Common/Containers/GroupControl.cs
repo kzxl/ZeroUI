@@ -12,13 +12,13 @@ namespace ZeroUI.WinForms.Containers
     /// <summary>
     /// Modern theme-aware container group box with stylish caption bar, rounded borders,
     /// optional interactive collapsible toggle, icon support, and High-DPI Per-Monitor V2 scaling.
-    /// Direct modern replacement for standard <see cref="System.Windows.Forms.GroupBox"/>.
+    /// Canonical modern replacement for standard <see cref="System.Windows.Forms.GroupBox"/>.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Containers")]
     [Description("Modern container group box with styled header caption bar and theme reactivity")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefaultControl.bmp")]
-    public class GroupControl : Panel, IZeroDpiScalable
+    public class ZGroupBox : Panel, IZeroDpiScalable
     {
         private string _caption = "Group Title";
         private Image? _captionImage;
@@ -269,7 +269,7 @@ namespace ZeroUI.WinForms.Containers
             }
         }
 
-        public GroupControl()
+        public ZGroupBox()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -494,11 +494,30 @@ namespace ZeroUI.WinForms.Containers
         }
     }
 
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
-    /// Backward-compatibility alias for <see cref="GroupControl"/>.
+    /// Backward-compatibility alias for <see cref="ZGroupBox"/>.
     /// </summary>
-    [Obsolete("ZeroGroupControl is deprecated. Use GroupControl instead.")]
-    public class ZeroGroupControl : GroupControl
-    {
-    }
+    [Obsolete("GroupControl is deprecated and will be removed in 5 release cycles. Please migrate to ZGroupBox instead.")]
+    public class GroupControl : ZGroupBox { }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZGroupBox"/>.
+    /// </summary>
+    [Obsolete("ZeroGroupControl is deprecated and will be removed in 5 release cycles. Please migrate to ZGroupBox instead.")]
+    public class ZeroGroupControl : ZGroupBox { }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZGroupBox"/>.
+    /// </summary>
+    [Obsolete("ZeroGroupBox is deprecated and will be removed in 5 release cycles. Please migrate to ZGroupBox instead.")]
+    public class ZeroGroupBox : ZGroupBox { }
+
+    /// <summary>
+    /// Convenience alias for <see cref="ZGroupBox"/>.
+    /// </summary>
+    public class ZGroupControl : ZGroupBox { }
+
+    #endregion
 }

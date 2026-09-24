@@ -10,9 +10,9 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.Containers
 {
     /// <summary>
-    /// Style of the border outline for <see cref="PanelControl"/>.
+    /// Style of the border outline for <see cref="ZPanel"/>.
     /// </summary>
-    public enum ZeroPanelBorderStyle
+    public enum PanelBorderStyle
     {
         None = 0,
         Solid = 1,
@@ -21,8 +21,29 @@ namespace ZeroUI.WinForms.Containers
     }
 
     /// <summary>
-    /// Semantic theme background mode for <see cref="PanelControl"/>.
+    /// Semantic theme background mode for <see cref="ZPanel"/>.
     /// </summary>
+    public enum PanelType
+    {
+        Surface = 0,
+        Card = 1,
+        Header = 2,
+        Transparent = 3,
+        Custom = 4
+    }
+
+    #region Backward Compatibility Enums (5-Release Deprecation)
+
+    [Obsolete("ZeroPanelBorderStyle is deprecated and will be removed in 5 release cycles. Use PanelBorderStyle instead.")]
+    public enum ZeroPanelBorderStyle
+    {
+        None = 0,
+        Solid = 1,
+        Dotted = 2,
+        Dashed = 3
+    }
+
+    [Obsolete("ZeroPanelType is deprecated and will be removed in 5 release cycles. Use PanelType instead.")]
     public enum ZeroPanelType
     {
         Surface = 0,
@@ -32,19 +53,21 @@ namespace ZeroUI.WinForms.Containers
         Custom = 4
     }
 
+    #endregion
+
     /// <summary>
     /// Modern theme-aware container panel with customizable border styles, rounded corners,
     /// High-DPI Per-Monitor V2 scaling, and automatic Dark/Light theme reactivity.
-    /// Direct drop-in replacement for standard <see cref="System.Windows.Forms.Panel"/>.
+    /// Canonical drop-in replacement for standard <see cref="System.Windows.Forms.Panel"/>.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Containers")]
     [Description("Modern theme-aware container panel with border, radius, and DPI scaling")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefaultControl.bmp")]
-    public class PanelControl : Panel, IZeroDpiScalable
+    public class ZPanel : Panel, IZeroDpiScalable
     {
-        private ZeroPanelBorderStyle _borderStyle = ZeroPanelBorderStyle.Solid;
-        private ZeroPanelType _panelType = ZeroPanelType.Surface;
+        private PanelBorderStyle _borderStyle = PanelBorderStyle.Solid;
+        private PanelType _panelType = PanelType.Surface;
         private int _baseBorderRadius = 0;
         private int _borderRadius = 0;
         private float _borderThickness = 1f;
@@ -53,9 +76,9 @@ namespace ZeroUI.WinForms.Containers
         private float _currentDpiScale = 1.0f;
 
         [Category("Appearance")]
-        [DefaultValue(ZeroPanelBorderStyle.Solid)]
+        [DefaultValue(PanelBorderStyle.Solid)]
         [Description("Visual style of the panel border.")]
-        public new ZeroPanelBorderStyle BorderStyle
+        public new PanelBorderStyle BorderStyle
         {
             get => _borderStyle;
             set
@@ -69,9 +92,9 @@ namespace ZeroUI.WinForms.Containers
         }
 
         [Category("Appearance")]
-        [DefaultValue(ZeroPanelType.Surface)]
-        [Description("Semantic theme role defining the background token.")]
-        public ZeroPanelType PanelType
+        [DefaultValue(PanelType.Surface)]
+        [Description("Semantic background surface type according to the active ZeroTheme.")]
+        public PanelType PanelType
         {
             get => _panelType;
             set
@@ -87,18 +110,17 @@ namespace ZeroUI.WinForms.Containers
 
         [Category("Appearance")]
         [DefaultValue(0)]
-        [Description("Corner radius for smooth rounded borders. 0 produces sharp corners.")]
+        [Description("Radius of rounded panel corners in pixels (0 = square corners).")]
         public int BorderRadius
         {
             get => _baseBorderRadius;
             set
             {
-                int clamped = Math.Max(0, value);
-                if (_baseBorderRadius != clamped)
+                int val = Math.Max(0, value);
+                if (_baseBorderRadius != val)
                 {
-                    _baseBorderRadius = clamped;
+                    _baseBorderRadius = val;
                     _borderRadius = (int)Math.Round(_baseBorderRadius * _currentDpiScale);
-                    UpdateRegion();
                     Invalidate();
                 }
             }
@@ -106,24 +128,24 @@ namespace ZeroUI.WinForms.Containers
 
         [Category("Appearance")]
         [DefaultValue(1f)]
-        [Description("Thickness of the border outline.")]
+        [Description("Border thickness in pixels.")]
         public float BorderThickness
         {
             get => _borderThickness;
             set
             {
-                float clamped = Math.Max(0.5f, value);
-                if (Math.Abs(_borderThickness - clamped) > 0.01f)
+                float val = Math.Max(0f, value);
+                if (Math.Abs(_borderThickness - val) > 0.001f)
                 {
-                    _borderThickness = clamped;
+                    _borderThickness = val;
                     Invalidate();
                 }
             }
         }
 
         [Category("Appearance")]
-        [DefaultValue(typeof(Color), "Empty")]
-        [Description("Custom border color override. If empty, the active theme border color is used.")]
+        [DefaultValue(typeof(Color), "")]
+        [Description("Custom border color override. Leave empty to follow active theme border.")]
         public Color BorderColor
         {
             get => _customBorderColor;
@@ -138,8 +160,8 @@ namespace ZeroUI.WinForms.Containers
         }
 
         [Category("Appearance")]
-        [DefaultValue(typeof(Color), "Empty")]
-        [Description("Custom background color override. If empty, the active theme background color is used.")]
+        [DefaultValue(typeof(Color), "")]
+        [Description("Custom background color override. Leave empty to follow PanelType theme tokens.")]
         public Color CustomBackColor
         {
             get => _customBackColor;
@@ -148,23 +170,21 @@ namespace ZeroUI.WinForms.Containers
                 if (_customBackColor != value)
                 {
                     _customBackColor = value;
-                    UpdateThemeColors();
                     Invalidate();
                 }
             }
         }
 
-        [Browsable(false)]
-        public float DpiScale => _currentDpiScale;
-
-        public PanelControl()
+        public ZPanel()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.UserPaint |
+                     ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.ResizeRedraw |
+                     ControlStyles.SupportsTransparentBackColor, true);
+
+            base.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            BackColor = Color.Transparent;
 
             UpdateThemeColors();
 
@@ -172,43 +192,28 @@ namespace ZeroUI.WinForms.Containers
             ZeroUIConfig.CornerStyleChanged += OnCornerStyleChanged;
         }
 
-        public void ApplyDpiScaling(float scaleFactor)
-        {
-            if (scaleFactor <= 0f) scaleFactor = 1.0f;
-            _currentDpiScale = scaleFactor;
-            _borderRadius = (int)Math.Round(_baseBorderRadius * _currentDpiScale);
-            UpdateRegion();
-            Invalidate();
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            float factor = ZeroDpi.GetScaleFactor(this);
-            if (Math.Abs(factor - _currentDpiScale) > 0.001f)
-            {
-                ApplyDpiScaling(factor);
-            }
-            UpdateThemeColors();
-        }
-
-        protected override void OnResize(EventArgs eventargs)
-        {
-            base.OnResize(eventargs);
-            UpdateRegion();
-        }
-
         private void OnThemeChanged(object? sender, EventArgs e)
         {
-            if (IsDisposed) return;
-            UpdateThemeColors();
-            Invalidate();
+            if (IsDisposed || Disposing) return;
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    UpdateThemeColors();
+                    Invalidate();
+                }));
+            }
+            else
+            {
+                UpdateThemeColors();
+                Invalidate();
+            }
         }
 
         private void OnCornerStyleChanged(object? sender, EventArgs e)
         {
-            if (IsDisposed) return;
-            UpdateRegion();
+            if (IsDisposed || Disposing) return;
             Invalidate();
         }
 
@@ -216,46 +221,66 @@ namespace ZeroUI.WinForms.Containers
         {
             if (_customBackColor != Color.Empty)
             {
-                BackColor = _customBackColor;
                 return;
             }
 
-            var palette = ZeroTheme.Colors;
-            BackColor = _panelType switch
+            switch (_panelType)
             {
-                ZeroPanelType.Surface => palette.Surface,
-                ZeroPanelType.Card => palette.CardBackground,
-                ZeroPanelType.Header => palette.HeaderBackground,
-                ZeroPanelType.Transparent => Color.Transparent,
-                _ => palette.Surface
-            };
+                case PanelType.Surface:
+                    BackColor = ZeroTheme.Colors.Surface;
+                    break;
+                case PanelType.Card:
+                    BackColor = ZeroTheme.Colors.CardBackground;
+                    break;
+                case PanelType.Header:
+                    BackColor = ZeroTheme.Colors.HeaderBackground;
+                    break;
+                case PanelType.Transparent:
+                    BackColor = Color.Transparent;
+                    break;
+                case PanelType.Custom:
+                    break;
+            }
         }
 
-        private void UpdateRegion()
+        [Browsable(false)]
+        public float DpiScale => _currentDpiScale;
+
+        public void ApplyDpiScaling(float scaleFactor)
         {
-            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
-            if (effRadius > 0 && Width > effRadius * 2 && Height > effRadius * 2)
-            {
-                using var path = ZeroUIConfig.CreateRoundedRectangle(new Rectangle(0, 0, Width, Height), effRadius);
-                Region = new Region(path);
-            }
-            else
-            {
-                Region = null;
-            }
+            if (scaleFactor <= 0f) scaleFactor = 1.0f;
+            _currentDpiScale = scaleFactor;
+            _borderRadius = (int)Math.Round(_baseBorderRadius * scaleFactor);
+            _borderThickness = Math.Max(1f, _borderThickness * scaleFactor);
+            Invalidate();
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-            var palette = ZeroTheme.Colors;
-            Color effectiveBorderColor = _customBorderColor != Color.Empty ? _customBorderColor : palette.Border;
-            Color effectiveBgColor = BackColor;
+            var rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            if (rect.Width <= 0 || rect.Height <= 0) return;
 
-            int effRadius = ZeroUIConfig.GetEffectiveRadius(_borderRadius);
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+            // Determine effective radius
+            int effRadius = _borderRadius;
+            if (effRadius == 0 && ZeroUIConfig.CornerStyle == ZeroCornerStyle.Rounded && _panelType != PanelType.Transparent)
+            {
+                effRadius = (int)Math.Round(6 * _currentDpiScale);
+            }
+
+            Color effectiveBgColor = _customBackColor != Color.Empty ? _customBackColor :
+                _panelType switch
+                {
+                    PanelType.Card => ZeroTheme.Colors.CardBackground,
+                    PanelType.Header => ZeroTheme.Colors.HeaderBackground,
+                    PanelType.Transparent => Color.Transparent,
+                    _ => ZeroTheme.Colors.Surface
+                };
+
+            Color effectiveBorderColor = _customBorderColor != Color.Empty ? _customBorderColor : ZeroTheme.Colors.Border;
 
             // 1. Draw Background
             if (effectiveBgColor != Color.Transparent)
@@ -273,15 +298,15 @@ namespace ZeroUI.WinForms.Containers
             }
 
             // 2. Draw Border
-            if (_borderStyle != ZeroPanelBorderStyle.None && _borderThickness > 0)
+            if (_borderStyle != PanelBorderStyle.None && _borderThickness > 0)
             {
                 using var pen = new Pen(effectiveBorderColor, _borderThickness)
                 {
                     Alignment = PenAlignment.Inset,
                     DashStyle = _borderStyle switch
                     {
-                        ZeroPanelBorderStyle.Dotted => DashStyle.Dot,
-                        ZeroPanelBorderStyle.Dashed => DashStyle.Dash,
+                        PanelBorderStyle.Dotted => DashStyle.Dot,
+                        PanelBorderStyle.Dashed => DashStyle.Dash,
                         _ => DashStyle.Solid
                     }
                 };
@@ -309,11 +334,30 @@ namespace ZeroUI.WinForms.Containers
         }
     }
 
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
-    /// Backward-compatibility alias for <see cref="PanelControl"/>.
+    /// Backward-compatibility alias for <see cref="ZPanel"/>.
     /// </summary>
-    [Obsolete("ZeroPanelControl is deprecated. Use PanelControl instead.")]
-    public class ZeroPanelControl : PanelControl
-    {
-    }
+    [Obsolete("PanelControl is deprecated and will be removed in 5 release cycles. Please migrate to ZPanel instead.")]
+    public class PanelControl : ZPanel { }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZPanel"/>.
+    /// </summary>
+    [Obsolete("ZeroPanel is deprecated and will be removed in 5 release cycles. Please migrate to ZPanel instead.")]
+    public class ZeroPanel : ZPanel { }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZPanel"/>.
+    /// </summary>
+    [Obsolete("ZeroPanelControl is deprecated and will be removed in 5 release cycles. Please migrate to ZPanel instead.")]
+    public class ZeroPanelControl : ZPanel { }
+
+    /// <summary>
+    /// Convenience alias for <see cref="ZPanel"/>.
+    /// </summary>
+    public class ZPanelControl : ZPanel { }
+
+    #endregion
 }

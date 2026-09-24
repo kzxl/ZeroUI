@@ -12,15 +12,15 @@ namespace ZeroUI.WinForms.Navigation
     /// Modern theme-aware application top menu bar adhering to ZeroUI design tokens.
     /// Features auto-skinning, crisp ClearType typography, dark/light theme reactivity,
     /// and fluent menu-building extension methods.
-    /// Direct drop-in replacement for standard <see cref="System.Windows.Forms.MenuStrip"/>.
+    /// Canonical drop-in replacement for standard <see cref="System.Windows.Forms.MenuStrip"/>.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI - Navigation")]
     [Description("Modern theme-aware top menu bar with auto-skinning and fluent APIs")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefaultControl.bmp")]
-    public class MenuBarControl : MenuStrip
+    public class ZMenuBar : MenuStrip
     {
-        public MenuBarControl()
+        public ZMenuBar()
         {
             SetStyle(
                 ControlStyles.AllPaintingInWmPaint |
@@ -60,43 +60,34 @@ namespace ZeroUI.WinForms.Navigation
         #region Fluent API Helpers
 
         /// <summary>
-        /// Adds a top-level menu category (e.g. File, Edit, View, Tools, Help).
+        /// Fluent helper to quickly add a top-level menu item.
         /// </summary>
-        public ToolStripMenuItem AddMenu(string title)
+        public ToolStripMenuItem AddMenu(string text)
         {
-            var menu = new ToolStripMenuItem(title)
-            {
-                Font = Font,
-                ForeColor = ForeColor
-            };
-            Items.Add(menu);
-            return menu;
+            var item = new ToolStripMenuItem(text);
+            Items.Add(item);
+            return item;
         }
 
         /// <summary>
-        /// Adds a child menu action item to a parent menu.
+        /// Fluent helper to quickly add a submenu item with an optional click handler and shortcut keys.
         /// </summary>
-        public ToolStripMenuItem AddMenuItem(ToolStripMenuItem parent, string text, Action? onClick = null, Keys shortcut = Keys.None, Image? icon = null)
+        public ToolStripMenuItem AddMenuItem(ToolStripMenuItem parent, string text, EventHandler? onClick = null, Keys shortcutKeys = Keys.None)
         {
             if (parent == null) throw new ArgumentNullException(nameof(parent));
 
-            var item = new ToolStripMenuItem(text, icon, (s, e) => onClick?.Invoke())
+            var item = new ToolStripMenuItem(text, null, onClick);
+            if (shortcutKeys != Keys.None)
             {
-                Font = Font
-            };
-
-            if (shortcut != Keys.None)
-            {
-                item.ShortcutKeys = shortcut;
+                item.ShortcutKeys = shortcutKeys;
                 item.ShowShortcutKeys = true;
             }
-
             parent.DropDownItems.Add(item);
             return item;
         }
 
         /// <summary>
-        /// Adds a visual horizontal divider separator to a parent menu.
+        /// Fluent helper to append a separator line to a menu.
         /// </summary>
         public ToolStripSeparator AddSeparator(ToolStripMenuItem parent)
         {
@@ -119,19 +110,36 @@ namespace ZeroUI.WinForms.Navigation
         }
     }
 
-    /// <summary>
-    /// Backward-compatibility alias for <see cref="MenuBarControl"/>.
-    /// </summary>
-    [Obsolete("ZeroMenuBarControl is deprecated. Use MenuBarControl instead.")]
-    public class ZeroMenuBarControl : MenuBarControl
-    {
-    }
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="MenuBarControl"/>.
+    /// Backward-compatibility alias for <see cref="ZMenuBar"/>.
     /// </summary>
-    [Obsolete("ZeroMenuStrip is deprecated. Use MenuBarControl instead.")]
-    public class ZeroMenuStrip : MenuBarControl
-    {
-    }
+    [Obsolete("MenuBarControl is deprecated and will be removed in 5 release cycles. Please migrate to ZMenuBar instead.")]
+    public class MenuBarControl : ZMenuBar { }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZMenuBar"/>.
+    /// </summary>
+    [Obsolete("ZeroMenuBarControl is deprecated and will be removed in 5 release cycles. Please migrate to ZMenuBar instead.")]
+    public class ZeroMenuBarControl : ZMenuBar { }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZMenuBar"/>.
+    /// </summary>
+    [Obsolete("ZeroMenuBar is deprecated and will be removed in 5 release cycles. Please migrate to ZMenuBar instead.")]
+    public class ZeroMenuBar : ZMenuBar { }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZMenuBar"/>.
+    /// </summary>
+    [Obsolete("ZeroMenuStrip is deprecated and will be removed in 5 release cycles. Please migrate to ZMenuBar instead.")]
+    public class ZeroMenuStrip : ZMenuBar { }
+
+    /// <summary>
+    /// Convenience alias for <see cref="ZMenuBar"/>.
+    /// </summary>
+    public class ZMenuStrip : ZMenuBar { }
+
+    #endregion
 }

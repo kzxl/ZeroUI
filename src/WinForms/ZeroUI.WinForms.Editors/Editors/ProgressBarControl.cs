@@ -233,7 +233,7 @@ namespace ZeroUI.WinForms.Editors
     /// <summary>
     /// Backward-compatibility alias for <see cref="ProgressBarControl"/>.
     /// </summary>
-    [Obsolete("ZeroProgressBar is deprecated. Use ProgressBarControl instead.")]
+    [Obsolete("ZeroProgressBar is deprecated and will be removed in 5 release cycles. Please migrate to ZProgressBar instead.")]
     [ToolboxItem(false)]
     public class ZeroProgressBar : ProgressBarControl
     {

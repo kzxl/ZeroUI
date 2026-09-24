@@ -391,7 +391,7 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for CheckEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [Obsolete("ZeroCheckBox is deprecated. Please use CheckEdit instead.")]
+    [Obsolete("ZeroCheckBox is deprecated and will be removed in 5 release cycles. Please migrate to ZCheckBox instead.")]
     [ToolboxItem(false)]
     public class ZeroCheckBox : CheckEdit
     {

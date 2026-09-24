@@ -524,7 +524,7 @@ namespace ZeroUI.WinForms.Editors
     /// Legacy alias for TextEdit.
     /// Preserved for 100% backward compatibility.
     /// </summary>
-    [Obsolete("ZeroTextBox is deprecated. Please use TextEdit instead.")]
+    [Obsolete("ZeroTextBox is deprecated and will be removed in 5 release cycles. Please migrate to ZTextBox instead.")]
     [ToolboxItem(false)]
     public class ZeroTextBox : TextEdit
     {
