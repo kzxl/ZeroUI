@@ -70,6 +70,7 @@ namespace ZeroUI.Samples.WpfDemo
             SetupCharts();
             SetupTelemetry();
             SetupScadaSimulation();
+            SetupSafetyDemo();
             SetupEnterpriseControls();
             SetupPivotGrid();
             SetupGanttChart();
@@ -223,7 +224,7 @@ namespace ZeroUI.Samples.WpfDemo
             MainNavRail.Items.Clear();
             MainNavRail.Items.Add(new SideNavItem("c1", "Big Data & Grids", "⚡", "DATA & BENCHMARK", 3));
             MainNavRail.Items.Add(new SideNavItem("c2", "Industrial Verticals", "🏭", "VERTICAL DOMAINS", 7));
-            MainNavRail.Items.Add(new SideNavItem("c3", "SCADA & Edge", "⚙️", "AUTOMATION & SCADA", 4));
+            MainNavRail.Items.Add(new SideNavItem("c3", "SCADA & Edge", "⚙️", "AUTOMATION & SCADA", 5));
             MainNavRail.Items.Add(new SideNavItem("c4", "Network & Infra", "🌐", "AUTOMATION & SCADA", 6));
             MainNavRail.Items.Add(new SideNavItem("c5", "MES Smart Factory", "📦", "MANUFACTURING & OPS", 2));
             MainNavRail.Items.Add(new SideNavItem("c6", "Analytics & Signals", "📊", "ANALYTICS & DIAGNOSTICS", 4));
@@ -2454,6 +2455,98 @@ namespace ZeroUI.Samples.WpfDemo
             win.ShowDialog();
         }
 
+        #region SCADA Safety & Instruments Demo Handlers
+
+        private void SetupSafetyDemo()
+        {
+            if (WpfEStop != null)
+            {
+                WpfEStop.Tripped += (s, e) =>
+                {
+                    if (TxtWpfEStopStatus != null)
+                    {
+                        TxtWpfEStopStatus.Text = "Status: TRIPPED (Interlock Open)";
+                        TxtWpfEStopStatus.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68));
+                    }
+                    ScadaAlarmEngine.RaiseAlarm("ESTOP_WPF", "Safety.Line1.EStop", "CRITICAL: E-Stop Latched on Line 1", ScadaAlarmSeverity.Critical);
+                };
+                WpfEStop.ResetCompleted += (s, e) =>
+                {
+                    if (TxtWpfEStopStatus != null)
+                    {
+                        TxtWpfEStopStatus.Text = "Status: READY (Contacts 1 & 2 Closed)";
+                        TxtWpfEStopStatus.Foreground = new SolidColorBrush(Color.FromRgb(34, 197, 94));
+                    }
+                    ScadaAlarmEngine.Acknowledge("ESTOP_WPF", "WPF Operator");
+                    ScadaAlarmEngine.ClearAlarm("ESTOP_WPF");
+                };
+            }
+        }
+
+        private void BtnWpfTripEStop_Click(object sender, RoutedEventArgs e)
+        {
+            WpfEStop.Trip();
+            if (TxtWpfEStopStatus != null)
+            {
+                TxtWpfEStopStatus.Text = "Status: TRIPPED (Interlock Open)";
+                TxtWpfEStopStatus.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68));
+            }
+            ScadaAlarmEngine.RaiseAlarm("ESTOP_WPF", "Safety.Line1.EStop", "CRITICAL: E-Stop Latched on Line 1", ScadaAlarmSeverity.Critical);
+        }
+
+        private void BtnWpfResetEStop_Click(object sender, RoutedEventArgs e)
+        {
+            WpfEStop.Reset();
+            if (TxtWpfEStopStatus != null)
+            {
+                TxtWpfEStopStatus.Text = "Status: READY (Contacts 1 & 2 Closed)";
+                TxtWpfEStopStatus.Foreground = new SolidColorBrush(Color.FromRgb(34, 197, 94));
+            }
+            ScadaAlarmEngine.Acknowledge("ESTOP_WPF", "WPF Operator");
+            ScadaAlarmEngine.ClearAlarm("ESTOP_WPF");
+        }
+
+        private void BtnWpfBreakBeam_Click(object sender, RoutedEventArgs e)
+        {
+            WpfLightCurtain.SimulateObstacle(7, 3);
+            if (TxtWpfCurtainStatus != null)
+            {
+                TxtWpfCurtainStatus.Text = "Safety Field: INTRUSION (OSSD Trip)";
+                TxtWpfCurtainStatus.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68));
+            }
+            ScadaAlarmEngine.RaiseAlarm("CURTAIN_WPF", "Safety.Curtain.Trip", "HIGH: Optical Curtain Intrusion Detected at Station 4", ScadaAlarmSeverity.High);
+        }
+
+        private void BtnWpfClearBeam_Click(object sender, RoutedEventArgs e)
+        {
+            WpfLightCurtain.ClearObstacle();
+            if (TxtWpfCurtainStatus != null)
+            {
+                TxtWpfCurtainStatus.Text = "Safety Field: CLEAR (OSSD Active)";
+                TxtWpfCurtainStatus.Foreground = new SolidColorBrush(Color.FromRgb(34, 197, 94));
+            }
+            ScadaAlarmEngine.ClearAlarm("CURTAIN_WPF");
+        }
+
+        private void BtnWpfSpikeMeter_Click(object sender, RoutedEventArgs e)
+        {
+            WpfMeterVertical.Value = 92.4;
+            ScadaAlarmEngine.RaiseAlarm("PRESS_WPF", "Header.Line1.Pressure", "WARNING: Header pressure exceeds 85 bar threshold", ScadaAlarmSeverity.High);
+        }
+
+        private void BtnWpfResetMeter_Click(object sender, RoutedEventArgs e)
+        {
+            WpfMeterVertical.Value = 68.5;
+            ScadaAlarmEngine.ClearAlarm("PRESS_WPF");
+        }
+
+        private void BtnWpfCycleLed_Click(object sender, RoutedEventArgs e)
+        {
+            WpfLedRun.State = (MultiStateLedState)(((int)WpfLedRun.State + 1) % 7);
+            WpfLedIdle.State = (MultiStateLedState)(((int)WpfLedIdle.State + 1) % 7);
+        }
+
+        #endregion
         #endregion
     }
 

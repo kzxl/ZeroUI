@@ -721,6 +721,108 @@
                                 </Border>
                             </Grid>
                         </TabItem>
+
+                        <!-- Sub-Tab 3.5: Safety Interlocks & Instruments -->
+                        <TabItem Header="🚨 Safety &amp; Instruments">
+                            <Grid Margin="16">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Top: ISA-18.2 Alarm Banner Ticker -->
+                                <ind:AlarmBannerControl x:Name="WpfAlarmBanner" Grid.Row="0" Margin="0,0,0,12" Height="36" OperatorName="WPF Chief Operator" />
+
+                                <!-- Main 2-Column Split: Safety Left, Instruments Right -->
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Left Column: SIL 3 Machine Safety & Light Curtain -->
+                                    <ind:GridCard Grid.Column="0" HeaderText="Machine Safety &amp; Optical Curtain (SIL 3 / PLe)" SubtitleText="Dual-channel E-Stop mushroom button with twisting latch and Type 4 optical barrier" Margin="0,0,8,0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+                                            <StackPanel Margin="8">
+                                                <TextBlock Text="EMERGENCY STOP (TWIST-TO-RESET)" FontSize="11" FontWeight="Bold" Foreground="#EF4444" Margin="0,0,0,6" />
+                                                
+                                                <Grid Margin="0,0,0,16">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <ind:EmergencyStopControl x:Name="WpfEStop" Grid.Column="0" Width="140" Height="140" ResetMode="TwistToReset" />
+                                                    
+                                                    <StackPanel Grid.Column="1" Margin="16,10,0,0" VerticalAlignment="Center">
+                                                        <TextBlock x:Name="TxtWpfEStopStatus" Text="Status: READY (Contacts 1 &amp; 2 Closed)" FontSize="12" FontWeight="SemiBold" Foreground="#22C55E" Margin="0,0,0,10" />
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Button x:Name="BtnWpfTripEStop" Click="BtnWpfTripEStop_Click" Content="🚨 Trip E-Stop" Background="#DC2626" Foreground="White" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                                                            <Button x:Name="BtnWpfResetEStop" Click="BtnWpfResetEStop_Click" Content="🔄 Reset E-Stop" Background="#16A34A" Foreground="White" Height="30" Padding="12,0,12,0" Cursor="Hand" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <TextBlock Text="TYPE 4 OPTICAL LIGHT CURTAIN (16 BEAMS)" FontSize="11" FontWeight="Bold" Foreground="#EAB308" Margin="0,8,0,6" />
+                                                
+                                                <Grid Margin="0,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <ind:LightCurtainBar x:Name="WpfLightCurtain" Grid.Column="0" Width="180" Height="240" BeamCount="16" InteractiveSimulation="True" />
+                                                    
+                                                    <StackPanel Grid.Column="1" Margin="16,10,0,0" VerticalAlignment="Center">
+                                                        <TextBlock x:Name="TxtWpfCurtainStatus" Text="Safety Field: CLEAR (OSSD Active)" FontSize="12" FontWeight="SemiBold" Foreground="#22C55E" Margin="0,0,0,10" />
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                            <Button x:Name="BtnWpfBreakBeam" Click="BtnWpfBreakBeam_Click" Content="✋ Break Beam" Background="#CA8A04" Foreground="White" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                                                            <Button x:Name="BtnWpfClearBeam" Click="BtnWpfClearBeam_Click" Content="✔ Clear Field" Background="#475569" Foreground="White" Height="30" Padding="12,0,12,0" Cursor="Hand" />
+                                                        </StackPanel>
+                                                        <TextBlock Text="Click or drag on curtain beams to test interactive intrusion detection" FontSize="11" Foreground="{DynamicResource ZeroUI.TextSecondary}" TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </ind:GridCard>
+
+                                    <!-- Right Column: Edgewise Meters & MultiState LEDs & Alarm Grid -->
+                                    <ind:GridCard Grid.Column="1" HeaderText="DIN 43700 Edgewise Indicators &amp; Pilot LEDs" SubtitleText="Vertical/horizontal process indicators and ISA-18.2 multi-state telemetry status" Margin="8,0,0,0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+                                            <StackPanel Margin="8">
+                                                <TextBlock Text="DIN 43700 EDGEWISE METERS (VERTICAL &amp; HORIZONTAL)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8" />
+                                                
+                                                <Grid Margin="0,0,0,16">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <ind:EdgewiseMeter x:Name="WpfMeterVertical" Grid.Column="0" Width="80" Height="200" Orientation="Vertical" Title="PRESSURE" Unit="bar" Value="68.5" Minimum="0" Maximum="100" HighAlarmThreshold="85" LowAlarmThreshold="15" />
+                                                    
+                                                    <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                                        <ind:EdgewiseMeter x:Name="WpfMeterHorizontal" Height="70" Orientation="Horizontal" Title="COOLANT TEMP" Unit="°C" Value="74.2" Minimum="0" Maximum="120" HighAlarmThreshold="95" LowAlarmThreshold="10" Margin="0,0,0,16" />
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Button x:Name="BtnWpfSpikeMeter" Click="BtnWpfSpikeMeter_Click" Content="📈 High Pressure Spike" Background="#DC2626" Foreground="White" Height="30" Padding="10,0,10,0" Margin="0,0,8,0" Cursor="Hand" />
+                                                            <Button x:Name="BtnWpfResetMeter" Click="BtnWpfResetMeter_Click" Content="📉 Reset Pressure" Background="#475569" Foreground="White" Height="30" Padding="10,0,10,0" Cursor="Hand" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <TextBlock Text="MULTI-STATE SCADA PILOT LIGHTS" FontSize="11" FontWeight="Bold" Foreground="#A855F7" Margin="0,8,0,8" />
+                                                
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                    <ind:MultiStateLed x:Name="WpfLedRun" Width="64" Height="76" State="Normal" Label="RUN" Margin="0,0,12,0" />
+                                                    <ind:MultiStateLed x:Name="WpfLedIdle" Width="64" Height="76" State="Standby" Label="IDLE" Margin="0,0,12,0" />
+                                                    <ind:MultiStateLed x:Name="WpfLedWarn" Width="64" Height="76" State="Warning" Shape="Square" Label="WARN" Margin="0,0,12,0" />
+                                                    <ind:MultiStateLed x:Name="WpfLedAlarm" Width="64" Height="76" State="Alarm" BlinkRate="Fast" Label="TRIP" Margin="0,0,12,0" />
+                                                </StackPanel>
+
+                                                <Button x:Name="BtnWpfCycleLed" Click="BtnWpfCycleLed_Click" Content="💡 Cycle LED Pilot States" Background="{DynamicResource ZeroUI.BgCard}" Foreground="{DynamicResource ZeroUI.TextPrimary}" Height="30" Padding="12,0,12,0" HorizontalAlignment="Left" Cursor="Hand" />
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </ind:GridCard>
+                                </Grid>
+                            </Grid>
+                        </TabItem>
                     </TabControl>
                 </TabItem>
 

@@ -104,6 +104,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private ZeroTabPage _tabScadaTags = null!;
         private ZeroTabPage _tabScadaOverview = null!;
         private ZeroTabPage _tabIndustrialRuntime = null!;
+        private ZeroTabPage _tabScadaSafety = null!;
 
         // Sub-tabs
         private ZeroTabControl _subTabsBenchmark = null!;
@@ -1124,12 +1125,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _tabScadaTags = new ZeroTabPage("Phase 3: Real-Time Tag Engine", "⚡", p => InitializeScadaTagEngineMonitor(p));
             _tabScadaOverview = new ZeroTabPage("Phase 4: Plant Overview & HMI", "🎛️", p => InitializeScadaHmiOverview(p));
             _tabIndustrialRuntime = new ZeroTabPage("Phase 5: Industrial Edge Runtime", "⚙️", p => InitializeIndustrialRuntimeOverview(p));
+            _tabScadaSafety = new ZeroTabPage("Phase 6: Safety & Annunciators", "🚨", p => InitializeScadaSafetyCluster(p));
             _subTabsScada.AddTab(_tabScadaClosedLoop);
             _subTabsScada.AddTab(_tabScadaPid);
             _subTabsScada.AddTab(_tabScadaAlarms);
             _subTabsScada.AddTab(_tabScadaTags);
             _subTabsScada.AddTab(_tabScadaOverview);
             _subTabsScada.AddTab(_tabIndustrialRuntime);
+            _subTabsScada.AddTab(_tabScadaSafety);
             cluster.Controls.Add(_subTabsScada);
         }
 
