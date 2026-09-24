@@ -1,6 +1,9 @@
 using System;
 
-using ZeroUI.WinForms.Icons;using System.Collections.Generic;
+using System.Collections.Generic;
+using ZeroUI.Core.Scene.Routing;
+using ZeroUI.Core.Scene.Svg;
+using ZeroUI.WinForms.Icons;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -594,6 +597,27 @@ namespace ZeroUI.WinForms.Industrial
                     g.DrawLine(gridPen, 0, y, Width, y);
                 }
             }
+        }
+
+        /// <summary>
+        /// Imports an SVG diagram string into the scene at the specified coordinates.
+        /// </summary>
+        public SvgVectorNode LoadSvg(string svgXml, float x = 0f, float y = 0f)
+        {
+            var node = SvgSceneImporter.ImportFromString(svgXml);
+            node.X = x;
+            node.Y = y;
+            _scene.AddNode(node);
+            Invalidate();
+            return node;
+        }
+
+        /// <summary>
+        /// Computes an optimal 90-degree orthogonal Manhattan pipe route between two scene points.
+        /// </summary>
+        public List<ScenePoint> RoutePipeManhattan(ScenePoint source, ScenePoint target, PortDirection srcDir = PortDirection.Auto, PortDirection tgtDir = PortDirection.Auto)
+        {
+            return PipeRouter.RouteManhattan(source, target, srcDir, tgtDir);
         }
 
         protected override void Dispose(bool disposing)

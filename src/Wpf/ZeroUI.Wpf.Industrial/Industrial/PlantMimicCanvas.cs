@@ -7,6 +7,8 @@ using System.Windows.Media;
 using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Scene;
+using ZeroUI.Core.Scene.Routing;
+using ZeroUI.Core.Scene.Svg;
 using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Wpf.Industrial
@@ -348,6 +350,10 @@ namespace ZeroUI.Wpf.Industrial
                 {
                     RenderZeroSceneNode(dc, zsn, isDark, dpi);
                 }
+                else if (node is SvgVectorNode svgNode)
+                {
+                    RenderSvgVectorNode(dc, svgNode, isDark);
+                }
                 else
                 {
                     node.Render(dc, renderContext);
@@ -525,6 +531,119 @@ namespace ZeroUI.Wpf.Industrial
             {
                 DeviceBadgeRenderer.DrawBadges(dc, nodeRect, node.StatusFlags, dpi);
             }
+        }
+
+        private void RenderSvgVectorNode(DrawingContext dc, SvgVectorNode node, bool isDark)
+        {
+            if (!node.IsVisible) return;
+            var b = node.WorldBounds;
+            dc.PushTransform(new TranslateTransform(b.X, b.Y));
+
+            foreach (var elem in node.Elements)
+            {
+                Brush? fill = ParseBrush(elem.FillColor);
+                Pen? stroke = ParsePen(elem.StrokeColor, elem.StrokeWidth);
+
+                switch (elem)
+                {
+                    case SvgRectElement r:
+                        dc.DrawRoundedRectangle(fill, stroke, new Rect(r.X, r.Y, r.Width, r.Height), r.RadiusX, r.RadiusY);
+                        break;
+                    case SvgCircleElement c:
+                        dc.DrawEllipse(fill, stroke, new Point(c.Cx, c.Cy), c.R, c.R);
+                        break;
+                    case SvgEllipseElement el:
+                        dc.DrawEllipse(fill, stroke, new Point(el.Cx, el.Cy), el.Rx, el.Ry);
+                        break;
+                    case SvgLineElement l:
+                        if (stroke != null) dc.DrawLine(stroke, new Point(l.X1, l.Y1), new Point(l.X2, l.Y2));
+                        break;
+                    case SvgPolylineElement pl:
+                        if (pl.Points.Count > 1)
+                        {
+                            var sg = new StreamGeometry();
+                            using (var ctx = sg.Open())
+                            {
+                                ctx.BeginFigure(new Point(pl.Points[0].X, pl.Points[0].Y), pl.IsClosed, pl.IsClosed);
+                                for (int pi = 1; pi < pl.Points.Count; pi++)
+                                {
+                                    ctx.LineTo(new Point(pl.Points[pi].X, pl.Points[pi].Y), true, false);
+                                }
+                            }
+                            sg.Freeze();
+                            dc.DrawGeometry(fill, stroke, sg);
+                        }
+                        break;
+                    case SvgPathElement p:
+                        if (!string.IsNullOrWhiteSpace(p.PathData))
+                        {
+                            try
+                            {
+                                var geom = Geometry.Parse(p.PathData);
+                                dc.DrawGeometry(fill, stroke, geom);
+                            }
+                            catch { }
+                        }
+                        break;
+                }
+            }
+
+            dc.Pop();
+        }
+
+        private static Brush? ParseBrush(string? colorStr)
+        {
+            if (string.IsNullOrWhiteSpace(colorStr) || colorStr!.Equals("none", StringComparison.OrdinalIgnoreCase)) return null;
+            try
+            {
+                var converted = new BrushConverter().ConvertFromString(colorStr!);
+                if (converted is Brush brush)
+                {
+                    if (brush.CanFreeze) brush.Freeze();
+                    return brush;
+                }
+            }
+            catch { }
+            return Brushes.Gray;
+        }
+
+        private static Pen? ParsePen(string? colorStr, float width)
+        {
+            if (string.IsNullOrWhiteSpace(colorStr) || colorStr!.Equals("none", StringComparison.OrdinalIgnoreCase)) return null;
+            try
+            {
+                var converted = new BrushConverter().ConvertFromString(colorStr!);
+                if (converted is Brush brush)
+                {
+                    if (brush.CanFreeze) brush.Freeze();
+                    var pen = new Pen(brush, Math.Max(0.5, width));
+                    pen.Freeze();
+                    return pen;
+                }
+            }
+            catch { }
+            return new Pen(Brushes.DarkGray, 1.0);
+        }
+
+        /// <summary>
+        /// Imports an SVG diagram string into the scene at the specified world coordinates.
+        /// </summary>
+        public SvgVectorNode LoadSvg(string svgXml, float x = 0f, float y = 0f)
+        {
+            var node = SvgSceneImporter.ImportFromString(svgXml);
+            node.X = x;
+            node.Y = y;
+            _scene.AddNode(node);
+            InvalidateVisual();
+            return node;
+        }
+
+        /// <summary>
+        /// Computes an optimal 90-degree orthogonal Manhattan pipe route between two scene points.
+        /// </summary>
+        public List<ScenePoint> RoutePipeManhattan(ScenePoint source, ScenePoint target, PortDirection srcDir = PortDirection.Auto, PortDirection tgtDir = PortDirection.Auto)
+        {
+            return PipeRouter.RouteManhattan(source, target, srcDir, tgtDir);
         }
 
         #endregion
