@@ -11,7 +11,7 @@ namespace ZeroUI.Wpf.Overlays;
 /// A non-activating floating HUD window with frosted glass aesthetic, perfect for subtitles, real-time metrics, and telemetry overlays.
 /// Avoids stealing user typing focus using WS_EX_NOACTIVATE.
 /// </summary>
-public class HudWindow : Window
+public class ZHudWindow : Window
 {
     private const int WS_EX_NOACTIVATE = 0x08000000;
     private const int WS_EX_TOOLWINDOW = 0x00000080;
@@ -23,7 +23,7 @@ public class HudWindow : Window
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
     private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
-    public HudWindow()
+    public ZHudWindow()
     {
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
@@ -62,4 +62,12 @@ public class HudWindow : Window
             }
         }
     }
+}
+
+/// <summary>
+/// Backward-compatibility alias for <see cref="ZHudWindow"/>.
+/// </summary>
+[Obsolete("HudWindow is deprecated and will be removed in 5 release cycles. Please migrate to ZHudWindow instead.")]
+public class HudWindow : ZHudWindow
+{
 }
