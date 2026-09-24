@@ -629,9 +629,9 @@ namespace ZeroUI.Wpf.Reporting
         #region Nested SpreadsheetCanvas Element
         private class SpreadsheetCanvas : FrameworkElement
         {
-            private readonly SpreadsheetControl _owner;
+            private readonly ZSpreadsheet _owner;
 
-            public SpreadsheetCanvas(SpreadsheetControl owner)
+            public SpreadsheetCanvas(ZSpreadsheet owner)
             {
                 _owner = owner;
                 Focusable = true;

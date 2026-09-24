@@ -557,10 +557,10 @@ namespace ZeroUI.Wpf.Reporting
 
         private sealed class PdfPageVisualHost : FrameworkElement
         {
-            private readonly PdfViewerControl _owner;
+            private readonly ZPdfViewer _owner;
             private readonly PdfPageModel _page;
 
-            public PdfPageVisualHost(PdfViewerControl owner, PdfPageModel page)
+            public PdfPageVisualHost(ZPdfViewer owner, PdfPageModel page)
             {
                 _owner = owner;
                 _page = page;
