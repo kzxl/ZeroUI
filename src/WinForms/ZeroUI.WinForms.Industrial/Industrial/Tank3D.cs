@@ -3,8 +3,11 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -19,13 +22,14 @@ namespace ZeroUI.WinForms.Industrial
     /// <summary>
     /// Industrial 3D cylindrical fluid storage tank with animated surface waves,
     /// graduated level markings, and high/low sensor trips.
+    /// Synchronized with ZeroAnimationClock and ZeroFontCache.
     /// </summary>
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroTank3D.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("CurrentLevelLiters")]
     [Description("Industrial 3D cylindrical fluid storage tank with animated liquid waves")]
-    public class Tank3D : Control
+    public class Tank3D : ControlBase
     {
         private float _capacityLiters = 10000f;
         private float _currentLevelLiters = 6850f;
@@ -35,40 +39,41 @@ namespace ZeroUI.WinForms.Industrial
         private string _fluidName = "IPA Solution 99.7%";
         private Color _fluidColor = Color.FromArgb(6, 182, 212); // Cyan Blue
 
-        private readonly Timer _animTimer;
+        private IDisposable? _clockToken;
         private float _wavePhase = 0f;
         private bool _blinkPhase = false;
 
         public Tank3D()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             Size = new Size(180, 240);
             BackColor = Color.Transparent;
-            Font = new Font("Segoe UI", 8.5f);
-
-            _animTimer = new Timer { Interval = 60 };
-            _animTimer.Tick += (s, e) =>
-            {
-                _wavePhase += 0.15f;
-                _blinkPhase = !_blinkPhase;
-                Invalidate();
-            };
-
-            if (!ZeroDesignHelper.IsInDesignMode(this))
-            {
-                _animTimer.Start();
-            }
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
-        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (!ZeroDesignHelper.IsInDesignMode(this))
+            {
+                _clockToken = ZeroAnimationClock.Subscribe(OnAnimationFrameTick);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _clockToken?.Dispose();
+            _clockToken = null;
+        }
+
+        private void OnAnimationFrameTick(double deltaSeconds, long frameCount)
+        {
+            _wavePhase = (_wavePhase + (float)(deltaSeconds * 2.5)) % (float)(Math.PI * 2);
+            _blinkPhase = ZeroAnimationClock.BlinkSlow;
+            if (IsHandleCreated && Visible)
+            {
+                Invalidate();
+            }
+        }
 
         [Category("Tank Parameters")]
         [DefaultValue(10000f)]
@@ -154,7 +159,7 @@ namespace ZeroUI.WinForms.Industrial
             int h = Height;
 
             // 1. Header: Tank Name
-            using (var titleFont = new Font("Segoe UI", 8f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get("Segoe UI", 8f * DpiScale, FontStyle.Bold);
             using (var titleBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
             {
                 var sz = g.MeasureString(_tankName, titleFont);
@@ -272,7 +277,7 @@ namespace ZeroUI.WinForms.Industrial
                 g.DrawRectangle(tubePen, tubeRect);
 
                 // Tick marks (0%, 25%, 50%, 75%, 100%)
-                using var tickFont = new Font("Segoe UI", 6f);
+                var tickFont = ZeroFontCache.Get("Segoe UI", 6f * DpiScale, FontStyle.Regular);
                 using var tickBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary);
                 for (int pct = 0; pct <= 100; pct += 25)
                 {
@@ -304,14 +309,14 @@ namespace ZeroUI.WinForms.Industrial
 
             // 8. Bottom Digital Value Readout
             string valText = $"{_currentLevelLiters:N0} L ({Percentage:F1}%)";
-            using (var valFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+            var valFont = ZeroFontCache.Get("Segoe UI", 8.5f * DpiScale, FontStyle.Bold);
             using (var valBrush = new SolidBrush(ZeroTheme.Colors.TextPrimary))
             {
                 var sz = g.MeasureString(valText, valFont);
                 g.DrawString(valText, valFont, valBrush, (w - sz.Width) / 2, h - 28);
             }
 
-            using (var subFont = new Font("Segoe UI", 7f))
+            var subFont = ZeroFontCache.Get("Segoe UI", 7f * DpiScale, FontStyle.Regular);
             using (var subBrush = new SolidBrush(ZeroTheme.Colors.TextSecondary))
             {
                 var sz = g.MeasureString(_fluidName, subFont);
@@ -323,8 +328,8 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
-                _animTimer.Dispose();
+                _clockToken?.Dispose();
+                _clockToken = null;
             }
             base.Dispose(disposing);
         }

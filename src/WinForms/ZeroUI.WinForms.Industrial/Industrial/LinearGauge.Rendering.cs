@@ -4,6 +4,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Globalization;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -46,7 +47,7 @@ namespace ZeroUI.WinForms.Industrial
             var theme = ZeroTheme.Colors;
 
             // 1. Header: Title (left) and Telemetry Value (right)
-            using (var titleFont = new Font("Segoe UI", 9f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get("Segoe UI", 9f * scale, FontStyle.Bold);
             using (var titleBrush = new SolidBrush(theme.TextPrimary))
             {
                 g.DrawString(_title, titleFont, titleBrush, 4 * scale, 2 * scale);
@@ -96,7 +97,7 @@ namespace ZeroUI.WinForms.Industrial
             // 3. Graduations & Scale Ticks
             int tickY = barY + barH + (int)(4 * scale);
             using var tickPen = new Pen(theme.Border, 1f);
-            using var tickFont = new Font("Segoe UI", 7.5f);
+            var tickFont = ZeroFontCache.Get("Segoe UI", 7.5f * scale, FontStyle.Regular);
             using var tickBrush = new SolidBrush(theme.TextSecondary);
 
             int tickSteps = 4;
@@ -120,7 +121,7 @@ namespace ZeroUI.WinForms.Industrial
             string numStr = FormatValue(_value);
             string fullStr = string.IsNullOrEmpty(_unit) ? numStr : $"{numStr} {_unit}".Trim();
 
-            using var valFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+            var valFont = ZeroFontCache.Get("Segoe UI", 9.5f * DpiScale, FontStyle.Bold);
             using var valBrush = new SolidBrush(statusColor);
 
             if (!_useTabularReadout)

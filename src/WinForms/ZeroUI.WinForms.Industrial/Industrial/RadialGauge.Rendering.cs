@@ -5,6 +5,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.Windows.Forms;
 using ZeroUI.Core.Scada;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -104,9 +105,9 @@ namespace ZeroUI.WinForms.Industrial
             int totalSteps = _majorTicks * Math.Max(1, _minorTicks);
             using (var majorPen = new Pen(colors.TextSecondary, 1.5f))
             using (var minorPen = new Pen(Color.FromArgb(120, colors.TextSecondary), 1f))
-            using (var labelFont = new Font("Segoe UI", 7.5f, FontStyle.Regular))
             using (var labelBrush = new SolidBrush(colors.TextSecondary))
             {
+                var labelFont = ZeroFontCache.Get("Segoe UI", 7.5f * DpiScale, FontStyle.Regular);
                 for (int step = 0; step <= totalSteps; step++)
                 {
                     float ratio = (float)step / totalSteps;
@@ -143,10 +144,11 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 5. Gauge Title and Readout
-            using (var titleFont = new Font("Segoe UI", 8f, FontStyle.Regular))
             using (var titleBrush = new SolidBrush(colors.TextSecondary))
-            using (var valFont = new Font("Segoe UI", 11f, FontStyle.Bold))
             {
+                var titleFont = ZeroFontCache.Get("Segoe UI", 8f * DpiScale, FontStyle.Regular);
+                var valFont = ZeroFontCache.Get("Segoe UI", 11f * DpiScale, FontStyle.Bold);
+
                 // Title
                 if (!string.IsNullOrEmpty(_title))
                 {

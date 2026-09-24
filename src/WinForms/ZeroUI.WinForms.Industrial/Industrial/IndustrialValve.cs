@@ -6,8 +6,10 @@ using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Scada.Safety;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -37,7 +39,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialValve.bmp")]
     [Category("ZeroUI - SCADA")]
-    public class IndustrialValve : Control, IScadaBindable
+    public class IndustrialValve : ControlBase, IScadaBindable
     {
         private ZeroValveType _valveType = ZeroValveType.TwoWaySolenoid;
         private ZeroValveState _state = ZeroValveState.Open;
@@ -106,18 +108,9 @@ namespace ZeroUI.WinForms.Industrial
 
         public IndustrialValve()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             BackColor = Color.Transparent;
             Size = new Size(54, 62);
             Cursor = Cursors.Hand;
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -308,7 +301,7 @@ namespace ZeroUI.WinForms.Industrial
             // 3. Tag Label Text below valve
             if (!string.IsNullOrEmpty(_tagLabel))
             {
-                using var fontTag = new Font("Segoe UI", 7f, FontStyle.Bold);
+                var fontTag = ZeroFontCache.Get("Segoe UI", 7f * DpiScale, FontStyle.Bold);
                 using var brushLabel = new SolidBrush(palette.TextPrimary);
                 var sfTag = new StringFormat { Alignment = StringAlignment.Center };
                 g.DrawString(_tagLabel, fontTag, brushLabel, cx, bodyY + bodyH + 2, sfTag);
@@ -327,7 +320,6 @@ namespace ZeroUI.WinForms.Industrial
             {
                 _clockToken?.Dispose();
                 _clockToken = null;
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 ZeroTagEngine.UnregisterBindable(this);
             }
             base.Dispose(disposing);

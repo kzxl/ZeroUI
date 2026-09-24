@@ -229,6 +229,81 @@ namespace ZeroUI.Wpf.Industrial
 
         #endregion
 
+        #region Cached Frozen Drawing Resources
+
+        private static readonly Brush DarkCanvasBg;
+        private static readonly Brush LightCanvasBg;
+        private static readonly Brush DarkBodyBrush;
+        private static readonly Brush LightBodyBrush;
+        private static readonly Pen DarkBorderPen;
+        private static readonly Pen LightBorderPen;
+        private static readonly Brush DarkTextBrush;
+        private static readonly Brush LightTextBrush;
+        private static readonly Brush DarkSubTextBrush;
+        private static readonly Brush LightSubTextBrush;
+        private static readonly Pen SelectionPen;
+        private static readonly Pen HoverPen;
+        private static readonly Pen RunningRingPen;
+        private static readonly Pen WarningRingPen;
+        private static readonly Pen FaultRingPen;
+        private static readonly Pen StoppedRingPen;
+        private static readonly Pen RunningImpellerPen;
+        private static readonly Pen WarningImpellerPen;
+        private static readonly Pen FaultImpellerPen;
+        private static readonly Pen StoppedImpellerPen;
+        private static readonly Brush NormalFluidBrush;
+        private static readonly Brush FaultFluidBrush;
+        private static readonly Brush NormalStatusDotBrush;
+        private static readonly Brush WarningStatusDotBrush;
+        private static readonly Brush FaultStatusDotBrush;
+        private static readonly Brush RunningValveBrush;
+        private static readonly Brush FaultValveBrush;
+        private static readonly Brush StoppedValveBrush;
+
+        static PlantMimicCanvas()
+        {
+            DarkCanvasBg = new SolidColorBrush(Color.FromRgb(15, 23, 42)); DarkCanvasBg.Freeze();
+            LightCanvasBg = new SolidColorBrush(Color.FromRgb(241, 245, 249)); LightCanvasBg.Freeze();
+
+            DarkBodyBrush = new SolidColorBrush(Color.FromRgb(30, 41, 59)); DarkBodyBrush.Freeze();
+            LightBodyBrush = new SolidColorBrush(Color.FromRgb(248, 250, 252)); LightBodyBrush.Freeze();
+
+            DarkBorderPen = new Pen(new SolidColorBrush(Color.FromRgb(71, 85, 105)), 1.5); DarkBorderPen.Freeze();
+            LightBorderPen = new Pen(new SolidColorBrush(Color.FromRgb(203, 213, 225)), 1.5); LightBorderPen.Freeze();
+
+            DarkTextBrush = new SolidColorBrush(Color.FromRgb(241, 245, 249)); DarkTextBrush.Freeze();
+            LightTextBrush = new SolidColorBrush(Color.FromRgb(15, 23, 42)); LightTextBrush.Freeze();
+
+            DarkSubTextBrush = new SolidColorBrush(Color.FromRgb(148, 163, 184)); DarkSubTextBrush.Freeze();
+            LightSubTextBrush = new SolidColorBrush(Color.FromRgb(100, 116, 139)); LightSubTextBrush.Freeze();
+
+            SelectionPen = new Pen(new SolidColorBrush(Color.FromRgb(245, 158, 11)), 2.0); SelectionPen.Freeze();
+            HoverPen = new Pen(new SolidColorBrush(Color.FromArgb(120, 59, 130, 246)), 1.5); HoverPen.Freeze();
+
+            RunningRingPen = new Pen(new SolidColorBrush(Color.FromRgb(16, 185, 129)), 2.5); RunningRingPen.Freeze();
+            WarningRingPen = new Pen(new SolidColorBrush(Color.FromRgb(245, 158, 11)), 2.5); WarningRingPen.Freeze();
+            FaultRingPen = new Pen(new SolidColorBrush(Color.FromRgb(239, 68, 68)), 2.5); FaultRingPen.Freeze();
+            StoppedRingPen = new Pen(new SolidColorBrush(Color.FromRgb(100, 116, 139)), 2.5); StoppedRingPen.Freeze();
+
+            RunningImpellerPen = new Pen(new SolidColorBrush(Color.FromRgb(16, 185, 129)), 1.5); RunningImpellerPen.Freeze();
+            WarningImpellerPen = new Pen(new SolidColorBrush(Color.FromRgb(245, 158, 11)), 1.5); WarningImpellerPen.Freeze();
+            FaultImpellerPen = new Pen(new SolidColorBrush(Color.FromRgb(239, 68, 68)), 1.5); FaultImpellerPen.Freeze();
+            StoppedImpellerPen = new Pen(new SolidColorBrush(Color.FromRgb(100, 116, 139)), 1.5); StoppedImpellerPen.Freeze();
+
+            NormalFluidBrush = new SolidColorBrush(Color.FromArgb(180, 14, 165, 233)); NormalFluidBrush.Freeze();
+            FaultFluidBrush = new SolidColorBrush(Color.FromArgb(180, 239, 68, 68)); FaultFluidBrush.Freeze();
+
+            NormalStatusDotBrush = new SolidColorBrush(Color.FromRgb(16, 185, 129)); NormalStatusDotBrush.Freeze();
+            WarningStatusDotBrush = new SolidColorBrush(Color.FromRgb(245, 158, 11)); WarningStatusDotBrush.Freeze();
+            FaultStatusDotBrush = new SolidColorBrush(Color.FromRgb(239, 68, 68)); FaultStatusDotBrush.Freeze();
+
+            RunningValveBrush = new SolidColorBrush(Color.FromArgb(140, 16, 185, 129)); RunningValveBrush.Freeze();
+            FaultValveBrush = new SolidColorBrush(Color.FromArgb(140, 239, 68, 68)); FaultValveBrush.Freeze();
+            StoppedValveBrush = new SolidColorBrush(Color.FromArgb(140, 148, 163, 184)); StoppedValveBrush.Freeze();
+        }
+
+        #endregion
+
         #region Render Pipeline
 
         protected override void OnRender(DrawingContext dc)
@@ -242,9 +317,7 @@ namespace ZeroUI.Wpf.Industrial
             bool isDark = ZeroWpfTheme.IsDark;
 
             // 1. Fill Canvas Background
-            Brush canvasBg = isDark
-                ? new SolidColorBrush(Color.FromRgb(15, 23, 42))
-                : new SolidColorBrush(Color.FromRgb(241, 245, 249));
+            Brush canvasBg = isDark ? DarkCanvasBg : LightCanvasBg;
             dc.DrawRectangle(canvasBg, null, new Rect(0, 0, w, h));
 
             // 2. Draw Transformed Grid Lines
@@ -265,14 +338,19 @@ namespace ZeroUI.Wpf.Industrial
 
             _scene.QueryVisibleNodes(viewportRect, _visibleNodesBuffer);
             double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            var renderContext = new RenderContext(viewportRect, (float)_zoomFactor, isDark, Environment.TickCount);
 
-            // 5. Render Scene Nodes
+            // 5. Render Scene Nodes (both ZeroSceneNode and polymorphic SceneNode subclasses)
             for (int i = 0; i < _visibleNodesBuffer.Count; i++)
             {
                 var node = _visibleNodesBuffer[i];
                 if (node is ZeroSceneNode zsn)
                 {
                     RenderZeroSceneNode(dc, zsn, isDark, dpi);
+                }
+                else
+                {
+                    node.Render(dc, renderContext);
                 }
             }
 
@@ -324,23 +402,21 @@ namespace ZeroUI.Wpf.Industrial
             double nw = b.Width;
             double nh = b.Height;
 
-            Brush bodyBrush = isDark ? new SolidColorBrush(Color.FromRgb(30, 41, 59)) : new SolidColorBrush(Color.FromRgb(248, 250, 252));
-            Pen borderPen = new Pen(isDark ? new SolidColorBrush(Color.FromRgb(71, 85, 105)) : new SolidColorBrush(Color.FromRgb(203, 213, 225)), 1.5);
-            Brush textBrush = isDark ? new SolidColorBrush(Color.FromRgb(241, 245, 249)) : new SolidColorBrush(Color.FromRgb(15, 23, 42));
-            Brush subTextBrush = isDark ? new SolidColorBrush(Color.FromRgb(148, 163, 184)) : new SolidColorBrush(Color.FromRgb(100, 116, 139));
+            Brush bodyBrush = isDark ? DarkBodyBrush : LightBodyBrush;
+            Pen borderPen = isDark ? DarkBorderPen : LightBorderPen;
+            Brush textBrush = isDark ? DarkTextBrush : LightTextBrush;
+            Brush subTextBrush = isDark ? DarkSubTextBrush : LightSubTextBrush;
 
             Rect nodeRect = new Rect(x, y, nw, nh);
 
             // Selection Glow
             if (node == _selectedNode)
             {
-                Pen selPen = new Pen(new SolidColorBrush(Color.FromRgb(245, 158, 11)), 2.0);
-                dc.DrawRoundedRectangle(null, selPen, new Rect(x - 3, y - 3, nw + 6, nh + 6), 6, 6);
+                dc.DrawRoundedRectangle(null, SelectionPen, new Rect(x - 3, y - 3, nw + 6, nh + 6), 6, 6);
             }
             else if (node == _hoveredNode)
             {
-                Pen hovPen = new Pen(new SolidColorBrush(Color.FromArgb(120, 59, 130, 246)), 1.5);
-                dc.DrawRoundedRectangle(null, hovPen, new Rect(x - 2, y - 2, nw + 4, nh + 4), 5, 5);
+                dc.DrawRoundedRectangle(null, HoverPen, new Rect(x - 2, y - 2, nw + 4, nh + 4), 5, 5);
             }
 
             switch (node.NodeType)
@@ -355,10 +431,7 @@ namespace ZeroUI.Wpf.Industrial
                     double fillY = y + nh - fillH;
                     if (fillH > 0)
                     {
-                        Color fluidColor = node.State == ScadaNodeState.Fault
-                            ? Color.FromRgb(239, 68, 68)
-                            : Color.FromRgb(14, 165, 233);
-                        Brush fluidBrush = new SolidColorBrush(Color.FromArgb(180, fluidColor.R, fluidColor.G, fluidColor.B));
+                        Brush fluidBrush = node.State == ScadaNodeState.Fault ? FaultFluidBrush : NormalFluidBrush;
                         dc.DrawRectangle(fluidBrush, null, new Rect(x + 1.5, fillY, nw - 3, fillH));
                     }
 
@@ -379,14 +452,16 @@ namespace ZeroUI.Wpf.Industrial
                     dc.DrawEllipse(bodyBrush, borderPen, new Point(cx, cy), r, r);
 
                     // State Indicator Ring
-                    Color ringColor = node.State == ScadaNodeState.Running ? Color.FromRgb(16, 185, 129) :
-                                      node.State == ScadaNodeState.Fault ? Color.FromRgb(239, 68, 68) : Color.FromRgb(100, 116, 139);
-                    Pen ringPen = new Pen(new SolidColorBrush(ringColor), 2.5);
+                    Pen ringPen = node.State == ScadaNodeState.Running ? RunningRingPen :
+                                  node.State == ScadaNodeState.Fault ? FaultRingPen :
+                                  node.State == ScadaNodeState.Warning ? WarningRingPen : StoppedRingPen;
                     dc.DrawEllipse(null, ringPen, new Point(cx, cy), r - 3, r - 3);
 
                     // Impeller Cross
                     double ir = r * 0.45;
-                    Pen impellerPen = new Pen(new SolidColorBrush(ringColor), 1.5);
+                    Pen impellerPen = node.State == ScadaNodeState.Running ? RunningImpellerPen :
+                                      node.State == ScadaNodeState.Fault ? FaultImpellerPen :
+                                      node.State == ScadaNodeState.Warning ? WarningImpellerPen : StoppedImpellerPen;
                     dc.DrawLine(impellerPen, new Point(cx - ir, cy), new Point(cx + ir, cy));
                     dc.DrawLine(impellerPen, new Point(cx, cy - ir), new Point(cx, cy + ir));
 
@@ -405,9 +480,9 @@ namespace ZeroUI.Wpf.Industrial
                     // Capsule Transmitter
                     dc.DrawRoundedRectangle(bodyBrush, borderPen, nodeRect, 4, 4);
 
-                    Color statusColor = node.State == ScadaNodeState.Fault ? Color.FromRgb(239, 68, 68) :
-                                        node.State == ScadaNodeState.Warning ? Color.FromRgb(245, 158, 11) : Color.FromRgb(16, 185, 129);
-                    dc.DrawEllipse(new SolidColorBrush(statusColor), null, new Point(x + 8, y + 10), 3.5, 3.5);
+                    Brush statusDotBrush = node.State == ScadaNodeState.Fault ? FaultStatusDotBrush :
+                                           node.State == ScadaNodeState.Warning ? WarningStatusDotBrush : NormalStatusDotBrush;
+                    dc.DrawEllipse(statusDotBrush, null, new Point(x + 8, y + 10), 3.5, 3.5);
 
                     var sensorLabel = new FormattedText(node.Label, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.MediumTypeface, 8.5, subTextBrush, dpi);
                     dc.DrawText(sensorLabel, new Point(x + 16, y + 4));
@@ -429,9 +504,9 @@ namespace ZeroUI.Wpf.Industrial
                     }
                     valveGeom.Freeze();
 
-                    Color valveColor = node.State == ScadaNodeState.Running ? Color.FromRgb(16, 185, 129) :
-                                       node.State == ScadaNodeState.Fault ? Color.FromRgb(239, 68, 68) : Color.FromRgb(148, 163, 184);
-                    dc.DrawGeometry(new SolidColorBrush(Color.FromArgb(140, valveColor.R, valveColor.G, valveColor.B)), borderPen, valveGeom);
+                    Brush valveBrush = node.State == ScadaNodeState.Running ? RunningValveBrush :
+                                       node.State == ScadaNodeState.Fault ? FaultValveBrush : StoppedValveBrush;
+                    dc.DrawGeometry(valveBrush, borderPen, valveGeom);
 
                     var valveLabel = new FormattedText(node.Label, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, ZeroWpfTheme.BoldTypeface, 8.5, textBrush, dpi);
                     dc.DrawText(valveLabel, new Point(x, y + nh + 2));

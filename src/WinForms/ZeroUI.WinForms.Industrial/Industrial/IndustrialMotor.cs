@@ -6,8 +6,10 @@ using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Scada.Safety;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -34,7 +36,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialMotor.bmp")]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial electric motor drive with cooling fins and dynamic telemetry status")]
-    public class IndustrialMotor : Control, IScadaBindable, IAnimationFrameListener
+    public class IndustrialMotor : ControlBase, IScadaBindable, IAnimationFrameListener
     {
         private ZeroMotorState _state = ZeroMotorState.Running;
         private ZeroMotorDirection _direction = ZeroMotorDirection.Forward;
@@ -272,14 +274,14 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 6. Header Tag Label
+            var fontTag = ZeroFontCache.Get("Segoe UI", 8.5f * DpiScale, FontStyle.Bold);
             using (var textBrush = new SolidBrush(textColor))
-            using (var fontTag = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
             {
                 g.DrawString(_tagLabel, fontTag, textBrush, padX, padY - 2f);
             }
 
             // 7. Telemetry Readouts (RPM, Amps, State)
-            using (var dataFont = new Font(Font.FontFamily, 8f, FontStyle.Regular))
+            var dataFont = ZeroFontCache.Get("Segoe UI", 8f * DpiScale, FontStyle.Regular);
             using (var valBrush = new SolidBrush(textColor))
             using (var stateBrush = new SolidBrush(finColor))
             {

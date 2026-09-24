@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
@@ -37,7 +38,7 @@ namespace ZeroUI.WinForms.Industrial
         private bool _useTabularReadout = true;
         private bool _enableDamping = true;
         private double _dampingFactor = 0.25;
-        private readonly Timer _animationTimer;
+        private IDisposable? _dampingSubscription;
         private string? _boundTagPath;
 
         private readonly List<GaugeThresholdRange> _thresholds = new List<GaugeThresholdRange>();
@@ -85,8 +86,7 @@ namespace ZeroUI.WinForms.Industrial
                 if (_enableDamping)
                 {
                     _targetValue = clamped;
-                    if (!_animationTimer.Enabled)
-                        _animationTimer.Start();
+                    EnsureDampingSubscription();
                 }
                 else
                 {
@@ -98,6 +98,31 @@ namespace ZeroUI.WinForms.Industrial
                         ValueChanged?.Invoke(this, EventArgs.Empty);
                     }
                 }
+            }
+        }
+
+        private void EnsureDampingSubscription()
+        {
+            if (_dampingSubscription == null && IsHandleCreated)
+            {
+                _dampingSubscription = ZeroAnimationClock.Subscribe((delta, frame) =>
+                {
+                    double next = GaugeMath.ApplyDamping(_value, _targetValue, _dampingFactor);
+                    if (Math.Abs(next - _value) > 1e-4)
+                    {
+                        _value = next;
+                        Invalidate();
+                        ValueChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                    else
+                    {
+                        _value = _targetValue;
+                        _dampingSubscription?.Dispose();
+                        _dampingSubscription = null;
+                        Invalidate();
+                        ValueChanged?.Invoke(this, EventArgs.Empty);
+                    }
+                });
             }
         }
 
@@ -264,35 +289,21 @@ namespace ZeroUI.WinForms.Industrial
             _thresholds.Add(new GaugeThresholdRange(0, 70, GaugeSeverity.Normal, 0xFF10B981u, "Normal"));
             _thresholds.Add(new GaugeThresholdRange(70, 85, GaugeSeverity.Warning, 0xFFF59E0Bu, "Warning"));
             _thresholds.Add(new GaugeThresholdRange(85, 100, GaugeSeverity.Critical, 0xFFEF4444u, "Danger"));
+        }
 
-            _animationTimer = new Timer
-            {
-                Interval = 16 // 60 FPS update
-            };
-            _animationTimer.Tick += (s, e) =>
-            {
-                double next = GaugeMath.ApplyDamping(_value, _targetValue, _dampingFactor);
-                if (Math.Abs(next - _value) > 1e-4)
-                {
-                    _value = next;
-                    Invalidate();
-                    ValueChanged?.Invoke(this, EventArgs.Empty);
-                }
-                else
-                {
-                    _value = _targetValue;
-                    _animationTimer.Stop();
-                    Invalidate();
-                    ValueChanged?.Invoke(this, EventArgs.Empty);
-                }
-            };
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _dampingSubscription?.Dispose();
+            _dampingSubscription = null;
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                _animationTimer.Dispose();
+                _dampingSubscription?.Dispose();
+                _dampingSubscription = null;
             }
             base.Dispose(disposing);
         }

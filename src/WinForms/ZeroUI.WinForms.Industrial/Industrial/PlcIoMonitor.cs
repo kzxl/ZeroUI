@@ -1,6 +1,9 @@
 using System;
 
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -30,7 +33,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("OutputCoilChanged")]
     [Description("PLC Digital I/O 16-Bit Monitor with live LED bit registers")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPlcIoMonitor.bmp")]
-    public class PlcIoMonitor : Control
+    public class PlcIoMonitor : ControlBase
     {
         private ushort _digitalInputs = 0x0055;  // Default sample bits
         private ushort _digitalOutputs = 0x0007; // Default sample bits
@@ -54,16 +57,16 @@ namespace ZeroUI.WinForms.Industrial
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 8f);
 
-            ZeroTheme.ThemeChanged += OnThemeChanged;
+
         }
 
-        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
+
             }
             base.Dispose(disposing);
         }
@@ -147,7 +150,7 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 2. Title & Status Bar
-            using (var titleFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+            var titleFont = ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold);
             using (var titleBrush = new SolidBrush(palette.TextPrimary))
             {
                 g.DrawString("PLC I/O Bit Matrix (16-DI / 16-DO)", titleFont, titleBrush, 8, 6);
@@ -166,7 +169,7 @@ namespace ZeroUI.WinForms.Industrial
             int w = Width;
             var palette = ZeroTheme.Colors;
             // Bank Label
-            using (var lblFont = new Font("Segoe UI", 8f, FontStyle.Bold))
+            var lblFont = ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Bold);
             using (var lblBrush = new SolidBrush(palette.TextSecondary))
             {
                 g.DrawString(label, lblFont, lblBrush, x, y + 4);
@@ -174,7 +177,7 @@ namespace ZeroUI.WinForms.Industrial
 
             // Hex Word Readout
             string hexText = $"0x{register:X4}";
-            using (var hexFont = new Font("Consolas", 8.5f, FontStyle.Bold))
+            var hexFont = ZeroFontCache.Get("Consolas", 8.5f, FontStyle.Bold);
             using (var hexBrush = new SolidBrush(palette.TextPrimary))
             {
                 var sz = g.MeasureString(hexText, hexFont);
@@ -187,7 +190,7 @@ namespace ZeroUI.WinForms.Industrial
             int bitH = 14;
             int spacing = 3;
 
-            using var numFont = new Font("Segoe UI", 6f);
+            var numFont = ZeroFontCache.Get("Segoe UI", 6f, FontStyle.Regular);
             using var numBrush = new SolidBrush(Color.FromArgb(100, 116, 139));
 
             for (int i = 15; i >= 0; i--)

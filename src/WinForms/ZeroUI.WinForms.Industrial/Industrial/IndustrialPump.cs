@@ -6,8 +6,10 @@ using System.Windows.Forms;
 using ZeroUI.Core.Rendering;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Scada.Safety;
+using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Native;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -27,7 +29,7 @@ namespace ZeroUI.WinForms.Industrial
     [ToolboxItem(true)]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialPump.bmp")]
     [Category("ZeroUI - SCADA")]
-    public class IndustrialPump : Control, IScadaBindable
+    public class IndustrialPump : ControlBase, IScadaBindable
     {
         private ZeroPumpState _state = ZeroPumpState.Running;
         private DeviceStatusFlags _statusFlags = DeviceStatusFlags.None;
@@ -86,18 +88,9 @@ namespace ZeroUI.WinForms.Industrial
 
         public IndustrialPump()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor, true);
-
             BackColor = Color.Transparent;
             Size = new Size(80, 84);
             Cursor = Cursors.Hand;
-
-            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -130,8 +123,6 @@ namespace ZeroUI.WinForms.Industrial
                 }
             }
         }
-
-        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
 
         public void OnTagValueChanged(IScadaTag tag)
         {
@@ -267,16 +258,17 @@ namespace ZeroUI.WinForms.Industrial
             g.Restore(stateContainer);
 
             // 5. Telemetry Readout below pump
-            using var fontTag = new Font("Segoe UI", 7.5f, FontStyle.Bold);
-            using var fontRpm = new Font("Segoe UI", 6.5f, FontStyle.Regular);
+            var fontTag = ZeroFontCache.Get("Segoe UI", 7.5f * DpiScale, FontStyle.Bold);
+            var fontRpm = ZeroFontCache.Get("Segoe UI", 6.5f * DpiScale, FontStyle.Regular);
             using var brushText = new SolidBrush(palette.TextPrimary);
             using var brushMuted = new SolidBrush(palette.TextSecondary);
+            using var brushDanger = new SolidBrush(palette.Danger);
 
             var sf = new StringFormat { Alignment = StringAlignment.Center };
             g.DrawString(_tagLabel, fontTag, brushText, cx, cy + radius + 6, sf);
 
             string infoStr = _state == ZeroPumpState.Running ? $"{_speedRpm:0} RPM" : (_state == ZeroPumpState.Trip ? "TRIP!" : "STOPPED");
-            g.DrawString(infoStr, fontRpm, (_state == ZeroPumpState.Trip) ? new SolidBrush(palette.Danger) : brushMuted, cx, cy + radius + 17, sf);
+            g.DrawString(infoStr, fontRpm, (_state == ZeroPumpState.Trip) ? brushDanger : brushMuted, cx, cy + radius + 17, sf);
 
             // 6. Safety & Interlock Badges
             if (_statusFlags != DeviceStatusFlags.None)
@@ -285,14 +277,12 @@ namespace ZeroUI.WinForms.Industrial
             }
         }
 
-
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
                 _clockToken?.Dispose();
                 _clockToken = null;
-                ZeroTheme.ThemeChanged -= OnThemeChanged;
                 ZeroTagEngine.UnregisterBindable(this);
             }
             base.Dispose(disposing);

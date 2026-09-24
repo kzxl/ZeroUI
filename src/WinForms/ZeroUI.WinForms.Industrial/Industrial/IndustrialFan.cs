@@ -1,6 +1,9 @@
 using System;
 
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -26,7 +29,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial ventilation fan with animated rotating blades")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroIndustrialFan.bmp")]
-    public class IndustrialFan : Control, IScadaBindable, IAnimationFrameListener
+    public class IndustrialFan : ControlBase, IScadaBindable, IAnimationFrameListener
     {
         private ZeroFanState _state = ZeroFanState.Running;
         private double _speedRpm = 1200.0;
@@ -152,7 +155,7 @@ namespace ZeroUI.WinForms.Industrial
             textColor = isDark ? Color.FromArgb(248, 250, 252) : Color.FromArgb(15, 23, 42);
 
             // 1. Tag & Status Header
-            using (var fontTag = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
+            var fontTag = ZeroFontCache.Get(Font.FontFamily.Name, 8.5f, FontStyle.Bold);
             using (var textBrush = new SolidBrush(textColor))
             {
                 g.DrawString(_tagLabel, fontTag, textBrush, 6f, 4f);
@@ -210,7 +213,7 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 5. Telemetry Footer (RPM & Status)
-            using (var dataFont = new Font(Font.FontFamily, 8f, FontStyle.Regular))
+            var dataFont = ZeroFontCache.Get(Font.FontFamily.Name, 8f, FontStyle.Regular);
             using (var valBrush = new SolidBrush(textColor))
             {
                 string info = $"{_speedRpm:0} RPM";

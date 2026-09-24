@@ -1,6 +1,9 @@
 using System;
 
-using ZeroUI.WinForms.Icons;using System.ComponentModel;
+using System.ComponentModel;
+using ZeroUI.WinForms.Base;
+using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -27,7 +30,7 @@ namespace ZeroUI.WinForms.Industrial
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Industrial pneumatic cylinder with animated piston rod and magnetic limit sensors")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroPneumaticCylinder.bmp")]
-    public class PneumaticCylinder : Control, IScadaBindable, IAnimationFrameListener
+    public class PneumaticCylinder : ControlBase, IScadaBindable, IAnimationFrameListener
     {
         private CylinderState _state = CylinderState.Extended;
         private double _extensionPercent = 100.0; // 0 = fully retracted, 100 = fully extended
@@ -175,7 +178,7 @@ namespace ZeroUI.WinForms.Industrial
             textColor = isDark ? Color.FromArgb(248, 250, 252) : Color.FromArgb(15, 23, 42);
 
             // 1. Tag Header
-            using (var fontTag = new Font(Font.FontFamily, 8.5f, FontStyle.Bold))
+            var fontTag = ZeroFontCache.Get(Font.FontFamily.Name, 8.5f, FontStyle.Bold);
             using (var textBrush = new SolidBrush(textColor))
             {
                 g.DrawString(_tagLabel, fontTag, textBrush, 8f, 4f);
@@ -242,7 +245,7 @@ namespace ZeroUI.WinForms.Industrial
             }
 
             // 5. Position Readout (%)
-            using (var dataFont = new Font(Font.FontFamily, 8f, FontStyle.Regular))
+            var dataFont = ZeroFontCache.Get(Font.FontFamily.Name, 8f, FontStyle.Regular);
             using (var valBrush = new SolidBrush(textColor))
             {
                 string info = $"Stroke: {_extensionPercent:0}%";
