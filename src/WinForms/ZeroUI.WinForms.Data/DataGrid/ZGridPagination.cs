@@ -12,11 +12,11 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultEvent("PageChanged")]
     [Description("High-performance single-HWND pagination toolbar control for virtual grids")]
-    public class GridPagination : PaginationControl
+    public class ZGridPagination : ZPagination
     {
         public new event EventHandler? PageChanged;
 
-        public GridPagination()
+        public ZGridPagination()
         {
             Height = 46;
             PageSizes = new[] { 100, 500, 1000, 5000 };
@@ -40,13 +40,26 @@ namespace ZeroUI.WinForms.DataGrid
         }
     }
 
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
-    /// Legacy alias for GridPagination.
-    /// Preserved for backward compatibility.
+    /// Legacy alias for <see cref="ZGridPagination"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
     /// </summary>
-    [Obsolete("ZeroGridPagination is deprecated. Please use GridPagination instead.")]
+    [Obsolete("GridPagination is deprecated and will be removed in 5 release cycles. Please migrate to ZGridPagination instead.")]
     [ToolboxItem(false)]
-    public class ZeroGridPagination : GridPagination
+    public class GridPagination : ZGridPagination
     {
     }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZGridPagination"/>.
+    /// </summary>
+    [Obsolete("ZeroGridPagination is deprecated. Please use ZGridPagination instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGridPagination : ZGridPagination
+    {
+    }
+
+    #endregion
 }

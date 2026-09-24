@@ -13,7 +13,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Pie and Donut distribution chart")]
-    public class ZPieChart : ChartControl
+    public class ZPieChart : ZChart
     {
         private bool _isDonut = true;
 

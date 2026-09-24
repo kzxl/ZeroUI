@@ -16,7 +16,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultEvent("ExportClicked")]
     [Description("Integrated search bar and toolbar for GridControl")]
-    public class GridSearchBar : Panel, IZeroDpiScalable
+    public class ZGridSearchBar : Panel, IZeroDpiScalable
     {
         private ZGrid? _grid;
         private readonly SearchControl _searchBox;
@@ -100,7 +100,7 @@ namespace ZeroUI.WinForms.DataGrid
 
         public event EventHandler? ExportClicked;
 
-        public GridSearchBar()
+        public ZGridSearchBar()
         {
             Dock = DockStyle.Top;
             Height = 48;
@@ -260,13 +260,26 @@ namespace ZeroUI.WinForms.DataGrid
         }
     }
 
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
-    /// Legacy alias for GridSearchBar.
-    /// Preserved for backward compatibility.
+    /// Legacy alias for <see cref="ZGridSearchBar"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
     /// </summary>
-    [Obsolete("ZeroGridSearchBar is deprecated. Please use GridSearchBar instead.")]
+    [Obsolete("GridSearchBar is deprecated and will be removed in 5 release cycles. Please migrate to ZGridSearchBar instead.")]
     [ToolboxItem(false)]
-    public class ZeroGridSearchBar : GridSearchBar
+    public class GridSearchBar : ZGridSearchBar
     {
     }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZGridSearchBar"/>.
+    /// </summary>
+    [Obsolete("ZeroGridSearchBar is deprecated. Please use ZGridSearchBar instead.")]
+    [ToolboxItem(false)]
+    public class ZeroGridSearchBar : ZGridSearchBar
+    {
+    }
+
+    #endregion
 }

@@ -12,7 +12,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Column and Bar comparison chart")]
-    public class ZBarChart : ChartControl
+    public class ZBarChart : ZChart
     {
         private bool _isHorizontal = false;
         private bool _isStacked = false;

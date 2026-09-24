@@ -25,8 +25,8 @@ namespace ZeroUI.WinForms.Charts
     public class ZTrendStudio : BaseUserControl, IZeroDpiScalable
     {
         private readonly Panel _toolbarPanel;
-        private readonly TrendPlot _plot;
-        private readonly TrendPenTable _penTable;
+        private readonly ZTrendPlot _plot;
+        private readonly ZTrendPenTable _penTable;
         private readonly SplitContainer _splitContainer;
 
         // Toolbar buttons
@@ -45,8 +45,8 @@ namespace ZeroUI.WinForms.Charts
         [Browsable(false)]
         public float DpiScale => _currentDpiScale;
 
-        public TrendPlot Plot => _plot;
-        public TrendPenTable PenTable => _penTable;
+        public ZTrendPlot Plot => _plot;
+        public ZTrendPenTable PenTable => _penTable;
         public List<TrendPen> Pens => _plot.Pens;
         public List<TrendAnnotation> Annotations => _plot.Annotations;
         public TrendDualCursor DualCursor => _plot.DualCursor;
@@ -76,8 +76,8 @@ namespace ZeroUI.WinForms.Charts
             BackColor = Color.FromArgb(15, 23, 42);
 
             // 1. Central Canvas & Pen Table
-            _plot = new TrendPlot { Dock = DockStyle.Fill };
-            _penTable = new TrendPenTable { Dock = DockStyle.Fill, Plot = _plot };
+            _plot = new ZTrendPlot { Dock = DockStyle.Fill };
+            _penTable = new ZTrendPenTable { Dock = DockStyle.Fill, Plot = _plot };
 
             _splitContainer = new SplitContainer
             {

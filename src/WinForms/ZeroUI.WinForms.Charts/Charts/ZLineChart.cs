@@ -12,7 +12,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxItem(true)]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("Specialized Line and Area trend chart")]
-    public class ZLineChart : ChartControl
+    public class ZLineChart : ZChart
     {
         private bool _isCurved = true;
         private bool _isArea = true;

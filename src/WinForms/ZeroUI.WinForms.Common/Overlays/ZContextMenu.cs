@@ -19,9 +19,9 @@ namespace ZeroUI.WinForms.Overlays
     [ToolboxItem(true)]
     [Category("ZeroUI - Overlays")]
     [Description("Modern anti-aliased context menu strip with pill highlights, interactive editors, and theme support")]
-    public class ContextMenuControl : ContextMenuStrip
+    public class ZContextMenu : ContextMenuStrip
     {
-        public ContextMenuControl()
+        public ZContextMenu()
         {
             Renderer = new ContextMenuRenderer();
             ShowImageMargin = false;
@@ -124,7 +124,7 @@ namespace ZeroUI.WinForms.Overlays
             var item = new MenuItemControl(text, null)
             {
                 Glyph = icon,
-                DropDown = new ContextMenuControl()
+                DropDown = new ZContextMenu()
             };
             Items.Add(item);
             return item;
@@ -135,7 +135,7 @@ namespace ZeroUI.WinForms.Overlays
             var item = new MenuItemControl(text, null)
             {
                 Icon = icon,
-                DropDown = new ContextMenuControl()
+                DropDown = new ZContextMenu()
             };
             Items.Add(item);
             return item;
@@ -441,9 +441,24 @@ namespace ZeroUI.WinForms.Overlays
             ZeroUIConfig.CreateRoundedRectangle(r, radius);
     }
 
-    [Obsolete("Use ContextMenuControl instead.")]
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZContextMenu"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ContextMenuControl is deprecated and will be removed in 5 release cycles. Please migrate to ZContextMenu instead.")]
     [ToolboxItem(false)]
-    public class ZeroContextMenu : ContextMenuControl
+    public class ContextMenuControl : ZContextMenu
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZContextMenu"/>.
+    /// </summary>
+    [Obsolete("ZeroContextMenu is deprecated. Please use ZContextMenu instead.")]
+    [ToolboxItem(false)]
+    public class ZeroContextMenu : ZContextMenu
     {
     }
 
@@ -458,4 +473,6 @@ namespace ZeroUI.WinForms.Overlays
     public class ZeroContextMenuRenderer : ContextMenuRenderer
     {
     }
+
+    #endregion
 }

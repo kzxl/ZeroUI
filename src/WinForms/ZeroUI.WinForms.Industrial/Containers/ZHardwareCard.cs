@@ -15,7 +15,7 @@ namespace ZeroUI.WinForms.Containers
     [ToolboxItem(true)]
     [Category("ZeroUI - Industrial & SCADA")]
     [Description("Hardware-accelerated Direct3D 11 card container with analytical drop shadows and neon bloom")]
-    public class HardwareCard : ZeroDirectXCanvas
+    public class ZHardwareCard : ZeroDirectXCanvas
     {
         private bool _alarmState;
 
@@ -44,7 +44,7 @@ namespace ZeroUI.WinForms.Containers
             }
         }
 
-        public HardwareCard()
+        public ZHardwareCard()
         {
             // Default to ZeroUI Obsidian Dark palette
             BackColor = Color.FromArgb(13, 17, 23);
@@ -59,13 +59,27 @@ namespace ZeroUI.WinForms.Containers
         }
     }
 
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
-    /// Legacy alias for <see cref="HardwareCard"/>.
-    /// Preserved for backward compatibility.
+    /// Legacy alias for <see cref="ZHardwareCard"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
     /// </summary>
-    [Obsolete("ZeroHardwareCard is deprecated. Please use HardwareCard instead.")]
+    [Obsolete("HardwareCard is deprecated and will be removed in 5 release cycles. Please migrate to ZHardwareCard instead.")]
     [ToolboxItem(false)]
-    public class ZeroHardwareCard : HardwareCard
+    public class HardwareCard : ZHardwareCard
     {
     }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZHardwareCard"/>.
+    /// Preserved for backward compatibility.
+    /// </summary>
+    [Obsolete("ZeroHardwareCard is deprecated. Please use ZHardwareCard instead.")]
+    [ToolboxItem(false)]
+    public class ZeroHardwareCard : ZHardwareCard
+    {
+    }
+
+    #endregion
 }
