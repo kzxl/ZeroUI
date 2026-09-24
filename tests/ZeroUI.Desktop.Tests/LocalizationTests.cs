@@ -12,7 +12,7 @@ namespace ZeroUI.Desktop.Tests
     public class LocalizationTests
     {
         [Fact]
-        public void ZeroJsonScanner_ParsesFlatJsonWithEscapesAndUnicodeCorrectly()
+        public void JsonScanner_ParsesFlatJsonWithEscapesAndUnicodeCorrectly()
         {
             string json = @"
             {
@@ -25,13 +25,18 @@ namespace ZeroUI.Desktop.Tests
             }";
 
             var dict = new Dictionary<string, string>(StringComparer.Ordinal);
-            ZeroJsonScanner.Parse(json, dict);
+            JsonScanner.Parse(json, dict);
 
             Assert.Equal("OK", dict["Common.Ok"]);
             Assert.Equal("Cancel", dict["Common.Cancel"]);
             Assert.Equal("Line 1\nLine 2\tTabbed\"", dict["Msg.LineBreak"]);
             Assert.Equal("Tạo tập tin nén", dict["Unicode.Vietnamese"]);
             Assert.Equal("42", dict["Number.Val"]);
+
+            // Backward compatibility test
+            var dictLegacy = new Dictionary<string, string>(StringComparer.Ordinal);
+            ZeroJsonScanner.Parse(json, dictLegacy);
+            Assert.Equal("OK", dictLegacy["Common.Ok"]);
         }
 
         [Fact]

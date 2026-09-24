@@ -319,7 +319,7 @@ namespace ZeroUI.Core.Pivot
             var grandTotals = new Dictionary<int, PivotAggregateCell>();
 
             // Default empty key when no row or column fields are assigned
-            var defaultEmptyKey = new PivotKey(ZeroLocalizer.GetString(ZeroStringId.PivotTotal));
+            var defaultEmptyKey = new PivotKey(Localizer.GetString(StringId.PivotTotal));
 
             if (_dataSource != null && dataFields.Count > 0)
             {

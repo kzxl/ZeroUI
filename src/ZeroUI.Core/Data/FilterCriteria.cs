@@ -190,10 +190,10 @@ namespace ZeroUI.Core.Data
         {
             return op switch
             {
-                FilterGroupOperator.And => ZeroLocalizer.GetString(ZeroStringId.FilterOpAnd),
-                FilterGroupOperator.Or => ZeroLocalizer.GetString(ZeroStringId.FilterOpOr),
-                FilterGroupOperator.NotAnd => ZeroLocalizer.GetString(ZeroStringId.FilterOpNotAnd),
-                FilterGroupOperator.NotOr => ZeroLocalizer.GetString(ZeroStringId.FilterOpNotOr),
+                FilterGroupOperator.And => Localizer.GetString(StringId.FilterOpAnd),
+                FilterGroupOperator.Or => Localizer.GetString(StringId.FilterOpOr),
+                FilterGroupOperator.NotAnd => Localizer.GetString(StringId.FilterOpNotAnd),
+                FilterGroupOperator.NotOr => Localizer.GetString(StringId.FilterOpNotOr),
                 _ => op.ToString().ToUpperInvariant()
             };
         }
@@ -202,18 +202,18 @@ namespace ZeroUI.Core.Data
         {
             return op switch
             {
-                FilterComparisonOperator.Equals => ZeroLocalizer.GetString(ZeroStringId.FilterEquals),
-                FilterComparisonOperator.NotEquals => ZeroLocalizer.GetString(ZeroStringId.FilterNotEquals),
-                FilterComparisonOperator.Contains => ZeroLocalizer.GetString(ZeroStringId.FilterContains),
-                FilterComparisonOperator.StartsWith => ZeroLocalizer.GetString(ZeroStringId.FilterStartsWith),
-                FilterComparisonOperator.EndsWith => ZeroLocalizer.GetString(ZeroStringId.FilterEndsWith),
-                FilterComparisonOperator.GreaterThan => ZeroLocalizer.GetString(ZeroStringId.FilterGreaterThan),
+                FilterComparisonOperator.Equals => Localizer.GetString(StringId.FilterEquals),
+                FilterComparisonOperator.NotEquals => Localizer.GetString(StringId.FilterNotEquals),
+                FilterComparisonOperator.Contains => Localizer.GetString(StringId.FilterContains),
+                FilterComparisonOperator.StartsWith => Localizer.GetString(StringId.FilterStartsWith),
+                FilterComparisonOperator.EndsWith => Localizer.GetString(StringId.FilterEndsWith),
+                FilterComparisonOperator.GreaterThan => Localizer.GetString(StringId.FilterGreaterThan),
                 FilterComparisonOperator.GreaterThanOrEqual => ">=",
-                FilterComparisonOperator.LessThan => ZeroLocalizer.GetString(ZeroStringId.FilterLessThan),
+                FilterComparisonOperator.LessThan => Localizer.GetString(StringId.FilterLessThan),
                 FilterComparisonOperator.LessThanOrEqual => "<=",
                 FilterComparisonOperator.Between => "Between",
-                FilterComparisonOperator.IsNull => ZeroLocalizer.GetString(ZeroStringId.FilterIsNull),
-                FilterComparisonOperator.IsNotNull => ZeroLocalizer.GetString(ZeroStringId.FilterIsNotNull),
+                FilterComparisonOperator.IsNull => Localizer.GetString(StringId.FilterIsNull),
+                FilterComparisonOperator.IsNotNull => Localizer.GetString(StringId.FilterIsNotNull),
                 _ => op.ToString()
             };
         }

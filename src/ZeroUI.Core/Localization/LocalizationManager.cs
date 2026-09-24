@@ -147,7 +147,7 @@ namespace ZeroUI.Core.Localization
             if (string.IsNullOrWhiteSpace(cultureCode) || string.IsNullOrWhiteSpace(jsonText)) return;
 
             var dict = new Dictionary<string, string>(StringComparer.Ordinal);
-            ZeroJsonScanner.Parse(jsonText, dict);
+            JsonScanner.Parse(jsonText, dict);
             RegisterTable(cultureCode, dict);
         }
 
@@ -338,9 +338,9 @@ namespace ZeroUI.Core.Localization
         }
 
         /// <summary>
-        /// Retrieves localized string using legacy ZeroStringId enum for backward compatibility.
+        /// Retrieves localized string using StringId enum.
         /// </summary>
-        public static string GetString(ZeroStringId id)
+        public static string GetString(StringId id)
         {
             string key = id.ToString();
             var active = _activeTable;
@@ -348,8 +348,14 @@ namespace ZeroUI.Core.Localization
             {
                 return val;
             }
-            return ZeroLocalizer.GetString(id);
+            return Localizer.GetString(id);
         }
+
+        /// <summary>
+        /// Retrieves localized string using legacy ZeroStringId enum for backward compatibility.
+        /// </summary>
+        [Obsolete("Use StringId overload instead.")]
+        public static string GetString(ZeroStringId id) => GetString((StringId)id);
 
         #endregion
 

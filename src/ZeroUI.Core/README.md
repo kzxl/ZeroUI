@@ -30,7 +30,7 @@ Ultra-high-performance, zero-allocation core runtime, analytical engines, and in
 
 ### 🛡️ Form Validation & Internationalization Engine
 * **Declarative Validation Engine (`ValidationProvider`, `IControlValidationRule`):** Extensible validation framework with built-in rules (`NotEmpty`, `Range`, `Regex`, `Email`, `Length`, `CustomPredicate`).
-* **Runtime Dynamic Localization (`ZeroLocalizer`):** Zero-allocation runtime string localization engine with instant culture hot-switching (`en-US`, `vi-VN`) without restarting the application, cascading fallback resolution, and built-in enterprise dictionaries.
+* **Runtime Dynamic Localization (`LocalizationManager`, `Localizer`, `L`):** Ultra-fast, lock-free, zero-allocation runtime string localization engine with instant culture hot-switching (`en-US`, `vi-VN`) without restarting the application, streaming JSON scanner (`JsonScanner`), cascading fallback resolution, and built-in enterprise dictionaries.
 * **Standardized Editor & Binding Contracts (`IZeroEditor`, `ZeroDataBinder`):** Unified contract (`EditValue`, `IsModified`, `ReadOnly`, `ResetModified()`) enabling fluent two-way binding, dirty state tracking, and validation integration.
 
 ### 🏭 Industrial Telemetry, SCADA & Decimation
@@ -69,8 +69,9 @@ using ZeroUI.Core.Localization;
 using ZeroUI.Core.Validation;
 
 // 1. Dynamic Runtime Localization
-ZeroLocalizer.SetCulture("vi-VN");
-string saveText = ZeroLocalizer.GetString("Common.Save"); // "Lưu"
+LocalizationManager.SetLanguage("vi-VN");
+string saveText = L.T("Common.Save"); // "Lưu"
+string okText = Localizer.GetString(StringId.Ok); // "Đồng ý"
 
 // 2. High-Performance Form Validation
 var validator = new ValidationProvider();

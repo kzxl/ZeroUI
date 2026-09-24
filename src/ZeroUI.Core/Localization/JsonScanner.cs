@@ -9,7 +9,7 @@ namespace ZeroUI.Core.Localization
     /// Operates without third-party dependencies, compatible across .NET Framework 4.6.2, .NET Standard 2.0, and .NET 8+.
     /// Supports standard JSON escapes (\", \\, \n, \r, \t, \uXXXX) and single/multi-line comments.
     /// </summary>
-    public static class ZeroJsonScanner
+    public static class JsonScanner
     {
         /// <summary>
         /// Parses a flat JSON string into a destination dictionary with zero AST allocations.
@@ -211,5 +211,18 @@ namespace ZeroUI.Core.Localization
 
             return sb.ToString();
         }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="JsonScanner"/> to preserve backward compatibility.
+    /// </summary>
+    [Obsolete("Use JsonScanner instead.")]
+    public static class ZeroJsonScanner
+    {
+        /// <summary>
+        /// Parses a flat JSON string into a destination dictionary with zero AST allocations.
+        /// </summary>
+        public static void Parse(string? jsonText, IDictionary<string, string> destination)
+            => JsonScanner.Parse(jsonText, destination);
     }
 }

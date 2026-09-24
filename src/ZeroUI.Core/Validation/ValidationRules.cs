@@ -26,7 +26,7 @@ namespace ZeroUI.Core.Validation
 
         public RequiredControlRule(string? errorMessage = null, ValidationSeverity severity = ValidationSeverity.Error)
         {
-            ErrorMessage = errorMessage ?? ZeroLocalizer.GetString(ZeroStringId.ValRequired);
+            ErrorMessage = errorMessage ?? Localizer.GetString(StringId.ValRequired);
             Severity = severity;
         }
 
@@ -66,7 +66,7 @@ namespace ZeroUI.Core.Validation
             Min = min;
             Max = max;
             Severity = severity;
-            ErrorMessage = errorMessage ?? ZeroLocalizer.GetFormattedString(ZeroStringId.ValRangeFormat, min?.ToString() ?? "", max?.ToString() ?? "");
+            ErrorMessage = errorMessage ?? Localizer.GetFormattedString(StringId.ValRangeFormat, min?.ToString() ?? "", max?.ToString() ?? "");
         }
 
         public ValidationResult Validate(object? value)
@@ -116,7 +116,7 @@ namespace ZeroUI.Core.Validation
         public RegexControlRule(string pattern, string? errorMessage = null, ValidationSeverity severity = ValidationSeverity.Error)
         {
             _regex = new Regex(pattern, RegexOptions.Compiled);
-            ErrorMessage = errorMessage ?? ZeroLocalizer.GetString(ZeroStringId.ValInvalidFormat);
+            ErrorMessage = errorMessage ?? Localizer.GetString(StringId.ValInvalidFormat);
             Severity = severity;
         }
 
@@ -145,7 +145,7 @@ namespace ZeroUI.Core.Validation
             MinLength = Math.Max(0, minLength);
             MaxLength = Math.Max(MinLength, maxLength);
             Severity = severity;
-            ErrorMessage = errorMessage ?? ZeroLocalizer.GetFormattedString(ZeroStringId.ValStringLengthFormat, MinLength, MaxLength);
+            ErrorMessage = errorMessage ?? Localizer.GetFormattedString(StringId.ValStringLengthFormat, MinLength, MaxLength);
         }
 
         public ValidationResult Validate(object? value)
@@ -195,10 +195,10 @@ namespace ZeroUI.Core.Validation
             new RangeControlRule<T>(min, max, message, severity);
 
         public static IControlValidationRule Email(string? message = null, ValidationSeverity severity = ValidationSeverity.Error) =>
-            new RegexControlRule(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", message ?? ZeroLocalizer.GetString(ZeroStringId.ValEmail), severity);
+            new RegexControlRule(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", message ?? Localizer.GetString(StringId.ValEmail), severity);
 
         public static IControlValidationRule Phone(string? message = null, ValidationSeverity severity = ValidationSeverity.Error) =>
-            new RegexControlRule(@"^[+0-9\s\-()]{7,20}$", message ?? ZeroLocalizer.GetString(ZeroStringId.ValPhone), severity);
+            new RegexControlRule(@"^[+0-9\s\-()]{7,20}$", message ?? Localizer.GetString(StringId.ValPhone), severity);
 
         public static IControlValidationRule StringLength(int min, int max, string? message = null, ValidationSeverity severity = ValidationSeverity.Error) =>
             new StringLengthControlRule(min, max, message, severity);
