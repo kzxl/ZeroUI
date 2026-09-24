@@ -170,6 +170,15 @@ namespace ZeroUI.WinForms.Industrial
 
         private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
 
+        /// <summary>
+        /// Clears all alarm tiles in the annunciator matrix.
+        /// </summary>
+        public void ClearTiles()
+        {
+            _tiles.Clear();
+            Invalidate();
+        }
+
         public void AddAlarm(string tagPath, string title, IsaAlarmSeverity severity)
         {
             var tile = new IsaAlarmTile

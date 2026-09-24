@@ -201,6 +201,30 @@ namespace ZeroUI.Wpf.Industrial
             InvalidateVisual();
         }
 
+        /// <summary>
+        /// Clears all alarm tiles in the annunciator matrix.
+        /// </summary>
+        public void ClearTiles()
+        {
+            _tiles.Clear();
+            InvalidateVisual();
+        }
+
+        /// <summary>
+        /// Dynamically appends an alarm tile to the matrix.
+        /// </summary>
+        public void AddAlarm(string tagPath, string title, IsaAlarmSeverity severity)
+        {
+            _tiles.Add(new IsaAlarmTile
+            {
+                TagPath = tagPath,
+                Title = title,
+                Severity = severity,
+                State = IsaAlarmState.Normal
+            });
+            InvalidateVisual();
+        }
+
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
