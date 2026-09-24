@@ -12,7 +12,7 @@ namespace ZeroUI.Wpf.Editors
     /// Modern SplitButton for WPF combining default action execution with a contextual dropdown menu.
     /// Provides vector-rendered styling, sub-zone hover states, and dynamic theme reactivity.
     /// </summary>
-    public class SplitButton : FrameworkElement
+    public class ZSplitButton : FrameworkElement
     {
         private bool _isActionHovered;
         private bool _isDropDownHovered;
@@ -22,27 +22,27 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty TextProperty =
-            DependencyProperty.Register(nameof(Text), typeof(string), typeof(SplitButton),
+            DependencyProperty.Register(nameof(Text), typeof(string), typeof(ZSplitButton),
                 new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty IconGlyphProperty =
-            DependencyProperty.Register(nameof(IconGlyph), typeof(string), typeof(SplitButton),
+            DependencyProperty.Register(nameof(IconGlyph), typeof(string), typeof(ZSplitButton),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty VariantProperty =
-            DependencyProperty.Register(nameof(Variant), typeof(ButtonVariant), typeof(SplitButton),
+            DependencyProperty.Register(nameof(Variant), typeof(ButtonVariant), typeof(ZSplitButton),
                 new FrameworkPropertyMetadata(ButtonVariant.Primary, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(SplitButton),
+            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(ZSplitButton),
                 new FrameworkPropertyMetadata(6.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty SplitWidthProperty =
-            DependencyProperty.Register(nameof(SplitWidth), typeof(double), typeof(SplitButton),
+            DependencyProperty.Register(nameof(SplitWidth), typeof(double), typeof(ZSplitButton),
                 new FrameworkPropertyMetadata(28.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty DropDownMenuProperty =
-            DependencyProperty.Register(nameof(DropDownMenu), typeof(ContextMenu), typeof(SplitButton),
+            DependencyProperty.Register(nameof(DropDownMenu), typeof(ContextMenu), typeof(ZSplitButton),
                 new FrameworkPropertyMetadata(null));
 
         #endregion
@@ -90,7 +90,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public SplitButton()
+        public ZSplitButton()
         {
             Height = 32;
             Cursor = Cursors.Hand;
@@ -293,5 +293,21 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZSplitButton"/>.
+    /// </summary>
+    [Obsolete("SplitButton is deprecated and will be removed in 5 release cycles. Please migrate to ZSplitButton instead.")]
+    public class SplitButton : ZSplitButton
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZSplitButton"/>.
+    /// </summary>
+    [Obsolete("ZeroSplitButton is deprecated and will be removed in 5 release cycles. Please migrate to ZSplitButton instead.")]
+    public class ZeroSplitButton : ZSplitButton
+    {
     }
 }
