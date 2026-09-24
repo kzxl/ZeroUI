@@ -2,6 +2,8 @@ using System;
 using System.Windows;
 using Xunit;
 using ZeroUI.Wpf.Editors;
+using ZeroUI.Wpf.Media;
+using ZHistogramScope = ZeroUI.Wpf.Media.ZHistogramScope;
 using ZeroUI.Wpf.DataGrid;
 
 namespace ZeroUI.Desktop.Tests
@@ -13,7 +15,7 @@ namespace ZeroUI.Desktop.Tests
         {
             StaTestRunner.Run(() =>
             {
-                var scope = new HistogramScopeControl();
+                var scope = new ZHistogramScope();
                 Assert.Equal(HistogramChannelMode.Rgb, scope.ChannelMode);
                 Assert.Equal(HistogramScopeType.Histogram, scope.ScopeType);
                 Assert.Null(scope.RedChannel);
@@ -30,7 +32,7 @@ namespace ZeroUI.Desktop.Tests
         {
             StaTestRunner.Run(() =>
             {
-                var scope = new HistogramScopeControl();
+                var scope = new ZHistogramScope();
                 scope.RedChannel = Array.Empty<int>();
                 scope.GreenChannel = new int[256]; // All zeros
                 scope.BlueChannel = new int[256];
@@ -57,7 +59,7 @@ namespace ZeroUI.Desktop.Tests
         {
             StaTestRunner.Run(() =>
             {
-                var scope = new HistogramScopeControl();
+                var scope = new ZHistogramScope();
 
                 // 21.5% shadow clipping at bin 0 (100,000 counts) and normal midtones (500 counts)
                 var red = new int[256];

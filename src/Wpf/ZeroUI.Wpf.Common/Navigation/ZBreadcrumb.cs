@@ -97,7 +97,7 @@ namespace ZeroUI.Wpf.Navigation
             return true;
         }
 
-        public BreadcrumbControl()
+        public ZBreadcrumb()
         {
             Height = 32;
             Focusable = true;

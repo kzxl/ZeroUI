@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ZeroUI.Core.Editors;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
 
     /// <summary>
@@ -15,53 +15,53 @@ namespace ZeroUI.Wpf.Editors
     /// Supports rounded borders, circular avatars, initials fallback, operator online/offline status dots,
     /// drag-drop file loading, clipboard copy/paste, and click-to-zoom Lightbox preview.
     /// </summary>
-    public class PictureEdit : Control, IZeroEditor
+    public class ZPictureEdit : Control, IZeroEditor
     {
         public static readonly DependencyProperty ImageSourceProperty =
             DependencyProperty.Register(
                 nameof(ImageSource),
                 typeof(ImageSource),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnImageSourceChanged));
 
         public static readonly DependencyProperty EditValueProperty =
             DependencyProperty.Register(
                 nameof(EditValue),
                 typeof(object),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnEditValueChanged));
 
         public static readonly DependencyProperty ScaleModeProperty =
             DependencyProperty.Register(
                 nameof(ScaleMode),
                 typeof(ImageScaleMode),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(ImageScaleMode.Cover));
 
         public static readonly DependencyProperty IsCircleProperty =
             DependencyProperty.Register(
                 nameof(IsCircle),
                 typeof(bool),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(false));
 
         public static readonly DependencyProperty CornerRadiusProperty =
             DependencyProperty.Register(
                 nameof(CornerRadius),
                 typeof(CornerRadius),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(new CornerRadius(8)));
 
         public static readonly DependencyProperty FallbackTextProperty =
             DependencyProperty.Register(
                 nameof(FallbackText),
                 typeof(string),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(null, OnFallbackTextChanged));
 
         private static void OnFallbackTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is PictureEdit pe && e.NewValue is string text && !string.IsNullOrWhiteSpace(text))
+            if (d is ZPictureEdit pe && e.NewValue is string text && !string.IsNullOrWhiteSpace(text))
             {
                 if (pe.FallbackBackground == null)
                 {
@@ -79,35 +79,35 @@ namespace ZeroUI.Wpf.Editors
             DependencyProperty.Register(
                 nameof(FallbackBackground),
                 typeof(Brush),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(null));
 
         public static readonly DependencyProperty StatusProperty =
             DependencyProperty.Register(
                 nameof(Status),
                 typeof(AvatarStatus),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(AvatarStatus.None));
 
         public static readonly DependencyProperty EnableZoomPreviewProperty =
             DependencyProperty.Register(
                 nameof(EnableZoomPreview),
                 typeof(bool),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty IsModifiedProperty =
             DependencyProperty.Register(
                 nameof(IsModified),
                 typeof(bool),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(false));
 
         public static readonly DependencyProperty ReadOnlyProperty =
             DependencyProperty.Register(
                 nameof(ReadOnly),
                 typeof(bool),
-                typeof(PictureEdit),
+                typeof(ZPictureEdit),
                 new PropertyMetadata(false));
 
         public event EventHandler? EditValueChanged;
@@ -179,12 +179,12 @@ namespace ZeroUI.Wpf.Editors
             set => SetValue(ReadOnlyProperty, value);
         }
 
-        static PictureEdit()
+        static ZPictureEdit()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(PictureEdit), new FrameworkPropertyMetadata(typeof(PictureEdit)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZPictureEdit), new FrameworkPropertyMetadata(typeof(ZPictureEdit)));
         }
 
-        public PictureEdit()
+        public ZPictureEdit()
         {
             AllowDrop = true;
             Cursor = Cursors.Hand;
@@ -197,7 +197,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnImageSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is PictureEdit pe)
+            if (d is ZPictureEdit pe)
             {
                 pe.EditValue = e.NewValue;
                 pe.IsModified = true;
@@ -207,7 +207,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnEditValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is not PictureEdit pe) return;
+            if (d is not ZPictureEdit pe) return;
 
             if (e.NewValue is ImageSource img)
             {
@@ -397,4 +397,25 @@ namespace ZeroUI.Wpf.Editors
             ContextMenu = cm;
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZPictureEdit"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("PictureEdit is deprecated. Use ZPictureEdit instead.")]
+    public class PictureEdit : ZPictureEdit
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZPictureEdit"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroPictureEdit is deprecated. Use ZPictureEdit instead.")]
+    public class ZeroPictureEdit : ZPictureEdit
+    {
+    }
+    #endregion
 }

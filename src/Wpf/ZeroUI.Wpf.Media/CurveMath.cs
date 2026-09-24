@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
     /// Pure mathematical spline engine for tone curves and transfer functions.

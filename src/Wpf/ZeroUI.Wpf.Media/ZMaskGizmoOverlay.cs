@@ -5,7 +5,7 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     public enum MaskGizmoType
     {
@@ -19,7 +19,7 @@ namespace ZeroUI.Wpf.Editors
     /// Provides center pin positioning, directional rotation, falloff feather ellipses,
     /// and cardinal handles. Renders directly using <see cref="DrawingContext"/>.
     /// </summary>
-    public class MaskGizmoOverlay : FrameworkElement, IZeroEditor
+    public class ZMaskGizmoOverlay : FrameworkElement, IZeroEditor
     {
         private enum HandleKind { None, Center, Start, End, Top, Bottom, Left, Right }
         private HandleKind _activeHandle = HandleKind.None;
@@ -30,35 +30,35 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty GizmoTypeProperty =
-            DependencyProperty.Register(nameof(GizmoType), typeof(MaskGizmoType), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(GizmoType), typeof(MaskGizmoType), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(MaskGizmoType.None, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CenterPointProperty =
-            DependencyProperty.Register(nameof(CenterPoint), typeof(Point), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(CenterPoint), typeof(Point), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(new Point(0.5, 0.5), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty EndPointProperty =
-            DependencyProperty.Register(nameof(EndPoint), typeof(Point), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(EndPoint), typeof(Point), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(new Point(0.5, 0.8), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty RadiusXProperty =
-            DependencyProperty.Register(nameof(RadiusX), typeof(double), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(RadiusX), typeof(double), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(0.25, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty RadiusYProperty =
-            DependencyProperty.Register(nameof(RadiusY), typeof(double), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(RadiusY), typeof(double), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(0.20, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty FeatherProperty =
-            DependencyProperty.Register(nameof(Feather), typeof(double), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(Feather), typeof(double), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(0.5, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GizmoBrushProperty =
-            DependencyProperty.Register(nameof(GizmoBrush), typeof(Brush), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(GizmoBrush), typeof(Brush), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(MaskGizmoOverlay),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZMaskGizmoOverlay),
                 new FrameworkPropertyMetadata(false));
 
         #endregion
@@ -163,7 +163,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public MaskGizmoOverlay()
+        public ZMaskGizmoOverlay()
         {
             Focusable = true;
             ClipToBounds = true;
@@ -401,4 +401,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZMaskGizmoOverlay"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("MaskGizmoOverlay is deprecated. Use ZMaskGizmoOverlay instead.")]
+    public class MaskGizmoOverlay : ZMaskGizmoOverlay
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZMaskGizmoOverlay"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroMaskGizmoOverlay is deprecated. Use ZMaskGizmoOverlay instead.")]
+    public class ZeroMaskGizmoOverlay : ZMaskGizmoOverlay
+    {
+    }
+    #endregion
 }

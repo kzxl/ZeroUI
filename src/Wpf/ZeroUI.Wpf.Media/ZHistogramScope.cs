@@ -6,7 +6,7 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     public enum HistogramChannelMode
     {
@@ -36,7 +36,7 @@ namespace ZeroUI.Wpf.Editors
     /// Supports RGB overlay, Luma curve, 5-zone parametric tone dragging (Blacks, Shadows, Exposure, Highlights, Whites),
     /// shadow/highlight clipping indicators, and high-performance direct <see cref="DrawingContext"/> rendering.
     /// </summary>
-    public class HistogramScopeControl : FrameworkElement, IZeroEditor
+    public class ZHistogramScope : FrameworkElement, IZeroEditor
     {
         private int _hoveredZone = -1;
         private int _draggedZone = -1;
@@ -50,43 +50,43 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty RedChannelProperty =
-            DependencyProperty.Register(nameof(RedChannel), typeof(int[]), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(RedChannel), typeof(int[]), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GreenChannelProperty =
-            DependencyProperty.Register(nameof(GreenChannel), typeof(int[]), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(GreenChannel), typeof(int[]), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BlueChannelProperty =
-            DependencyProperty.Register(nameof(BlueChannel), typeof(int[]), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(BlueChannel), typeof(int[]), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty LumaChannelProperty =
-            DependencyProperty.Register(nameof(LumaChannel), typeof(int[]), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(LumaChannel), typeof(int[]), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ChannelModeProperty =
-            DependencyProperty.Register(nameof(ChannelMode), typeof(HistogramChannelMode), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(ChannelMode), typeof(HistogramChannelMode), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(HistogramChannelMode.Rgb, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ScopeTypeProperty =
-            DependencyProperty.Register(nameof(ScopeType), typeof(HistogramScopeType), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(ScopeType), typeof(HistogramScopeType), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(HistogramScopeType.Histogram, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ShadowClipPercentProperty =
-            DependencyProperty.Register(nameof(ShadowClipPercent), typeof(double), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(ShadowClipPercent), typeof(double), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty HighlightClipPercentProperty =
-            DependencyProperty.Register(nameof(HighlightClipPercent), typeof(double), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(HighlightClipPercent), typeof(double), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ShowZoneHoverProperty =
-            DependencyProperty.Register(nameof(ShowZoneHover), typeof(bool), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(ShowZoneHover), typeof(bool), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(HistogramScopeControl),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZHistogramScope),
                 new FrameworkPropertyMetadata(false));
 
         #endregion
@@ -200,7 +200,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public HistogramScopeControl()
+        public ZHistogramScope()
         {
             Height = 110;
             MinWidth = 160;
@@ -504,4 +504,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZHistogramScope"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("HistogramScopeControl is deprecated. Use ZHistogramScope instead.")]
+    public class HistogramScopeControl : ZHistogramScope
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZHistogramScope"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroHistogramScope is deprecated. Use ZHistogramScope instead.")]
+    public class ZeroHistogramScope : ZHistogramScope
+    {
+    }
+    #endregion
 }

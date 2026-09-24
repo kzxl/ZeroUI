@@ -6,10 +6,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Comparison display modes for <see cref="CompareViewerControl"/>.
+    /// Comparison display modes for <see cref="ZCompareViewer"/>.
     /// </summary>
     public enum CompareViewMode
     {
@@ -27,7 +27,7 @@ namespace ZeroUI.Wpf.Editors
     /// cross-fade blend, and custom metadata badges.
     /// Renders directly using <see cref="DrawingContext"/> for maximum frame rates.
     /// </summary>
-    public class CompareViewerControl : FrameworkElement, IZeroEditor
+    public class ZCompareViewer : FrameworkElement, IZeroEditor
     {
         private bool _isDraggingSplitter;
         private bool _isPanning;
@@ -38,47 +38,47 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty BeforeSourceProperty =
-            DependencyProperty.Register(nameof(BeforeSource), typeof(ImageSource), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(BeforeSource), typeof(ImageSource), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty AfterSourceProperty =
-            DependencyProperty.Register(nameof(AfterSource), typeof(ImageSource), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(AfterSource), typeof(ImageSource), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ModeProperty =
-            DependencyProperty.Register(nameof(Mode), typeof(CompareViewMode), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(Mode), typeof(CompareViewMode), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(CompareViewMode.SideBySide, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty SplitPositionProperty =
-            DependencyProperty.Register(nameof(SplitPosition), typeof(double), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(SplitPosition), typeof(double), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(0.5, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ZoomProperty =
-            DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnZoomChanged));
 
         public static readonly DependencyProperty PanOffsetProperty =
-            DependencyProperty.Register(nameof(PanOffset), typeof(Point), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(PanOffset), typeof(Point), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(new Point(0, 0), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BeforeLabelProperty =
-            DependencyProperty.Register(nameof(BeforeLabel), typeof(string), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(BeforeLabel), typeof(string), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata("BEFORE", FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty AfterLabelProperty =
-            DependencyProperty.Register(nameof(AfterLabel), typeof(string), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(AfterLabel), typeof(string), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata("AFTER", FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ShowBadgesProperty =
-            DependencyProperty.Register(nameof(ShowBadges), typeof(bool), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(ShowBadges), typeof(bool), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CurtainBrushProperty =
-            DependencyProperty.Register(nameof(CurtainBrush), typeof(Brush), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(CurtainBrush), typeof(Brush), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CurtainThicknessProperty =
-            DependencyProperty.Register(nameof(CurtainThickness), typeof(double), typeof(CompareViewerControl),
+            DependencyProperty.Register(nameof(CurtainThickness), typeof(double), typeof(ZCompareViewer),
                 new FrameworkPropertyMetadata(2.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         #endregion
@@ -196,7 +196,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public CompareViewerControl()
+        public ZCompareViewer()
         {
             Focusable = true;
             ClipToBounds = true;
@@ -207,7 +207,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnZoomChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is CompareViewerControl ctrl)
+            if (d is ZCompareViewer ctrl)
             {
                 ctrl.ZoomChanged?.Invoke(ctrl, (double)e.NewValue);
             }
@@ -508,4 +508,25 @@ namespace ZeroUI.Wpf.Editors
             return val;
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Backward-compatibility alias for <see cref="ZCompareViewer"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("CompareViewerControl is deprecated and will be removed in 5 release cycles. Please migrate to ZCompareViewer instead.")]
+    public class CompareViewerControl : ZCompareViewer
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZCompareViewer"/>.
+    /// </summary>
+    [Obsolete("ZeroCompareViewer is deprecated and will be removed in 5 release cycles. Please migrate to ZCompareViewer instead.")]
+    public class ZeroCompareViewer : ZCompareViewer
+    {
+    }
+
+    #endregion
 }

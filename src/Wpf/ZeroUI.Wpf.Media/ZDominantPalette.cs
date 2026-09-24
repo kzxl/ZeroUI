@@ -11,10 +11,10 @@ using System.Windows.Media.Animation;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Represents a color swatch item in <see cref="DominantPaletteControl"/>.
+    /// Represents a color swatch item in <see cref="ZDominantPalette"/>.
     /// </summary>
     public class PaletteSwatchItem : INotifyPropertyChanged
     {
@@ -159,7 +159,7 @@ namespace ZeroUI.Wpf.Editors
     /// Displays extracted image swatches (K-Means/Median-Cut), color percentage badges,
     /// color harmony recommendations (Complementary, Analogous, Triadic), and contrast assessment.
     /// </summary>
-    public class DominantPaletteControl : Control, IZeroEditor
+    public class ZDominantPalette : Control, IZeroEditor
     {
         private readonly ObservableCollection<PaletteSwatchItem> _swatches = new ObservableCollection<PaletteSwatchItem>();
         private readonly ObservableCollection<PaletteSwatchItem> _suggestions = new ObservableCollection<PaletteSwatchItem>();
@@ -174,47 +174,47 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register(nameof(Title), typeof(string), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(ZDominantPalette),
                 new PropertyMetadata("DOMINANT PALETTE", OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty SuggestionsTitleProperty =
-            DependencyProperty.Register(nameof(SuggestionsTitle), typeof(string), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(SuggestionsTitle), typeof(string), typeof(ZDominantPalette),
                 new PropertyMetadata("COLOR HARMONY", OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty ContrastAdviceProperty =
-            DependencyProperty.Register(nameof(ContrastAdvice), typeof(string), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(ContrastAdvice), typeof(string), typeof(ZDominantPalette),
                 new PropertyMetadata("", OnContrastAdviceChanged));
 
         public static readonly DependencyProperty ShowSuggestionsProperty =
-            DependencyProperty.Register(nameof(ShowSuggestions), typeof(bool), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(ShowSuggestions), typeof(bool), typeof(ZDominantPalette),
                 new PropertyMetadata(true, OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty ShowContrastAdviceProperty =
-            DependencyProperty.Register(nameof(ShowContrastAdvice), typeof(bool), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(ShowContrastAdvice), typeof(bool), typeof(ZDominantPalette),
                 new PropertyMetadata(true, OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty AllowCopyOnClickProperty =
-            DependencyProperty.Register(nameof(AllowCopyOnClick), typeof(bool), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(AllowCopyOnClick), typeof(bool), typeof(ZDominantPalette),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty SwatchWidthProperty =
-            DependencyProperty.Register(nameof(SwatchWidth), typeof(double), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(SwatchWidth), typeof(double), typeof(ZDominantPalette),
                 new PropertyMetadata(42.0, OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty SwatchHeightProperty =
-            DependencyProperty.Register(nameof(SwatchHeight), typeof(double), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(SwatchHeight), typeof(double), typeof(ZDominantPalette),
                 new PropertyMetadata(30.0, OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty SuggestionSwatchWidthProperty =
-            DependencyProperty.Register(nameof(SuggestionSwatchWidth), typeof(double), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(SuggestionSwatchWidth), typeof(double), typeof(ZDominantPalette),
                 new PropertyMetadata(36.0, OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty SuggestionSwatchHeightProperty =
-            DependencyProperty.Register(nameof(SuggestionSwatchHeight), typeof(double), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(SuggestionSwatchHeight), typeof(double), typeof(ZDominantPalette),
                 new PropertyMetadata(22.0, OnLayoutPropertyChanged));
 
         public static readonly DependencyProperty IsReadOnlyProperty =
-            DependencyProperty.Register(nameof(IsReadOnly), typeof(bool), typeof(DominantPaletteControl),
+            DependencyProperty.Register(nameof(IsReadOnly), typeof(bool), typeof(ZDominantPalette),
                 new PropertyMetadata(false));
 
         public string Title
@@ -338,13 +338,13 @@ namespace ZeroUI.Wpf.Editors
         public ObservableCollection<PaletteSwatchItem> Swatches => _swatches;
         public ObservableCollection<PaletteSwatchItem> Suggestions => _suggestions;
 
-        static DominantPaletteControl()
+        static ZDominantPalette()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(DominantPaletteControl),
-                new FrameworkPropertyMetadata(typeof(DominantPaletteControl)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZDominantPalette),
+                new FrameworkPropertyMetadata(typeof(ZDominantPalette)));
         }
 
-        public DominantPaletteControl()
+        public ZDominantPalette()
         {
             Loaded += (s, e) => BuildVisualTree();
             _swatches.CollectionChanged += (s, e) => RebuildSwatches();
@@ -353,7 +353,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnLayoutPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is DominantPaletteControl ctrl)
+            if (d is ZDominantPalette ctrl)
             {
                 ctrl.BuildVisualTree();
             }
@@ -361,7 +361,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnContrastAdviceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is DominantPaletteControl ctrl && ctrl._contrastText != null)
+            if (d is ZDominantPalette ctrl && ctrl._contrastText != null)
             {
                 var text = (string)e.NewValue;
                 ctrl._contrastText.Text = text;
@@ -708,4 +708,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZDominantPalette"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("DominantPaletteControl is deprecated. Use ZDominantPalette instead.")]
+    public class DominantPaletteControl : ZDominantPalette
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZDominantPalette"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroDominantPalette is deprecated. Use ZDominantPalette instead.")]
+    public class ZeroDominantPalette : ZDominantPalette
+    {
+    }
+    #endregion
 }

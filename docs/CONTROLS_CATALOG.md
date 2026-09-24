@@ -114,14 +114,17 @@ All editors implement `IZeroEditor` and integrate with `ZeroDataBinder` for auto
 * **`ColorPickEdit`** *(Legacy alias: `ZeroColorPicker`)*: Swatch matrix and HEX color editor.
 * **`DateEdit` & `DateRangePicker`**: Multi-tier zoom navigation calendar (Days &rarr; Months &rarr; Years) and dual-date range presets.
 * **`RangeControl` / `DateTimeRangeSlider`**: Interactive dual-thumb range selector with background sparkline / distribution histogram track.
-* **`ValidationProvider`**: Declarative fluent validation engine (`NotEmpty`, `Range`, `Regex`, `Email`, `Custom`) with animated pulsing vector badges and auto scroll-to-error.
+* **`NumericSliderEdit`**: High-precision slider + label + direct numeric input composite control with double-click reset to default, Alt-key clipping preview, and drag-scrubbing.
+* **`FacetedFilterBar`**: Multi-dimension drill-down search and faceted filter bar featuring categorized pill chips, match count badges, active indicator, and batch reset.
 
 ---
 
-## 5. Media & Creative Image Controls Suite (`ZeroUI.WinForms.Media` / `ZeroUI.Wpf.Media` / `ZeroUI.Wpf.Editors`)
+## 5. Media & Creative Image Controls Suite (`ZeroUI.WinForms.Media` / `ZeroUI.Wpf.Media`)
 
-### Core Interactive Image Viewers (`ZeroUI.WinForms.Media` / `ZeroUI.Wpf.Media`)
-* **`ZImageViewer` (WinForms) & `ImageViewerControl` / `ZImageViewer` (WPF)**:
+All creative photo studio, inspection, color grading, and media controls reside cleanly in dedicated Media subsystems (`ZeroUI.WinForms.Media` and `ZeroUI.Wpf.Media`). Complete backward compatibility across 5 release cycles is guaranteed via forwarding shims in `ZeroUI.WinForms.Editors` and `ZeroUI.Wpf.Editors`.
+
+### Core Interactive Image Viewers & Picture Editors
+* **`ZImageViewer`** *(WinForms & WPF - Legacy aliases: `ImageViewerControl`, `ZeroImageViewer`)*:
   * High-performance interactive image viewing canvas powered by Direct2D, GDI+, and WPF vector rendering.
   * Smooth sub-pixel infinite pan and cursor-anchored continuous zoom ($0.01\times$ to $64\times$).
   * **Forensic Pixel Grid**: Automatically renders aligned pixel grid overlay when zoom level reaches $\ge 800\%$ for fine sub-pixel inspection and alignment.
@@ -130,24 +133,24 @@ All editors implement `IZeroEditor` and integrate with `ZeroDataBinder` for auto
   * **Floating Loupe Magnifier (WPF)**: Dedicated magnification lens tracking cursor for instant close-up inspection.
   * **Transform Pipeline**: Real-time lossless rotation ($0^\circ, 90^\circ, 180^\circ, 270^\circ$), horizontal/vertical flip, and interpolation quality switching (`NearestNeighbor`, `Bilinear`, `HighQuality`).
   * **IZeroEditor & IZeroSkinnable**: Two-way data binding support, file-loading, and Obsidian Dark / Clean Light theme synchronization.
+* **`ZPictureEdit`** *(WinForms & WPF - Legacy aliases: `PictureEdit`, `ZeroImage`, `ZeroPictureEdit`)*:
+  * Anti-aliased image and avatar control with rounded corners, circular clip, initials fallback with deterministic background palettes, presence status indicator dots, drag-and-drop file loading, clipboard sync, and click-to-zoom Lightbox inspection modal.
 
-### Specialized Creative Media Editors (`ZeroUI.Wpf.Editors`)
-* **`CurveEditor` & `CurveMath`**: Monotone cubic spline curve editor supporting RGB and per-channel curves (Red, Green, Blue), 4x4 coordinate grid, interactive control point manipulation, delete, and evaluate.
-* **`ColorWheelEdit` / `ColorWheel`**: 360° Hue/Saturation color grading wheel with pre-calculated antialiased gamut bitmap, smooth dragging crosshairs, and numeric degree/distance updates.
-* **`CompareViewerControl`**: Dual-image comparison inspection viewer featuring Split-Curtain (with draggable divider line), Side-by-Side (horizontal split), and Fade-Blend modes with synchronized panning and zoom.
-* **`CropBoxControl`**: Non-destructive image cropping canvas with 8-point bounding box handles, aspect ratio locking, and dynamic rule overlays (Rule of Thirds, Golden Ratio, Diagonals, Grid, None).
-* **`HistogramScopeControl`**: Real-time histogram and waveform scope supporting RGB Parade, Luminance curve, 5-zone parametric tonal range dragging (Blacks, Shadows, Midtones, Highlights, Whites), and clipping warnings.
-* **`FacetedFilterBar`**: Multi-dimension drill-down search and faceted filter bar featuring categorized pill chips, match count badges, active indicator, and batch reset.
-* **`MiniMapNavigator`**: Floating / docking thumbnail canvas overview with an interactive translucent viewport box for fluid 2D pan/zoom navigation.
-* **`MaskGizmoOverlay`**: Non-destructive linear / radial gradient and brush mask gizmo with interactive origin pin, cardinal handles, feather boundary ellipses, and rotation arcs.
-* **`HistoryTimelineControl`**: Visual undo/redo history and snapshot tree timeline with step indexing, relative timestamps, state jumping, and snapshot curation.
-* **`FilmstripScrollerControl`**: Horizontal smooth-scrolling thumbnail filmstrip with rating stars, color label flags, active badges, and multi-selection support.
-* **`DominantPaletteControl`**: Dominant color palette inspector with extracted swatches, percentage labels, click-to-copy hex codes, color theory harmonies, and contrast evaluation.
-* **`ExifTelemetryCard`**: Camera & exposure HUD metrics deck (Shutter, Aperture, ISO, Focal Length), device banner, GPS location link, and detailed collapsible EXIF table.
-* **`NumericSliderEdit`**: High-precision slider + label + direct numeric input composite control with double-click reset to default, Alt-key clipping preview, and drag-scrubbing.
-* **`BatchTaskQueueControl`**: Production-grade background batch task queue controller with concurrency selection (1..8 workers), pause/resume orchestration, retry/remove item actions, and live visual progress bars.
-* **`TokenPatternEditor`**: Filename and dynamic text template pattern editor with interactive token insertion chips, caret placement, and live evaluated preview.
-* **`ThumbnailGridControl`**: Lightroom-style light table photo browser grid with responsive wrap-panel card layout, Ctrl/Shift multi-selection, rating stars, color label badges, pick flags, and overlay badges.
+### Specialized Creative Media Editors (`ZeroUI.Wpf.Media`)
+* **`ZCompareViewer`** *(Legacy alias: `CompareViewerControl`)*: Dual-image comparison inspection viewer featuring Split-Curtain (with draggable divider line), Side-by-Side (horizontal split), and Fade-Blend modes with synchronized panning and zoom.
+* **`ZCropBox`** *(Legacy alias: `CropBoxControl`)*: Non-destructive image cropping canvas with 8-point bounding box handles, aspect ratio locking, and dynamic rule overlays (Rule of Thirds, Golden Ratio, Diagonals, Grid, None).
+* **`ZHistogramScope`** *(Legacy alias: `HistogramScopeControl`)*: Real-time histogram and waveform scope supporting RGB Parade, Luminance curve, 5-zone parametric tonal range dragging (Blacks, Shadows, Midtones, Highlights, Whites), and clipping warnings.
+* **`ZCurveEditor` & `CurveMath`** *(Legacy alias: `CurveEditor`)*: Monotone cubic spline curve editor supporting RGB and per-channel curves (Red, Green, Blue), 4x4 coordinate grid, interactive control point manipulation, delete, and evaluate.
+* **`ZColorWheel`** *(Legacy aliases: `ColorWheelEdit`, `ColorWheel`)*: 360° Hue/Saturation color grading wheel with pre-calculated antialiased gamut bitmap, smooth dragging crosshairs, and numeric degree/distance updates.
+* **`ZMiniMapNavigator`** *(Legacy alias: `MiniMapNavigator`)*: Floating / docking thumbnail canvas overview with an interactive translucent viewport box for fluid 2D pan/zoom navigation.
+* **`ZMaskGizmoOverlay`** *(Legacy alias: `MaskGizmoOverlay`)*: Non-destructive linear / radial gradient and brush mask gizmo with interactive origin pin, cardinal handles, feather boundary ellipses, and rotation arcs.
+* **`ZHistoryTimeline`** *(Legacy alias: `HistoryTimelineControl`)*: Visual undo/redo history and snapshot tree timeline with step indexing, relative timestamps, state jumping, and snapshot curation.
+* **`ZFilmstripScroller`** *(Legacy alias: `FilmstripScrollerControl`)*: Horizontal smooth-scrolling thumbnail filmstrip with rating stars, color label flags, active badges, and multi-selection support.
+* **`ZThumbnailGrid`** *(Legacy alias: `ThumbnailGridControl`)*: Lightroom-style light table photo browser grid with responsive wrap-panel card layout, Ctrl/Shift multi-selection, rating stars, color label badges, pick flags, and overlay badges.
+* **`ZDominantPalette`** *(Legacy alias: `DominantPaletteControl`)*: Dominant color palette inspector with extracted swatches, percentage labels, click-to-copy hex codes, color theory harmonies, and contrast evaluation.
+* **`ZExifTelemetryCard`** *(Legacy alias: `ExifTelemetryCard`)*: Camera & exposure HUD metrics deck (Shutter, Aperture, ISO, Focal Length), device banner, GPS location link, and detailed collapsible EXIF table.
+* **`ZBatchTaskQueue`** *(Legacy alias: `BatchTaskQueueControl`)*: Production-grade background batch task queue controller with concurrency selection (1..8 workers), pause/resume orchestration, retry/remove item actions, and live visual progress bars.
+* **`ZTokenPatternEditor`** *(Legacy alias: `TokenPatternEditor`)*: Filename and dynamic text template pattern editor with interactive token insertion chips, caret placement, and live evaluated preview.
 
 ---
 

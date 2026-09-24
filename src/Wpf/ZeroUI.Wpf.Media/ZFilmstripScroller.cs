@@ -11,10 +11,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Represents an item in the <see cref="FilmstripScrollerControl"/>.
+    /// Represents an item in the <see cref="ZFilmstripScroller"/>.
     /// </summary>
     public class FilmstripItemModel : INotifyPropertyChanged
     {
@@ -109,7 +109,7 @@ namespace ZeroUI.Wpf.Editors
     }
 
     /// <summary>
-    /// Event arguments for <see cref="FilmstripScrollerControl.ItemClicked"/> events.
+    /// Event arguments for <see cref="ZFilmstripScroller.ItemClicked"/> events.
     /// </summary>
     public class FilmstripItemClickEventArgs : EventArgs
     {
@@ -130,7 +130,7 @@ namespace ZeroUI.Wpf.Editors
     /// Provides horizontal smooth scrolling, rating stars, color label flags,
     /// edit badges, selection coordination, and theme integration.
     /// </summary>
-    public class FilmstripScrollerControl : Control, IZeroEditor
+    public class ZFilmstripScroller : Control, IZeroEditor
     {
         private readonly ObservableCollection<FilmstripItemModel> _items = new ObservableCollection<FilmstripItemModel>();
         private ScrollViewer? _scroller;
@@ -140,19 +140,19 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty ItemWidthProperty =
-            DependencyProperty.Register(nameof(ItemWidth), typeof(double), typeof(FilmstripScrollerControl),
+            DependencyProperty.Register(nameof(ItemWidth), typeof(double), typeof(ZFilmstripScroller),
                 new PropertyMetadata(100.0));
 
         public static readonly DependencyProperty ItemHeightProperty =
-            DependencyProperty.Register(nameof(ItemHeight), typeof(double), typeof(FilmstripScrollerControl),
+            DependencyProperty.Register(nameof(ItemHeight), typeof(double), typeof(ZFilmstripScroller),
                 new PropertyMetadata(112.0));
 
         public static readonly DependencyProperty AllowMultiSelectProperty =
-            DependencyProperty.Register(nameof(AllowMultiSelect), typeof(bool), typeof(FilmstripScrollerControl),
+            DependencyProperty.Register(nameof(AllowMultiSelect), typeof(bool), typeof(ZFilmstripScroller),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(FilmstripScrollerControl),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZFilmstripScroller),
                 new PropertyMetadata(false));
 
         #endregion
@@ -235,12 +235,12 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        static FilmstripScrollerControl()
+        static ZFilmstripScroller()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(FilmstripScrollerControl), new FrameworkPropertyMetadata(typeof(FilmstripScrollerControl)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZFilmstripScroller), new FrameworkPropertyMetadata(typeof(ZFilmstripScroller)));
         }
 
-        public FilmstripScrollerControl()
+        public ZFilmstripScroller()
         {
             Height = 128;
             Focusable = true;
@@ -461,4 +461,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZFilmstripScroller"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("FilmstripScrollerControl is deprecated. Use ZFilmstripScroller instead.")]
+    public class FilmstripScrollerControl : ZFilmstripScroller
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZFilmstripScroller"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroFilmstripScroller is deprecated. Use ZFilmstripScroller instead.")]
+    public class ZeroFilmstripScroller : ZFilmstripScroller
+    {
+    }
+    #endregion
 }

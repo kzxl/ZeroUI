@@ -12,10 +12,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Status states for a task in <see cref="BatchTaskQueueControl"/>.
+    /// Status states for a task in <see cref="ZBatchTaskQueue"/>.
     /// </summary>
     public enum BatchTaskStatus
     {
@@ -28,7 +28,7 @@ namespace ZeroUI.Wpf.Editors
     }
 
     /// <summary>
-    /// Represents an individual task item in <see cref="BatchTaskQueueControl"/>.
+    /// Represents an individual task item in <see cref="ZBatchTaskQueue"/>.
     /// </summary>
     public class BatchTaskItemModel : INotifyPropertyChanged
     {
@@ -189,7 +189,7 @@ namespace ZeroUI.Wpf.Editors
     /// Manages queued, running, completed, and failed batch tasks with parallel concurrency selection,
     /// pause/resume orchestration, retry/cancel item actions, and live visual progress bars.
     /// </summary>
-    public class BatchTaskQueueControl : Control, IZeroEditor
+    public class ZBatchTaskQueue : Control, IZeroEditor
     {
         private readonly ObservableCollection<BatchTaskItemModel> _tasks = new ObservableCollection<BatchTaskItemModel>();
 
@@ -208,35 +208,35 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty HeaderTitleProperty =
-            DependencyProperty.Register(nameof(HeaderTitle), typeof(string), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(HeaderTitle), typeof(string), typeof(ZBatchTaskQueue),
                 new PropertyMetadata("BATCH QUEUE", OnHeaderTitleChanged));
 
         public static readonly DependencyProperty MaxParallelProperty =
-            DependencyProperty.Register(nameof(MaxParallel), typeof(int), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(MaxParallel), typeof(int), typeof(ZBatchTaskQueue),
                 new PropertyMetadata(1, OnMaxParallelChanged));
 
         public static readonly DependencyProperty IsPausedProperty =
-            DependencyProperty.Register(nameof(IsPaused), typeof(bool), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(IsPaused), typeof(bool), typeof(ZBatchTaskQueue),
                 new PropertyMetadata(false, OnIsPausedChanged));
 
         public static readonly DependencyProperty EmptyMessageProperty =
-            DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(ZBatchTaskQueue),
                 new PropertyMetadata("Queue is empty.", OnEmptyMessageChanged));
 
         public static readonly DependencyProperty ParallelLabelProperty =
-            DependencyProperty.Register(nameof(ParallelLabel), typeof(string), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(ParallelLabel), typeof(string), typeof(ZBatchTaskQueue),
                 new PropertyMetadata("Parallel:", OnParallelLabelChanged));
 
         public static readonly DependencyProperty ConcurrencyOptionsProperty =
-            DependencyProperty.Register(nameof(ConcurrencyOptions), typeof(int[]), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(ConcurrencyOptions), typeof(int[]), typeof(ZBatchTaskQueue),
                 new PropertyMetadata(new[] { 1, 2, 4, 8 }, OnConcurrencyOptionsChanged));
 
         public static readonly DependencyProperty ShowParallelSelectorProperty =
-            DependencyProperty.Register(nameof(ShowParallelSelector), typeof(bool), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(ShowParallelSelector), typeof(bool), typeof(ZBatchTaskQueue),
                 new PropertyMetadata(true, OnShowParallelSelectorChanged));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(BatchTaskQueueControl),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZBatchTaskQueue),
                 new PropertyMetadata(false));
 
         public string HeaderTitle
@@ -345,7 +345,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public BatchTaskQueueControl()
+        public ZBatchTaskQueue()
         {
             Focusable = true;
             _tasks.CollectionChanged += (_, _) => UpdateEmptyState();
@@ -356,7 +356,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnHeaderTitleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BatchTaskQueueControl ctrl && ctrl._txtHeaderTitle != null)
+            if (d is ZBatchTaskQueue ctrl && ctrl._txtHeaderTitle != null)
             {
                 ctrl._txtHeaderTitle.Text = e.NewValue as string ?? "";
             }
@@ -364,7 +364,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnMaxParallelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BatchTaskQueueControl ctrl && ctrl._cmbParallel != null)
+            if (d is ZBatchTaskQueue ctrl && ctrl._cmbParallel != null)
             {
                 int val = (int)e.NewValue;
                 ctrl.SelectParallelComboValue(val);
@@ -374,7 +374,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnIsPausedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BatchTaskQueueControl ctrl && ctrl._btnPause != null)
+            if (d is ZBatchTaskQueue ctrl && ctrl._btnPause != null)
             {
                 bool isPaused = (bool)e.NewValue;
                 ctrl._btnPause.Content = isPaused ? "▶" : "⏸";
@@ -384,7 +384,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnEmptyMessageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BatchTaskQueueControl ctrl && ctrl._txtEmpty != null)
+            if (d is ZBatchTaskQueue ctrl && ctrl._txtEmpty != null)
             {
                 ctrl._txtEmpty.Text = e.NewValue as string ?? "";
             }
@@ -392,7 +392,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnParallelLabelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BatchTaskQueueControl ctrl && ctrl._lblParallel != null)
+            if (d is ZBatchTaskQueue ctrl && ctrl._lblParallel != null)
             {
                 ctrl._lblParallel.Text = e.NewValue as string ?? "";
             }
@@ -400,7 +400,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnConcurrencyOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BatchTaskQueueControl ctrl)
+            if (d is ZBatchTaskQueue ctrl)
             {
                 ctrl.RebuildConcurrencyCombo();
             }
@@ -408,7 +408,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnShowParallelSelectorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is BatchTaskQueueControl ctrl)
+            if (d is ZBatchTaskQueue ctrl)
             {
                 bool show = (bool)e.NewValue;
                 var vis = show ? Visibility.Visible : Visibility.Collapsed;
@@ -791,4 +791,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZBatchTaskQueue"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("BatchTaskQueueControl is deprecated. Use ZBatchTaskQueue instead.")]
+    public class BatchTaskQueueControl : ZBatchTaskQueue
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZBatchTaskQueue"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroBatchTaskQueue is deprecated. Use ZBatchTaskQueue instead.")]
+    public class ZeroBatchTaskQueue : ZBatchTaskQueue
+    {
+    }
+    #endregion
 }

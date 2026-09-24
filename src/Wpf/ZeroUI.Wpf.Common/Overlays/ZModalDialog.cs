@@ -12,11 +12,11 @@ namespace ZeroUI.Wpf.Overlays
     /// Provides semi-transparent backdrop dimming, centered rounded card,
     /// and built-in dialog helpers (Information, Warning, Error, Confirm).
     /// </summary>
-    public class ModalDialog : Window
+    public class ZModalDialog : Window
     {
         public bool? DialogResultValue { get; private set; }
 
-        public ModalDialog(
+        public ZModalDialog(
             Window owner,
             string title,
             UIElement contentElement,
@@ -185,7 +185,7 @@ namespace ZeroUI.Wpf.Overlays
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            var modal = new ModalDialog(owner, title, textBlock, okText, cancelText, true, 420, 200);
+            var modal = new ZModalDialog(owner, title, textBlock, okText, cancelText, true, 420, 200);
             modal.ShowDialog();
             return modal.DialogResultValue == true;
         }
@@ -200,7 +200,7 @@ namespace ZeroUI.Wpf.Overlays
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            var modal = new ModalDialog(owner, title, textBlock, "OK", "", false, 400, 190);
+            var modal = new ZModalDialog(owner, title, textBlock, "OK", "", false, 400, 190);
             modal.ShowDialog();
         }
 
@@ -214,7 +214,7 @@ namespace ZeroUI.Wpf.Overlays
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            var modal = new ModalDialog(owner, title, textBlock, "OK", "", false, 420, 190);
+            var modal = new ZModalDialog(owner, title, textBlock, "OK", "", false, 420, 190);
             modal.ShowDialog();
         }
 
@@ -228,16 +228,36 @@ namespace ZeroUI.Wpf.Overlays
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            var modal = new ModalDialog(owner, title, textBlock, "OK", "", false, 420, 190);
+            var modal = new ZModalDialog(owner, title, textBlock, "OK", "", false, 420, 190);
             modal.ShowDialog();
         }
     }
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="ModalDialog"/>.
+    /// Backward-compatibility alias for <see cref="ZModalDialog"/>.
     /// </summary>
-    [Obsolete("ZeroModal is deprecated. Use ModalDialog instead.")]
-    public class ZeroModal : ModalDialog
+    [Obsolete("ModalDialog is deprecated and will be removed in 5 release cycles. Please migrate to ZModalDialog instead.")]
+    public class ModalDialog : ZModalDialog
+    {
+        public ModalDialog(
+            Window owner,
+            string title,
+            UIElement contentElement,
+            string okText = "OK",
+            string cancelText = "Cancel",
+            bool showCancel = true,
+            double cardWidth = 500,
+            double cardHeight = 320)
+            : base(owner, title, contentElement, okText, cancelText, showCancel, cardWidth, cardHeight)
+        {
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZModalDialog"/>.
+    /// </summary>
+    [Obsolete("ZeroModal is deprecated and will be removed in 5 release cycles. Please migrate to ZModalDialog instead.")]
+    public class ZeroModal : ZModalDialog
     {
         public ZeroModal(
             Window owner,

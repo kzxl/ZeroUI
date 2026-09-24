@@ -7,7 +7,7 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
     /// Interactive 2D Tone Curve Editor for ZeroUI in WPF.
@@ -17,7 +17,7 @@ namespace ZeroUI.Wpf.Editors
     /// arrow-key nudging, background histogram visualization, and theme synchronization.
     /// Renders directly using <see cref="DrawingContext"/> for maximum performance.
     /// </summary>
-    public class CurveEditor : FrameworkElement, IZeroEditor
+    public class ZCurveEditor : FrameworkElement, IZeroEditor
     {
         private readonly List<(float x, float y)> _points = new List<(float x, float y)> { (0f, 0f), (1f, 1f) };
         private int _dragIndex = -1;
@@ -32,79 +32,79 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty CurveDataProperty =
-            DependencyProperty.Register(nameof(CurveData), typeof(string), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(CurveData), typeof(string), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata("0,0;1,1", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnCurveDataChanged));
 
         public static readonly DependencyProperty BackgroundHistogramProperty =
-            DependencyProperty.Register(nameof(BackgroundHistogram), typeof(float[]), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(BackgroundHistogram), typeof(float[]), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GridDivisionsProperty =
-            DependencyProperty.Register(nameof(GridDivisions), typeof(int), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(GridDivisions), typeof(int), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(4, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ShowDiagonalProperty =
-            DependencyProperty.Register(nameof(ShowDiagonal), typeof(bool), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(ShowDiagonal), typeof(bool), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CurveBrushProperty =
-            DependencyProperty.Register(nameof(CurveBrush), typeof(Brush), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(CurveBrush), typeof(Brush), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CurveThicknessProperty =
-            DependencyProperty.Register(nameof(CurveThickness), typeof(double), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(CurveThickness), typeof(double), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(1.8, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ThumbSizeProperty =
-            DependencyProperty.Register(nameof(ThumbSize), typeof(double), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(ThumbSize), typeof(double), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(10.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ThumbBrushProperty =
-            DependencyProperty.Register(nameof(ThumbBrush), typeof(Brush), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(ThumbBrush), typeof(Brush), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ThumbStrokeProperty =
-            DependencyProperty.Register(nameof(ThumbStroke), typeof(Brush), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(ThumbStroke), typeof(Brush), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ThumbStrokeThicknessProperty =
-            DependencyProperty.Register(nameof(ThumbStrokeThickness), typeof(double), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(ThumbStrokeThickness), typeof(double), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(1.5, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GridStrokeProperty =
-            DependencyProperty.Register(nameof(GridStroke), typeof(Brush), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(GridStroke), typeof(Brush), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GridThicknessProperty =
-            DependencyProperty.Register(nameof(GridThickness), typeof(double), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(GridThickness), typeof(double), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(0.6, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty HistogramBrushProperty =
-            DependencyProperty.Register(nameof(HistogramBrush), typeof(Brush), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(HistogramBrush), typeof(Brush), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BackgroundBrushProperty =
-            DependencyProperty.Register(nameof(BackgroundBrush), typeof(Brush), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(BackgroundBrush), typeof(Brush), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BorderBrushProperty =
-            DependencyProperty.Register(nameof(BorderBrush), typeof(Brush), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(BorderBrush), typeof(Brush), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BorderThicknessProperty =
-            DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(CornerRadius), typeof(double), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(4.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(false));
 
         public static readonly DependencyProperty ShowCoordinatesBadgeProperty =
-            DependencyProperty.Register(nameof(ShowCoordinatesBadge), typeof(bool), typeof(CurveEditor),
+            DependencyProperty.Register(nameof(ShowCoordinatesBadge), typeof(bool), typeof(ZCurveEditor),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         #endregion
@@ -283,7 +283,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public CurveEditor()
+        public ZCurveEditor()
         {
             Focusable = true;
             ClipToBounds = true;
@@ -322,7 +322,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnCurveDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is CurveEditor editor && !editor._isUpdatingFromDp)
+            if (d is ZCurveEditor editor && !editor._isUpdatingFromDp)
             {
                 editor.SetPoints(e.NewValue as string);
             }
@@ -812,4 +812,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZCurveEditor"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("CurveEditor is deprecated. Use ZCurveEditor instead.")]
+    public class CurveEditor : ZCurveEditor
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZCurveEditor"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroCurveEditor is deprecated. Use ZCurveEditor instead.")]
+    public class ZeroCurveEditor : ZCurveEditor
+    {
+    }
+    #endregion
 }

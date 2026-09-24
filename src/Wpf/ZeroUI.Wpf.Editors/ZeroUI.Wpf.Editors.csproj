@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\ZeroUI.Core\ZeroUI.Core.csproj" />
     <ProjectReference Include="..\ZeroUI.Wpf.Common\ZeroUI.Wpf.Common.csproj" />
+    <ProjectReference Include="..\ZeroUI.Wpf.Media\ZeroUI.Wpf.Media.csproj" />
   </ItemGroup>
 
   <ItemGroup>

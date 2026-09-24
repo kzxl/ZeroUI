@@ -5,10 +5,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Composition guide overlay styles for <see cref="CropBoxControl"/>.
+    /// Composition guide overlay styles for <see cref="ZCropBox"/>.
     /// </summary>
     public enum CropGuideMode
     {
@@ -30,7 +30,7 @@ namespace ZeroUI.Wpf.Editors
     /// 8 precision resize handles, composition guide overlays (Thirds, Golden Ratio, Diagonals),
     /// and direct high-performance <see cref="DrawingContext"/> rendering.
     /// </summary>
-    public class CropBoxControl : FrameworkElement, IZeroEditor
+    public class ZCropBox : FrameworkElement, IZeroEditor
     {
         private string _activeHandle = "";
         private Point _dragStartMouse;
@@ -43,39 +43,39 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty CropRectProperty =
-            DependencyProperty.Register(nameof(CropRect), typeof(Rect), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(CropRect), typeof(Rect), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(new Rect(0, 0, 1, 1), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnCropRectChanged));
 
         public static readonly DependencyProperty AspectRatioProperty =
-            DependencyProperty.Register(nameof(AspectRatio), typeof(double), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(AspectRatio), typeof(double), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GuideModeProperty =
-            DependencyProperty.Register(nameof(GuideMode), typeof(CropGuideMode), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(GuideMode), typeof(CropGuideMode), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(CropGuideMode.RuleOfThirds, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty DimBrushProperty =
-            DependencyProperty.Register(nameof(DimBrush), typeof(Brush), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(DimBrush), typeof(Brush), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BorderBrushProperty =
-            DependencyProperty.Register(nameof(BorderBrush), typeof(Brush), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(BorderBrush), typeof(Brush), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty BorderThicknessProperty =
-            DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(1.5, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty GuideBrushProperty =
-            DependencyProperty.Register(nameof(GuideBrush), typeof(Brush), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(GuideBrush), typeof(Brush), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty HandleSizeProperty =
-            DependencyProperty.Register(nameof(HandleSize), typeof(double), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(HandleSize), typeof(double), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(12.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(CropBoxControl),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZCropBox),
                 new FrameworkPropertyMetadata(false));
 
         #endregion
@@ -196,7 +196,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public CropBoxControl()
+        public ZCropBox()
         {
             Focusable = true;
             ClipToBounds = true;
@@ -207,7 +207,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnCropRectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is CropBoxControl ctrl && !ctrl._isUpdatingFromDp)
+            if (d is ZCropBox ctrl && !ctrl._isUpdatingFromDp)
             {
                 ctrl.CropRectChanged?.Invoke(ctrl, (Rect)e.NewValue);
                 ctrl.EditValueChanged?.Invoke(ctrl, EventArgs.Empty);
@@ -515,4 +515,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZCropBox"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("CropBoxControl is deprecated. Use ZCropBox instead.")]
+    public class CropBoxControl : ZCropBox
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZCropBox"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroCropBox is deprecated. Use ZCropBox instead.")]
+    public class ZeroCropBox : ZCropBox
+    {
+    }
+    #endregion
 }

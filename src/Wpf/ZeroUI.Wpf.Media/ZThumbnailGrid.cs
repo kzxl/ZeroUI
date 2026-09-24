@@ -12,10 +12,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Represents an individual photo or asset card in <see cref="ThumbnailGridControl"/>.
+    /// Represents an individual photo or asset card in <see cref="ZThumbnailGrid"/>.
     /// </summary>
     public class ThumbnailGridItemModel : INotifyPropertyChanged
     {
@@ -185,7 +185,7 @@ namespace ZeroUI.Wpf.Editors
     }
 
     /// <summary>
-    /// Event arguments for click events on <see cref="ThumbnailGridControl"/>.
+    /// Event arguments for click events on <see cref="ZThumbnailGrid"/>.
     /// </summary>
     public class ThumbnailGridItemClickEventArgs : EventArgs
     {
@@ -206,7 +206,7 @@ namespace ZeroUI.Wpf.Editors
     /// Provides responsive wrap-grid layout, multi-selection (Ctrl/Shift range), rating stars,
     /// color label badges, pick flags, overlay badges, and theme-aware rendering.
     /// </summary>
-    public class ThumbnailGridControl : Control, IZeroEditor
+    public class ZThumbnailGrid : Control, IZeroEditor
     {
         private readonly ObservableCollection<ThumbnailGridItemModel> _items = new ObservableCollection<ThumbnailGridItemModel>();
         private UIElement? _child;
@@ -218,31 +218,31 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty ItemsSourceProperty =
-            DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(ThumbnailGridControl),
+            DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(ZThumbnailGrid),
                 new PropertyMetadata(null, OnItemsSourceChanged));
 
         public static readonly DependencyProperty ThumbnailWidthProperty =
-            DependencyProperty.Register(nameof(ThumbnailWidth), typeof(double), typeof(ThumbnailGridControl),
+            DependencyProperty.Register(nameof(ThumbnailWidth), typeof(double), typeof(ZThumbnailGrid),
                 new PropertyMetadata(130.0));
 
         public static readonly DependencyProperty ThumbnailHeightProperty =
-            DependencyProperty.Register(nameof(ThumbnailHeight), typeof(double), typeof(ThumbnailGridControl),
+            DependencyProperty.Register(nameof(ThumbnailHeight), typeof(double), typeof(ZThumbnailGrid),
                 new PropertyMetadata(140.0));
 
         public static readonly DependencyProperty AllowMultiSelectProperty =
-            DependencyProperty.Register(nameof(AllowMultiSelect), typeof(bool), typeof(ThumbnailGridControl),
+            DependencyProperty.Register(nameof(AllowMultiSelect), typeof(bool), typeof(ZThumbnailGrid),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty EmptyMessageProperty =
-            DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(ThumbnailGridControl),
+            DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(ZThumbnailGrid),
                 new PropertyMetadata("No items to display.", OnEmptyMessageChanged));
 
         public static readonly DependencyProperty CardTemplateProperty =
-            DependencyProperty.Register(nameof(CardTemplate), typeof(DataTemplate), typeof(ThumbnailGridControl),
+            DependencyProperty.Register(nameof(CardTemplate), typeof(DataTemplate), typeof(ZThumbnailGrid),
                 new PropertyMetadata(null, OnCardTemplateChanged));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ThumbnailGridControl),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZThumbnailGrid),
                 new PropertyMetadata(false));
 
         public IEnumerable? ItemsSource
@@ -342,7 +342,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public ThumbnailGridControl()
+        public ZThumbnailGrid()
         {
             Focusable = true;
             _items.CollectionChanged += (_, _) => UpdateEmptyState();
@@ -353,7 +353,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ThumbnailGridControl ctrl && ctrl._itemsControl != null)
+            if (d is ZThumbnailGrid ctrl && ctrl._itemsControl != null)
             {
                 ctrl._itemsControl.ItemsSource = e.NewValue as IEnumerable ?? ctrl._items;
                 ctrl.UpdateEmptyState();
@@ -362,7 +362,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnEmptyMessageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ThumbnailGridControl ctrl && ctrl._txtEmpty != null)
+            if (d is ZThumbnailGrid ctrl && ctrl._txtEmpty != null)
             {
                 ctrl._txtEmpty.Text = e.NewValue as string ?? "";
             }
@@ -370,7 +370,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnCardTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ThumbnailGridControl ctrl && ctrl._itemsControl != null)
+            if (d is ZThumbnailGrid ctrl && ctrl._itemsControl != null)
             {
                 ctrl._itemsControl.ItemTemplate = e.NewValue as DataTemplate ?? ctrl.CreateThumbnailTemplate();
             }
@@ -695,4 +695,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZThumbnailGrid"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ThumbnailGridControl is deprecated. Use ZThumbnailGrid instead.")]
+    public class ThumbnailGridControl : ZThumbnailGrid
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZThumbnailGrid"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroThumbnailGrid is deprecated. Use ZThumbnailGrid instead.")]
+    public class ZeroThumbnailGrid : ZThumbnailGrid
+    {
+    }
+    #endregion
 }

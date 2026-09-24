@@ -77,7 +77,7 @@ namespace ZeroUI.Wpf.Layout
 
         #endregion
 
-        public FlowLayoutControl()
+        public ZFlowLayout()
         {
             ClipToBounds = true;
         }

@@ -5,7 +5,7 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
     /// Interactive Mini-Map Navigator control for ZeroUI in WPF.
@@ -13,7 +13,7 @@ namespace ZeroUI.Wpf.Editors
     /// Dragging the viewport box or clicking anywhere on the thumbnail pans the main viewer.
     /// Renders directly using <see cref="DrawingContext"/> for maximum performance.
     /// </summary>
-    public class MiniMapNavigator : FrameworkElement, IZeroEditor
+    public class ZMiniMapNavigator : FrameworkElement, IZeroEditor
     {
         private bool _isDraggingViewport;
         private Point _dragStartMouse;
@@ -24,31 +24,31 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty ImageSourceProperty =
-            DependencyProperty.Register(nameof(ImageSource), typeof(ImageSource), typeof(MiniMapNavigator),
+            DependencyProperty.Register(nameof(ImageSource), typeof(ImageSource), typeof(ZMiniMapNavigator),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ViewportRectProperty =
-            DependencyProperty.Register(nameof(ViewportRect), typeof(Rect), typeof(MiniMapNavigator),
+            DependencyProperty.Register(nameof(ViewportRect), typeof(Rect), typeof(ZMiniMapNavigator),
                 new FrameworkPropertyMetadata(new Rect(0, 0, 1, 1), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnViewportRectChanged));
 
         public static readonly DependencyProperty ViewportStrokeProperty =
-            DependencyProperty.Register(nameof(ViewportStroke), typeof(Brush), typeof(MiniMapNavigator),
+            DependencyProperty.Register(nameof(ViewportStroke), typeof(Brush), typeof(ZMiniMapNavigator),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ViewportFillProperty =
-            DependencyProperty.Register(nameof(ViewportFill), typeof(Brush), typeof(MiniMapNavigator),
+            DependencyProperty.Register(nameof(ViewportFill), typeof(Brush), typeof(ZMiniMapNavigator),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ViewportThicknessProperty =
-            DependencyProperty.Register(nameof(ViewportThickness), typeof(double), typeof(MiniMapNavigator),
+            DependencyProperty.Register(nameof(ViewportThickness), typeof(double), typeof(ZMiniMapNavigator),
                 new FrameworkPropertyMetadata(1.5, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ShowDimOutsideProperty =
-            DependencyProperty.Register(nameof(ShowDimOutside), typeof(bool), typeof(MiniMapNavigator),
+            DependencyProperty.Register(nameof(ShowDimOutside), typeof(bool), typeof(ZMiniMapNavigator),
                 new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(MiniMapNavigator),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZMiniMapNavigator),
                 new FrameworkPropertyMetadata(false));
 
         #endregion
@@ -141,7 +141,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public MiniMapNavigator()
+        public ZMiniMapNavigator()
         {
             Width = 140;
             Height = 110;
@@ -154,7 +154,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnViewportRectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is MiniMapNavigator nav && !nav._isUpdatingFromDp)
+            if (d is ZMiniMapNavigator nav && !nav._isUpdatingFromDp)
             {
                 nav.ViewportMoved?.Invoke(nav, (Rect)e.NewValue);
                 nav.EditValueChanged?.Invoke(nav, EventArgs.Empty);
@@ -354,4 +354,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZMiniMapNavigator"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("MiniMapNavigator is deprecated. Use ZMiniMapNavigator instead.")]
+    public class MiniMapNavigator : ZMiniMapNavigator
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZMiniMapNavigator"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroMiniMapNavigator is deprecated. Use ZMiniMapNavigator instead.")]
+    public class ZeroMiniMapNavigator : ZMiniMapNavigator
+    {
+    }
+    #endregion
 }

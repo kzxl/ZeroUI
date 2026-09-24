@@ -24,4 +24,16 @@ namespace ZeroUI.WinForms.Editors
             set => SelectedColor = value;
         }
     }
+
+    [Obsolete("ZPictureEdit has moved to ZeroUI.WinForms.Media. Please migrate to ZeroUI.WinForms.Media.ZPictureEdit instead.")]
+    public class ZPictureEdit : ZeroUI.WinForms.Media.ZPictureEdit { }
+
+    [Obsolete("PictureEdit has moved to ZeroUI.WinForms.Media. Please migrate to ZeroUI.WinForms.Media.ZPictureEdit instead.")]
+    public class PictureEdit : ZeroUI.WinForms.Media.ZPictureEdit { }
+
+    [Obsolete("ZeroPictureEdit has moved to ZeroUI.WinForms.Media. Please migrate to ZeroUI.WinForms.Media.ZPictureEdit instead.")]
+    public class ZeroPictureEdit : ZeroUI.WinForms.Media.ZPictureEdit { }
+
+    [Obsolete("ZeroImage has moved to ZeroUI.WinForms.Media. Please migrate to ZeroUI.WinForms.Media.ZPictureEdit instead.")]
+    public class ZeroImage : ZeroUI.WinForms.Media.ZPictureEdit { }
 }

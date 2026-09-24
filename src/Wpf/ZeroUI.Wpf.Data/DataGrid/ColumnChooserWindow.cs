@@ -15,13 +15,13 @@ namespace ZeroUI.Wpf.DataGrid
     /// </summary>
     public class ColumnChooserWindow : Window
     {
-        private readonly GridControl _grid;
+        private readonly ZGrid _grid;
         private readonly ListBox _hiddenColumnsList;
         private readonly Button _btnShowColumn;
         private readonly Button _btnShowAll;
         private readonly TextBlock _lblInfo;
 
-        public ColumnChooserWindow(GridControl grid)
+        public ColumnChooserWindow(ZGrid grid)
         {
             _grid = grid ?? throw new ArgumentNullException(nameof(grid));
 

@@ -7,7 +7,7 @@ using System.Windows.Media.Imaging;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
     /// Interactive 360° Color Grading Wheel control for ZeroUI in WPF.
@@ -16,7 +16,7 @@ namespace ZeroUI.Wpf.Editors
     /// Uses a pre-rendered high-fidelity anti-aliased gamut bitmap and direct <see cref="DrawingContext"/>
     /// rendering for zero visual-tree overhead.
     /// </summary>
-    public class ColorWheelEdit : FrameworkElement, IZeroEditor
+    public class ZColorWheel : FrameworkElement, IZeroEditor
     {
         private static BitmapSource? s_cachedWheelBitmap;
         private static readonly object s_bitmapLock = new object();
@@ -30,43 +30,43 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty HueProperty =
-            DependencyProperty.Register(nameof(Hue), typeof(float), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(Hue), typeof(float), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(0f, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnHueChanged));
 
         public static readonly DependencyProperty SaturationProperty =
-            DependencyProperty.Register(nameof(Saturation), typeof(float), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(Saturation), typeof(float), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(0f, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnSaturationChanged));
 
         public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register(nameof(Value), typeof(float), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(Value), typeof(float), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(1f, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender, OnValueChanged));
 
         public static readonly DependencyProperty ThumbSizeProperty =
-            DependencyProperty.Register(nameof(ThumbSize), typeof(double), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(ThumbSize), typeof(double), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(12.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ThumbStrokeProperty =
-            DependencyProperty.Register(nameof(ThumbStroke), typeof(Brush), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(ThumbStroke), typeof(Brush), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty RingStrokeProperty =
-            DependencyProperty.Register(nameof(RingStroke), typeof(Brush), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(RingStroke), typeof(Brush), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty RingThicknessProperty =
-            DependencyProperty.Register(nameof(RingThickness), typeof(double), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(RingThickness), typeof(double), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ShowCrosshairProperty =
-            DependencyProperty.Register(nameof(ShowCrosshair), typeof(bool), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(ShowCrosshair), typeof(bool), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ShowTooltipProperty =
-            DependencyProperty.Register(nameof(ShowTooltip), typeof(bool), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(ShowTooltip), typeof(bool), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ColorWheelEdit),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZColorWheel),
                 new FrameworkPropertyMetadata(false));
 
         #endregion
@@ -203,7 +203,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public ColorWheelEdit()
+        public ZColorWheel()
         {
             Width = 120;
             Height = 120;
@@ -230,7 +230,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnHueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ColorWheelEdit wheel && !wheel._isUpdatingFromDp)
+            if (d is ZColorWheel wheel && !wheel._isUpdatingFromDp)
             {
                 wheel.InvalidateVisual();
             }
@@ -238,7 +238,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnSaturationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ColorWheelEdit wheel && !wheel._isUpdatingFromDp)
+            if (d is ZColorWheel wheel && !wheel._isUpdatingFromDp)
             {
                 wheel.InvalidateVisual();
             }
@@ -246,7 +246,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ColorWheelEdit wheel && !wheel._isUpdatingFromDp)
+            if (d is ZColorWheel wheel && !wheel._isUpdatingFromDp)
             {
                 wheel.InvalidateVisual();
             }
@@ -640,10 +640,35 @@ namespace ZeroUI.Wpf.Editors
         #endregion
     }
 
+    
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
-    /// Backward-compatible alias for <see cref="ColorWheelEdit"/>.
+    /// Legacy alias for <see cref="ZColorWheel"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
     /// </summary>
-    public class ColorWheel : ColorWheelEdit
+    [Obsolete("ColorWheelEdit is deprecated. Use ZColorWheel instead.")]
+    public class ColorWheelEdit : ZColorWheel
     {
     }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZColorWheel"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ColorWheel is deprecated. Use ZColorWheel instead.")]
+    public class ColorWheel : ZColorWheel
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZColorWheel"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroColorWheel is deprecated. Use ZColorWheel instead.")]
+    public class ZeroColorWheel : ZColorWheel
+    {
+    }
+    #endregion
 }

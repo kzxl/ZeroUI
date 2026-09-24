@@ -13,10 +13,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Metadata token descriptor for <see cref="TokenPatternEditor"/>.
+    /// Metadata token descriptor for <see cref="ZTokenPatternEditor"/>.
     /// </summary>
     public class TokenChipItem : INotifyPropertyChanged
     {
@@ -70,7 +70,7 @@ namespace ZeroUI.Wpf.Editors
     /// Composite Filename / Text Pattern Editor with interactive token insertion chips,
     /// live evaluated preview, and keyboard shortcuts.
     /// </summary>
-    public class TokenPatternEditor : Control, IZeroEditor
+    public class ZTokenPatternEditor : Control, IZeroEditor
     {
         private UIElement? _child;
         private TextBlock? _lblTitle;
@@ -87,27 +87,27 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty LabelTextProperty =
-            DependencyProperty.Register(nameof(LabelText), typeof(string), typeof(TokenPatternEditor),
+            DependencyProperty.Register(nameof(LabelText), typeof(string), typeof(ZTokenPatternEditor),
                 new PropertyMetadata("Pattern", OnLabelTextChanged));
 
         public static readonly DependencyProperty PatternProperty =
-            DependencyProperty.Register(nameof(Pattern), typeof(string), typeof(TokenPatternEditor),
+            DependencyProperty.Register(nameof(Pattern), typeof(string), typeof(ZTokenPatternEditor),
                 new FrameworkPropertyMetadata("{name}.{ext}", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnPatternChanged));
 
         public static readonly DependencyProperty ShowLabelProperty =
-            DependencyProperty.Register(nameof(ShowLabel), typeof(bool), typeof(TokenPatternEditor),
+            DependencyProperty.Register(nameof(ShowLabel), typeof(bool), typeof(ZTokenPatternEditor),
                 new PropertyMetadata(true, OnShowLabelChanged));
 
         public static readonly DependencyProperty ShowChipsProperty =
-            DependencyProperty.Register(nameof(ShowChips), typeof(bool), typeof(TokenPatternEditor),
+            DependencyProperty.Register(nameof(ShowChips), typeof(bool), typeof(ZTokenPatternEditor),
                 new PropertyMetadata(true, OnShowChipsChanged));
 
         public static readonly DependencyProperty ShowPreviewProperty =
-            DependencyProperty.Register(nameof(ShowPreview), typeof(bool), typeof(TokenPatternEditor),
+            DependencyProperty.Register(nameof(ShowPreview), typeof(bool), typeof(ZTokenPatternEditor),
                 new PropertyMetadata(true, OnShowPreviewChanged));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(TokenPatternEditor),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZTokenPatternEditor),
                 new PropertyMetadata(false, OnReadOnlyChanged));
 
         public string LabelText
@@ -231,7 +231,7 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        public TokenPatternEditor()
+        public ZTokenPatternEditor()
         {
             Focusable = true;
             InitializeDefaultTokens();
@@ -256,7 +256,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnLabelTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TokenPatternEditor ctrl && ctrl._lblTitle != null)
+            if (d is ZTokenPatternEditor ctrl && ctrl._lblTitle != null)
             {
                 ctrl._lblTitle.Text = e.NewValue as string ?? "";
             }
@@ -264,7 +264,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnPatternChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TokenPatternEditor ctrl)
+            if (d is ZTokenPatternEditor ctrl)
             {
                 string newPattern = e.NewValue as string ?? "";
                 if (!ctrl._suppressTextEvent && ctrl._txtInput != null && ctrl._txtInput.Text != newPattern)
@@ -287,7 +287,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnShowLabelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TokenPatternEditor ctrl && ctrl._lblTitle != null)
+            if (d is ZTokenPatternEditor ctrl && ctrl._lblTitle != null)
             {
                 ctrl._lblTitle.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
             }
@@ -295,7 +295,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnShowChipsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TokenPatternEditor ctrl && ctrl._pnlChips != null)
+            if (d is ZTokenPatternEditor ctrl && ctrl._pnlChips != null)
             {
                 ctrl._pnlChips.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
             }
@@ -303,7 +303,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnShowPreviewChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TokenPatternEditor ctrl)
+            if (d is ZTokenPatternEditor ctrl)
             {
                 var vis = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
                 if (ctrl._lblPreviewPrefix != null) ctrl._lblPreviewPrefix.Visibility = vis;
@@ -313,7 +313,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnReadOnlyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is TokenPatternEditor ctrl && ctrl._txtInput != null)
+            if (d is ZTokenPatternEditor ctrl && ctrl._txtInput != null)
             {
                 ctrl._txtInput.IsReadOnly = (bool)e.NewValue;
             }
@@ -570,4 +570,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZTokenPatternEditor"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("TokenPatternEditor is deprecated. Use ZTokenPatternEditor instead.")]
+    public class TokenPatternEditor : ZTokenPatternEditor
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZTokenPatternEditor"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroTokenPatternEditor is deprecated. Use ZTokenPatternEditor instead.")]
+    public class ZeroTokenPatternEditor : ZTokenPatternEditor
+    {
+    }
+    #endregion
 }

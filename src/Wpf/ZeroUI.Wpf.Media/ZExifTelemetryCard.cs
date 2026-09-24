@@ -12,10 +12,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Represents a single metadata key-value item in <see cref="ExifTelemetryCard"/>.
+    /// Represents a single metadata key-value item in <see cref="ZExifTelemetryCard"/>.
     /// </summary>
     public class ExifTelemetryItem : INotifyPropertyChanged
     {
@@ -77,7 +77,7 @@ namespace ZeroUI.Wpf.Editors
     /// Modern industrial HUD & Card control for inspecting Camera, Exposure, Lens,
     /// GPS telemetry, and raw EXIF metadata tags.
     /// </summary>
-    public class ExifTelemetryCard : Control, IZeroEditor
+    public class ZExifTelemetryCard : Control, IZeroEditor
     {
         private readonly ObservableCollection<ExifTelemetryItem> _exifRows = new ObservableCollection<ExifTelemetryItem>();
 
@@ -98,63 +98,63 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty ShutterSpeedProperty =
-            DependencyProperty.Register(nameof(ShutterSpeed), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(ShutterSpeed), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnTelemetryFieldChanged));
 
         public static readonly DependencyProperty ApertureProperty =
-            DependencyProperty.Register(nameof(Aperture), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(Aperture), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnTelemetryFieldChanged));
 
         public static readonly DependencyProperty IsoProperty =
-            DependencyProperty.Register(nameof(Iso), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(Iso), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnTelemetryFieldChanged));
 
         public static readonly DependencyProperty FocalLengthProperty =
-            DependencyProperty.Register(nameof(FocalLength), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(FocalLength), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnTelemetryFieldChanged));
 
         public static readonly DependencyProperty CameraModelProperty =
-            DependencyProperty.Register(nameof(CameraModel), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(CameraModel), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnTelemetryFieldChanged));
 
         public static readonly DependencyProperty LensModelProperty =
-            DependencyProperty.Register(nameof(LensModel), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(LensModel), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnTelemetryFieldChanged));
 
         public static readonly DependencyProperty CaptureDateTimeProperty =
-            DependencyProperty.Register(nameof(CaptureDateTime), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(CaptureDateTime), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnTelemetryFieldChanged));
 
         public static readonly DependencyProperty HasGpsProperty =
-            DependencyProperty.Register(nameof(HasGps), typeof(bool), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(HasGps), typeof(bool), typeof(ZExifTelemetryCard),
                 new PropertyMetadata(false, OnGpsChanged));
 
         public static readonly DependencyProperty GpsLatitudeProperty =
-            DependencyProperty.Register(nameof(GpsLatitude), typeof(double?), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(GpsLatitude), typeof(double?), typeof(ZExifTelemetryCard),
                 new PropertyMetadata(null, OnGpsChanged));
 
         public static readonly DependencyProperty GpsLongitudeProperty =
-            DependencyProperty.Register(nameof(GpsLongitude), typeof(double?), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(GpsLongitude), typeof(double?), typeof(ZExifTelemetryCard),
                 new PropertyMetadata(null, OnGpsChanged));
 
         public static readonly DependencyProperty GpsTextProperty =
-            DependencyProperty.Register(nameof(GpsText), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(GpsText), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("", OnGpsChanged));
 
         public static readonly DependencyProperty AutoLaunchMapOnGpsClickProperty =
-            DependencyProperty.Register(nameof(AutoLaunchMapOnGpsClick), typeof(bool), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(AutoLaunchMapOnGpsClick), typeof(bool), typeof(ZExifTelemetryCard),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty ShowDetailedExifProperty =
-            DependencyProperty.Register(nameof(ShowDetailedExif), typeof(bool), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(ShowDetailedExif), typeof(bool), typeof(ZExifTelemetryCard),
                 new PropertyMetadata(true, OnLayoutChanged));
 
         public static readonly DependencyProperty IsDetailedExifExpandedProperty =
-            DependencyProperty.Register(nameof(IsDetailedExifExpanded), typeof(bool), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(IsDetailedExifExpanded), typeof(bool), typeof(ZExifTelemetryCard),
                 new PropertyMetadata(true, OnLayoutChanged));
 
         public static readonly DependencyProperty DetailedExifHeaderProperty =
-            DependencyProperty.Register(nameof(DetailedExifHeader), typeof(string), typeof(ExifTelemetryCard),
+            DependencyProperty.Register(nameof(DetailedExifHeader), typeof(string), typeof(ZExifTelemetryCard),
                 new PropertyMetadata("EXIF METADATA", OnLayoutChanged));
 
         public string ShutterSpeed
@@ -292,30 +292,30 @@ namespace ZeroUI.Wpf.Editors
 
         public ObservableCollection<ExifTelemetryItem> ExifRows => _exifRows;
 
-        static ExifTelemetryCard()
+        static ZExifTelemetryCard()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ExifTelemetryCard),
-                new FrameworkPropertyMetadata(typeof(ExifTelemetryCard)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZExifTelemetryCard),
+                new FrameworkPropertyMetadata(typeof(ZExifTelemetryCard)));
         }
 
-        public ExifTelemetryCard()
+        public ZExifTelemetryCard()
         {
             Loaded += (s, e) => BuildVisualTree();
         }
 
         private static void OnLayoutChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ExifTelemetryCard card) card.BuildVisualTree();
+            if (d is ZExifTelemetryCard card) card.BuildVisualTree();
         }
 
         private static void OnTelemetryFieldChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ExifTelemetryCard card) card.UpdateTelemetryLabels();
+            if (d is ZExifTelemetryCard card) card.UpdateTelemetryLabels();
         }
 
         private static void OnGpsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is ExifTelemetryCard card) card.UpdateGpsSection();
+            if (d is ZExifTelemetryCard card) card.UpdateGpsSection();
         }
 
         public void SetTelemetry(string? camera = null, string? lens = null,
@@ -733,4 +733,25 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZExifTelemetryCard"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ExifTelemetryCard is deprecated. Use ZExifTelemetryCard instead.")]
+    public class ExifTelemetryCard : ZExifTelemetryCard
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZExifTelemetryCard"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroExifTelemetryCard is deprecated. Use ZExifTelemetryCard instead.")]
+    public class ZeroExifTelemetryCard : ZExifTelemetryCard
+    {
+    }
+    #endregion
 }

@@ -9,8 +9,9 @@ using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
 using ZeroUI.WinForms.Overlays;
 using ZeroUI.WinForms.Theme;
+using ZeroUI.WinForms.Editors;
 
-namespace ZeroUI.WinForms.Editors
+namespace ZeroUI.WinForms.Media
 {
 
     /// <summary>
@@ -19,7 +20,7 @@ namespace ZeroUI.WinForms.Editors
     /// and click-to-zoom Lightbox modal preview.
     /// </summary>
     [ToolboxItem(true)]
-    [Category("ZeroUI - Editors")]
+    [Category("ZeroUI - Media")]
     [DefaultProperty("Image")]
     [Description("Modern anti-aliased image and avatar control with initials fallback and zoom lightbox")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroImage.bmp")]
@@ -457,9 +458,9 @@ namespace ZeroUI.WinForms.Editors
                 return fitRatio > 0 ? 1.0f / fitRatio : 1.0f;
             }
 
-            private SimpleButton CreateToolButton(string text, int width, Action onClick)
+            private ZButton CreateToolButton(string text, int width, Action onClick)
             {
-                var btn = new SimpleButton
+                var btn = new ZButton
                 {
                     Text = text,
                     Dock = DockStyle.Left,
@@ -598,14 +599,14 @@ namespace ZeroUI.WinForms.Editors
         }
     }
 
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
     /// <summary>
     /// Obsolete alias for <see cref="ZPictureEdit"/>.
     /// </summary>
     [Obsolete("ZeroImage is deprecated and will be removed in 5 release cycles. Please migrate to ZPictureEdit instead.")]
     [ToolboxItem(false)]
     public class ZeroImage : ZPictureEdit { }
-
-    #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>
     /// Legacy alias for <see cref="ZPictureEdit"/>.
@@ -616,6 +617,13 @@ namespace ZeroUI.WinForms.Editors
     public class PictureEdit : ZPictureEdit
     {
     }
+
+    /// <summary>
+    /// Backward-compatible alias for <see cref="ZPictureEdit"/>.
+    /// </summary>
+    [Obsolete("ZeroPictureEdit is deprecated. Use ZPictureEdit instead.")]
+    [ToolboxItem(false)]
+    public class ZeroPictureEdit : ZPictureEdit { }
 
     #endregion
 }

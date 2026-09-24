@@ -10,10 +10,10 @@ using System.Windows.Media;
 using ZeroUI.Core.Editors;
 using ZeroUI.Wpf.Theme;
 
-namespace ZeroUI.Wpf.Editors
+namespace ZeroUI.Wpf.Media
 {
     /// <summary>
-    /// Represents an entry in the <see cref="HistoryTimelineControl"/>.
+    /// Represents an entry in the <see cref="ZHistoryTimeline"/>.
     /// </summary>
     public class HistoryTimelineItemModel : INotifyPropertyChanged
     {
@@ -101,7 +101,7 @@ namespace ZeroUI.Wpf.Editors
     }
 
     /// <summary>
-    /// Represents a saved named snapshot state in <see cref="HistoryTimelineControl"/>.
+    /// Represents a saved named snapshot state in <see cref="ZHistoryTimeline"/>.
     /// </summary>
     public class HistorySnapshotItemModel : INotifyPropertyChanged
     {
@@ -139,7 +139,7 @@ namespace ZeroUI.Wpf.Editors
     /// Provides linear step history with thumbnails, active marker indicators,
     /// named snapshot bookmarks, and instant time-travel state rollback.
     /// </summary>
-    public class HistoryTimelineControl : Control, IZeroEditor
+    public class ZHistoryTimeline : Control, IZeroEditor
     {
         private readonly ObservableCollection<HistoryTimelineItemModel> _steps = new ObservableCollection<HistoryTimelineItemModel>();
         private readonly ObservableCollection<HistorySnapshotItemModel> _snapshots = new ObservableCollection<HistorySnapshotItemModel>();
@@ -154,27 +154,27 @@ namespace ZeroUI.Wpf.Editors
         #region Dependency Properties
 
         public static readonly DependencyProperty HeaderTitleProperty =
-            DependencyProperty.Register(nameof(HeaderTitle), typeof(string), typeof(HistoryTimelineControl),
+            DependencyProperty.Register(nameof(HeaderTitle), typeof(string), typeof(ZHistoryTimeline),
                 new PropertyMetadata("HISTORY"));
 
         public static readonly DependencyProperty EmptyMessageProperty =
-            DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(HistoryTimelineControl),
+            DependencyProperty.Register(nameof(EmptyMessage), typeof(string), typeof(ZHistoryTimeline),
                 new PropertyMetadata("No history entries yet."));
 
         public static readonly DependencyProperty CurrentIndexProperty =
-            DependencyProperty.Register(nameof(CurrentIndex), typeof(int), typeof(HistoryTimelineControl),
+            DependencyProperty.Register(nameof(CurrentIndex), typeof(int), typeof(ZHistoryTimeline),
                 new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnCurrentIndexChanged));
 
         public static readonly DependencyProperty ShowSnapshotsProperty =
-            DependencyProperty.Register(nameof(ShowSnapshots), typeof(bool), typeof(HistoryTimelineControl),
+            DependencyProperty.Register(nameof(ShowSnapshots), typeof(bool), typeof(ZHistoryTimeline),
                 new PropertyMetadata(true, OnShowSnapshotsChanged));
 
         public static readonly DependencyProperty ShowThumbnailsProperty =
-            DependencyProperty.Register(nameof(ShowThumbnails), typeof(bool), typeof(HistoryTimelineControl),
+            DependencyProperty.Register(nameof(ShowThumbnails), typeof(bool), typeof(ZHistoryTimeline),
                 new PropertyMetadata(true));
 
         public static readonly DependencyProperty ReadOnlyProperty =
-            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(HistoryTimelineControl),
+            DependencyProperty.Register(nameof(ReadOnly), typeof(bool), typeof(ZHistoryTimeline),
                 new PropertyMetadata(false));
 
         #endregion
@@ -264,12 +264,12 @@ namespace ZeroUI.Wpf.Editors
 
         #endregion
 
-        static HistoryTimelineControl()
+        static ZHistoryTimeline()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(HistoryTimelineControl), new FrameworkPropertyMetadata(typeof(HistoryTimelineControl)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZHistoryTimeline), new FrameworkPropertyMetadata(typeof(ZHistoryTimeline)));
         }
 
-        public HistoryTimelineControl()
+        public ZHistoryTimeline()
         {
             Focusable = true;
             _steps.CollectionChanged += (_, _) => UpdateEmptyState();
@@ -280,7 +280,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnCurrentIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is HistoryTimelineControl ctrl)
+            if (d is ZHistoryTimeline ctrl)
             {
                 int newIdx = (int)e.NewValue;
                 foreach (var step in ctrl._steps)
@@ -294,7 +294,7 @@ namespace ZeroUI.Wpf.Editors
 
         private static void OnShowSnapshotsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is HistoryTimelineControl ctrl && ctrl._snapshotsBorder != null)
+            if (d is ZHistoryTimeline ctrl && ctrl._snapshotsBorder != null)
             {
                 ctrl._snapshotsBorder.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed;
             }
@@ -658,4 +658,25 @@ namespace ZeroUI.Wpf.Editors
                 throw new NotImplementedException();
         }
     }
+
+    #region Backward Compatibility Shims (5-Release Deprecation Policy)
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZHistoryTimeline"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("HistoryTimelineControl is deprecated. Use ZHistoryTimeline instead.")]
+    public class HistoryTimelineControl : ZHistoryTimeline
+    {
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZHistoryTimeline"/>.
+    /// Preserved for backward compatibility across 5 release cycles.
+    /// </summary>
+    [Obsolete("ZeroHistoryTimeline is deprecated. Use ZHistoryTimeline instead.")]
+    public class ZeroHistoryTimeline : ZHistoryTimeline
+    {
+    }
+    #endregion
 }
