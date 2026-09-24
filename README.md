@@ -72,6 +72,19 @@ In-depth technical specifications and architectural documentation are modularize
 
 ---
 
+## 🏷️ Canonical `Z*` Control Naming Standard & Collision Prevention
+
+To prevent ambiguous reference collisions (`CS0104`) with native WinForms and WPF controls (such as `System.Windows.Forms.Panel`, `GroupBox`, `Button`, `Label`, `TextBox`), ZeroUI establishes a clean architectural separation:
+
+* **Foundational Engine & Infrastructure:** Prefixed with **`Zero`** (`ZeroTheme`, `ZeroDpi`, `ZeroFontCache`, `ZeroIcons`, `ZeroAnimationClock`, `ZeroLocalizer`).
+* **Canonical UI Controls Suite:** Standard controls adopt the **`Z`** prefix (`ZPanel`, `ZGroupBox`, `ZMenuBar`, `ZButton`, `ZLabel`, `ZCheckBox`, `ZRadioButton`, `ZTextBox`, `ZProgressBar`, `ZTabControl`, `ZSplitContainer`, `ZGrid`, `ZChart`).
+  * **Zero Collisions (`CS0104`):** Guarantees zero naming conflicts when developers import both `System.Windows.Forms` and ZeroUI namespaces.
+  * **Instant IDE Discovery:** Simply typing `Z` in the IDE immediately surfaces the complete ZeroUI component palette.
+  * **Full Theme Synchronization:** All `Z*` controls automatically inherit `ZeroTheme` dark/light modes, rounded corner styles, and High-DPI scaling.
+  * **5-Release Deprecation Wrappers:** Previous class names (`PanelControl`, `GroupControl`, `MenuBarControl`, `SimpleButton`, `TextEdit`, and legacy `Zero*` shims) are retained as backward-compatibility wrappers with `[Obsolete]` warnings and will be maintained across 5 minor release cycles before pruning.
+
+---
+
 ## 📦 Package Matrix
 
 | Package | Targets | Primary Capabilities | Dependencies |

@@ -3,7 +3,12 @@
 Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows virtual grid, cross-tab OLAP pivot matrices, visual timeline range selectors, form validation engines, and 60 FPS SCADA mimics (`net462`, `net8.0-windows`).
 
 > [!NOTE]
-> **Enterprise Naming Standard:** All control classes adhere to clean enterprise names without the `Zero` prefix (e.g. `GridControl`, `ChartControl`, `SevenSegment`, `LinearGauge`, `ValidationProvider`). Full backward compatibility is preserved via `[Obsolete]` shims (e.g., `ZeroGridControl`, `ZeroValidationProvider`).
+> **Canonical `Z*` Control Naming Standard & Collision Prevention:**
+> Standard UI controls in ZeroUI adopt the canonical **`Z*`** prefix (e.g., `ZPanel`, `ZGroupBox`, `ZMenuBar`, `ZButton`, `ZLabel`, `ZCheckBox`, `ZRadioButton`, `ZTextBox`, `ZProgressBar`, `ZTabControl`, `ZSplitContainer`, `ZGrid`, `ZChart`).
+> - **Zero Name Collisions (`CS0104`):** WinForms default controls (`Panel`, `GroupBox`, `Button`, `Label`, `TextBox`) reside in `System.Windows.Forms`. Using the `Z` prefix completely eliminates ambiguous type collisions when developers have both namespaces imported.
+> - **IntelliSense Ergonomics:** Typing `Z` in the IDE immediately groups and surfaces the entire ZeroUI component palette.
+> - **Seamless Theme Reactivity:** All `Z*` controls automatically synchronize with `ZeroTheme` (instant Dark/Light skin hot-swapping), anti-aliasing, and High-DPI scaling.
+> - **5-Release Backward Compatibility:** Previous class names (`PanelControl`, `GroupControl`, `MenuBarControl`, `SimpleButton`, `TextEdit`, and legacy `Zero*` shims) are retained as `[Obsolete]` wrappers across exactly 5 minor releases to guarantee zero compilation breaks during migration.
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
 [![NuGet Version](https://img.shields.io/badge/nuget-v1.8.6-blue.svg)](https://github.com/kzxl/ZeroUI)
