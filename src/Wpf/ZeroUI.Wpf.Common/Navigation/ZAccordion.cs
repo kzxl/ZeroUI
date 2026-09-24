@@ -84,7 +84,7 @@ namespace ZeroUI.Wpf.Navigation
     /// Supports nested collapsible groups, glyph icons, notification badges,
     /// and SingleGroup or MultipleGroups expansion modes.
     /// </summary>
-    public class AccordionControl : Control
+    public class ZAccordion : Control
     {
         private readonly ObservableCollection<AccordionGroup> _groups = new ObservableCollection<AccordionGroup>();
         private StackPanel? _groupsStack;
@@ -102,12 +102,12 @@ namespace ZeroUI.Wpf.Navigation
         public event EventHandler<AccordionItem>? ItemClicked;
         public event EventHandler<AccordionGroup>? GroupToggled;
 
-        static AccordionControl()
+        static ZAccordion()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(AccordionControl), new FrameworkPropertyMetadata(typeof(AccordionControl)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZAccordion), new FrameworkPropertyMetadata(typeof(ZAccordion)));
         }
 
-        public AccordionControl()
+        public ZAccordion()
         {
             Background = ZeroWpfTheme.BgCard;
             BorderBrush = ZeroWpfTheme.BorderDefault;
@@ -368,10 +368,26 @@ namespace ZeroUI.Wpf.Navigation
     }
 
     /// <summary>
-    /// Backward-compatibility alias for <see cref="AccordionControl"/>.
+    /// Backward-compatibility alias for <see cref="ZAccordion"/>.
     /// </summary>
-    [Obsolete("ZeroAccordion is deprecated. Use AccordionControl instead.")]
-    public class ZeroAccordion : AccordionControl
+    [Obsolete("AccordionControl is deprecated and will be removed in 5 release cycles. Please migrate to ZAccordion instead.")]
+    public class AccordionControl : ZAccordion
     {
+        static AccordionControl()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(AccordionControl), new FrameworkPropertyMetadata(typeof(ZAccordion)));
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZAccordion"/>.
+    /// </summary>
+    [Obsolete("ZeroAccordion is deprecated and will be removed in 5 release cycles. Please migrate to ZAccordion instead.")]
+    public class ZeroAccordion : ZAccordion
+    {
+        static ZeroAccordion()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroAccordion), new FrameworkPropertyMetadata(typeof(ZAccordion)));
+        }
     }
 }
