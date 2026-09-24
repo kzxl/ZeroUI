@@ -34,6 +34,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Category("ZeroUI - DataGrid")]
     [DefaultProperty("DataSource")]
     [Description("High-performance virtual DataGrid with direct Win32 DIBSection rendering")]
+    [Designer("ZeroUI.WinForms.Design.Data.ZGridDesigner, ZeroUI.WinForms.Design")]
     public class ZGrid : Control, IAnimationFrameListener
     {
         private readonly List<ZeroColumn> _columns = new List<ZeroColumn>();

@@ -20,6 +20,7 @@ namespace ZeroUI.WinForms.Layout
     [DefaultEvent("OrderChanged")]
     [Description("Responsive card container with auto-wrapping and interactive drag reordering")]
     [ToolboxBitmap(typeof(ZeroIcons), "FlowLayoutControl.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Common.ZFlowLayoutDesigner, ZeroUI.WinForms.Design")]
     public class ZFlowLayout : Panel
     {
         private int _hGap = 8;

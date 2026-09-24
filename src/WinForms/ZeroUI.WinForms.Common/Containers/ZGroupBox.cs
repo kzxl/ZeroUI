@@ -18,6 +18,7 @@ namespace ZeroUI.WinForms.Containers
     [Category("ZeroUI - Containers")]
     [Description("Modern container group box with styled header caption bar and theme reactivity")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefaultControl.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Common.ZGroupBoxDesigner, ZeroUI.WinForms.Design")]
     public class ZGroupBox : Panel, IZeroDpiScalable
     {
         private string _caption = "Group Title";

@@ -22,6 +22,7 @@ namespace ZeroUI.WinForms.Charts
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroChart.bmp")]
     [Category("ZeroUI - Charts & Analytics")]
     [Description("High-performance universal chart control for modern desktop analytics and dashboards")]
+    [Designer("ZeroUI.WinForms.Design.Charts.ZChartDesigner, ZeroUI.WinForms.Design")]
     public class ZChart : Control
     {
         private string _title = string.Empty;

@@ -22,5 +22,6 @@
     <ProjectReference Include="..\..\src\ZeroUI.Core\ZeroUI.Core.csproj" />
     <ProjectReference Include="..\..\src\Wpf\ZeroUI.Wpf\ZeroUI.Wpf.csproj" />
     <ProjectReference Include="..\..\src\WinForms\ZeroUI.WinForms\ZeroUI.WinForms.csproj" />
+    <ProjectReference Include="..\..\src\WinForms\ZeroUI.WinForms.Design\ZeroUI.WinForms.Design.csproj" />
   </ItemGroup>
 </Project>

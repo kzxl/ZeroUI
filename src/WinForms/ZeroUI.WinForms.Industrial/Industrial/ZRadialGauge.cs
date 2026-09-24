@@ -22,6 +22,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultEvent("ValueChanged")]
     [Description("High-precision circular industrial dial gauge with needle pointer and threshold zones")]
     [ToolboxBitmap(typeof(ZeroIcons), "RadialGauge.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Industrial.ZRadialGaugeDesigner, ZeroUI.WinForms.Design")]
     public partial class ZRadialGauge : ControlBase, IScadaBindable
     {
         private double _minimum = 0.0;
@@ -83,7 +84,7 @@ namespace ZeroUI.WinForms.Industrial
             set
             {
                 double clamped = Math.Max(_minimum, Math.Min(_maximum, value));
-                if (_enableDamping)
+                if (_enableDamping && !DesignMode && IsHandleCreated)
                 {
                     _targetValue = clamped;
                     EnsureDampingSubscription();
@@ -216,8 +217,10 @@ namespace ZeroUI.WinForms.Industrial
             set => _dampingFactor = Math.Max(0.01, Math.Min(1.0, value));
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Category("ZeroUI - Scale")]
+        [Description("Collection of colored threshold alarm and limit bands.")]
+        [Editor("ZeroUI.WinForms.Design.Editors.GaugeThresholdEditor, ZeroUI.WinForms.Design", typeof(System.Drawing.Design.UITypeEditor))]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public List<GaugeThresholdRange> Thresholds => _thresholds;
 
         [Category("ZeroUI - Scale")]

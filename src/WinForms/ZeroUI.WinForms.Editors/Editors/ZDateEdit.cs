@@ -21,6 +21,7 @@ namespace ZeroUI.WinForms.Editors
     [DefaultProperty("Value")]
     [DefaultEvent("ValueChanged")]
     [Description("Modern date picker with custom-drawn popup calendar and quick-select presets")]
+    [Designer("ZeroUI.WinForms.Design.Editors.ZDateEditDesigner, ZeroUI.WinForms.Design")]
     public class ZDateEdit : ControlBase, IZeroEditor
     {
         private DateTime _selectedDate = DateTime.Today;

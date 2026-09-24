@@ -46,6 +46,7 @@ namespace ZeroUI.WinForms.Industrial
     [DefaultProperty("Value")]
     [Description("Industrial 7-Segment Digital LED Display for SCADA & MES telemetry")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroSevenSegment.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Industrial.ZSevenSegmentDesigner, ZeroUI.WinForms.Design")]
     public partial class ZSevenSegment : ControlBase
     {
         private string _value = "1420";

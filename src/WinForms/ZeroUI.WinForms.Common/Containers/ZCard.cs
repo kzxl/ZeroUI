@@ -15,6 +15,7 @@ namespace ZeroUI.WinForms.Containers
     [Category("ZeroUI - Industrial & SCADA")]
     [DefaultProperty("Title")]
     [Description("Modern container card with rounded corners, optional Step Badge, and Title")]
+    [Designer("ZeroUI.WinForms.Design.Common.ZCardDesigner, ZeroUI.WinForms.Design")]
     public class ZCard : Panel, IZeroDpiScalable
     {
         private int? _stepNumber = 1;

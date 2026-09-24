@@ -64,6 +64,7 @@ namespace ZeroUI.WinForms.Containers
     [Category("ZeroUI - Containers")]
     [Description("Modern theme-aware container panel with border, radius, and DPI scaling")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroDefaultControl.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Common.ZPanelDesigner, ZeroUI.WinForms.Design")]
     public class ZPanel : Panel, IZeroDpiScalable
     {
         private PanelBorderStyle _borderStyle = PanelBorderStyle.Solid;

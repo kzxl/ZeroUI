@@ -791,6 +791,7 @@ namespace ZeroUI.WinForms.Navigation
     [DefaultProperty("SelectedIndex")]
     [Description("Modern theme-aware TabControl adhering to the canonical Z-prefix standard")]
     [ToolboxBitmap(typeof(ZeroIcons), "TabControlEx.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Common.ZTabControlDesigner, ZeroUI.WinForms.Design")]
     public class ZTabControl : TabControlEx
     {
     }

@@ -426,6 +426,7 @@ namespace ZeroUI.WinForms.Layout
     [Category("ZeroUI - Layout")]
     [Description("Splits the control display area into two resizable panels with Z-prefix standard.")]
     [ToolboxBitmap(typeof(ZeroIcons), "SplitContainerControl.bmp")]
+    [Designer("ZeroUI.WinForms.Design.Common.ZSplitContainerDesigner, ZeroUI.WinForms.Design")]
     public class ZSplitContainer : SplitContainerControl
     {
     }

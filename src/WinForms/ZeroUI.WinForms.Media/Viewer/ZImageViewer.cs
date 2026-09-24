@@ -19,6 +19,7 @@ namespace ZeroUI.WinForms.Media
     [Category("ZeroUI - Media")]
     [DefaultProperty("Image")]
     [Description("Enterprise high-performance interactive image viewer control")]
+    [Designer("ZeroUI.WinForms.Design.Media.ZImageViewerDesigner, ZeroUI.WinForms.Design")]
     public partial class ZImageViewer : ControlBase, IZeroEditor
     {
         private Image? _image;
