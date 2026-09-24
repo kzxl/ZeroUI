@@ -22,6 +22,7 @@
     <Project Path="src/Wpf/ZeroUI.Wpf.Industrial/ZeroUI.Wpf.Industrial.csproj" />
     <Project Path="src/Wpf/ZeroUI.Wpf.Documents/ZeroUI.Wpf.Documents.csproj" />
     <Project Path="src/Wpf/ZeroUI.Wpf.Media/ZeroUI.Wpf.Media.csproj" />
+    <Project Path="src/Wpf/ZeroUI.Wpf.Design/ZeroUI.Wpf.Design.csproj" />
     <Project Path="src/Wpf/ZeroUI.Wpf/ZeroUI.Wpf.csproj" />
   </Folder>
   <Folder Name="/demo/">
