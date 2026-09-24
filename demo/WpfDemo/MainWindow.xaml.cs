@@ -79,6 +79,7 @@ namespace ZeroUI.Samples.WpfDemo
             SetupHexInspector();
             SetupStateExecutor();
             SetupEnterpriseCommercialSuite();
+            SetupDesignToolsDemo();
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
@@ -2545,6 +2546,81 @@ namespace ZeroUI.Samples.WpfDemo
             WpfLedRun.State = (MultiStateLedState)(((int)WpfLedRun.State + 1) % 7);
             WpfLedIdle.State = (MultiStateLedState)(((int)WpfLedIdle.State + 1) % 7);
         }
+
+        #region Design-Time & RAD Demo Handlers
+        private ZeroUI.Wpf.Design.Adorners.DesignOverlayAdorner? _gridAdorner;
+        private bool _isAdornerVisible = false;
+
+        private void SetupDesignToolsDemo()
+        {
+            try
+            {
+                ZeroUI.Wpf.Design.Metadata.ZeroWpfMetadataProvider.Register();
+                PopulateDesignMockData();
+                TxtDesignCodeSnippet.Text = @"<!-- ZeroUI WPF Design-Time Telemetry Grid -->
+<datagrid:ZeroGridControl x:Name=""TelemetryGrid""
+                          ShowAutoFilterRow=""True""
+                          ShowGroupPanel=""True""
+                          d:DataContext=""{d:DesignInstance Type=mock:DesignTelemetryRecord, IsDesignTimeCreatable=True}"">
+    <datagrid:ZeroGridControl.Columns>
+        <datagrid:ZeroColumn FieldName=""Id"" HeaderText=""ID"" Width=""60"" Alignment=""Right"" />
+        <datagrid:ZeroColumn FieldName=""TagName"" HeaderText=""Tag Name"" Width=""140"" Alignment=""Left"" />
+        <datagrid:ZeroColumn FieldName=""Value"" HeaderText=""Process Value"" Width=""120"" Alignment=""Right"" FormatString=""N2"" />
+        <datagrid:ZeroColumn FieldName=""Unit"" HeaderText=""Eng Unit"" Width=""80"" Alignment=""Center"" />
+        <datagrid:ZeroColumn FieldName=""Status"" HeaderText=""Health Status"" Width=""100"" Alignment=""Center"" />
+        <datagrid:ZeroColumn FieldName=""Timestamp"" HeaderText=""Last Sample"" Width=""160"" Alignment=""Left"" />
+    </datagrid:ZeroGridControl.Columns>
+</datagrid:ZeroGridControl>";
+            }
+            catch { }
+        }
+
+        private void PopulateDesignMockData()
+        {
+            var virtualSource = ZeroUI.Wpf.Design.Mock.DesignDataFactory.CreateSampleVirtualSource(15);
+            DesignSampleGrid.Columns.Clear();
+            DesignSampleGrid.Columns.Add(new ZeroColumn("Id", 60, CellAlignment.Right));
+            DesignSampleGrid.Columns.Add(new ZeroColumn("TagName", 130, CellAlignment.Left));
+            DesignSampleGrid.Columns.Add(new ZeroColumn("Value", 100, CellAlignment.Right));
+            DesignSampleGrid.Columns.Add(new ZeroColumn("Unit", 70, CellAlignment.Center));
+            DesignSampleGrid.Columns.Add(new ZeroColumn("Status", 90, CellAlignment.Center));
+            DesignSampleGrid.Columns.Add(new ZeroColumn("Timestamp", 150, CellAlignment.Left));
+            DesignSampleGrid.DataSource = virtualSource;
+        }
+
+        private void BtnRegenerateDesignData_Click(object sender, RoutedEventArgs e)
+        {
+            PopulateDesignMockData();
+        }
+
+        private void BtnToggleDesignAdorner_Click(object sender, RoutedEventArgs e)
+        {
+            var layer = System.Windows.Documents.AdornerLayer.GetAdornerLayer(DesignSampleGrid);
+            if (layer == null) return;
+
+            if (_isAdornerVisible && _gridAdorner != null)
+            {
+                layer.Remove(_gridAdorner);
+                _isAdornerVisible = false;
+            }
+            else
+            {
+                _gridAdorner = new ZeroUI.Wpf.Design.Adorners.DesignOverlayAdorner(DesignSampleGrid, "ZeroGridControl (d:DataContext Active)");
+                layer.Add(_gridAdorner);
+                _isAdornerVisible = true;
+            }
+        }
+
+        private void BtnCopyDesignSnippet_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Clipboard.SetText(TxtDesignCodeSnippet.Text);
+                MessageBox.Show("XAML Snippet copied to clipboard!", "ZeroUI RAD Assistant", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch { }
+        }
+        #endregion
 
         #endregion
         #endregion

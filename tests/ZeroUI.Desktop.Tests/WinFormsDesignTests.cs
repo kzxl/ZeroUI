@@ -5,6 +5,7 @@ using System.Drawing.Design;
 using System.Linq;
 using System.Windows.Forms;
 using Xunit;
+using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 using ZeroUI.Core.Media;
 using ZeroUI.WinForms.Charts;
@@ -326,6 +327,97 @@ namespace ZeroUI.Desktop.Tests
 
                 actionList.Dock = DockStyle.Fill;
                 Assert.Equal(DockStyle.Fill, pivot.Dock);
+            });
+        }
+
+        [Fact]
+        public void CodeExportForm_GeneratesValidCSharpAndXamlSnippets()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var grid = new ZGrid();
+                grid.Columns.Add(new ZeroColumn("Id", 60, CellAlignment.Right));
+                grid.Columns.Add(new ZeroColumn("Name", 120, CellAlignment.Left));
+
+                string cs = ZeroUI.WinForms.Design.Forms.CodeExportForm.GenerateCSharpCode("ZGrid", grid);
+                string xaml = ZeroUI.WinForms.Design.Forms.CodeExportForm.GenerateXamlCode("ZGrid", grid);
+
+                Assert.NotNull(cs);
+                Assert.Contains("ZeroUI.WinForms.DataGrid.ZGrid", cs);
+                Assert.Contains("Columns.Add", cs);
+
+                Assert.NotNull(xaml);
+                Assert.Contains("ZeroGridControl", xaml);
+                Assert.Contains("ZeroColumn", xaml);
+            });
+        }
+
+        [Fact]
+        public void TreeListDesignerForm_GeneratesValidSetupCode()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var treeList = new ZeroUI.WinForms.Data.ZTreeList();
+                treeList.Columns.Add(new ZeroUI.WinForms.Data.TreeListColumn("Task", "Task Name", 200));
+
+                string cs = ZeroUI.WinForms.Design.Forms.TreeListDesignerForm.GenerateCSharpSetupCode(treeList);
+                string xaml = ZeroUI.WinForms.Design.Forms.TreeListDesignerForm.GenerateXamlSetupCode(treeList);
+
+                Assert.NotNull(cs);
+                Assert.Contains("ZTreeList", cs);
+                Assert.Contains("TreeListColumn", cs);
+
+                Assert.NotNull(xaml);
+                Assert.Contains("ZTreeList", xaml);
+            });
+        }
+
+        [Fact]
+        public void ChartWizardForm_GeneratesValidSetupCode()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var chart = new ZChart();
+                chart.Title = "Telemetry Overview";
+
+                string cs = ZeroUI.WinForms.Design.Forms.ChartWizardForm.GenerateCSharpSetupCode(chart);
+                string xaml = ZeroUI.WinForms.Design.Forms.ChartWizardForm.GenerateXamlSetupCode(chart);
+
+                Assert.NotNull(cs);
+                Assert.Contains("ZChart", cs);
+                Assert.Contains("Telemetry Overview", cs);
+
+                Assert.NotNull(xaml);
+                Assert.Contains("ZChart", xaml);
+            });
+        }
+
+        [Fact]
+        public void GaugeThresholdEditorDialog_AddAndRetrieveRanges()
+        {
+            StaTestRunner.Run(() =>
+            {
+                var initial = new System.Collections.Generic.List<ZeroUI.Core.Scada.GaugeThresholdRange>
+                {
+                    new ZeroUI.Core.Scada.GaugeThresholdRange(0, 80, ZeroUI.Core.Scada.GaugeSeverity.Normal, (uint)System.Drawing.Color.Green.ToArgb(), "Safe")
+                };
+
+                using var dlg = new GaugeThresholdEditor.GaugeThresholdEditorDialog(initial);
+                var ranges = dlg.GetRanges();
+                Assert.NotNull(ranges);
+                Assert.Single(ranges);
+                Assert.Equal(80, ranges[0].To);
+            });
+        }
+
+        [Fact]
+        public void ZeroColorPaletteDialog_InstantiatesCorrectly()
+        {
+            StaTestRunner.Run(() =>
+            {
+                using var dlg = new ZeroColorPaletteDialog(System.Drawing.Color.FromArgb(37, 99, 235));
+                Assert.NotNull(dlg);
+                Assert.Equal(System.Drawing.Color.FromArgb(37, 99, 235), dlg.SelectedColor);
             });
         }
     }

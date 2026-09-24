@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -518,6 +518,20 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _allItems.Clear();
 
             // 1. UI & DATA
+            _allItems.Add(new ShowcaseFeatureItem(
+                "feat_design_rad", "Visual Designers & RAD Suite", "UI & Data", "🛠️", "RAD SUITE", Color.FromArgb(14, 165, 233),
+                "Enterprise visual design tools: Smart Tag Action Lists, In-Place Grid/TreeList/Chart Wizards, Modal Threshold/Palette UITypeEditors, and 1-Click C#/XAML Code Generation.",
+                @"// Launch Visual Studio In-Place Designers & Wizards
+using var gridDesigner = new GridDesignerForm(myZGrid);
+gridDesigner.ShowDialog();
+
+using var chartWizard = new ChartWizardForm(myZChart);
+chartWizard.ShowDialog();
+
+using var treeDesigner = new TreeListDesignerForm(myZTreeList);
+treeDesigner.ShowDialog();"
+            ));
+
             _allItems.Add(new ShowcaseFeatureItem(
                 "feat_components", "UI Components & Editors", "UI & Data", "🎨", "CATALOG", Color.FromArgb(59, 130, 246),
                 "Comprehensive control suite: ButtonEdit, CalcEdit, ColorPick, Rating, RangeSlider, PictureEdit, TreeList, PropertyGrid, PivotGrid, FilterControl, Wizard, etc.",

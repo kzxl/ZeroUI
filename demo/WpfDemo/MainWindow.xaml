@@ -273,6 +273,86 @@
                                 </Grid>
                             </Grid>
                         </TabItem>
+
+                        <!-- Sub-Tab 1.4: VS XAML Design-Time & RAD Tools -->
+                        <TabItem Header="🛠️ Visual Studio XAML Design-Time &amp; RAD">
+                            <Grid Margin="12">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Header Card -->
+                                <Border Grid.Row="0" Margin="0,0,0,12" Padding="16,12,16,12" CornerRadius="8" Background="{DynamicResource ZeroUI.BgCard}" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}">
+                                    <StackPanel>
+                                        <TextBlock Text="DevExpress Parity: Visual Studio XAML Designer Extensions &amp; DesignData Providers" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" />
+                                        <TextBlock Text="Explore d:DataContext mock providers (DesignDataFactory), visual adorner overlays (DesignOverlayAdorner), and Property Grid Metadata Registration (ZeroWpfMetadataProvider)." FontSize="12" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Workspace Grid -->
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Left: Design-Time Controls Preview -->
+                                    <Border Grid.Column="0" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" Background="{DynamicResource ZeroUI.BgCard}">
+                                        <Grid Margin="12">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="📊 Design-Time Live Simulation Canvas" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,8" />
+                                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                                                <Button x:Name="BtnRegenerateDesignData" Content="⚡ Regenerate Mock Data" Margin="0,0,8,0" Padding="12,6" Style="{DynamicResource ZeroUI.Button.Primary}" Click="BtnRegenerateDesignData_Click" />
+                                                <Button x:Name="BtnToggleDesignAdorner" Content="📐 Toggle Visual Design Adorner" Padding="12,6" Style="{DynamicResource ZeroUI.Button.Secondary}" Click="BtnToggleDesignAdorner_Click" />
+                                            </StackPanel>
+
+                                            <!-- Preview Controls Container -->
+                                            <Border x:Name="DesignPreviewContainer" Grid.Row="2" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" Background="{DynamicResource ZeroUI.BgWorkspace}" Padding="10">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                                        <TextBlock Text="SCADA Gauge &amp; Industrial Readout (Design-Time Active)" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource ZeroUI.TextMuted}" />
+                                                    </StackPanel>
+                                                    <Grid Grid.Row="1">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="180" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <ind:ZRadialGauge x:Name="DesignSampleGauge" Grid.Column="0" Minimum="0" Maximum="200" Value="135.5" Unit="PSI" Title="Boiler Pressure" Margin="4" />
+                                                        <grid:ZeroGridControl x:Name="DesignSampleGrid" Grid.Column="1" Margin="4" />
+                                                    </Grid>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Right: Design Metadata & Generated Code Inspector -->
+                                    <Border Grid.Column="2" CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" Background="{DynamicResource ZeroUI.BgCard}">
+                                        <Grid Margin="12">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="📋 Design-Time Metadata &amp; XAML Setup Snippet" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,8" />
+                                            <TextBox x:Name="TxtDesignCodeSnippet" Grid.Row="1" IsReadOnly="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11.5" Background="{DynamicResource ZeroUI.BgWorkspace}" Foreground="{DynamicResource ZeroUI.TextPrimary}" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" Padding="8" />
+                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                                                <Button x:Name="BtnCopyDesignSnippet" Content="📋 Copy Code" Padding="14,6" Style="{DynamicResource ZeroUI.Button.Primary}" Click="BtnCopyDesignSnippet_Click" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </TabItem>
                     </TabControl>
                 </TabItem>
 

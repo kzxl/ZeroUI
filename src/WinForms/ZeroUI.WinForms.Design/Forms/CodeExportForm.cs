@@ -14,6 +14,11 @@ namespace ZeroUI.WinForms.Design.Forms
         private readonly Button _btnClose;
         private readonly Label _lblStatus;
 
+        public CodeExportForm(string title, string codeSnippet)
+            : this(title, "C# / XAML", codeSnippet)
+        {
+        }
+
         public CodeExportForm(string title, string language, string codeSnippet)
         {
             Text = title;
@@ -132,6 +137,46 @@ namespace ZeroUI.WinForms.Design.Forms
             Controls.Add(pnlEditor);
             Controls.Add(pnlBottom);
             Controls.Add(pnlBanner);
+        }
+
+        /// <summary>
+        /// Generates standard C# setup code for any supported ZeroUI control instance.
+        /// </summary>
+        public static string GenerateCSharpCode(string controlName, object controlInstance)
+        {
+            if (controlInstance is ZeroUI.WinForms.DataGrid.ZGrid grid)
+            {
+                return GridDesignerForm.GenerateCSharpSetupCode(grid);
+            }
+            if (controlInstance is ZeroUI.WinForms.Charts.ZChart chart)
+            {
+                return ChartWizardForm.GenerateCSharpSetupCode(chart);
+            }
+            if (controlInstance is ZeroUI.WinForms.Data.ZTreeList treeList)
+            {
+                return TreeListDesignerForm.GenerateCSharpSetupCode(treeList);
+            }
+            return $"// Setup code for {controlName}\nvar ctrl = new {controlName}();\n// Configure properties as desired.";
+        }
+
+        /// <summary>
+        /// Generates standard XAML setup markup for any supported ZeroUI control instance.
+        /// </summary>
+        public static string GenerateXamlCode(string controlName, object controlInstance)
+        {
+            if (controlInstance is ZeroUI.WinForms.DataGrid.ZGrid grid)
+            {
+                return GridDesignerForm.GenerateXamlSetupCode(grid);
+            }
+            if (controlInstance is ZeroUI.WinForms.Charts.ZChart chart)
+            {
+                return ChartWizardForm.GenerateXamlSetupCode(chart);
+            }
+            if (controlInstance is ZeroUI.WinForms.Data.ZTreeList treeList)
+            {
+                return TreeListDesignerForm.GenerateXamlSetupCode(treeList);
+            }
+            return $"<!-- XAML Setup for {controlName} -->\n<controls:{controlName} />";
         }
     }
 }

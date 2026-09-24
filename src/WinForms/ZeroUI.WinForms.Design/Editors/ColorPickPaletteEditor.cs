@@ -42,7 +42,7 @@ namespace ZeroUI.WinForms.Design.Editors
             }
         }
 
-        private class ColorSwatchDropDown : UserControl
+        public class ColorSwatchDropDown : UserControl
         {
             private readonly Action<Color> _onSelect;
             private static readonly Color[] EnterpriseSwatches = new[]
@@ -106,6 +106,37 @@ namespace ZeroUI.WinForms.Design.Editors
                     }
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Interactive dialog displaying an enterprise color swatch matrix.
+    /// </summary>
+    public class ZeroColorPaletteDialog : Form
+    {
+        public Color SelectedColor { get; private set; }
+
+        public ZeroColorPaletteDialog(Color initial)
+        {
+            SelectedColor = initial;
+            Text = "Select Palette Color";
+            Size = new Size(200, 240);
+            StartPosition = FormStartPosition.CenterParent;
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            BackColor = Color.FromArgb(24, 30, 42);
+
+            var dropdown = new ColorPickPaletteEditor.ColorSwatchDropDown(initial, c =>
+            {
+                SelectedColor = c;
+                DialogResult = DialogResult.OK;
+                Close();
+            })
+            {
+                Dock = DockStyle.Fill
+            };
+            Controls.Add(dropdown);
         }
     }
 }

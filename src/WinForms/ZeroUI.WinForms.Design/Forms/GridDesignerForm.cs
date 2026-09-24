@@ -469,6 +469,39 @@ namespace ZeroUI.WinForms.Design.Forms
             _grid.Invalidate();
         }
 
+        public static string GenerateCSharpSetupCode(ZGrid grid)
+        {
+            if (grid == null) return string.Empty;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("// ZeroUI DataGrid Setup (C#)");
+            sb.AppendLine("var grid = new ZeroUI.WinForms.DataGrid.ZGrid();");
+            sb.AppendLine($"grid.ShowAutoFilterRow = {grid.ShowAutoFilterRow.ToString().ToLower()};");
+            sb.AppendLine($"grid.ShowGroupPanel = {grid.ShowGroupPanel.ToString().ToLower()};");
+            sb.AppendLine($"grid.ShowFooter = {grid.ShowFooter.ToString().ToLower()};");
+            sb.AppendLine("grid.Columns.Clear();");
+            foreach (var col in grid.Columns)
+            {
+                sb.AppendLine($"grid.Columns.Add(new ZeroColumn(\"{col.FieldName}\", \"{col.HeaderText}\", {col.Width}, CellAlignment.{col.Alignment}) {{ IsVisible = {col.IsVisible.ToString().ToLower()} }});");
+            }
+            return sb.ToString();
+        }
+
+        public static string GenerateXamlSetupCode(ZGrid grid)
+        {
+            if (grid == null) return string.Empty;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("<!-- ZeroUI DataGrid (WPF XAML) -->");
+            sb.AppendLine($"<z:ZeroGridControl ShowAutoFilterRow=\"{grid.ShowAutoFilterRow.ToString().ToLower()}\" ShowGroupPanel=\"{grid.ShowGroupPanel.ToString().ToLower()}\">");
+            sb.AppendLine("    <z:ZeroGridControl.Columns>");
+            foreach (var col in grid.Columns)
+            {
+                sb.AppendLine($"        <z:ZeroColumn FieldName=\"{col.FieldName}\" HeaderText=\"{col.HeaderText}\" Width=\"{col.Width}\" Alignment=\"{col.Alignment}\" IsVisible=\"{col.IsVisible.ToString().ToLower()}\" />");
+            }
+            sb.AppendLine("    </z:ZeroGridControl.Columns>");
+            sb.AppendLine("</z:ZeroGridControl>");
+            return sb.ToString();
+        }
+
         private void ShowGeneratedCSharp()
         {
             var sb = new System.Text.StringBuilder();

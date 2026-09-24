@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.Design.Editors
             if (provider?.GetService(typeof(IWindowsFormsEditorService)) is IWindowsFormsEditorService editorService)
             {
                 var list = value as List<GaugeThresholdRange> ?? new List<GaugeThresholdRange>();
-                using var dlg = new ThresholdEditorDialog(list);
+                using var dlg = new GaugeThresholdEditorDialog(list);
                 if (editorService.ShowDialog(dlg) == DialogResult.OK)
                 {
                     return dlg.GetRanges();
@@ -55,7 +55,7 @@ namespace ZeroUI.WinForms.Design.Editors
             }
         }
 
-        private class ThresholdEditorDialog : Form
+        public class GaugeThresholdEditorDialog : Form
         {
             private readonly List<GaugeThresholdRange> _ranges = new List<GaugeThresholdRange>();
             private readonly DataGridView _grid;
@@ -64,7 +64,7 @@ namespace ZeroUI.WinForms.Design.Editors
             private readonly Button _btnAdd;
             private readonly Button _btnRemove;
 
-            public ThresholdEditorDialog(List<GaugeThresholdRange> initial)
+            public GaugeThresholdEditorDialog(List<GaugeThresholdRange> initial)
             {
                 _ranges.AddRange(initial);
 

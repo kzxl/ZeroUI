@@ -41,8 +41,8 @@ namespace ZeroUI.WinForms.Design.Forms
                 {
                     _workingColumns.Add(new TreeColumnDefinition
                     {
-                        Caption = col.Caption,
-                        FieldName = col.FieldName,
+                        Caption = col.Caption ?? string.Empty,
+                        FieldName = col.FieldName ?? string.Empty,
                         Width = col.Width > 0 ? col.Width : 120,
                         IsVisible = col.Visible
                     });
@@ -379,6 +379,38 @@ namespace ZeroUI.WinForms.Design.Forms
                 });
             }
             _treeList.Invalidate();
+        }
+
+        public static string GenerateCSharpSetupCode(ZTreeList treeList)
+        {
+            if (treeList == null) return string.Empty;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("// ZeroUI TreeList Setup (C#)");
+            sb.AppendLine("var treeList = new ZeroUI.WinForms.Data.ZTreeList();");
+            sb.AppendLine($"treeList.ShowLines = {treeList.ShowLines.ToString().ToLower()};");
+            sb.AppendLine($"treeList.ShowCheckBoxes = {treeList.ShowCheckBoxes.ToString().ToLower()};");
+            sb.AppendLine("treeList.Columns.Clear();");
+            foreach (var col in treeList.Columns)
+            {
+                sb.AppendLine($"treeList.Columns.Add(new TreeListColumn(\"{col.FieldName}\", \"{col.Caption}\", {col.Width}) {{ Visible = {col.Visible.ToString().ToLower()} }});");
+            }
+            return sb.ToString();
+        }
+
+        public static string GenerateXamlSetupCode(ZTreeList treeList)
+        {
+            if (treeList == null) return string.Empty;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("<!-- ZeroUI TreeList (WPF XAML) -->");
+            sb.AppendLine("<z:ZTreeList>");
+            sb.AppendLine("    <z:ZTreeList.Columns>");
+            foreach (var col in treeList.Columns)
+            {
+                sb.AppendLine($"        <z:TreeListColumn FieldName=\"{col.FieldName}\" Caption=\"{col.Caption}\" Width=\"{col.Width}\" Visible=\"{col.Visible.ToString().ToLower()}\" />");
+            }
+            sb.AppendLine("    </z:ZTreeList.Columns>");
+            sb.AppendLine("</z:ZTreeList>");
+            return sb.ToString();
         }
 
         private void ShowGeneratedCSharp()

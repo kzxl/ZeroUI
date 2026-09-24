@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ZeroUI.Core\ZeroUI.Core.csproj" />
     <ProjectReference Include="..\..\src\WinForms\ZeroUI.WinForms\ZeroUI.WinForms.csproj" />
+    <ProjectReference Include="..\..\src\WinForms\ZeroUI.WinForms.Design\ZeroUI.WinForms.Design.csproj" />
     <ProjectReference Include="..\ZeroUI.Demo.Data\ZeroUI.Demo.Data.csproj" />
   </ItemGroup>
 </Project>

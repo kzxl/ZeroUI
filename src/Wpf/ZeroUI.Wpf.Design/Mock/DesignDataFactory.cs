@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using ZeroUI.Core.Common;
 using ZeroUI.Core.Data;
 
 namespace ZeroUI.Wpf.Design.Mock
@@ -46,6 +47,63 @@ namespace ZeroUI.Wpf.Design.Mock
             }
 
             return list;
+        }
+
+        /// <summary>
+        /// Creates a high-performance virtual data source implementing <see cref="IZeroVirtualSource"/> for ZeroGridControl preview.
+        /// </summary>
+        public static IZeroVirtualSource CreateSampleVirtualSource(int count = 15)
+        {
+            var list = CreateSampleTelemetryData(count);
+            var arr = new DesignTelemetryRecord[list.Count];
+            list.CopyTo(arr, 0);
+            return new DesignTelemetrySource(arr);
+        }
+
+        public sealed class DesignTelemetrySource : IZeroVirtualSource
+        {
+            private readonly DesignTelemetryRecord[] _records;
+
+            public DesignTelemetrySource(DesignTelemetryRecord[] records)
+            {
+                _records = records;
+            }
+
+            public int TotalRowCount => _records.Length;
+            public int TotalColumnCount => 6;
+
+            public void GetCellValue(int rowIndex, int columnIndex, ref CellValueBuffer buffer)
+            {
+                if (rowIndex < 0 || rowIndex >= _records.Length) return;
+                var rec = _records[rowIndex];
+                switch (columnIndex)
+                {
+                    case 0:
+                        buffer.Text = rec.Id.ToString().AsSpan();
+                        buffer.Alignment = CellAlignment.Right;
+                        break;
+                    case 1:
+                        buffer.Text = rec.TagName.AsSpan();
+                        buffer.Alignment = CellAlignment.Left;
+                        break;
+                    case 2:
+                        buffer.Text = rec.Value.ToString("F2").AsSpan();
+                        buffer.Alignment = CellAlignment.Right;
+                        break;
+                    case 3:
+                        buffer.Text = rec.Unit.AsSpan();
+                        buffer.Alignment = CellAlignment.Center;
+                        break;
+                    case 4:
+                        buffer.Text = rec.Status.AsSpan();
+                        buffer.Alignment = CellAlignment.Center;
+                        break;
+                    case 5:
+                        buffer.Text = rec.Timestamp.ToString("HH:mm:ss").AsSpan();
+                        buffer.Alignment = CellAlignment.Left;
+                        break;
+                }
+            }
         }
     }
 }

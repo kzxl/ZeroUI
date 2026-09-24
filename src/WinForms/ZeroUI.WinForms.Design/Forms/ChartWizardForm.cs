@@ -298,6 +298,29 @@ namespace ZeroUI.WinForms.Design.Forms
             _chart.Invalidate();
         }
 
+        public static string GenerateCSharpSetupCode(ZChart chart)
+        {
+            if (chart == null) return string.Empty;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("// ZeroUI Chart Setup (C#)");
+            sb.AppendLine("var chart = new ZeroUI.WinForms.Charts.ZChart();");
+            sb.AppendLine($"chart.Title = \"{chart.Title}\";");
+            sb.AppendLine($"chart.ChartType = ChartType.{chart.ChartType};");
+            sb.AppendLine($"chart.LegendPosition = ChartLegendPosition.{chart.LegendPosition};");
+            sb.AppendLine($"chart.ShowGridLines = {chart.ShowGridLines.ToString().ToLower()};");
+            sb.AppendLine($"chart.ShowTooltips = {chart.ShowTooltips.ToString().ToLower()};");
+            return sb.ToString();
+        }
+
+        public static string GenerateXamlSetupCode(ZChart chart)
+        {
+            if (chart == null) return string.Empty;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("<!-- ZeroUI Chart Control (WPF XAML) -->");
+            sb.AppendLine($"<z:ZChart Title=\"{chart.Title}\" ChartType=\"{chart.ChartType}\" ShowGridLines=\"{chart.ShowGridLines.ToString().ToLower()}\" />");
+            return sb.ToString();
+        }
+
         private void ShowGeneratedCSharp()
         {
             string chartTypeName = _lstChartTypes.SelectedIndex switch

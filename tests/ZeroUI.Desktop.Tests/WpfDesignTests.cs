@@ -85,6 +85,19 @@ namespace ZeroUI.Desktop.Tests
         }
 
         [Fact]
+        public void DesignDataFactory_GeneratesValidVirtualSource()
+        {
+            var source = DesignDataFactory.CreateSampleVirtualSource(12);
+            Assert.NotNull(source);
+            Assert.Equal(12, source.TotalRowCount);
+            Assert.Equal(6, source.TotalColumnCount);
+
+            var buffer = new ZeroUI.Core.Data.CellValueBuffer();
+            source.GetCellValue(0, 1, ref buffer);
+            Assert.False(buffer.Text.IsEmpty);
+        }
+
+        [Fact]
         public void DesignOverlayAdorner_InstantiatesWithoutExceptions()
         {
             StaTestRunner.Run(() =>

@@ -128,6 +128,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private ZeroTabPage _tabLayout = null!;
         private ZeroTabPage _tabMasterDetail = null!;
         private ZeroTabPage _tabPivot = null!;
+        private ZeroTabPage _tabDesignRAD = null!;
 
         private ZeroGridControl _zeroGrid = null!;
         private DataGridView _dgv = null!;
@@ -720,6 +721,12 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                     _optionsPanel.Visible = false;
                     break;
 
+                case "feat_design_rad":
+                    _mainNav.SelectedTab = _clusterComponents;
+                    _subTabsComponents.SelectedTab = _tabDesignRAD;
+                    _optionsPanel.Visible = false;
+                    break;
+
                 // 2. DATA & GRIDS
                 case "feat_datagrid":
                 case "feat_virtual_10m":
@@ -1100,6 +1107,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _tabPivot = new ZeroTabPage("Cross-Tab Pivot Grid", "📊", p => InitializePivotGridShowcase(p));
             _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐", p => InitializeLayoutShowcase(p));
             _tabMasterDetail = new ZeroTabPage("Master-Detail & In-Place LookUp", "📑", p => InitializeMasterDetailDemo(p));
+            _tabDesignRAD = new ZeroTabPage("Visual Designers & RAD Suite", "🛠️", p => InitializeDesignerRadDemo(p));
             _subTabsComponents.AddTab(_tabControls);
             _subTabsComponents.AddTab(_tabCommercial);
             _subTabsComponents.AddTab(_tabOfficeDocs);
@@ -1107,6 +1115,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _subTabsComponents.AddTab(_tabPivot);
             _subTabsComponents.AddTab(_tabLayout);
             _subTabsComponents.AddTab(_tabMasterDetail);
+            _subTabsComponents.AddTab(_tabDesignRAD);
             cluster.Controls.Add(_subTabsComponents);
         }
 

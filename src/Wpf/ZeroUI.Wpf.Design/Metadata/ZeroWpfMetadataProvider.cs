@@ -22,6 +22,11 @@ namespace ZeroUI.Wpf.Design.Metadata
         /// <summary>
         /// Registers design-time metadata attributes for all ZeroUI WPF components.
         /// </summary>
+        public static void Register() => RegisterMetadata();
+
+        /// <summary>
+        /// Registers design-time metadata attributes for all ZeroUI WPF components.
+        /// </summary>
         public static void RegisterMetadata()
         {
             if (_isRegistered) return;
