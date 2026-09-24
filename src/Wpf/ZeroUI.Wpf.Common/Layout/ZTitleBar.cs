@@ -14,25 +14,25 @@ namespace ZeroUI.Wpf.Layout
     /// Provides drag support, double-click maximize toggle, customizable content slot,
     /// and theme-reactive system window buttons (Minimize, Maximize/Restore, Close).
     /// </summary>
-    public class TitleBar : ZeroWpfControlBase
+    public class ZTitleBar : ZeroWpfControlBase
     {
         public static readonly DependencyProperty TitleProperty =
-            DependencyProperty.Register(nameof(Title), typeof(string), typeof(TitleBar), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(ZTitleBar), new PropertyMetadata(string.Empty));
 
         public static readonly DependencyProperty IconProperty =
-            DependencyProperty.Register(nameof(Icon), typeof(ImageSource), typeof(TitleBar), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(Icon), typeof(ImageSource), typeof(ZTitleBar), new PropertyMetadata(null));
 
         public static readonly DependencyProperty TitleContentProperty =
-            DependencyProperty.Register(nameof(TitleContent), typeof(object), typeof(TitleBar), new PropertyMetadata(null));
+            DependencyProperty.Register(nameof(TitleContent), typeof(object), typeof(ZTitleBar), new PropertyMetadata(null));
 
         public static readonly DependencyProperty ShowMinimizeButtonProperty =
-            DependencyProperty.Register(nameof(ShowMinimizeButton), typeof(bool), typeof(TitleBar), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(ShowMinimizeButton), typeof(bool), typeof(ZTitleBar), new PropertyMetadata(true));
 
         public static readonly DependencyProperty ShowMaximizeButtonProperty =
-            DependencyProperty.Register(nameof(ShowMaximizeButton), typeof(bool), typeof(TitleBar), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(ShowMaximizeButton), typeof(bool), typeof(ZTitleBar), new PropertyMetadata(true));
 
         public static readonly DependencyProperty ShowCloseButtonProperty =
-            DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(TitleBar), new PropertyMetadata(true));
+            DependencyProperty.Register(nameof(ShowCloseButton), typeof(bool), typeof(ZTitleBar), new PropertyMetadata(true));
 
         public string Title
         {
@@ -70,12 +70,12 @@ namespace ZeroUI.Wpf.Layout
             set => SetValue(ShowCloseButtonProperty, value);
         }
 
-        static TitleBar()
+        static ZTitleBar()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(TitleBar), new FrameworkPropertyMetadata(typeof(TitleBar)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZTitleBar), new FrameworkPropertyMetadata(typeof(ZTitleBar)));
         }
 
-        public TitleBar()
+        public ZTitleBar()
         {
             Height = 36;
             SetResourceReference(BackgroundProperty, "ZeroUI.BgPrimary");
@@ -173,14 +173,26 @@ namespace ZeroUI.Wpf.Layout
     }
 
     /// <summary>
-    /// Legacy alias for <see cref="TitleBar"/>.
+    /// Backward-compatibility alias for <see cref="ZTitleBar"/>.
     /// </summary>
-    [Obsolete("ZeroTitleBar is deprecated. Use TitleBar instead.")]
-    public class ZeroTitleBar : TitleBar
+    [Obsolete("TitleBar is deprecated and will be removed in 5 release cycles. Please migrate to ZTitleBar instead.")]
+    public class TitleBar : ZTitleBar
+    {
+        static TitleBar()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(TitleBar), new FrameworkPropertyMetadata(typeof(ZTitleBar)));
+        }
+    }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZTitleBar"/>.
+    /// </summary>
+    [Obsolete("ZeroTitleBar is deprecated and will be removed in 5 release cycles. Please migrate to ZTitleBar instead.")]
+    public class ZeroTitleBar : ZTitleBar
     {
         static ZeroTitleBar()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroTitleBar), new FrameworkPropertyMetadata(typeof(TitleBar)));
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(ZeroTitleBar), new FrameworkPropertyMetadata(typeof(ZTitleBar)));
         }
     }
 }
