@@ -23,5 +23,6 @@
     <ProjectReference Include="..\ZeroUI.Wpf.Charts\ZeroUI.Wpf.Charts.csproj" />
     <ProjectReference Include="..\ZeroUI.Wpf.Industrial\ZeroUI.Wpf.Industrial.csproj" />
     <ProjectReference Include="..\ZeroUI.Wpf.Documents\ZeroUI.Wpf.Documents.csproj" />
+    <ProjectReference Include="..\ZeroUI.Wpf.Media\ZeroUI.Wpf.Media.csproj" />
   </ItemGroup>
 </Project>

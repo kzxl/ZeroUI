@@ -22,5 +22,6 @@
     <ProjectReference Include="..\ZeroUI.WinForms.Charts\ZeroUI.WinForms.Charts.csproj" />
     <ProjectReference Include="..\ZeroUI.WinForms.Industrial\ZeroUI.WinForms.Industrial.csproj" />
     <ProjectReference Include="..\ZeroUI.WinForms.Documents\ZeroUI.WinForms.Documents.csproj" />
+    <ProjectReference Include="..\ZeroUI.WinForms.Media\ZeroUI.WinForms.Media.csproj" />
   </ItemGroup>
 </Project>

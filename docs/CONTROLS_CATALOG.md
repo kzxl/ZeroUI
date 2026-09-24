@@ -118,8 +118,20 @@ All editors implement `IZeroEditor` and integrate with `ZeroDataBinder` for auto
 
 ---
 
-## 5. Creative & Media Controls Suite (`ZeroUI.Wpf.Editors`)
+## 5. Media & Creative Image Controls Suite (`ZeroUI.WinForms.Media` / `ZeroUI.Wpf.Media` / `ZeroUI.Wpf.Editors`)
 
+### Core Interactive Image Viewers (`ZeroUI.WinForms.Media` / `ZeroUI.Wpf.Media`)
+* **`ZImageViewer` (WinForms) & `ImageViewerControl` / `ZImageViewer` (WPF)**:
+  * High-performance interactive image viewing canvas powered by Direct2D, GDI+, and WPF vector rendering.
+  * Smooth sub-pixel infinite pan and cursor-anchored continuous zoom ($0.01\times$ to $64\times$).
+  * **Forensic Pixel Grid**: Automatically renders aligned pixel grid overlay when zoom level reaches $\ge 800\%$ for fine sub-pixel inspection and alignment.
+  * **Interactive MiniMap Navigator**: Translucent viewport box in corner overview thumbnail with drag navigation.
+  * **Telemetry Color Probe HUD**: Real-time hover cursor coordinates $(X, Y)$ and exact RGBA / HEX color readout badge.
+  * **Floating Loupe Magnifier (WPF)**: Dedicated magnification lens tracking cursor for instant close-up inspection.
+  * **Transform Pipeline**: Real-time lossless rotation ($0^\circ, 90^\circ, 180^\circ, 270^\circ$), horizontal/vertical flip, and interpolation quality switching (`NearestNeighbor`, `Bilinear`, `HighQuality`).
+  * **IZeroEditor & IZeroSkinnable**: Two-way data binding support, file-loading, and Obsidian Dark / Clean Light theme synchronization.
+
+### Specialized Creative Media Editors (`ZeroUI.Wpf.Editors`)
 * **`CurveEditor` & `CurveMath`**: Monotone cubic spline curve editor supporting RGB and per-channel curves (Red, Green, Blue), 4x4 coordinate grid, interactive control point manipulation, delete, and evaluate.
 * **`ColorWheelEdit` / `ColorWheel`**: 360° Hue/Saturation color grading wheel with pre-calculated antialiased gamut bitmap, smooth dragging crosshairs, and numeric degree/distance updates.
 * **`CompareViewerControl`**: Dual-image comparison inspection viewer featuring Split-Curtain (with draggable divider line), Side-by-Side (horizontal split), and Fade-Blend modes with synchronized panning and zoom.

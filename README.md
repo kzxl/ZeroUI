@@ -52,6 +52,7 @@ Headless and interactive stress-test verified on `.NET 8.0` (x64, Intel Core i7 
 * **Unified Theme Engine**: Instant reactive switching between **Obsidian Dark Mode** (`#12151C`) and **Clean Light Mode** across all controls.
 * **Specialized Analytics & Business Charts Suite (v1.9.0)**: Clean Architecture with 100% platform-neutral mathematical engines in `ZeroUI.Core.Analytics` and lightweight hardware rendering layers for WinForms and WPF (`HistogramChart`, `ScatterChart`, `SunburstChart`, `LollipopChart`, `TreemapChart`, `SankeyChart`, `BulletChart`, `ParetoChart`).
 * **Creative & Media Controls Suite (v1.8.0)**: Direct-rendered, high-performance visual editors for digital imaging, raw photography, and video grading (`CurveEditor`, `ColorWheelEdit`, `CompareViewerControl`, `HistogramScopeControl`, `CropBoxControl`, `MiniMapNavigator`, `MaskGizmoOverlay`, `FacetedFilterBar`, `HistoryTimelineControl`, `FilmstripScrollerControl`, `DominantPaletteControl`, `ExifTelemetryCard`, `NumericSliderEdit`, `BatchTaskQueueControl`, `ThumbnailGridControl`, `TokenPatternEditor`).
+* **High-Performance Interactive Media Subsystem (v1.9.1)**: Dedicated hardware-accelerated image canvases (`ZeroUI.WinForms.Media` & `ZeroUI.Wpf.Media`) offering sub-pixel pan, continuous anchored zoom, forensic pixel grid ($\ge 800\%$), interactive MiniMap overview navigator, floating magnifier loupe, and real-time telemetry color probe HUD (`ZImageViewer` / `ImageViewerControl`).
 * **Centralized 60 FPS Clock (`ZeroAnimationClock`)**: Single global ticker with synchronized ISA-18.2 blinking phases, eliminating timer scatter.
 
 ---
@@ -63,7 +64,7 @@ In-depth technical specifications and architectural documentation are modularize
 | Document | Description |
 | :--- | :--- |
 | 📊 **[Verified Benchmarks](docs/BENCHMARKS.md)** | Frame budgets, 10M rows virtualization, GC allocations, and telemetry throughput. |
-| 🎛️ **[Controls Catalog](docs/CONTROLS_CATALOG.md)** | Full reference for 60+ controls (GridControl, PivotGrid, SCADA, Charts, and Creative Editors). |
+| 🎛️ **[Controls Catalog](docs/CONTROLS_CATALOG.md)** | Full reference for 60+ controls (GridControl, PivotGrid, SCADA, Charts, Media Viewers, and Creative Editors). |
 | 🎬 **[Visual Controls Guide & Tour](docs/ZEROUI_CONTROLS_GUIDE.md)** | Architectural guide, in-process live video recordings, and feature tour across all subsystems. |
 | 🎨 **[Theming & Styling](docs/THEMING_AND_STYLING.md)** | Obsidian Dark / Clean Light themes, High-DPI Per-Monitor V2, and single-HWND architecture. |
 | 🏛️ **[System Architecture](docs/architecture/system-architecture.md)** | Multi-tier pipeline coordination, lock-free TripleBuffer, decoupled runtime, and renderers. |
@@ -77,7 +78,7 @@ In-depth technical specifications and architectural documentation are modularize
 To prevent ambiguous reference collisions (`CS0104`) with native WinForms and WPF controls (such as `System.Windows.Forms.Panel`, `GroupBox`, `Button`, `Label`, `TextBox`), ZeroUI establishes a clean architectural separation:
 
 * **Foundational Engine & Infrastructure:** Prefixed with **`Zero`** (`ZeroTheme`, `ZeroDpi`, `ZeroFontCache`, `ZeroIcons`, `ZeroAnimationClock`, `ZeroLocalizer`).
-* **Canonical UI Controls Suite:** Standard controls adopt the **`Z`** prefix (`ZPanel`, `ZGroupBox`, `ZMenuBar`, `ZButton`, `ZLabel`, `ZCheckBox`, `ZRadioButton`, `ZTextBox`, `ZProgressBar`, `ZTabControl`, `ZSplitContainer`, `ZGrid`, `ZChart`).
+* **Canonical UI Controls Suite:** Standard controls adopt the **`Z`** prefix (`ZPanel`, `ZGroupBox`, `ZMenuBar`, `ZButton`, `ZLabel`, `ZCheckBox`, `ZRadioButton`, `ZTextBox`, `ZProgressBar`, `ZTabControl`, `ZSplitContainer`, `ZGrid`, `ZChart`, `ZImageViewer`).
   * **Zero Collisions (`CS0104`):** Guarantees zero naming conflicts when developers import both `System.Windows.Forms` and ZeroUI namespaces.
   * **Instant IDE Discovery:** Simply typing `Z` in the IDE immediately surfaces the complete ZeroUI component palette.
   * **Full Theme Synchronization:** All `Z*` controls automatically inherit `ZeroTheme` dark/light modes, rounded corner styles, and High-DPI scaling.
@@ -92,7 +93,9 @@ To prevent ambiguous reference collisions (`CS0104`) with native WinForms and WP
 | **`ZeroUI.Core`** | `netstandard2.0`, `net462`, `net8.0` | High-frequency telemetry triple-buffer, TagEngine v2, PackML state machine, OEE metrics, validation engine, industrial state models, statistical chart engines (`HistogramEngine`, `ScatterPlotEngine`, `SunburstLayoutEngine`, `LollipopEngine`, `TreemapEngine`, `SankeyLayoutEngine`, `BulletBenchmarkEngine`, `ParetoEngine`) | **Zero 3rd-party dependencies** (Pure BCL) |
 | **`ZeroUI.Historian.Sqlite`** | `netstandard2.0`, `net462`, `net8.0` | High-throughput SQLite WAL time-series telemetry storage engine (>100k records/s), rolling partitions, store & forward disk cache | `Microsoft.Data.Sqlite` |
 | **`ZeroUI.WinForms`** | `net462`, `net8.0-windows` | 10M+ rows virtual grid (`GridControl`), 40+ SCADA/HMI controls, 15+ specialized charts, Obsidian dark theme, DIBSection unmanaged double-buffering | `ZeroUI.Core` |
+| **`ZeroUI.WinForms.Media`** | `net462`, `net8.0-windows` | Enterprise interactive image canvas (`ZImageViewer`) with sub-pixel pan/zoom, forensic pixel grid, MiniMap navigator, HUD color probe, and Direct2D / GDI+ pipelines | `ZeroUI.Core`, `ZeroGraphics` |
 | **`ZeroUI.Wpf`** | `net462`, `net8.0-windows` | Zero-alloc WPF virtual grid (`GridControl`), industrial styling, 15+ specialized charts, Creative Media Editors Suite, and D3D11 shared texture bridge | `ZeroUI.Core` |
+| **`ZeroUI.Wpf.Media`** | `net462`, `net8.0-windows` | GPU-accelerated interactive image viewer (`ImageViewerControl` / `ZImageViewer`), loupe magnifier, sub-pixel transform, forensic pixel grid, and MiniMap overview | `ZeroUI.Core`, `ZeroGraphics` |
 
 ---
 
