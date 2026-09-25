@@ -83,17 +83,17 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
 ![01. ZeroGrid Virtual DataGrid Benchmark](images/01_zerogrid_benchmark.png)
 
 #### Key Controls:
-- **`GridControl` (`ZeroUI.WinForms.DataGrid` / `ZeroUI.Wpf.DataGrid`):**
+- **`ZGrid` (`ZeroUI.WinForms.DataGrid` / `ZeroUI.Wpf.DataGrid` - Aliases: `GridControl`, `ZeroGridControl`):**
   * **Scale:** Smoothly renders **10,000,000+ virtual rows** at 60–144 FPS.
   * **Zero Allocation:** Hot render loops (`VirtualViewport2D`, `CellValueBuffer`) produce **0 bytes GC Gen0 churn**.
   * **Pointer-Swap Indexing:** `RowIndexMap` sorts 1,000,000 rows in ~80ms; debounced instant search (150ms).
   * **Row Density (`RowDensity`):** Instant switching between `Compact` (24px), `Normal` (28px), and `Comfortable` (36px).
   * **Streaming Export:** Exports CSV/XLSX at >1,100,000 rows/sec directly from memory buffers.
-- **`PivotGridControl` (`ZeroUI.WinForms.PivotGrid` / `ZeroUI.Wpf.PivotGrid`):**
+- **`ZPivotGrid` (`ZeroUI.WinForms.PivotGrid` / `ZeroUI.Wpf.PivotGrid` - Aliases: `PivotGridControl`, `ZeroPivotGrid`):**
   * Multidimensional OLAP cross-tab matrix grouping tabular data across Row and Column dimensions.
   * Computes automated sub-totals, grand totals, and measure aggregations (`Sum`, `Count`, `Average`, `Min`, `Max`).
   * Features collapsible tree headers (`▶`/`▼`) with virtualized viewport culling.
-- **`FilterControl` & `FilterCriteria`:**
+- **`ZFilterControl` & `FilterCriteria`:**
   * Visual query builder rendering boolean condition trees (`AND`, `OR`, `NOT AND`, `NOT OR`) with automated SQL `WHERE` generation.
 
 ---
@@ -105,15 +105,15 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
 ![13. SCADA Field Actuators, Sensors & Safety Controls](images/13_scada_actuators_composite.png)
 
 #### Key Controls:
-- **`SevenSegment`:**
+- **`ZSevenSegment`:**
   * Precision digital LED display with 100% feature parity across WinForms and WPF.
   * Backed by platform-agnostic `SevenSegmentState` (`ZeroUI.Core.Industrial`) with hardware bitmask decoding (`0x7F` mapping).
   * Supports configurable digit count, decimal points, colons, negative signs, italic slant angles, unlit ghost segments, and standardized color presets (`Green`, `Amber`, `Red`, `Cyan`, `Blue`, `White`).
-- **`LinearGauge` & `RadialGauge`:**
+- **`ZLinearGauge` & `ZRadialGauge`:**
   * Linear vertical/horizontal thermometer gauges and circular Bourdon tube dial gauges (180° / 270° sweep).
   * Subpixel anti-aliased needles, magnetic needle damping (`GaugeMath`), color warning threshold bands (Green, Amber, Red), and direct telemetry binding via `IScadaBindable`.
 - **`Tank3D`:** Cylindrical fluid vessel displaying actual volume (`CurrentLevelLiters`), capacity (`CapacityLiters`), wave gradient physics, and medium labels (IPA, Acid, DI Water).
-- **`LedTowerControl`:** 4-tier industrial Andon signal tower (`Red`, `Amber`, `Green`, `Blue`) supporting `On`, `Off`, `BlinkFast`, and `BlinkSlow` synchronized to `ZeroAnimationClock`.
+- **`ZLedTowerControl`:** 4-tier industrial Andon signal tower (`Red`, `Amber`, `Green`, `Blue`) supporting `On`, `Off`, `BlinkFast`, and `BlinkSlow` synchronized to `ZeroAnimationClock`.
 - **`IndustrialMotor`, `IndustrialPump`, `IndustrialFan`:**
   * Asynchronous motors, centrifugal pumps, and industrial ventilation fans with smooth rotor/impeller animations synchronized to actual RPM.
 - **`IndustrialHeater` & `IndustrialValve`:**
@@ -134,10 +134,10 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
 ![08. Obsidian Dark SCADA Process](images/08_dark_theme_scada.png)
 
 #### Key Controls:
-- **`AlarmGrid`:** Real-time alarm monitoring grid adhering strictly to the ISA-18.2 standard with severity levels (`Critical`, `High`, `Medium`, `Low`), operator acknowledgment, and shelving.
-- **`TrendChart`:** 60 FPS real-time oscilloscope streaming multiple telemetry channels via lock-free ring buffers (`ZeroTripleBuffer`), upper/lower specification limits (USL/LSL), and LTTB peak decimation.
+- **`ZAlarmGrid`:** Real-time alarm monitoring grid adhering strictly to the ISA-18.2 standard with severity levels (`Critical`, `High`, `Medium`, `Low`), operator acknowledgment, and shelving.
+- **`ZTrendChart`:** 60 FPS real-time oscilloscope streaming multiple telemetry channels via lock-free ring buffers (`ZeroTripleBuffer`), upper/lower specification limits (USL/LSL), and LTTB peak decimation.
 - **`PipeFlow`:** Dynamic fluid pipe lines with pulsating animated particle flows simulating liquid/gas velocity and pressure.
-- **`TreeList`:** Virtual hierarchical multi-column tree with tri-state cascading checkboxes (`Unchecked`, `Checked`, `Indeterminate`) for plant asset breakdowns and product BOMs.
+- **`ZTreeList`:** Virtual hierarchical multi-column tree with tri-state cascading checkboxes (`Unchecked`, `Checked`, `Indeterminate`) for plant asset breakdowns and product BOMs.
 
 ---
 
@@ -146,13 +146,13 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
 ![05. WMS Warehouse Rack Center](images/05_wms_warehouse_rack.png)
 
 #### Key Controls:
-- **`WarehouseRack` (`ZeroUI.WinForms.Warehouse`):**
+- **`ZWarehouseRack` (`ZeroUI.WinForms.Warehouse`):**
   * Interactive 2D visualization of high-bay warehouse racks (Aisle - Bay - Level - Bin position).
   * Displays bin location barcodes, cargo classifications, and max weight capacity.
   * Color-coded occupancy statuses (Empty, Occupied, Full, Maintenance Locked).
   * Interactive click selection to inspect lot metadata (Lot No, Inbound Date, Weight).
-- **`BarcodeScanControl`:** High-speed workstation scanner handler with USB wedge delta detection (<35ms), duplicate scan protection, and audio feedback.
-- **`LotSelector`:** Automated FIFO and FEFO lot allocation engine with quarantine locks.
+- **`ZBarcodeScanControl`:** High-speed workstation scanner handler with USB wedge delta detection (<35ms), duplicate scan protection, and audio feedback.
+- **`ZLotSelector`:** Automated FIFO and FEFO lot allocation engine with quarantine locks.
 
 ---
 
@@ -163,11 +163,11 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
 ![11. Charts Hero Showcase](images/11_charts_hero_showcase.png)
 
 #### Key Controls:
-- **`ChartControl` / `BarChart`:** Grouped and stacked column/bar charts comparing revenue against targets.
-- **`PieChart`:** Full Pie and Donut distribution charts with centered KPI summary metrics.
-- **`LineChart`:** Catmull-Rom spline trend charts with vertical gradient fills and hover markers.
-- **`BoxPlotChart`:** Six Sigma Statistical Process Control (SPC) Box-and-Whisker chart displaying Min, Max, Q1, Median, Q3, outliers, and USL/LSL tolerance limits.
-- **Financial & Flow Charts:** Candlestick OHLC charts, multi-axis Radar charts, conversion Funnel/Pyramid charts, and Waterfall variance charts.
+- **`ZChart` / `ZBarChart`:** Grouped and stacked column/bar charts comparing revenue against targets.
+- **`ZPieChart`:** Full Pie and Donut distribution charts with centered KPI summary metrics.
+- **`ZLineChart`:** Catmull-Rom spline trend charts with vertical gradient fills and hover markers.
+- **`ZBoxPlotChart`:** Six Sigma Statistical Process Control (SPC) Box-and-Whisker chart displaying Min, Max, Q1, Median, Q3, outliers, and USL/LSL tolerance limits.
+- **Financial & Flow Charts:** `ZCandlestickChart` OHLC charts, multi-axis `ZRadarChart`, conversion `ZFunnelChart`/`ZPyramidChart`, and `ZWaterfallChart` variance charts.
 
 ---
 
@@ -178,15 +178,15 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
 ![07. Multi-Tier Zoom DatePicker](images/07_datepicker_multitier_zoom.png)
 
 #### Key Controls:
-- **`DateEdit` & `DateRangePicker`:**
+- **`ZDateEdit` & `ZDateRangePicker`:**
   * Multi-tier zoom navigation calendar: **Days ↔ Months ↔ Years** without screen flicker.
   * Quick-select presets (Today, This Week, This Month, This Quarter).
-- **`GridLookupEdit`:** Multi-column dropdown editor embedding a virtual data grid for instant filtering across 100k+ master records.
-- **`CheckedComboBoxEdit`:** Multi-select dropdown with checkbox items and search.
-- **`TokenEdit`:** Tag/badge chip editor with keyboard navigation and dismiss buttons.
-- **`ColorPickEdit`:** Swatch palette matrix with HEX/RGB inputs.
-- **`RangeControl` / `DateTimeRangeSlider`:** Dual-thumb range selector with background distribution histogram.
-- **`ValidationProvider`:** Declarative fluent validation engine with pulsing vector error badges, warning icons, and automatic scroll-to-error.
+- **`ZGridLookupEdit`:** Multi-column dropdown editor embedding a virtual data grid for instant filtering across 100k+ master records.
+- **`ZCheckedComboBoxEdit`:** Multi-select dropdown with checkbox items and search.
+- **`ZTokenEdit`:** Tag/badge chip editor with keyboard navigation and dismiss buttons.
+- **`ZColorPickEdit` / `ZColorPicker`:** Swatch palette matrix with HEX/RGB inputs.
+- **`ZRangeControl` / `ZRangeSlider`:** Dual-thumb range selector with background distribution histogram.
+- **`ZErrorProvider` / `ValidationProvider`:** Declarative fluent validation engine with pulsing vector error badges, warning icons, and automatic scroll-to-error.
 
 ---
 
@@ -195,11 +195,11 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
 ![04. SCADA & Smart Factory Hub](images/04_scada_smart_factory.png)
 
 #### Key Controls:
-- **`DockManager` & `FloatingWindow`:**
+- **`ZDockManager` & `FloatingWindow`:**
   * Multi-zone docking layout (Left, Right, Top, Bottom, Document tabs) supporting floating detached windows across secondary monitors.
-  * Zero-dependency layout persistence via JSON (`WorkspaceSerializer`).
-- **`OptimizedPanel`:** 9-slice cached shadow panel eliminating GDI+ convolution latency while maintaining native text clarity.
-- **`ToolbarControl` & `SideNavControl`:** Vertical collapsible sidebar and anti-aliased action toolbar with collision guard.
+  * Zero-dependency layout persistence via JSON (`ZWorkspaceSerializer`).
+- **`OptimizedPanel` / `ZPanel`:** 9-slice cached shadow panel eliminating GDI+ convolution latency while maintaining native text clarity.
+- **`ZToolbarControl` & `ZSideNavControl`:** Vertical collapsible sidebar and anti-aliased action toolbar with collision guard.
 - **9 Built-in Theme Skins:**
   * `obsidian_dark` (Default for SCADA control centers)
   * `clean_light` (Flat modern light theme)
