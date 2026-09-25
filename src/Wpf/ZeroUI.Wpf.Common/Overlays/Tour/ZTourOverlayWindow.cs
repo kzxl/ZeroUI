@@ -56,6 +56,7 @@ namespace ZeroUI.Wpf.Overlays
             Background = Brushes.Transparent;
             ShowInTaskbar = false;
             Focusable = true;
+            Topmost = true;
 
             if (owner != null)
             {
@@ -285,6 +286,9 @@ namespace ZeroUI.Wpf.Overlays
         {
             if (step == null) return;
 
+            Topmost = true;
+            Activate();
+
             // 1. Cập nhật dữ liệu hiển thị trên Card
             _stepBadgeBlock.Text = $"{currentIndex + 1}/{totalCount}";
             _titleBlock.Text = step.Title;
@@ -456,6 +460,47 @@ namespace ZeroUI.Wpf.Overlays
             }
         }
 
+        private static bool TryCalculatePlacement(ZTourPlacement placement, Rect targetRect, double cardW, double cardH, double clientW, double clientH, out Rect resultRect)
+        {
+            const double margin = 16;
+            const double spacing = 14;
+            double x;
+            double y;
+
+            switch (placement)
+            {
+                case ZTourPlacement.Bottom:
+                    x = targetRect.Left + (targetRect.Width - cardW) / 2.0;
+                    y = targetRect.Bottom + spacing;
+                    break;
+                case ZTourPlacement.Top:
+                    x = targetRect.Left + (targetRect.Width - cardW) / 2.0;
+                    y = targetRect.Top - cardH - spacing;
+                    break;
+                case ZTourPlacement.Right:
+                    x = targetRect.Right + spacing;
+                    y = targetRect.Top + (targetRect.Height - cardH) / 2.0;
+                    break;
+                case ZTourPlacement.Left:
+                    x = targetRect.Left - cardW - spacing;
+                    y = targetRect.Top + (targetRect.Height - cardH) / 2.0;
+                    break;
+                default:
+                    resultRect = new Rect((clientW - cardW) / 2.0, (clientH - cardH) / 2.0, cardW, cardH);
+                    return true;
+            }
+
+            // Kẹp trong màn hình
+            x = Math.Max(margin, Math.Min(clientW - cardW - margin, x));
+            y = Math.Max(margin, Math.Min(clientH - cardH - margin, y));
+
+            resultRect = new Rect(x, y, cardW, cardH);
+
+            // Kiểm tra xem sau khi kẹp có bị đè lên targetRect không
+            Rect safeTarget = new Rect(targetRect.Left - 2, targetRect.Top - 2, targetRect.Width + 4, targetRect.Height + 4);
+            return !resultRect.IntersectsWith(safeTarget);
+        }
+
         private void PositionCard(ZTourStep step, Rect targetRect)
         {
             _cardBorder.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
@@ -475,57 +520,65 @@ namespace ZeroUI.Wpf.Overlays
             }
             else
             {
+                ZTourPlacement[] candidates;
                 if (placement == ZTourPlacement.Auto)
                 {
-                    // Tự động tìm vị trí thông minh
-                    if (targetRect.Bottom + cardH + 20 <= ActualHeight)
-                        placement = ZTourPlacement.Bottom;
-                    else if (targetRect.Top - cardH - 20 >= 0)
-                        placement = ZTourPlacement.Top;
-                    else if (targetRect.Right + cardW + 20 <= ActualWidth)
-                        placement = ZTourPlacement.Right;
-                    else
-                        placement = ZTourPlacement.Left;
-                }
+                    double spaceBottom = ActualHeight - targetRect.Bottom;
+                    double spaceTop = targetRect.Top;
+                    double spaceRight = ActualWidth - targetRect.Right;
+                    double spaceLeft = targetRect.Left;
 
-                switch (placement)
+                    var dirs = new List<(ZTourPlacement p, double space)>
+                    {
+                        (ZTourPlacement.Bottom, spaceBottom),
+                        (ZTourPlacement.Top, spaceTop),
+                        (ZTourPlacement.Right, spaceRight),
+                        (ZTourPlacement.Left, spaceLeft)
+                    };
+                    dirs.Sort((a, b) => b.space.CompareTo(a.space));
+                    candidates = new[] { dirs[0].p, dirs[1].p, dirs[2].p, dirs[3].p };
+                }
+                else
                 {
-                    case ZTourPlacement.Top:
-                        cardX = targetRect.Left + (targetRect.Width - cardW) / 2.0;
-                        cardY = targetRect.Top - cardH - 12;
-                        break;
-
-                    case ZTourPlacement.Bottom:
-                        cardX = targetRect.Left + (targetRect.Width - cardW) / 2.0;
-                        cardY = targetRect.Bottom + 12;
-                        break;
-
-                    case ZTourPlacement.Left:
-                        cardX = targetRect.Left - cardW - 12;
-                        cardY = targetRect.Top + (targetRect.Height - cardH) / 2.0;
-                        break;
-
-                    case ZTourPlacement.Right:
-                        cardX = targetRect.Right + 12;
-                        cardY = targetRect.Top + (targetRect.Height - cardH) / 2.0;
-                        break;
-
-                    default:
-                        cardX = (ActualWidth - cardW) / 2.0;
-                        cardY = (ActualHeight - cardH) / 2.0;
-                        break;
+                    candidates = placement switch
+                    {
+                        ZTourPlacement.Bottom => new[] { ZTourPlacement.Bottom, ZTourPlacement.Top, ZTourPlacement.Right, ZTourPlacement.Left },
+                        ZTourPlacement.Top => new[] { ZTourPlacement.Top, ZTourPlacement.Bottom, ZTourPlacement.Right, ZTourPlacement.Left },
+                        ZTourPlacement.Right => new[] { ZTourPlacement.Right, ZTourPlacement.Left, ZTourPlacement.Bottom, ZTourPlacement.Top },
+                        ZTourPlacement.Left => new[] { ZTourPlacement.Left, ZTourPlacement.Right, ZTourPlacement.Bottom, ZTourPlacement.Top },
+                        _ => new[] { ZTourPlacement.Bottom, ZTourPlacement.Top, ZTourPlacement.Right, ZTourPlacement.Left }
+                    };
                 }
 
-                // Kẹp toạ độ trong màn hình để không bị tràn
-                cardX = Math.Max(16, Math.Min(ActualWidth - cardW - 16, cardX));
-                cardY = Math.Max(16, Math.Min(ActualHeight - cardH - 16, cardY));
+                bool placed = false;
+                Rect placedRect = Rect.Empty;
+                ZTourPlacement resolved = placement;
 
-                BuildArrow(targetRect, cardX, cardY, cardW, cardH, placement);
+                foreach (var p in candidates)
+                {
+                    if (TryCalculatePlacement(p, targetRect, cardW, cardH, ActualWidth, ActualHeight, out var rect))
+                    {
+                        placedRect = rect;
+                        resolved = p;
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (placed)
+                {
+                    cardX = placedRect.X;
+                    cardY = placedRect.Y;
+                    BuildArrow(targetRect, cardX, cardY, cardW, cardH, resolved);
+                }
+                else
+                {
+                    // Fallback nếu không hướng nào hoàn toàn né được (target quá to): đặt vào góc thoáng nhất
+                    cardX = targetRect.Right + 14 + cardW <= ActualWidth ? targetRect.Right + 14 : Math.Max(16, ActualWidth - cardW - 16);
+                    cardY = Math.Max(16, Math.Min(ActualHeight - cardH - 16, targetRect.Bottom + 14));
+                    _arrowPolygon.Visibility = Visibility.Collapsed;
+                }
             }
-
-            // Kẹp toạ độ trong màn hình để không bị tràn
-            cardX = Math.Max(16, Math.Min(ActualWidth - cardW - 16, cardX));
-            cardY = Math.Max(16, Math.Min(ActualHeight - cardH - 16, cardY));
 
             Canvas.SetLeft(_cardBorder, cardX);
             Canvas.SetTop(_cardBorder, cardY);

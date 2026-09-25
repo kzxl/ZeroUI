@@ -163,7 +163,9 @@ namespace ZeroUI.WinForms.Overlays
             try { step.OnEnter?.Invoke(step); } catch { }
 
             _backdropForm?.UpdateHole(step);
+            _backdropForm?.BringToFront();
             _overlayForm?.DisplayStep(step, newIndex, Steps.Count);
+            _overlayForm?.BringToFront();
             StepChanged?.Invoke(this, new ZTourStepChangedEventArgs(prevIndex, newIndex, step));
         }
 

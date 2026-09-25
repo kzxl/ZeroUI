@@ -24,7 +24,7 @@ namespace ZeroUI.WinForms.Overlays
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
             ShowInTaskbar = false;
-            TopMost = false;
+            TopMost = true;
             KeyPreview = true;
             BackColor = Color.FromArgb(10, 15, 26);
             Opacity = 0.55; // Mờ 55% dịu mắt, thấy rõ ràng mọi chi tiết của form bên dưới

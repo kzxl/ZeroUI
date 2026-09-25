@@ -40,7 +40,7 @@ namespace ZeroUI.WinForms.Overlays
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
             ShowInTaskbar = false;
-            TopMost = false;
+            TopMost = true;
             KeyPreview = true;
             BackColor = Color.FromArgb(10, 15, 27);
             TransparencyKey = Color.FromArgb(10, 15, 27);
@@ -68,6 +68,7 @@ namespace ZeroUI.WinForms.Overlays
         {
             _targetRect = ResolveTargetRect(step);
             RecalculateCardLayout(step, currentIndex, totalCount);
+            BringToFront();
             Invalidate();
         }
 
@@ -110,65 +111,122 @@ namespace ZeroUI.WinForms.Overlays
                 Math.Max(10, target.Height + pad.Top + pad.Bottom));
         }
 
+        private static bool TryCalculatePlacement(
+            ZTourPlacement placement,
+            Rectangle targetRect,
+            int cardW,
+            int cardH,
+            int clientW,
+            int clientH,
+            out Rectangle resultRect)
+        {
+            int x;
+            int y;
+            const int gap = 14;
+            const int margin = 12;
+
+            switch (placement)
+            {
+                case ZTourPlacement.Bottom:
+                    x = targetRect.Left + (targetRect.Width - cardW) / 2;
+                    y = targetRect.Bottom + gap;
+                    break;
+                case ZTourPlacement.Top:
+                    x = targetRect.Left + (targetRect.Width - cardW) / 2;
+                    y = targetRect.Top - cardH - gap;
+                    break;
+                case ZTourPlacement.Left:
+                    x = targetRect.Left - cardW - gap;
+                    y = targetRect.Top + (targetRect.Height - cardH) / 2;
+                    break;
+                case ZTourPlacement.Right:
+                    x = targetRect.Right + gap;
+                    y = targetRect.Top + (targetRect.Height - cardH) / 2;
+                    break;
+                default:
+                    resultRect = Rectangle.Empty;
+                    return false;
+            }
+
+            // Kẹp trong màn hình
+            x = Math.Max(margin, Math.Min(clientW - cardW - margin, x));
+            y = Math.Max(margin, Math.Min(clientH - cardH - margin, y));
+
+            resultRect = new Rectangle(x, y, cardW, cardH);
+
+            // Kiểm tra xem sau khi kẹp có bị đè lên targetRect không
+            var safeTarget = Rectangle.Inflate(targetRect, 2, 2);
+            return !resultRect.IntersectsWith(safeTarget);
+        }
+
         private void RecalculateCardLayout(ZTourStep step, int currentIndex, int totalCount)
         {
             int cardW = 340;
             int cardH = 150;
-            int x;
-            int y;
 
-            ZTourPlacement placement = step.Placement;
-            if (_targetRect.IsEmpty || placement == ZTourPlacement.Center)
+            ZTourPlacement desired = step.Placement;
+            if (_targetRect.IsEmpty || desired == ZTourPlacement.Center)
             {
                 _resolvedPlacement = ZTourPlacement.Center;
-                x = (ClientSize.Width - cardW) / 2;
-                y = (ClientSize.Height - cardH) / 2;
+                int cx = (ClientSize.Width - cardW) / 2;
+                int cy = (ClientSize.Height - cardH) / 2;
+                _cardRect = new Rectangle(cx, cy, cardW, cardH);
             }
             else
             {
-                if (placement == ZTourPlacement.Auto)
+                // Danh sách các hướng ưu tiên kiểm tra để tránh đè lên target control
+                ZTourPlacement[] candidates;
+                if (desired == ZTourPlacement.Auto)
                 {
-                    if (_targetRect.Bottom + cardH + 16 <= ClientSize.Height)
-                        placement = ZTourPlacement.Bottom;
-                    else if (_targetRect.Top - cardH - 16 >= 0)
-                        placement = ZTourPlacement.Top;
-                    else if (_targetRect.Right + cardW + 16 <= ClientSize.Width)
-                        placement = ZTourPlacement.Right;
-                    else
-                        placement = ZTourPlacement.Left;
+                    int spaceBottom = ClientSize.Height - _targetRect.Bottom;
+                    int spaceTop = _targetRect.Top;
+                    int spaceRight = ClientSize.Width - _targetRect.Right;
+                    int spaceLeft = _targetRect.Left;
+
+                    var dirs = new System.Collections.Generic.List<(ZTourPlacement p, int space)>
+                    {
+                        (ZTourPlacement.Bottom, spaceBottom),
+                        (ZTourPlacement.Top, spaceTop),
+                        (ZTourPlacement.Right, spaceRight),
+                        (ZTourPlacement.Left, spaceLeft)
+                    };
+                    dirs.Sort((a, b) => b.space.CompareTo(a.space));
+                    candidates = new[] { dirs[0].p, dirs[1].p, dirs[2].p, dirs[3].p };
+                }
+                else
+                {
+                    candidates = desired switch
+                    {
+                        ZTourPlacement.Bottom => new[] { ZTourPlacement.Bottom, ZTourPlacement.Top, ZTourPlacement.Right, ZTourPlacement.Left },
+                        ZTourPlacement.Top => new[] { ZTourPlacement.Top, ZTourPlacement.Bottom, ZTourPlacement.Right, ZTourPlacement.Left },
+                        ZTourPlacement.Right => new[] { ZTourPlacement.Right, ZTourPlacement.Left, ZTourPlacement.Bottom, ZTourPlacement.Top },
+                        ZTourPlacement.Left => new[] { ZTourPlacement.Left, ZTourPlacement.Right, ZTourPlacement.Bottom, ZTourPlacement.Top },
+                        _ => new[] { ZTourPlacement.Bottom, ZTourPlacement.Top, ZTourPlacement.Right, ZTourPlacement.Left }
+                    };
                 }
 
-                _resolvedPlacement = placement;
-                switch (placement)
+                bool placed = false;
+                foreach (var p in candidates)
                 {
-                    case ZTourPlacement.Top:
-                        x = _targetRect.Left + (_targetRect.Width - cardW) / 2;
-                        y = _targetRect.Top - cardH - 12;
+                    if (TryCalculatePlacement(p, _targetRect, cardW, cardH, ClientSize.Width, ClientSize.Height, out var rect))
+                    {
+                        _cardRect = rect;
+                        _resolvedPlacement = p;
+                        placed = true;
                         break;
-                    case ZTourPlacement.Bottom:
-                        x = _targetRect.Left + (_targetRect.Width - cardW) / 2;
-                        y = _targetRect.Bottom + 12;
-                        break;
-                    case ZTourPlacement.Left:
-                        x = _targetRect.Left - cardW - 12;
-                        y = _targetRect.Top + (_targetRect.Height - cardH) / 2;
-                        break;
-                    case ZTourPlacement.Right:
-                        x = _targetRect.Right + 12;
-                        y = _targetRect.Top + (_targetRect.Height - cardH) / 2;
-                        break;
-                    default:
-                        x = (ClientSize.Width - cardW) / 2;
-                        y = (ClientSize.Height - cardH) / 2;
-                        break;
+                    }
+                }
+
+                if (!placed)
+                {
+                    // Fallback nếu không hướng nào hoàn toàn né được (target quá to): đặt vào góc thoáng nhất
+                    int fx = _targetRect.Right + 14 + cardW <= ClientSize.Width ? _targetRect.Right + 14 : Math.Max(12, ClientSize.Width - cardW - 12);
+                    int fy = Math.Max(12, Math.Min(ClientSize.Height - cardH - 12, _targetRect.Bottom + 14));
+                    _cardRect = new Rectangle(fx, fy, cardW, cardH);
+                    _resolvedPlacement = ZTourPlacement.Center;
                 }
             }
 
-            // Kẹp toạ độ trong màn hình
-            x = Math.Max(12, Math.Min(ClientSize.Width - cardW - 12, x));
-            y = Math.Max(12, Math.Min(ClientSize.Height - cardH - 12, y));
-
-            _cardRect = new Rectangle(x, y, cardW, cardH);
             _btnCloseRect = new Rectangle(_cardRect.Right - 28, _cardRect.Top + 10, 20, 20);
 
             int btnY = _cardRect.Bottom - 38;
