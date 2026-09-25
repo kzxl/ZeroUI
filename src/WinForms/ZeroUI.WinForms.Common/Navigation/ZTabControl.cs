@@ -52,6 +52,7 @@ namespace ZeroUI.WinForms.Navigation
         {
             Dock = DockStyle.Fill;
             Visible = false;
+            AutoScroll = true;
         }
 
         public TabPageEx(string title, string icon = "") : this()
@@ -93,6 +94,18 @@ namespace ZeroUI.WinForms.Navigation
         private TabStyle _tabStyle = TabStyle.Underline;
         private TabOrientation _orientation = TabOrientation.Horizontal;
         private bool _showHeader = true;
+
+        // Tab header scrolling state
+        private int _scrollOffset = 0;
+        private int _maxScrollOffset = 0;
+        private bool _canScrollLeft = false;
+        private bool _canScrollRight = false;
+        private Rectangle _btnScrollLeftRect = Rectangle.Empty;
+        private Rectangle _btnScrollRightRect = Rectangle.Empty;
+        private bool _hoveredScrollLeft = false;
+        private bool _hoveredScrollRight = false;
+        private const int ScrollStep = 140;
+        private const int NavButtonsWidth = 56;
 
         public event EventHandler? SelectedIndexChanged;
         public event EventHandler<TabPageEx>? TabClosed;
@@ -277,6 +290,7 @@ namespace ZeroUI.WinForms.Navigation
                 {
                     _selectedIndex = clamped;
                     UpdateActiveTabContent();
+                    EnsureTabVisible(_selectedIndex);
                     SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
                     Invalidate();
                 }
@@ -399,10 +413,73 @@ namespace ZeroUI.WinForms.Navigation
             _contentContainer.ResumeLayout(true);
         }
 
+        public void EnsureTabVisible(int index)
+        {
+            if (index < 0 || index >= _tabPages.Count || _orientation != TabOrientation.Horizontal)
+                return;
+
+            int targetLeft = 12;
+            using var g = CreateGraphics();
+            var fontTab = ZeroFontCache.Get(9.2f, FontStyle.Regular);
+            var fontTabActive = ZeroFontCache.Get(9.2f, FontStyle.Bold);
+
+            int targetWidth = 0;
+            for (int i = 0; i <= index; i++)
+            {
+                var page = _tabPages[i];
+                bool isSelected = (i == _selectedIndex);
+                var activeFont = isSelected ? fontTabActive : fontTab;
+                var textSz = g.MeasureString(page.Title, activeFont);
+                int itemW = (int)textSz.Width + 24;
+                if (!string.IsNullOrEmpty(page.Icon)) itemW += 20;
+                if (page.BadgeCount > 0) itemW += 24;
+                if (page.Closable) itemW += 18;
+
+                if (i == index)
+                {
+                    targetWidth = itemW;
+                    break;
+                }
+                targetLeft += itemW + 4;
+            }
+
+            int visibleWidth = Math.Max(100, Width - NavButtonsWidth);
+            if (targetLeft < _scrollOffset)
+            {
+                _scrollOffset = Math.Max(0, targetLeft - 12);
+                Invalidate();
+            }
+            else if (targetLeft + targetWidth > _scrollOffset + visibleWidth)
+            {
+                _scrollOffset = Math.Max(0, (targetLeft + targetWidth + 16) - visibleWidth);
+                Invalidate();
+            }
+        }
+
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
             UpdateContainerBounds();
+            if (_selectedIndex >= 0)
+            {
+                EnsureTabVisible(_selectedIndex);
+            }
+            Invalidate();
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            if (_orientation == TabOrientation.Horizontal && e.Y <= _tabHeight && _maxScrollOffset > 0)
+            {
+                int delta = (e.Delta > 0) ? -ScrollStep : ScrollStep;
+                int newOffset = Math.Max(0, Math.Min(_maxScrollOffset, _scrollOffset + delta));
+                if (newOffset != _scrollOffset)
+                {
+                    _scrollOffset = newOffset;
+                    Invalidate();
+                }
+            }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -412,12 +489,35 @@ namespace ZeroUI.WinForms.Navigation
             if (_orientation == TabOrientation.Horizontal && e.Y > _tabHeight) return;
             if (_orientation == TabOrientation.Vertical && e.X > _tabWidth) return;
 
+            // Check navigation buttons hover in horizontal mode
+            if (_orientation == TabOrientation.Horizontal && !_btnScrollLeftRect.IsEmpty)
+            {
+                bool hovLeft = _btnScrollLeftRect.Contains(e.Location) && _canScrollLeft;
+                bool hovRight = _btnScrollRightRect.Contains(e.Location) && _canScrollRight;
+                if (hovLeft != _hoveredScrollLeft || hovRight != _hoveredScrollRight)
+                {
+                    _hoveredScrollLeft = hovLeft;
+                    _hoveredScrollRight = hovRight;
+                    Cursor = (hovLeft || hovRight) ? Cursors.Hand : Cursors.Default;
+                    Invalidate();
+                }
+                if (e.X >= Width - NavButtonsWidth)
+                {
+                    return;
+                }
+            }
+
             int hov = -1;
             int hovClose = -1;
+            int visibleWidth = (_btnScrollLeftRect.IsEmpty) ? Width : Math.Max(0, Width - NavButtonsWidth);
 
             for (int i = 0; i < _tabPages.Count; i++)
             {
-                if (_tabPages[i].HeaderBounds.Contains(e.Location))
+                var bounds = _tabPages[i].HeaderBounds;
+                if (_orientation == TabOrientation.Horizontal && bounds.Right > visibleWidth + 2)
+                    continue;
+
+                if (bounds.Contains(e.Location))
                 {
                     hov = i;
                     if (_tabPages[i].Closable && _tabPages[i].CloseButtonBounds.Contains(e.Location))
@@ -441,10 +541,12 @@ namespace ZeroUI.WinForms.Navigation
         {
             base.OnMouseLeave(e);
             if (!_showHeader) return;
-            if (_hoveredIndex != -1 || _hoveredCloseIndex != -1)
+            if (_hoveredIndex != -1 || _hoveredCloseIndex != -1 || _hoveredScrollLeft || _hoveredScrollRight)
             {
                 _hoveredIndex = -1;
                 _hoveredCloseIndex = -1;
+                _hoveredScrollLeft = false;
+                _hoveredScrollRight = false;
                 Cursor = Cursors.Default;
                 Invalidate();
             }
@@ -458,9 +560,36 @@ namespace ZeroUI.WinForms.Navigation
             if (_orientation == TabOrientation.Horizontal && e.Y > _tabHeight) return;
             if (_orientation == TabOrientation.Vertical && e.X > _tabWidth) return;
 
+            // Handle scroll buttons click
+            if (_orientation == TabOrientation.Horizontal && !_btnScrollLeftRect.IsEmpty)
+            {
+                if (_btnScrollLeftRect.Contains(e.Location) && _canScrollLeft)
+                {
+                    _scrollOffset = Math.Max(0, _scrollOffset - ScrollStep);
+                    Invalidate();
+                    return;
+                }
+                if (_btnScrollRightRect.Contains(e.Location) && _canScrollRight)
+                {
+                    _scrollOffset = Math.Min(_maxScrollOffset, _scrollOffset + ScrollStep);
+                    Invalidate();
+                    return;
+                }
+                if (e.X >= Width - NavButtonsWidth)
+                {
+                    return;
+                }
+            }
+
+            int visibleWidth = (_btnScrollLeftRect.IsEmpty) ? Width : Math.Max(0, Width - NavButtonsWidth);
+
             for (int i = 0; i < _tabPages.Count; i++)
             {
-                if (_tabPages[i].HeaderBounds.Contains(e.Location))
+                var bounds = _tabPages[i].HeaderBounds;
+                if (_orientation == TabOrientation.Horizontal && bounds.Right > visibleWidth + 2)
+                    continue;
+
+                if (bounds.Contains(e.Location))
                 {
                     if (_tabPages[i].Closable && _tabPages[i].CloseButtonBounds.Contains(e.Location))
                     {
@@ -511,135 +640,216 @@ namespace ZeroUI.WinForms.Navigation
 
             if (_tabPages.Count == 0) return;
 
-            int curX = 12;
             var fontTab = ZeroFontCache.Get(9.2f, FontStyle.Regular);
             var fontTabActive = ZeroFontCache.Get(9.2f, FontStyle.Bold);
             var fontIcon = ZeroFontCache.Get("Segoe UI Emoji", 9.5f, FontStyle.Regular);
             var fontBadge = ZeroFontCache.Get(7.5f, FontStyle.Bold);
+
+            // Pre-calculate tab widths to determine scroll necessity
+            int totalTabsWidth = 12;
+            int[] itemWidths = new int[_tabPages.Count];
+            for (int i = 0; i < _tabPages.Count; i++)
+            {
+                var page = _tabPages[i];
+                bool isSelected = (i == _selectedIndex);
+                var activeFont = isSelected ? fontTabActive : fontTab;
+                var textSz = g.MeasureString(page.Title, activeFont);
+                int itemW = (int)textSz.Width + 24;
+                if (!string.IsNullOrEmpty(page.Icon)) itemW += 20;
+                if (page.BadgeCount > 0) itemW += 24;
+                if (page.Closable) itemW += 18;
+                itemWidths[i] = itemW;
+                totalTabsWidth += itemW + 4;
+            }
+            totalTabsWidth += 12;
+
+            bool needScroll = totalTabsWidth > Width;
+            int visibleWidth = needScroll ? Math.Max(0, Width - NavButtonsWidth) : Width;
+            _maxScrollOffset = needScroll ? Math.Max(0, totalTabsWidth - visibleWidth) : 0;
+            _scrollOffset = Math.Max(0, Math.Min(_maxScrollOffset, _scrollOffset));
+
+            _canScrollLeft = needScroll && (_scrollOffset > 0);
+            _canScrollRight = needScroll && (_scrollOffset < _maxScrollOffset);
+
+            if (needScroll)
+            {
+                int btnY = (_tabHeight - 26) / 2;
+                _btnScrollLeftRect = new Rectangle(Width - NavButtonsWidth + 4, btnY, 22, 26);
+                _btnScrollRightRect = new Rectangle(Width - NavButtonsWidth + 30, btnY, 22, 26);
+            }
+            else
+            {
+                _btnScrollLeftRect = Rectangle.Empty;
+                _btnScrollRightRect = Rectangle.Empty;
+            }
+
+            // Clip tabs rendering within visible header area
+            var origClip = g.Clip;
+            g.SetClip(new Rectangle(0, 0, visibleWidth, _tabHeight));
+
+            int curX = 12 - _scrollOffset;
 
             for (int i = 0; i < _tabPages.Count; i++)
             {
                 var page = _tabPages[i];
                 bool isSelected = i == _selectedIndex;
                 bool isHovered = i == _hoveredIndex;
-
-                var activeFont = isSelected ? fontTabActive : fontTab;
-                var textSz = g.MeasureString(page.Title, activeFont);
-
-                int itemW = (int)textSz.Width + 24;
-                if (!string.IsNullOrEmpty(page.Icon)) itemW += 20;
-                if (page.BadgeCount > 0) itemW += 24;
-                if (page.Closable) itemW += 18;
+                int itemW = itemWidths[i];
 
                 page.HeaderBounds = new Rectangle(curX, 0, itemW, _tabHeight);
 
-                // Draw Tab Shape based on style
-                if (_tabStyle == TabStyle.Pill)
+                // Only render if within visible viewport
+                if (curX + itemW >= -20 && curX <= visibleWidth + 20)
                 {
-                    int pillH = _tabHeight - 12;
-                    var pillRect = new Rectangle(curX + 2, 6, itemW - 4, pillH);
-                    int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
-                    if (isSelected)
+                    // Draw Tab Shape based on style
+                    if (_tabStyle == TabStyle.Pill)
                     {
-                        using var brushPill = new SolidBrush(palette.Primary);
-                        using var pathPill = CreateRoundedRect(pillRect, effRadius);
-                        g.FillPath(brushPill, pathPill);
-                    }
-                    else if (isHovered)
-                    {
-                        using var brushPillHov = new SolidBrush(Color.FromArgb(20, palette.Primary));
-                        using var pathPillHov = CreateRoundedRect(pillRect, effRadius);
-                        g.FillPath(brushPillHov, pathPillHov);
-                    }
-                }
-                else if (_tabStyle == TabStyle.Card)
-                {
-                    if (isSelected)
-                    {
-                        var cardRect = new Rectangle(curX, 4, itemW, _tabHeight - 4);
+                        int pillH = _tabHeight - 12;
+                        var pillRect = new Rectangle(curX + 2, 6, itemW - 4, pillH);
                         int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
-                        using var brushCard = new SolidBrush(palette.Background);
-                        using var pathCard = CreateTopRoundedRect(cardRect, effRadius);
-                        g.FillPath(brushCard, pathCard);
-                        using var penCard = new Pen(palette.Border, 1f);
-                        g.DrawPath(penCard, pathCard);
+                        if (isSelected)
+                        {
+                            using var brushPill = new SolidBrush(palette.Primary);
+                            using var pathPill = CreateRoundedRect(pillRect, effRadius);
+                            g.FillPath(brushPill, pathPill);
+                        }
+                        else if (isHovered)
+                        {
+                            using var brushPillHov = new SolidBrush(Color.FromArgb(20, palette.Primary));
+                            using var pathPillHov = CreateRoundedRect(pillRect, effRadius);
+                            g.FillPath(brushPillHov, pathPillHov);
+                        }
                     }
-                }
-                else // Underline
-                {
-                    if (isHovered && !isSelected)
+                    else if (_tabStyle == TabStyle.Card)
                     {
-                        using var brushHov = new SolidBrush(Color.FromArgb(10, palette.Primary));
-                        g.FillRectangle(brushHov, page.HeaderBounds);
+                        if (isSelected)
+                        {
+                            var cardRect = new Rectangle(curX, 4, itemW, _tabHeight - 4);
+                            int effRadius = ZeroUIConfig.GetEffectiveRadius(6);
+                            using var brushCard = new SolidBrush(palette.Background);
+                            using var pathCard = CreateTopRoundedRect(cardRect, effRadius);
+                            g.FillPath(brushCard, pathCard);
+                            using var penCard = new Pen(palette.Border, 1f);
+                            g.DrawPath(penCard, pathCard);
+                        }
                     }
-
-                    if (isSelected)
+                    else // Underline
                     {
-                        int barH = 3;
-                        var barRect = new Rectangle(curX + 6, _tabHeight - barH, itemW - 12, barH);
-                        using var brushBar = new SolidBrush(palette.Primary);
-                        using var pathBar = CreateRoundedRect(barRect, 2);
-                        g.FillPath(brushBar, pathBar);
+                        if (isHovered && !isSelected)
+                        {
+                            using var brushHov = new SolidBrush(Color.FromArgb(10, palette.Primary));
+                            g.FillRectangle(brushHov, page.HeaderBounds);
+                        }
+
+                        if (isSelected)
+                        {
+                            int barH = 3;
+                            var barRect = new Rectangle(curX + 6, _tabHeight - barH, itemW - 12, barH);
+                            using var brushBar = new SolidBrush(palette.Primary);
+                            using var pathBar = CreateRoundedRect(barRect, 2);
+                            g.FillPath(brushBar, pathBar);
+                        }
                     }
-                }
 
-                int innerX = curX + 12;
+                    int innerX = curX + 12;
 
-                // Draw Icon
-                if (!string.IsNullOrEmpty(page.Icon))
-                {
-                    using var brushIcon = new SolidBrush(isSelected && _tabStyle == TabStyle.Pill ? Color.White : palette.TextPrimary);
-                    g.DrawString(page.Icon, fontIcon, brushIcon, innerX, (_tabHeight - 18) / 2);
-                    innerX += 20;
-                }
+                    // Draw Icon
+                    if (!string.IsNullOrEmpty(page.Icon))
+                    {
+                        using var brushIcon = new SolidBrush(isSelected && _tabStyle == TabStyle.Pill ? Color.White : palette.TextPrimary);
+                        g.DrawString(page.Icon, fontIcon, brushIcon, innerX, (_tabHeight - 18) / 2);
+                        innerX += 20;
+                    }
 
-                // Draw Tab Title
-                Color textCol;
-                if (_tabStyle == TabStyle.Pill && isSelected) textCol = Color.White;
-                else if (isSelected) textCol = palette.Primary;
-                else if (isHovered) textCol = palette.TextPrimary;
-                else textCol = palette.TextSecondary;
+                    // Draw Tab Title
+                    Color textCol;
+                    if (_tabStyle == TabStyle.Pill && isSelected) textCol = Color.White;
+                    else if (isSelected) textCol = palette.Primary;
+                    else if (isHovered) textCol = palette.TextPrimary;
+                    else textCol = palette.TextSecondary;
 
-                using (var brushText = new SolidBrush(textCol))
-                {
-                    g.DrawString(page.Title, activeFont, brushText, innerX, (_tabHeight - 18) / 2);
-                    innerX += (int)textSz.Width + 6;
-                }
+                    var activeFont = isSelected ? fontTabActive : fontTab;
+                    using (var brushText = new SolidBrush(textCol))
+                    {
+                        g.DrawString(page.Title, activeFont, brushText, innerX, (_tabHeight - 18) / 2);
+                        var textSz = g.MeasureString(page.Title, activeFont);
+                        innerX += (int)textSz.Width + 6;
+                    }
 
-                // Draw Badge
-                if (page.BadgeCount > 0)
-                {
-                    string bStr = page.BadgeCount > 99 ? "99+" : page.BadgeCount.ToString();
-                    var bSz = g.MeasureString(bStr, fontBadge);
-                    int bW = Math.Max(18, (int)bSz.Width + 8);
-                    int bH = 16;
-                    var bRect = new Rectangle(innerX, (_tabHeight - bH) / 2, bW, bH);
+                    // Draw Badge
+                    if (page.BadgeCount > 0)
+                    {
+                        string bStr = page.BadgeCount > 99 ? "99+" : page.BadgeCount.ToString();
+                        var bSz = g.MeasureString(bStr, fontBadge);
+                        int bW = Math.Max(18, (int)bSz.Width + 8);
+                        int bH = 16;
+                        var bRect = new Rectangle(innerX, (_tabHeight - bH) / 2, bW, bH);
 
-                    Color bColor = page.BadgeColor ?? palette.Danger;
-                    using var brushBadge = new SolidBrush(bColor);
-                    using var pathBadge = CreateRoundedRect(bRect, 8);
-                    g.FillPath(brushBadge, pathBadge);
+                        Color bColor = page.BadgeColor ?? palette.Danger;
+                        using var brushBadge = new SolidBrush(bColor);
+                        using var pathBadge = CreateRoundedRect(bRect, 8);
+                        g.FillPath(brushBadge, pathBadge);
 
-                    using var brushBadgeText = new SolidBrush(Color.White);
-                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(bStr, fontBadge, brushBadgeText, bRect, sf);
-                    innerX += bW + 6;
-                }
+                        using var brushBadgeText = new SolidBrush(Color.White);
+                        var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                        g.DrawString(bStr, fontBadge, brushBadgeText, bRect, sf);
+                        innerX += bW + 6;
+                    }
 
-                // Draw Close Button (✕)
-                if (page.Closable)
-                {
-                    page.CloseButtonBounds = new Rectangle(innerX, (_tabHeight - 14) / 2, 14, 14);
-                    bool hovClose = _hoveredCloseIndex == i;
+                    // Draw Close Button (✕)
+                    if (page.Closable)
+                    {
+                        page.CloseButtonBounds = new Rectangle(innerX, (_tabHeight - 14) / 2, 14, 14);
+                        bool hovClose = _hoveredCloseIndex == i;
 
-                    Color closeC = hovClose ? palette.Danger : palette.TextSecondary;
-                    using var brushClose = new SolidBrush(closeC);
-                    var sfClose = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString("✕", fontBadge, brushClose, page.CloseButtonBounds, sfClose);
+                        Color closeC = hovClose ? palette.Danger : palette.TextSecondary;
+                        using var brushClose = new SolidBrush(closeC);
+                        var sfClose = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                        g.DrawString("✕", fontBadge, brushClose, page.CloseButtonBounds, sfClose);
+                    }
                 }
 
                 curX += itemW + 4;
             }
+
+            g.Clip = origClip;
+
+            // Render navigation arrows if header overflows
+            if (needScroll)
+            {
+                var navAreaRect = new Rectangle(Width - NavButtonsWidth, 0, NavButtonsWidth, _tabHeight);
+                using (var brushNavBg = new SolidBrush(palette.HeaderBackground))
+                {
+                    g.FillRectangle(brushNavBg, navAreaRect);
+                }
+                using (var penSep = new Pen(palette.Border, 1f))
+                {
+                    g.DrawLine(penSep, Width - NavButtonsWidth, 4, Width - NavButtonsWidth, _tabHeight - 5);
+                }
+
+                DrawScrollButton(g, _btnScrollLeftRect, "◀", _canScrollLeft, _hoveredScrollLeft, palette);
+                DrawScrollButton(g, _btnScrollRightRect, "▶", _canScrollRight, _hoveredScrollRight, palette);
+            }
+        }
+
+        private void DrawScrollButton(Graphics g, Rectangle rect, string arrow, bool enabled, bool hovered, ZeroThemePalette palette)
+        {
+            if (rect.IsEmpty) return;
+
+            Color bgColor = hovered && enabled ? Color.FromArgb(40, palette.Primary) : Color.Transparent;
+            Color textColor = enabled ? (hovered ? palette.Primary : palette.TextPrimary) : Color.FromArgb(100, palette.TextSecondary);
+
+            if (bgColor != Color.Transparent)
+            {
+                using var brushBg = new SolidBrush(bgColor);
+                using var pathBg = CreateRoundedRect(rect, 4);
+                g.FillPath(brushBg, pathBg);
+            }
+
+            var fontArrow = ZeroFontCache.Get(8.5f, FontStyle.Bold);
+            using var brushText = new SolidBrush(textColor);
+            var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            g.DrawString(arrow, fontArrow, brushText, rect, sf);
         }
 
         private void PaintVerticalTabs(Graphics g, ZeroThemePalette palette)

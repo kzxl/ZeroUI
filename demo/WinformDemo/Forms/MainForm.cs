@@ -1116,14 +1116,14 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 TabHeight = 36,
                 TabStyle = ZeroTabStyle.Pill
             };
-            _tabControls = new ZeroTabPage("Core Input Controls", "🎛️", _ => InitializeComponentsShowcase());
-            _tabCommercial = new ZeroTabPage("Enterprise Commercial Suite", "🏢", _ => InitializeCommercialSuite());
-            _tabOfficeDocs = new ZeroTabPage("Office & Technical Documents", "📄", p => InitializeOfficeDocsSuite(p));
-            _tabAdvanced = new ZeroTabPage("Data Hierarchy & Property Inspector", "🌳", _ => InitializeAdvancedSuite());
-            _tabPivot = new ZeroTabPage("Cross-Tab Pivot Grid", "📊", p => InitializePivotGridShowcase(p));
+            _tabControls = new ZeroTabPage("Core Controls", "🎛️", _ => InitializeComponentsShowcase());
+            _tabCommercial = new ZeroTabPage("Commercial Suite", "🏢", _ => InitializeCommercialSuite());
+            _tabOfficeDocs = new ZeroTabPage("Office & Docs", "📄", p => InitializeOfficeDocsSuite(p));
+            _tabAdvanced = new ZeroTabPage("Data Hierarchy & Inspector", "🌳", _ => InitializeAdvancedSuite());
+            _tabPivot = new ZeroTabPage("Pivot Grid", "📊", p => InitializePivotGridShowcase(p));
             _tabLayout = new ZeroTabPage("Layout & Workspaces", "📐", p => InitializeLayoutShowcase(p));
-            _tabMasterDetail = new ZeroTabPage("Master-Detail & In-Place LookUp", "📑", p => InitializeMasterDetailDemo(p));
-            _tabDesignRAD = new ZeroTabPage("Visual Designers & RAD Suite", "🛠️", p => InitializeDesignerRadDemo(p));
+            _tabMasterDetail = new ZeroTabPage("Master-Detail LookUp", "📑", p => InitializeMasterDetailDemo(p));
+            _tabDesignRAD = new ZeroTabPage("Visual Designers & RAD", "🛠️", p => InitializeDesignerRadDemo(p));
             _subTabsComponents.AddTab(_tabControls);
             _subTabsComponents.AddTab(_tabCommercial);
             _subTabsComponents.AddTab(_tabOfficeDocs);

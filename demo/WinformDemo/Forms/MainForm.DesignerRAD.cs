@@ -34,13 +34,20 @@ namespace ZeroUI.Samples.WinformDemo.Forms
 
         private void InitializeDesignerRadDemo(ZeroTabPage targetTab)
         {
-            var pnlContainer = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12), BackColor = Color.FromArgb(248, 249, 251) };
+            var pnlContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(12),
+                BackColor = Color.FromArgb(248, 249, 251),
+                AutoScroll = true,
+                AutoScrollMinSize = new Size(680, 500)
+            };
 
             // 1. Top Header Card
             var headerCard = new ZeroUI.WinForms.Containers.ZeroCard
             {
                 Dock = DockStyle.Top,
-                Height = 85,
+                Height = 72,
                 Title = "DevExpress-Grade Visual Designers, Smart Tags & RAD Code Generation",
                 Subtitle = "Test in-place modal designers, property wizards, SCADA editors, and export instant C# & XAML setup code."
             };
@@ -50,7 +57,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var radActionBar = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 52,
+                Height = 56,
                 BackColor = Color.White,
                 Padding = new Padding(8, 8, 8, 8)
             };
@@ -65,7 +72,8 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
-                AutoScroll = true
+                AutoScroll = true,
+                Padding = new Padding(0, 0, 4, 4)
             };
 
             var btnRunGridDesigner = CreateRadActionButton("⚡ ZGrid Designer", Color.FromArgb(37, 99, 235), () => RunZGridDesigner());
@@ -94,9 +102,23 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Horizontal,
-                SplitterDistance = 460,
+                Panel1MinSize = 160,
+                Panel2MinSize = 100,
                 SplitterWidth = 6,
                 BackColor = Color.FromArgb(226, 232, 240)
+            };
+
+            pnlContainer.Resize += (s, e) =>
+            {
+                if (splitWorkspace.Height > 280)
+                {
+                    try
+                    {
+                        int targetDist = (int)(splitWorkspace.Height * 0.58);
+                        splitWorkspace.SplitterDistance = Math.Max(splitWorkspace.Panel1MinSize, Math.Min(splitWorkspace.Height - splitWorkspace.Panel2MinSize, targetDist));
+                    }
+                    catch { }
+                }
             };
 
             // Top Area: Live Component Tabs
