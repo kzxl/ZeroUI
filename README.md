@@ -19,13 +19,9 @@
 | :---: | :---: |
 | ![1M Rows Scroll](docs/images/01_zerogrid_1m_scroll.gif) | ![Media Editors](docs/images/02_media_editors_interactive.gif) |
 
-| 🔍 Excel-Style Column Distinct Filter Header (v1.8.1) | 🧭 Interactive ZTour Spotlight Walkthrough (Cutout & Pulsing Halo) |
+| 🔍 Excel-Style Column Distinct Filter Header (v1.8.1) | 🏭 SCADA Closed-Loop Workcell |
 | :---: | :---: |
-| ![Column Filter](docs/images/03_column_filter_header.gif) | ![Interactive ZTour Spotlight Guide](docs/images/14_ztour_interactive_guide.gif) |
-
-| 🏭 SCADA Closed-Loop Workcell Simulation | 📊 Industrial Diagnostics & Telemetry HUD |
-| :---: | :---: |
-| ![SCADA Closed Loop](docs/images/12_scada_closed_loop_simulation.png) | ![Dark Theme SCADA](docs/images/08_dark_theme_scada.png) |
+| ![Column Filter](docs/images/03_column_filter_header.gif) | ![SCADA Closed Loop](docs/images/12_scada_closed_loop_simulation.png) |
 
 ---
 

@@ -42,17 +42,13 @@ namespace ZeroUI.WinForms.Overlays
             ShowInTaskbar = false;
             TopMost = false;
             KeyPreview = true;
-            BackColor = Color.FromArgb(10, 15, 26);
+            BackColor = Color.FromArgb(10, 15, 27);
+            TransparencyKey = Color.FromArgb(10, 15, 27);
 
             SyncBounds();
 
             _ownerForm.LocationChanged += (s, e) => { SyncBounds(); Invalidate(); };
-            _ownerForm.SizeChanged += (s, e) =>
-            {
-                SyncBounds();
-                UpdateFormRegion(_tour.CurrentStep);
-                Invalidate();
-            };
+            _ownerForm.SizeChanged += (s, e) => { SyncBounds(); Invalidate(); };
 
             _pulseTimer = new Timer { Interval = 40 };
             _pulseTimer.Tick += (s, e) =>
@@ -71,7 +67,6 @@ namespace ZeroUI.WinForms.Overlays
         public void DisplayStep(ZTourStep step, int currentIndex, int totalCount)
         {
             _targetRect = ResolveTargetRect(step);
-            UpdateFormRegion(step);
             RecalculateCardLayout(step, currentIndex, totalCount);
             Invalidate();
         }
@@ -80,27 +75,6 @@ namespace ZeroUI.WinForms.Overlays
         {
             if (g == null) return;
             OnPaint(new PaintEventArgs(g, ClientRectangle));
-        }
-
-        private void UpdateFormRegion(ZTourStep? step)
-        {
-            if (ClientSize.Width <= 0 || ClientSize.Height <= 0) return;
-
-            if (step != null && step.Mask && !_targetRect.IsEmpty)
-            {
-                using (var fullPath = new GraphicsPath())
-                using (var holePath = CreateRoundedRectPath(_targetRect, Math.Max(2, step.CornerRadius)))
-                {
-                    fullPath.AddRectangle(new Rectangle(0, 0, ClientSize.Width, ClientSize.Height));
-                    var region = new Region(fullPath);
-                    region.Exclude(holePath);
-                    Region = region;
-                }
-            }
-            else
-            {
-                Region = null;
-            }
         }
 
         private void SyncBounds()
@@ -212,23 +186,8 @@ namespace ZeroUI.WinForms.Overlays
             var currentStep = _tour.CurrentStep;
             if (currentStep == null) return;
 
-            // 1. Vẽ Backdrop Mask mờ tối (khoét lỗ loại trừ _targetRect để giữ nguyên độ sắc nét của control bên dưới)
-            using (var fullBrush = new SolidBrush(Color.FromArgb(175, 10, 15, 26)))
-            {
-                if (!_targetRect.IsEmpty && currentStep.Mask)
-                {
-                    using (var region = new Region(ClientRectangle))
-                    using (var holePath = CreateRoundedRectPath(_targetRect, Math.Max(2, currentStep.CornerRadius)))
-                    {
-                        region.Exclude(holePath);
-                        g.FillRegion(fullBrush, region);
-                    }
-                }
-                else
-                {
-                    g.FillRectangle(fullBrush, ClientRectangle);
-                }
-            }
+            // 1. Nền trong suốt 100% để hiển thị lớp kính mờ tối (BackdropForm) và form chính bên dưới
+            g.Clear(Color.FromArgb(10, 15, 27));
 
             // 2. Vẽ Animated Glowing Spotlight Border xung quanh vùng khoanh
             if (!_targetRect.IsEmpty && currentStep.Mask)

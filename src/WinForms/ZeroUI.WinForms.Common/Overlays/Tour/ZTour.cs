@@ -30,6 +30,7 @@ namespace ZeroUI.WinForms.Overlays
     public class ZTour
     {
         private readonly Form _owner;
+        private ZTourBackdropForm? _backdropForm;
         private ZTourOverlayForm? _overlayForm;
 
         public ObservableCollection<ZTourStep> Steps { get; } = new ObservableCollection<ZTourStep>();
@@ -76,8 +77,11 @@ namespace ZeroUI.WinForms.Overlays
 
             CurrentIndex = Math.Max(0, Math.Min(Steps.Count - 1, startIndex));
 
+            _backdropForm = new ZTourBackdropForm(_owner, this);
+            _backdropForm.Show(_owner);
+
             _overlayForm = new ZTourOverlayForm(_owner, this);
-            _overlayForm.Show(_owner);
+            _overlayForm.Show(_backdropForm);
 
             NavigateToStep(CurrentIndex, -1);
         }
@@ -129,6 +133,17 @@ namespace ZeroUI.WinForms.Overlays
                 _overlayForm = null;
             }
 
+            if (_backdropForm != null)
+            {
+                try
+                {
+                    _backdropForm.Close();
+                    _backdropForm.Dispose();
+                }
+                catch { }
+                _backdropForm = null;
+            }
+
             if (CurrentStep?.OnLeave != null)
             {
                 try { CurrentStep.OnLeave(CurrentStep); } catch { }
@@ -147,6 +162,7 @@ namespace ZeroUI.WinForms.Overlays
             var step = Steps[newIndex];
             try { step.OnEnter?.Invoke(step); } catch { }
 
+            _backdropForm?.UpdateHole(step);
             _overlayForm?.DisplayStep(step, newIndex, Steps.Count);
             StepChanged?.Invoke(this, new ZTourStepChangedEventArgs(prevIndex, newIndex, step));
         }

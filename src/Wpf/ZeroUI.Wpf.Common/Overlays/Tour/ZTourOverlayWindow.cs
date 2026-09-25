@@ -72,10 +72,10 @@ namespace ZeroUI.Wpf.Overlays
             };
             Content = _rootCanvas;
 
-            // 1. Dark Backdrop Mask with Spotlight Cutout
+            // 1. Dark Backdrop Mask with Spotlight Cutout (mờ dịu 50%, thấy rõ cửa sổ bên dưới)
             _maskPath = new Path
             {
-                Fill = new SolidColorBrush(Color.FromArgb(175, 10, 15, 26)), // Deep Obsidian Dim
+                Fill = new SolidColorBrush(Color.FromArgb(135, 10, 15, 26)), // Soft Obsidian Dim
                 IsHitTestVisible = true
             };
             _rootCanvas.Children.Add(_maskPath);

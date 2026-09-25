@@ -171,7 +171,6 @@ All creative photo studio, inspection, color grading, and media controls reside 
 * **`ZTour`** *(WPF & WinForms - New in v2.0.0, Legacy alias: `ZeroTour`)*:
   * Enterprise interactive onboarding tour and product walkthrough engine matching Ant Design `Tour` standards.
   * Features spotlight target highlighting with dark backdrop cutout masking (`CombinedGeometry.Exclude` / GDI+ `Region.Exclude`), glowing animated bounding box, dynamic popover card with directional arrows, step progress badges (`1/4`), dot indicators, and full keyboard navigation (`Escape`, `Right`, `Left`, `Enter`).
-  * ![ZTour Interactive Guide](images/14_ztour_interactive_guide.gif)
 * **`ToolbarControl` & `SideNavControl`**: Anti-aliased action toolbar with collision guard and collapsible vertical navigation bar.
 
 ---
