@@ -1,0 +1,588 @@
+using System;
+using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
+using System.Windows.Shapes;
+using ZeroUI.Wpf.Theme;
+
+namespace ZeroUI.Wpf.Overlays
+{
+    /// <summary>
+    /// Specialized full-surface transparent overlay window hosting the spotlight cutout mask
+    /// and floating tour guide cards for <see cref="ZTour"/>.
+    /// </summary>
+    internal sealed class ZTourOverlayWindow : Window
+    {
+        private readonly ZTour _tour;
+        private readonly Canvas _rootCanvas;
+        private readonly Path _maskPath;
+        private readonly Border _spotlightGlowBorder;
+        private readonly Border _cardBorder;
+        private readonly Polygon _arrowPolygon;
+        private readonly TextBlock _stepBadgeBlock;
+        private readonly TextBlock _titleBlock;
+        private readonly TextBlock _descBlock;
+        private readonly ContentPresenter _customContentPresenter;
+        private readonly StackPanel _dotsPanel;
+        private readonly Button _btnSkip;
+        private readonly Button _btnPrev;
+        private readonly Button _btnNext;
+        private readonly Button _btnClose;
+
+        private readonly Window? _targetOwner;
+        private Rect _currentTargetRect = Rect.Empty;
+
+        public ZTourOverlayWindow(Window owner, ZTour tour)
+        {
+            _tour = tour ?? throw new ArgumentNullException(nameof(tour));
+            _targetOwner = owner;
+
+            if (owner != null && (owner.IsLoaded || owner.IsVisible))
+            {
+                try
+                {
+                    Owner = owner;
+                }
+                catch { }
+            }
+
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            WindowStyle = WindowStyle.None;
+            AllowsTransparency = true;
+            Background = Brushes.Transparent;
+            ShowInTaskbar = false;
+            Focusable = true;
+
+            if (owner != null)
+            {
+                SyncWithWindowBounds(owner);
+                owner.LocationChanged += Owner_BoundsChanged;
+                owner.SizeChanged += Owner_BoundsChanged;
+                owner.StateChanged += Owner_StateChanged;
+            }
+
+            _rootCanvas = new Canvas
+            {
+                ClipToBounds = true,
+                Focusable = false
+            };
+            Content = _rootCanvas;
+
+            // 1. Dark Backdrop Mask with Spotlight Cutout
+            _maskPath = new Path
+            {
+                Fill = new SolidColorBrush(Color.FromArgb(175, 10, 15, 26)), // Deep Obsidian Dim
+                IsHitTestVisible = true
+            };
+            _rootCanvas.Children.Add(_maskPath);
+
+            // 2. Animated Spotlight Target Glow Border
+            _spotlightGlowBorder = new Border
+            {
+                BorderBrush = ZeroWpfTheme.PrimaryAccent,
+                BorderThickness = new Thickness(2),
+                IsHitTestVisible = false,
+                Visibility = Visibility.Collapsed,
+                Effect = new DropShadowEffect
+                {
+                    Color = Color.FromRgb(59, 130, 246),
+                    BlurRadius = 16,
+                    ShadowDepth = 0,
+                    Opacity = 0.8
+                }
+            };
+            _rootCanvas.Children.Add(_spotlightGlowBorder);
+
+            // 3. Arrow Polygon pointing to target
+            _arrowPolygon = new Polygon
+            {
+                Fill = ZeroWpfTheme.BgCard,
+                IsHitTestVisible = false,
+                Visibility = Visibility.Collapsed
+            };
+            _rootCanvas.Children.Add(_arrowPolygon);
+
+            // 4. Tour Guide Popover Card
+            _cardBorder = new Border
+            {
+                Width = 360,
+                Background = ZeroWpfTheme.BgCard,
+                BorderBrush = ZeroWpfTheme.BorderDefault,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Effect = new DropShadowEffect
+                {
+                    BlurRadius = 24,
+                    ShadowDepth = 6,
+                    Opacity = 0.5,
+                    Color = Colors.Black
+                }
+            };
+
+            var cardGrid = new Grid { Margin = new Thickness(16) };
+            cardGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Header
+            cardGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Body
+            cardGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // Footer
+
+            // Header: Step Badge + Title + Close Button
+            var headerGrid = new Grid();
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            _stepBadgeBlock = new TextBlock
+            {
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            var badgeBorder = new Border
+            {
+                Background = ZeroWpfTheme.PrimaryAccent,
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(6, 2, 6, 2),
+                Child = _stepBadgeBlock,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            Grid.SetColumn(badgeBorder, 0);
+            headerGrid.Children.Add(badgeBorder);
+
+            _titleBlock = new TextBlock
+            {
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = ZeroWpfTheme.TextPrimary,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            Grid.SetColumn(_titleBlock, 1);
+            headerGrid.Children.Add(_titleBlock);
+
+            _btnClose = new Button
+            {
+                Content = "✕",
+                Width = 24,
+                Height = 24,
+                Foreground = ZeroWpfTheme.TextMuted,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Cursor = Cursors.Hand,
+                FontSize = 11,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            _btnClose.Click += (s, e) => _tour.Close(completed: false);
+            Grid.SetColumn(_btnClose, 2);
+            headerGrid.Children.Add(_btnClose);
+
+            Grid.SetRow(headerGrid, 0);
+            cardGrid.Children.Add(headerGrid);
+
+            // Body: Description or Custom Content
+            var bodyStack = new StackPanel { Margin = new Thickness(0, 10, 0, 14) };
+
+            _descBlock = new TextBlock
+            {
+                FontSize = 12,
+                LineHeight = 18,
+                Foreground = ZeroWpfTheme.TextSecondary,
+                TextWrapping = TextWrapping.Wrap
+            };
+            bodyStack.Children.Add(_descBlock);
+
+            _customContentPresenter = new ContentPresenter
+            {
+                Visibility = Visibility.Collapsed,
+                Margin = new Thickness(0, 6, 0, 0)
+            };
+            bodyStack.Children.Add(_customContentPresenter);
+
+            Grid.SetRow(bodyStack, 1);
+            cardGrid.Children.Add(bodyStack);
+
+            // Footer: Indicators (left) + Action Buttons (right)
+            var footerGrid = new Grid();
+            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            footerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            _dotsPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            Grid.SetColumn(_dotsPanel, 0);
+            footerGrid.Children.Add(_dotsPanel);
+
+            var buttonsStack = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            _btnSkip = new Button
+            {
+                Content = "Bỏ qua",
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                Foreground = ZeroWpfTheme.TextMuted,
+                FontSize = 11,
+                Padding = new Thickness(8, 4, 8, 4),
+                Cursor = Cursors.Hand,
+                Margin = new Thickness(0, 0, 6, 0)
+            };
+            _btnSkip.Click += (s, e) => _tour.Close(completed: false);
+            buttonsStack.Children.Add(_btnSkip);
+
+            _btnPrev = new Button
+            {
+                Content = "Quay lại",
+                Background = ZeroWpfTheme.BgInput,
+                BorderBrush = ZeroWpfTheme.BorderDefault,
+                BorderThickness = new Thickness(1),
+                Foreground = ZeroWpfTheme.TextPrimary,
+                FontSize = 11,
+                Padding = new Thickness(10, 4, 10, 4),
+                Cursor = Cursors.Hand,
+                Margin = new Thickness(0, 0, 6, 0)
+            };
+            _btnPrev.Click += (s, e) => _tour.Previous();
+            buttonsStack.Children.Add(_btnPrev);
+
+            _btnNext = new Button
+            {
+                Content = "Tiếp theo",
+                Background = ZeroWpfTheme.PrimaryAccent,
+                BorderThickness = new Thickness(0),
+                Foreground = Brushes.White,
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 11,
+                Padding = new Thickness(14, 5, 14, 5),
+                Cursor = Cursors.Hand
+            };
+            _btnNext.Click += (s, e) => _tour.Next();
+            buttonsStack.Children.Add(_btnNext);
+
+            Grid.SetColumn(buttonsStack, 1);
+            footerGrid.Children.Add(buttonsStack);
+
+            Grid.SetRow(footerGrid, 2);
+            cardGrid.Children.Add(footerGrid);
+
+            _cardBorder.Child = cardGrid;
+            _rootCanvas.Children.Add(_cardBorder);
+
+            PreviewKeyDown += OnWindowKeyDown;
+        }
+
+        public void DisplayStep(ZTourStep step, int currentIndex, int totalCount)
+        {
+            if (step == null) return;
+
+            // 1. Cập nhật dữ liệu hiển thị trên Card
+            _stepBadgeBlock.Text = $"{currentIndex + 1}/{totalCount}";
+            _titleBlock.Text = step.Title;
+            _descBlock.Text = step.Description;
+
+            if (step.CustomContent != null)
+            {
+                _customContentPresenter.Content = step.CustomContent;
+                _customContentPresenter.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _customContentPresenter.Visibility = Visibility.Collapsed;
+            }
+
+            // 2. Nút điều hướng
+            _btnPrev.Visibility = currentIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
+            _btnPrev.Content = step.PrevButtonText ?? "Quay lại";
+
+            bool isLast = (currentIndex == totalCount - 1);
+            _btnNext.Content = step.NextButtonText ?? (isLast ? "Hoàn tất" : "Tiếp theo");
+            _btnSkip.Visibility = isLast ? Visibility.Collapsed : Visibility.Visible;
+
+            // 3. Render Dot indicators
+            RenderDots(currentIndex, totalCount);
+
+            // 4. Tính toán Target Bounding Box
+            _currentTargetRect = ResolveTargetRect(step);
+
+            // 5. Cập nhật Spotlight Cutout Mask
+            UpdateSpotlightMask(step, _currentTargetRect);
+
+            // 6. Định vị Popover Card
+            PositionCard(step, _currentTargetRect);
+        }
+
+        private void RenderDots(int currentIndex, int totalCount)
+        {
+            _dotsPanel.Children.Clear();
+            for (int i = 0; i < totalCount; i++)
+            {
+                bool active = (i == currentIndex);
+                var dot = new Border
+                {
+                    Width = active ? 14 : 6,
+                    Height = 6,
+                    CornerRadius = new CornerRadius(3),
+                    Background = active ? ZeroWpfTheme.PrimaryAccent : ZeroWpfTheme.BorderDefault,
+                    Margin = new Thickness(0, 0, 4, 0)
+                };
+                _dotsPanel.Children.Add(dot);
+            }
+        }
+
+        private Rect ResolveTargetRect(ZTourStep step)
+        {
+            UIElement? target = step.Target;
+
+            if (target == null && !string.IsNullOrWhiteSpace(step.TargetName) && Owner != null)
+            {
+                target = Owner.FindName(step.TargetName) as UIElement;
+            }
+
+            if (target == null || !target.IsVisible)
+                return Rect.Empty;
+
+            try
+            {
+                // Chuyển đổi tọa độ từ target sang tọa độ màn hình Window Overlay
+                var transform = target.TransformToVisual(this);
+                var renderSize = target.RenderSize;
+                var rawRect = new Rect(0, 0, renderSize.Width, renderSize.Height);
+                var bounds = transform.TransformBounds(rawRect);
+
+                var pad = step.TargetPadding;
+                return new Rect(
+                    bounds.Left - pad.Left,
+                    bounds.Top - pad.Top,
+                    Math.Max(10, bounds.Width + pad.Left + pad.Right),
+                    Math.Max(10, bounds.Height + pad.Top + pad.Bottom));
+            }
+            catch
+            {
+                return Rect.Empty;
+            }
+        }
+
+        private void UpdateSpotlightMask(ZTourStep step, Rect targetRect)
+        {
+            double width = Math.Max(10, ActualWidth);
+            double height = Math.Max(10, ActualHeight);
+
+            if (!step.Mask)
+            {
+                _maskPath.Data = null;
+                _spotlightGlowBorder.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            var fullWindowGeom = new RectangleGeometry(new Rect(0, 0, width, height));
+
+            if (targetRect.IsEmpty)
+            {
+                // Toàn màn hình bị mờ, không có khoét lỗ (Welcome Step)
+                _maskPath.Data = fullWindowGeom;
+                _spotlightGlowBorder.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                // Khoét lỗ spotlight tại targetRect
+                var holeGeom = new RectangleGeometry(targetRect, step.CornerRadius, step.CornerRadius);
+                var combined = new CombinedGeometry(GeometryCombineMode.Exclude, fullWindowGeom, holeGeom);
+                _maskPath.Data = combined;
+
+                // Border phát sáng
+                _spotlightGlowBorder.Visibility = Visibility.Visible;
+                _spotlightGlowBorder.Width = targetRect.Width;
+                _spotlightGlowBorder.Height = targetRect.Height;
+                _spotlightGlowBorder.CornerRadius = new CornerRadius(step.CornerRadius);
+                Canvas.SetLeft(_spotlightGlowBorder, targetRect.Left);
+                Canvas.SetTop(_spotlightGlowBorder, targetRect.Top);
+            }
+        }
+
+        private void PositionCard(ZTourStep step, Rect targetRect)
+        {
+            _cardBorder.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            double cardW = _cardBorder.DesiredSize.Width > 0 ? _cardBorder.DesiredSize.Width : 360;
+            double cardH = _cardBorder.DesiredSize.Height > 0 ? _cardBorder.DesiredSize.Height : 160;
+
+            double cardX;
+            double cardY;
+            ZTourPlacement placement = step.Placement;
+
+            if (targetRect.IsEmpty || placement == ZTourPlacement.Center)
+            {
+                // Canh giữa màn hình
+                cardX = (ActualWidth - cardW) / 2.0;
+                cardY = (ActualHeight - cardH) / 2.0;
+                _arrowPolygon.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                if (placement == ZTourPlacement.Auto)
+                {
+                    // Tự động tìm vị trí thông minh
+                    if (targetRect.Bottom + cardH + 20 <= ActualHeight)
+                        placement = ZTourPlacement.Bottom;
+                    else if (targetRect.Top - cardH - 20 >= 0)
+                        placement = ZTourPlacement.Top;
+                    else if (targetRect.Right + cardW + 20 <= ActualWidth)
+                        placement = ZTourPlacement.Right;
+                    else
+                        placement = ZTourPlacement.Left;
+                }
+
+                switch (placement)
+                {
+                    case ZTourPlacement.Top:
+                        cardX = targetRect.Left + (targetRect.Width - cardW) / 2.0;
+                        cardY = targetRect.Top - cardH - 12;
+                        BuildArrow(targetRect.Left + targetRect.Width / 2.0, targetRect.Top, ZTourPlacement.Top);
+                        break;
+
+                    case ZTourPlacement.Bottom:
+                        cardX = targetRect.Left + (targetRect.Width - cardW) / 2.0;
+                        cardY = targetRect.Bottom + 12;
+                        BuildArrow(targetRect.Left + targetRect.Width / 2.0, targetRect.Bottom, ZTourPlacement.Bottom);
+                        break;
+
+                    case ZTourPlacement.Left:
+                        cardX = targetRect.Left - cardW - 12;
+                        cardY = targetRect.Top + (targetRect.Height - cardH) / 2.0;
+                        BuildArrow(targetRect.Left, targetRect.Top + targetRect.Height / 2.0, ZTourPlacement.Left);
+                        break;
+
+                    case ZTourPlacement.Right:
+                        cardX = targetRect.Right + 12;
+                        cardY = targetRect.Top + (targetRect.Height - cardH) / 2.0;
+                        BuildArrow(targetRect.Right, targetRect.Top + targetRect.Height / 2.0, ZTourPlacement.Right);
+                        break;
+
+                    default:
+                        cardX = (ActualWidth - cardW) / 2.0;
+                        cardY = (ActualHeight - cardH) / 2.0;
+                        _arrowPolygon.Visibility = Visibility.Collapsed;
+                        break;
+                }
+            }
+
+            // Kẹp toạ độ trong màn hình để không bị tràn
+            cardX = Math.Max(16, Math.Min(ActualWidth - cardW - 16, cardX));
+            cardY = Math.Max(16, Math.Min(ActualHeight - cardH - 16, cardY));
+
+            Canvas.SetLeft(_cardBorder, cardX);
+            Canvas.SetTop(_cardBorder, cardY);
+        }
+
+        private void BuildArrow(double targetPointX, double targetPointY, ZTourPlacement placement)
+        {
+            _arrowPolygon.Points.Clear();
+            _arrowPolygon.Visibility = Visibility.Visible;
+
+            const double arrowSize = 8;
+            switch (placement)
+            {
+                case ZTourPlacement.Bottom:
+                    _arrowPolygon.Points.Add(new Point(targetPointX, targetPointY + 4));
+                    _arrowPolygon.Points.Add(new Point(targetPointX - arrowSize, targetPointY + 12));
+                    _arrowPolygon.Points.Add(new Point(targetPointX + arrowSize, targetPointY + 12));
+                    break;
+
+                case ZTourPlacement.Top:
+                    _arrowPolygon.Points.Add(new Point(targetPointX, targetPointY - 4));
+                    _arrowPolygon.Points.Add(new Point(targetPointX - arrowSize, targetPointY - 12));
+                    _arrowPolygon.Points.Add(new Point(targetPointX + arrowSize, targetPointY - 12));
+                    break;
+
+                case ZTourPlacement.Right:
+                    _arrowPolygon.Points.Add(new Point(targetPointX + 4, targetPointY));
+                    _arrowPolygon.Points.Add(new Point(targetPointX + 12, targetPointY - arrowSize));
+                    _arrowPolygon.Points.Add(new Point(targetPointX + 12, targetPointY + arrowSize));
+                    break;
+
+                case ZTourPlacement.Left:
+                    _arrowPolygon.Points.Add(new Point(targetPointX - 4, targetPointY));
+                    _arrowPolygon.Points.Add(new Point(targetPointX - 12, targetPointY - arrowSize));
+                    _arrowPolygon.Points.Add(new Point(targetPointX - 12, targetPointY + arrowSize));
+                    break;
+            }
+        }
+
+        private void SyncWithWindowBounds(Window owner)
+        {
+            if (owner == null) return;
+
+            if (owner.WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Maximized;
+            }
+            else
+            {
+                WindowState = WindowState.Normal;
+                Left = owner.Left;
+                Top = owner.Top;
+                Width = Math.Max(100, owner.ActualWidth);
+                Height = Math.Max(100, owner.ActualHeight);
+            }
+        }
+
+        private void Owner_BoundsChanged(object? sender, EventArgs e)
+        {
+            if (Owner != null)
+            {
+                SyncWithWindowBounds(Owner);
+                if (_tour.CurrentStep != null)
+                {
+                    DisplayStep(_tour.CurrentStep, _tour.CurrentIndex, _tour.Steps.Count);
+                }
+            }
+        }
+
+        private void Owner_StateChanged(object? sender, EventArgs e)
+        {
+            if (Owner != null)
+            {
+                SyncWithWindowBounds(Owner);
+            }
+        }
+
+        private void OnWindowKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                _tour.Close(completed: false);
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Right || e.Key == Key.Enter)
+            {
+                _tour.Next();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Left)
+            {
+                _tour.Previous();
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_targetOwner != null)
+            {
+                _targetOwner.LocationChanged -= Owner_BoundsChanged;
+                _targetOwner.SizeChanged -= Owner_BoundsChanged;
+                _targetOwner.StateChanged -= Owner_StateChanged;
+            }
+            base.OnClosed(e);
+        }
+    }
+}

@@ -168,6 +168,9 @@ All creative photo studio, inspection, color grading, and media controls reside 
 * **`ProcessMap`**: Interactive business process flowchart & workflow navigation map with customizable UserControl action triggers, orthogonal routing, and JSON serialization.
 * **`SpreadsheetControl`**: High-performance vector spreadsheet engine with formula evaluation (`SUM`, `AVERAGE`, `MIN`, `MAX`, `IF`), interactive formula bar, and in-place editing.
 * **`PdfViewerControl`**: Vector CAD schematic and technical PDF document viewer with continuous vertical scrolling, zoom (Fit Width, 25%–400%), and full-text search highlights.
+* **`ZTour`** *(WPF & WinForms - New in v2.0.0, Legacy alias: `ZeroTour`)*:
+  * Enterprise interactive onboarding tour and product walkthrough engine matching Ant Design `Tour` standards.
+  * Features spotlight target highlighting with dark backdrop cutout masking (`CombinedGeometry.Exclude` / GDI+ `Region.Exclude`), glowing animated bounding box, dynamic popover card with directional arrows, step progress badges (`1/4`), dot indicators, and full keyboard navigation (`Escape`, `Right`, `Left`, `Enter`).
 * **`ToolbarControl` & `SideNavControl`**: Anti-aliased action toolbar with collision guard and collapsible vertical navigation bar.
 
 ---
