@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Navigation
@@ -343,7 +344,7 @@ namespace ZeroUI.WinForms.Navigation
 
             // Search Icon
             Rectangle iconRect = new Rectangle(_searchBoxRect.Left + 8, _searchBoxRect.Top, 18, _searchBoxRect.Height);
-            TextRenderer.DrawText(g, "🔍", new Font("Segoe UI", 9f), iconRect, palette.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(g, "🔍", ZeroFontCache.Get("Segoe UI", 9f), iconRect, palette.TextSecondary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
             // Text or Placeholder
             Rectangle textRect = new Rectangle(_searchBoxRect.Left + 28, _searchBoxRect.Top, _searchBoxRect.Width - 48, _searchBoxRect.Height);
@@ -377,7 +378,7 @@ namespace ZeroUI.WinForms.Navigation
             if (!string.IsNullOrEmpty(group.Glyph))
             {
                 Rectangle glyphRect = new Rectangle(x, group.Bounds.Top, 22, group.Bounds.Height);
-                TextRenderer.DrawText(g, group.Glyph, new Font("Segoe UI", 10.5f), glyphRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, group.Glyph, ZeroFontCache.Get("Segoe UI", 10.5f), glyphRect, palette.TextPrimary, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
                 x += 24;
             }
 
@@ -395,13 +396,13 @@ namespace ZeroUI.WinForms.Navigation
                 using var bPath = ZeroUIConfig.CreateRoundedRectangle(bRect, 9);
                 using var bBrush = new SolidBrush(bColor);
                 g.FillPath(bBrush, bPath);
-                TextRenderer.DrawText(g, group.BadgeText, new Font(Font.FontFamily, 7.5f, FontStyle.Bold), bRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, group.BadgeText, ZeroFontCache.Get(Font.FontFamily.Name, 7.5f, FontStyle.Bold), bRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
 
             // Chevron (▼ or ▶)
             group.ChevronBounds = new Rectangle(group.Bounds.Right - 22, group.Bounds.Top, 18, group.Bounds.Height);
             string chevron = isExpanded ? "▼" : "▶";
-            TextRenderer.DrawText(g, chevron, new Font("Segoe UI", 7.5f), group.ChevronBounds, palette.TextSecondary, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(g, chevron, ZeroFontCache.Get("Segoe UI", 7.5f), group.ChevronBounds, palette.TextSecondary, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
         private void DrawItem(Graphics g, AccordionItem item, ZeroThemePalette palette)
@@ -430,7 +431,7 @@ namespace ZeroUI.WinForms.Navigation
             if (!string.IsNullOrEmpty(item.Glyph))
             {
                 Rectangle glyphRect = new Rectangle(x, item.Bounds.Top, 18, item.Bounds.Height);
-                TextRenderer.DrawText(g, item.Glyph, new Font("Segoe UI", 9f), glyphRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, item.Glyph, ZeroFontCache.Get("Segoe UI", 9f), glyphRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
                 x += 20;
             }
 
@@ -449,7 +450,7 @@ namespace ZeroUI.WinForms.Navigation
                 using var bPath = ZeroUIConfig.CreateRoundedRectangle(bRect, 8);
                 using var bBrush = new SolidBrush(bColor);
                 g.FillPath(bBrush, bPath);
-                TextRenderer.DrawText(g, item.BadgeText, new Font(Font.FontFamily, 7f, FontStyle.Bold), bRect, bTextColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, item.BadgeText, ZeroFontCache.Get(Font.FontFamily.Name, 7f, FontStyle.Bold), bRect, bTextColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
         }
 

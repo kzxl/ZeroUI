@@ -8,6 +8,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Data;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Navigation
@@ -386,7 +387,7 @@ namespace ZeroUI.WinForms.Navigation
                 Color textColor = isLast ? textPrimary : textMuted;
                 if (i == _hoveredCrumbIndex) textColor = activeAccent;
 
-                TextRenderer.DrawText(g, crumbText, isLast ? new Font(Font, FontStyle.Bold) : Font,
+                TextRenderer.DrawText(g, crumbText, isLast ? ZeroFontCache.Get(Font.FontFamily.Name, Font.Size, FontStyle.Bold) : Font,
                     crumbRect, textColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
 
                 curX += crumbW + 2;

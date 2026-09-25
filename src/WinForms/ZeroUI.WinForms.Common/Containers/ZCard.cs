@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Containers
@@ -545,7 +546,7 @@ namespace ZeroUI.WinForms.Containers
                 TextRenderer.DrawText(
                     g,
                     _stepNumber.Value.ToString(),
-                    new Font("Segoe UI", 9f * _currentDpiScale, FontStyle.Bold),
+                    ZeroFontCache.Get("Segoe UI", 9f * _currentDpiScale, FontStyle.Bold),
                     badgeRect,
                     Color.White,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);

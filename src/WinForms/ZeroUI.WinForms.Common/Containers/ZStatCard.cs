@@ -7,6 +7,7 @@ using ZeroUI.Core.Editors;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Containers
@@ -133,7 +134,7 @@ namespace ZeroUI.WinForms.Containers
             TextRenderer.DrawText(
                 g,
                 _title,
-                new Font("Segoe UI", 8.5f, FontStyle.Regular),
+                ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Regular),
                 titleRect,
                 palette.TextSecondary,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
@@ -145,7 +146,7 @@ namespace ZeroUI.WinForms.Containers
             TextRenderer.DrawText(
                 g,
                 fullVal,
-                new Font("Segoe UI", 18f, FontStyle.Bold),
+                ZeroFontCache.Get("Segoe UI", 18f, FontStyle.Bold),
                 valRect,
                 effValCol,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
@@ -162,7 +163,7 @@ namespace ZeroUI.WinForms.Containers
                 TextRenderer.DrawText(
                     g,
                     trendFull,
-                    new Font("Segoe UI", 8f, FontStyle.Bold),
+                    ZeroFontCache.Get("Segoe UI", 8f, FontStyle.Bold),
                     trendRect,
                     trendColor,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter);

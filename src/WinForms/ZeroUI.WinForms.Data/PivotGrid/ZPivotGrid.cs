@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using ZeroUI.Core.Localization;
 using ZeroUI.Core.Pivot;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.PivotGrid
@@ -326,7 +327,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 using (var tBrush = new SolidBrush(colors.TextSecondary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-                    g.DrawString($"{rowTitle} \\ {colTitle}", new Font("Segoe UI", 8.5f, FontStyle.Bold), tBrush, new Rectangle(6, _headerAreaHeight, _rowHeaderWidth - 12, _columnHeaderHeight), sf);
+                    g.DrawString($"{rowTitle} \\ {colTitle}", ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold), tBrush, new Rectangle(6, _headerAreaHeight, _rowHeaderWidth - 12, _columnHeaderHeight), sf);
                 }
             }
 
@@ -385,7 +386,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 using (var tBrush = new SolidBrush(f.Area == PivotArea.FilterArea ? colors.TextPrimary : Color.White))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(text, new Font("Segoe UI", 8.5f, FontStyle.Bold), tBrush, badgeRect, sf);
+                    g.DrawString(text, ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold), tBrush, badgeRect, sf);
                 }
 
                 curX += badgeWidth + 6;
@@ -408,7 +409,7 @@ namespace ZeroUI.WinForms.PivotGrid
             using (var tBrush = new SolidBrush(_hoverFieldListBtn ? colors.Primary : colors.TextPrimary))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("⚙ Field List", new Font("Segoe UI", 8.2f, FontStyle.Bold), tBrush, _fieldListButtonRect, sf);
+                g.DrawString("⚙ Field List", ZeroFontCache.Get("Segoe UI", 8.2f, FontStyle.Bold), tBrush, _fieldListButtonRect, sf);
             }
         }
 
@@ -440,7 +441,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 using (var brush = new SolidBrush(colors.TextPrimary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter };
-                    g.DrawString(title, new Font("Segoe UI", 8.5f, FontStyle.Bold), brush, cellRect, sf);
+                    g.DrawString(title, ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold), brush, cellRect, sf);
                 }
             }
 
@@ -458,7 +459,7 @@ namespace ZeroUI.WinForms.PivotGrid
             using (var brush = new SolidBrush(colors.Primary))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(Localizer.GetString(StringId.PivotGrandTotal), new Font("Segoe UI", 8.5f, FontStyle.Bold), brush, gtRect, sf);
+                g.DrawString(Localizer.GetString(StringId.PivotGrandTotal), ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold), brush, gtRect, sf);
             }
 
             g.Clip = prevClip;
@@ -510,7 +511,7 @@ namespace ZeroUI.WinForms.PivotGrid
             using (var brush = new SolidBrush(colors.Primary))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-                g.DrawString(Localizer.GetString(StringId.PivotGrandTotal), new Font("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(8, gtY, _rowHeaderWidth - 12, _cellHeight), sf);
+                g.DrawString(Localizer.GetString(StringId.PivotGrandTotal), ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(8, gtY, _rowHeaderWidth - 12, _cellHeight), sf);
             }
 
             g.Clip = prevClip;
@@ -571,7 +572,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 using (var brush = new SolidBrush(colors.TextPrimary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-                    g.DrawString(rTotText, new Font("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(rTotX + 4, y, _cellWidth - 10, _cellHeight), sf);
+                    g.DrawString(rTotText, ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(rTotX + 4, y, _cellWidth - 10, _cellHeight), sf);
                 }
             }
 
@@ -595,7 +596,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 using (var brush = new SolidBrush(colors.TextPrimary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-                    g.DrawString(cTotText, new Font("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(x + 4, botY, _cellWidth - 10, _cellHeight), sf);
+                    g.DrawString(cTotText, ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(x + 4, botY, _cellWidth - 10, _cellHeight), sf);
                 }
             }
 
@@ -616,7 +617,7 @@ namespace ZeroUI.WinForms.PivotGrid
             using (var brush = new SolidBrush(Color.White))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-                g.DrawString(gtText, new Font("Segoe UI", 9.5f, FontStyle.Bold), brush, new Rectangle(gtX + 4, botY, _cellWidth - 10, _cellHeight), sf);
+                g.DrawString(gtText, ZeroFontCache.Get("Segoe UI", 9.5f, FontStyle.Bold), brush, new Rectangle(gtX + 4, botY, _cellWidth - 10, _cellHeight), sf);
             }
         }
 

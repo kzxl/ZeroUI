@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Workflow
@@ -207,7 +208,7 @@ namespace ZeroUI.WinForms.Workflow
                 TextRenderer.DrawText(
                     g,
                     glyphChar,
-                    new Font("Segoe UI", 12f, FontStyle.Bold),
+                    ZeroFontCache.Get("Segoe UI", 12f, FontStyle.Bold),
                     iconRect,
                     iconCol,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
@@ -261,7 +262,7 @@ namespace ZeroUI.WinForms.Workflow
                     TextRenderer.DrawText(
                         g,
                         "→",
-                        new Font("Segoe UI", 13f, FontStyle.Bold),
+                        ZeroFontCache.Get("Segoe UI", 13f, FontStyle.Bold),
                         arrowRect,
                         Color.FromArgb(59, 130, 246),
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);

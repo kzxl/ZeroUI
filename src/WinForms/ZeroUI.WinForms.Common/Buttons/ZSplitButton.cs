@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -363,7 +364,7 @@ namespace ZeroUI.WinForms.Editors
             TextRenderer.DrawText(
                 g,
                 "▾",
-                new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ZeroFontCache.Get("Segoe UI", 8.5f, FontStyle.Bold),
                 dropTextRect,
                 fg,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 using ZeroUI.Core.Notification;
 
@@ -272,7 +273,7 @@ namespace ZeroUI.WinForms.Overlays
             TextRenderer.DrawText(
                 g,
                 iconChar,
-                new Font("Segoe UI", 12f, FontStyle.Bold),
+                ZeroFontCache.Get("Segoe UI", 12f, FontStyle.Bold),
                 iconRect,
                 accentColor,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
@@ -284,7 +285,7 @@ namespace ZeroUI.WinForms.Overlays
             TextRenderer.DrawText(
                 g,
                 "✕",
-                new Font("Segoe UI", 9f, FontStyle.Bold),
+                ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold),
                 _closeButtonRect,
                 closeColor,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);

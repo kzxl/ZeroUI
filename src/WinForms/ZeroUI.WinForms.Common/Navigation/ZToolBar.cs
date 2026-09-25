@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Navigation
@@ -339,7 +340,7 @@ namespace ZeroUI.WinForms.Navigation
                 if (!string.IsNullOrEmpty(item.Glyph))
                 {
                     Rectangle glyphRect = new Rectangle(contentX, item.Bounds.Top, 20, item.Bounds.Height);
-                    TextRenderer.DrawText(g, item.Glyph, new Font("Segoe UI", 10.5f, FontStyle.Regular), glyphRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, item.Glyph, ZeroFontCache.Get("Segoe UI", 10.5f, FontStyle.Regular), glyphRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
                     contentX += 22;
                 }
 
@@ -357,7 +358,7 @@ namespace ZeroUI.WinForms.Navigation
                 if (item is ToolbarDropdown)
                 {
                     Rectangle chevRect = new Rectangle(contentX, item.Bounds.Top, 14, item.Bounds.Height);
-                    TextRenderer.DrawText(g, "▾", new Font("Segoe UI", 9f, FontStyle.Regular), chevRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, "▾", ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Regular), chevRect, textColor, TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
                     contentX += 14;
                 }
 

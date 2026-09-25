@@ -4,6 +4,7 @@ using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Feedback
@@ -124,7 +125,7 @@ namespace ZeroUI.WinForms.Feedback
             TextRenderer.DrawText(
                 g,
                 iconChar,
-                new Font("Segoe UI", 11f, FontStyle.Bold),
+                ZeroFontCache.Get("Segoe UI", 11f, FontStyle.Bold),
                 iconRect,
                 iconCol,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
@@ -160,7 +161,7 @@ namespace ZeroUI.WinForms.Feedback
             {
                 _closeRect = new Rectangle(Width - 28, centerY - 10, 20, 20);
                 Color closeColor = _isCloseHovered ? palette.TextPrimary : palette.TextSecondary;
-                TextRenderer.DrawText(g, "✕", new Font("Segoe UI", 9f, FontStyle.Bold), _closeRect, closeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, "✕", ZeroFontCache.Get("Segoe UI", 9f, FontStyle.Bold), _closeRect, closeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
             else
             {

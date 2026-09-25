@@ -8,6 +8,7 @@ using ZeroUI.Core.Data;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Navigation
@@ -483,7 +484,7 @@ namespace ZeroUI.WinForms.Navigation
                         TextRenderer.DrawText(
                             g,
                             btn.Text,
-                            new Font(Font, FontStyle.Bold),
+                            ZeroFontCache.Get(Font.FontFamily.Name, Font.Size, FontStyle.Bold),
                             btn.Bounds,
                             Color.White,
                             TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);

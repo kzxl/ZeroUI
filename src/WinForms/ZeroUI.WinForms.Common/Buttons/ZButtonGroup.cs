@@ -8,6 +8,7 @@ using ZeroUI.Core.Editors;
 using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Icons;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Editors
@@ -216,7 +217,7 @@ namespace ZeroUI.WinForms.Editors
 
             if (!string.IsNullOrEmpty(item.BadgeText))
             {
-                Size badgeSize = TextRenderer.MeasureText(g, item.BadgeText, new Font("Segoe UI", 7.5f, FontStyle.Bold));
+                Size badgeSize = TextRenderer.MeasureText(g, item.BadgeText, ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold));
                 w += Math.Max(18, badgeSize.Width + 8) + 6;
             }
             else if (item.ShowBadgeDot)
@@ -600,7 +601,7 @@ namespace ZeroUI.WinForms.Editors
                     TextRenderer.DrawText(
                         g,
                         textToDraw,
-                        item.IsChecked ? new Font(Font, FontStyle.Bold) : Font,
+                        item.IsChecked ? ZeroFontCache.Get(Font.FontFamily.Name, Font.Size, FontStyle.Bold) : Font,
                         textRect,
                         itemFg,
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
@@ -625,7 +626,7 @@ namespace ZeroUI.WinForms.Editors
                     if (!string.IsNullOrEmpty(item.BadgeText))
                     {
                         Color badgeBgColor = ParseHexColor(item.BadgeColorHex, Color.FromArgb(220, 38, 38));
-                        Size badgeSize = TextRenderer.MeasureText(item.BadgeText, new Font("Segoe UI", 7.5f, FontStyle.Bold));
+                        Size badgeSize = TextRenderer.MeasureText(item.BadgeText, ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold));
                         int badgeW = Math.Max(18, badgeSize.Width + 8);
                         int badgeH = 16;
                         Rectangle badgeRect = new Rectangle(bounds.Right - badgeW - 6, (bounds.Height - badgeH) / 2, badgeW, badgeH);
@@ -637,7 +638,7 @@ namespace ZeroUI.WinForms.Editors
                         TextRenderer.DrawText(
                             g,
                             item.BadgeText,
-                            new Font("Segoe UI", 7.5f, FontStyle.Bold),
+                            ZeroFontCache.Get("Segoe UI", 7.5f, FontStyle.Bold),
                             badgeRect,
                             Color.White,
                             TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);

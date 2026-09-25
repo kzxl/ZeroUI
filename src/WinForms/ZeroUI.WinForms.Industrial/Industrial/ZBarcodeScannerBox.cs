@@ -4,6 +4,7 @@ using ZeroUI.WinForms.Icons;using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ZeroUI.WinForms.Rendering;
 using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Industrial
@@ -214,7 +215,7 @@ namespace ZeroUI.WinForms.Industrial
 
             // 2. Draw Barcode Icon glyph (||||)
             Rectangle iconRect = new Rectangle(10, (Height - 16) / 2, 18, 16);
-            TextRenderer.DrawText(g, "❚❙❘", new Font("Segoe UI", 10f, FontStyle.Bold), iconRect, _isFocused ? Color.FromArgb(79, 70, 229) : Color.FromArgb(156, 163, 175), TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(g, "❚❙❘", ZeroFontCache.Get("Segoe UI", 10f, FontStyle.Bold), iconRect, _isFocused ? Color.FromArgb(79, 70, 229) : Color.FromArgb(156, 163, 175), TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
 
             // 3. Draw Placeholder when empty
             if (string.IsNullOrEmpty(_textBox.Text) && !_isFocused)
