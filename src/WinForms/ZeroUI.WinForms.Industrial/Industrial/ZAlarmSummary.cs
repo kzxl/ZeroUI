@@ -158,6 +158,7 @@ namespace ZeroUI.WinForms.Industrial
                 var a = _alarms[_selectedRowIndex];
                 if (a.State == AlarmState.Active && a.AcknowledgedTime == null)
                 {
+                    a.State = AlarmState.Acknowledged;
                     a.AcknowledgedTime = DateTime.Now;
                     a.AcknowledgedBy = "Operator";
                     AlarmAcknowledged?.Invoke(this, new AlarmActionEventArgs(a));
@@ -170,6 +171,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             foreach (var a in _alarms.Where(x => x.State == AlarmState.Active && x.AcknowledgedTime == null))
             {
+                a.State = AlarmState.Acknowledged;
                 a.AcknowledgedTime = DateTime.Now;
                 a.AcknowledgedBy = "Operator";
                 AlarmAcknowledged?.Invoke(this, new AlarmActionEventArgs(a));

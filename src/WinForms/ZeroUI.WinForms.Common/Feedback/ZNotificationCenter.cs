@@ -172,6 +172,7 @@ namespace ZeroUI.WinForms.Feedback
 
         private void UpdateScrollBounds()
         {
+            if (_scrollBar == null) return;
             int totalHeight = _notifications.Count * ItemHeight;
             int viewHeight = Height - HeaderHeight;
 
