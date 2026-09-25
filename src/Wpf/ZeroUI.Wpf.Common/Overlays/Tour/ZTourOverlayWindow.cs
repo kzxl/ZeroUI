@@ -339,13 +339,28 @@ namespace ZeroUI.Wpf.Overlays
             }
         }
 
+        private static FrameworkElement? FindChildByName(DependencyObject? parent, string name)
+        {
+            if (parent == null || string.IsNullOrWhiteSpace(name)) return null;
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is FrameworkElement fe && fe.Name == name)
+                    return fe;
+                var nested = FindChildByName(child, name);
+                if (nested != null) return nested;
+            }
+            return null;
+        }
+
         private Rect ResolveTargetRect(ZTourStep step)
         {
             UIElement? target = step.Target;
 
             if (target == null && !string.IsNullOrWhiteSpace(step.TargetName) && Owner != null)
             {
-                target = Owner.FindName(step.TargetName) as UIElement;
+                target = (Owner.FindName(step.TargetName) as UIElement) ?? FindChildByName(Owner, step.TargetName);
             }
 
             if (target == null || !target.IsVisible)
@@ -353,18 +368,37 @@ namespace ZeroUI.Wpf.Overlays
 
             try
             {
-                // Chuyển đổi tọa độ từ target sang tọa độ màn hình Window Overlay
-                var transform = target.TransformToVisual(this);
-                var renderSize = target.RenderSize;
-                var rawRect = new Rect(0, 0, renderSize.Width, renderSize.Height);
-                var bounds = transform.TransformBounds(rawRect);
+                // Chuyển đổi tọa độ từ target sang tọa độ màn hình thực tế (an toàn giữa các Visual Tree khác nhau)
+                Point screenTopLeft = target.PointToScreen(new Point(0, 0));
+                Point overlayTopLeft;
+
+                var source = PresentationSource.FromVisual(this);
+                if (source?.CompositionTarget != null)
+                {
+                    overlayTopLeft = PointFromScreen(screenTopLeft);
+                }
+                else
+                {
+                    var dpi = VisualTreeHelper.GetDpi(this);
+                    overlayTopLeft = new Point(
+                        (screenTopLeft.X / dpi.DpiScaleX) - Left,
+                        (screenTopLeft.Y / dpi.DpiScaleY) - Top);
+                }
+
+                double renderW = target.RenderSize.Width;
+                double renderH = target.RenderSize.Height;
+                if ((renderW <= 0 || renderH <= 0) && target is FrameworkElement fe)
+                {
+                    renderW = fe.ActualWidth;
+                    renderH = fe.ActualHeight;
+                }
 
                 var pad = step.TargetPadding;
                 return new Rect(
-                    bounds.Left - pad.Left,
-                    bounds.Top - pad.Top,
-                    Math.Max(10, bounds.Width + pad.Left + pad.Right),
-                    Math.Max(10, bounds.Height + pad.Top + pad.Bottom));
+                    overlayTopLeft.X - pad.Left,
+                    overlayTopLeft.Y - pad.Top,
+                    Math.Max(10, renderW + pad.Left + pad.Right),
+                    Math.Max(10, renderH + pad.Top + pad.Bottom));
             }
             catch
             {
@@ -380,6 +414,7 @@ namespace ZeroUI.Wpf.Overlays
             if (!step.Mask)
             {
                 _maskPath.Data = null;
+                _spotlightGlowBorder.BeginAnimation(UIElement.OpacityProperty, null);
                 _spotlightGlowBorder.Visibility = Visibility.Collapsed;
                 return;
             }
@@ -390,22 +425,34 @@ namespace ZeroUI.Wpf.Overlays
             {
                 // Toàn màn hình bị mờ, không có khoét lỗ (Welcome Step)
                 _maskPath.Data = fullWindowGeom;
+                _spotlightGlowBorder.BeginAnimation(UIElement.OpacityProperty, null);
                 _spotlightGlowBorder.Visibility = Visibility.Collapsed;
             }
             else
             {
                 // Khoét lỗ spotlight tại targetRect
-                var holeGeom = new RectangleGeometry(targetRect, step.CornerRadius, step.CornerRadius);
+                var holeGeom = new RectangleGeometry(targetRect, Math.Max(2, step.CornerRadius), Math.Max(2, step.CornerRadius));
                 var combined = new CombinedGeometry(GeometryCombineMode.Exclude, fullWindowGeom, holeGeom);
                 _maskPath.Data = combined;
 
-                // Border phát sáng
+                // Border phát sáng nổi bật với nhịp thở (Pulsing Halo)
                 _spotlightGlowBorder.Visibility = Visibility.Visible;
                 _spotlightGlowBorder.Width = targetRect.Width;
                 _spotlightGlowBorder.Height = targetRect.Height;
-                _spotlightGlowBorder.CornerRadius = new CornerRadius(step.CornerRadius);
+                _spotlightGlowBorder.CornerRadius = new CornerRadius(Math.Max(2, step.CornerRadius));
                 Canvas.SetLeft(_spotlightGlowBorder, targetRect.Left);
                 Canvas.SetTop(_spotlightGlowBorder, targetRect.Top);
+
+                var pulseAnimation = new DoubleAnimation
+                {
+                    From = 0.55,
+                    To = 1.0,
+                    Duration = TimeSpan.FromMilliseconds(850),
+                    AutoReverse = true,
+                    RepeatBehavior = RepeatBehavior.Forever,
+                    EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+                };
+                _spotlightGlowBorder.BeginAnimation(UIElement.OpacityProperty, pulseAnimation);
             }
         }
 
@@ -446,33 +493,34 @@ namespace ZeroUI.Wpf.Overlays
                     case ZTourPlacement.Top:
                         cardX = targetRect.Left + (targetRect.Width - cardW) / 2.0;
                         cardY = targetRect.Top - cardH - 12;
-                        BuildArrow(targetRect.Left + targetRect.Width / 2.0, targetRect.Top, ZTourPlacement.Top);
                         break;
 
                     case ZTourPlacement.Bottom:
                         cardX = targetRect.Left + (targetRect.Width - cardW) / 2.0;
                         cardY = targetRect.Bottom + 12;
-                        BuildArrow(targetRect.Left + targetRect.Width / 2.0, targetRect.Bottom, ZTourPlacement.Bottom);
                         break;
 
                     case ZTourPlacement.Left:
                         cardX = targetRect.Left - cardW - 12;
                         cardY = targetRect.Top + (targetRect.Height - cardH) / 2.0;
-                        BuildArrow(targetRect.Left, targetRect.Top + targetRect.Height / 2.0, ZTourPlacement.Left);
                         break;
 
                     case ZTourPlacement.Right:
                         cardX = targetRect.Right + 12;
                         cardY = targetRect.Top + (targetRect.Height - cardH) / 2.0;
-                        BuildArrow(targetRect.Right, targetRect.Top + targetRect.Height / 2.0, ZTourPlacement.Right);
                         break;
 
                     default:
                         cardX = (ActualWidth - cardW) / 2.0;
                         cardY = (ActualHeight - cardH) / 2.0;
-                        _arrowPolygon.Visibility = Visibility.Collapsed;
                         break;
                 }
+
+                // Kẹp toạ độ trong màn hình để không bị tràn
+                cardX = Math.Max(16, Math.Min(ActualWidth - cardW - 16, cardX));
+                cardY = Math.Max(16, Math.Min(ActualHeight - cardH - 16, cardY));
+
+                BuildArrow(targetRect, cardX, cardY, cardW, cardH, placement);
             }
 
             // Kẹp toạ độ trong màn hình để không bị tràn
@@ -483,7 +531,7 @@ namespace ZeroUI.Wpf.Overlays
             Canvas.SetTop(_cardBorder, cardY);
         }
 
-        private void BuildArrow(double targetPointX, double targetPointY, ZTourPlacement placement)
+        private void BuildArrow(Rect targetRect, double cardX, double cardY, double cardW, double cardH, ZTourPlacement placement)
         {
             _arrowPolygon.Points.Clear();
             _arrowPolygon.Visibility = Visibility.Visible;
@@ -492,27 +540,47 @@ namespace ZeroUI.Wpf.Overlays
             switch (placement)
             {
                 case ZTourPlacement.Bottom:
-                    _arrowPolygon.Points.Add(new Point(targetPointX, targetPointY + 4));
-                    _arrowPolygon.Points.Add(new Point(targetPointX - arrowSize, targetPointY + 12));
-                    _arrowPolygon.Points.Add(new Point(targetPointX + arrowSize, targetPointY + 12));
+                {
+                    double targetCenterX = targetRect.Left + targetRect.Width / 2.0;
+                    double arrowX = Math.Max(cardX + 20, Math.Min(cardX + cardW - 20, targetCenterX));
+                    _arrowPolygon.Points.Add(new Point(arrowX, targetRect.Bottom + 2));
+                    _arrowPolygon.Points.Add(new Point(arrowX - arrowSize, cardY));
+                    _arrowPolygon.Points.Add(new Point(arrowX + arrowSize, cardY));
                     break;
+                }
 
                 case ZTourPlacement.Top:
-                    _arrowPolygon.Points.Add(new Point(targetPointX, targetPointY - 4));
-                    _arrowPolygon.Points.Add(new Point(targetPointX - arrowSize, targetPointY - 12));
-                    _arrowPolygon.Points.Add(new Point(targetPointX + arrowSize, targetPointY - 12));
+                {
+                    double targetCenterX = targetRect.Left + targetRect.Width / 2.0;
+                    double arrowX = Math.Max(cardX + 20, Math.Min(cardX + cardW - 20, targetCenterX));
+                    _arrowPolygon.Points.Add(new Point(arrowX, targetRect.Top - 2));
+                    _arrowPolygon.Points.Add(new Point(arrowX - arrowSize, cardY + cardH));
+                    _arrowPolygon.Points.Add(new Point(arrowX + arrowSize, cardY + cardH));
                     break;
+                }
 
                 case ZTourPlacement.Right:
-                    _arrowPolygon.Points.Add(new Point(targetPointX + 4, targetPointY));
-                    _arrowPolygon.Points.Add(new Point(targetPointX + 12, targetPointY - arrowSize));
-                    _arrowPolygon.Points.Add(new Point(targetPointX + 12, targetPointY + arrowSize));
+                {
+                    double targetCenterY = targetRect.Top + targetRect.Height / 2.0;
+                    double arrowY = Math.Max(cardY + 16, Math.Min(cardY + cardH - 16, targetCenterY));
+                    _arrowPolygon.Points.Add(new Point(targetRect.Right + 2, arrowY));
+                    _arrowPolygon.Points.Add(new Point(cardX, arrowY - arrowSize));
+                    _arrowPolygon.Points.Add(new Point(cardX, arrowY + arrowSize));
                     break;
+                }
 
                 case ZTourPlacement.Left:
-                    _arrowPolygon.Points.Add(new Point(targetPointX - 4, targetPointY));
-                    _arrowPolygon.Points.Add(new Point(targetPointX - 12, targetPointY - arrowSize));
-                    _arrowPolygon.Points.Add(new Point(targetPointX - 12, targetPointY + arrowSize));
+                {
+                    double targetCenterY = targetRect.Top + targetRect.Height / 2.0;
+                    double arrowY = Math.Max(cardY + 16, Math.Min(cardY + cardH - 16, targetCenterY));
+                    _arrowPolygon.Points.Add(new Point(targetRect.Left - 2, arrowY));
+                    _arrowPolygon.Points.Add(new Point(cardX + cardW, arrowY - arrowSize));
+                    _arrowPolygon.Points.Add(new Point(cardX + cardW, arrowY + arrowSize));
+                    break;
+                }
+
+                default:
+                    _arrowPolygon.Visibility = Visibility.Collapsed;
                     break;
             }
         }

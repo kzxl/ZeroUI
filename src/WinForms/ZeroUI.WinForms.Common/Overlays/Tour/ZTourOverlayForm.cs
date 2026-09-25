@@ -11,6 +11,7 @@ namespace ZeroUI.WinForms.Overlays
         private readonly ZTour _tour;
         private readonly Form _ownerForm;
         private Rectangle _targetRect = Rectangle.Empty;
+        private ZTourPlacement _resolvedPlacement = ZTourPlacement.Center;
 
         // Card Layout
         private Rectangle _cardRect = Rectangle.Empty;
@@ -23,6 +24,11 @@ namespace ZeroUI.WinForms.Overlays
         private bool _isPrevHover;
         private bool _isSkipHover;
         private bool _isCloseHover;
+
+        // Pulsing Halo Beacon
+        private readonly Timer _pulseTimer;
+        private float _pulseAngle = 0f;
+        private float _pulseFactor = 1.0f;
 
         public ZTourOverlayForm(Form owner, ZTour tour)
         {
@@ -41,14 +47,54 @@ namespace ZeroUI.WinForms.Overlays
             SyncBounds();
 
             _ownerForm.LocationChanged += (s, e) => { SyncBounds(); Invalidate(); };
-            _ownerForm.SizeChanged += (s, e) => { SyncBounds(); Invalidate(); };
+            _ownerForm.SizeChanged += (s, e) =>
+            {
+                SyncBounds();
+                UpdateFormRegion(_tour.CurrentStep);
+                Invalidate();
+            };
+
+            _pulseTimer = new Timer { Interval = 40 };
+            _pulseTimer.Tick += (s, e) =>
+            {
+                if (_targetRect.IsEmpty || _tour.CurrentStep == null || !_tour.CurrentStep.Mask) return;
+                _pulseAngle += 0.12f;
+                if (_pulseAngle > (float)(Math.PI * 2)) _pulseAngle -= (float)(Math.PI * 2);
+                _pulseFactor = 0.55f + 0.45f * (float)Math.Sin(_pulseAngle);
+
+                var invalidRect = Rectangle.Inflate(_targetRect, 20, 20);
+                Invalidate(invalidRect);
+            };
+            _pulseTimer.Start();
         }
 
         public void DisplayStep(ZTourStep step, int currentIndex, int totalCount)
         {
             _targetRect = ResolveTargetRect(step);
+            UpdateFormRegion(step);
             RecalculateCardLayout(step, currentIndex, totalCount);
             Invalidate();
+        }
+
+        private void UpdateFormRegion(ZTourStep? step)
+        {
+            if (ClientSize.Width <= 0 || ClientSize.Height <= 0) return;
+
+            if (step != null && step.Mask && !_targetRect.IsEmpty)
+            {
+                using (var fullPath = new GraphicsPath())
+                using (var holePath = CreateRoundedRectPath(_targetRect, Math.Max(2, step.CornerRadius)))
+                {
+                    fullPath.AddRectangle(new Rectangle(0, 0, ClientSize.Width, ClientSize.Height));
+                    var region = new Region(fullPath);
+                    region.Exclude(holePath);
+                    Region = region;
+                }
+            }
+            else
+            {
+                Region = null;
+            }
         }
 
         private void SyncBounds()
@@ -80,8 +126,8 @@ namespace ZeroUI.WinForms.Overlays
             return new Rectangle(
                 localPt.X - pad.Left,
                 localPt.Y - pad.Top,
-                target.Width + pad.Left + pad.Right,
-                target.Height + pad.Top + pad.Bottom);
+                Math.Max(10, target.Width + pad.Left + pad.Right),
+                Math.Max(10, target.Height + pad.Top + pad.Bottom));
         }
 
         private void RecalculateCardLayout(ZTourStep step, int currentIndex, int totalCount)
@@ -94,6 +140,7 @@ namespace ZeroUI.WinForms.Overlays
             ZTourPlacement placement = step.Placement;
             if (_targetRect.IsEmpty || placement == ZTourPlacement.Center)
             {
+                _resolvedPlacement = ZTourPlacement.Center;
                 x = (ClientSize.Width - cardW) / 2;
                 y = (ClientSize.Height - cardH) / 2;
             }
@@ -111,6 +158,7 @@ namespace ZeroUI.WinForms.Overlays
                         placement = ZTourPlacement.Left;
                 }
 
+                _resolvedPlacement = placement;
                 switch (placement)
                 {
                     case ZTourPlacement.Top:
@@ -158,28 +206,54 @@ namespace ZeroUI.WinForms.Overlays
             var currentStep = _tour.CurrentStep;
             if (currentStep == null) return;
 
-            // 1. Vẽ Backdrop Mask mờ tối
-            using (var fullBrush = new SolidBrush(Color.FromArgb(170, 10, 15, 26)))
+            // 1. Vẽ Backdrop Mask mờ tối (vùng lỗ khoét đã được OS loại trừ qua Form.Region nên hiển thị rõ nét control bên dưới)
+            using (var fullBrush = new SolidBrush(Color.FromArgb(175, 10, 15, 26)))
             {
-                if (!_targetRect.IsEmpty && currentStep.Mask)
-                {
-                    using (var region = new Region(ClientRectangle))
-                    using (var holePath = CreateRoundedRectPath(_targetRect, currentStep.CornerRadius))
-                    {
-                        region.Exclude(holePath);
-                        g.FillRegion(fullBrush, region);
-                    }
+                g.FillRectangle(fullBrush, ClientRectangle);
+            }
 
-                    // Spotlight Border
-                    using (var pen = new Pen(Color.FromArgb(59, 130, 246), 2))
-                    using (var holePath = CreateRoundedRectPath(_targetRect, currentStep.CornerRadius))
-                    {
-                        g.DrawPath(pen, holePath);
-                    }
-                }
-                else
+            // 2. Vẽ Animated Glowing Spotlight Border xung quanh vùng khoanh
+            if (!_targetRect.IsEmpty && currentStep.Mask)
+            {
+                // Vòng hào quang ngoài 1 (Soft Glow)
+                int halo1Alpha = (int)(45 * _pulseFactor);
+                var halo1Rect = Rectangle.Inflate(_targetRect, 3, 3);
+                using (var halo1Pen = new Pen(Color.FromArgb(halo1Alpha, 59, 130, 246), 4))
+                using (var halo1Path = CreateRoundedRectPath(halo1Rect, Math.Max(4, currentStep.CornerRadius + 2)))
                 {
-                    g.FillRectangle(fullBrush, ClientRectangle);
+                    g.DrawPath(halo1Pen, halo1Path);
+                }
+
+                // Vòng hào quang ngoài 2 (Inner Glow)
+                int halo2Alpha = (int)(95 * _pulseFactor);
+                var halo2Rect = Rectangle.Inflate(_targetRect, 1, 1);
+                using (var halo2Pen = new Pen(Color.FromArgb(halo2Alpha, 59, 130, 246), 2))
+                using (var halo2Path = CreateRoundedRectPath(halo2Rect, Math.Max(3, currentStep.CornerRadius + 1)))
+                {
+                    g.DrawPath(halo2Pen, halo2Path);
+                }
+
+                // Viền phát sáng chính (Primary Accent Border)
+                int borderAlpha = (int)(255 * _pulseFactor);
+                using (var borderPen = new Pen(Color.FromArgb(borderAlpha, 59, 130, 246), 2))
+                using (var borderPath = CreateRoundedRectPath(_targetRect, Math.Max(2, currentStep.CornerRadius)))
+                {
+                    g.DrawPath(borderPen, borderPath);
+                }
+            }
+
+            // 3. Mũi tên chỉ từ Card đến Target
+            if (!_targetRect.IsEmpty && _resolvedPlacement != ZTourPlacement.Center)
+            {
+                Point[]? arrowPoints = CalculateArrowPoints(_resolvedPlacement, _targetRect, _cardRect);
+                if (arrowPoints != null)
+                {
+                    using (var arrowBrush = new SolidBrush(Color.FromArgb(30, 41, 59)))
+                    using (var arrowPen = new Pen(Color.FromArgb(51, 65, 85), 1))
+                    {
+                        g.FillPolygon(arrowBrush, arrowPoints);
+                        g.DrawPolygon(arrowPen, arrowPoints);
+                    }
                 }
             }
 
@@ -344,6 +418,56 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
+        private static Point[]? CalculateArrowPoints(ZTourPlacement placement, Rectangle targetRect, Rectangle cardRect)
+        {
+            const int size = 8;
+            switch (placement)
+            {
+                case ZTourPlacement.Bottom:
+                {
+                    int midX = Math.Max(cardRect.Left + 16, Math.Min(cardRect.Right - 16, targetRect.Left + targetRect.Width / 2));
+                    return new[]
+                    {
+                        new Point(midX, targetRect.Bottom + 2),
+                        new Point(midX - size, cardRect.Top),
+                        new Point(midX + size, cardRect.Top)
+                    };
+                }
+                case ZTourPlacement.Top:
+                {
+                    int midX = Math.Max(cardRect.Left + 16, Math.Min(cardRect.Right - 16, targetRect.Left + targetRect.Width / 2));
+                    return new[]
+                    {
+                        new Point(midX, targetRect.Top - 2),
+                        new Point(midX - size, cardRect.Bottom),
+                        new Point(midX + size, cardRect.Bottom)
+                    };
+                }
+                case ZTourPlacement.Right:
+                {
+                    int midY = Math.Max(cardRect.Top + 16, Math.Min(cardRect.Bottom - 16, targetRect.Top + targetRect.Height / 2));
+                    return new[]
+                    {
+                        new Point(targetRect.Right + 2, midY),
+                        new Point(cardRect.Left, midY - size),
+                        new Point(cardRect.Left, midY + size)
+                    };
+                }
+                case ZTourPlacement.Left:
+                {
+                    int midY = Math.Max(cardRect.Top + 16, Math.Min(cardRect.Bottom - 16, targetRect.Top + targetRect.Height / 2));
+                    return new[]
+                    {
+                        new Point(targetRect.Left - 2, midY),
+                        new Point(cardRect.Right, midY - size),
+                        new Point(cardRect.Right, midY + size)
+                    };
+                }
+                default:
+                    return null;
+            }
+        }
+
         private static GraphicsPath CreateRoundedRectPath(Rectangle rect, int radius)
         {
             var path = new GraphicsPath();
@@ -356,6 +480,16 @@ namespace ZeroUI.WinForms.Overlays
             path.AddArc(rect.X, rect.Bottom - diameter, diameter, diameter, 90, 90);
             path.CloseFigure();
             return path;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _pulseTimer?.Stop();
+                _pulseTimer?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
