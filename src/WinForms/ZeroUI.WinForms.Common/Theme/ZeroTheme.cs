@@ -35,6 +35,7 @@ namespace ZeroUI.WinForms.Theme
         public Color BorderFocused => Primary;
         public Color BgCard => CardBackground;
         public Color BgInput => Surface;
+        public Color BgPrimary => Background;
         public Color TextMuted => TextSecondary;
     }
 
