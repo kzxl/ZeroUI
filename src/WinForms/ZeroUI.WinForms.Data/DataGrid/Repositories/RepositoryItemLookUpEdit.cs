@@ -26,7 +26,7 @@ namespace ZeroUI.WinForms.DataGrid.Repositories
 
         public virtual Control CreateInPlaceEditor()
         {
-            var lue = new LookUpEdit
+            var lue = new ZLookUpEdit
             {
                 Placeholder = Placeholder,
                 ShowAddNewButton = ShowAddNewButton,

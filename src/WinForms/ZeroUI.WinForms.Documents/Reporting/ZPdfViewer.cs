@@ -40,24 +40,24 @@ namespace ZeroUI.WinForms.Reporting
         private readonly Panel _canvasHost;
         private readonly Panel _bookmarksPanel;
         private readonly Splitter _bookmarksSplitter;
-        private readonly TreeList _bookmarksTree;
-        private readonly SimpleButton _btnBookmarks;
-        private readonly SimpleButton _btnOpen;
-        private readonly SimpleButton _btnPrint;
-        private readonly SimpleButton _btnFirstPage;
-        private readonly SimpleButton _btnPrevPage;
-        private readonly SimpleButton _btnNextPage;
-        private readonly SimpleButton _btnLastPage;
+        private readonly ZTreeList _bookmarksTree;
+        private readonly ZButton _btnBookmarks;
+        private readonly ZButton _btnOpen;
+        private readonly ZButton _btnPrint;
+        private readonly ZButton _btnFirstPage;
+        private readonly ZButton _btnPrevPage;
+        private readonly ZButton _btnNextPage;
+        private readonly ZButton _btnLastPage;
         private readonly Label _lblPageInfo;
-        private readonly SimpleButton _btnFitWidth;
-        private readonly SimpleButton _btnFitPage;
-        private readonly SimpleButton _btnZoomOut;
-        private readonly SimpleButton _btnZoomIn;
+        private readonly ZButton _btnFitWidth;
+        private readonly ZButton _btnFitPage;
+        private readonly ZButton _btnZoomOut;
+        private readonly ZButton _btnZoomIn;
         private readonly ComboBox _comboZoom;
-        private readonly SimpleButton _btnViewMode;
-        private readonly TextEdit _txtSearch;
-        private readonly SimpleButton _btnSearchPrev;
-        private readonly SimpleButton _btnSearchNext;
+        private readonly ZButton _btnViewMode;
+        private readonly ZTextBox _txtSearch;
+        private readonly ZButton _btnSearchPrev;
+        private readonly ZButton _btnSearchNext;
         private readonly Label _lblSearchCount;
 
         // Layout state
@@ -236,26 +236,26 @@ namespace ZeroUI.WinForms.Reporting
             const int btnH = 28;
 
             // Open Document
-            _btnOpen = new SimpleButton { Text = "📂 Open", Left = btnX, Top = btnY, Width = 78, Height = btnH };
+            _btnOpen = new ZButton { Text = "📂 Open", Left = btnX, Top = btnY, Width = 78, Height = btnH };
             _btnOpen.Click += (s, e) => OpenFileDialogPrompt();
             btnX += 84;
 
             // Print Document
-            _btnPrint = new SimpleButton { Text = "🖨️ Print", Left = btnX, Top = btnY, Width = 78, Height = btnH };
+            _btnPrint = new ZButton { Text = "🖨️ Print", Left = btnX, Top = btnY, Width = 78, Height = btnH };
             _btnPrint.Click += (s, e) => PrintDocument();
             btnX += 84;
 
             // Bookmarks / Outline Sidebar Toggle
-            _btnBookmarks = new SimpleButton { Text = "📑 Outline", Left = btnX, Top = btnY, Width = 112, Height = btnH };
+            _btnBookmarks = new ZButton { Text = "📑 Outline", Left = btnX, Top = btnY, Width = 112, Height = btnH };
             _btnBookmarks.Click += (s, e) => ToggleBookmarksSidebar();
             btnX += 118;
 
             // Page Navigation: First, Prev, Next, Last
-            _btnFirstPage = new SimpleButton { Text = "⏮", Left = btnX, Top = btnY, Width = 32, Height = btnH };
+            _btnFirstPage = new ZButton { Text = "⏮", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnFirstPage.Click += (s, e) => CurrentPageIndex = 0;
             btnX += 36;
 
-            _btnPrevPage = new SimpleButton { Text = "◀", Left = btnX, Top = btnY, Width = 32, Height = btnH };
+            _btnPrevPage = new ZButton { Text = "◀", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnPrevPage.Click += (s, e) => CurrentPageIndex--;
             btnX += 36;
 
@@ -272,25 +272,25 @@ namespace ZeroUI.WinForms.Reporting
             };
             btnX += 100;
 
-            _btnNextPage = new SimpleButton { Text = "▶", Left = btnX, Top = btnY, Width = 32, Height = btnH };
+            _btnNextPage = new ZButton { Text = "▶", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnNextPage.Click += (s, e) => CurrentPageIndex++;
             btnX += 36;
 
-            _btnLastPage = new SimpleButton { Text = "⏭", Left = btnX, Top = btnY, Width = 32, Height = btnH };
+            _btnLastPage = new ZButton { Text = "⏭", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnLastPage.Click += (s, e) => CurrentPageIndex = _document.PageCount - 1;
             btnX += 42;
 
             // View Mode Toggle
-            _btnViewMode = new SimpleButton { Text = "📜 Continuous", Left = btnX, Top = btnY, Width = 116, Height = btnH };
+            _btnViewMode = new ZButton { Text = "📜 Continuous", Left = btnX, Top = btnY, Width = 116, Height = btnH };
             _btnViewMode.Click += (s, e) => ViewMode = (_viewMode == PdfViewMode.ContinuousScroll) ? PdfViewMode.SinglePage : PdfViewMode.ContinuousScroll;
             btnX += 122;
 
             // Zoom Controls
-            _btnZoomOut = new SimpleButton { Text = "−", Left = btnX, Top = btnY, Width = 32, Height = btnH };
+            _btnZoomOut = new ZButton { Text = "−", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnZoomOut.Click += (s, e) => Zoom *= 0.85;
             btnX += 36;
 
-            _btnZoomIn = new SimpleButton { Text = "+", Left = btnX, Top = btnY, Width = 32, Height = btnH };
+            _btnZoomIn = new ZButton { Text = "+", Left = btnX, Top = btnY, Width = 32, Height = btnH };
             _btnZoomIn.Click += (s, e) => Zoom *= 1.15;
             btnX += 36;
 
@@ -310,16 +310,16 @@ namespace ZeroUI.WinForms.Reporting
             _comboZoom.SelectedIndexChanged += ComboZoom_SelectedIndexChanged;
             btnX += 98;
 
-            _btnFitWidth = new SimpleButton { Text = "↔ Fit Width", Left = btnX, Top = btnY, Width = 88, Height = btnH };
+            _btnFitWidth = new ZButton { Text = "↔ Fit Width", Left = btnX, Top = btnY, Width = 88, Height = btnH };
             _btnFitWidth.Click += (s, e) => ApplyFitWidth();
             btnX += 94;
 
-            _btnFitPage = new SimpleButton { Text = "⛶ Fit Page", Left = btnX, Top = btnY, Width = 82, Height = btnH };
+            _btnFitPage = new ZButton { Text = "⛶ Fit Page", Left = btnX, Top = btnY, Width = 82, Height = btnH };
             _btnFitPage.Click += (s, e) => ApplyFitPage();
             btnX += 88;
 
             // Search Box & Buttons
-            _txtSearch = new TextEdit { Left = btnX, Top = btnY, Width = 115, Height = btnH, Text = "" };
+            _txtSearch = new ZTextBox { Left = btnX, Top = btnY, Width = 115, Height = btnH, Text = "" };
             _txtSearch.KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
@@ -331,11 +331,11 @@ namespace ZeroUI.WinForms.Reporting
             };
             btnX += 120;
 
-            _btnSearchPrev = new SimpleButton { Text = "▲", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnSearchPrev = new ZButton { Text = "▲", Left = btnX, Top = btnY, Width = 28, Height = btnH };
             _btnSearchPrev.Click += (s, e) => StepSearch(-1);
             btnX += 32;
 
-            _btnSearchNext = new SimpleButton { Text = "▼", Left = btnX, Top = btnY, Width = 28, Height = btnH };
+            _btnSearchNext = new ZButton { Text = "▼", Left = btnX, Top = btnY, Width = 28, Height = btnH };
             _btnSearchNext.Click += (s, e) => StepSearch(1);
             btnX += 34;
 
@@ -391,7 +391,7 @@ namespace ZeroUI.WinForms.Reporting
                 Padding = new Padding(8, 0, 0, 0)
             };
 
-            var btnCloseBookmarks = new SimpleButton
+            var btnCloseBookmarks = new ZButton
             {
                 Text = "✕",
                 Dock = DockStyle.Right,
@@ -403,7 +403,7 @@ namespace ZeroUI.WinForms.Reporting
             bookmarksHeader.Controls.Add(lblOutline);
             bookmarksHeader.Controls.Add(btnCloseBookmarks);
 
-            _bookmarksTree = new TreeList
+            _bookmarksTree = new ZTreeList
             {
                 Dock = DockStyle.Fill,
                 ShowCheckBoxes = false,

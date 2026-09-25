@@ -78,7 +78,7 @@ namespace ZeroUI.WinForms.Base
             var parentForm = FindForm();
             if (parentForm != null)
             {
-                ModalDialog.Error(parentForm, "Component Initialization Error", ex.Message);
+                ZModalDialog.Error(parentForm, "Component Initialization Error", ex.Message);
             }
         }
 

@@ -246,7 +246,7 @@ namespace ZeroUI.WinForms.Workflow
             {
                 if (_selectedLane == null) return;
                 var initial = ParseColor(_selectedLane.HeaderColorHex, Color.FromArgb(100, 116, 139));
-                var chosen = ColorPickEdit.PickColor(this, initial, "Choose Swimlane Header Color");
+                var chosen = ZColorPicker.PickColor(this, initial, "Choose Swimlane Header Color");
                 if (chosen.HasValue)
                 {
                     _selectedLane.HeaderColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
@@ -261,7 +261,7 @@ namespace ZeroUI.WinForms.Workflow
             {
                 if (_selectedLane == null) return;
                 var initial = ParseColor(_selectedLane.BackgroundColorHex, Color.FromArgb(248, 250, 252));
-                var chosen = ColorPickEdit.PickColor(this, initial, "Choose Swimlane Background Color");
+                var chosen = ZColorPicker.PickColor(this, initial, "Choose Swimlane Background Color");
                 if (chosen.HasValue)
                 {
                     _selectedLane.BackgroundColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
@@ -346,7 +346,7 @@ namespace ZeroUI.WinForms.Workflow
             {
                 if (_selectedConnection == null) return;
                 var initial = ParseColor(_selectedConnection.StrokeColorHex, Color.FromArgb(14, 165, 233));
-                var chosen = ColorPickEdit.PickColor(this, initial, "Choose Connection Line Color");
+                var chosen = ZColorPicker.PickColor(this, initial, "Choose Connection Line Color");
                 if (chosen.HasValue)
                 {
                     _selectedConnection.StrokeColorHex = $"#{chosen.Value.R:X2}{chosen.Value.G:X2}{chosen.Value.B:X2}";
@@ -675,7 +675,7 @@ namespace ZeroUI.WinForms.Workflow
                 string selectedBgHex = lane.BackgroundColorHex;
 
                 var lblTitle = new Label { Text = "Lane Title:", Top = 16, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
-                var txtTitle = new TextEdit { Text = lane.Title, Top = 38, Left = 20, Width = 464, Height = 32 };
+                var txtTitle = new ZTextBox { Text = lane.Title, Top = 38, Left = 20, Width = 464, Height = 32 };
 
                 var lblPresets = new Label { Text = "Color Theme Presets:", Top = 74, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
                 var flowPresets = new FlowLayoutPanel
@@ -692,7 +692,7 @@ namespace ZeroUI.WinForms.Workflow
 
                 // Custom ColorPickEdit Pickers
                 var lblHeaderPicker = new Label { Text = "Header / Accent Color:", Top = 148, Left = 20, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
-                var cpeHeader = new ColorPickEdit
+                var cpeHeader = new ZColorPicker
                 {
                     Top = 170,
                     Left = 20,
@@ -702,7 +702,7 @@ namespace ZeroUI.WinForms.Workflow
                 };
 
                 var lblBgPicker = new Label { Text = "Background Color:", Top = 148, Left = 254, AutoSize = true, Font = new Font("Segoe UI", 9f, FontStyle.Bold) };
-                var cpeBg = new ColorPickEdit
+                var cpeBg = new ZColorPicker
                 {
                     Top = 170,
                     Left = 254,
@@ -807,8 +807,8 @@ namespace ZeroUI.WinForms.Workflow
                     flowPresets.Controls.Add(btnSwatch);
                 }
 
-                var btnOk = new SimpleButton { Text = "Save", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 370, Left = 296, Width = 90, Height = 32 };
-                var btnCancel = new SimpleButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 370, Left = 394, Width = 90, Height = 32 };
+                var btnOk = new ZButton { Text = "Save", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 370, Left = 296, Width = 90, Height = 32 };
+                var btnCancel = new ZButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 370, Left = 394, Width = 90, Height = 32 };
 
                 dlg.Controls.AddRange(new Control[]
                 {
@@ -2898,16 +2898,16 @@ namespace ZeroUI.WinForms.Workflow
                 dlg.MinimizeBox = false;
 
                 var lbl1 = new Label { Text = "Title:", Top = 16, Left = 16, Width = 80 };
-                var txtTitle = new TextEdit { Text = _selectedNode.Title, Top = 14, Left = 100, Width = 260, Height = 30 };
+                var txtTitle = new ZTextBox { Text = _selectedNode.Title, Top = 14, Left = 100, Width = 260, Height = 30 };
 
                 var lbl2 = new Label { Text = "Subtitle:", Top = 50, Left = 16, Width = 80 };
-                var txtSub = new MemoEdit { Text = _selectedNode.Subtitle, Top = 48, Left = 100, Width = 260, Height = 60 };
+                var txtSub = new ZMemoEdit { Text = _selectedNode.Subtitle, Top = 48, Left = 100, Width = 260, Height = 60 };
 
                 var lbl3 = new Label { Text = "Icon Glyph:", Top = 120, Left = 16, Width = 80 };
-                var txtIcon = new TextEdit { Text = _selectedNode.IconGlyph, Top = 118, Left = 100, Width = 80, Height = 30 };
+                var txtIcon = new ZTextBox { Text = _selectedNode.IconGlyph, Top = 118, Left = 100, Width = 80, Height = 30 };
 
-                var btnOk = new SimpleButton { Text = "OK", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 170, Left = 190, Width = 80, Height = 30 };
-                var btnCancel = new SimpleButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 170, Left = 280, Width = 80, Height = 30 };
+                var btnOk = new ZButton { Text = "OK", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 170, Left = 190, Width = 80, Height = 30 };
+                var btnCancel = new ZButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 170, Left = 280, Width = 80, Height = 30 };
 
                 dlg.Controls.AddRange(new Control[] { lbl1, txtTitle, lbl2, txtSub, lbl3, txtIcon, btnOk, btnCancel });
                 dlg.AcceptButton = btnOk;
@@ -2988,9 +2988,9 @@ namespace ZeroUI.WinForms.Workflow
                 dlg.MinimizeBox = false;
 
                 var lbl = new Label { Text = "Branch Label (e.g. Approved, Rejected, In Stock):", Top = 16, Left = 16, Width = 340 };
-                var txtLabel = new TextEdit { Text = _selectedConnection.Label, Top = 42, Left = 16, Width = 330, Height = 30 };
-                var btnOk = new SimpleButton { Text = "OK", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 80, Left = 170, Width = 80, Height = 30 };
-                var btnCancel = new SimpleButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 80, Left = 266, Width = 80, Height = 30 };
+                var txtLabel = new ZTextBox { Text = _selectedConnection.Label, Top = 42, Left = 16, Width = 330, Height = 30 };
+                var btnOk = new ZButton { Text = "OK", ButtonStyle = ZeroButtonStyle.Primary, DialogResult = DialogResult.OK, Top = 80, Left = 170, Width = 80, Height = 30 };
+                var btnCancel = new ZButton { Text = "Cancel", ButtonStyle = ZeroButtonStyle.Secondary, DialogResult = DialogResult.Cancel, Top = 80, Left = 266, Width = 80, Height = 30 };
 
                 dlg.Controls.AddRange(new Control[] { lbl, txtLabel, btnOk, btnCancel });
                 dlg.AcceptButton = btnOk;

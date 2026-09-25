@@ -288,7 +288,7 @@ namespace ZeroUI.WinForms.Editors
     /// Alias for BarcodeBox matching the BarcodeEdit convention.
     /// </summary>
     [ToolboxItem(false)]
-    public class BarcodeEdit : BarcodeBox
+    public class BarcodeEdit : ZBarcodeBox
     {
     }
 

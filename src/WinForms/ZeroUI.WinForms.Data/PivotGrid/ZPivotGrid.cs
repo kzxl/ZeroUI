@@ -127,7 +127,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 Invalidate();
             };
 
-            ZeroLocalizer.CultureChanged += (s, e) =>
+            Localizer.CultureChanged += (s, e) =>
             {
                 RefreshData();
             };
@@ -286,7 +286,7 @@ namespace ZeroUI.WinForms.PivotGrid
                 using (var brush = new SolidBrush(colors.TextSecondary))
                 {
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    string emptyMsg = ZeroLocalizer.GetString(ZeroStringId.PivotDropDataFields);
+                    string emptyMsg = Localizer.GetString(StringId.PivotDropDataFields);
                     g.DrawString(emptyMsg, Font, brush, new Rectangle(0, _headerAreaHeight, Width, Height - _headerAreaHeight), sf);
                 }
                 return;
@@ -458,7 +458,7 @@ namespace ZeroUI.WinForms.PivotGrid
             using (var brush = new SolidBrush(colors.Primary))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(ZeroLocalizer.GetString(ZeroStringId.PivotGrandTotal), new Font("Segoe UI", 8.5f, FontStyle.Bold), brush, gtRect, sf);
+                g.DrawString(Localizer.GetString(StringId.PivotGrandTotal), new Font("Segoe UI", 8.5f, FontStyle.Bold), brush, gtRect, sf);
             }
 
             g.Clip = prevClip;
@@ -510,7 +510,7 @@ namespace ZeroUI.WinForms.PivotGrid
             using (var brush = new SolidBrush(colors.Primary))
             {
                 var sf = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
-                g.DrawString(ZeroLocalizer.GetString(ZeroStringId.PivotGrandTotal), new Font("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(8, gtY, _rowHeaderWidth - 12, _cellHeight), sf);
+                g.DrawString(Localizer.GetString(StringId.PivotGrandTotal), new Font("Segoe UI", 9f, FontStyle.Bold), brush, new Rectangle(8, gtY, _rowHeaderWidth - 12, _cellHeight), sf);
             }
 
             g.Clip = prevClip;

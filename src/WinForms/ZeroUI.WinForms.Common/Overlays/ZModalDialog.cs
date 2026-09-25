@@ -39,8 +39,8 @@ namespace ZeroUI.WinForms.Overlays
         private Rectangle _cardRect;
         private Rectangle _closeRect;
         private bool _isCloseHovered = false;
-        private readonly SimpleButton _btnOk;
-        private readonly SimpleButton? _btnCancel;
+        private readonly ZButton _btnOk;
+        private readonly ZButton? _btnCancel;
 
         public ZModalDialog(
             string title,
@@ -84,7 +84,7 @@ namespace ZeroUI.WinForms.Overlays
             Controls.Add(bodyPanel);
 
             // OK Button
-            _btnOk = new SimpleButton
+            _btnOk = new ZButton
             {
                 Text = _okText,
                 ButtonStyle = ZeroButtonStyle.Primary,
@@ -102,7 +102,7 @@ namespace ZeroUI.WinForms.Overlays
             // Cancel Button (if enabled)
             if (_showCancel)
             {
-                _btnCancel = new SimpleButton
+                _btnCancel = new ZButton
                 {
                     Text = _cancelText,
                     ButtonStyle = ZeroButtonStyle.Secondary,

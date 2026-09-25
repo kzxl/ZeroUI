@@ -22,7 +22,7 @@ namespace ZeroUI.WinForms.DataGrid
     [Description("Interactive hierarchical visual filter editor with expression preview and grid binding.")]
     public class ZFilterEditor : ControlBase
     {
-        private readonly FilterControl _filterControl;
+        private readonly ZFilterControl _filterControl;
         private readonly TextBox _txtExpressionPreview;
         private readonly Panel _topPanel;
         private readonly Panel _bottomPanel;
@@ -33,7 +33,7 @@ namespace ZeroUI.WinForms.DataGrid
         private readonly Button _btnOk;
         private readonly Button _btnCancel;
 
-        private GridControl? _attachedGrid;
+        private ZGrid? _attachedGrid;
         private bool _isTextMode;
 
         public event EventHandler? FilterApplied;
@@ -51,7 +51,7 @@ namespace ZeroUI.WinForms.DataGrid
             DoubleBuffered = true;
 
             // Center Content (Initialize first to prevent lambda null capture warnings)
-            _filterControl = new FilterControl
+            _filterControl = new ZFilterControl
             {
                 Dock = DockStyle.Fill
             };
@@ -206,7 +206,7 @@ namespace ZeroUI.WinForms.DataGrid
             UpdatePreview();
         }
 
-        public void AttachTo(GridControl grid)
+        public void AttachTo(ZGrid grid)
         {
             _attachedGrid = grid ?? throw new ArgumentNullException(nameof(grid));
             SetColumns(grid.Columns);
@@ -310,7 +310,7 @@ namespace ZeroUI.WinForms.DataGrid
         /// <summary>
         /// Displays the Filter Editor inside a modal dialog window.
         /// </summary>
-        public static DialogResult ShowDialog(IWin32Window? owner, GridControl grid)
+        public static DialogResult ShowDialog(IWin32Window? owner, ZGrid grid)
         {
             using (var form = new Form())
             {
@@ -322,7 +322,7 @@ namespace ZeroUI.WinForms.DataGrid
                 form.MinimizeBox = false;
                 form.MaximizeBox = true;
 
-                var editor = new FilterEditorControl
+                var editor = new ZFilterEditor
                 {
                     Dock = DockStyle.Fill
                 };

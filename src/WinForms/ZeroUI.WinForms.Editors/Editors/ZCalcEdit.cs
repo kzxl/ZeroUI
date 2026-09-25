@@ -444,7 +444,7 @@ namespace ZeroUI.WinForms.Editors
     [ToolboxItem(true)]
     [Category("ZeroUI - Editors")]
     [Description("Currency editor with quick currency symbols, thousands separator, and embedded mini-calculator.")]
-    public class CurrencyEdit : CalcEdit
+    public class CurrencyEdit : ZCalcEdit
     {
         private string _currencySymbol = "₫";
         private bool _isSymbolSuffix = true;

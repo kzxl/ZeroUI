@@ -109,7 +109,7 @@ namespace ZeroUI.WinForms.Base
         /// </summary>
         protected virtual void OnRunAfterShownException(Exception ex)
         {
-            ModalDialog.Error(this, "Initialization Error", ex.Message);
+            ZModalDialog.Error(this, "Initialization Error", ex.Message);
         }
 
         private void BaseForm_ThemeChanged(object? sender, EventArgs e)
@@ -191,7 +191,7 @@ namespace ZeroUI.WinForms.Base
             int width = 520,
             int height = 340)
         {
-            return ModalDialog.Show(this, title, content, onOk, onCancel, okText, cancelText, showCancel, width, height);
+            return ZModalDialog.Show(this, title, content, onOk, onCancel, okText, cancelText, showCancel, width, height);
         }
 
         #endregion

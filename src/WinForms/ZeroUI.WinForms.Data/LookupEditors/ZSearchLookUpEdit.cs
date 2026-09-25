@@ -38,7 +38,7 @@ namespace ZeroUI.WinForms.Editors
         private readonly Label _lblStatus;
         private readonly Button _btnAddNew;
         private readonly Button _btnApply;
-        private readonly GridControl _grid;
+        private readonly ZGrid _grid;
         private readonly Timer _debounceTimer;
         private readonly SearchFilterEngine _filterEngine = new SearchFilterEngine();
 
@@ -243,7 +243,7 @@ namespace ZeroUI.WinForms.Editors
         public string SelectedText => _selectedText;
 
         [Browsable(false)]
-        public GridControl Grid => _grid;
+        public ZGrid Grid => _grid;
 
         [Browsable(false)]
         public int TotalRecords => _grid.DataSource?.TotalRowCount ?? 0;
@@ -340,7 +340,7 @@ namespace ZeroUI.WinForms.Editors
                 Interval = _debounceDelayMs
             };
 
-            _grid = new GridControl
+            _grid = new ZGrid
             {
                 Dock = DockStyle.Fill
             };

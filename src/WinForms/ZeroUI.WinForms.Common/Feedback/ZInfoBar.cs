@@ -23,7 +23,7 @@ namespace ZeroUI.WinForms.Feedback
     [DefaultEvent("Closed")]
     [Description("Modern in-window banner notification alert matching WinUI 3 standards")]
     [ToolboxBitmap(typeof(ZeroIcons), "ZeroAlertBanner.bmp")]
-    public class ZInfoBar : AlertBanner
+    public class ZInfoBar : ZAlertBanner
     {
         [Category("Appearance")]
         [DefaultValue(InfoBarSeverity.Info)]

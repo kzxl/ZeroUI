@@ -87,9 +87,9 @@ namespace ZeroUI.WinForms.Containers
 
         private readonly Panel _topBar;
         private readonly Label _lblTitle;
-        private readonly SimpleButton _btnAdd;
-        private readonly SimpleButton _btnPaste;
-        private readonly SimpleButton _btnClearAll;
+        private readonly ZButton _btnAdd;
+        private readonly ZButton _btnPaste;
+        private readonly ZButton _btnClearAll;
         private readonly FlowLayoutPanel _flowList;
 
         private bool _readOnly = false;
@@ -127,7 +127,7 @@ namespace ZeroUI.WinForms.Containers
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
-            _btnClearAll = new SimpleButton
+            _btnClearAll = new ZButton
             {
                 Text = "Clear All",
                 ButtonStyle = ZeroButtonStyle.Ghost,
@@ -137,7 +137,7 @@ namespace ZeroUI.WinForms.Containers
             };
             _btnClearAll.Click += (s, e) => ClearFiles();
 
-            _btnPaste = new SimpleButton
+            _btnPaste = new ZButton
             {
                 Text = "📋 Paste",
                 ButtonStyle = ZeroButtonStyle.Secondary,
@@ -147,7 +147,7 @@ namespace ZeroUI.WinForms.Containers
             };
             _btnPaste.Click += (s, e) => PasteFromClipboard();
 
-            _btnAdd = new SimpleButton
+            _btnAdd = new ZButton
             {
                 Text = "+ Add Files...",
                 ButtonStyle = ZeroButtonStyle.Primary,

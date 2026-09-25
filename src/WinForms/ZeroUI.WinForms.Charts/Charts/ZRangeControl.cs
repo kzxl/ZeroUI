@@ -757,7 +757,7 @@ namespace ZeroUI.WinForms.Charts
     /// <summary>
     /// Semantic alias specialized for temporal date and time interval sliding.
     /// </summary>
-    public class DateTimeRangeSlider : RangeControl
+    public class DateTimeRangeSlider : ZRangeControl
     {
         public DateTimeRangeSlider()
         {

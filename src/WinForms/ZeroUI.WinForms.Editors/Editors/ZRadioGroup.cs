@@ -58,7 +58,7 @@ namespace ZeroUI.WinForms.Editors
             base.OnThemeChanged(skin);
             foreach (Control c in Controls)
             {
-                if (c is RadioButtonControl rb)
+                if (c is ZRadioButton rb)
                 {
                     rb.UseDefaultSkin = UseDefaultSkin;
                     rb.CustomSkin = CustomSkin;
@@ -186,7 +186,7 @@ namespace ZeroUI.WinForms.Editors
                 for (int i = 0; i < _items.Length; i++)
                 {
                     int index = i;
-                    var rb = new RadioButtonControl
+                    var rb = new ZRadioButton
                     {
                         Text = _items[i],
                         Font = Font,
@@ -223,7 +223,7 @@ namespace ZeroUI.WinForms.Editors
             {
                 for (int i = 0; i < Controls.Count; i++)
                 {
-                    if (Controls[i] is RadioButtonControl rb)
+                    if (Controls[i] is ZRadioButton rb)
                     {
                         rb.Checked = (i == _selection.SelectedIndex);
                     }
@@ -239,7 +239,7 @@ namespace ZeroUI.WinForms.Editors
         {
             foreach (Control c in Controls)
             {
-                if (c is RadioButtonControl rb)
+                if (c is ZRadioButton rb)
                 {
                     rb.Font = Font;
                 }

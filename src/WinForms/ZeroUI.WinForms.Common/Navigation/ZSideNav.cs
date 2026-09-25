@@ -554,7 +554,7 @@ namespace ZeroUI.WinForms.Navigation
     /// Alias for <see cref="ZSideNav"/> for 100% cross-platform parity with WPF SideNav.
     /// </summary>
     [ToolboxItem(true)]
-    public class SideNav : SideNavControl
+    public class SideNav : ZSideNav
     {
     }
 

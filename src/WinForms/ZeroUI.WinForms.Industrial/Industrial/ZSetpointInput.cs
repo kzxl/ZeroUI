@@ -128,7 +128,7 @@ namespace ZeroUI.WinForms.Industrial
         {
             base.OnClick(e);
 
-            using (var keypad = new NumericKeypad(_tagLabel, _setpointValue, _minValue, _maxValue, _unit))
+            using (var keypad = new ZNumericKeypad(_tagLabel, _setpointValue, _minValue, _maxValue, _unit))
             {
                 if (keypad.ShowDialog(FindForm()) == DialogResult.OK)
                 {

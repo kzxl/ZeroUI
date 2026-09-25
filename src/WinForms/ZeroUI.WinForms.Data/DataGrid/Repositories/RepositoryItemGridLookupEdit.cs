@@ -38,7 +38,7 @@ namespace ZeroUI.WinForms.DataGrid.Repositories
 
         public virtual Control CreateInPlaceEditor()
         {
-            var gle = new GridLookupEdit
+            var gle = new ZGridLookupEdit
             {
                 DisplayMember = DisplayMember,
                 ValueMember = ValueMember,

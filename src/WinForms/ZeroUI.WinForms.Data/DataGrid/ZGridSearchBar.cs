@@ -19,10 +19,10 @@ namespace ZeroUI.WinForms.DataGrid
     public class ZGridSearchBar : Panel, IZeroDpiScalable
     {
         private ZGrid? _grid;
-        private readonly SearchControl _searchBox;
+        private readonly ZSearchControl _searchBox;
         private readonly Label _lblMatchCount;
-        private readonly SimpleButton _btnDensity;
-        private readonly SimpleButton _btnExport;
+        private readonly ZButton _btnDensity;
+        private readonly ZButton _btnExport;
 
         private int _baseHeight = 48;
         private int _baseSearchWidth = 320;
@@ -107,7 +107,7 @@ namespace ZeroUI.WinForms.DataGrid
             BackColor = ZeroTheme.Colors.Surface;
             Padding = new Padding(12, 7, 12, 7);
 
-            _searchBox = new SearchControl
+            _searchBox = new ZSearchControl
             {
                 PlaceholderText = "🔍 Search all columns (live filter)...",
                 Location = new Point(12, 7),
@@ -125,7 +125,7 @@ namespace ZeroUI.WinForms.DataGrid
                 Location = new Point(345, 14)
             };
 
-            _btnDensity = new SimpleButton
+            _btnDensity = new ZButton
             {
                 Text = "📏 Density: Normal",
                 ButtonStyle = ZeroButtonStyle.Ghost,
@@ -155,7 +155,7 @@ namespace ZeroUI.WinForms.DataGrid
                 };
             };
 
-            _btnExport = new SimpleButton
+            _btnExport = new ZButton
             {
                 Text = "📊 Export CSV",
                 ButtonStyle = ZeroButtonStyle.Secondary,

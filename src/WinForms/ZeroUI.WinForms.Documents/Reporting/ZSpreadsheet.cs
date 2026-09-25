@@ -42,13 +42,13 @@ namespace ZeroUI.WinForms.Reporting
         private readonly Label _lblActiveCell;
         private readonly Label _lblFx;
         private readonly TextBox _txtFormulaBar;
-        private readonly SimpleButton _btnAutoSum;
-        private readonly SimpleButton _btnRecalc;
-        private readonly SimpleButton _btnFreeze;
-        private readonly SimpleButton _btnCurrency;
-        private readonly SimpleButton _btnPercent;
-        private readonly SimpleButton _btnSampleBom;
-        private readonly SimpleButton _btnSampleQc;
+        private readonly ZButton _btnAutoSum;
+        private readonly ZButton _btnRecalc;
+        private readonly ZButton _btnFreeze;
+        private readonly ZButton _btnCurrency;
+        private readonly ZButton _btnPercent;
+        private readonly ZButton _btnSampleBom;
+        private readonly ZButton _btnSampleQc;
 
         private readonly GridCanvasPanel _canvas;
         private readonly VScrollBar _vScrollBar;
@@ -325,7 +325,7 @@ namespace ZeroUI.WinForms.Reporting
             };
             _txtFormulaBar.LostFocus += (s, e) => CommitFormulaBar();
 
-            _btnAutoSum = new SimpleButton
+            _btnAutoSum = new ZButton
             {
                 Location = new Point(332, 6),
                 Size = new Size(64, 26),
@@ -333,7 +333,7 @@ namespace ZeroUI.WinForms.Reporting
             };
             _btnAutoSum.Click += (s, e) => InsertAutoSum();
 
-            _btnRecalc = new SimpleButton
+            _btnRecalc = new ZButton
             {
                 Location = new Point(402, 6),
                 Size = new Size(64, 26),
@@ -346,7 +346,7 @@ namespace ZeroUI.WinForms.Reporting
                 _canvas.Invalidate();
             };
 
-            _btnFreeze = new SimpleButton
+            _btnFreeze = new ZButton
             {
                 Location = new Point(472, 6),
                 Size = new Size(80, 26),
@@ -354,7 +354,7 @@ namespace ZeroUI.WinForms.Reporting
             };
             _btnFreeze.Click += (s, e) => ToggleFreezePanes();
 
-            _btnCurrency = new SimpleButton
+            _btnCurrency = new ZButton
             {
                 Location = new Point(558, 6),
                 Size = new Size(32, 26),
@@ -362,7 +362,7 @@ namespace ZeroUI.WinForms.Reporting
             };
             _btnCurrency.Click += (s, e) => SetActiveCellFormat(SpreadsheetFormatType.Currency);
 
-            _btnPercent = new SimpleButton
+            _btnPercent = new ZButton
             {
                 Location = new Point(594, 6),
                 Size = new Size(32, 26),
@@ -370,7 +370,7 @@ namespace ZeroUI.WinForms.Reporting
             };
             _btnPercent.Click += (s, e) => SetActiveCellFormat(SpreadsheetFormatType.Percentage);
 
-            _btnSampleBom = new SimpleButton
+            _btnSampleBom = new ZButton
             {
                 Location = new Point(634, 6),
                 Size = new Size(122, 26),
@@ -381,7 +381,7 @@ namespace ZeroUI.WinForms.Reporting
                 Worksheet = SpreadsheetSampleGenerator.CreateFactoryCostingWorksheet();
             };
 
-            _btnSampleQc = new SimpleButton
+            _btnSampleQc = new ZButton
             {
                 Location = new Point(762, 6),
                 Size = new Size(128, 26),

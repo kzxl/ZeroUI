@@ -164,9 +164,9 @@ namespace ZeroUI.WinForms.DataGrid
 
         // In-Place Floating Editors (Pluggable)
         private readonly TextBox _inPlaceEditor;
-        private readonly SpinEdit _numericEditor;
-        private readonly DateEdit _dateEditor;
-        private readonly MaskBox _maskedEditor;
+        private readonly ZSpinEdit _numericEditor;
+        private readonly ZDateEdit _dateEditor;
+        private readonly ZMaskBox _maskedEditor;
         private Control? _activeInPlaceEditor;
         private bool _isEditing = false;
         private int _editingVisualRow = -1;
@@ -259,7 +259,7 @@ namespace ZeroUI.WinForms.DataGrid
             _inPlaceEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_inPlaceEditor);
 
-            _numericEditor = new SpinEdit
+            _numericEditor = new ZSpinEdit
             {
                 Visible = false,
                 Font = Font
@@ -272,7 +272,7 @@ namespace ZeroUI.WinForms.DataGrid
             _numericEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_numericEditor);
 
-            _dateEditor = new DateEdit
+            _dateEditor = new ZDateEdit
             {
                 Visible = false,
                 Font = Font
@@ -285,7 +285,7 @@ namespace ZeroUI.WinForms.DataGrid
             _dateEditor.LostFocus += (s, e) => CommitEdit();
             Controls.Add(_dateEditor);
 
-            _maskedEditor = new MaskBox
+            _maskedEditor = new ZMaskBox
             {
                 Visible = false,
                 Font = Font
@@ -1225,7 +1225,7 @@ namespace ZeroUI.WinForms.DataGrid
                 var form = FindForm();
                 if (form != null)
                 {
-                    ToastNotification.Warning(form, validatingArgs.ErrorMessage!);
+                    ZToastNotification.Warning(form, validatingArgs.ErrorMessage!);
                 }
             }
         }
@@ -4395,7 +4395,7 @@ namespace ZeroUI.WinForms.DataGrid
                 }
                 else if (args.ChildDataSource != null)
                 {
-                    var childGrid = new GridControl
+                    var childGrid = new ZGrid
                     {
                         DataSource = args.ChildDataSource,
                         RowHeight = Math.Max(20, _rowHeight - 2),
@@ -4752,20 +4752,20 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 editor = repWf.CreateInPlaceEditor();
                 if (editor is TextBox tbRep) tbRep.Text = val;
-                else if (editor is SpinEdit spRep && decimal.TryParse(val.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) spRep.Value = n;
-                else if (editor is DateEdit deRep && DateTime.TryParse(val, out var d)) deRep.Value = d;
+                else if (editor is ZSpinEdit spRep && decimal.TryParse(val.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var n)) spRep.Value = n;
+                else if (editor is ZDateEdit deRep && DateTime.TryParse(val, out var d)) deRep.Value = d;
                 else if (editor is CheckBox cbRep && bool.TryParse(val, out var b)) cbRep.Checked = b;
-                else if (editor is GridLookupEdit gleRep)
+                else if (editor is ZGridLookupEdit gleRep)
                 {
                     gleRep.EditValue = val;
                     gleRep.SelectionChanged += (s, e) => CommitEdit();
                 }
-                else if (editor is LookUpEdit lueRep)
+                else if (editor is ZLookUpEdit lueRep)
                 {
                     lueRep.EditValue = val;
                     lueRep.SelectedItemChanged += (s, e) => CommitEdit();
                 }
-                else if (editor is ComboBoxEdit cmbRep)
+                else if (editor is ZComboBox cmbRep)
                 {
                     cmbRep.Text = val;
                     cmbRep.SelectedIndexChanged += (s, e) => CommitEdit();
@@ -4837,7 +4837,7 @@ namespace ZeroUI.WinForms.DataGrid
             int colIndex = _editingColIndex;
             string newText = string.Empty;
 
-            if (_activeInPlaceEditor is MaskBox mtb)
+            if (_activeInPlaceEditor is ZMaskBox mtb)
             {
                 newText = mtb.Text;
             }
@@ -4845,15 +4845,15 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 newText = cb.Checked.ToString();
             }
-            else if (_activeInPlaceEditor is GridLookupEdit gle)
+            else if (_activeInPlaceEditor is ZGridLookupEdit gle)
             {
                 newText = gle.SelectedValue?.ToString() ?? gle.SelectedText;
             }
-            else if (_activeInPlaceEditor is LookUpEdit lue)
+            else if (_activeInPlaceEditor is ZLookUpEdit lue)
             {
                 newText = lue.SelectedKey ?? lue.SelectedItem?.DisplayText ?? lue.Text;
             }
-            else if (_activeInPlaceEditor is ComboBoxEdit cmb)
+            else if (_activeInPlaceEditor is ZComboBox cmb)
             {
                 newText = cmb.SelectedItem?.ToString() ?? cmb.Text;
             }
@@ -4861,11 +4861,11 @@ namespace ZeroUI.WinForms.DataGrid
             {
                 newText = tb.Text;
             }
-            else if (_activeInPlaceEditor is SpinEdit nb)
+            else if (_activeInPlaceEditor is ZSpinEdit nb)
             {
                 newText = nb.Value.ToString(CultureInfo.InvariantCulture);
             }
-            else if (_activeInPlaceEditor is DateEdit dp)
+            else if (_activeInPlaceEditor is ZDateEdit dp)
             {
                 newText = dp.Value.ToString(dp.DateFormat);
             }
@@ -4885,7 +4885,7 @@ namespace ZeroUI.WinForms.DataGrid
                         var form = FindForm();
                         if (form != null)
                         {
-                            ToastNotification.Warning(form, errMsg ?? "Validation failed");
+                            ZToastNotification.Warning(form, errMsg ?? "Validation failed");
                         }
                         _activeInPlaceEditor.Focus();
                         return;
@@ -4910,7 +4910,7 @@ namespace ZeroUI.WinForms.DataGrid
                                 var form = FindForm();
                                 if (form != null)
                                 {
-                                    ToastNotification.Warning(form, validatingArgs.ErrorMessage!);
+                                    ZToastNotification.Warning(form, validatingArgs.ErrorMessage!);
                                 }
                             }
                             _activeInPlaceEditor.Focus();

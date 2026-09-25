@@ -495,7 +495,7 @@ namespace ZeroUI.WinForms.Industrial
         /// <summary>
         /// Displays the PID faceplate flyout adjacent to the target control.
         /// </summary>
-        public static PidFlyout ShowFlyout(
+        public static ZPidFlyout ShowFlyout(
             Control owner,
             string loopTag,
             string description = "",
@@ -503,7 +503,7 @@ namespace ZeroUI.WinForms.Industrial
             double initialPv = 48.0,
             double initialMv = 60.0)
         {
-            var flyout = new PidFlyout
+            var flyout = new ZPidFlyout
             {
                 LoopTag = loopTag,
                 LoopDescription = description,

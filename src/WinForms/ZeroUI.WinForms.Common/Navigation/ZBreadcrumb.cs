@@ -432,7 +432,7 @@ namespace ZeroUI.WinForms.Navigation
     [ToolboxItem(true)]
     [Category("ZeroUI - Layout")]
     [Description("Hierarchical breadcrumb navigation bar")]
-    public class BreadcrumbNavigation : BreadcrumbControl
+    public class BreadcrumbNavigation : ZBreadcrumb
     {
     }
 

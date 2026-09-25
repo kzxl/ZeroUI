@@ -31,12 +31,12 @@ namespace ZeroUI.WinForms.Editors
     {
         private readonly DropDownHost _dropdown;
         private readonly Panel _popupPanel;
-        private readonly TextEdit _searchBox;
-        private readonly SimpleButton _btnExpandAll;
-        private readonly SimpleButton _btnCollapseAll;
-        private readonly TreeList _treeList;
+        private readonly ZTextBox _searchBox;
+        private readonly ZButton _btnExpandAll;
+        private readonly ZButton _btnCollapseAll;
+        private readonly ZTreeList _treeList;
         private readonly Label _lblStatus;
-        private readonly SimpleButton _btnClear;
+        private readonly ZButton _btnClear;
 
         private string _placeholder = "Click to select from tree...";
         private string _displayMember = "Name";
@@ -82,7 +82,7 @@ namespace ZeroUI.WinForms.Editors
             };
 
             // Center TreeList
-            _treeList = new TreeList
+            _treeList = new ZTreeList
             {
                 Dock = DockStyle.Fill,
                 ShowCheckBoxes = false,
@@ -100,7 +100,7 @@ namespace ZeroUI.WinForms.Editors
                 Padding = new Padding(0, 0, 0, 6)
             };
 
-            _searchBox = new TextEdit
+            _searchBox = new ZTextBox
             {
                 Placeholder = "Search tree nodes...",
                 Dock = DockStyle.Fill,
@@ -116,7 +116,7 @@ namespace ZeroUI.WinForms.Editors
                 UpdateStatus();
             };
 
-            _btnExpandAll = new SimpleButton
+            _btnExpandAll = new ZButton
             {
                 Text = "⊞",
                 ButtonStyle = ZeroButtonStyle.Secondary,
@@ -126,7 +126,7 @@ namespace ZeroUI.WinForms.Editors
             };
             _btnExpandAll.Click += (s, e) => _treeList.ExpandAll();
 
-            _btnCollapseAll = new SimpleButton
+            _btnCollapseAll = new ZButton
             {
                 Text = "⊟",
                 ButtonStyle = ZeroButtonStyle.Secondary,
@@ -160,7 +160,7 @@ namespace ZeroUI.WinForms.Editors
                 TextAlign = ContentAlignment.MiddleLeft
             };
 
-            _btnClear = new SimpleButton
+            _btnClear = new ZButton
             {
                 Text = "Clear",
                 ButtonStyle = ZeroButtonStyle.Ghost,
@@ -327,7 +327,7 @@ namespace ZeroUI.WinForms.Editors
         }
 
         [Browsable(false)]
-        public TreeList InnerTree => _treeList;
+        public ZTreeList InnerTree => _treeList;
 
         [Browsable(false)]
         public List<ZeroTreeNode> Nodes => _treeList.Nodes;

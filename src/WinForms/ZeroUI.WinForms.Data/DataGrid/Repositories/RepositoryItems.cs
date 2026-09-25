@@ -81,7 +81,7 @@ namespace ZeroUI.WinForms.DataGrid.Repositories
 
         public Control CreateInPlaceEditor()
         {
-            return new SpinEdit
+            return new ZSpinEdit
             {
                 MinValue = MinValue,
                 MaxValue = MaxValue,
@@ -123,7 +123,7 @@ namespace ZeroUI.WinForms.DataGrid.Repositories
 
         public Control CreateInPlaceEditor()
         {
-            return new DateEdit();
+            return new ZDateEdit();
         }
 
         public string FormatValue(object? rawValue)
@@ -162,7 +162,7 @@ namespace ZeroUI.WinForms.DataGrid.Repositories
 
         public Control CreateInPlaceEditor()
         {
-            var cb = new ComboBoxEdit();
+            var cb = new ZComboBox();
             for (int i = 0; i < Items.Count; i++)
             {
                 cb.Items.Add(Items[i]);

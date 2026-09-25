@@ -173,7 +173,7 @@ namespace ZeroUI.WinForms.Editors
                     AutoSize = true
                 };
 
-                var editor = new ColorPickEdit
+                var editor = new ZColorPicker
                 {
                     SelectedColor = initialColor,
                     Top = 42,

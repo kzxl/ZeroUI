@@ -444,7 +444,7 @@ namespace ZeroUI.WinForms.Overlays
     /// <summary>
     /// Standard alias for <see cref="ZDrawer"/>.
     /// </summary>
-    public class Drawer : DrawerControl
+    public class Drawer : ZDrawer
     {
     }
 

@@ -11,20 +11,20 @@ namespace ZeroUI.WinForms.Charts
     /// </summary>
     public class ChartRangeControlClient : IRangeControlClient
     {
-        private readonly ChartControl _chart;
+        private readonly ZChart _chart;
         private readonly int _seriesIndex;
 
         /// <summary>
         /// The bound ChartControl instance.
         /// </summary>
-        public ChartControl Chart => _chart;
+        public ZChart Chart => _chart;
 
         /// <summary>
         /// The active data domain type (Numeric).
         /// </summary>
         public RangeDataType DataType => RangeDataType.Numeric;
 
-        public ChartRangeControlClient(ChartControl chart, int seriesIndex = 0)
+        public ChartRangeControlClient(ZChart chart, int seriesIndex = 0)
         {
             _chart = chart ?? throw new ArgumentNullException(nameof(chart));
             _seriesIndex = Math.Max(0, seriesIndex);
@@ -94,7 +94,7 @@ namespace ZeroUI.WinForms.Charts
         /// <summary>
         /// Creates an IRangeControlClient bridge for this chart to bind with a RangeControl.
         /// </summary>
-        public static ChartRangeControlClient AsRangeClient(this ChartControl chart, int seriesIndex = 0)
+        public static ChartRangeControlClient AsRangeClient(this ZChart chart, int seriesIndex = 0)
         {
             return new ChartRangeControlClient(chart, seriesIndex);
         }

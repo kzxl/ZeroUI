@@ -748,7 +748,7 @@ namespace ZeroUI.WinForms.Overlays
     public class ToastNotification : ZToastNotification
     {
         public ToastNotification(
-            Form? parent,
+            Form parent,
             string message,
             string title = "",
             ToastType type = ToastType.Info,
@@ -764,7 +764,7 @@ namespace ZeroUI.WinForms.Overlays
     public class ZToast : ZToastNotification
     {
         public ZToast(
-            Form? parent,
+            Form parent,
             string message,
             string title = "",
             ToastType type = ToastType.Info,

@@ -62,7 +62,7 @@ namespace ZeroUI.WinForms.DataGrid
                 RebuildTreeUI();
             };
 
-            ZeroLocalizer.CultureChanged += (s, e) =>
+            Localizer.CultureChanged += (s, e) =>
             {
                 RebuildTreeUI();
             };
@@ -129,7 +129,7 @@ namespace ZeroUI.WinForms.DataGrid
             // [+] Add Condition Button
             var btnAddCond = new Button
             {
-                Text = ZeroLocalizer.GetString(ZeroStringId.FilterAddCondition),
+                Text = Localizer.GetString(StringId.FilterAddCondition),
                 Font = new Font("Segoe UI", 8.5f),
                 ForeColor = colors.TextPrimary,
                 BackColor = colors.HeaderBackground,
@@ -150,7 +150,7 @@ namespace ZeroUI.WinForms.DataGrid
             // [+] Add Group Button
             var btnAddGroup = new Button
             {
-                Text = ZeroLocalizer.GetString(ZeroStringId.FilterAddGroup),
+                Text = Localizer.GetString(StringId.FilterAddGroup),
                 Font = new Font("Segoe UI", 8.5f),
                 ForeColor = colors.TextPrimary,
                 BackColor = colors.HeaderBackground,

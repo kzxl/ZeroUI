@@ -85,10 +85,10 @@ namespace ZeroUI.WinForms.Navigation
         private readonly Panel _contentPanel = new Panel { Dock = DockStyle.Fill };
         private readonly Panel _footerPanel = new Panel { Dock = DockStyle.Bottom, Height = 56 };
 
-        private readonly SimpleButton _btnBack = new SimpleButton { Text = "◀ Back", Width = 90, Height = 34 };
-        private readonly SimpleButton _btnNext = new SimpleButton { Text = "Next ▶", Width = 90, Height = 34 };
-        private readonly SimpleButton _btnFinish = new SimpleButton { Text = "✔ Finish", Width = 100, Height = 34, Visible = false };
-        private readonly SimpleButton _btnCancel = new SimpleButton { Text = "Cancel", Width = 80, Height = 34 };
+        private readonly ZButton _btnBack = new ZButton { Text = "◀ Back", Width = 90, Height = 34 };
+        private readonly ZButton _btnNext = new ZButton { Text = "Next ▶", Width = 90, Height = 34 };
+        private readonly ZButton _btnFinish = new ZButton { Text = "✔ Finish", Width = 100, Height = 34, Visible = false };
+        private readonly ZButton _btnCancel = new ZButton { Text = "Cancel", Width = 80, Height = 34 };
 
         public event EventHandler? StepChanged;
         public event EventHandler? Finished;
@@ -144,7 +144,7 @@ namespace ZeroUI.WinForms.Navigation
             PositionFooterButtons();
 
             UpdateLocalizedStrings();
-            ZeroLocalizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
+            Localizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
 
             ZeroTheme.ThemeChanged += (s, e) =>
             {
@@ -215,16 +215,16 @@ namespace ZeroUI.WinForms.Navigation
             }
             else if (!string.IsNullOrEmpty(error))
             {
-                MessageBox.Show(error, ZeroLocalizer.GetString(ZeroStringId.WizardValidationTitle), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(error, Localizer.GetString(StringId.WizardValidationTitle), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
         private void UpdateLocalizedStrings()
         {
-            _btnBack.Text = ZeroLocalizer.GetString(ZeroStringId.WizardBack);
-            _btnNext.Text = ZeroLocalizer.GetString(ZeroStringId.WizardNext);
-            _btnFinish.Text = ZeroLocalizer.GetString(ZeroStringId.WizardFinish);
-            _btnCancel.Text = ZeroLocalizer.GetString(ZeroStringId.WizardCancel);
+            _btnBack.Text = Localizer.GetString(StringId.WizardBack);
+            _btnNext.Text = Localizer.GetString(StringId.WizardNext);
+            _btnFinish.Text = Localizer.GetString(StringId.WizardFinish);
+            _btnCancel.Text = Localizer.GetString(StringId.WizardCancel);
             PositionFooterButtons();
             Invalidate(true);
         }

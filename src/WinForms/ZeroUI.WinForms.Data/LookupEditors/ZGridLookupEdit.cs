@@ -29,7 +29,7 @@ namespace ZeroUI.WinForms.Editors
         private readonly DropDownHost _dropdown;
         private readonly Panel _popupContainer;
         private readonly TextBox _searchBox;
-        private readonly GridControl _grid;
+        private readonly ZGrid _grid;
         private readonly Panel _footerPanel;
         private readonly Button _btnAddNew;
 
@@ -167,7 +167,7 @@ namespace ZeroUI.WinForms.Editors
         public string SelectedText => _selectedText;
 
         [Browsable(false)]
-        public GridControl Grid => _grid;
+        public ZGrid Grid => _grid;
 
         public ZGridLookupEdit()
         {
@@ -177,7 +177,7 @@ namespace ZeroUI.WinForms.Editors
             BackColor = Color.Transparent;
 
             // 1. Construct Embedded GridControl first
-            _grid = new GridControl
+            _grid = new ZGrid
             {
                 Dock = DockStyle.Fill
             };

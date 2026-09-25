@@ -163,14 +163,14 @@ namespace ZeroUI.WinForms.Editors
         [Category("Appearance")]
         public string Placeholder
         {
-            get => _placeholder ?? ZeroLocalizer.GetString(ZeroStringId.CheckedComboPlaceholder);
+            get => _placeholder ?? Localizer.GetString(StringId.CheckedComboPlaceholder);
             set { _placeholder = value; Invalidate(); }
         }
 
         [Category("Appearance")]
         public string SummaryFormat
         {
-            get => _summaryFormat ?? ZeroLocalizer.GetString(ZeroStringId.CheckedComboSummaryFormat);
+            get => _summaryFormat ?? Localizer.GetString(StringId.CheckedComboSummaryFormat);
             set { _summaryFormat = value; Invalidate(); }
         }
 
@@ -209,7 +209,7 @@ namespace ZeroUI.WinForms.Editors
         {
             Height = 32;
             Cursor = Cursors.Hand;
-            ZeroLocalizer.CultureChanged += (s, e) => Invalidate();
+            Localizer.CultureChanged += (s, e) => Invalidate();
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
 
@@ -675,7 +675,7 @@ namespace ZeroUI.WinForms.Editors
                     if (!_owner._items[i].IsChecked) { allChecked = false; break; }
                 }
 
-                DrawCheckboxItem(g, 0, selectAllY, Width, itemH, ZeroLocalizer.GetString(ZeroStringId.CheckedComboSelectAll), allChecked, _hoveredIndex == -2);
+                DrawCheckboxItem(g, 0, selectAllY, Width, itemH, Localizer.GetString(StringId.CheckedComboSelectAll), allChecked, _hoveredIndex == -2);
 
                 // Separator line
                 using (var pen = new Pen(colors.Border))
