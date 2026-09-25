@@ -116,7 +116,7 @@ namespace ZeroUI.WinForms.Charts
             _toolTip.InitialDelay = 150;
             _toolTip.ReshowDelay = 100;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void LoadSampleData()
@@ -380,7 +380,19 @@ namespace ZeroUI.WinForms.Charts
                 Invalidate();
             }
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

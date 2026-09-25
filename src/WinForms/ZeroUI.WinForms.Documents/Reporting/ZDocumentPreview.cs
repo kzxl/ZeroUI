@@ -149,14 +149,7 @@ namespace ZeroUI.WinForms.Reporting
             UpdateLocalizedStrings();
 
             // Theme Sync
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.Background;
-                _toolbarPanel.BackColor = ZeroTheme.Colors.Surface;
-                _previewControl.BackColor = ZeroTheme.Colors.Background;
-                _lblPageInfo.ForeColor = ZeroTheme.Colors.TextPrimary;
-                _toolbarPanel.Invalidate();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void Print()
@@ -188,7 +181,26 @@ namespace ZeroUI.WinForms.Reporting
             _previewControl.InvalidatePreview();
             UpdatePageInfo();
         }
+    
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.Background;
+                _toolbarPanel.BackColor = ZeroTheme.Colors.Surface;
+                _previewControl.BackColor = ZeroTheme.Colors.Background;
+                _lblPageInfo.ForeColor = ZeroTheme.Colors.TextPrimary;
+                _toolbarPanel.Invalidate();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for DocumentPreviewControl.

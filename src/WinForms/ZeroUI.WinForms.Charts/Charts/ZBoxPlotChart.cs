@@ -128,7 +128,7 @@ namespace ZeroUI.WinForms.Charts
             BackColor = Color.Transparent;
             Size = new Size(480, 300);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void AddPoint(BoxPlotDataPoint point)
@@ -310,7 +310,19 @@ namespace ZeroUI.WinForms.Charts
                 }
             }
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for BoxPlotChart.

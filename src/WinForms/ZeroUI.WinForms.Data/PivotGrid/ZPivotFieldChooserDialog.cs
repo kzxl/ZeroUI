@@ -85,7 +85,7 @@ namespace ZeroUI.WinForms.PivotGrid
 
             PopulateFields();
 
-            ZeroTheme.ThemeChanged += (s, e) => ApplyTheme();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         private ListBox CreateFieldListBox()
@@ -288,5 +288,17 @@ namespace ZeroUI.WinForms.PivotGrid
 
             Invalidate(true);
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => ApplyTheme();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 }

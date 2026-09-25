@@ -98,7 +98,7 @@ namespace ZeroUI.WinForms.Layout
             Padding = new Padding(8);
             BackColor = Color.Transparent;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnControlAdded(ControlEventArgs e)
@@ -298,7 +298,19 @@ namespace ZeroUI.WinForms.Layout
         }
 
         #endregion
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

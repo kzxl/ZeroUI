@@ -40,7 +40,7 @@ namespace ZeroUI.WinForms.Network
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 8.25f);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -69,6 +69,7 @@ namespace ZeroUI.WinForms.Network
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _animSub?.Dispose();
                 _animSub = null;
             }
@@ -325,7 +326,10 @@ namespace ZeroUI.WinForms.Network
             path.CloseFigure();
             return path;
         }
-    }
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

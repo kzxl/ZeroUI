@@ -206,12 +206,7 @@ namespace ZeroUI.WinForms.Editors
                 DropDownClosed?.Invoke(this, EventArgs.Empty);
             };
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                _popupPanel.BackColor = ZeroTheme.Colors.BgCard;
-                _lblStatus.ForeColor = ZeroTheme.Colors.TextSecondary;
-                Invalidate();
-            };
+            
         }
 
         #region Properties
@@ -790,7 +785,16 @@ namespace ZeroUI.WinForms.Editors
         }
 
         #endregion
+    
+    protected override void OnThemeChanged(ZeroSkin skin)
+    {
+        base.OnThemeChanged(skin);
+        _popupPanel.BackColor = ZeroTheme.Colors.BgCard;
+                _lblStatus.ForeColor = ZeroTheme.Colors.TextSecondary;
+                Invalidate();
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

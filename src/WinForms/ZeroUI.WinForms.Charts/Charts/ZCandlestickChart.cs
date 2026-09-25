@@ -69,7 +69,7 @@ namespace ZeroUI.WinForms.Charts
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             Size = new Size(550, 320);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         [Category("Appearance")]
@@ -374,7 +374,19 @@ namespace ZeroUI.WinForms.Charts
                 g.DrawString(hud, hudFont, hudTextBrush, hudX + 8, hudY + 5);
             }
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZCandlestickChart"/>.

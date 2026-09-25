@@ -162,7 +162,7 @@ namespace ZeroUI.WinForms.Workflow
 
             InitContextMenu();
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         private void InitContextMenu()
@@ -3330,7 +3330,19 @@ namespace ZeroUI.WinForms.Workflow
         }
 
         #endregion
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZProcessMap"/>.

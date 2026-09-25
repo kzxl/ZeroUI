@@ -122,7 +122,7 @@ namespace ZeroUI.WinForms.Navigation
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             BackColor = Color.Transparent;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
         }
 
@@ -524,11 +524,15 @@ namespace ZeroUI.WinForms.Navigation
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _toolTip.Dispose();
             }
             base.Dispose(disposing);
         }
-    }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+}
 
     [Obsolete("Use SideNavItem instead.")]
     public class ZeroSideNavItem : SideNavItem

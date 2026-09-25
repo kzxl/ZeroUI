@@ -134,11 +134,7 @@ namespace ZeroUI.WinForms.Layout
             Font = new Font("Segoe UI", 9f);
             Padding = new Padding(12);
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                UpdateThemeColors();
-                Invalidate();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         #region Properties
@@ -474,7 +470,23 @@ namespace ZeroUI.WinForms.Layout
         }
 
         #endregion
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                UpdateThemeColors();
+                Invalidate();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

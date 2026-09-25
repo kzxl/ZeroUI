@@ -210,7 +210,7 @@ namespace ZeroUI.WinForms.Workflow
             _toolTip.ReshowDelay = 200;
             _toolTip.AutoPopDelay = 5000;
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void AddTask(GanttTaskItem task)
@@ -1159,6 +1159,7 @@ namespace ZeroUI.WinForms.Workflow
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _reusableBarPath?.Dispose();
                 _toolTip?.Dispose();
             }
@@ -1166,7 +1167,10 @@ namespace ZeroUI.WinForms.Workflow
         }
 
         #endregion
-    }
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZGantt"/>.

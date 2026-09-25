@@ -173,7 +173,7 @@ namespace ZeroUI.WinForms.Navigation
             Size = new Size(500, 350);
             UpdateContainerBounds();
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -974,7 +974,19 @@ namespace ZeroUI.WinForms.Navigation
 
         private static GraphicsPath CreateTopRoundedRect(Rectangle r, int radius) =>
             ZeroUIConfig.CreateTopRoundedRectangle(r, radius);
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     [Obsolete("Use TabStyle instead.")]
     public enum ZeroTabStyle

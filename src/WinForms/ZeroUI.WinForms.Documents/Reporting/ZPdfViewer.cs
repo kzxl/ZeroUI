@@ -30,6 +30,9 @@ namespace ZeroUI.WinForms.Reporting
     [ToolboxBitmap(typeof(ZeroIcons), "DocumentPreviewControl.bmp")]
     public class ZPdfViewer : Control
     {
+        private Panel _bookmarksHeader;
+        private Label _lblOutline;
+
         private PdfDocumentModel _document;
         private readonly PdfLayoutEngine _layoutEngine = new PdfLayoutEngine();
         private readonly List<PdfSearchResult> _searchResults = new List<PdfSearchResult>();
@@ -369,19 +372,19 @@ namespace ZeroUI.WinForms.Reporting
                 Visible = false
             };
 
-            var bookmarksHeader = new Panel
+            _bookmarksHeader = new Panel
             {
                 Dock = DockStyle.Top,
                 Height = 32,
                 BackColor = ZeroTheme.Colors.HeaderBackground
             };
-            bookmarksHeader.Paint += (s, e) =>
+            _bookmarksHeader.Paint += (s, e) =>
             {
                 using var pen = new Pen(ZeroTheme.Colors.Border, 1);
-                e.Graphics.DrawLine(pen, 0, bookmarksHeader.Height - 1, bookmarksHeader.Width, bookmarksHeader.Height - 1);
+                e.Graphics.DrawLine(pen, 0, _bookmarksHeader.Height - 1, _bookmarksHeader.Width, _bookmarksHeader.Height - 1);
             };
 
-            var lblOutline = new Label
+            _lblOutline = new Label
             {
                 Text = "📑 Document Outline",
                 Dock = DockStyle.Fill,
@@ -400,8 +403,8 @@ namespace ZeroUI.WinForms.Reporting
             };
             btnCloseBookmarks.Click += (s, e) => ShowBookmarksSidebar = false;
 
-            bookmarksHeader.Controls.Add(lblOutline);
-            bookmarksHeader.Controls.Add(btnCloseBookmarks);
+            _bookmarksHeader.Controls.Add(_lblOutline);
+            _bookmarksHeader.Controls.Add(btnCloseBookmarks);
 
             _bookmarksTree = new ZTreeList
             {
@@ -420,7 +423,7 @@ namespace ZeroUI.WinForms.Reporting
             };
 
             _bookmarksPanel.Controls.Add(_bookmarksTree);
-            _bookmarksPanel.Controls.Add(bookmarksHeader);
+            _bookmarksPanel.Controls.Add(_bookmarksHeader);
 
             _bookmarksSplitter = new Splitter
             {
@@ -442,16 +445,7 @@ namespace ZeroUI.WinForms.Reporting
             Controls.Add(_toolbarPanel);
 
             // Reactivity
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.Background;
-                _toolbarPanel.BackColor = ZeroTheme.Colors.Surface;
-                _bookmarksPanel.BackColor = ZeroTheme.Colors.Surface;
-                bookmarksHeader.BackColor = ZeroTheme.Colors.HeaderBackground;
-                lblOutline.ForeColor = ZeroTheme.Colors.TextPrimary;
-                _toolbarPanel.Invalidate();
-                _canvasHost.Invalidate();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
 
             PopulateBookmarksTree();
             Size = new Size(820, 600);
@@ -933,7 +927,28 @@ namespace ZeroUI.WinForms.Reporting
         }
 
         #endregion
+    
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.Background;
+                _toolbarPanel.BackColor = ZeroTheme.Colors.Surface;
+                _bookmarksPanel.BackColor = ZeroTheme.Colors.Surface;
+                _bookmarksHeader.BackColor = ZeroTheme.Colors.HeaderBackground;
+                _lblOutline.ForeColor = ZeroTheme.Colors.TextPrimary;
+                _toolbarPanel.Invalidate();
+                _canvasHost.Invalidate();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

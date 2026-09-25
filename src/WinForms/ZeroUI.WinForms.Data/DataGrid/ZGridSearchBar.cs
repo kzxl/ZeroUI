@@ -173,7 +173,7 @@ namespace ZeroUI.WinForms.DataGrid
             Controls.Add(_btnDensity);
             Controls.Add(_btnExport);
 
-            ZeroTheme.ThemeChanged += (s, e) => ApplyTheme();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             ApplyTheme();
         }
 
@@ -258,7 +258,19 @@ namespace ZeroUI.WinForms.DataGrid
             using var pen = new Pen(ZeroTheme.Colors.Border, 1f);
             e.Graphics.DrawLine(pen, 0, Height - 1, Width, Height - 1);
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => ApplyTheme();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

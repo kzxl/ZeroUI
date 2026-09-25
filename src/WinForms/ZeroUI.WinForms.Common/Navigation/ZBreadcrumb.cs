@@ -58,7 +58,7 @@ namespace ZeroUI.WinForms.Navigation
             BackColor = Color.Transparent;
 
             _items.CollectionChanged += OnItemsChanged;
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
 
             // Inline path editor for Explorer-style editing
             _pathEditor = new TextBox
@@ -425,7 +425,19 @@ namespace ZeroUI.WinForms.Navigation
         }
 
         #endregion
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Alias for BreadcrumbControl providing hierarchical path navigation.

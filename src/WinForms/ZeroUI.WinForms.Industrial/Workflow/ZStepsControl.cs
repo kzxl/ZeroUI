@@ -85,7 +85,7 @@ namespace ZeroUI.WinForms.Workflow
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         [Browsable(false)]
@@ -338,7 +338,19 @@ namespace ZeroUI.WinForms.Workflow
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="StepsControlStatus"/>.

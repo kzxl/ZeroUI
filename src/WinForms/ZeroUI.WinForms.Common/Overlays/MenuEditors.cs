@@ -94,7 +94,7 @@ namespace ZeroUI.WinForms.Overlays
 
             Controls.Add(_textBox);
             UpdateColors();
-            ZeroTheme.ThemeChanged += (s, e) => UpdateColors();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void UpdateColors()
@@ -182,12 +182,16 @@ namespace ZeroUI.WinForms.Overlays
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _debounceTimer.Stop();
                 _debounceTimer.Dispose();
             }
             base.Dispose(disposing);
         }
-    }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => UpdateColors();
+
+}
 
     /// <summary>
     /// Search input menu item embeddable into ContextMenuStrip or ToolStrip.
@@ -673,7 +677,7 @@ namespace ZeroUI.WinForms.Overlays
             Controls.Add(_comboBox);
 
             UpdateColors();
-            ZeroTheme.ThemeChanged += (s, e) => UpdateColors();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void UpdateColors()
@@ -685,7 +689,19 @@ namespace ZeroUI.WinForms.Overlays
             _comboBox.ForeColor = palette.TextPrimary;
             Invalidate();
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => UpdateColors();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// ComboBox selector menu item embeddable into ContextMenuStrip or ToolStrip.

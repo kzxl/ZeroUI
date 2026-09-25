@@ -31,11 +31,7 @@ namespace ZeroUI.WinForms.Overlays
             Padding = new Padding(4, 6, 4, 6);
             BackColor = ZeroTheme.Colors.CardBackground;
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.CardBackground;
-                Invalidate();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         #region Actions & Submenus
@@ -207,7 +203,23 @@ namespace ZeroUI.WinForms.Overlays
         }
 
         #endregion
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.CardBackground;
+                Invalidate();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Custom MenuItem supporting danger state, glyph emojis, vector IconKey, shortcut hints, and badge tags.

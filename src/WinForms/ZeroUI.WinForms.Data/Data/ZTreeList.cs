@@ -293,7 +293,7 @@ namespace ZeroUI.WinForms.Data
             Size = new Size(380, 420);
 
             MouseWheel += OnMouseWheelScroll;
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -1377,7 +1377,19 @@ namespace ZeroUI.WinForms.Data
 
         private static GraphicsPath CreateRoundedRect(Rectangle r, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(r, radius);
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for TreeList.

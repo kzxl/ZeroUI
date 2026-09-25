@@ -527,16 +527,7 @@ namespace ZeroUI.WinForms.Docking
             _rightAutoHideBar.Paint += OnRightAutoHideBarPaint;
             _rightAutoHideBar.MouseDown += OnRightAutoHideBarMouseDown;
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.Background;
-                _drawerOverlay.BackColor = ZeroTheme.Colors.Surface;
-                _leftSplitter.BackColor = ZeroTheme.Colors.Border;
-                _rightSplitter.BackColor = ZeroTheme.Colors.Border;
-                _topSplitter.BackColor = ZeroTheme.Colors.Border;
-                _bottomSplitter.BackColor = ZeroTheme.Colors.Border;
-                Invalidate(true);
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void AddPanel(DockPanelControl panel, DockPosition position)
@@ -1171,7 +1162,28 @@ namespace ZeroUI.WinForms.Docking
         }
 
         #endregion
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.Background;
+                _drawerOverlay.BackColor = ZeroTheme.Colors.Surface;
+                _leftSplitter.BackColor = ZeroTheme.Colors.Border;
+                _rightSplitter.BackColor = ZeroTheme.Colors.Border;
+                _topSplitter.BackColor = ZeroTheme.Colors.Border;
+                _bottomSplitter.BackColor = ZeroTheme.Colors.Border;
+                Invalidate(true);
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     [Obsolete("Use DockPosition instead.")]
     public enum ZeroDockPosition

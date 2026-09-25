@@ -116,12 +116,7 @@ namespace ZeroUI.WinForms.Containers
             _contentPanel.ControlRemoved += OnContentControlRemoved;
             Controls.Add(_contentPanel);
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.CardBackground;
-                _borderColor = ZeroTheme.Colors.Border;
-                Invalidate();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             ZeroUIConfig.CornerStyleChanged += (s, e) =>
             {
                 UpdateRegion();
@@ -625,7 +620,24 @@ namespace ZeroUI.WinForms.Containers
 
         private static GraphicsPath CreateRoundedRectangle(Rectangle rect, int radius) =>
             ZeroUIConfig.CreateRoundedRectangle(rect, radius);
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.CardBackground;
+                _borderColor = ZeroTheme.Colors.Border;
+                Invalidate();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZCard"/>.

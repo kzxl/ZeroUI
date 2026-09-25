@@ -47,7 +47,7 @@ namespace ZeroUI.WinForms.Industrial
             Font = new Font("Segoe UI", 9f, FontStyle.Bold);
             Text = "Active / Running";
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -176,12 +176,16 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _clockToken?.Dispose();
                 _clockToken = null;
             }
             base.Dispose(disposing);
         }
-    }
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZStatusBadge"/>.

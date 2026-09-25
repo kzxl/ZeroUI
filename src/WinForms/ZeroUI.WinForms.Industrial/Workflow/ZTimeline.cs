@@ -64,7 +64,7 @@ namespace ZeroUI.WinForms.Workflow
             Font = new Font("Segoe UI", 9f);
             Size = new Size(320, 240);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         [Browsable(false)]
@@ -172,7 +172,19 @@ namespace ZeroUI.WinForms.Workflow
             TimelineStatus.Error => (Color.FromArgb(239, 68, 68), Color.FromArgb(254, 226, 226)),      // Red
             _ => (Color.FromArgb(156, 163, 175), Color.FromArgb(243, 244, 246))                            // Slate
         };
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="TimelineStatus"/>.

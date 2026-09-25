@@ -68,7 +68,7 @@ namespace ZeroUI.WinForms.Charts
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
             Size = new Size(500, 320);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         #region Properties
@@ -373,7 +373,19 @@ namespace ZeroUI.WinForms.Charts
                 }
             }
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for FunnelChart.

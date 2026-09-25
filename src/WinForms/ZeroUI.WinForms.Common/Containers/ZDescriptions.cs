@@ -55,7 +55,7 @@ namespace ZeroUI.WinForms.Containers
             Font = new Font("Segoe UI", 9f);
             Size = new Size(400, 90);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         [Browsable(false)]
@@ -177,7 +177,19 @@ namespace ZeroUI.WinForms.Containers
                 }
             }
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="DescriptionItem"/>.

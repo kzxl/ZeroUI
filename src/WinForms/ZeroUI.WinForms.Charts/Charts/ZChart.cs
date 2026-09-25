@@ -298,7 +298,7 @@ namespace ZeroUI.WinForms.Charts
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9f, FontStyle.Regular);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public ChartSeries AddSeries(string name, Color? color = null)
@@ -1296,7 +1296,19 @@ namespace ZeroUI.WinForms.Charts
 
         #endregion
 
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZChart"/>.

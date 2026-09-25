@@ -146,11 +146,7 @@ namespace ZeroUI.WinForms.Navigation
             UpdateLocalizedStrings();
             Localizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.Background;
-                Invalidate(true);
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         private void PositionFooterButtons()
@@ -333,7 +329,23 @@ namespace ZeroUI.WinForms.Navigation
                 g.DrawLine(pen, 0, 0, _footerPanel.Width, 0);
             }
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.Background;
+                Invalidate(true);
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for WizardControl.

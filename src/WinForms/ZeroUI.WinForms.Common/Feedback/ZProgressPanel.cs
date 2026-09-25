@@ -134,7 +134,7 @@ namespace ZeroUI.WinForms.Feedback
             };
             _animTimer.Start();
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -223,12 +223,16 @@ namespace ZeroUI.WinForms.Feedback
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _animTimer.Stop();
                 _animTimer.Dispose();
             }
             base.Dispose(disposing);
         }
-    }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ZProgressPanel"/>.

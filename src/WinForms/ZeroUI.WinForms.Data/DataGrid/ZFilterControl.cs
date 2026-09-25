@@ -56,11 +56,7 @@ namespace ZeroUI.WinForms.DataGrid
             };
             Controls.Add(_treePanel);
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.Surface;
-                RebuildTreeUI();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
 
             Localizer.CultureChanged += (s, e) =>
             {
@@ -340,7 +336,23 @@ namespace ZeroUI.WinForms.DataGrid
 
         public string GetSqlWhere() => _rootGroup.ToSqlWhere();
         public string GetDisplayString() => _rootGroup.ToDisplayString();
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.Surface;
+                RebuildTreeUI();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for FilterControl.

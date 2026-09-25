@@ -122,11 +122,7 @@ namespace ZeroUI.WinForms.PivotGrid
             _hScrollBar.ValueChanged += (s, e) => { _scrollX = _hScrollBar.Value; Invalidate(); };
             Controls.Add(_hScrollBar);
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.Surface;
-                Invalidate();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
 
             Localizer.CultureChanged += (s, e) =>
             {
@@ -637,7 +633,23 @@ namespace ZeroUI.WinForms.PivotGrid
             path.CloseFigure();
             return path;
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.Surface;
+                Invalidate();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ZPivotGrid"/>.

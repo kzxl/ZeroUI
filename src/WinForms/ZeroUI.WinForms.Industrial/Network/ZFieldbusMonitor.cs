@@ -63,7 +63,7 @@ namespace ZeroUI.WinForms.Network
 
             _network.PopulateDemoIndustrialLine();
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -92,6 +92,7 @@ namespace ZeroUI.WinForms.Network
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _animSub?.Dispose();
                 _animSub = null;
             }
@@ -399,7 +400,10 @@ namespace ZeroUI.WinForms.Network
             path.CloseFigure();
             return path;
         }
-    }
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

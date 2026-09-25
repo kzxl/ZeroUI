@@ -238,7 +238,7 @@ namespace ZeroUI.WinForms.Charts
                 Invalidate();
             };
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         #region Data and Client Binding
@@ -743,7 +743,19 @@ namespace ZeroUI.WinForms.Charts
         }
 
         #endregion
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Backward-compatible alias for RangeControl.

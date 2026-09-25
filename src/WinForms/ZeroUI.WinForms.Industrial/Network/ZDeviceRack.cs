@@ -91,7 +91,7 @@ namespace ZeroUI.WinForms.Network
             Font = new Font("Segoe UI", 8.25f);
 
             InitializeDemoRack();
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         private void InitializeDemoRack()
@@ -456,7 +456,19 @@ namespace ZeroUI.WinForms.Network
             path.CloseFigure();
             return path;
         }
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

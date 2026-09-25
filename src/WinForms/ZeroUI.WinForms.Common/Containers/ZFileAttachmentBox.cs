@@ -186,12 +186,7 @@ namespace ZeroUI.WinForms.Containers
             DragLeave += OnFlowDragLeave;
             DragDrop += OnFlowDragDrop;
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                _lblTitle.ForeColor = ZeroTheme.Colors.TextPrimary;
-                RebuildFileCards();
-                Invalidate();
-            };
+            
         }
 
         #region Properties
@@ -652,7 +647,16 @@ namespace ZeroUI.WinForms.Containers
         }
 
         #endregion
+    
+    protected override void OnThemeChanged(ZeroSkin skin)
+    {
+        base.OnThemeChanged(skin);
+        _lblTitle.ForeColor = ZeroTheme.Colors.TextPrimary;
+                RebuildFileCards();
+                Invalidate();
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

@@ -46,7 +46,7 @@ namespace ZeroUI.WinForms.Charts
             Font = new Font("Segoe UI", 8.5f);
             BackColor = Color.FromArgb(15, 23, 42);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -243,7 +243,19 @@ namespace ZeroUI.WinForms.Charts
                 }
             }
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

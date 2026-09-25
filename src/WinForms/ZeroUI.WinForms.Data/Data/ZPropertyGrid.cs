@@ -125,16 +125,7 @@ namespace ZeroUI.WinForms.Data
 
             _model.PropertyValueChanged += (s, e) => PropertyValueChanged?.Invoke(this, e);
 
-            ZeroTheme.ThemeChanged += (s, e) =>
-            {
-                BackColor = ZeroTheme.Colors.Surface;
-                _searchBox.BackColor = ZeroTheme.Colors.Surface;
-                _searchBox.ForeColor = ZeroTheme.Colors.TextPrimary;
-                _descPanel.BackColor = ZeroTheme.Colors.HeaderBackground;
-                _lblDescTitle.ForeColor = ZeroTheme.Colors.TextPrimary;
-                _lblDescBody.ForeColor = ZeroTheme.Colors.TextSecondary;
-                RebuildPropertyTree();
-            };
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         public void RebuildPropertyTree()
@@ -265,7 +256,28 @@ namespace ZeroUI.WinForms.Data
                 : item.Description;
             Invalidate(true);
         }
+    
+    private void OnThemeChanged(object sender, EventArgs e)
+    {
+                BackColor = ZeroTheme.Colors.Surface;
+                _searchBox.BackColor = ZeroTheme.Colors.Surface;
+                _searchBox.ForeColor = ZeroTheme.Colors.TextPrimary;
+                _descPanel.BackColor = ZeroTheme.Colors.HeaderBackground;
+                _lblDescTitle.ForeColor = ZeroTheme.Colors.TextPrimary;
+                _lblDescBody.ForeColor = ZeroTheme.Colors.TextSecondary;
+                RebuildPropertyTree();
+            }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZPropertyGrid"/>.

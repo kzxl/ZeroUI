@@ -82,7 +82,7 @@ namespace ZeroUI.WinForms.Charts
             BackColor = Color.FromArgb(15, 23, 42); // Obsidian Dark
 
             InitializeSampleData();
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
         }
 
         private void InitializeSampleData()
@@ -589,7 +589,19 @@ namespace ZeroUI.WinForms.Charts
 
         private static GraphicsPath CreateRoundedRect(RectangleF r, int radius) =>
             ZeroUIConfig.CreateRoundedRectangleF(r, radius);
+    
+    private void OnThemeChanged(object sender, EventArgs e) => Invalidate();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
+        }
+        base.Dispose(disposing);
     }
+
+}
 
     /// <summary>
     /// Legacy alias for <see cref="ZHeatmap"/>.

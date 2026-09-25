@@ -56,7 +56,7 @@ namespace ZeroUI.WinForms.Industrial
             BackColor = Color.Transparent;
             Font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
-            ZeroTheme.ThemeChanged += (s, e) => Invalidate();
+            ZeroTheme.ThemeChanged += OnThemeChanged;
             ZeroUIConfig.CornerStyleChanged += (s, e) => Invalidate();
             ZeroUIConfig.FontChanged += (s, e) =>
             {
@@ -238,11 +238,15 @@ namespace ZeroUI.WinForms.Industrial
         {
             if (disposing)
             {
+            ZeroTheme.ThemeChanged -= OnThemeChanged;
                 _flashTimer.Dispose();
             }
             base.Dispose(disposing);
         }
-    }
+    
+    private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
