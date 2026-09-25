@@ -15,6 +15,12 @@ namespace ZeroUI.Wpf.DataGrid
     {
         private void UpdateEditorTheme()
         {
+            if (!Dispatcher.CheckAccess())
+            {
+                if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
+                    Dispatcher.BeginInvoke((Action)UpdateEditorTheme);
+                return;
+            }
             _inPlaceEditor.Background = ZeroWpfTheme.BgInput;
             _inPlaceEditor.Foreground = ZeroWpfTheme.TextPrimary;
             _inPlaceEditor.BorderBrush = ZeroWpfTheme.PrimaryAccent;

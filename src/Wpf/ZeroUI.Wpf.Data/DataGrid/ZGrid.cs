@@ -507,11 +507,22 @@ namespace ZeroUI.Wpf.DataGrid
             _columns.CollectionChanged += (s, e) => InvalidateVisual();
             _groupSummaries.CollectionChanged += (s, e) => RecalculateGroupSummaries();
             _conditionalRules.CollectionChanged += (s, e) => InvalidateVisual();
-            ZeroWpfTheme.ThemeChanged += () =>
+            Loaded += (s, e) => ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+            Unloaded += (s, e) => ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+        }
+
+        private void OnThemeChanged()
+        {
+            if (!Dispatcher.CheckAccess())
             {
-                UpdateEditorTheme();
-                InvalidateVisual();
-            };
+                if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
+                {
+                    Dispatcher.BeginInvoke((Action)OnThemeChanged);
+                }
+                return;
+            }
+            UpdateEditorTheme();
+            InvalidateVisual();
         }
 
         protected override int VisualChildrenCount => _visualChildren.Count;

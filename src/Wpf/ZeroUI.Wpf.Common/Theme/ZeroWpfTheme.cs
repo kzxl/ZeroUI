@@ -113,7 +113,37 @@ namespace ZeroUI.Wpf.Theme
             SelectionPen = CreateFrozenPen(PrimaryAccent, 1.0);
 
             UpdateApplicationResources();
-            ThemeChanged?.Invoke();
+            if (ThemeChanged != null)
+            {
+                foreach (Action handler in ThemeChanged.GetInvocationList())
+                {
+                    try
+                    {
+                        if (handler.Target is System.Windows.Threading.DispatcherObject dispObj)
+                        {
+                            if (!dispObj.Dispatcher.HasShutdownStarted && !dispObj.Dispatcher.HasShutdownFinished)
+                            {
+                                if (dispObj.Dispatcher.CheckAccess())
+                                {
+                                    handler();
+                                }
+                                else
+                                {
+                                    dispObj.Dispatcher.BeginInvoke(handler);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            handler();
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore exceptions from obsolete/disposed subscribers
+                    }
+                }
+            }
         }
 
         private static SolidColorBrush CreateFrozen(string hex)
