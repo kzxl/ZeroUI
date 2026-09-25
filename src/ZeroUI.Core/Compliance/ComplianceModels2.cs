@@ -1,0 +1,1 @@
+namespace ZeroUI.Core.Compliance { public class ChecklistItem {} }
