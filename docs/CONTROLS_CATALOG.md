@@ -200,3 +200,62 @@ All creative photo studio, inspection, color grading, and media controls reside 
 * **`ZInventoryCard`** *(Aliases: `InventoryCard`, `ZeroInventoryCard`)*: Industrial stock telemetry card featuring Available, Waiting, and Reserved segment distributions.
 * **`ZLotSelector`** *(Aliases: `LotSelector`, `ZeroLotSelector`)*: Automated FIFO/FEFO lot allocation selector with quarantine and expiry locks.
 
+---
+
+## 8. Enterprise Extended Controls Suite (`Z*` - v1.10.1)
+
+A specialized suite of 21 cross-platform enterprise controls spanning Modern Inputs, Industrial Workflows, Visual Schedulers, Tree Views, Markdown/Code/JSON Viewers, and Audit Trails:
+
+### Modern Inputs & Search Overlays
+* **`ZAutoComplete`** *(WinForms: `ZeroUI.WinForms.Editors` / WPF: `ZeroUI.Wpf.Editors`)*:
+  * Async debounce filtering (default 200ms) with cancellation token support, customizable suggestion items, keyboard navigation (Up/Down/Enter/Escape), and theme-aware popup dropdown.
+* **`ZCommandPalette`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Global command launcher modal overlay (invoked via `Ctrl+K`), fuzzy match scoring, categorized command groups, keyboard execution triggers, and translucent backdrop dimming.
+* **`ZPasswordBox`** *(WinForms: `ZeroUI.WinForms.Editors` / WPF: `ZeroUI.Wpf.Editors`)*:
+  * Masked secure text input with interactive password reveal eye toggle button, real-time entropy calculation bar (Weak, Medium, Strong), and focus glow borders.
+* **`ZMultiSelect`** *(WinForms: `ZeroUI.WinForms.Editors` / WPF: `ZeroUI.Wpf.Editors`)*:
+  * Modern multi-value tag box with dismissible chips, inline text search filter, maximum selection limits, clear-all button, and theme synchronization.
+* **`ZSignaturePad`** *(WinForms: `ZeroUI.WinForms.Editors` / WPF: `ZeroUI.Wpf.Editors`)*:
+  * High-fidelity vector handwriting ink stroke capture, Bezier curve smoothing, custom stroke width/color, clear canvas trigger, and lossless PNG export.
+
+### Feedback, Notifications & Status
+* **`ZNotificationCenter` & `ZNotificationBell`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Slide-out notification drawer with severity grouping (Info, Success, Warning, Error), unread badge counts, timestamp formatting, action links, mark-as-read, and companion header bell icon (`ZNotificationBell`).
+* **`ZEmptyState`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Zero-data placeholder container featuring vector icon glyphs, title, description, and primary/secondary call-to-action buttons.
+* **`ZAvatar`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Circular or rounded user avatar with image caching, initials fallback with deterministic background color generation, and real-time presence status indicator dots (Online, Busy, Away, Offline).
+
+### Industrial SCADA, Planning & Workflow
+* **`ZAlarmSummary`** *(WinForms: `ZeroUI.WinForms.Industrial` / WPF: `ZeroUI.Wpf.Industrial`)*:
+  * ISA-18.2 compliant industrial alarm management console featuring state badges (Active, Acked, Cleared), operator acknowledgment action, audio snooze toggles, and severity indicators.
+* **`ZScheduler`** *(WinForms: `ZeroUI.WinForms.Industrial` / WPF: `ZeroUI.Wpf.Industrial`)*:
+  * Comprehensive scheduling calendar control offering Day, Week, Month, and Agenda views, interactive date navigation headers, and appointment binding.
+* **`ZCronEditor`** *(WinForms: `ZeroUI.WinForms.Editors` / WPF: `ZeroUI.Wpf.Editors`)*:
+  * Visual cron expression builder (Minutes, Hours, Days, Months, Weekdays), real-time human-readable cadence summary ("At 09:30 on day 1 of every month"), and validation.
+* **`ZTimeline`** *(WinForms: `ZeroUI.WinForms.Industrial` / WPF: `ZeroUI.Wpf.Industrial`)*:
+  * Vertical manufacturing audit trail and batch journal control with status indicator nodes (Completed, InProgress, Error, Pending), connecting line tracks, timestamps, and detail cards.
+
+### Data Visualization & Virtualization
+* **`ZGaugeChart`** *(WinForms: `ZeroUI.WinForms.Charts` / WPF: `ZeroUI.Wpf.Charts`)*:
+  * High-precision circular dial gauge with configurable threshold arcs (Normal, Warning, Danger), animated needle pointer, and digital readout display.
+* **`ZBubbleChart`** *(WinForms: `ZeroUI.WinForms.Charts` / WPF: `ZeroUI.Wpf.Charts`)*:
+  * Multi-variable 3D bubble chart scaling X, Y, Radius, and Color with hover crosshair hit-testing and dynamic legend integration.
+* **`ZVirtualGrid`** *(WinForms: `ZeroUI.WinForms.Data` / WPF: `ZeroUI.Wpf.Data`)*:
+  * Minimal-footprint, ultra-fast virtualized data table designed for rapid embedding and high-frequency telemetry feeds.
+
+### Documents, Code & Tree Navigation
+* **`ZRichTextEditor`** *(WinForms: `ZeroUI.WinForms.Editors` / WPF: `ZeroUI.Wpf.Editors`)*:
+  * Full-featured WYSIWYG document editor with formatting toolbar (Bold, Italic, Underline, Bullet lists, Colors, Font sizes), and RTF/HTML round-trip persistence.
+* **`ZMarkdownViewer`** *(WinForms: `ZeroUI.WinForms.Documents` / WPF: `ZeroUI.Wpf.Documents`)*:
+  * Live Markdown document previewer with headings ($H_1-H_6$), code blocks, blockquotes, horizontal rules, bullet lists, and a Raw/Preview view toggle button.
+* **`ZCodeEditor`** *(WinForms: `ZeroUI.WinForms.Documents` / WPF: `ZeroUI.Wpf.Documents`)*:
+  * Monospace script and formula editor with gutter line numbering, configurable tab indentation, and dark/light theme integration.
+* **`ZJsonEditor`** *(WinForms: `ZeroUI.WinForms.Editors` / WPF: `ZeroUI.Wpf.Editors`)*:
+  * Zero-dependency JSON editor with pretty-formatting (`FormatJson`), minification (`MinifyJson`), real-time token syntax validation (`ValidateJson`), gutter line numbers, and status indicators.
+* **`ZTreeView`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * High-performance hierarchical tree view control supporting chevron expand/collapse toggles, optional node checkboxes, selection highlights, and connector lines.
+* **`ZTransferList`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Dual-box item transfer control with transfer actions ($>, >>, <, <<$), dual search boxes, item count badges, and disabled state handling.
+
+

@@ -208,3 +208,17 @@ ZeroUI is designed around the **Strict Zero-Allocation** principle, **Single-HWN
   * `emerald_industrial` (Precision green industrial)
   * `solar_amber` (Amber energy theme)
   * `amethyst_violet`, `crimson_ruby`, `oled_midnight`.
+
+---
+
+### 8. Enterprise Extended Controls Suite (v1.10.1)
+
+#### Key Controls:
+- **`ZAutoComplete` & `ZCommandPalette`:** Async debounced suggestions and global Ctrl+K modal quick-launcher with fuzzy search.
+- **`ZNotificationCenter` & `ZNotificationBell`:** Multi-severity notification drawer with unread counts and direct action callbacks.
+- **`ZAlarmSummary` & `ZTimeline`:** ISA-18.2 compliant industrial alarm management and vertical manufacturing batch audit trails.
+- **`ZScheduler` & `ZCronEditor`:** Multi-view calendar scheduling (Day, Week, Month, Agenda) and visual Quartz cron expression builder.
+- **`ZRichTextEditor`, `ZMarkdownViewer`, `ZCodeEditor` & `ZJsonEditor`:** Comprehensive document, code, and JSON suite with zero-dependency syntax validation, formatting, and live previews.
+- **`ZTreeView`, `ZTransferList`, `ZEmptyState` & `ZAvatar`:** Modern application navigation, dual-box transfer lists, empty-state placeholders, and user presence avatars.
+- **`ZGaugeChart`, `ZBubbleChart` & `ZVirtualGrid`:** Radial dial gauges with threshold zones, 3D bubble dispersion charts, and lightweight virtual data tables.
+

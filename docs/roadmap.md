@@ -24,6 +24,8 @@
 | **Phase 20** | **Creative & Media Controls Suite (v1.8.0)** | Digital Imaging & Video Grading | **Completed** | 15 direct-rendered visual editors (`CurveEditor`, `ColorWheelEdit`, `CompareViewerControl`, `HistogramScopeControl`, `CropBoxControl`, `MiniMapNavigator`, `MaskGizmoOverlay`, `ThumbnailGridControl`). |
 | **Phase 21** | **Core SQLite Historian Decoupling (v1.8.6)** | Architectural Decoupling & Storage | **Completed** | Extracted `ZeroUI.Historian.Sqlite`, eliminating external dependencies from `ZeroUI.Core` (100% Pure BCL). |
 | **Phase 22** | **Cross-Platform Control Parity & Shared Logic (v1.8.6)** | Multi-Framework Unification | **Completed** | Automated parity reflection test suite (`ControlParityInspectionTests`), `SevenSegmentState` platform-neutral core state, 100% parity across WinForms & WPF. |
+| **Phase 23** | **Interactive Guided Tour Engine & Canonical Naming (v1.10.0)** | Onboarding Engine & Forensic Inspection | **Completed** | Cross-platform `ZTour` (spotlight aperture cutout masking, semi-transparent glass backdrop, adaptive popovers), forensic inspection suite (`ZAnnotationCanvas`, `ZMeasurementRuler`, `ZWatermarkOverlay`, `ZVideoPlayer`, `ZAudioWaveform`, `ZDocumentDeskew`), canonical `Z*` naming standard, 720 tests (100%). |
+| **Phase 24** | **Enterprise Extended Controls Suite & Deep Multi-Dimensional Verification (v1.10.1)** | Extended Controls & Deep Test Suite | **Completed** | 21 production controls across WinForms & WPF (`ZAutoComplete`, `ZCommandPalette`, `ZNotificationCenter`, `ZAlarmSummary`, `ZRichTextEditor`, `ZScheduler`, `ZGaugeChart`, `ZBubbleChart`, `ZPasswordBox`, `ZVirtualGrid`, `ZCronEditor`, `ZMultiSelect`, `ZSignaturePad`, `ZTransferList`, `ZEmptyState`, `ZAvatar`, `ZMarkdownViewer`, `ZCodeEditor`, `ZJsonEditor`, `ZTreeView`, `ZTimeline`), zero-dependency JSON token engine, STA thread safety, 804 tests (100%). |
 
 ---
 
@@ -211,3 +213,16 @@ For detailed architectural evaluations, design trade-offs, and implementation sp
 - **Automated Parity Reflection Testing:** Created `ControlParityInspectionTests` validating property/event synchronization across 166 control pairs.
 - **Golden Spike Industrial Parity (`SevenSegment`):** Extracted `SevenSegmentState` into `ZeroUI.Core.Industrial`, achieving 100% property and rendering parity between WinForms and WPF.
 - **Test Suite Verification:** 607/607 unit tests passing (100%) across `ZeroUI.Core.Tests` (539) and `ZeroUI.Desktop.Tests` (68).
+
+#### Phase 23: Interactive Guided Tour Engine & Canonical Naming (v1.10.0 — COMPLETED)
+- **Cross-Platform Interactive Onboarding (`ZTour`):** Native spotlight aperture cutout masking (`Region.Exclude` / `CombinedGeometry.Exclude`), semi-transparent glass dimming backdrop, and collision-free adaptive popover positioning (`TopMost = true`).
+- **Forensic Inspection Suite (`ZeroUI.Wpf.Media`):** `ZAnnotationCanvas`, `ZMeasurementRuler`, `ZWatermarkOverlay`, `ZVideoPlayer`, `ZAudioWaveform`, `ZDocumentDeskew`.
+- **Standardized Naming Convention:** Canonical `Z*` naming prefix with 100% backward compatibility via `[Obsolete]` aliases.
+- **Automated Tests:** 720 tests passing (100%).
+
+#### Phase 24: Enterprise Extended Controls Suite & Deep Multi-Dimensional Verification (v1.10.1 — COMPLETED)
+- **21 Production Extended Controls:** Implemented full lifecycle, zero-allocation theming, and cross-platform parity across WinForms and WPF (`ZAutoComplete`, `ZCommandPalette`, `ZNotificationCenter`, `ZAlarmSummary`, `ZRichTextEditor`, `ZScheduler`, `ZGaugeChart`, `ZBubbleChart`, `ZPasswordBox`, `ZVirtualGrid`, `ZCronEditor`, `ZMultiSelect`, `ZSignaturePad`, `ZTransferList`, `ZEmptyState`, `ZAvatar`, `ZMarkdownViewer`, `ZCodeEditor`, `ZJsonEditor`, `ZTreeView`, `ZTimeline`).
+- **Zero-Dependency JSON Token Engine:** Integrated high-speed parser and validator in `ZJsonEditor` with zero external dependencies, compatible across .NET Framework 4.6.2 and .NET 8.
+- **Thread Safety & STA Synchronization:** Cross-thread Dispatcher STA safety checks preventing xUnit race conditions and deadlocks.
+- **Deep Test Verification:** 804 automated unit tests passed (100% green: 593 Core + 211 Desktop).
+- **Deprecation Policy Conformance:** Strict 5-release deprecation policy with unambiguous, non-colliding shims.
