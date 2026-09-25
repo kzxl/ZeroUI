@@ -12,11 +12,11 @@ namespace ZeroUI.WinForms.Documents
         public string MarkdownText { get; set; } public bool ShowSourceToggle { get; set; } public event EventHandler LinkClicked;
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZMarkdownViewer instead.")]
+    [Obsolete("MarkdownViewer is deprecated and will be removed in 5 release cycles. Please migrate to ZMarkdownViewer instead.")]
     [ToolboxItem(false)]
     public class MarkdownViewer : ZMarkdownViewer { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZMarkdownViewer instead.")]
+    [Obsolete("ZeroMarkdownViewer is deprecated and will be removed in 5 release cycles. Please migrate to ZMarkdownViewer instead.")]
     [ToolboxItem(false)]
     public class ZeroMarkdownViewer : ZMarkdownViewer { }
 }

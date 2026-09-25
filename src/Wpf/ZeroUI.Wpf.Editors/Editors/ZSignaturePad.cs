@@ -11,9 +11,9 @@ namespace ZeroUI.Wpf.Editors
         public System.Windows.Media.Color StrokeColor { get; set; } public int StrokeWidth { get; set; } public System.Windows.Media.Color BackgroundColor { get; set; } public bool IsEmpty { get; set; } public event EventHandler SignatureChanged; public void Clear() {} public System.Windows.Media.ImageSource GetSignatureImage() { return null; }
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZSignaturePad instead.")]
+    [Obsolete("SignaturePad is deprecated and will be removed in 5 release cycles. Please migrate to ZSignaturePad instead.")]
     public class SignaturePad : ZSignaturePad { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZSignaturePad instead.")]
+    [Obsolete("ZeroSignaturePad is deprecated and will be removed in 5 release cycles. Please migrate to ZSignaturePad instead.")]
     public class ZeroSignaturePad : ZSignaturePad { }
 }

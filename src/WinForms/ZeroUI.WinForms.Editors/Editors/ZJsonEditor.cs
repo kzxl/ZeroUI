@@ -12,11 +12,11 @@ namespace ZeroUI.WinForms.Editors
         public string JsonText { get; set; } public bool ReadOnly { get; set; } public int IndentSize { get; set; } public bool ShowLineNumbers { get; set; } public event EventHandler JsonChanged;
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZJsonEditor instead.")]
+    [Obsolete("JsonEditor is deprecated and will be removed in 5 release cycles. Please migrate to ZJsonEditor instead.")]
     [ToolboxItem(false)]
     public class JsonEditor : ZJsonEditor { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZJsonEditor instead.")]
+    [Obsolete("ZeroJsonEditor is deprecated and will be removed in 5 release cycles. Please migrate to ZJsonEditor instead.")]
     [ToolboxItem(false)]
     public class ZeroJsonEditor : ZJsonEditor { }
 }

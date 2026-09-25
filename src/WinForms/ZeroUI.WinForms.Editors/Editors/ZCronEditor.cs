@@ -12,11 +12,11 @@ namespace ZeroUI.WinForms.Editors
         public string CronExpression { get; set; } public bool ShowPreview { get; set; } public event EventHandler CronChanged;
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZCronEditor instead.")]
+    [Obsolete("CronEditor is deprecated and will be removed in 5 release cycles. Please migrate to ZCronEditor instead.")]
     [ToolboxItem(false)]
     public class CronEditor : ZCronEditor { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZCronEditor instead.")]
+    [Obsolete("ZeroCronEditor is deprecated and will be removed in 5 release cycles. Please migrate to ZCronEditor instead.")]
     [ToolboxItem(false)]
     public class ZeroCronEditor : ZCronEditor { }
 }

@@ -11,9 +11,9 @@ namespace ZeroUI.Wpf.Data
         public System.Windows.Controls.Control MasterControl { get; set; } public System.Windows.Controls.Control DetailControl { get; set; } public System.Windows.Controls.Orientation Orientation { get; set; } public int SplitterPosition { get; set; } public event EventHandler MasterSelectionChanged;
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
+    [Obsolete("MasterDetail is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
     public class MasterDetail : ZMasterDetail { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
+    [Obsolete("ZeroMasterDetail is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
     public class ZeroMasterDetail : ZMasterDetail { }
 }

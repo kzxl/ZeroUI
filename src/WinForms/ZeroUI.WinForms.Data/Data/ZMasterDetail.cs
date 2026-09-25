@@ -12,11 +12,11 @@ namespace ZeroUI.WinForms.Data
         public Control MasterControl { get; set; } public Control DetailControl { get; set; } public Orientation Orientation { get; set; } public int SplitterPosition { get; set; } public event EventHandler MasterSelectionChanged;
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
+    [Obsolete("MasterDetail is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
     [ToolboxItem(false)]
     public class MasterDetail : ZMasterDetail { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
+    [Obsolete("ZeroMasterDetail is deprecated and will be removed in 5 release cycles. Please migrate to ZMasterDetail instead.")]
     [ToolboxItem(false)]
     public class ZeroMasterDetail : ZMasterDetail { }
 }

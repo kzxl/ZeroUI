@@ -11,9 +11,9 @@ namespace ZeroUI.Wpf.Data
         public object ItemsSource { get; set; } public Action CardTemplate { get; set; } public int ColumnCount { get; set; } public int CardSpacing { get; set; } public event EventHandler CardClicked;
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZCardView instead.")]
+    [Obsolete("CardView is deprecated and will be removed in 5 release cycles. Please migrate to ZCardView instead.")]
     public class CardView : ZCardView { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZCardView instead.")]
+    [Obsolete("ZeroCardView is deprecated and will be removed in 5 release cycles. Please migrate to ZCardView instead.")]
     public class ZeroCardView : ZCardView { }
 }

@@ -11,9 +11,9 @@ namespace ZeroUI.Wpf.Editors
         public string Password { get; set; } public bool ShowStrengthMeter { get; set; } public bool ShowToggleVisibility { get; set; } public string StrengthLevel { get; set; } public string PlaceholderText { get; set; }
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZPasswordBox instead.")]
+    [Obsolete("PasswordBox is deprecated and will be removed in 5 release cycles. Please migrate to ZPasswordBox instead.")]
     public class PasswordBox : ZPasswordBox { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZPasswordBox instead.")]
+    [Obsolete("ZeroPasswordBox is deprecated and will be removed in 5 release cycles. Please migrate to ZPasswordBox instead.")]
     public class ZeroPasswordBox : ZPasswordBox { }
 }

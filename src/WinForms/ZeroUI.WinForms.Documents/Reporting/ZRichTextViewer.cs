@@ -12,11 +12,11 @@ namespace ZeroUI.WinForms.Documents
         public string HtmlContent { get; set; } public bool ShowToolbar { get; set; } public double ZoomLevel { get; set; }
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZRichTextViewer instead.")]
+    [Obsolete("RichTextViewer is deprecated and will be removed in 5 release cycles. Please migrate to ZRichTextViewer instead.")]
     [ToolboxItem(false)]
     public class RichTextViewer : ZRichTextViewer { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZRichTextViewer instead.")]
+    [Obsolete("ZeroRichTextViewer is deprecated and will be removed in 5 release cycles. Please migrate to ZRichTextViewer instead.")]
     [ToolboxItem(false)]
     public class ZeroRichTextViewer : ZRichTextViewer { }
 }

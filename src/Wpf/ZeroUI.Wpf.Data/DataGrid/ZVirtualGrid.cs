@@ -11,9 +11,9 @@ namespace ZeroUI.Wpf.Data
         public int RowCount { get; set; } public int ColumnCount { get; set; } public bool ReadOnly { get; set; } public event EventHandler CellValueNeeded;
     }
     
-    [Obsolete("$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZVirtualGrid instead.")]
+    [Obsolete("VirtualGrid is deprecated and will be removed in 5 release cycles. Please migrate to ZVirtualGrid instead.")]
     public class VirtualGrid : ZVirtualGrid { }
     
-    [Obsolete("Zero$alias is deprecated and will be removed in 5 release cycles. Please migrate to ZVirtualGrid instead.")]
+    [Obsolete("ZeroVirtualGrid is deprecated and will be removed in 5 release cycles. Please migrate to ZVirtualGrid instead.")]
     public class ZeroVirtualGrid : ZVirtualGrid { }
 }
