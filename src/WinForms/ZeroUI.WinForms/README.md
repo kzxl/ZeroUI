@@ -11,7 +11,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 > - **5-Release Backward Compatibility:** Previous class names (`PanelControl`, `GroupControl`, `MenuBarControl`, `SimpleButton`, `TextEdit`, and legacy `Zero*` shims) are retained as `[Obsolete]` wrappers across exactly 5 minor releases to guarantee zero compilation breaks during migration.
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.6-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.10.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
@@ -54,6 +54,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 * **`WorkspaceSerializer` / `ZeroWorkspaceSerializer`:** Pure zero-dependency JSON layout persistence engine capturing and restoring DockPanel and DataGrid column configurations.
 * **`WizardControl` / `ZeroWizard`:** Multi-step process workflow wizard with validation and step progress indicator.
 * **`ToolbarControl` & `SideNavControl`:** Anti-aliased action toolbar with collision guard and collapsible vertical navigation bar.
+* **`ZTour` (`ZeroUI.WinForms.Common.ZTour`):** Interactive guided onboarding tour engine with spotlight cutout masking (`Region.Exclude`), glowing animated target borders, dynamic popover card with collision-free placement, step counter, dot indicators, and keyboard navigation (`Escape`, `Enter`, arrows).
 
 ### 🏭 Industrial, SCADA & MES Suite (`ZeroUI.WinForms.Industrial`)
 * **Instrumentation Gauges:** `SevenSegment` (100% parity with WPF, 7-segment LED readout with color profiles), `LinearGauge` (horizontal/vertical thermometer), and `RadialGauge` (Bourdon tube dial).
@@ -72,7 +73,7 @@ Ultra-high-performance WinForms enterprise & industrial UI suite with 10M+ rows 
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.WinForms --version 1.8.6
+dotnet add package ZeroUI.WinForms --version 1.10.0
 ```
 
 ---

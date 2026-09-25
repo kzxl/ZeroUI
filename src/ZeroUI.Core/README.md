@@ -6,7 +6,7 @@ Ultra-high-performance, zero-allocation core runtime, analytical engines, and in
 > **Zero External Dependencies:** `ZeroUI.Core` contains **0 third-party package dependencies**. All memory pools, math decimation, TagEngine, validation, serialization, and state machines run purely on .NET BCL.
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.6-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.10.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![Dependencies](https://img.shields.io/badge/dependencies-0%20external-brightgreen.svg)](#-key-features)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
@@ -57,7 +57,7 @@ Ultra-high-performance, zero-allocation core runtime, analytical engines, and in
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.Core --version 1.8.6
+dotnet add package ZeroUI.Core --version 1.10.0
 ```
 
 ---

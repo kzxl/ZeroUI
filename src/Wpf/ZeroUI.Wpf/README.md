@@ -3,10 +3,11 @@
 Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big data grid, OLAP pivot matrices, timeline range selectors, form validation, Creative & Media Editors Suite, and reactive Obsidian Dark/Clean Light theme engine (`net462`, `net8.0-windows`).
 
 > [!NOTE]
-> **Enterprise Naming Standard:** All control classes adhere to clean enterprise names without the `Zero` prefix (e.g. `GridControl`, `SevenSegment`, `LinearGauge`, `RadialGauge`, `ValidationProvider`). Full backward compatibility is preserved via `[Obsolete]` shims.
+> **Canonical `Z*` Control Naming Standard & Collision Prevention:**
+> All control classes adhere to the canonical `Z*` prefix (e.g. `ZGrid`, `ZSevenSegment`, `ZLinearGauge`, `ZRadialGauge`, `ZValidationProvider`, `ZTour`). Full backward compatibility is preserved via `[Obsolete]` shims.
 
 [![ZeroPlatform Ecosystem](https://img.shields.io/badge/ZeroPlatform-Ecosystem-blueviolet.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.8.6-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.10.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kzxl/ZeroUI)
 [![GitHub](https://img.shields.io/badge/GitHub-kzxl%2FZeroUI-blue.svg)](https://github.com/kzxl/ZeroUI)
 
@@ -44,7 +45,16 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 * **`TokenEdit` / `ZeroTokenEdit`:** Tag & badge input with dismissible chips and keyboard navigation.
 * **`ColorPickEdit` / `ZeroColorPicker` & `DateRangePicker`:** Enterprise swatch color picker and dual-date range presets.
 
-### 📐 Navigation, Layout & Reporting
+### 🎨 Specialized Creative & Inspection Media Editors (`ZeroUI.Wpf.Media`)
+* **`ZAnnotationCanvas`**: Vector-based interactive markup canvas for defect tagging and forensic inspection (Bounding Box, Ellipse, Arrow, Line, Callout, Blur/Pixelate) with severity ratings and bitmap burning.
+* **`ZMeasurementRuler`**: Precision optical caliper and gauge for machine vision metrology (linear calipers, 3-point angle gauge $\theta^\circ$, sub-pixel calibration).
+* **`ZWatermarkOverlay`**: Dynamic security layer with runtime token substitution (`{User}`, `{Date}`, `{Time}`, `{Machine}`), 9-point anchor, and diagonal matrix tiling.
+* **`ZVideoPlayer`**: GPU-accelerated video playback workstation with SMPTE timecode (`hh:mm:ss:ff`), frame-accurate stepping, and speed ratios (0.1x–8.0x).
+* **`ZAudioWaveform`**: Symmetrical audio amplitude waveform visualizer with synchronized playhead scrubbing and time-range selection.
+* **`ZDocumentDeskew`**: Document straightening canvas with perspective keystone correction, alignment grid overlay, and Otsu binarization for OCR.
+
+### 📐 Navigation, Layout & Onboarding
+* **`ZTour` (`ZeroUI.Wpf.Common.ZTour`):** Interactive guided onboarding tour engine with spotlight cutout aperture (`CombinedGeometry.Exclude`), glowing animated target borders, dynamic popover card with collision-free placement, step counter, dot indicators, and keyboard navigation (`Escape`, `Enter`, arrows).
 * **`ProcessMap`:** Interactive business process flowchart & workflow navigation map with customizable UserControl action triggers, orthogonal routing, and JSON serialization.
 * **`WizardControl` / `ZeroWizard`:** Multi-step process workflow wizard with validation and step progress indicator.
 * **`SideNavControl` & `AccordionControl`:** Collapsible vertical sidebar navigation with category groups and badges.
@@ -60,7 +70,7 @@ Ultra-high-performance WPF industrial UI suite with zero-allocation virtual big 
 ## 📦 Installation
 
 ```powershell
-dotnet add package ZeroUI.Wpf --version 1.8.6
+dotnet add package ZeroUI.Wpf --version 1.10.0
 ```
 
 ---
