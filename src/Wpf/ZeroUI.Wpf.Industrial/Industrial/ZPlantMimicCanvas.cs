@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using ZeroUI.Core.Common;
 using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada;
 using ZeroUI.Core.Scene;
@@ -340,7 +341,7 @@ namespace ZeroUI.Wpf.Industrial
 
             _scene.QueryVisibleNodes(viewportRect, _visibleNodesBuffer);
             double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-            var renderContext = new RenderContext(viewportRect, (float)_zoomFactor, isDark, Environment.TickCount);
+            var renderContext = new RenderContext(viewportRect, (float)_zoomFactor, isDark, MonotonicClock.ElapsedMilliseconds);
 
             // 5. Render Scene Nodes (both ZeroSceneNode and polymorphic SceneNode subclasses)
             for (int i = 0; i < _visibleNodesBuffer.Count; i++)

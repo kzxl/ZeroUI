@@ -1,6 +1,6 @@
 using System;
-
 using System.Collections.Generic;
+using ZeroUI.Core.Common;
 using ZeroUI.Core.Scene.Routing;
 using ZeroUI.Core.Scene.Svg;
 using ZeroUI.WinForms.Icons;
@@ -30,7 +30,7 @@ namespace ZeroUI.WinForms.Industrial
         private readonly List<SceneNode> _visibleNodesBuffer = new List<SceneNode>(256);
         private readonly List<IScadaDrawable> _elements = new List<IScadaDrawable>();
         private readonly IDisposable? _animationSub;
-        private long _lastTick = Environment.TickCount;
+        private long _lastTick = MonotonicClock.ElapsedMilliseconds;
         private float _zoomFactor = 1.0f;
         private float _panOffsetX = 0f;
         private float _panOffsetY = 0f;
@@ -120,7 +120,7 @@ namespace ZeroUI.WinForms.Industrial
 
         private void OnAnimationTick()
         {
-            long now = Environment.TickCount;
+            long now = MonotonicClock.ElapsedMilliseconds;
             long elapsed = Math.Max(1, now - _lastTick);
             _lastTick = now;
 
@@ -321,7 +321,7 @@ namespace ZeroUI.WinForms.Industrial
 
             // 3. Render ZeroScene Nodes with Spatial Culling
             _scene.QueryVisibleNodes(viewportRect, _visibleNodesBuffer);
-            var renderContext = new RenderContext(viewportRect, _zoomFactor, isDark, Environment.TickCount);
+            var renderContext = new RenderContext(viewportRect, _zoomFactor, isDark, MonotonicClock.ElapsedMilliseconds);
 
             for (int i = 0; i < _visibleNodesBuffer.Count; i++)
             {

@@ -506,6 +506,9 @@ namespace ZeroUI.WinForms.Reporting
             }
         }
 
+        /// <summary>
+        /// Displays an open file dialog to allow the user to select and load a PDF document.
+        /// </summary>
         public async void OpenFileDialogPrompt()
         {
             using var ofd = new OpenFileDialog
@@ -516,7 +519,14 @@ namespace ZeroUI.WinForms.Reporting
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                await LoadDocumentAsync(ofd.FileName);
+                try
+                {
+                    await LoadDocumentAsync(ofd.FileName);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ZPdfViewer] Failed to load document: {ex.Message}");
+                }
             }
         }
 

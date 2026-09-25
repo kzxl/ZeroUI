@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using ZeroUI.Core.Common;
 using ZeroUI.Core.Mes;
 using ZeroUI.Core.Runtime;
 using ZeroUI.Core.Scada.Analytics;
@@ -42,7 +43,7 @@ namespace ZeroUI.Core.Scada.Pipeline
         private long _mediumTotalTicks;
         private long _slowFramesCount;
         private long _slowTotalTicks;
-        private long _lastMetricsResetTick = Environment.TickCount;
+        private long _lastMetricsResetTick = MonotonicClock.ElapsedMilliseconds;
 
         public ScadaSafetyInterlockEngine Safety => _safetyEngine;
         public ScadaAggregationEngine Aggregation => _aggregationEngine;
@@ -193,7 +194,7 @@ namespace ZeroUI.Core.Scada.Pipeline
 
             try
             {
-                long currentTick = Environment.TickCount;
+                long currentTick = MonotonicClock.ElapsedMilliseconds;
 
                 // 1. Execute sliding-window aggregations (SMA, RMS, Min/Max)
                 _aggregationEngine.ExecuteAggregationCycle(currentTick);
@@ -258,7 +259,7 @@ namespace ZeroUI.Core.Scada.Pipeline
         /// </summary>
         public ScadaPipelineMetrics GetMetrics()
         {
-            long now = Environment.TickCount;
+            long now = MonotonicClock.ElapsedMilliseconds;
             double elapsedSec = Math.Max(0.001, (now - _lastMetricsResetTick) / 1000.0);
 
             long fastCount = Interlocked.Read(ref _fastIngestCount);

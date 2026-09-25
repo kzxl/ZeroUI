@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using ZeroUI.Core.Common;
 
 namespace ZeroUI.Core.Scada.Analytics
 {
@@ -38,7 +39,7 @@ namespace ZeroUI.Core.Scada.Analytics
         private double _runningSumSquares = 0;
         private double _ema = 0;
         private double _totalIntegral = 0;
-        private long _lastUpdateTick = 0;
+        private long _lastUpdateTick = -1;
 
         public TagAggregator(
             string sourceTagPath,
@@ -141,7 +142,7 @@ namespace ZeroUI.Core.Scada.Analytics
 
                 case AggregationType.IntegralAccumulation:
                 {
-                    if (_lastUpdateTick > 0)
+                    if (_lastUpdateTick >= 0)
                     {
                         double dtSeconds = Math.Max(0.0001, (currentTick - _lastUpdateTick) / 1000.0);
                         _totalIntegral += sampleValue * dtSeconds;

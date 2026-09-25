@@ -76,7 +76,18 @@ namespace ZeroUI.Core.Runtime
                 }
             }
 
-            // Fallback: If no dispatcher initialized, execute in threadpool
+            // Auto-detect current thread's SynchronizationContext as last resort
+            var currentCtx = SynchronizationContext.Current;
+            if (currentCtx != null)
+            {
+                currentCtx.Post(_ => action(), null);
+                return;
+            }
+
+            // Final fallback: log warning and execute on threadpool
+            System.Diagnostics.Debug.WriteLine(
+                "[UiDispatcher] WARNING: No SynchronizationContext available. " +
+                "Call UiDispatcher.Initialize() on the UI thread during startup.");
             ThreadPool.QueueUserWorkItem(_ => action());
         }
 
