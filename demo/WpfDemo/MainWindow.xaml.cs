@@ -958,40 +958,40 @@ namespace ZeroUI.Samples.WpfDemo
             var tour = new ZTour(this);
             tour.AddStep(new ZTourStep
             {
-                Title = "Chào mừng bạn đến với ZeroUI!",
-                Description = "Hệ thống UI Component Suite hiệu năng cao, kiến trúc Zero-Alloc dành cho doanh nghiệp và ứng dụng công nghiệp quy mô lớn.",
+                Title = "Welcome to ZeroUI!",
+                Description = "Enterprise high-performance, zero-allocation desktop UI suite engineered for large-scale mission-critical applications.",
                 Placement = ZTourPlacement.Center,
                 Target = null
             });
 
             tour.AddStep(new ZTourStep
             {
-                Title = "Chuyển Đổi Skin & Theme",
-                Description = "Hỗ trợ thay đổi theme trực tiếp trong thời gian thực (Dark, Light, Cyberpunk, High-Contrast) mà không làm gián đoạn hiển thị hay reload giao diện.",
+                Title = "Theme & Skin Selector",
+                Description = "Instantly switch visual themes (Dark, Light, Cyberpunk, High-Contrast) in real time with zero layout flicker or UI reloads.",
                 Placement = ZTourPlacement.Bottom,
                 Target = ComboSkinSelector
             });
 
             tour.AddStep(new ZTourStep
             {
-                Title = "Thanh Điều Hướng 7 Cụm Tính Năng",
-                Description = "Phân vùng nghiệp vụ rõ ràng bao gồm Virtual DataGrid, Industrial SCADA, Biểu Đồ Real-time, Báo Cáo In-Memory và Công cụ Tối ưu hóa.",
+                Title = "Cluster Navigation Rail",
+                Description = "Seamlessly browse 7 enterprise clusters: Virtual DataGrid, Industrial SCADA, Real-time Charts, In-Memory Reporting, and Optimization Tools.",
                 Placement = ZTourPlacement.Right,
                 Target = MainNavRail
             });
 
             tour.AddStep(new ZTourStep
             {
-                Title = "Diagnostics HUD (Render Optimizer)",
-                Description = "Bật/Tắt màn hình chẩn đoán kỹ thuật để đo đạc FPS render trực tiếp, mức tiêu thụ tài nguyên và thông lượng dữ liệu của Canvas.",
+                Title = "Diagnostics HUD",
+                Description = "Toggle real-time telemetry overlay to monitor render FPS, drawing throughput, and memory consumption directly on the canvas.",
                 Placement = ZTourPlacement.Bottom,
                 Target = BtnToggleHUD
             });
 
             tour.AddStep(new ZTourStep
             {
-                Title = "Ngăn Kéo Drawer & Overlays",
-                Description = "Trải nghiệm các panel trượt Slide-out, hộp thoại Contextual Popover và hệ thống Onboarding Walkthrough (ZTour) mượt mà.",
+                Title = "Drawers & Overlays",
+                Description = "Explore slide-out drawers, contextual popovers, and interactive guided walkthroughs powered by the ZTour component.",
                 Placement = ZTourPlacement.Bottom,
                 Target = BtnDetailDrawer
             });

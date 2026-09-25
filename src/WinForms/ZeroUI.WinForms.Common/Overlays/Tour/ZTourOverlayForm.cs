@@ -248,11 +248,11 @@ namespace ZeroUI.WinForms.Overlays
                 using (var skipFont = new Font("Segoe UI", 8.5f))
                 {
                     var skipColor = _isSkipHover ? Color.White : Color.FromArgb(148, 163, 184);
-                    TextRenderer.DrawText(g, "Bỏ qua", skipFont, _btnSkipRect, skipColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, "Skip", skipFont, _btnSkipRect, skipColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
                 }
             }
 
-            // Nút Quay lại
+            // Previous button
             if (_tour.CurrentIndex > 0)
             {
                 using (var btnPath = CreateRoundedRectPath(_btnPrevRect, 4))
@@ -264,11 +264,11 @@ namespace ZeroUI.WinForms.Overlays
                 }
                 using (var prevFont = new Font("Segoe UI", 8.5f))
                 {
-                    TextRenderer.DrawText(g, currentStep.PrevButtonText ?? "Quay lại", prevFont, _btnPrevRect, Color.FromArgb(241, 245, 249), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, currentStep.PrevButtonText ?? "Previous", prevFont, _btnPrevRect, Color.FromArgb(241, 245, 249), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
                 }
             }
 
-            // Nút Tiếp theo / Hoàn tất
+            // Next / Finish button
             using (var btnPath = CreateRoundedRectPath(_btnNextRect, 4))
             using (var btnBg = new SolidBrush(_isNextHover ? Color.FromArgb(37, 99, 235) : Color.FromArgb(59, 130, 246)))
             {
@@ -276,7 +276,7 @@ namespace ZeroUI.WinForms.Overlays
             }
             using (var nextFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
             {
-                string nextText = currentStep.NextButtonText ?? (isLast ? "Hoàn tất" : "Tiếp theo");
+                string nextText = currentStep.NextButtonText ?? (isLast ? "Finish" : "Next");
                 TextRenderer.DrawText(g, nextText, nextFont, _btnNextRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
         }

@@ -9131,32 +9131,32 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             var tour = new ZTour(this);
             tour.AddStep(new ZTourStep
             {
-                Title = "ZeroUI WinForms Demo Suite",
-                Description = "Chào mừng bạn đến với bộ điều khiển WinForms hiệu năng cao Zero-Alloc (DataGrid 10M rows, Industrial SCADA, RAD Designer).",
+                Title = "ZeroUI WinForms Showcase",
+                Description = "Welcome to the high-performance, Zero-Alloc WinForms component suite (10M rows DataGrid, Industrial SCADA, RAD Designer).",
                 Placement = ZTourPlacement.Center,
                 Target = null
             });
 
             tour.AddStep(new ZTourStep
             {
-                Title = "Thử Nghiệm Tải Dữ Liệu Lớn",
-                Description = "Nhấp chọn từ 100K đến 10M bản ghi để trải nghiệm tốc độ render tức thời với VirtualViewport2D và Zero-Allocation.",
+                Title = "High-Volume Data Benchmark",
+                Description = "Ingest 100K to 10M records instantly with sub-millisecond virtual viewport rendering and zero garbage collection overhead.",
                 Placement = ZTourPlacement.Bottom,
                 Target = _btn1M
             });
 
             tour.AddStep(new ZTourStep
             {
-                Title = "Stress Test Cuộn Siêu Tốc",
-                Description = "Kích hoạt Stress Test cuộn liên tục 60 FPS để kiểm tra độ trễ hiển thị và tính ổn định của Garbage Collector (GC Gen0 = 0).",
+                Title = "60 FPS Virtual Scroll Stress Test",
+                Description = "Launch high-frequency continuous scrolling to benchmark frame rate stability and confirm zero Gen0 GC allocations.",
                 Placement = ZTourPlacement.Bottom,
                 Target = _btnAutoScroll
             });
 
             tour.AddStep(new ZTourStep
             {
-                Title = "Điều Hướng Phân Hệ Nghiệp Vụ",
-                Description = "Chuyển đổi giữa các phân hệ: Virtual Grid, SCADA Mimics, MES Workflow, Warehouse Barcode, Analytics và RAD Visual Designer.",
+                Title = "Enterprise Modular Navigation",
+                Description = "Explore specialized clusters: Virtual Grid, SCADA Mimics, MES Workflow, Warehouse Barcode, Analytics, and RAD Designers.",
                 Placement = ZTourPlacement.Right,
                 Target = _mainNav
             });

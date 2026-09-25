@@ -228,7 +228,7 @@ namespace ZeroUI.Wpf.Overlays
 
             _btnSkip = new Button
             {
-                Content = "Bỏ qua",
+                Content = "Skip",
                 Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 Foreground = ZeroWpfTheme.TextMuted,
@@ -242,7 +242,7 @@ namespace ZeroUI.Wpf.Overlays
 
             _btnPrev = new Button
             {
-                Content = "Quay lại",
+                Content = "Previous",
                 Background = ZeroWpfTheme.BgInput,
                 BorderBrush = ZeroWpfTheme.BorderDefault,
                 BorderThickness = new Thickness(1),
@@ -257,7 +257,7 @@ namespace ZeroUI.Wpf.Overlays
 
             _btnNext = new Button
             {
-                Content = "Tiếp theo",
+                Content = "Next",
                 Background = ZeroWpfTheme.PrimaryAccent,
                 BorderThickness = new Thickness(0),
                 Foreground = Brushes.White,
@@ -300,12 +300,12 @@ namespace ZeroUI.Wpf.Overlays
                 _customContentPresenter.Visibility = Visibility.Collapsed;
             }
 
-            // 2. Nút điều hướng
+            // 2. Navigation buttons
             _btnPrev.Visibility = currentIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
-            _btnPrev.Content = step.PrevButtonText ?? "Quay lại";
+            _btnPrev.Content = step.PrevButtonText ?? "Previous";
 
             bool isLast = (currentIndex == totalCount - 1);
-            _btnNext.Content = step.NextButtonText ?? (isLast ? "Hoàn tất" : "Tiếp theo");
+            _btnNext.Content = step.NextButtonText ?? (isLast ? "Finish" : "Next");
             _btnSkip.Visibility = isLast ? Visibility.Collapsed : Visibility.Visible;
 
             // 3. Render Dot indicators
