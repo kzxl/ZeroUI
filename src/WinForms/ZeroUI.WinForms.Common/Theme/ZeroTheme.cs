@@ -31,8 +31,11 @@ namespace ZeroUI.WinForms.Theme
         public Color PrimaryAccent => Primary;
         public Color PrimaryAccentDark => PrimaryHover;
         public Color BorderDefault => Border;
+        public Color BorderSubtle => Border;
+        public Color BorderFocused => Primary;
         public Color BgCard => CardBackground;
         public Color BgInput => Surface;
+        public Color TextMuted => TextSecondary;
     }
 
     /// <summary>
