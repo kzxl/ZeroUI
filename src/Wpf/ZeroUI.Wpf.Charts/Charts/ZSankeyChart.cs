@@ -46,7 +46,8 @@ namespace ZeroUI.Wpf.Charts
             ClipToBounds = true;
             MinHeight = 240;
             MinWidth = 320;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         public SankeyNode AddNode(string name, Color color, int column = 0)
@@ -280,7 +281,18 @@ namespace ZeroUI.Wpf.Charts
                 InvalidateVisual();
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

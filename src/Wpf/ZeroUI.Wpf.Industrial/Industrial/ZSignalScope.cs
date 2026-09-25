@@ -66,7 +66,8 @@ namespace ZeroUI.Wpf.Industrial
             Cursor = Cursors.Cross;
 
             _channels.CollectionChanged += (s, e) => InvalidateVisual();
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         protected override void OnRender(DrawingContext dc)
@@ -487,7 +488,18 @@ namespace ZeroUI.Wpf.Industrial
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

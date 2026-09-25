@@ -32,7 +32,8 @@ namespace ZeroUI.Wpf.Editors
         {
             Height = 16;
             MinWidth = 100;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         #if NETFRAMEWORK
@@ -83,7 +84,18 @@ namespace ZeroUI.Wpf.Editors
                 dc.DrawText(ft, new Point((w - ft.Width) / 2.0, (h - ft.Height) / 2.0));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ProgressBarControl"/>.

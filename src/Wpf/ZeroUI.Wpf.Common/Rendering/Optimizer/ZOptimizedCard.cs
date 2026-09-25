@@ -173,8 +173,8 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
         public ZOptimizedCard()
         {
             SnapsToDevicePixels = true;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
-            Loaded += (s, e) => ZeroWpfRenderMonitor.Instance.CoreMonitor.FidelityTierChanged += OnFidelityTierChanged;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             Unloaded += (s, e) => ZeroWpfRenderMonitor.Instance.CoreMonitor.FidelityTierChanged -= OnFidelityTierChanged;
         }
 
@@ -383,7 +383,19 @@ namespace ZeroUI.Wpf.Rendering.Optimizer
                 dc.DrawRoundedRectangle(shadowBrush, null, rect, rx + spread * 0.5, ry + spread * 0.5);
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfRenderMonitor.Instance.CoreMonitor.FidelityTierChanged += OnFidelityTierChanged;
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ZOptimizedCard"/>.

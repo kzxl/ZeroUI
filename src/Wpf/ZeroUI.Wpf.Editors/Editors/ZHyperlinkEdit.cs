@@ -126,7 +126,8 @@ namespace ZeroUI.Wpf.Editors
             Height = 32;
             Width = 200;
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private static void OnTargetUrlChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -312,7 +313,18 @@ namespace ZeroUI.Wpf.Editors
                 dc.DrawLine(underlinePen, new Point(textX, textY + ft.Height + 1), new Point(textX + ft.Width, textY + ft.Height + 1));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

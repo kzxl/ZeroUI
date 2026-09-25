@@ -150,14 +150,27 @@ namespace ZeroUI.Wpf.DataGrid
 
             Child = stack;
 
-            ZeroWpfTheme.ThemeChanged += () =>
-            {
-                Background = ZeroWpfTheme.BgCard;
-                BorderBrush = ZeroWpfTheme.BorderDefault;
-                _recordsSummary.Foreground = ZeroWpfTheme.TextSecondary;
-                _sizeLabel.Foreground = ZeroWpfTheme.TextMuted;
-                _pageInfo.Foreground = ZeroWpfTheme.TextPrimary;
-            };
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
+        }
+
+        private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+        }
+
+        private void OnThemeChanged()
+        {
+            Background = ZeroWpfTheme.BgCard;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            _recordsSummary.Foreground = ZeroWpfTheme.TextSecondary;
+            _sizeLabel.Foreground = ZeroWpfTheme.TextMuted;
+            _pageInfo.Foreground = ZeroWpfTheme.TextPrimary;
         }
 
         public void UpdateTotalRecords(int total)

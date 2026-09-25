@@ -83,7 +83,8 @@ namespace ZeroUI.Wpf.Editors
             Focusable = true;
             Height = 28;
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private static void OnIsCheckedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -241,7 +242,18 @@ namespace ZeroUI.Wpf.Editors
                 dc.DrawText(ft, new Point(textX, textY));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="RadioEdit"/>.

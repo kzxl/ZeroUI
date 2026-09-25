@@ -69,7 +69,8 @@ namespace ZeroUI.Wpf.Editors
         public ZTagControl()
         {
             Height = 24;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         protected override Size MeasureOverride(Size availableSize)
@@ -208,7 +209,18 @@ namespace ZeroUI.Wpf.Editors
 
             return (bg, border, fg);
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="TagControl"/>.

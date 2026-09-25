@@ -231,7 +231,8 @@ namespace ZeroUI.Wpf.Editors
                 else { _searchBox.Focus(); OpenDropdown(); }
             };
 
-            ZeroWpfTheme.ThemeChanged += () => UpdateThemeColors(isFocused: _searchBox.IsFocused);
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             UpdateThemeColors(isFocused: false);
         }
 
@@ -416,7 +417,18 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => UpdateThemeColors(isFocused: _searchBox.IsFocused);
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="LookUpEdit"/>.

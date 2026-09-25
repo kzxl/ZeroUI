@@ -58,7 +58,8 @@ namespace ZeroUI.Wpf.Industrial
         {
             Height = 26;
             MinWidth = 80;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
 #if NETFRAMEWORK
@@ -109,7 +110,18 @@ namespace ZeroUI.Wpf.Industrial
             var ft = CreateFormattedText(display, ZeroWpfTheme.BoldTypeface, 11.0, textBrush, dpi);
             dc.DrawText(ft, new Point(dotX + dotRadius + 6, dotY - ft.Height / 2.0));
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

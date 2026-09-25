@@ -115,7 +115,8 @@ namespace ZeroUI.Wpf.Navigation
             Width = 260;
 
             _groups.CollectionChanged += (s, e) => RebuildUI();
-            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             BuildVisualTemplate();
         }
 
@@ -365,7 +366,17 @@ namespace ZeroUI.Wpf.Navigation
             _groups.Add(grp);
             return grp;
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ZAccordion"/>.

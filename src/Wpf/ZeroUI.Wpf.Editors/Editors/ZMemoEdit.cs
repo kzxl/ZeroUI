@@ -120,7 +120,8 @@ namespace ZeroUI.Wpf.Editors
             Padding = new Thickness(10, 8, 10, 8);
             SnapsToDevicePixels = true;
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         protected override void OnTextChanged(TextChangedEventArgs e)
@@ -186,7 +187,18 @@ namespace ZeroUI.Wpf.Editors
                 dc.DrawText(ft, new Point(badgeX + 4, badgeY + 2));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

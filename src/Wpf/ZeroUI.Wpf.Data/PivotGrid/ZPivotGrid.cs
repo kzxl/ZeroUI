@@ -61,17 +61,30 @@ namespace ZeroUI.Wpf.PivotGrid
             BuildVisualStructure();
 
             ZeroLocalizer.CultureChanged += (s, e) => RefreshData();
-            ZeroWpfTheme.ThemeChanged += () =>
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
+        }
+
+        private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+        }
+
+        private void OnThemeChanged()
+        {
+            Background = ZeroWpfTheme.BgCard;
+            BorderBrush = ZeroWpfTheme.BorderDefault;
+            if (_outerBorder != null)
             {
-                Background = ZeroWpfTheme.BgCard;
-                BorderBrush = ZeroWpfTheme.BorderDefault;
-                if (_outerBorder != null)
-                {
-                    _outerBorder.Background = Background;
-                    _outerBorder.BorderBrush = BorderBrush;
-                }
-                RebuildMatrixUI();
-            };
+                _outerBorder.Background = Background;
+                _outerBorder.BorderBrush = BorderBrush;
+            }
+            RebuildMatrixUI();
         }
 
         private void OnDataSourceChanged(object? newValue)

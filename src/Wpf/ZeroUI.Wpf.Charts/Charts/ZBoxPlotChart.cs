@@ -113,7 +113,8 @@ namespace ZeroUI.Wpf.Charts
             ClipToBounds = true;
             MinHeight = 240;
             MinWidth = 320;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         public void AddPoint(BoxPlotDataPoint point)
@@ -319,7 +320,18 @@ namespace ZeroUI.Wpf.Charts
                 dc.DrawText(xLabel, new Point(cx - xLabel.Width / 2, padTop + plotH + 8));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

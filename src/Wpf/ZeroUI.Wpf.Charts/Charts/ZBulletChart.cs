@@ -84,7 +84,8 @@ namespace ZeroUI.Wpf.Charts
             ClipToBounds = true;
             MinHeight = 200;
             MinWidth = 360;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         public void LoadSampleData()
@@ -369,7 +370,18 @@ namespace ZeroUI.Wpf.Charts
                 InvalidateVisual();
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

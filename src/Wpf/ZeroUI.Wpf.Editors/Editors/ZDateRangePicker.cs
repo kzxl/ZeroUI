@@ -153,7 +153,8 @@ namespace ZeroUI.Wpf.Editors
             AddVisualChild(_containerBorder);
             AddLogicalChild(_containerBorder);
 
-            ZeroWpfTheme.ThemeChanged += () => UpdateThemeColors(isFocused: IsFocused);
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             UpdateThemeColors(isFocused: false);
         }
 
@@ -882,7 +883,18 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => UpdateThemeColors(isFocused: IsFocused);
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

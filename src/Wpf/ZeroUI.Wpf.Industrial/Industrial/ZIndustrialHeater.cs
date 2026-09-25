@@ -129,7 +129,8 @@ namespace ZeroUI.Wpf.Industrial
                 _clockToken = null;
                 ZeroTagEngine.UnregisterBindable(this);
             };
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void OnAnimationFrame(double deltaSeconds, long frameCount)
@@ -248,7 +249,18 @@ namespace ZeroUI.Wpf.Industrial
             );
             dc.DrawText(spText, new Point(w - spText.Width - 8, h - 18));
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

@@ -231,7 +231,8 @@ namespace ZeroUI.Wpf.Editors
             };
             _calendarPopup.Closed += (s, e) => _dateBox.Text = SelectedDate.ToString(DateFormat);
 
-            ZeroWpfTheme.ThemeChanged += () => UpdateThemeColors(isFocused: _dateBox.IsFocused);
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             UpdateThemeColors(isFocused: false);
         }
 
@@ -619,7 +620,18 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => UpdateThemeColors(isFocused: _dateBox.IsFocused);
+}
 
     /// <summary>
     /// Legacy alias for DateEdit.

@@ -82,8 +82,21 @@ namespace ZeroUI.Wpf.Charts
             ClipToBounds = true;
             MinHeight = 220;
             MinWidth = 320;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
+
+        private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+        }
+
+        private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+        }
+
+        private void OnThemeChanged() => InvalidateVisual();
 
         public void LoadSampleData()
         {

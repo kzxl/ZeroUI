@@ -137,9 +137,9 @@ namespace ZeroUI.Wpf.Editors
             Cursor = Cursors.Hand;
             Focusable = true;
             Height = 32;
-            Loaded += (s, e) => InvalidateMeasure();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -387,7 +387,19 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        InvalidateMeasure();
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

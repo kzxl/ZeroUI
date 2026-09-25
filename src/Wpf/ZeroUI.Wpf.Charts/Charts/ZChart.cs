@@ -50,7 +50,8 @@ namespace ZeroUI.Wpf.Charts
         public ZChart()
         {
             ClipToBounds = true;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         #pragma warning disable CS0618
@@ -515,7 +516,18 @@ namespace ZeroUI.Wpf.Charts
                 dc.DrawRectangle(cBrush, null, new Rect(cx - candleWidth / 2.0, topY, candleWidth, bodyH));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

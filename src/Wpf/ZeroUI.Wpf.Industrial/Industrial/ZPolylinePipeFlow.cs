@@ -90,7 +90,6 @@ namespace ZeroUI.Wpf.Industrial
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         public void SetPoints(IEnumerable<Point> points)
@@ -105,6 +104,7 @@ namespace ZeroUI.Wpf.Industrial
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
             if (!_isSubscribed)
             {
                 CompositionTarget.Rendering += OnRendering;
@@ -114,6 +114,7 @@ namespace ZeroUI.Wpf.Industrial
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
             if (_isSubscribed)
             {
                 CompositionTarget.Rendering -= OnRendering;
@@ -225,7 +226,8 @@ namespace ZeroUI.Wpf.Industrial
             centerBrush.Freeze();
             dc.DrawEllipse(centerBrush, null, p, d * 0.25, d * 0.25);
         }
-    }
+        private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

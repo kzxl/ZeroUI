@@ -125,7 +125,8 @@ namespace ZeroUI.Wpf.TreeList
             Focusable = true;
             _columns.CollectionChanged += OnColumnsChanged;
             _model.ModelChanged += OnModelChanged;
-            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void OnModelChanged(object? sender, EventArgs e)
@@ -396,7 +397,17 @@ namespace ZeroUI.Wpf.TreeList
                 brush,
                 dpi.PixelsPerDip);
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

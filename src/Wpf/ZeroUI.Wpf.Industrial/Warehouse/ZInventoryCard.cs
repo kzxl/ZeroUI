@@ -27,7 +27,8 @@ namespace ZeroUI.Wpf.Warehouse
             Height = 190;
             MinWidth = 280;
             ClipToBounds = true;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         #if NETFRAMEWORK
@@ -131,7 +132,18 @@ namespace ZeroUI.Wpf.Warehouse
             var whFt = CreateFormattedText($"📍 {WarehouseName}", ZeroWpfTheme.RegularTypeface, 10.0, ZeroWpfTheme.TextMuted, dpi);
             dc.DrawText(whFt, new Point(14, 162));
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

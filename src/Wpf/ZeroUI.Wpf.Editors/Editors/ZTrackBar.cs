@@ -142,7 +142,8 @@ namespace ZeroUI.Wpf.Editors
                 ValueChanged?.Invoke(this, _rangeModel.Value);
             };
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         #region DP Callbacks
@@ -430,7 +431,18 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="SliderControl"/>.

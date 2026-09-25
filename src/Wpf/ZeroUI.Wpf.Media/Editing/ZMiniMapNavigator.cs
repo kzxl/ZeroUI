@@ -149,7 +149,8 @@ namespace ZeroUI.Wpf.Media
             ClipToBounds = true;
             Cursor = Cursors.Hand;
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private static void OnViewportRectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -353,7 +354,18 @@ namespace ZeroUI.Wpf.Media
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

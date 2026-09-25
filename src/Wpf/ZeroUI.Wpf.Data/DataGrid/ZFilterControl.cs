@@ -40,7 +40,8 @@ namespace ZeroUI.Wpf.DataGrid
             Height = 280;
 
             ZeroLocalizer.CultureChanged += (s, e) => RebuildTreeUI();
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             _rootGroup.AddCondition("Status", FilterComparisonOperator.Equals, "Active");
             BuildVisualTemplate();
@@ -294,7 +295,17 @@ namespace ZeroUI.Wpf.DataGrid
 
         public string GetSqlWhere() => _rootGroup.ToSqlWhere();
         public string GetDisplayString() => _rootGroup.ToDisplayString();
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += UpdateTheme;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= UpdateTheme;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

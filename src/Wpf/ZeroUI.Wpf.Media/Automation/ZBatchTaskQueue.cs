@@ -349,7 +349,8 @@ namespace ZeroUI.Wpf.Media
         {
             Focusable = true;
             _tasks.CollectionChanged += (_, _) => UpdateEmptyState();
-            ZeroWpfTheme.ThemeChanged += ApplyTheme;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             BuildVisualTree();
         }
@@ -790,7 +791,17 @@ namespace ZeroUI.Wpf.Media
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += ApplyTheme;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= ApplyTheme;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

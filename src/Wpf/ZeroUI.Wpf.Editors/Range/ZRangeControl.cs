@@ -241,7 +241,8 @@ namespace ZeroUI.Wpf.Range
                 InvalidateVisual();
             };
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void SyncModelToDependencyProperties()
@@ -677,7 +678,18 @@ namespace ZeroUI.Wpf.Range
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Semantic alias specialized for temporal date and time interval sliding.

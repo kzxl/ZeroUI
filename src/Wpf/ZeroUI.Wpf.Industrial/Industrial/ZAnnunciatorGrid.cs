@@ -130,7 +130,8 @@ namespace ZeroUI.Wpf.Industrial
                 _clockToken = null;
                 ZeroTagEngine.UnregisterBindable(this);
             };
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void GenerateDefaultTiles()
@@ -394,7 +395,18 @@ namespace ZeroUI.Wpf.Industrial
             var ft = CreateFormattedText(text, SegoeBold, 10, Brushes.White, dpi);
             dc.DrawText(ft, new Point(r.X + (r.Width - ft.Width) * 0.5, r.Y + (r.Height - ft.Height) * 0.5));
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

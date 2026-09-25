@@ -67,7 +67,8 @@ namespace ZeroUI.Wpf.Editors
             Style = ZeroWpfStyles.ButtonStyle;
             ApplyStyle();
 
-            ZeroWpfTheme.ThemeChanged += ApplyStyle;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private static void OnVariantChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -111,7 +112,17 @@ namespace ZeroUI.Wpf.Editors
                     break;
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += ApplyStyle;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= ApplyStyle;
+    }
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ZButton"/>.

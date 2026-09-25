@@ -95,7 +95,8 @@ namespace ZeroUI.Wpf.Editors
         {
             Width = 200;
             Height = 90;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         protected override Size MeasureOverride(Size availableSize)
@@ -197,7 +198,18 @@ namespace ZeroUI.Wpf.Editors
                 dc.DrawText(trendFt, new Point(leftMargin, trendY));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// KPI card metric alias for <see cref="StatisticControl"/>.

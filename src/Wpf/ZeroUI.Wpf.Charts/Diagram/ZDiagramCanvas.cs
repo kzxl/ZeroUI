@@ -160,7 +160,8 @@ namespace ZeroUI.Wpf.Diagram
             _nodes.CollectionChanged += (s, e) => InvalidateVisual();
             _connections.CollectionChanged += (s, e) => InvalidateVisual();
 
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         public Point ScreenToWorld(Point screen)
@@ -605,7 +606,18 @@ namespace ZeroUI.Wpf.Diagram
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

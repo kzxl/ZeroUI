@@ -36,7 +36,8 @@ namespace ZeroUI.Wpf.DataGrid
             ShowInTaskbar = false;
 
             ApplyThemeStyles();
-            ZeroWpfTheme.ThemeChanged += ApplyThemeStyles;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             var rootGrid = new Grid
             {
@@ -183,5 +184,15 @@ namespace ZeroUI.Wpf.DataGrid
             Hide();
             base.OnClosing(e);
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += ApplyThemeStyles;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= ApplyThemeStyles;
+    }
+}
 }

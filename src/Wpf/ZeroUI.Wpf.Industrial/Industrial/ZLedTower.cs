@@ -41,7 +41,8 @@ namespace ZeroUI.Wpf.Industrial
         public ZLedTower()
         {
             ClipToBounds = true;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             _blinkTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
             _blinkTimer.Tick += (s, e) =>
@@ -141,7 +142,18 @@ namespace ZeroUI.Wpf.Industrial
             // Base plate
             dc.DrawRoundedRectangle(ZeroWpfTheme.BgInput, ZeroWpfTheme.BorderPen, new Rect(centerX - 24, poleY + poleH, 48, 8), 2, 2);
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

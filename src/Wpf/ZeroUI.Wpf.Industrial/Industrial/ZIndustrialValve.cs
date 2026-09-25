@@ -93,9 +93,9 @@ namespace ZeroUI.Wpf.Industrial
         public ZIndustrialValve()
         {
             ClipToBounds = true;
-            Loaded += (s, e) => ZeroTagEngine.RegisterBindable(this);
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             Unloaded += (s, e) => ZeroTagEngine.UnregisterBindable(this);
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
         }
 
         public void OnTagValueChanged(IScadaTag tag)
@@ -200,7 +200,19 @@ namespace ZeroUI.Wpf.Industrial
             );
             dc.DrawText(stateText, new Point(cx - stateText.Width / 2, h - 16));
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroTagEngine.RegisterBindable(this);
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

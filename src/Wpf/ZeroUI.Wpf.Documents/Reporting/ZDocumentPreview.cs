@@ -205,7 +205,8 @@ namespace ZeroUI.Wpf.Reporting
                 UpdateLocalizedStrings();
                 UpdatePageDisplay();
             };
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             UpdateLocalizedStrings();
             UpdatePageDisplay();
         }
@@ -362,7 +363,17 @@ namespace ZeroUI.Wpf.Reporting
             protected override int VisualChildrenCount => 1;
             protected override Visual GetVisualChild(int index) => _visual;
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += UpdateTheme;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= UpdateTheme;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

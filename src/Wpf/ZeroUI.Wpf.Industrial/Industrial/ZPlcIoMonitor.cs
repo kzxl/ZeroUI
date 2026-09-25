@@ -86,7 +86,8 @@ namespace ZeroUI.Wpf.Industrial
         public ZPlcIoMonitor()
         {
             ClipToBounds = true;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         public void SetInputBit(int bitIndex, bool state)
@@ -228,7 +229,18 @@ namespace ZeroUI.Wpf.Industrial
                 }
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

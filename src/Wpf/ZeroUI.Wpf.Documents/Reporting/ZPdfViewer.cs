@@ -282,7 +282,8 @@ namespace ZeroUI.Wpf.Reporting
 
             AddVisualChild(rootGrid);
 
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             UpdateTheme();
             RebuildPages();
             UpdatePageInfo();
@@ -678,7 +679,17 @@ namespace ZeroUI.Wpf.Reporting
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += UpdateTheme;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= UpdateTheme;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

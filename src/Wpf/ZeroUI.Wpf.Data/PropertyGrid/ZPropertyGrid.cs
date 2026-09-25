@@ -100,7 +100,8 @@ namespace ZeroUI.Wpf.PropertyGrid
 
             _model.ModelChanged += OnModelChanged;
             _model.PropertyValueChanged += OnPropertyValueChanged;
-            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             // Integrated Search Bar
             _searchBox = new TextBox
@@ -519,7 +520,17 @@ namespace ZeroUI.Wpf.PropertyGrid
                 dpi.PixelsPerDip);
 #endif
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

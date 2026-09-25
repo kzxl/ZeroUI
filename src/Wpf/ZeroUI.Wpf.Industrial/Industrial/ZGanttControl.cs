@@ -62,7 +62,8 @@ namespace ZeroUI.Wpf.Industrial
             ClipToBounds = true;
             Focusable = true;
             _tasks.CollectionChanged += (s, e) => InvalidateVisual();
-            ZeroWpfTheme.ThemeChanged += InvalidateVisual;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
 #if NETFRAMEWORK
@@ -402,7 +403,17 @@ namespace ZeroUI.Wpf.Industrial
                 InvalidateVisual();
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += InvalidateVisual;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= InvalidateVisual;
+    }
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="GanttControl"/>.

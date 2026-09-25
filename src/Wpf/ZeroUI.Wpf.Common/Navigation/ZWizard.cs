@@ -158,7 +158,8 @@ namespace ZeroUI.Wpf.Navigation
             };
 
             ZeroLocalizer.CultureChanged += (s, e) => UpdateLocalizedStrings();
-            ZeroWpfTheme.ThemeChanged += OnThemeChanged;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             BuildVisualTemplate();
         }
@@ -464,7 +465,17 @@ namespace ZeroUI.Wpf.Navigation
         {
             _pages.Add(page);
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ZWizard"/>.

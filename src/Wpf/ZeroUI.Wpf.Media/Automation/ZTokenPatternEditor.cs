@@ -235,9 +235,20 @@ namespace ZeroUI.Wpf.Media
         {
             Focusable = true;
             InitializeDefaultTokens();
-            ZeroWpfTheme.ThemeChanged += ApplyTheme;
 
             BuildVisualTree();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
+        }
+
+        private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged += ApplyTheme;
+        }
+
+        private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ZeroWpfTheme.ThemeChanged -= ApplyTheme;
         }
 
         private void InitializeDefaultTokens()

@@ -83,7 +83,8 @@ namespace ZeroUI.Wpf.Editors
             Width = 44;
             Height = 24;
             Cursor = Cursors.Hand;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private static void OnIsCheckedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -149,7 +150,18 @@ namespace ZeroUI.Wpf.Editors
 
             dc.DrawEllipse(Brushes.White, null, new Point(thumbX + thumbDiameter / 2.0, thumbY + thumbDiameter / 2.0), thumbDiameter / 2.0, thumbDiameter / 2.0);
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ToggleSwitch"/>.

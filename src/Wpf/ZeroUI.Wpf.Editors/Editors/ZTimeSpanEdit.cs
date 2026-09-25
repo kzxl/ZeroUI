@@ -167,7 +167,8 @@ namespace ZeroUI.Wpf.Editors
             };
 
             _model.PartChanged += (s, e) => InvalidateVisual();
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -419,7 +420,18 @@ namespace ZeroUI.Wpf.Editors
                 dc.DrawLine(focusPen, new Point(textX, h - 3), new Point(textX + Math.Min(ft.Width, w - btnWidth - 14), h - 3));
             }
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

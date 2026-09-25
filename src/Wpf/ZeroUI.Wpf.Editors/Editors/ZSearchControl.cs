@@ -180,7 +180,8 @@ namespace ZeroUI.Wpf.Editors
             _containerBorder.Child = grid;
             AddVisualChild(_containerBorder);
 
-            ZeroWpfTheme.ThemeChanged += () => UpdateThemeColors(isFocused: _innerBox.IsFocused);
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
             UpdateThemeColors(isFocused: false);
         }
 
@@ -255,7 +256,18 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => UpdateThemeColors(isFocused: _innerBox.IsFocused);
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="SearchControl"/>.

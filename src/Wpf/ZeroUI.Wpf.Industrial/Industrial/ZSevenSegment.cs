@@ -304,7 +304,8 @@ namespace ZeroUI.Wpf.Industrial
         public ZSevenSegment()
         {
             ClipToBounds = true;
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             _blinkTimer = new DispatcherTimer(DispatcherPriority.Render)
             {
@@ -491,7 +492,18 @@ namespace ZeroUI.Wpf.Industrial
 
             dc.Pop();
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
     /// <summary>

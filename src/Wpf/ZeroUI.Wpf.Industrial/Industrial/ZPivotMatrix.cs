@@ -46,7 +46,8 @@ namespace ZeroUI.Wpf.Industrial
         {
             ClipToBounds = true;
             Focusable = true;
-            ZeroWpfTheme.ThemeChanged += InvalidateVisual;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         public void RefreshData()
@@ -282,7 +283,17 @@ namespace ZeroUI.Wpf.Industrial
             _scrollY = Math.Max(0, _scrollY - delta);
             InvalidateVisual();
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += InvalidateVisual;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= InvalidateVisual;
+    }
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="PivotMatrix"/>.

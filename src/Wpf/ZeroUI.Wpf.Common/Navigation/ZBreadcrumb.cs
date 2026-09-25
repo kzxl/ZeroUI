@@ -103,7 +103,8 @@ namespace ZeroUI.Wpf.Navigation
             Focusable = true;
             ClipToBounds = true;
             _items.CollectionChanged += (s, e) => InvalidateVisual();
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         protected override Size MeasureOverride(Size availableSize)
@@ -286,7 +287,18 @@ namespace ZeroUI.Wpf.Navigation
                 dpi);
 #endif
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     /// <summary>
     /// Backward-compatibility alias for <see cref="ZBreadcrumb"/>.

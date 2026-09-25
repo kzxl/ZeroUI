@@ -118,7 +118,8 @@ namespace ZeroUI.Wpf.DataGrid
                 _debounceTimer.Start();
             };
 
-            ZeroWpfTheme.ThemeChanged += UpdateTheme;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void UpdateTheme()
@@ -174,7 +175,17 @@ namespace ZeroUI.Wpf.DataGrid
             };
             return btn;
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += UpdateTheme;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= UpdateTheme;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

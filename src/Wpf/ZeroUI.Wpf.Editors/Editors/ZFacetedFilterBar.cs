@@ -238,7 +238,8 @@ namespace ZeroUI.Wpf.Editors
             Focusable = true;
 
             _columns.CollectionChanged += (_, _) => RebuildColumns();
-            ZeroWpfTheme.ThemeChanged += ApplyTheme;
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
 
             BuildVisualTree();
         }
@@ -463,7 +464,17 @@ namespace ZeroUI.Wpf.Editors
         }
 
         #endregion
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += ApplyTheme;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= ApplyTheme;
+    }
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 

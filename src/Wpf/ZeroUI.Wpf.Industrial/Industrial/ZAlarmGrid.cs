@@ -104,7 +104,8 @@ namespace ZeroUI.Wpf.Industrial
             {
                 ScadaAlarmEngine.AlarmStateChanged -= OnAlarmEngineChanged;
             };
-            ZeroWpfTheme.ThemeChanged += () => InvalidateVisual();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         private void OnAlarmEngineChanged(ScadaAlarmRecord record)
@@ -303,7 +304,18 @@ namespace ZeroUI.Wpf.Industrial
             var ft = CreateFormattedText(severity.ToString().ToUpperInvariant(), SegoeBold, 8.5, Brushes.White, dpi);
             dc.DrawText(ft, new Point(x + (w - ft.Width) * 0.5, y + (18 - ft.Height) * 0.5));
         }
+    
+    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged += OnThemeChanged;
     }
+
+    private void OnUnloaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        ZeroWpfTheme.ThemeChanged -= OnThemeChanged;
+    }
+    private void OnThemeChanged() => InvalidateVisual();
+}
 
     #region Backward Compatibility Shims (5-Release Deprecation Policy)
 
