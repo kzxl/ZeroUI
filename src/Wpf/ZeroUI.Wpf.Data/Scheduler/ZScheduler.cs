@@ -227,5 +227,5 @@ namespace ZeroUI.Wpf.Data
     }
 
     [Obsolete("Use ZScheduler instead")]
-    public class ZeroScheduler : ZScheduler { }
+    public class ZeroSchedulerControl : ZScheduler { }
 }

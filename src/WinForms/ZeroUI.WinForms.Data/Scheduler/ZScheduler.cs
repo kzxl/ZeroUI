@@ -178,5 +178,5 @@ namespace ZeroUI.WinForms.Data
 
     [Obsolete("Use ZScheduler instead")]
     [ToolboxItem(false)]
-    public class ZeroScheduler : ZScheduler { }
+    public class ZeroSchedulerControl : ZScheduler { }
 }
