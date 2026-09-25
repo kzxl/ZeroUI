@@ -76,6 +76,12 @@ namespace ZeroUI.WinForms.Overlays
             Invalidate();
         }
 
+        public void RenderOverlay(Graphics g)
+        {
+            if (g == null) return;
+            OnPaint(new PaintEventArgs(g, ClientRectangle));
+        }
+
         private void UpdateFormRegion(ZTourStep? step)
         {
             if (ClientSize.Width <= 0 || ClientSize.Height <= 0) return;
@@ -206,10 +212,22 @@ namespace ZeroUI.WinForms.Overlays
             var currentStep = _tour.CurrentStep;
             if (currentStep == null) return;
 
-            // 1. Vẽ Backdrop Mask mờ tối (vùng lỗ khoét đã được OS loại trừ qua Form.Region nên hiển thị rõ nét control bên dưới)
+            // 1. Vẽ Backdrop Mask mờ tối (khoét lỗ loại trừ _targetRect để giữ nguyên độ sắc nét của control bên dưới)
             using (var fullBrush = new SolidBrush(Color.FromArgb(175, 10, 15, 26)))
             {
-                g.FillRectangle(fullBrush, ClientRectangle);
+                if (!_targetRect.IsEmpty && currentStep.Mask)
+                {
+                    using (var region = new Region(ClientRectangle))
+                    using (var holePath = CreateRoundedRectPath(_targetRect, Math.Max(2, currentStep.CornerRadius)))
+                    {
+                        region.Exclude(holePath);
+                        g.FillRegion(fullBrush, region);
+                    }
+                }
+                else
+                {
+                    g.FillRectangle(fullBrush, ClientRectangle);
+                }
             }
 
             // 2. Vẽ Animated Glowing Spotlight Border xung quanh vùng khoanh

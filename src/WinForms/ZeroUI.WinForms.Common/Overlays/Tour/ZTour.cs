@@ -156,6 +156,14 @@ namespace ZeroUI.WinForms.Overlays
             var tour = new ZTour(owner, steps);
             tour.Start(startIndex);
         }
+
+        /// <summary>
+        /// Renders the tour spotlight overlay directly onto an in-memory <see cref="Graphics"/> canvas.
+        /// </summary>
+        public void RenderToGraphics(System.Drawing.Graphics g)
+        {
+            _overlayForm?.RenderOverlay(g);
+        }
     }
 
     /// <summary>

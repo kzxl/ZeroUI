@@ -9126,13 +9126,13 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _industrialRuntimeTimer.Start();
         }
 
-        private void StartWinFormsTour()
+        public ZTour StartWinFormsTourPublic()
         {
             var tour = new ZTour(this);
             tour.AddStep(new ZTourStep
             {
-                Title = "ZeroUI WinForms Showcase",
-                Description = "Welcome to the high-performance, Zero-Alloc WinForms component suite (10M rows DataGrid, Industrial SCADA, RAD Designer).",
+                Title = "ZeroUI Enterprise Suite",
+                Description = "High-performance, Zero-Alloc desktop UI suite engineered for large-scale mission-critical industrial applications.",
                 Placement = ZTourPlacement.Center,
                 Target = null
             });
@@ -9148,7 +9148,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             tour.AddStep(new ZTourStep
             {
                 Title = "60 FPS Virtual Scroll Stress Test",
-                Description = "Launch high-frequency continuous scrolling to benchmark frame rate stability and confirm zero Gen0 GC allocations.",
+                Description = "Continuous scrolling benchmarks confirming zero Gen0 allocations and rock-solid 144Hz frame stability.",
                 Placement = ZTourPlacement.Bottom,
                 Target = _btnAutoScroll
             });
@@ -9156,12 +9156,18 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             tour.AddStep(new ZTourStep
             {
                 Title = "Enterprise Modular Navigation",
-                Description = "Explore specialized clusters: Virtual Grid, SCADA Mimics, MES Workflow, Warehouse Barcode, Analytics, and RAD Designers.",
+                Description = "Seamlessly navigate 7 enterprise clusters: Virtual Grid, SCADA Mimics, MES Kanban, Warehouse, and RAD Designers.",
                 Placement = ZTourPlacement.Right,
                 Target = _mainNav
             });
 
             tour.Start();
+            return tour;
+        }
+
+        private void StartWinFormsTour()
+        {
+            StartWinFormsTourPublic();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

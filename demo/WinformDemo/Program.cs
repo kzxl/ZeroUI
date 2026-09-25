@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -66,6 +66,11 @@ namespace ZeroUI.Samples.WinformDemo
             if (args.Length > 0 && args[0].Equals("--record-live-demo", StringComparison.OrdinalIgnoreCase))
             {
                 RecordLiveDemoVideo();
+                return;
+            }
+            if (args.Length > 0 && args[0].Equals("--record-tour-gif", StringComparison.OrdinalIgnoreCase))
+            {
+                RecordTourGifForReadme();
                 return;
             }
 
@@ -1221,6 +1226,126 @@ namespace ZeroUI.Samples.WinformDemo
                 try { Directory.Delete(framesDir, true); } catch { }
 
                 Console.WriteLine("\n🎉 LIVE VIDEO RECORDING GENERATED SUCCESSFULLY!");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"\n❌ RECORDING FAILED: {ex}");
+                Environment.Exit(1);
+            }
+        }
+
+        private static void RecordTourGifForReadme()
+        {
+            try
+            {
+                Console.WriteLine("🎥 Recording Interactive ZTour Showcase GIF for README...");
+                string outputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "docs", "images");
+                outputDir = Path.GetFullPath(outputDir);
+                if (!Directory.Exists(outputDir)) Directory.CreateDirectory(outputDir);
+
+                string framesDir = Path.Combine(Path.GetTempPath(), "zeroui_tour_frames");
+                if (Directory.Exists(framesDir)) Directory.Delete(framesDir, true);
+                Directory.CreateDirectory(framesDir);
+
+                Console.WriteLine($"   Frames Temp Directory: {framesDir}");
+
+                int formW = 1240;
+                int formH = 780;
+
+                using (var form = new MainForm())
+                {
+                    form.StartPosition = FormStartPosition.Manual;
+                    form.Location = new Point(40, 40);
+                    form.Size = new Size(formW, formH);
+                    form.TopMost = true;
+                    form.Show();
+                    form.BringToFront();
+                    form.Activate();
+
+                    form.LoadDatasetPublic(100_000);
+                    Application.DoEvents();
+                    Thread.Sleep(500);
+                    Application.DoEvents();
+
+                    var tour = form.StartWinFormsTourPublic();
+                    Application.DoEvents();
+                    Thread.Sleep(300);
+
+                    int frameIndex = 0;
+                    const int framesPerStep = 18; // ~1.5s per step at 12fps
+                    int totalSteps = 4;
+
+                    for (int s = 0; s < totalSteps; s++)
+                    {
+                        Console.WriteLine($"   -> Capturing Step {s + 1}/{totalSteps}: {tour.CurrentStep?.Title}");
+                        for (int f = 0; f < framesPerStep; f++)
+                        {
+                            Application.DoEvents();
+                            Thread.Sleep(45);
+                            Application.DoEvents();
+
+                            string framePath = Path.Combine(framesDir, $"frame_{frameIndex:D4}.png");
+                            using (var bmp = new Bitmap(form.Width, form.Height))
+                            {
+                                form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+                                using (var g = Graphics.FromImage(bmp))
+                                {
+                                    tour.RenderToGraphics(g);
+                                }
+                                bmp.Save(framePath, System.Drawing.Imaging.ImageFormat.Png);
+                            }
+                            frameIndex++;
+                        }
+
+                        if (s < totalSteps - 1)
+                        {
+                            tour.Next();
+                            Application.DoEvents();
+                            Thread.Sleep(120);
+                        }
+                    }
+
+                    tour.Close();
+                    form.Close();
+
+                    Console.WriteLine($"   Captured {frameIndex} frames! Compiling GIF via ffmpeg...");
+
+                    string gifOutput = Path.Combine(outputDir, "14_ztour_interactive_guide.gif");
+                    string mp4Output = Path.Combine(outputDir, "14_ztour_interactive_guide.mp4");
+
+                    // 1. Compile High Quality GIF with Lanczos scaling and Bayer dithering
+                    var psiGif = new ProcessStartInfo
+                    {
+                        FileName = "ffmpeg",
+                        Arguments = $"-y -framerate 12 -i \"{framesDir}\\frame_%04d.png\" -vf \"fps=12,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer\" \"{gifOutput}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (var p = Process.Start(psiGif))
+                    {
+                        p?.WaitForExit();
+                    }
+                    Console.WriteLine($"   [OK] Generated {gifOutput}");
+
+                    // 2. Compile MP4
+                    var psiMp4 = new ProcessStartInfo
+                    {
+                        FileName = "ffmpeg",
+                        Arguments = $"-y -framerate 12 -i \"{framesDir}\\frame_%04d.png\" -c:v libx264 -pix_fmt yuv420p \"{mp4Output}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (var p = Process.Start(psiMp4))
+                    {
+                        p?.WaitForExit();
+                    }
+                    Console.WriteLine($"   [OK] Generated {mp4Output}");
+
+                    // Cleanup frames
+                    try { Directory.Delete(framesDir, true); } catch { }
+
+                    Console.WriteLine("\n🎉 ZTOUR DEMO GIF GENERATED SUCCESSFULLY!");
+                }
             }
             catch (Exception ex)
             {
