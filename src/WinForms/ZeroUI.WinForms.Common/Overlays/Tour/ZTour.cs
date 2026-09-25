@@ -56,6 +56,18 @@ namespace ZeroUI.WinForms.Overlays
             }
         }
 
+        /// <summary>
+        /// Adds a walkthrough step and returns this tour instance for fluent chaining.
+        /// </summary>
+        public ZTour AddStep(ZTourStep step)
+        {
+            if (step != null)
+            {
+                Steps.Add(step);
+            }
+            return this;
+        }
+
         public void Start(int startIndex = 0)
         {
             if (Steps.Count == 0) return;

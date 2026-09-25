@@ -78,6 +78,18 @@ namespace ZeroUI.Wpf.Overlays
         }
 
         /// <summary>
+        /// Adds a walkthrough step and returns this tour instance for fluent chaining.
+        /// </summary>
+        public ZTour AddStep(ZTourStep step)
+        {
+            if (step != null)
+            {
+                Steps.Add(step);
+            }
+            return this;
+        }
+
+        /// <summary>
         /// Starts the guided walkthrough beginning at the specified step index.
         /// </summary>
         /// <param name="startIndex">Initial step index (default 0).</param>

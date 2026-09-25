@@ -307,6 +307,22 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _btnAutoScroll.Click += (s, e) => ToggleStressTest();
             _topPanel.Controls.Add(_btnAutoScroll);
 
+            btnX += 138;
+            var btnTourGuide = new Button
+            {
+                Text = "🧭 Tour Guide",
+                Location = new Point(btnX, 13),
+                Size = new Size(115, 30),
+                BackColor = Color.FromArgb(16, 185, 129),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnTourGuide.FlatAppearance.BorderSize = 0;
+            btnTourGuide.Click += (s, e) => StartWinFormsTour();
+            _topPanel.Controls.Add(btnTourGuide);
+
             _topPanel.Controls.Add(_btn100k);
             _topPanel.Controls.Add(_btn500k);
             _topPanel.Controls.Add(_btn1M);
@@ -9108,6 +9124,44 @@ namespace ZeroUI.Samples.WinformDemo.Forms
                 }
             };
             _industrialRuntimeTimer.Start();
+        }
+
+        private void StartWinFormsTour()
+        {
+            var tour = new ZTour(this);
+            tour.AddStep(new ZTourStep
+            {
+                Title = "ZeroUI WinForms Demo Suite",
+                Description = "Chào mừng bạn đến với bộ điều khiển WinForms hiệu năng cao Zero-Alloc (DataGrid 10M rows, Industrial SCADA, RAD Designer).",
+                Placement = ZTourPlacement.Center,
+                Target = null
+            });
+
+            tour.AddStep(new ZTourStep
+            {
+                Title = "Thử Nghiệm Tải Dữ Liệu Lớn",
+                Description = "Nhấp chọn từ 100K đến 10M bản ghi để trải nghiệm tốc độ render tức thời với VirtualViewport2D và Zero-Allocation.",
+                Placement = ZTourPlacement.Bottom,
+                Target = _btn1M
+            });
+
+            tour.AddStep(new ZTourStep
+            {
+                Title = "Stress Test Cuộn Siêu Tốc",
+                Description = "Kích hoạt Stress Test cuộn liên tục 60 FPS để kiểm tra độ trễ hiển thị và tính ổn định của Garbage Collector (GC Gen0 = 0).",
+                Placement = ZTourPlacement.Bottom,
+                Target = _btnAutoScroll
+            });
+
+            tour.AddStep(new ZTourStep
+            {
+                Title = "Điều Hướng Phân Hệ Nghiệp Vụ",
+                Description = "Chuyển đổi giữa các phân hệ: Virtual Grid, SCADA Mimics, MES Workflow, Warehouse Barcode, Analytics và RAD Visual Designer.",
+                Placement = ZTourPlacement.Right,
+                Target = _mainNav
+            });
+
+            tour.Start();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
