@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -45,6 +46,7 @@ namespace ZeroUI.Samples.WpfDemo
         private DispatcherTimer? _telemetryTimer;
         private DispatcherTimer? _scadaSimTimer;
         private bool _isSimulating = true;
+        private System.Threading.CancellationTokenSource? _filterCts;
 
         // Telemetry tracking
         private int _frameCount = 0;
@@ -388,10 +390,17 @@ namespace ZeroUI.Samples.WpfDemo
             GridPager.PageSizeChanged += (s, size) => VirtualGrid.InvalidateVisual();
         }
 
-        private void LoadData(int count)
+        private async void LoadData(int count)
         {
+            if (count >= 10_000_000)
+            {
+                BtnLoad10M_Click(this, new RoutedEventArgs());
+                return;
+            }
+
             var sw = Stopwatch.StartNew();
-            var items = InventorySource.Generate(count);
+            TxtLatency.Text = "Generating...";
+            var items = await Task.Run(() => InventorySource.Generate(count));
             _inventorySource = new InventorySource(items);
             VirtualGrid.DataSource = _inventorySource;
             sw.Stop();
@@ -407,36 +416,85 @@ namespace ZeroUI.Samples.WpfDemo
             TxtLatency.Text = $"{sw.ElapsedMilliseconds} ms (Init)";
         }
 
-        private void FilterData(string query)
+        private async void FilterData(string query)
         {
-            if (_inventorySource == null) return;
+            _filterCts?.Cancel();
+            _filterCts = new System.Threading.CancellationTokenSource();
+            var token = _filterCts.Token;
 
-            var items = _inventorySource.Items;
+            var ds = VirtualGrid.DataSource;
+            if (ds == null) return;
+
+            int total = ds.TotalRowCount;
             if (string.IsNullOrWhiteSpace(query))
             {
-                VirtualGrid.IndexMap.ResetIdentity(items.Length);
-                GridSearch.SetMatchCount(items.Length, items.Length);
-                GridPager.UpdateTotalRecords(items.Length);
+                VirtualGrid.IndexMap.ResetIdentity(total);
+                GridSearch.SetMatchCount(total, total);
+                GridPager.UpdateTotalRecords(total);
+                VirtualGrid.ClearRowSelection();
                 VirtualGrid.InvalidateVisual();
                 return;
             }
 
-            int matchCount = 0;
-            for (int i = 0; i < items.Length; i++)
+            try
             {
-                if (items[i].ItemName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    items[i].ItemCode.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    items[i].Category.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    items[i].LotNumber.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                var matches = new List<int>();
+                if (_inventorySource != null)
                 {
-                    VirtualGrid.IndexMap[matchCount++] = i;
+                    var items = _inventorySource.Items;
+                    await Task.Run(() =>
+                    {
+                        for (int i = 0; i < items.Length; i++)
+                        {
+                            if ((i & 0x7FFF) == 0 && token.IsCancellationRequested) return;
+                            if (items[i].ItemName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                items[i].ItemCode.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                items[i].Category.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                items[i].LotNumber.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                matches.Add(i);
+                            }
+                        }
+                    }, token);
+                }
+                else
+                {
+                    await Task.Run(() =>
+                    {
+                        CellValueBuffer buf = new CellValueBuffer();
+                        int limit = Math.Min(total, 500_000);
+                        for (int i = 0; i < limit && matches.Count < 50_000; i++)
+                        {
+                            if ((i & 0x7FFF) == 0 && token.IsCancellationRequested) return;
+                            buf.Reset();
+                            ds.GetCellValue(i, 1, ref buf);
+                            if (buf.Text.ToString().IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                matches.Add(i);
+                                continue;
+                            }
+                            buf.Reset();
+                            ds.GetCellValue(i, 2, ref buf);
+                            if (buf.Text.ToString().IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                matches.Add(i);
+                            }
+                        }
+                    }, token);
+                }
+
+                if (!token.IsCancellationRequested)
+                {
+                    int matchCount = matches.Count;
+                    int[] buffer = matches.ToArray();
+                    VirtualGrid.IndexMap.SetUnderlyingBuffer(buffer, matchCount);
+                    GridSearch.SetMatchCount(matchCount, total);
+                    GridPager.UpdateTotalRecords(matchCount);
+                    VirtualGrid.ClearRowSelection();
+                    VirtualGrid.InvalidateVisual();
                 }
             }
-
-            VirtualGrid.IndexMap.ActiveCount = matchCount;
-            GridSearch.SetMatchCount(matchCount, items.Length);
-            GridPager.UpdateTotalRecords(matchCount);
-            VirtualGrid.InvalidateVisual();
+            catch (OperationCanceledException) { }
         }
 
         private void SetupTelemetry()

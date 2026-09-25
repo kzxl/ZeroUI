@@ -240,7 +240,9 @@ namespace ZeroUI.Wpf.DataGrid
         // Selection & Interaction
         private int _selectedVisualRow = -1;
         private int _hoveredVisualRow = -1;
+        private bool _isAllSelected = false;
         private readonly HashSet<int> _selectedVisualRows = new HashSet<int>();
+        private readonly HashSet<int> _deselectedVisualRows = new HashSet<int>();
         private ZeroGridSelectionMode _selectionMode = ZeroGridSelectionMode.SingleRow;
         private CellRange _selectedBlock = CellRange.Empty;
         private bool _isSelectingBlock = false;
@@ -262,9 +264,13 @@ namespace ZeroUI.Wpf.DataGrid
         private int _editingVisualRow = -1;
         private int _editingColIndex = -1;
 
-        // Summary Footer
+        // Summary Footer & Async Background Calculation Cache
         private bool _showFooter = false;
         private int _footerHeight = 28;
+        private readonly Dictionary<int, string> _cachedSummaryTexts = new Dictionary<int, string>();
+        private bool _summariesDirty = true;
+        private volatile bool _isCalculatingSummaries = false;
+        private System.Threading.CancellationTokenSource? _summaryCts;
 
         // Slim ScrollBar Interaction
         private const int ScrollBarThickness = 8;
@@ -345,8 +351,8 @@ namespace ZeroUI.Wpf.DataGrid
                 _groupedMap.ResetIdentity(0);
             }
             _scrollY = 0;
-            _selectedVisualRow = -1;
-            _selectedVisualRows.Clear();
+            ClearRowSelection();
+            InvalidateSummaries();
             InvalidateVisual();
         }
 
@@ -378,8 +384,15 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 if (value < 0 || _dataSource == null || value >= _dataSource.TotalRowCount)
                 {
-                    _selectedVisualRow = -1;
+                    ClearRowSelection();
+                }
+                else if (_rowIndexMap.IsIdentity && !_groupedMap.HasGrouping)
+                {
+                    _selectedVisualRow = value;
+                    _isAllSelected = false;
                     _selectedVisualRows.Clear();
+                    _deselectedVisualRows.Clear();
+                    _selectedVisualRows.Add(value);
                 }
                 else
                 {
@@ -389,7 +402,9 @@ namespace ZeroUI.Wpf.DataGrid
                         if (GetModelRowIndex(i) == value)
                         {
                             _selectedVisualRow = i;
+                            _isAllSelected = false;
                             _selectedVisualRows.Clear();
+                            _deselectedVisualRows.Clear();
                             _selectedVisualRows.Add(i);
                             break;
                         }
@@ -465,7 +480,9 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 int total = _dataSource.TotalRowCount;
                 CellValueBuffer buf = new CellValueBuffer();
-                for (int r = 0; r < total; r++)
+                int limit = Math.Min(total, 500);
+                int step = (total > limit && limit > 0) ? Math.Max(1, total / limit) : 1;
+                for (int r = 0; r < total && set.Count < 500; r += step)
                 {
                     _dataSource.GetCellValue(r, columnIndex, ref buf);
                     set.Add(buf.Text.ToString());
@@ -519,6 +536,9 @@ namespace ZeroUI.Wpf.DataGrid
                 }, total);
             }
 
+            ClearRowSelection();
+            InvalidateSummaries();
+
             if (_groupedMap.HasGrouping && _groupColumnIndices.Length > 0)
             {
                 GroupBy(_groupColumnIndices);
@@ -562,8 +582,8 @@ namespace ZeroUI.Wpf.DataGrid
                 _rowIndexMap.ActiveCount = 0;
             }
             _scrollY = 0;
-            _selectedVisualRow = -1;
-            _selectedVisualRows.Clear();
+            ClearRowSelection();
+            InvalidateSummaries();
             InvalidateVisual();
         }
 
@@ -602,12 +622,54 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 _selectionMode = value;
                 _selectedBlock = CellRange.Empty;
-                _selectedVisualRows.Clear();
-                InvalidateVisual();
+                ClearRowSelection();
             }
         }
 
         public IReadOnlyCollection<int> SelectedVisualRows => _selectedVisualRows;
+
+        public bool IsVisualRowSelected(int visualRowIndex)
+        {
+            if (_selectionMode != ZeroGridSelectionMode.MultiRow)
+            {
+                return visualRowIndex == _selectedVisualRow;
+            }
+            if (_isAllSelected)
+            {
+                return !_deselectedVisualRows.Contains(visualRowIndex);
+            }
+            return _selectedVisualRows.Contains(visualRowIndex);
+        }
+
+        public int SelectedRowCount => _isAllSelected
+            ? Math.Max(0, VisualRowCount - _deselectedVisualRows.Count)
+            : _selectedVisualRows.Count;
+
+        public void SelectAllRows()
+        {
+            _isAllSelected = true;
+            _selectedVisualRows.Clear();
+            _deselectedVisualRows.Clear();
+            if (VisualRowCount > 0) _selectedVisualRow = 0;
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+        }
+
+        public void ClearRowSelection()
+        {
+            _isAllSelected = false;
+            _selectedVisualRows.Clear();
+            _deselectedVisualRows.Clear();
+            _selectedVisualRow = -1;
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+        }
+
+        public void InvalidateSummaries()
+        {
+            _summariesDirty = true;
+            _summaryCts?.Cancel();
+        }
 
         public bool ShowFooter
         {
@@ -633,7 +695,13 @@ namespace ZeroUI.Wpf.DataGrid
 
             _flushScrollConflationAction = FlushScrollConflation;
             ZeroAnimationClock.AutoSynchronizeWithDisplay();
-            Unloaded += (s, e) => RemoveClockSubscribed();
+            Unloaded += (s, e) =>
+            {
+                RemoveClockSubscribed();
+                _summaryCts?.Cancel();
+                _summaryCts?.Dispose();
+                _summaryCts = null;
+            };
 
             _inPlaceEditor = new TextBox
             {
@@ -982,11 +1050,15 @@ namespace ZeroUI.Wpf.DataGrid
             _sortCts = new System.Threading.CancellationTokenSource();
             var token = _sortCts.Token;
 
-            // Fast copy active indices into background working buffer
-            int[] working = new int[count];
-            for (int i = 0; i < count; i++)
+            bool isIdentity = _rowIndexMap.IsIdentity;
+            int[]? working = null;
+            if (!isIdentity)
             {
-                working[i] = _rowIndexMap[i];
+                working = new int[count];
+                for (int i = 0; i < count; i++)
+                {
+                    working[i] = _rowIndexMap[i];
+                }
             }
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -996,6 +1068,12 @@ namespace ZeroUI.Wpf.DataGrid
                 var ds = _dataSource;
                 await Task.Run(() =>
                 {
+                    if (working == null)
+                    {
+                        working = new int[count];
+                        for (int i = 0; i < count; i++) working[i] = i;
+                    }
+
                     if (ds is IZeroSortableSource sortable)
                     {
                         var comparer = new SortableSourceComparer(sortable, colIndex, newDirection);
@@ -1012,12 +1090,11 @@ namespace ZeroUI.Wpf.DataGrid
 
                 if (!token.IsCancellationRequested)
                 {
-                    for (int i = 0; i < count; i++)
-                    {
-                        _rowIndexMap[i] = working[i];
-                    }
+                    _rowIndexMap.SetUnderlyingBuffer(working!, count);
 
                     _scrollY = 0;
+                    ClearRowSelection();
+                    InvalidateSummaries();
                     SortingCompleted?.Invoke(this, sw.Elapsed);
                 }
             }
@@ -1347,9 +1424,7 @@ namespace ZeroUI.Wpf.DataGrid
                         continue;
                     }
 
-                    bool isSelected = (_selectionMode == ZeroGridSelectionMode.MultiRow)
-                        ? _selectedVisualRows.Contains(r)
-                        : (r == _selectedVisualRow);
+                    bool isSelected = IsVisualRowSelected(r);
                     bool isHovered = (r == _hoveredVisualRow && !isSelected);
 
                     Brush rowBrush = isSelected ? ZeroWpfTheme.SelectionBackground :
@@ -2174,10 +2249,20 @@ namespace ZeroUI.Wpf.DataGrid
                     {
                         if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                         {
-                            if (_selectedVisualRows.Contains(visualRow))
-                                _selectedVisualRows.Remove(visualRow);
+                            if (_isAllSelected)
+                            {
+                                if (_deselectedVisualRows.Contains(visualRow))
+                                    _deselectedVisualRows.Remove(visualRow);
+                                else
+                                    _deselectedVisualRows.Add(visualRow);
+                            }
                             else
-                                _selectedVisualRows.Add(visualRow);
+                            {
+                                if (_selectedVisualRows.Contains(visualRow))
+                                    _selectedVisualRows.Remove(visualRow);
+                                else
+                                    _selectedVisualRows.Add(visualRow);
+                            }
                             _selectedVisualRow = visualRow;
                         }
                         else if ((Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) && _selectedVisualRow >= 0)
@@ -2185,11 +2270,32 @@ namespace ZeroUI.Wpf.DataGrid
                             int start = (_selectedVisualRow >= 0) ? _selectedVisualRow : visualRow;
                             int min = Math.Min(start, visualRow);
                             int max = Math.Max(start, visualRow);
-                            _selectedVisualRows.Clear();
-                            for (int r = min; r <= max; r++) _selectedVisualRows.Add(r);
+                            long span = (long)max - min + 1;
+                            if (span >= VisualRowCount && VisualRowCount > 0)
+                            {
+                                SelectAllRows();
+                            }
+                            else
+                            {
+                                _isAllSelected = false;
+                                _deselectedVisualRows.Clear();
+                                _selectedVisualRows.Clear();
+                                if (span > 100_000)
+                                {
+                                    _isAllSelected = true;
+                                    for (int r = 0; r < min; r++) _deselectedVisualRows.Add(r);
+                                    for (int r = max + 1; r < VisualRowCount; r++) _deselectedVisualRows.Add(r);
+                                }
+                                else
+                                {
+                                    for (int r = min; r <= max; r++) _selectedVisualRows.Add(r);
+                                }
+                            }
                         }
                         else
                         {
+                            _isAllSelected = false;
+                            _deselectedVisualRows.Clear();
                             _selectedVisualRows.Clear();
                             _selectedVisualRows.Add(visualRow);
                             _selectedVisualRow = visualRow;
@@ -2197,6 +2303,8 @@ namespace ZeroUI.Wpf.DataGrid
                     }
                     else
                     {
+                        _isAllSelected = false;
+                        _deselectedVisualRows.Clear();
                         _selectedVisualRows.Clear();
                         _selectedVisualRows.Add(visualRow);
                         _selectedVisualRow = visualRow;
@@ -2397,6 +2505,15 @@ namespace ZeroUI.Wpf.DataGrid
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.A)
+            {
+                if (_selectionMode == ZeroGridSelectionMode.MultiRow)
+                {
+                    SelectAllRows();
+                    e.Handled = true;
+                    return;
+                }
+            }
             if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && e.Key == Key.C)
             {
                 CopySelectionToClipboard();
@@ -2421,6 +2538,8 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 if (_isEditing) CommitEdit();
                 _selectedVisualRow--;
+                _isAllSelected = false;
+                _deselectedVisualRows.Clear();
                 _selectedVisualRows.Clear();
                 _selectedVisualRows.Add(_selectedVisualRow);
                 EnsureRowVisible(_selectedVisualRow);
@@ -2432,6 +2551,8 @@ namespace ZeroUI.Wpf.DataGrid
             {
                 if (_isEditing) CommitEdit();
                 _selectedVisualRow++;
+                _isAllSelected = false;
+                _deselectedVisualRows.Clear();
                 _selectedVisualRows.Clear();
                 _selectedVisualRows.Add(_selectedVisualRow);
                 EnsureRowVisible(_selectedVisualRow);
@@ -2508,7 +2629,18 @@ namespace ZeroUI.Wpf.DataGrid
             }
 
             var rowsToCopy = new List<int>();
-            if (_selectedVisualRows.Count > 0)
+            if (_isAllSelected)
+            {
+                int maxCopy = Math.Min(VisualRowCount, 50_000);
+                for (int r = 0; r < maxCopy; r++)
+                {
+                    if (!_deselectedVisualRows.Contains(r))
+                    {
+                        rowsToCopy.Add(r);
+                    }
+                }
+            }
+            else if (_selectedVisualRows.Count > 0)
             {
                 rowsToCopy.AddRange(_selectedVisualRows);
                 rowsToCopy.Sort();
@@ -2808,22 +2940,55 @@ namespace ZeroUI.Wpf.DataGrid
             int count = _rowIndexMap.ActiveCount;
             if (col.Summary == SummaryType.Count)
             {
-                return !string.IsNullOrEmpty(col.SummaryFormat)
+                string countText = !string.IsNullOrEmpty(col.SummaryFormat)
                     ? string.Format(CultureInfo.InvariantCulture, col.SummaryFormat, count)
                     : $"Count: {count:N0}";
+                _cachedSummaryTexts[colIndex] = countText;
+                return countText;
             }
 
             if (count == 0) return "-";
+
+            // If clean and cached, return immediately O(1) with 0 allocations
+            if (!_summariesDirty && _cachedSummaryTexts.TryGetValue(colIndex, out var cachedVal))
+            {
+                return cachedVal;
+            }
+
+            // For small datasets (<= 50,000 rows), calculate synchronously on-demand
+            if (count <= 50_000)
+            {
+                string syncText = CalculateColumnSummarySync(colIndex, col, count);
+                _cachedSummaryTexts[colIndex] = syncText;
+                return syncText;
+            }
+
+            // For large datasets (> 50,000 rows), trigger background calculation and avoid blocking UI thread
+            TriggerBackgroundSummaryCalculation();
+
+            if (_cachedSummaryTexts.TryGetValue(colIndex, out var previousVal))
+            {
+                return previousVal;
+            }
+
+            return "Calculating...";
+        }
+
+        private string CalculateColumnSummarySync(int colIndex, ZeroColumn col, int count)
+        {
+            if (_dataSource == null || count == 0) return "-";
 
             double sum = 0;
             double min = double.MaxValue;
             double max = double.MinValue;
             int validCount = 0;
+            bool isIdentity = _rowIndexMap.IsIdentity;
 
             CellValueBuffer buf = new CellValueBuffer();
             for (int i = 0; i < count; i++)
             {
-                int mRow = _rowIndexMap[i];
+                int mRow = isIdentity ? i : _rowIndexMap[i];
+                buf.Reset();
                 _dataSource.GetCellValue(mRow, colIndex, ref buf);
                 string s = buf.Text.ToString();
                 if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double val) ||
@@ -2860,6 +3025,116 @@ namespace ZeroUI.Wpf.DataGrid
                 SummaryType.Max => $"Max {result:N0}",
                 _ => result.ToString(CultureInfo.InvariantCulture)
             };
+        }
+
+        private void TriggerBackgroundSummaryCalculation()
+        {
+            if (_isCalculatingSummaries || _dataSource == null) return;
+            _isCalculatingSummaries = true;
+            _summaryCts?.Cancel();
+            _summaryCts = new System.Threading.CancellationTokenSource();
+            var token = _summaryCts.Token;
+
+            var source = _dataSource;
+            int activeCount = _rowIndexMap.ActiveCount;
+            bool isIdentity = _rowIndexMap.IsIdentity;
+
+            var colsToCalculate = new List<(int ColIndex, SummaryType Summary, string? Format)>();
+            for (int c = 0; c < _columns.Count; c++)
+            {
+                if (_columns[c].IsVisible && _columns[c].Summary != SummaryType.None && _columns[c].Summary != SummaryType.Count)
+                {
+                    colsToCalculate.Add((c, _columns[c].Summary, _columns[c].SummaryFormat));
+                }
+            }
+
+            if (colsToCalculate.Count == 0)
+            {
+                _summariesDirty = false;
+                _isCalculatingSummaries = false;
+                return;
+            }
+
+            Task.Run(() =>
+            {
+                var computed = new Dictionary<int, string>();
+                CellValueBuffer buf = new CellValueBuffer();
+
+                foreach (var item in colsToCalculate)
+                {
+                    if (token.IsCancellationRequested) return;
+
+                    double sum = 0;
+                    double min = double.MaxValue;
+                    double max = double.MinValue;
+                    int validCount = 0;
+
+                    for (int i = 0; i < activeCount; i++)
+                    {
+                        if ((i & 0xFFFF) == 0 && token.IsCancellationRequested) return;
+                        int mRow = isIdentity ? i : _rowIndexMap[i];
+                        buf.Reset();
+                        source.GetCellValue(mRow, item.ColIndex, ref buf);
+                        string s = buf.Text.ToString();
+                        if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double val) ||
+                            double.TryParse(s.Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out val))
+                        {
+                            sum += val;
+                            if (val < min) min = val;
+                            if (val > max) max = val;
+                            validCount++;
+                        }
+                    }
+
+                    if (validCount > 0)
+                    {
+                        double result = item.Summary switch
+                        {
+                            SummaryType.Sum => sum,
+                            SummaryType.Average => sum / validCount,
+                            SummaryType.Min => min,
+                            SummaryType.Max => max,
+                            _ => 0
+                        };
+
+                        string formatted = !string.IsNullOrEmpty(item.Format)
+                            ? string.Format(CultureInfo.InvariantCulture, item.Format, result)
+                            : item.Summary switch
+                            {
+                                SummaryType.Sum => $"Σ {result:N0}",
+                                SummaryType.Average => $"μ {result:N1}",
+                                SummaryType.Min => $"Min {result:N0}",
+                                SummaryType.Max => $"Max {result:N0}",
+                                _ => result.ToString(CultureInfo.InvariantCulture)
+                            };
+
+                        computed[item.ColIndex] = formatted;
+                    }
+                    else
+                    {
+                        computed[item.ColIndex] = "-";
+                    }
+                }
+
+                if (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        Dispatcher.BeginInvoke((Action)(() =>
+                        {
+                            if (token.IsCancellationRequested) return;
+                            foreach (var kvp in computed)
+                            {
+                                _cachedSummaryTexts[kvp.Key] = kvp.Value;
+                            }
+                            _summariesDirty = false;
+                            _isCalculatingSummaries = false;
+                            InvalidateVisual();
+                        }));
+                    }
+                    catch { }
+                }
+            }, token);
         }
 
         private int HitTestColumnDivider(double mouseX)
