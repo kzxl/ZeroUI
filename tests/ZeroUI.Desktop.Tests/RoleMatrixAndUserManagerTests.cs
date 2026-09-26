@@ -195,7 +195,8 @@ namespace ZeroUI.Desktop.Tests
         {
             StaTestRunner.Run(() =>
             {
-                var session = SessionContext.Current;
+                var session = new SessionContext();
+                ZeroUI.Wpf.Security.ZAuthorize.Session = session;
                 var btn = new System.Windows.Controls.Button();
 
                 ZeroUI.Wpf.Security.ZAuthorize.SetRequiredRole(btn, "Administrator");
@@ -212,7 +213,8 @@ namespace ZeroUI.Desktop.Tests
                 ZeroUI.Wpf.Security.ZAuthorize.EvaluateElement(btn);
                 Assert.True(btn.IsEnabled);
 
-                session.Logout();
+                session.Dispose();
+                ZeroUI.Wpf.Security.ZAuthorize.Session = null;
             });
         }
 

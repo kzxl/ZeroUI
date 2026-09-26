@@ -92,12 +92,13 @@ namespace ZeroUI.Desktop.Tests
         {
             StaTestRunner.Run(() =>
             {
-                var session = SessionContext.Current;
+                var session = new SessionContext();
                 var user = new UserModel("usr-wpf", "wpf_operator", "WPF Operator", roles: new[] { "Engineer" });
                 session.SetCurrentUser(user);
 
                 var badge = new ZeroUI.Wpf.Feedback.ZUserStatusBadge
                 {
+                    Session = session,
                     ShowAvatar = true,
                     ShowCountdown = true
                 };
@@ -106,7 +107,7 @@ namespace ZeroUI.Desktop.Tests
                 Assert.True(badge.ShowCountdown);
                 Assert.Equal("wpf_operator", session.CurrentUser?.Username);
 
-                session.Logout();
+                session.Dispose();
             });
         }
 

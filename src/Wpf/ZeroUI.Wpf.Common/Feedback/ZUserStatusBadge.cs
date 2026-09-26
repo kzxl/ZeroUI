@@ -41,6 +41,28 @@ namespace ZeroUI.Wpf.Feedback
             set => SetValue(ShowAvatarProperty, value);
         }
 
+        private ISessionManager? _session;
+
+        public ISessionManager Session
+        {
+            get => _session ?? SessionContext.Current;
+            set
+            {
+                if (_session != value)
+                {
+                    if (_session != null) _session.UserChanged -= OnUserChanged;
+                    _session = value;
+                    if (_session != null) _session.UserChanged += OnUserChanged;
+                    UpdateDisplay();
+                }
+            }
+        }
+
+        private void OnUserChanged(object? sender, UserChangedEventArgs e)
+        {
+            Dispatcher.Invoke(UpdateDisplay);
+        }
+
         public event EventHandler? SwitchUserClicked;
         public event EventHandler? LogoutClicked;
 
@@ -69,7 +91,7 @@ namespace ZeroUI.Wpf.Feedback
             _timer.Tick += (s, e) => UpdateCountdown();
             _timer.Start();
 
-            SessionContext.Current.UserChanged += (s, e) => Dispatcher.Invoke(UpdateDisplay);
+            Session.UserChanged += OnUserChanged;
             UpdateDisplay();
 
             AddVisualChild(_rootBorder);
@@ -188,7 +210,7 @@ namespace ZeroUI.Wpf.Feedback
 
         private void UpdateDisplay()
         {
-            var session = SessionContext.Current;
+            var session = Session;
             var user = session.CurrentUser;
             bool auth = session.IsAuthenticated;
 
@@ -210,7 +232,7 @@ namespace ZeroUI.Wpf.Feedback
 
         private void UpdateCountdown()
         {
-            var session = SessionContext.Current;
+            var session = Session;
             if (!ShowCountdown || !session.IsAuthenticated || session.IdleTimeout <= TimeSpan.Zero)
             {
                 _txtCountdown.Text = "";

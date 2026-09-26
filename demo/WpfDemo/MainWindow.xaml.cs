@@ -82,6 +82,7 @@ namespace ZeroUI.Samples.WpfDemo
             SetupStateExecutor();
             SetupEnterpriseCommercialSuite();
             SetupDesignToolsDemo();
+            SetupSecurityDemo();
 
             CompositionTarget.Rendering += OnCompositionRendering;
 

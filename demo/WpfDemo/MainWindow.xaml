@@ -29,6 +29,9 @@
         xmlns:opt="clr-namespace:ZeroUI.Wpf.Rendering.Optimizer;assembly=ZeroUI.Wpf.Common"
         xmlns:btn="clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf.Common"
         xmlns:dataedit="clr-namespace:ZeroUI.Wpf.Editors;assembly=ZeroUI.Wpf.Data"
+        xmlns:sec="clr-namespace:ZeroUI.Wpf.Security;assembly=ZeroUI.Wpf.Data"
+        xmlns:auth="clr-namespace:ZeroUI.Wpf.Security;assembly=ZeroUI.Wpf.Common"
+        xmlns:input="clr-namespace:ZeroUI.Wpf.Input;assembly=ZeroUI.Wpf.Common"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="920" Width="1440"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -902,6 +905,127 @@
                                         </ScrollViewer>
                                     </ind:GridCard>
                                 </Grid>
+                            </Grid>
+                        </TabItem>
+
+                        <!-- Sub-Tab 3.6: Industrial Security & RBAC Suite -->
+                        <TabItem Header="🛡️ Security &amp; Users">
+                            <Grid Margin="18">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Top Description Header -->
+                                <DockPanel Grid.Row="0" Margin="0,0,0,12">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="Industrial Security, Touch HMI &amp; RBAC Audit Suite" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
+                                        <TextBlock Text="Multi-modal authentication, on-screen touch virtual keyboards, 64-bit monotonic clock watchdog, and 21 CFR Part 11 audit trails." FontSize="12.5" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <!-- Session Control Toolbar -->
+                                <Border Grid.Row="1" Background="{DynamicResource ZeroUI.BgCard}" CornerRadius="6" BorderBrush="{DynamicResource ZeroUI.Border}" BorderThickness="1" Padding="12,8,12,8" Margin="0,0,0,14">
+                                    <DockPanel LastChildFill="False">
+                                        <feed:ZUserStatusBadge x:Name="WpfUserBadge" DockPanel.Dock="Left" Width="260" Height="44" />
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button x:Name="BtnWpfSwitchAdmin" Click="BtnWpfSwitchAdmin_Click" Content="👤 Admin" Height="30" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfSwitchEng" Click="BtnWpfSwitchEng_Click" Content="🔧 Engineer" Height="30" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfSwitchOp" Click="BtnWpfSwitchOp_Click" Content="👷 Operator" Height="30" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfSwipeBadge" Click="BtnWpfSwipeBadge_Click" Content="💳 Swipe Tech Badge" Height="30" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfLoginDialog" Click="BtnWpfLoginDialog_Click" Content="🔑 Sign-In Dialog" Height="30" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfLockHmi" Click="BtnWpfLockHmi_Click" Content="🔒 Lock HMI" Height="30" Padding="10,0,10,0" Cursor="Hand" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- Sub-Tab Workspace -->
+                                <TabControl Grid.Row="2" BorderThickness="0">
+                                    <!-- Panel 1: Touch HMI & Declarative RBAC -->
+                                    <TabItem Header="🔤 Touch HMI &amp; Declarative RBAC">
+                                        <Grid Margin="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="14" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Left: Touch HMI & Virtual Keyboard -->
+                                            <ind:GridCard Grid.Column="0" HeaderText="Touch-Screen HMI &amp; On-Screen Keyboards" SubtitleText="Automatic popup on focus + standalone embedded virtual keyboard">
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Numeric Setpoint / PIN Code:" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                        <TextBox x:Name="TxtWpfNumpad" Text="1250" Height="32" FontSize="14" Padding="6,4,6,4" Margin="0,0,0,12" />
+
+                                                        <TextBlock Text="Recipe / Batch Name (Alphanumeric):" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                        <TextBox x:Name="TxtWpfRecipe" Text="BATCH-TITANIUM-2026" Height="32" FontSize="14" Padding="6,4,6,4" Margin="0,0,0,16" />
+
+                                                        <TextBlock Text="Embedded Virtual Keyboard (Live Touch Preview):" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" Margin="0,0,0,4" />
+                                                        <TextBox x:Name="TxtWpfKbdPreview" Text="Typed: " Height="30" FontFamily="Consolas" IsReadOnly="True" Margin="0,0,0,8" />
+                                                        <Border BorderBrush="{DynamicResource ZeroUI.Border}" BorderThickness="1" CornerRadius="4">
+                                                            <input:ZVirtualKeyboard x:Name="WpfEmbeddedKbd" Height="220" LayoutMode="AlphaNumeric" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </ind:GridCard>
+
+                                            <!-- Right: Declarative RBAC Actions -->
+                                            <ind:GridCard Grid.Column="2" HeaderText="Declarative RBAC Dynamic Control Authorization" SubtitleText="ZAuthorize attached properties dynamically enable/disable elements">
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                                                    <StackPanel>
+                                                        <TextBlock Text="🔒 Requires Role: 'Administrator'" FontStyle="Italic" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                        <Button x:Name="BtnWpfAdminAction" auth:ZAuthorize.RequiredRole="Administrator" Click="BtnWpfAdminAction_Click" Content="⚙️ Overhaul Plant Parameters (Admin Only)" Background="#EF4444" Foreground="White" FontWeight="Bold" Height="42" Margin="0,0,0,14" Cursor="Hand" />
+
+                                                        <TextBlock Text="🔒 Requires Permission: 'Parameters.Write' (Engineer / Admin)" FontStyle="Italic" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                        <Button x:Name="BtnWpfEngAction" auth:ZAuthorize.RequiredPermission="Parameters.Write" Click="BtnWpfEngAction_Click" Content="🔧 Calibrate PID Loops &amp; Setpoints (Engineer+)" Background="#0EA5E9" Foreground="White" FontWeight="Bold" Height="42" Margin="0,0,0,14" Cursor="Hand" />
+
+                                                        <TextBlock Text="🔒 Requires Permission: 'Alarms.Acknowledge' (Operator / Engineer / Admin)" FontStyle="Italic" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                        <Button x:Name="BtnWpfOpAction" auth:ZAuthorize.RequiredPermission="Alarms.Acknowledge" Click="BtnWpfOpAction_Click" Content="🔔 Acknowledge Active Alarms (All Operators)" Background="#22C55E" Foreground="White" FontWeight="Bold" Height="42" Margin="0,0,0,14" Cursor="Hand" />
+
+                                                        <TextBlock Text="🔒 Requires Permission: 'Audit.Export' (Administrator)" FontStyle="Italic" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                        <Button x:Name="BtnWpfExportAction" auth:ZAuthorize.RequiredPermission="Audit.Export" Click="BtnWpfExportAction_Click" Content="💾 Export Regulatory Compliance Audit (Admin/Supervisor)" Background="#A855F7" Foreground="White" FontWeight="Bold" Height="42" Cursor="Hand" />
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </ind:GridCard>
+                                        </Grid>
+                                    </TabItem>
+
+                                    <!-- Panel 2: User Accounts & Role Matrix -->
+                                    <TabItem Header="👥 User &amp; Role Matrix Admin">
+                                        <Grid Margin="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="14" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <ind:GridCard Grid.Column="0" HeaderText="Role-to-Permission Access Matrix (ZRoleMatrix)" SubtitleText="Interactive tri-state matrix assigning permissions across roles">
+                                                <sec:ZRoleMatrix x:Name="WpfRoleMatrix" Margin="8" />
+                                            </ind:GridCard>
+                                            <ind:GridCard Grid.Column="2" HeaderText="Industrial Operator Accounts (ZUserManager)" SubtitleText="Manage operator credentials, PINs, and RFID badge card hardware assignments">
+                                                <sec:ZUserManager x:Name="WpfUserManager" Margin="8" />
+                                            </ind:GridCard>
+                                        </Grid>
+                                    </TabItem>
+
+                                    <!-- Panel 3: 21 CFR Part 11 Audit Trail -->
+                                    <TabItem Header="📜 21 CFR Part 11 Audit Trail">
+                                        <Grid Margin="8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button x:Name="BtnWpfRefreshLogs" Click="BtnWpfRefreshLogs_Click" Content="🔄 Refresh Logs" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                                                    <Button x:Name="BtnWpfExportCsv" Click="BtnWpfExportCsv_Click" Content="📤 Export CSV" Height="30" Padding="12,0,12,0" Margin="0,0,8,0" Cursor="Hand" />
+                                                    <Button x:Name="BtnWpfSimulateLog" Click="BtnWpfSimulateLog_Click" Content="🧪 Simulate Parameter Change Log" Height="30" Padding="12,0,12,0" Cursor="Hand" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                            <sec:ZOperationLogViewer x:Name="WpfLogViewer" Grid.Row="1" />
+                                        </Grid>
+                                    </TabItem>
+                                </TabControl>
                             </Grid>
                         </TabItem>
                     </TabControl>
