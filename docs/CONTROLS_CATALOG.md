@@ -258,4 +258,40 @@ A specialized suite of 21 cross-platform enterprise controls spanning Modern Inp
 * **`ZTransferList`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
   * Dual-box item transfer control with transfer actions ($>, >>, <, <<$), dual search boxes, item count badges, and disabled state handling.
 
+---
+
+## 9. Industrial Security & Identity Management Suite (`Z*` - v1.11.0)
+
+A decoupled, enterprise-grade authentication, role-based authorization (RBAC), touch HMI, and compliance audit suite engineered specifically for 24/7 industrial runtime environments and multi-operator manufacturing stations:
+
+### Multi-Modal Authentication & Session Controls
+* **`ZLoginDialog`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Multi-modal industrial login dialog supporting Username/Password, Operator quick-PIN, and RFID/NFC hardware badge dongles.
+  * Completely decoupled via `IAuthenticationProvider`, `IUserStore`, and `ISessionManager`.
+* **`ZUserStatusBadge`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Real-time HMI operator status bar badge displaying current user avatar, operator name, active role badge (`Operator`, `Technician`, `Engineer`, `Administrator`), idle elapsed timer, and quick sign-out / lock triggers.
+* **`ZBadgeReaderListener`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Hardware RFID/NFC badge card scanner listener supporting USB HID keyboard-wedge scanners, serial readers, configurable preamble/postamble characters, and timing debounce.
+* **`ZIdleTimeoutMonitor` & `ZLockScreenOverlay`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * High-performance, zero-allocation activity heartbeat monitor powered by 64-bit monotonic clock (`MonotonicClock`).
+  * Triggers configurable warning countdown and automatically locks the HMI or signs out the operator upon inactivity timeout.
+  * Translucent lock screen overlay (`ZLockScreenOverlay`) requiring quick-PIN or badge re-authentication to resume runtime operation.
+
+### Touch HMI Virtual Keyboard
+* **`ZVirtualKeyboard` & `ZTouchKeyboardProvider`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Dedicated on-screen touch virtual keyboard offering QWERTY alphanumeric and 10-key numeric keypad modes with large hit targets (48px+) optimized for gloved industrial operators.
+  * `ZTouchKeyboardProvider` automatically detects clicks/focus on text inputs and pops up the appropriate keyboard layout adjacent to the target control.
+
+### Role-Based Access Control (RBAC) & Audit Trails
+* **`ZRoleMatrix`** *(WinForms: `ZeroUI.WinForms.Data` / WPF: `ZeroUI.Wpf.Data`)*:
+  * Visual matrix table mapping roles against permissions (`Alarms.Acknowledge`, `Parameters.Write`, `Recipes.Edit`, `Audit.Export`).
+  * Features interactive tri-state checkbox toggles, batch updates, and asynchronous persistence via `IRoleStore`.
+* **`ZUserManager`** *(WinForms: `ZeroUI.WinForms.Data` / WPF: `ZeroUI.Wpf.Data`)*:
+  * Industrial operator administration console for creating, editing, locking, assigning RFID badge dongles, and managing passwords/PINs.
+* **`ZAuthorizeExtender` & `ZAuthorize`** *(WinForms: `ZeroUI.WinForms.Common` / WPF: `ZeroUI.Wpf.Common`)*:
+  * Declarative, zero-boilerplate RBAC extender (WinForms) and attached properties (WPF) that dynamically enable, disable, or hide controls based on active operator permissions.
+* **`ZOperationLogViewer`** *(WinForms: `ZeroUI.WinForms.Data` / WPF: `ZeroUI.Wpf.Data`)*:
+  * 21 CFR Part 11 compliant operator action and electronic signature audit viewer with severity badges, actor filtering, and streaming CSV export.
+
+
 

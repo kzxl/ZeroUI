@@ -3,9 +3,9 @@
 > **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
 
 [![ZeroPlatform Tier](https://img.shields.io/badge/ZeroPlatform-Tier%205%20(Presentation%20%26%20Apps)-e11d48.svg)](https://github.com/kzxl/ZeroPlatform)
-[![NuGet Version](https://img.shields.io/badge/nuget-v1.10.1-blue.svg)](https://github.com/kzxl/ZeroUI)
+[![NuGet Version](https://img.shields.io/badge/nuget-v1.11.0-blue.svg)](https://github.com/kzxl/ZeroUI)
 [![GPU Acceleration](https://img.shields.io/badge/GPU%20Acceleration-Direct3D%2011%20%7C%20Direct2D-cyan.svg)](https://github.com/kzxl/ZeroGraphics)
-[![Unit Tests](https://img.shields.io/badge/tests-804%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
+[![Unit Tests](https://img.shields.io/badge/tests-836%20passed%20(100%25)-brightgreen.svg)](#-testing--quality-assurance)
 [![Target Frameworks](https://img.shields.io/badge/targets-netstandard2.0%20%7C%20net462%20%7C%20net8.0--windows-blue.svg)](#-package-matrix)
 [![UI Frame Latency](https://img.shields.io/badge/Frame%20Latency-%3C%204ms%20P95-brightgreen.svg)](docs/BENCHMARKS.md)
 [![GC Allocations](https://img.shields.io/badge/Hot%20Path%20Allocations-0%20B%20(Zero--Alloc)-brightgreen.svg)](docs/BENCHMARKS.md)
@@ -50,6 +50,7 @@ Headless and interactive stress-test verified on `.NET 8.0` (x64, Intel Core i7 
 * **Win32 Memory DC DIBSection Engine**: Offscreen unmanaged double buffering with zero-copy `BitBlt` presentation (100% resilient across RDP and virtual machines).
 * **Enterprise Dual-Runtime Support**: Full native compatibility with **.NET Framework 4.6.2** as well as modern **.NET 8.0 / 9.0**.
 * **Unified Theme Engine**: Instant reactive switching between **Obsidian Dark Mode** (`#12151C`) and **Clean Light Mode** across all controls.
+* **Industrial Security & Identity Management Suite (v1.11.0)**: Decoupled enterprise authentication, role-based authorization (RBAC), multi-modal login (Username/Password, quick PIN, RFID/NFC hardware badge dongle), on-screen touch virtual keyboard (`ZVirtualKeyboard`), idle timeout heartbeat monitor with auto-lock screen overlay (`ZLockScreenOverlay`), user management console (`ZUserManager`), visual permission matrix (`ZRoleMatrix`), declarative RBAC extender (`ZAuthorizeExtender` / `ZAuthorize`), and 21 CFR Part 11 audit log viewer (`ZOperationLogViewer`).
 * **Enterprise Extended Controls Suite (v1.10.1)**: 21 comprehensive production controls covering async autocomplete, command palettes, notification drawers, ISA-18.2 alarm summaries, calendars, cron builders, gauge & bubble charts, signature pads, JSON/code/markdown editors, tree views, and manufacturing timelines.
 * **Interactive Guided Tour & Onboarding Engine (v1.10.0)**: Native spotlight aperture cutout masking (`Region.Exclude` / `CombinedGeometry.Exclude`), semi-transparent glass backdrop dimming, collision-free adaptive popovers, and full keyboard navigation across WinForms and WPF (`ZTour`).
 * **Specialized Creative & Forensic Inspection Media Suite (v1.10.0)**: High-performance vector defect tagging with direct bitmap burning (`ZAnnotationCanvas`), optical precision metrology caliper (`ZMeasurementRuler`), dynamic screen-capture security stamps (`ZWatermarkOverlay`), GPU-accelerated video playback (`ZVideoPlayer`), symmetrical audio waveform scrubbers (`ZAudioWaveform`), and document straightening/binarization (`ZDocumentDeskew`).
@@ -86,6 +87,24 @@ ZeroUI delivers 21 fully implemented, production-ready enterprise controls acros
 | **JSON Management** | **`ZJsonEditor`** | ✅ | ✅ | Zero-dependency JSON editor with pretty-formatting, minification, real-time syntax validator, and status indicators. |
 | **Hierarchical Trees** | **`ZTreeView`** | ✅ | ✅ | Vector tree view with chevron expand/collapse, optional node checkboxes, selection highlights, and connector lines. |
 | **Audit Trails** | **`ZTimeline`** | ✅ | ✅ | Vertical manufacturing audit trail and lot tracking journal with status indicator nodes (Completed, InProgress, Error, Pending). |
+
+---
+
+## 🛡️ Industrial Security & Identity Management Suite (v1.11.0)
+
+A decoupled, enterprise-grade authentication, role-based authorization (RBAC), touch HMI, and compliance audit suite engineered specifically for 24/7 industrial runtime environments and multi-operator manufacturing stations:
+
+| Category | Control | WinForms | WPF | Core Capabilities |
+| :--- | :--- | :---: | :---: | :--- |
+| **Authentication** | **`ZLoginDialog`** | ✅ | ✅ | Multi-modal login modal supporting Username/Password, quick PIN, and RFID/NFC hardware badge dongle. |
+| **Touch HMI** | **`ZVirtualKeyboard`** | ✅ | ✅ | Touch-screen keyboard (QWERTY alphanumeric & 10-key numeric keypad modes) with 48px+ hit targets and auto-popup provider. |
+| **Session Watchdog** | **`ZIdleTimeoutMonitor`** | ✅ | ✅ | Inactivity watchdog with 64-bit monotonic clock, idle countdown, warning, auto-lock overlay, and unlock authentication. |
+| **Operator Status** | **`ZUserStatusBadge`** | ✅ | ✅ | Real-time session status badge showing operator name, role badge, session duration, lockout indicator, and quick logout menu. |
+| **Hardware I/O** | **`ZBadgeReaderListener`** | ✅ | ✅ | Hardware RFID/NFC badge card scanner listener (USB HID keyboard-wedge / Serial) with preamble/postamble and debounce. |
+| **RBAC Matrix** | **`ZRoleMatrix`** | ✅ | ✅ | Visual permission matrix mapping roles against permissions with tri-state checkboxes and asynchronous store sync. |
+| **User Management** | **`ZUserManager`** | ✅ | ✅ | Industrial operator administration console for creating, editing, locking, assigning badges, and managing credentials. |
+| **Declarative Security** | **`ZAuthorizeExtender` / `ZAuthorize`** | ✅ | ✅ | Extender provider (WinForms) & attached property (WPF) dynamically disabling or hiding UI elements based on active role/permission. |
+| **Compliance & Audit** | **`ZOperationLogViewer`** | ✅ | ✅ | 21 CFR Part 11 compliant operator action and electronic signature audit viewer with severity badges, actor filter, and CSV export. |
 
 ---
 
