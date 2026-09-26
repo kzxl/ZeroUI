@@ -83,6 +83,7 @@ namespace ZeroUI.Desktop.Tests
             using var btnTuning = new Button();
 
             using var extender = new ZeroUI.WinForms.Security.ZAuthorizeExtender();
+            extender.Session = session;
             extender.SetRequiredRole(btnAdminOnly, "Administrator");
             extender.SetRequiredPermission(btnTuning, "Parameters.Write");
 

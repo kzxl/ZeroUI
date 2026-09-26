@@ -259,7 +259,7 @@ namespace ZeroUI.Wpf.Overlays
             {
                 AuthenticatedUser = result.User;
                 _session.SetCurrentUser(result.User);
-                DialogResult = true;
+                try { DialogResult = true; } catch (InvalidOperationException) { }
                 Close();
                 return true;
             }
@@ -279,7 +279,7 @@ namespace ZeroUI.Wpf.Overlays
             {
                 AuthenticatedUser = result.User;
                 _session.SetCurrentUser(result.User);
-                DialogResult = true;
+                try { DialogResult = true; } catch (InvalidOperationException) { }
                 Close();
                 return true;
             }

@@ -25,6 +25,24 @@ namespace ZeroUI.WinForms.Security
         private readonly Dictionary<Control, string> _requiredRoles = new Dictionary<Control, string>();
         private readonly Dictionary<Control, string> _requiredPermissions = new Dictionary<Control, string>();
         private readonly Dictionary<Control, UnauthorizedBehavior> _behaviors = new Dictionary<Control, UnauthorizedBehavior>();
+        private ISessionManager? _session;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ISessionManager Session
+        {
+            get => _session ?? SessionContext.Current;
+            set
+            {
+                if (!ReferenceEquals(_session, value))
+                {
+                    UnsubscribeSession();
+                    _session = value;
+                    SubscribeSession();
+                    EvaluateAll();
+                }
+            }
+        }
 
         public bool CanExtend(object extendee) => extendee is Control;
 
@@ -77,14 +95,34 @@ namespace ZeroUI.WinForms.Security
 
         public ZAuthorizeExtender()
         {
-            SessionContext.Current.UserChanged += OnUserChanged;
-            SessionContext.Current.SessionLocked += OnSessionLockedOrUnlocked;
-            SessionContext.Current.SessionUnlocked += OnSessionLockedOrUnlocked;
+            SubscribeSession();
         }
 
         public ZAuthorizeExtender(IContainer container) : this()
         {
             container?.Add(this);
+        }
+
+        private void SubscribeSession()
+        {
+            var s = Session;
+            if (s != null)
+            {
+                s.UserChanged += OnUserChanged;
+                s.SessionLocked += OnSessionLockedOrUnlocked;
+                s.SessionUnlocked += OnSessionLockedOrUnlocked;
+            }
+        }
+
+        private void UnsubscribeSession()
+        {
+            var s = Session;
+            if (s != null)
+            {
+                s.UserChanged -= OnUserChanged;
+                s.SessionLocked -= OnSessionLockedOrUnlocked;
+                s.SessionUnlocked -= OnSessionLockedOrUnlocked;
+            }
         }
 
         private void OnUserChanged(object? sender, UserChangedEventArgs e)
@@ -112,7 +150,7 @@ namespace ZeroUI.WinForms.Security
         {
             if (control == null || control.IsDisposed) return;
 
-            var session = SessionContext.Current;
+            var session = Session;
             bool authorized = true;
 
             // Check role requirement
@@ -143,9 +181,7 @@ namespace ZeroUI.WinForms.Security
         {
             if (disposing)
             {
-                SessionContext.Current.UserChanged -= OnUserChanged;
-                SessionContext.Current.SessionLocked -= OnSessionLockedOrUnlocked;
-                SessionContext.Current.SessionUnlocked -= OnSessionLockedOrUnlocked;
+                UnsubscribeSession();
                 _requiredRoles.Clear();
                 _requiredPermissions.Clear();
                 _behaviors.Clear();

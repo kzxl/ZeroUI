@@ -46,6 +46,8 @@ namespace ZeroUI.Wpf.Security
         public static UnauthorizedBehavior GetBehavior(DependencyObject obj) => (UnauthorizedBehavior)obj.GetValue(BehaviorProperty);
         public static void SetBehavior(DependencyObject obj, UnauthorizedBehavior value) => obj.SetValue(BehaviorProperty, value);
 
+        public static ISessionManager? Session { get; set; }
+
         private static void OnSecurityPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is UIElement element)
@@ -62,7 +64,7 @@ namespace ZeroUI.Wpf.Security
             string permission = GetRequiredPermission(element);
             var behavior = GetBehavior(element);
 
-            var session = SessionContext.Current;
+            var session = Session ?? SessionContext.Current;
             bool authorized = true;
 
             if (!string.IsNullOrWhiteSpace(role) && !session.HasRole(role))
