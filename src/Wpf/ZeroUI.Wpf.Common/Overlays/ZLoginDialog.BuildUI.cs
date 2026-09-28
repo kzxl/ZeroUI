@@ -146,6 +146,7 @@ namespace ZeroUI.Wpf.Overlays
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 12)
             };
+            _txtUsername.GotFocus += (s, e) => ShowInputKeyboard(_txtUsername);
             _panelPassword.Children.Add(_txtUsername);
 
             _lblPass = _lblPassword = new TextBlock
@@ -168,6 +169,7 @@ namespace ZeroUI.Wpf.Overlays
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 20)
             };
+            _txtPassword.GotFocus += (s, e) => ShowInputKeyboard(_txtPassword);
             _txtPassword.KeyDown += (s, e) => { if (e.Key == Key.Enter) _ = ExecuteLoginAsync(0); };
             _panelPassword.Children.Add(_txtPassword);
 
@@ -273,6 +275,23 @@ namespace ZeroUI.Wpf.Overlays
             UpdateTabButton(btn, isActive);
             btn.Click += (s, e) => onClick();
             return btn;
+        }
+
+        /// <summary>
+        /// Shows a floating AlphaNumeric virtual keyboard popup anchored below the target input element.
+        /// Ensures only one popup is active at a time. Only activates when the dialog is visible (not during tests).
+        /// </summary>
+        private void ShowInputKeyboard(UIElement target)
+        {
+            if (!IsLoaded || !IsVisible)
+                return;
+
+            if (_activePopup != null && _activePopup.IsOpen)
+            {
+                _activePopup.IsOpen = false;
+            }
+
+            _activePopup = ZVirtualKeyboard.ShowFloatingPopup(target, VirtualKeyboardLayout.AlphaNumeric);
         }
     }
 }

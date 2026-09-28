@@ -60,6 +60,7 @@ namespace ZeroUI.Wpf.Overlays
 
         private TextBlock _lblStatus = null!;
         private StatusState _currentStatusState = StatusState.Ready;
+        private Popup? _activePopup;
 
         public IUser? AuthenticatedUser { get; private set; }
         public Button CloseButton => _btnClose;

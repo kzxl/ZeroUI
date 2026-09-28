@@ -16,7 +16,7 @@ using ZeroUI.Wpf.Theme;
 
 namespace ZeroUI.Desktop.Tests
 {
-    [Collection("WinFormsThemeTests")]
+    [Collection("WpfThemeTests")]
     public class ZWpfLoginDialogChallenger2Tests
     {
         private readonly ITestOutputHelper _output;
