@@ -218,13 +218,14 @@ namespace ZeroUI.WinForms.Editors
 
         private void UpdateTheme()
         {
+            if (IsDisposed || Disposing) return;
             var p = CurrentPalette;
-            if (_richTextBox != null)
+            if (_richTextBox != null && !_richTextBox.IsDisposed)
             {
                 _richTextBox.BackColor = ReadOnly ? p.HeaderBackground : p.Surface;
                 _richTextBox.ForeColor = Enabled ? p.TextPrimary : p.TextSecondary;
             }
-            if (_toolbarPanel != null)
+            if (_toolbarPanel != null && !_toolbarPanel.IsDisposed)
             {
                 _toolbarPanel.BackColor = p.HeaderBackground;
             }

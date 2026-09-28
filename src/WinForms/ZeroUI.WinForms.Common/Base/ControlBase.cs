@@ -146,7 +146,7 @@ namespace ZeroUI.WinForms.Base
 
             _skinChangedHandler = skin =>
             {
-                if (_useDefaultSkin && !_isDisposed)
+                if (_useDefaultSkin && !_isDisposed && !IsDisposed && !Disposing)
                 {
                     if (IsHandleCreated && InvokeRequired)
                     {
@@ -155,15 +155,19 @@ namespace ZeroUI.WinForms.Base
                     }
                     else
                     {
-                        OnThemeChanged(skin);
-                        Invalidate();
+                        try
+                        {
+                            OnThemeChanged(skin);
+                            Invalidate();
+                        }
+                        catch (ObjectDisposedException) { }
                     }
                 }
             };
 
             _themeChangedHandler = (s, e) =>
             {
-                if (_useDefaultSkin && !_isDisposed)
+                if (_useDefaultSkin && !_isDisposed && !IsDisposed && !Disposing)
                 {
                     if (IsHandleCreated && InvokeRequired)
                     {
@@ -172,8 +176,12 @@ namespace ZeroUI.WinForms.Base
                     }
                     else
                     {
-                        OnThemeChanged(EffectiveSkin);
-                        Invalidate();
+                        try
+                        {
+                            OnThemeChanged(EffectiveSkin);
+                            Invalidate();
+                        }
+                        catch (ObjectDisposedException) { }
                     }
                 }
             };

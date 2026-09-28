@@ -274,7 +274,8 @@ namespace ZeroUI.WinForms.Containers
 
         private void ApplyControlTheme()
         {
-            if (_leftHeader == null || _rightHeader == null || _leftList == null || _rightList == null || _btnRight == null) return;
+            if (IsDisposed) return;
+            if (_leftHeader == null || _rightHeader == null || _leftList == null || _rightList == null) return;
 
             var c = ZeroTheme.Colors;
 
@@ -286,11 +287,15 @@ namespace ZeroUI.WinForms.Containers
             _rightList.BackColor = c.Surface;
             _rightList.ForeColor = c.TextPrimary;
 
-            foreach (var btn in new[] { _btnRight, _btnAllRight, _btnLeft, _btnAllLeft })
+            var buttons = new[] { _btnRight, _btnAllRight, _btnLeft, _btnAllLeft };
+            foreach (var btn in buttons)
             {
-                btn.BackColor = c.Background;
-                btn.ForeColor = c.Primary;
-                btn.FlatAppearance.BorderColor = c.BorderSubtle;
+                if (btn != null && !btn.IsDisposed)
+                {
+                    btn.BackColor = c.Background;
+                    btn.ForeColor = c.Primary;
+                    btn.FlatAppearance.BorderColor = c.BorderSubtle;
+                }
             }
         }
     }
