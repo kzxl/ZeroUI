@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Media;
+using ZeroUI.Core.Theme;
 
 namespace ZeroUI.Wpf.Theme
 {
@@ -67,7 +68,6 @@ namespace ZeroUI.Wpf.Theme
             if (IsDark == isDark) return;
             var tokens = isDark ? ZeroUI.Core.Theme.ZeroSkinDefaults.ObsidianDark.Tokens : ZeroUI.Core.Theme.ZeroSkinDefaults.CleanLight.Tokens;
             ApplyPalette(tokens, isDark);
-            ThemeChanged?.Invoke();
         }
 
         public static void ApplyPalette(ZeroUI.Core.Theme.ZeroPaletteTokens tokens, bool isDark)
@@ -85,7 +85,14 @@ namespace ZeroUI.Wpf.Theme
             BorderSubtle = CreateFrozen(tokens.BorderSubtle);
             BorderFocus = CreateFrozen(string.IsNullOrEmpty(tokens.BorderFocus) ? tokens.PrimaryAccent : tokens.BorderFocus);
 
-            PrimaryAccent = CreateFrozen(tokens.PrimaryAccent);
+            string primaryHex = tokens.PrimaryAccent;
+            if (ZeroColorUtils.GetContrastRatio(primaryHex, tokens.BgPrimary) < 4.5 
+                && !string.IsNullOrEmpty(tokens.SecondaryAccent) 
+                && ZeroColorUtils.GetContrastRatio(tokens.SecondaryAccent, tokens.BgPrimary) >= 4.5)
+            {
+                primaryHex = tokens.SecondaryAccent;
+            }
+            PrimaryAccent = CreateFrozen(primaryHex);
             PrimaryAccentDark = CreateFrozen(tokens.PrimaryAccentDark);
             SecondaryAccent = CreateFrozen(tokens.SecondaryAccent);
 

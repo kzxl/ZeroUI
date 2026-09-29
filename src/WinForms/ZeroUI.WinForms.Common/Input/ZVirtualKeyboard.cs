@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ZeroUI.Core.Input;
+using ZeroUI.Core.Theme;
 using ZeroUI.WinForms.Base;
 using ZeroUI.WinForms.Theme;
 
@@ -76,7 +77,17 @@ namespace ZeroUI.WinForms.Input
                      ControlStyles.ResizeRedraw, true);
 
             Size = new Size(680, 240);
+            BackColor = CurrentPalette.Background;
+            ForeColor = CurrentPalette.TextPrimary;
             RebuildKeyLayout();
+        }
+
+        protected override void OnThemeChanged(ZeroSkin skin)
+        {
+            base.OnThemeChanged(skin);
+            BackColor = CurrentPalette.Background;
+            ForeColor = CurrentPalette.TextPrimary;
+            Invalidate();
         }
 
         protected override void OnResize(EventArgs e)
@@ -402,16 +413,15 @@ namespace ZeroUI.WinForms.Input
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-            var skin = EffectiveSkin;
-            bool isDark = skin.IsDark;
+            var pal = CurrentPalette;
 
-            Color backColor = isDark ? Color.FromArgb(20, 24, 33) : Color.FromArgb(243, 244, 246);
-            Color keyBackNormal = isDark ? Color.FromArgb(32, 38, 52) : Color.FromArgb(255, 255, 255);
-            Color keyBackHover = isDark ? Color.FromArgb(45, 55, 72) : Color.FromArgb(229, 231, 235);
-            Color keyBackPressed = isDark ? Color.FromArgb(14, 116, 144) : Color.FromArgb(2, 132, 199);
-            Color keyBorder = isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(209, 213, 219);
-            Color textColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
-            Color specialKeyBack = isDark ? Color.FromArgb(26, 31, 44) : Color.FromArgb(235, 238, 242);
+            Color backColor = pal.Background;
+            Color keyBackNormal = pal.Surface;
+            Color keyBackHover = pal.Hover;
+            Color keyBackPressed = pal.Primary;
+            Color keyBorder = pal.Border;
+            Color textColor = pal.TextPrimary;
+            Color specialKeyBack = pal.HeaderBackground;
 
             g.Clear(backColor);
 
@@ -446,7 +456,7 @@ namespace ZeroUI.WinForms.Input
                     displayLabel = upper ? displayLabel.ToUpperInvariant() : displayLabel.ToLowerInvariant();
                 }
 
-                Color currentText = isPressed ? Color.White : textColor;
+                Color currentText = isPressed ? GetPressedTextColor(pal) : textColor;
                 using var textBrush = new SolidBrush(currentText);
 
                 var f = (k.KeyType != VirtualKeyType.Character) ? specialFont : font;
@@ -472,6 +482,38 @@ namespace ZeroUI.WinForms.Input
             return path;
         }
 
+        private static string ColorToHex(Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+
+        public static Color GetPressedTextColor(ZeroThemePalette pal)
+        {
+            double bgContrast = ZeroColorUtils.GetContrastRatio(ColorToHex(pal.Background), ColorToHex(pal.Primary));
+            double textContrast = ZeroColorUtils.GetContrastRatio(ColorToHex(pal.TextPrimary), ColorToHex(pal.Primary));
+            if (bgContrast >= 4.5 && bgContrast >= textContrast) return pal.Background;
+            if (textContrast >= 4.5) return pal.TextPrimary;
+
+            var skin = ZeroSkinManager.CurrentSkin;
+            if (skin == null || !string.Equals(skin.Tokens.PrimaryAccent, ColorToHex(pal.Primary), StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var s in ZeroSkinDefaults.GetAllDefaults())
+                {
+                    if (string.Equals(s.Tokens.PrimaryAccent, ColorToHex(pal.Primary), StringComparison.OrdinalIgnoreCase))
+                    {
+                        skin = s;
+                        break;
+                    }
+                }
+            }
+
+            if (skin != null && !string.IsNullOrEmpty(skin.Tokens.SelectionForeground))
+            {
+                Color selColor = ColorTranslator.FromHtml(skin.Tokens.SelectionForeground);
+                double selContrast = ZeroColorUtils.GetContrastRatio(ColorToHex(selColor), ColorToHex(pal.Primary));
+                if (selContrast >= 4.5) return selColor;
+            }
+
+            return bgContrast >= textContrast ? pal.Background : pal.TextPrimary;
+        }
+
         #endregion
 
         #region Helper Popover Launcher
@@ -487,9 +529,38 @@ namespace ZeroUI.WinForms.Input
                 StartPosition = FormStartPosition.Manual,
                 ShowInTaskbar = false,
                 TopMost = true,
-                BackColor = Color.FromArgb(20, 24, 33),
+                BackColor = ZeroTheme.Colors.Border,
+                Padding = new Padding(1),
                 Size = (layout == VirtualKeyboardLayout.Numpad) ? new Size(320, 300) : new Size(720, 260)
             };
+
+            EventHandler themeHandler = (s, e) =>
+            {
+                if (form.IsDisposed) return;
+                if (form.InvokeRequired)
+                {
+                    try { form.BeginInvoke(new Action(() => form.BackColor = ZeroTheme.Colors.Border)); }
+                    catch (ObjectDisposedException) { }
+                    catch (InvalidOperationException) { }
+                }
+                else
+                {
+                    form.BackColor = ZeroTheme.Colors.Border;
+                }
+            };
+
+            int cleanedUp = 0;
+            void CleanupHandler(object? s, EventArgs e)
+            {
+                if (System.Threading.Interlocked.Exchange(ref cleanedUp, 1) == 0)
+                {
+                    ZeroTheme.ThemeChanged -= themeHandler;
+                }
+            }
+
+            ZeroTheme.ThemeChanged += themeHandler;
+            form.FormClosed += CleanupHandler;
+            form.Disposed += CleanupHandler;
 
             var kb = new ZVirtualKeyboard
             {

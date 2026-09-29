@@ -3569,6 +3569,29 @@ namespace ZeroUI.WinForms.DataGrid
             Invalidate();
         }
 
+        /// <summary>
+        /// Applies an Apache Arrow-compliant SelectionMask directly to the visual row index map.
+        /// Accelerates 1,000,000+ row filtering using SIMD 64-bit word skipping and TrailingZeroCount bit extraction. Zero GC allocation.
+        /// </summary>
+        public void ApplySelectionMask(SelectionMask mask)
+        {
+            if (_dataSource == null) return;
+            if (mask == null)
+            {
+                _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+            }
+            else
+            {
+                _rowIndexMap.ApplySelectionMask(mask);
+            }
+            ClearRowSelection();
+            InvalidateSummaries();
+            _scrollY = 0;
+            _selectedVisualRow = -1;
+            UpdateScrollBars();
+            Invalidate();
+        }
+
         protected virtual void OnHeaderClicked(int columnIndex)
         {
             if (columnIndex < 0 || columnIndex >= _columns.Count || _dataSource == null || _isSorting) return;

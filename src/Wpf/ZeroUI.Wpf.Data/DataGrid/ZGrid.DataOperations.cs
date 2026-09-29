@@ -149,6 +149,36 @@ namespace ZeroUI.Wpf.DataGrid
             }
         }
 
+        /// <summary>
+        /// Applies an Apache Arrow-compliant SelectionMask directly to the visual row index map.
+        /// Accelerates 1,000,000+ row filtering using SIMD 64-bit word skipping and TrailingZeroCount bit extraction. Zero GC allocation.
+        /// </summary>
+        public void ApplySelectionMask(SelectionMask mask)
+        {
+            if (_dataSource == null) return;
+            if (mask == null)
+            {
+                _rowIndexMap.ResetIdentity(_dataSource.TotalRowCount);
+            }
+            else
+            {
+                _rowIndexMap.ApplySelectionMask(mask);
+            }
+
+            ClearRowSelection();
+            InvalidateSummaries();
+
+            if (_groupedMap.HasGrouping && _groupColumnIndices.Length > 0)
+            {
+                GroupBy(_groupColumnIndices);
+            }
+            else
+            {
+                _scrollY = 0;
+                InvalidateVisual();
+            }
+        }
+
         public void ShowColumnFilterPopup(int columnIndex)
         {
             if (columnIndex < 0 || columnIndex >= _columns.Count) return;
