@@ -190,6 +190,10 @@ All creative photo studio, inspection, color grading, and media controls reside 
 * **`ZProcessMap`** *(Aliases: `ProcessMap`)*: Interactive business process flowchart & workflow navigation map with customizable UserControl action triggers, orthogonal routing, and JSON serialization.
 * **`ZSpreadsheetControl`** *(Aliases: `SpreadsheetControl`)*: High-performance vector spreadsheet engine with formula evaluation (`SUM`, `AVERAGE`, `MIN`, `MAX`, `IF`), interactive formula bar, and in-place editing.
 * **`ZPdfViewerControl`** *(Aliases: `PdfViewerControl`)*: Vector CAD schematic and technical PDF document viewer with continuous vertical scrolling, zoom (Fit Width, 25%–400%), and full-text search highlights.
+* **`ZAiChatBox`** *(WinForms & WPF - Aliases: `AiChatBox`, `ZeroAiChatBox`, `ZCopilotBox`)*:
+  * Enterprise AI chat box and copilot workstation control with streaming token display, speech-bubble styling, and dark theme synchronization.
+  * Powered by `ZeroUI.Core.AiMl` models (`ChatMessage`, `ChatRole`, `ChatStreamingState`, `ChatPromptAction`).
+  * Features header deck with Model/Assistant banner, real-time generation state indicator (`Thinking...`, `Generating response...`, `Ready`), message history scroller, one-click clipboard text copy, quick prompt suggestion chips, auto-expanding multi-line prompt editor, and instant Stop Generation controls.
 * **`ZTour`** *(WPF & WinForms - New in v1.10.0, Aliases: `ZeroTour`)*:
   * Enterprise interactive onboarding tour and product walkthrough engine matching Ant Design `Tour` standards.
   * Features spotlight target highlighting with dark backdrop cutout masking (`CombinedGeometry.Exclude` / GDI+ `Region.Exclude`), glowing animated bounding box, dynamic popover card with collision-free adaptive positioning (`TopMost = true`), directional arrows, step progress badges (`1/4`), dot indicators, and full keyboard navigation (`Escape`, `Right`, `Left`, `Enter`).
