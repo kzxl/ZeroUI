@@ -25,4 +25,10 @@
     <ProjectReference Include="..\..\src\WinForms\ZeroUI.WinForms.Design\ZeroUI.WinForms.Design.csproj" />
     <ProjectReference Include="..\..\src\Wpf\ZeroUI.Wpf.Design\ZeroUI.Wpf.Design.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
