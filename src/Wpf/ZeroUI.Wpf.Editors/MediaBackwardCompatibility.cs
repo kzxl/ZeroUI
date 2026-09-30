@@ -19,6 +19,18 @@ namespace ZeroUI.Wpf.Editors
     public class ZCropBox : ZeroUI.Wpf.Media.ZCropBox { }
 
     /// <summary>
+    /// Forwarding shim for <see cref="ZeroUI.Wpf.Media.ZDocumentDeskew"/>.
+    /// </summary>
+    [Obsolete("ZDocumentDeskew has moved to ZeroUI.Wpf.Media. Please update your using directives.")]
+    public class ZDocumentDeskew : ZeroUI.Wpf.Media.ZDocumentDeskew { }
+
+    /// <summary>
+    /// Forwarding shim for <see cref="ZeroUI.Wpf.Media.ZOcrViewer"/>.
+    /// </summary>
+    [Obsolete("ZOcrViewer has moved to ZeroUI.Wpf.Media. Please update your using directives.")]
+    public class ZOcrViewer : ZeroUI.Wpf.Media.ZOcrViewer { }
+
+    /// <summary>
     /// Forwarding shim for <see cref="ZeroUI.Wpf.Media.ZHistogramScope"/>.
     /// </summary>
     [Obsolete("ZHistogramScope has moved to ZeroUI.Wpf.Media. Please update your using directives.")]
@@ -111,6 +123,18 @@ namespace ZeroUI.Wpf.Editors
     /// </summary>
     [Obsolete("CropBoxControl has moved to ZeroUI.Wpf.Media. Please migrate to ZeroUI.Wpf.Media.ZCropBox instead.")]
     public class CropBoxControl : ZeroUI.Wpf.Media.ZCropBox { }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZeroUI.Wpf.Media.ZOcrViewer"/>.
+    /// </summary>
+    [Obsolete("OcrRoiBoxControl has moved to ZeroUI.Wpf.Media. Please migrate to ZeroUI.Wpf.Media.ZOcrViewer instead.")]
+    public class OcrRoiBoxControl : ZeroUI.Wpf.Media.ZOcrViewer { }
+
+    /// <summary>
+    /// Legacy alias for <see cref="ZeroUI.Wpf.Media.ZOcrViewer"/>.
+    /// </summary>
+    [Obsolete("ZeroOcrViewer has moved to ZeroUI.Wpf.Media. Please migrate to ZeroUI.Wpf.Media.ZOcrViewer instead.")]
+    public class ZeroOcrViewer : ZeroUI.Wpf.Media.ZOcrViewer { }
 
     /// <summary>
     /// Legacy alias for <see cref="ZeroUI.Wpf.Media.ZHistogramScope"/>.

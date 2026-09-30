@@ -24,5 +24,6 @@
     <PackageReference Include="ZeroGraphics.Imaging" Version="1.5.0" />
     <PackageReference Include="ZeroGraphics.DirectX" Version="1.5.0" />
     <PackageReference Include="ZeroGraphics.Direct2D" Version="1.5.0" />
+    <PackageReference Include="ZeroOcr.Core" Version="1.0.0" />
   </ItemGroup>
 </Project>
