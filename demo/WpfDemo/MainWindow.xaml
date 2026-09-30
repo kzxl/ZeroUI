@@ -32,6 +32,8 @@
         xmlns:sec="clr-namespace:ZeroUI.Wpf.Security;assembly=ZeroUI.Wpf.Data"
         xmlns:auth="clr-namespace:ZeroUI.Wpf.Security;assembly=ZeroUI.Wpf.Common"
         xmlns:input="clr-namespace:ZeroUI.Wpf.Input;assembly=ZeroUI.Wpf.Common"
+        xmlns:chat="clr-namespace:ZeroUI.Wpf.Documents;assembly=ZeroUI.Wpf.Documents"
+        xmlns:ocr="clr-namespace:ZeroUI.Wpf.Media;assembly=ZeroUI.Wpf.Media"
         Title="ZeroUI ⚡ High-Performance Enterprise Desktop Suite (WPF)" Height="920" Width="1440"
         WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI">
@@ -2437,6 +2439,190 @@
                                     </Border>
                                 </StackPanel>
                             </ScrollViewer>
+                        </TabItem>
+                    </TabControl>
+                </TabItem>
+
+                <!-- ========================================================================= -->
+                <!-- CLUSTER 8: AI & VISION STUDIO                                             -->
+                <!-- ========================================================================= -->
+                <TabItem Header="🤖 AI &amp; Vision Studio">
+                    <TabControl BorderThickness="0" Margin="0">
+                        <!-- Sub-Tab 8.1: AI Chat Assistant -->
+                        <TabItem Header="🤖 AI Assistant &amp; Copilot (ZAiChatBox)">
+                            <Grid Margin="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="340" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- AI Chat Box Control -->
+                                <Border Grid.Column="0" BorderThickness="1" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" CornerRadius="8" ClipToBounds="True">
+                                    <chat:ZAiChatBox x:Name="WpfChatControl"
+                                                    AssistantName="ZeroCopilot"
+                                                    ModelName="ZeroInference Edge (FP16)" />
+                                </Border>
+
+                                <!-- Side Telemetry & Prompt Deck -->
+                                <Border Grid.Column="1" Margin="16,0,0,0" Background="{DynamicResource ZeroUI.BgSecondary}"
+                                        BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1"
+                                        CornerRadius="8" Padding="16">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <StackPanel>
+                                            <TextBlock Text="⚡ AI REASONING WORKBENCH" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,12" />
+                                            <TextBlock Text="ZeroUI ZAiChatBox provides low-latency token streaming, enterprise message bubbles, prompt suggestion chips, and responsive conversation layout for edge AI models."
+                                                       Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,16" LineHeight="18" />
+
+                                            <!-- Engine Telemetry Card -->
+                                            <Border Background="{DynamicResource ZeroUI.BgPrimary}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16">
+                                                <StackPanel>
+                                                    <TextBlock Text="INFERENCE ENGINE STATUS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" Margin="0,0,0,8" />
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="Runtime" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="11" />
+                                                        <TextBlock Text="Local ONNX / GGUF" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" HorizontalAlignment="Right" FontSize="11" />
+                                                    </DockPanel>
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="Quantization" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="11" />
+                                                        <TextBlock Text="FP16 DirectML" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" HorizontalAlignment="Right" FontSize="11" />
+                                                    </DockPanel>
+                                                    <DockPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="Stream Speed" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="11" />
+                                                        <TextBlock x:Name="TxtWpfAiSpeed" Text="~42.5 tokens/sec" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Right" FontSize="11" />
+                                                    </DockPanel>
+                                                    <DockPanel>
+                                                        <TextBlock Text="Ring Buffer" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="11" />
+                                                        <TextBlock Text="Zero-Alloc Chunks" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" HorizontalAlignment="Right" FontSize="11" />
+                                                    </DockPanel>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Action Triggers -->
+                                            <TextBlock Text="SIMULATION SCENARIOS" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,10" />
+                                            <Button x:Name="BtnWpfAiScada" Click="BtnWpfAiScada_Click" Content="⚡ Analyze SCADA Telemetry" Height="32" Margin="0,0,0,8" Cursor="Hand" FontWeight="SemiBold" HorizontalContentAlignment="Left" Padding="10,0,0,0" />
+                                            <Button x:Name="BtnWpfAiOcr" Click="BtnWpfAiOcr_Click" Content="📑 Extract Invoice OCR Summary" Height="32" Margin="0,0,0,8" Cursor="Hand" FontWeight="SemiBold" HorizontalContentAlignment="Left" Padding="10,0,0,0" />
+                                            <Button x:Name="BtnWpfAiBatch" Click="BtnWpfAiBatch_Click" Content="🔄 Query ISA-88 Batch State" Height="32" Margin="0,0,0,8" Cursor="Hand" FontWeight="SemiBold" HorizontalContentAlignment="Left" Padding="10,0,0,0" />
+                                            <Button x:Name="BtnWpfAiClear" Click="BtnWpfAiClear_Click" Content="🧹 Clear Message History" Height="32" Margin="0,0,0,16" Cursor="Hand" HorizontalContentAlignment="Left" Padding="10,0,0,0" />
+
+                                            <CheckBox x:Name="ChkWpfAiFastStream" Content="⚡ Fast Stream Mode (15ms)" IsChecked="False" Margin="0,0,0,8" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Border>
+                            </Grid>
+                        </TabItem>
+
+                        <!-- Sub-Tab 8.2: OCR Vision & Document Deskew -->
+                        <TabItem Header="🔍 OCR Vision &amp; Document Straightening (ZOcrViewer &amp; ZDocumentDeskew)">
+                            <Grid Margin="16">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Top Toolbar -->
+                                <Border Grid.Row="0" Background="{DynamicResource ZeroUI.BgSecondary}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="6" Padding="12,8,12,8" Margin="0,0,0,12">
+                                    <DockPanel LastChildFill="False">
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                            <TextBlock Text="OCR Overlays:" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="12" />
+                                            <CheckBox x:Name="ChkWpfOcrBoxes" Content="Bounding Boxes" IsChecked="True" Checked="ChkWpfOcrOption_Changed" Unchecked="ChkWpfOcrOption_Changed" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
+                                            <CheckBox x:Name="ChkWpfOcrBadges" Content="Confidence Badges" IsChecked="True" Checked="ChkWpfOcrOption_Changed" Unchecked="ChkWpfOcrOption_Changed" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
+                                            <CheckBox x:Name="ChkWpfOcrText" Content="Text Overlay" IsChecked="False" Checked="ChkWpfOcrOption_Changed" Unchecked="ChkWpfOcrOption_Changed" VerticalAlignment="Center" Margin="0,0,16,0" Foreground="{DynamicResource ZeroUI.TextPrimary}" />
+
+                                            <TextBlock Text="Confidence Threshold:" Foreground="{DynamicResource ZeroUI.TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="12" />
+                                            <Slider x:Name="SliderWpfOcrConfidence" Width="90" Minimum="0" Maximum="1" Value="0.70" SmallChange="0.05" LargeChange="0.1" ValueChanged="SliderWpfOcrConfidence_ValueChanged" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                            <TextBlock x:Name="TxtWpfOcrConfidenceVal" Text="70%" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0" FontSize="12" />
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                            <Button x:Name="BtnWpfOcrZoomIn" Click="BtnWpfOcrZoomIn_Click" Content="🔍+ Zoom In" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfOcrZoomOut" Click="BtnWpfOcrZoomOut_Click" Content="🔍- Zoom Out" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfOcrZoomFit" Click="BtnWpfOcrZoomFit_Click" Content="📐 Fit" Height="28" Padding="10,0,10,0" Margin="0,0,6,0" Cursor="Hand" />
+                                            <Button x:Name="BtnWpfOcrClearSel" Click="BtnWpfOcrClearSel_Click" Content="🧹 Clear Selection" Height="28" Padding="10,0,10,0" Cursor="Hand" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- Workspace Split: OCR Viewer (Left) and Deskew / Binarization (Right) -->
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="420" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Left: ZOcrViewer + Inspector Strip -->
+                                    <Grid Grid.Column="0" Margin="0,0,12,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <Border Grid.Row="0" Background="{DynamicResource ZeroUI.BgPrimary}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="8" ClipToBounds="True">
+                                            <ocr:ZOcrViewer x:Name="WpfOcrViewerControl"
+                                                            MinConfidenceThreshold="0.70"
+                                                            ShowBoundingBoxes="True"
+                                                            ShowConfidenceBadges="True"
+                                                            ShowTextOverlay="False" />
+                                        </Border>
+
+                                        <!-- Token Inspector Status Card -->
+                                        <Border Grid.Row="1" Margin="0,8,0,0" Background="{DynamicResource ZeroUI.BgSecondary}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="6" Padding="12,8,12,8">
+                                            <DockPanel LastChildFill="True">
+                                                <Button x:Name="BtnWpfOcrCopy" Click="BtnWpfOcrCopy_Click" DockPanel.Dock="Right" Content="📋 Copy Text" Height="28" Padding="12,0,12,0" Cursor="Hand" FontWeight="SemiBold" />
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="Selected Token:" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="12" Margin="0,0,6,0" />
+                                                    <TextBlock x:Name="TxtWpfOcrToken" Text="(Click a token or drag ROI)" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" FontSize="12" Margin="0,0,16,0" />
+                                                    <TextBlock Text="Confidence:" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="12" Margin="0,0,6,0" />
+                                                    <TextBlock x:Name="TxtWpfOcrTokenConfidence" Text="--" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextPrimary}" FontSize="12" Margin="0,0,16,0" />
+                                                    <TextBlock Text="Bounds:" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="12" Margin="0,0,6,0" />
+                                                    <TextBlock x:Name="TxtWpfOcrTokenBounds" Text="--" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="12" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Right: ZDocumentDeskew & Image Processing -->
+                                    <Border Grid.Column="1" Background="{DynamicResource ZeroUI.BgSecondary}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="8" Padding="14">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Header -->
+                                            <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                                <TextBlock Text="DOCUMENT DESKEW &amp; BINARIZATION" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.TextSecondary}" Margin="0,0,0,4" />
+                                                <TextBlock Text="Hardware-accelerated perspective deskew and adaptive threshold binarization for document preprocessing."
+                                                           Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="11.5" TextWrapping="Wrap" LineHeight="16" />
+                                            </StackPanel>
+
+                                            <!-- Deskew Canvas -->
+                                            <Border Grid.Row="1" Background="{DynamicResource ZeroUI.BgPrimary}" BorderBrush="{DynamicResource ZeroUI.BorderDefault}" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+                                                <ocr:ZDocumentDeskew x:Name="WpfDeskewControl" DeskewAngle="-8.5" />
+                                            </Border>
+
+                                            <!-- Deskew Controls -->
+                                            <StackPanel Grid.Row="2" Margin="0,12,0,0">
+                                                <DockPanel Margin="0,0,0,4">
+                                                    <TextBlock Text="Deskew Angle:" Foreground="{DynamicResource ZeroUI.TextSecondary}" FontSize="12" />
+                                                    <TextBlock x:Name="TxtWpfDeskewAngle" Text="-8.5°" FontWeight="Bold" Foreground="{DynamicResource ZeroUI.PrimaryAccent}" HorizontalAlignment="Right" FontSize="12" />
+                                                </DockPanel>
+                                                <Slider x:Name="SliderWpfDeskewAngle" Minimum="-30" Maximum="30" Value="-8.5" SmallChange="0.5" LargeChange="2" ValueChanged="SliderWpfDeskewAngle_ValueChanged" Margin="0,0,0,10" />
+
+                                                <DockPanel Margin="0,0,0,4">
+                                                    <CheckBox x:Name="ChkWpfDeskewBinarize" Content="Adaptive Threshold Binarization" IsChecked="False" Checked="ChkWpfDeskewBinarize_Changed" Unchecked="ChkWpfDeskewBinarize_Changed" Foreground="{DynamicResource ZeroUI.TextPrimary}" FontSize="12" />
+                                                    <TextBlock x:Name="TxtWpfDeskewThreshold" Text="128" FontWeight="SemiBold" Foreground="{DynamicResource ZeroUI.TextSecondary}" HorizontalAlignment="Right" FontSize="12" />
+                                                </DockPanel>
+                                                <Slider x:Name="SliderWpfDeskewThreshold" Minimum="10" Maximum="245" Value="128" ValueChanged="SliderWpfDeskewThreshold_ValueChanged" Margin="0,0,0,12" />
+
+                                                <UniformGrid Columns="2" Margin="0,0,0,4">
+                                                    <Button x:Name="BtnWpfDeskewAuto" Click="BtnWpfDeskewAuto_Click" Content="📐 Auto Straighten" Height="32" Margin="0,0,4,0" Cursor="Hand" FontWeight="SemiBold" />
+                                                    <Button x:Name="BtnWpfDeskewSendToOcr" Click="BtnWpfDeskewSendToOcr_Click" Content="🚀 Send to OCR" Height="32" Margin="4,0,0,0" Cursor="Hand" FontWeight="SemiBold" Background="{DynamicResource ZeroUI.PrimaryAccent}" Foreground="White" BorderThickness="0" />
+                                                </UniformGrid>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Grid>
                         </TabItem>
                     </TabControl>
                 </TabItem>

@@ -83,6 +83,7 @@ namespace ZeroUI.Samples.WpfDemo
             SetupEnterpriseCommercialSuite();
             SetupDesignToolsDemo();
             SetupSecurityDemo();
+            SetupAiOcrDemo();
 
             CompositionTarget.Rendering += OnCompositionRendering;
 
@@ -233,6 +234,7 @@ namespace ZeroUI.Samples.WpfDemo
             MainNavRail.Items.Add(new SideNavItem("c5", "MES Smart Factory", "📦", "MANUFACTURING & OPS", 2));
             MainNavRail.Items.Add(new SideNavItem("c6", "Analytics & Signals", "📊", "ANALYTICS & DIAGNOSTICS", 4));
             MainNavRail.Items.Add(new SideNavItem("c7", "Form Editors & UI", "🎨", "UI TOOLKIT & CONTROLS", 5));
+            MainNavRail.Items.Add(new SideNavItem("c8", "AI & Vision Studio", "🤖", "AI & COMPUTER VISION", 2));
 
             MainNavRail.SelectedIndex = 0;
             MainNavRail.ItemSelected += (s, e) =>

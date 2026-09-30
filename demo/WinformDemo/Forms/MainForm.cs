@@ -106,6 +106,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
         private ZeroTabPage _tabIndustrialRuntime = null!;
         private ZeroTabPage _tabScadaSafety = null!;
         private ZeroTabPage _tabSecuritySuite = null!;
+        private ZeroTabPage _clusterAiOcr = null!;
 
         // Sub-tabs
         private ZeroTabControl _subTabsBenchmark = null!;
@@ -636,6 +637,9 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             // Cluster 9: Industrial Domain Verticals (Phases 13, 15, 16, 17 - Lazy)
             _clusterIndustrial = new ZeroTabPage("Industrial Verticals", "🏭", page => InitializeIndustrialVerticals(page)) { BadgeCount = 7 };
 
+            // Cluster 10: AI Assistant & Computer Vision Studio (Phase 8 Suite - Lazy)
+            _clusterAiOcr = new ZeroTabPage("AI & Vision Studio", "🤖", page => InitializeAiOcrCluster(page)) { BadgeCount = 2 };
+
             // Build benchmark views (active suite at startup)
             InitializeZeroGrid();
             InitializeDataGridView();
@@ -654,6 +658,7 @@ namespace ZeroUI.Samples.WinformDemo.Forms
             _mainNav.AddTab(_clusterWarehouse);
             _mainNav.AddTab(_clusterAnalytics);
             _mainNav.AddTab(_clusterComponents);
+            _mainNav.AddTab(_clusterAiOcr);
 
             // Start autonomous background PLC driver
             SimulatedPlcDriver.Start();
