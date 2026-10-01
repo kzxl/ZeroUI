@@ -31,6 +31,11 @@ namespace ZeroUI.WinForms.Documents
         private readonly Label _titleLabel;
         private readonly Label _statusLabel;
 
+        private readonly FlowLayoutPanel _attachmentToolbar;
+        private readonly Button _btnUploadImage;
+        private readonly Button _btnUploadPdf;
+        private bool _enableAttachments = true;
+
         private ObservableCollection<ChatMessage> _messages;
         private ObservableCollection<string> _promptSuggestions;
         private string _assistantName = "ZeroCopilot";
@@ -179,6 +184,48 @@ namespace ZeroUI.WinForms.Documents
             _inputPanel.Controls.Add(_promptInputBox);
             _inputPanel.Controls.Add(buttonPanel);
 
+            // 2.5 Attachment Toolbar (Dock Bottom above Input)
+            _attachmentToolbar = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 36,
+                BackColor = Color.FromArgb(24, 34, 53),
+                Padding = new Padding(12, 4, 12, 4),
+                WrapContents = false
+            };
+
+            _btnUploadImage = new Button
+            {
+                Text = "🖼️ Tải hình ảnh",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(147, 197, 253),
+                BackColor = Color.FromArgb(30, 41, 59),
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(125, 28),
+                Margin = new Padding(0, 0, 8, 0),
+                Cursor = Cursors.Hand
+            };
+            _btnUploadImage.FlatAppearance.BorderColor = Color.FromArgb(59, 130, 246);
+            _btnUploadImage.FlatAppearance.BorderSize = 1;
+            _btnUploadImage.Click += (s, e) => TriggerImageUpload();
+
+            _btnUploadPdf = new Button
+            {
+                Text = "📎 Tải tệp PDF",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(244, 114, 182),
+                BackColor = Color.FromArgb(30, 41, 59),
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(120, 28),
+                Cursor = Cursors.Hand
+            };
+            _btnUploadPdf.FlatAppearance.BorderColor = Color.FromArgb(236, 72, 153);
+            _btnUploadPdf.FlatAppearance.BorderSize = 1;
+            _btnUploadPdf.Click += (s, e) => TriggerPdfUpload();
+
+            _attachmentToolbar.Controls.Add(_btnUploadImage);
+            _attachmentToolbar.Controls.Add(_btnUploadPdf);
+
             // 3. Suggestions Panel (Dock Bottom above Input)
             _suggestionsPanel = new FlowLayoutPanel
             {
@@ -201,6 +248,7 @@ namespace ZeroUI.WinForms.Documents
 
             Controls.Add(_messagesContainer);
             Controls.Add(_suggestionsPanel);
+            Controls.Add(_attachmentToolbar);
             Controls.Add(_inputPanel);
             Controls.Add(_headerPanel);
 
@@ -309,6 +357,19 @@ namespace ZeroUI.WinForms.Documents
             }
         }
 
+        [Category("ZeroUI")]
+        [Description("Enables or disables the attachment toolbar (Images & PDFs).")]
+        [DefaultValue(true)]
+        public bool EnableAttachments
+        {
+            get => _enableAttachments;
+            set
+            {
+                _enableAttachments = value;
+                _attachmentToolbar.Visible = value;
+            }
+        }
+
         #endregion
 
         #region Events
@@ -316,6 +377,48 @@ namespace ZeroUI.WinForms.Documents
         public event EventHandler<string>? SendMessageRequested;
         public event EventHandler? StopGenerationRequested;
         public event EventHandler? ClearChatRequested;
+        public event EventHandler<(string FilePath, string FileType)>? FileAttached;
+        public event EventHandler<string>? UndoRequested;
+
+        #endregion
+
+        #region Attachments & Actions
+
+        private void TriggerImageUpload()
+        {
+            using var ofd = new OpenFileDialog
+            {
+                Title = "Chọn ảnh chụp đơn hàng / báo giá / PO",
+                Filter = "Image Files (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|All Files (*.*)|*.*"
+            };
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                AppendUserMessage($"🖼️ [Tải hình ảnh]: {System.IO.Path.GetFileName(ofd.FileName)}");
+                FileAttached?.Invoke(this, (ofd.FileName, "image"));
+            }
+        }
+
+        private void TriggerPdfUpload()
+        {
+            using var ofd = new OpenFileDialog
+            {
+                Title = "Chọn tệp PDF đơn hàng / PO",
+                Filter = "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*"
+            };
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                AppendUserMessage($"📎 [Tải tệp PDF]: {System.IO.Path.GetFileName(ofd.FileName)}");
+                FileAttached?.Invoke(this, (ofd.FileName, "pdf"));
+            }
+        }
+
+        public ChatMessage AppendAssistantActionMessage(string content, bool canUndo = true)
+        {
+            var msg = ChatMessage.Assistant(content, _modelName);
+            msg.CanUndo = canUndo;
+            _messages.Add(msg);
+            return msg;
+        }
 
         #endregion
 
@@ -428,12 +531,31 @@ namespace ZeroUI.WinForms.Documents
             txt.Size = new Size(textWidth, textHeight);
             bubble.Controls.Add(txt);
 
-            int totalBubbleWidth = Math.Max(textWidth + 24, 180);
+            int totalBubbleWidth = Math.Max(textWidth + 24, msg.CanUndo ? 220 : 180);
             int totalBubbleHeight = textHeight + 36;
 
-            // Copy button for assistant
+            // Copy and Undo buttons for assistant
             if (!isUser)
             {
+                if (msg.CanUndo)
+                {
+                    var undoBtn = new Button
+                    {
+                        Text = "↺ Hoàn tác",
+                        Font = new Font("Segoe UI", 8f, FontStyle.Bold),
+                        ForeColor = Color.FromArgb(251, 191, 36),
+                        BackColor = Color.FromArgb(40, 251, 191, 36),
+                        FlatStyle = FlatStyle.Flat,
+                        Size = new Size(74, 22),
+                        Location = new Point(totalBubbleWidth - 142, totalBubbleHeight - 26),
+                        Cursor = Cursors.Hand
+                    };
+                    undoBtn.FlatAppearance.BorderColor = Color.FromArgb(251, 191, 36);
+                    undoBtn.FlatAppearance.BorderSize = 1;
+                    undoBtn.Click += (s, e) => UndoRequested?.Invoke(this, msg.Id);
+                    bubble.Controls.Add(undoBtn);
+                }
+
                 var copyBtn = new Button
                 {
                     Text = "📋 Copy",

@@ -40,6 +40,9 @@ namespace ZeroUI.Core.AiMl
         public bool IsStreaming { get; set; }
         public string? ErrorMessage { get; set; }
         public object? Tag { get; set; }
+        public bool CanUndo { get; set; }
+        public string? AttachmentPath { get; set; }
+        public string? AttachmentType { get; set; }
 
         public ChatMessage() { }
 
