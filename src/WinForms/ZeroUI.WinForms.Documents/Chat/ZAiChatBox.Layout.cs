@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ZeroUI.Core.AiMl;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Documents
 {
@@ -164,23 +165,34 @@ namespace ZeroUI.WinForms.Documents
         private Control CreateBubbleControl(ChatMessage msg, int containerWidth, out RichTextBox? outRtb, out Panel? outFooterPanel)
         {
             bool isUser = msg.Role == ChatRole.User;
+            bool isDark = ZeroTheme.IsDark;
 
             int maxAllowedWidth = Math.Max(180, containerWidth - 24);
             int maxBubbleWidth = Math.Min(580, maxAllowedWidth);
 
+            var bubbleBg = isUser
+                ? (isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(238, 242, 255))
+                : (isDark ? Color.FromArgb(17, 24, 39) : Color.FromArgb(255, 255, 255));
+
             var bubble = new Panel
             {
-                BackColor = isUser ? Color.FromArgb(30, 41, 59) : Color.FromArgb(17, 24, 39),
+                BackColor = bubbleBg,
                 Padding = new Padding(12, 8, 12, 8),
                 Tag = msg.Id
             };
 
             // 1. Header: Sender + Timestamp
+            var senderColor = isUser
+                ? (isDark ? Color.FromArgb(165, 180, 252) : Color.FromArgb(67, 56, 202))
+                : (isDark ? Color.FromArgb(52, 211, 153) : Color.FromArgb(5, 150, 105));
+
+            var timeColor = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+
             var senderLabel = new Label
             {
                 Text = isUser ? (msg.SenderName ?? "Operator") : (string.IsNullOrWhiteSpace(msg.ModelName) ? _assistantName : msg.ModelName),
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                ForeColor = isUser ? Color.FromArgb(165, 180, 252) : Color.FromArgb(52, 211, 153),
+                ForeColor = senderColor,
                 AutoSize = true,
                 Location = new Point(12, 7)
             };
@@ -190,13 +202,21 @@ namespace ZeroUI.WinForms.Documents
             {
                 Text = msg.Timestamp.ToLocalTime().ToString("HH:mm:ss"),
                 Font = new Font("Segoe UI", 8f),
-                ForeColor = Color.FromArgb(148, 163, 184),
+                ForeColor = timeColor,
                 AutoSize = true,
                 Location = new Point(senderLabel.Right + 8, 8)
             };
             bubble.Controls.Add(timeLabel);
 
             // 2. Rich Text Content Box
+            Color textFore = isUser
+                ? (isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(30, 27, 75))
+                : (isDark ? Color.FromArgb(226, 232, 240) : Color.FromArgb(15, 23, 42));
+
+            Color highlight = isUser
+                ? (isDark ? Color.White : Color.FromArgb(67, 56, 202))
+                : (isDark ? Color.FromArgb(56, 189, 248) : Color.FromArgb(2, 132, 199));
+
             var rtb = new RichTextBox
             {
                 Multiline = true,
@@ -204,7 +224,7 @@ namespace ZeroUI.WinForms.Documents
                 BorderStyle = BorderStyle.None,
                 ScrollBars = RichTextBoxScrollBars.None,
                 BackColor = bubble.BackColor,
-                ForeColor = isUser ? Color.FromArgb(241, 245, 249) : Color.FromArgb(226, 232, 240),
+                ForeColor = textFore,
                 Font = new Font("Segoe UI", 9.5f),
                 Location = new Point(12, 28),
                 Cursor = Cursors.IBeam
@@ -214,8 +234,6 @@ namespace ZeroUI.WinForms.Documents
             int contentWidth = Math.Max(120, maxBubbleWidth - 28);
             rtb.Width = contentWidth;
 
-            Color textFore = isUser ? Color.FromArgb(241, 245, 249) : Color.FromArgb(226, 232, 240);
-            Color highlight = isUser ? Color.White : Color.FromArgb(56, 189, 248);
             SetMarkdownText(rtb, msg.Content ?? "", textFore, highlight);
 
             int textHeight = CalculateRichTextBoxHeight(rtb, contentWidth);
@@ -267,21 +285,25 @@ namespace ZeroUI.WinForms.Documents
                     footerPanel.Controls.Add(undoBtn);
                 }
 
+                var copyBtnBg = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(241, 245, 249);
+                var copyBtnFore = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(71, 85, 105);
+                var copyBtnBorder = isDark ? Color.FromArgb(71, 85, 105) : Color.FromArgb(203, 213, 225);
+
                 var copyBtn = new Button
                 {
                     Text = "📋 Sao chép",
                     Font = new Font("Segoe UI", 8f),
-                    ForeColor = Color.FromArgb(148, 163, 184),
-                    BackColor = Color.FromArgb(30, 41, 59),
+                    ForeColor = copyBtnFore,
+                    BackColor = copyBtnBg,
                     FlatStyle = FlatStyle.Flat,
                     Size = new Size(80, 24),
                     Location = new Point(Math.Max(105, totalBubbleWidth - 88), 3),
                     Cursor = Cursors.Hand
                 };
-                copyBtn.FlatAppearance.BorderColor = Color.FromArgb(71, 85, 105);
+                copyBtn.FlatAppearance.BorderColor = copyBtnBorder;
                 copyBtn.FlatAppearance.BorderSize = 1;
-                copyBtn.MouseEnter += (s, e) => { copyBtn.ForeColor = Color.White; copyBtn.BackColor = Color.FromArgb(51, 65, 85); };
-                copyBtn.MouseLeave += (s, e) => { copyBtn.ForeColor = Color.FromArgb(148, 163, 184); copyBtn.BackColor = Color.FromArgb(30, 41, 59); };
+                copyBtn.MouseEnter += (s, e) => { copyBtn.ForeColor = isDark ? Color.White : Color.FromArgb(15, 23, 42); copyBtn.BackColor = isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(226, 232, 240); };
+                copyBtn.MouseLeave += (s, e) => { copyBtn.ForeColor = copyBtnFore; copyBtn.BackColor = copyBtnBg; };
                 copyBtn.Click += (s, e) =>
                 {
                     if (!string.IsNullOrEmpty(msg.Content))
@@ -301,7 +323,10 @@ namespace ZeroUI.WinForms.Documents
             // 5. Custom Border Paint
             bubble.Paint += (s, e) =>
             {
-                var penColor = isUser ? Color.FromArgb(99, 102, 241) : Color.FromArgb(51, 65, 85);
+                var penColor = isUser
+                    ? (isDark ? Color.FromArgb(99, 102, 241) : Color.FromArgb(199, 210, 254))
+                    : (isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(226, 232, 240));
+
                 using var p = new Pen(penColor, 1f);
                 e.Graphics.DrawRectangle(p, 0, 0, bubble.Width - 1, bubble.Height - 1);
             };
