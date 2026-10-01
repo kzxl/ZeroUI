@@ -66,6 +66,8 @@ namespace ZeroUI.WinForms.Documents
         private readonly Button _clearButton;
         private readonly Label _titleLabel;
         private readonly Label _statusLabel;
+        private readonly Label _botIcon;
+        private bool _showHeaderIcon = true;
 
         private readonly FlowLayoutPanel _attachmentToolbar;
         private readonly Button _btnUploadImage;
@@ -75,7 +77,7 @@ namespace ZeroUI.WinForms.Documents
         private ObservableCollection<ChatMessage> _messages;
         private ObservableCollection<string> _promptSuggestions;
         private string _assistantName = "ZeroCopilot";
-        private string _modelName = "ZeroInference Edge";
+        private string? _modelName = "ZeroInference Edge";
         private bool _isGenerating;
         private ChatStreamingState _streamingState = ChatStreamingState.Idle;
 
@@ -114,23 +116,25 @@ namespace ZeroUI.WinForms.Documents
                 Padding = new Padding(12, 8, 12, 8)
             };
 
-            var botIcon = new Label
+            _botIcon = new Label
             {
                 Text = "🤖",
                 Font = new Font("Segoe UI Emoji", 14f, FontStyle.Regular),
                 ForeColor = Color.White,
                 AutoSize = true,
-                Location = new Point(12, 10)
+                Location = new Point(12, 10),
+                Visible = _showHeaderIcon
             };
-            _headerPanel.Controls.Add(botIcon);
+            _headerPanel.Controls.Add(_botIcon);
 
+            int textLeft = _showHeaderIcon ? 44 : 14;
             _titleLabel = new Label
             {
-                Text = $"{_assistantName} ({_modelName})",
+                Text = FormatTitleText(),
                 Font = new Font("Segoe UI", 10f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(241, 245, 249),
                 AutoSize = true,
-                Location = new Point(44, 6)
+                Location = new Point(textLeft, 6)
             };
             _headerPanel.Controls.Add(_titleLabel);
 
@@ -140,7 +144,7 @@ namespace ZeroUI.WinForms.Documents
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
                 ForeColor = Color.FromArgb(52, 211, 153),
                 AutoSize = true,
-                Location = new Point(44, 26)
+                Location = new Point(textLeft, 26)
             };
             _headerPanel.Controls.Add(_statusLabel);
 
@@ -380,21 +384,51 @@ namespace ZeroUI.WinForms.Documents
             set
             {
                 _assistantName = value;
-                _titleLabel.Text = $"{_assistantName} ({_modelName})";
+                UpdateHeaderLayout();
             }
         }
 
         [Category("ZeroUI")]
         [Description("Target AI model identifier.")]
         [DefaultValue("ZeroInference Edge")]
-        public string ModelName
+        public string? ModelName
         {
             get => _modelName;
             set
             {
                 _modelName = value;
-                _titleLabel.Text = $"{_assistantName} ({_modelName})";
+                UpdateHeaderLayout();
             }
+        }
+
+        [Category("ZeroUI")]
+        [Description("Show or hide the bot icon in the header.")]
+        [DefaultValue(true)]
+        public bool ShowHeaderIcon
+        {
+            get => _showHeaderIcon;
+            set
+            {
+                _showHeaderIcon = value;
+                UpdateHeaderLayout();
+            }
+        }
+
+        private string FormatTitleText()
+        {
+            if (string.IsNullOrWhiteSpace(_modelName))
+                return _assistantName;
+            return $"{_assistantName} ({_modelName})";
+        }
+
+        private void UpdateHeaderLayout()
+        {
+            if (_titleLabel == null || _statusLabel == null) return;
+            if (_botIcon != null) _botIcon.Visible = _showHeaderIcon;
+            int textLeft = _showHeaderIcon ? 44 : 14;
+            _titleLabel.Location = new Point(textLeft, 6);
+            _statusLabel.Location = new Point(textLeft, 26);
+            _titleLabel.Text = FormatTitleText();
         }
 
         [Category("ZeroUI")]

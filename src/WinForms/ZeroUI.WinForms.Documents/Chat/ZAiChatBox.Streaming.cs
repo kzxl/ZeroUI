@@ -200,7 +200,7 @@ namespace ZeroUI.WinForms.Documents
 
             var header = new Label
             {
-                Text = _modelName ?? _assistantName,
+                Text = string.IsNullOrWhiteSpace(_modelName) ? _assistantName : _modelName,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 211, 153),
                 AutoSize = true,

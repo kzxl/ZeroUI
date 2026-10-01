@@ -178,7 +178,7 @@ namespace ZeroUI.WinForms.Documents
             // 1. Header: Sender + Timestamp
             var senderLabel = new Label
             {
-                Text = isUser ? (msg.SenderName ?? "Operator") : (msg.ModelName ?? _assistantName),
+                Text = isUser ? (msg.SenderName ?? "Operator") : (string.IsNullOrWhiteSpace(msg.ModelName) ? _assistantName : msg.ModelName),
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = isUser ? Color.FromArgb(165, 180, 252) : Color.FromArgb(52, 211, 153),
                 AutoSize = true,
