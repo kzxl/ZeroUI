@@ -4,7 +4,10 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZeroUI.Core.AiMl;
 using ZeroUI.WinForms.Theme;
@@ -12,8 +15,8 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.Documents
 {
     /// <summary>
-    /// Enterprise AI chat box control for WinForms with streaming token display, message bubbles,
-    /// quick prompt suggestions, and responsive conversation layout.
+    /// Enterprise AI chat box control for WinForms with fluid animations, token streaming,
+    /// markdown formatting, attachment ingestion, and atomic undo actions.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI")]
@@ -42,6 +45,10 @@ namespace ZeroUI.WinForms.Documents
         private string _modelName = "ZeroInference Edge";
         private bool _isGenerating;
         private ChatStreamingState _streamingState = ChatStreamingState.Idle;
+
+        private Control? _thinkingBubble;
+        private bool _cancelStreaming;
+        private bool _suppressRebuild;
 
         public ZAiChatBox()
         {
@@ -89,7 +96,7 @@ namespace ZeroUI.WinForms.Documents
 
             _statusLabel = new Label
             {
-                Text = "Ready",
+                Text = "Sẵn sàng",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Regular),
                 ForeColor = Color.FromArgb(52, 211, 153),
                 AutoSize = true,
@@ -100,7 +107,7 @@ namespace ZeroUI.WinForms.Documents
             _clearButton = new Button
             {
                 Text = "🗑 Clear",
-                Font = new Font("Segoe UI", 9f),
+                Font = new Font("Segoe UI", 8.5f),
                 ForeColor = Color.FromArgb(148, 163, 184),
                 BackColor = Color.Transparent,
                 FlatStyle = FlatStyle.Flat,
@@ -148,13 +155,13 @@ namespace ZeroUI.WinForms.Documents
             var buttonPanel = new Panel
             {
                 Dock = DockStyle.Right,
-                Width = 90,
+                Width = 92,
                 Padding = new Padding(8, 0, 0, 0)
             };
 
             _sendButton = new Button
             {
-                Text = "Send ➢",
+                Text = "Gửi ➢",
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                 BackColor = Color.FromArgb(79, 70, 229),
                 ForeColor = Color.White,
@@ -163,12 +170,14 @@ namespace ZeroUI.WinForms.Documents
                 Cursor = Cursors.Hand
             };
             _sendButton.FlatAppearance.BorderSize = 0;
+            _sendButton.MouseEnter += (s, e) => _sendButton.BackColor = Color.FromArgb(99, 102, 241);
+            _sendButton.MouseLeave += (s, e) => _sendButton.BackColor = Color.FromArgb(79, 70, 229);
             _sendButton.Click += (s, e) => SubmitPrompt();
             buttonPanel.Controls.Add(_sendButton);
 
             _stopButton = new Button
             {
-                Text = "⏹ Stop",
+                Text = "⏹ Dừng",
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                 BackColor = Color.FromArgb(220, 38, 38),
                 ForeColor = Color.White,
@@ -178,7 +187,11 @@ namespace ZeroUI.WinForms.Documents
                 Visible = false
             };
             _stopButton.FlatAppearance.BorderSize = 0;
-            _stopButton.Click += (s, e) => StopGenerationRequested?.Invoke(this, EventArgs.Empty);
+            _stopButton.Click += (s, e) =>
+            {
+                _cancelStreaming = true;
+                StopGenerationRequested?.Invoke(this, EventArgs.Empty);
+            };
             buttonPanel.Controls.Add(_stopButton);
 
             _inputPanel.Controls.Add(_promptInputBox);
@@ -189,49 +202,53 @@ namespace ZeroUI.WinForms.Documents
             {
                 Dock = DockStyle.Bottom,
                 Height = 36,
-                BackColor = Color.FromArgb(24, 34, 53),
+                BackColor = Color.FromArgb(20, 28, 44),
                 Padding = new Padding(12, 4, 12, 4),
                 WrapContents = false
             };
 
             _btnUploadImage = new Button
             {
-                Text = "🖼️ Tải hình ảnh",
+                Text = "📷 Tải hình ảnh (PO / Báo giá)",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(147, 197, 253),
                 BackColor = Color.FromArgb(30, 41, 59),
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(125, 28),
+                Size = new Size(190, 28),
                 Margin = new Padding(0, 0, 8, 0),
                 Cursor = Cursors.Hand
             };
             _btnUploadImage.FlatAppearance.BorderColor = Color.FromArgb(59, 130, 246);
             _btnUploadImage.FlatAppearance.BorderSize = 1;
+            _btnUploadImage.MouseEnter += (s, e) => { _btnUploadImage.BackColor = Color.FromArgb(37, 99, 235); _btnUploadImage.ForeColor = Color.White; };
+            _btnUploadImage.MouseLeave += (s, e) => { _btnUploadImage.BackColor = Color.FromArgb(30, 41, 59); _btnUploadImage.ForeColor = Color.FromArgb(147, 197, 253); };
             _btnUploadImage.Click += (s, e) => TriggerImageUpload();
 
             _btnUploadPdf = new Button
             {
-                Text = "📎 Tải tệp PDF",
+                Text = "📄 Tải tệp PDF",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(244, 114, 182),
                 BackColor = Color.FromArgb(30, 41, 59),
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(120, 28),
+                Size = new Size(130, 28),
                 Cursor = Cursors.Hand
             };
             _btnUploadPdf.FlatAppearance.BorderColor = Color.FromArgb(236, 72, 153);
             _btnUploadPdf.FlatAppearance.BorderSize = 1;
+            _btnUploadPdf.MouseEnter += (s, e) => { _btnUploadPdf.BackColor = Color.FromArgb(219, 39, 119); _btnUploadPdf.ForeColor = Color.White; };
+            _btnUploadPdf.MouseLeave += (s, e) => { _btnUploadPdf.BackColor = Color.FromArgb(30, 41, 59); _btnUploadPdf.ForeColor = Color.FromArgb(244, 114, 182); };
             _btnUploadPdf.Click += (s, e) => TriggerPdfUpload();
 
             _attachmentToolbar.Controls.Add(_btnUploadImage);
             _attachmentToolbar.Controls.Add(_btnUploadPdf);
 
-            // 3. Suggestions Panel (Dock Bottom above Input)
+            // 3. Suggestions Panel (Dock Bottom above Attachment Toolbar)
             _suggestionsPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Bottom,
                 Height = 36,
-                BackColor = Color.FromArgb(20, 29, 47),
+                BackColor = Color.FromArgb(17, 24, 39),
                 Padding = new Padding(12, 4, 12, 4),
                 WrapContents = false,
                 AutoScroll = true
@@ -246,6 +263,7 @@ namespace ZeroUI.WinForms.Documents
                 Padding = new Padding(14)
             };
 
+            // Add in reverse docking order so top/bottom dock stack properly:
             Controls.Add(_messagesContainer);
             Controls.Add(_suggestionsPanel);
             Controls.Add(_attachmentToolbar);
@@ -349,10 +367,10 @@ namespace ZeroUI.WinForms.Documents
                 _streamingState = value;
                 _statusLabel.Text = value switch
                 {
-                    ChatStreamingState.Thinking => "Thinking...",
-                    ChatStreamingState.Streaming => "Generating response...",
-                    ChatStreamingState.Error => "Error during generation",
-                    _ => "Ready"
+                    ChatStreamingState.Thinking => "Đang suy nghĩ...",
+                    ChatStreamingState.Streaming => "Đang phản hồi...",
+                    ChatStreamingState.Error => "Lỗi xử lý",
+                    _ => "Sẵn sàng"
                 };
             }
         }
@@ -393,7 +411,7 @@ namespace ZeroUI.WinForms.Documents
             };
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                AppendUserMessage($"🖼️ [Tải hình ảnh]: {System.IO.Path.GetFileName(ofd.FileName)}");
+                AppendUserMessage($"📷 [Tải hình ảnh]: {System.IO.Path.GetFileName(ofd.FileName)}");
                 FileAttached?.Invoke(this, (ofd.FileName, "image"));
             }
         }
@@ -407,13 +425,14 @@ namespace ZeroUI.WinForms.Documents
             };
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                AppendUserMessage($"📎 [Tải tệp PDF]: {System.IO.Path.GetFileName(ofd.FileName)}");
+                AppendUserMessage($"📄 [Tải tệp PDF]: {System.IO.Path.GetFileName(ofd.FileName)}");
                 FileAttached?.Invoke(this, (ofd.FileName, "pdf"));
             }
         }
 
         public ChatMessage AppendAssistantActionMessage(string content, bool canUndo = true)
         {
+            HideThinkingIndicator();
             var msg = ChatMessage.Assistant(content, _modelName);
             msg.CanUndo = canUndo;
             _messages.Add(msg);
@@ -436,9 +455,22 @@ namespace ZeroUI.WinForms.Documents
 
         #endregion
 
-        #region Message Bubbles
+        #region Message Bubbles & Animation
 
-        private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildAllMessages();
+        private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (_suppressRebuild) return;
+
+            if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null && e.NewItems.Count == 1)
+            {
+                var newMsg = (ChatMessage)e.NewItems[0]!;
+                AppendSingleMessageBubble(newMsg, animate: true);
+            }
+            else
+            {
+                RebuildAllMessages();
+            }
+        }
 
         private void OnPromptSuggestionsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => RebuildPromptSuggestions();
 
@@ -454,11 +486,12 @@ namespace ZeroUI.WinForms.Documents
             {
                 var emptyLabel = new Label
                 {
-                    Text = "No conversation history. Ask a question to begin.",
-                    Font = new Font("Segoe UI", 10f),
+                    Text = "Chưa có lịch sử hội thoại. Đặt câu hỏi hoặc tải chứng từ để bắt đầu.",
+                    Font = new Font("Segoe UI", 9.5f),
                     ForeColor = Color.FromArgb(100, 116, 139),
                     AutoSize = true,
-                    Location = new Point((availableWidth - 280) / 2, 40)
+                    Location = new Point((availableWidth - 360) / 2, 40),
+                    Tag = "emptyState"
                 };
                 _messagesContainer.Controls.Add(emptyLabel);
                 _messagesContainer.ResumeLayout();
@@ -467,7 +500,7 @@ namespace ZeroUI.WinForms.Documents
 
             foreach (var msg in _messages)
             {
-                var bubble = CreateBubbleControl(msg, availableWidth);
+                var bubble = CreateBubbleControl(msg, availableWidth, out _, out _);
                 bubble.Location = new Point(msg.Role == ChatRole.User ? availableWidth - bubble.Width + 14 : 14, yOffset);
                 _messagesContainer.Controls.Add(bubble);
                 yOffset += bubble.Height + 12;
@@ -477,25 +510,87 @@ namespace ZeroUI.WinForms.Documents
             ScrollToBottom();
         }
 
-        private Control CreateBubbleControl(ChatMessage msg, int containerWidth)
+        private void AppendSingleMessageBubble(ChatMessage msg, bool animate = false)
+        {
+            HideEmptyState();
+            int availableWidth = Math.Max(200, _messagesContainer.ClientSize.Width - 40);
+            int yOffset = 10;
+
+            foreach (Control c in _messagesContainer.Controls)
+            {
+                if (c != _thinkingBubble && c.Bottom + 12 > yOffset)
+                {
+                    yOffset = c.Bottom + 12;
+                }
+            }
+
+            var bubble = CreateBubbleControl(msg, availableWidth, out _, out _);
+            int targetLeft = msg.Role == ChatRole.User ? availableWidth - bubble.Width + 14 : 14;
+
+            if (animate && msg.Role == ChatRole.User)
+            {
+                AddUserBubbleAnimated(bubble, availableWidth, targetLeft, yOffset);
+            }
+            else
+            {
+                bubble.Location = new Point(targetLeft, yOffset);
+                _messagesContainer.Controls.Add(bubble);
+            }
+
+            if (_thinkingBubble != null)
+            {
+                _thinkingBubble.Location = new Point(14, bubble.Bottom + 12);
+                _thinkingBubble.BringToFront();
+            }
+
+            ScrollToBottom();
+        }
+
+        private void AddUserBubbleAnimated(Control bubble, int availableWidth, int targetLeft, int yOffset)
+        {
+            bubble.Location = new Point(availableWidth + 30, yOffset);
+            _messagesContainer.Controls.Add(bubble);
+
+            var timer = new System.Windows.Forms.Timer { Interval = 16 };
+            int step = 0;
+            int startX = availableWidth + 30;
+
+            timer.Tick += (s, e) =>
+            {
+                step++;
+                float t = Math.Min(1.0f, step / 4.0f);
+                float ease = 1f - (1f - t) * (1f - t); // EaseOutQuad
+                bubble.Left = (int)(startX + (targetLeft - startX) * ease);
+
+                if (step >= 4)
+                {
+                    bubble.Left = targetLeft;
+                    timer.Stop();
+                    timer.Dispose();
+                }
+            };
+            timer.Start();
+        }
+
+        private Control CreateBubbleControl(ChatMessage msg, int containerWidth, out RichTextBox? outRtb, out Panel? outFooterPanel)
         {
             bool isUser = msg.Role == ChatRole.User;
-            int maxBubbleWidth = Math.Min(600, (int)(containerWidth * 0.85));
+            int maxBubbleWidth = Math.Min(650, (int)(containerWidth * 0.88));
 
             var bubble = new Panel
             {
                 BackColor = isUser ? Color.FromArgb(30, 41, 59) : Color.FromArgb(17, 24, 39),
-                Padding = new Padding(10, 8, 10, 8)
+                Padding = new Padding(12, 8, 12, 8)
             };
 
-            // Header: Sender + Timestamp
+            // 1. Header: Sender + Timestamp
             var senderLabel = new Label
             {
                 Text = isUser ? (msg.SenderName ?? "Operator") : (msg.ModelName ?? _assistantName),
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = isUser ? Color.FromArgb(165, 180, 252) : Color.FromArgb(52, 211, 153),
                 AutoSize = true,
-                Location = new Point(8, 6)
+                Location = new Point(12, 7)
             };
             bubble.Controls.Add(senderLabel);
 
@@ -505,69 +600,94 @@ namespace ZeroUI.WinForms.Documents
                 Font = new Font("Segoe UI", 8f),
                 ForeColor = Color.FromArgb(148, 163, 184),
                 AutoSize = true,
-                Location = new Point(senderLabel.Right + 8, 7)
+                Location = new Point(senderLabel.Right + 8, 8)
             };
             bubble.Controls.Add(timeLabel);
 
-            // Message text box
-            var txt = new TextBox
+            // 2. Rich Text Content Box
+            var rtb = new RichTextBox
             {
-                Text = msg.Content,
                 Multiline = true,
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
+                ScrollBars = RichTextBoxScrollBars.None,
                 BackColor = bubble.BackColor,
-                ForeColor = Color.FromArgb(241, 245, 249),
+                ForeColor = isUser ? Color.FromArgb(241, 245, 249) : Color.FromArgb(226, 232, 240),
                 Font = new Font("Segoe UI", 9.5f),
-                Location = new Point(8, 28)
+                Location = new Point(12, 28),
+                Cursor = Cursors.IBeam
             };
+            outRtb = rtb;
 
-            // Measure height
-            using var g = CreateGraphics();
-            var size = g.MeasureString(msg.Content, txt.Font, maxBubbleWidth - 24);
-            int textWidth = Math.Max(120, Math.Min(maxBubbleWidth - 24, (int)size.Width + 10));
-            int textHeight = Math.Max(24, (int)size.Height + 10);
+            int contentWidth = maxBubbleWidth - 28;
+            rtb.Width = contentWidth;
 
-            txt.Size = new Size(textWidth, textHeight);
-            bubble.Controls.Add(txt);
+            Color textFore = isUser ? Color.FromArgb(241, 245, 249) : Color.FromArgb(226, 232, 240);
+            Color highlight = isUser ? Color.White : Color.FromArgb(56, 189, 248);
+            SetMarkdownText(rtb, msg.Content ?? "", textFore, highlight);
 
-            int totalBubbleWidth = Math.Max(textWidth + 24, msg.CanUndo ? 220 : 180);
-            int totalBubbleHeight = textHeight + 36;
+            int textHeight = CalculateRichTextBoxHeight(rtb, contentWidth);
+            rtb.Height = textHeight;
 
-            // Copy and Undo buttons for assistant
+            int totalBubbleWidth = Math.Max(contentWidth + 28, msg.CanUndo ? 280 : 180);
+            if (isUser)
+            {
+                using var g = CreateGraphics();
+                var measure = g.MeasureString(msg.Content ?? "", rtb.Font, contentWidth);
+                totalBubbleWidth = Math.Max(130, Math.Min(maxBubbleWidth, (int)measure.Width + 32));
+                rtb.Width = totalBubbleWidth - 24;
+                textHeight = CalculateRichTextBoxHeight(rtb, rtb.Width);
+                rtb.Height = textHeight;
+            }
+            bubble.Controls.Add(rtb);
+
+            // 3. Footer Action Bar (Assistant Only)
+            Panel? footerPanel = null;
             if (!isUser)
             {
+                footerPanel = new Panel
+                {
+                    Size = new Size(totalBubbleWidth, 30),
+                    Location = new Point(0, 28 + textHeight + 6),
+                    BackColor = Color.Transparent
+                };
+
                 if (msg.CanUndo)
                 {
                     var undoBtn = new Button
                     {
                         Text = "↺ Hoàn tác",
-                        Font = new Font("Segoe UI", 8f, FontStyle.Bold),
+                        Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                         ForeColor = Color.FromArgb(251, 191, 36),
-                        BackColor = Color.FromArgb(40, 251, 191, 36),
+                        BackColor = Color.FromArgb(40, 245, 158, 11),
                         FlatStyle = FlatStyle.Flat,
-                        Size = new Size(74, 22),
-                        Location = new Point(totalBubbleWidth - 142, totalBubbleHeight - 26),
+                        Size = new Size(96, 24),
+                        Location = new Point(12, 3),
                         Cursor = Cursors.Hand
                     };
-                    undoBtn.FlatAppearance.BorderColor = Color.FromArgb(251, 191, 36);
+                    undoBtn.FlatAppearance.BorderColor = Color.FromArgb(245, 158, 11);
                     undoBtn.FlatAppearance.BorderSize = 1;
+                    undoBtn.MouseEnter += (s, e) => undoBtn.BackColor = Color.FromArgb(70, 245, 158, 11);
+                    undoBtn.MouseLeave += (s, e) => undoBtn.BackColor = Color.FromArgb(40, 245, 158, 11);
                     undoBtn.Click += (s, e) => UndoRequested?.Invoke(this, msg.Id);
-                    bubble.Controls.Add(undoBtn);
+                    footerPanel.Controls.Add(undoBtn);
                 }
 
                 var copyBtn = new Button
                 {
-                    Text = "📋 Copy",
+                    Text = "📋 Sao chép",
                     Font = new Font("Segoe UI", 8f),
                     ForeColor = Color.FromArgb(148, 163, 184),
-                    BackColor = Color.Transparent,
+                    BackColor = Color.FromArgb(30, 41, 59),
                     FlatStyle = FlatStyle.Flat,
-                    Size = new Size(54, 22),
-                    Location = new Point(totalBubbleWidth - 62, totalBubbleHeight - 26),
+                    Size = new Size(84, 24),
+                    Location = new Point(totalBubbleWidth - 96, 3),
                     Cursor = Cursors.Hand
                 };
-                copyBtn.FlatAppearance.BorderSize = 0;
+                copyBtn.FlatAppearance.BorderColor = Color.FromArgb(71, 85, 105);
+                copyBtn.FlatAppearance.BorderSize = 1;
+                copyBtn.MouseEnter += (s, e) => { copyBtn.ForeColor = Color.White; copyBtn.BackColor = Color.FromArgb(51, 65, 85); };
+                copyBtn.MouseLeave += (s, e) => { copyBtn.ForeColor = Color.FromArgb(148, 163, 184); copyBtn.BackColor = Color.FromArgb(30, 41, 59); };
                 copyBtn.Click += (s, e) =>
                 {
                     if (!string.IsNullOrEmpty(msg.Content))
@@ -575,12 +695,16 @@ namespace ZeroUI.WinForms.Documents
                         Clipboard.SetText(msg.Content);
                     }
                 };
-                bubble.Controls.Add(copyBtn);
+                footerPanel.Controls.Add(copyBtn);
+                bubble.Controls.Add(footerPanel);
             }
+            outFooterPanel = footerPanel;
 
+            // 4. Overall Bubble Sizing
+            int totalBubbleHeight = isUser ? (28 + textHeight + 10) : (28 + textHeight + 6 + 30 + 8);
             bubble.Size = new Size(totalBubbleWidth, totalBubbleHeight);
 
-            // Custom border paint
+            // 5. Custom Border Paint
             bubble.Paint += (s, e) =>
             {
                 var penColor = isUser ? Color.FromArgb(99, 102, 241) : Color.FromArgb(51, 65, 85);
@@ -590,6 +714,315 @@ namespace ZeroUI.WinForms.Documents
 
             return bubble;
         }
+
+        #endregion
+
+        #region Thinking Indicator & Streaming Animations
+
+        public void ShowThinkingIndicator(string text = "Đang phân tích...")
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => ShowThinkingIndicator(text)));
+                return;
+            }
+
+            StreamingState = ChatStreamingState.Thinking;
+
+            if (_thinkingBubble != null)
+            {
+                var lbl = _thinkingBubble.Controls.OfType<Label>().FirstOrDefault(l => (string?)l.Tag == "statusText");
+                if (lbl != null) lbl.Text = text;
+                ScrollToBottom();
+                return;
+            }
+
+            int yOffset = 10;
+            foreach (Control c in _messagesContainer.Controls)
+            {
+                if (c.Bottom + 12 > yOffset) yOffset = c.Bottom + 12;
+            }
+
+            var pnl = new Panel
+            {
+                BackColor = Color.FromArgb(17, 24, 39),
+                Size = new Size(320, 58),
+                Location = new Point(14, yOffset),
+                Padding = new Padding(10, 6, 10, 6)
+            };
+
+            pnl.Paint += (s, e) =>
+            {
+                using var p = new Pen(Color.FromArgb(51, 65, 85), 1f);
+                e.Graphics.DrawRectangle(p, 0, 0, pnl.Width - 1, pnl.Height - 1);
+            };
+
+            var header = new Label
+            {
+                Text = _modelName ?? _assistantName,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(52, 211, 153),
+                AutoSize = true,
+                Location = new Point(10, 6)
+            };
+            pnl.Controls.Add(header);
+
+            var dots = new PulsingDotsControl
+            {
+                Location = new Point(10, 26),
+                Size = new Size(60, 24)
+            };
+            pnl.Controls.Add(dots);
+
+            var lblText = new Label
+            {
+                Text = text,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Italic),
+                ForeColor = Color.FromArgb(148, 163, 184),
+                AutoSize = true,
+                Location = new Point(72, 28),
+                Tag = "statusText"
+            };
+            pnl.Controls.Add(lblText);
+
+            _thinkingBubble = pnl;
+            _messagesContainer.Controls.Add(pnl);
+            ScrollToBottom();
+        }
+
+        public void HideThinkingIndicator()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(HideThinkingIndicator));
+                return;
+            }
+
+            if (_thinkingBubble != null)
+            {
+                _messagesContainer.Controls.Remove(_thinkingBubble);
+                _thinkingBubble.Dispose();
+                _thinkingBubble = null;
+            }
+        }
+
+        public async Task<ChatMessage> AppendAssistantActionMessageAnimatedAsync(
+            string fullContent,
+            bool canUndo = true,
+            int delayMs = 16)
+        {
+            HideThinkingIndicator();
+
+            var msg = ChatMessage.Assistant(fullContent, _modelName);
+            msg.CanUndo = canUndo;
+
+            _suppressRebuild = true;
+            _messages.Add(msg);
+            _suppressRebuild = false;
+
+            int availableWidth = Math.Max(200, _messagesContainer.ClientSize.Width - 40);
+            int yOffset = 10;
+            foreach (Control c in _messagesContainer.Controls)
+            {
+                if (c.Bottom + 12 > yOffset) yOffset = c.Bottom + 12;
+            }
+
+            var tempMsg = ChatMessage.Assistant("", _modelName);
+            tempMsg.CanUndo = canUndo;
+            var bubble = CreateBubbleControl(tempMsg, availableWidth, out var rtb, out var footerPanel);
+            bubble.Location = new Point(14, yOffset);
+
+            if (footerPanel != null)
+            {
+                footerPanel.Visible = false;
+            }
+
+            _messagesContainer.Controls.Add(bubble);
+            ScrollToBottom();
+
+            if (rtb == null)
+            {
+                return msg;
+            }
+
+            _isGenerating = true;
+            StreamingState = ChatStreamingState.Streaming;
+            _sendButton.Visible = false;
+            _stopButton.Visible = true;
+            _cancelStreaming = false;
+
+            // Tokenize by word groups
+            var tokens = Regex.Matches(fullContent, @"(\S+\s*|\s+)").Cast<Match>().Select(m => m.Value).ToList();
+            var sb = new System.Text.StringBuilder();
+
+            Color textFore = Color.FromArgb(226, 232, 240);
+            Color highlight = Color.FromArgb(56, 189, 248);
+
+            for (int i = 0; i < tokens.Count; i += 2)
+            {
+                if (_cancelStreaming)
+                {
+                    sb.Clear();
+                    sb.Append(fullContent);
+                    SetMarkdownText(rtb, sb.ToString(), textFore, highlight);
+                    break;
+                }
+
+                sb.Append(tokens[i]);
+                if (i + 1 < tokens.Count) sb.Append(tokens[i + 1]);
+
+                SetMarkdownText(rtb, sb.ToString(), textFore, highlight);
+                int h = CalculateRichTextBoxHeight(rtb, rtb.Width);
+                rtb.Height = h;
+                bubble.Height = h + (canUndo ? 76 : 64);
+                ScrollToBottom();
+                await Task.Delay(delayMs);
+            }
+
+            // Final render pass
+            SetMarkdownText(rtb, fullContent, textFore, highlight);
+            int finalH = CalculateRichTextBoxHeight(rtb, rtb.Width);
+            rtb.Height = finalH;
+            bubble.Height = finalH + (canUndo ? 76 : 64);
+
+            if (footerPanel != null)
+            {
+                footerPanel.Location = new Point(0, 28 + finalH + 6);
+                footerPanel.Visible = true;
+            }
+
+            _isGenerating = false;
+            StreamingState = ChatStreamingState.Completed;
+            _stopButton.Visible = false;
+            _sendButton.Visible = true;
+            ScrollToBottom();
+
+            return msg;
+        }
+
+        #endregion
+
+        #region Markdown & Sizing Helpers
+
+        private static void SetMarkdownText(RichTextBox rtb, string text, Color defaultColor, Color highlightColor)
+        {
+            rtb.Clear();
+            if (string.IsNullOrEmpty(text)) return;
+
+            string normalized = text.Replace("\r\n", "\n").Replace("\r", "\n");
+            using var baseFont = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+            using var boldFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+            using var italicFont = new Font("Segoe UI", 9.5f, FontStyle.Italic);
+
+            rtb.SuspendLayout();
+            int i = 0;
+            while (i < normalized.Length)
+            {
+                if (normalized[i] == '\n')
+                {
+                    rtb.SelectionFont = baseFont;
+                    rtb.SelectionColor = defaultColor;
+                    rtb.AppendText(Environment.NewLine);
+                    i++;
+                }
+                else if (normalized.Length - i >= 4 && normalized.Substring(i, 2) == "**")
+                {
+                    int end = normalized.IndexOf("**", i + 2, StringComparison.Ordinal);
+                    if (end > i + 2)
+                    {
+                        string boldText = normalized.Substring(i + 2, end - (i + 2));
+                        rtb.SelectionFont = boldFont;
+                        rtb.SelectionColor = highlightColor;
+                        rtb.AppendText(boldText);
+                        i = end + 2;
+                        continue;
+                    }
+                    rtb.SelectionFont = baseFont;
+                    rtb.SelectionColor = defaultColor;
+                    rtb.AppendText("*");
+                    i++;
+                }
+                else if (normalized[i] == '*' && normalized.Length - i >= 3)
+                {
+                    int end = normalized.IndexOf('*', i + 1);
+                    if (end > i + 1 && (end + 1 >= normalized.Length || normalized[end + 1] != '*'))
+                    {
+                        string italicText = normalized.Substring(i + 1, end - (i + 1));
+                        rtb.SelectionFont = italicFont;
+                        rtb.SelectionColor = Color.FromArgb(203, 213, 225);
+                        rtb.AppendText(italicText);
+                        i = end + 1;
+                        continue;
+                    }
+                    rtb.SelectionFont = baseFont;
+                    rtb.SelectionColor = defaultColor;
+                    rtb.AppendText("*");
+                    i++;
+                }
+                else if (normalized[i] == '[')
+                {
+                    int end = normalized.IndexOf(']', i + 1);
+                    if (end > i + 1 && end - i < 40 && !normalized.Substring(i + 1, end - (i + 1)).Contains("\n"))
+                    {
+                        string tagText = normalized.Substring(i, end - i + 1);
+                        rtb.SelectionFont = boldFont;
+                        rtb.SelectionColor = Color.FromArgb(56, 189, 248);
+                        rtb.AppendText(tagText);
+                        i = end + 1;
+                        continue;
+                    }
+                    rtb.SelectionFont = baseFont;
+                    rtb.SelectionColor = defaultColor;
+                    rtb.AppendText("[");
+                    i++;
+                }
+                else
+                {
+                    int nextSpecial = normalized.IndexOfAny(new[] { '\n', '*', '[' }, i);
+                    if (nextSpecial == -1)
+                    {
+                        string rest = normalized.Substring(i);
+                        rtb.SelectionFont = baseFont;
+                        rtb.SelectionColor = defaultColor;
+                        rtb.AppendText(rest);
+                        break;
+                    }
+                    else
+                    {
+                        string span = normalized.Substring(i, nextSpecial - i);
+                        rtb.SelectionFont = baseFont;
+                        rtb.SelectionColor = defaultColor;
+                        rtb.AppendText(span);
+                        i = nextSpecial;
+                    }
+                }
+            }
+            rtb.ResumeLayout();
+        }
+
+        private static int CalculateRichTextBoxHeight(RichTextBox rtb, int width)
+        {
+            rtb.Width = width;
+            if (rtb.TextLength == 0) return 24;
+
+            Point p = rtb.GetPositionFromCharIndex(rtb.TextLength - 1);
+            int lineH = TextRenderer.MeasureText("A", rtb.Font).Height;
+            return Math.Max(26, p.Y + lineH + 12);
+        }
+
+        private void HideEmptyState()
+        {
+            var emptyLabel = _messagesContainer.Controls.OfType<Label>().FirstOrDefault(l => (string?)l.Tag == "emptyState");
+            if (emptyLabel != null)
+            {
+                _messagesContainer.Controls.Remove(emptyLabel);
+                emptyLabel.Dispose();
+            }
+        }
+
+        #endregion
+
+        #region Suggestions
 
         public void RebuildPromptSuggestions()
         {
@@ -610,6 +1043,18 @@ namespace ZeroUI.WinForms.Documents
                     Cursor = Cursors.Hand
                 };
                 chip.FlatAppearance.BorderColor = Color.FromArgb(71, 85, 105);
+                chip.MouseEnter += (s, e) =>
+                {
+                    chip.BackColor = Color.FromArgb(49, 46, 129);
+                    chip.ForeColor = Color.White;
+                    chip.FlatAppearance.BorderColor = Color.FromArgb(99, 102, 241);
+                };
+                chip.MouseLeave += (s, e) =>
+                {
+                    chip.BackColor = Color.FromArgb(30, 41, 59);
+                    chip.ForeColor = Color.FromArgb(226, 232, 240);
+                    chip.FlatAppearance.BorderColor = Color.FromArgb(71, 85, 105);
+                };
                 chip.Click += (s, e) =>
                 {
                     _promptInputBox.Text = suggestion;
@@ -634,6 +1079,7 @@ namespace ZeroUI.WinForms.Documents
 
         public ChatMessage AppendAssistantMessage(string initialText = "")
         {
+            HideThinkingIndicator();
             var msg = ChatMessage.Assistant(initialText, _modelName);
             _messages.Add(msg);
             return msg;
@@ -662,14 +1108,17 @@ namespace ZeroUI.WinForms.Documents
 
         public void ClearMessages()
         {
+            HideThinkingIndicator();
             _messages.Clear();
             RebuildAllMessages();
         }
 
         public void ScrollToBottom()
         {
-            _messagesContainer.VerticalScroll.Value = _messagesContainer.VerticalScroll.Maximum;
-            _messagesContainer.PerformLayout();
+            if (_messagesContainer.Controls.Count > 0)
+            {
+                _messagesContainer.ScrollControlIntoView(_messagesContainer.Controls[_messagesContainer.Controls.Count - 1]);
+            }
         }
 
         #endregion
@@ -689,6 +1138,62 @@ namespace ZeroUI.WinForms.Documents
 
         #endregion
     }
+
+    #region Pulsing Dots Animation Control
+
+    internal sealed class PulsingDotsControl : Control
+    {
+        private readonly System.Windows.Forms.Timer _timer;
+        private int _tick;
+
+        public PulsingDotsControl()
+        {
+            SetStyle(ControlStyles.UserPaint |
+                     ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.SupportsTransparentBackColor, true);
+
+            BackColor = Color.Transparent;
+            Size = new Size(64, 24);
+
+            _timer = new System.Windows.Forms.Timer { Interval = 40 };
+            _timer.Tick += (s, e) =>
+            {
+                _tick++;
+                Invalidate();
+            };
+            _timer.Start();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            for (int i = 0; i < 3; i++)
+            {
+                float phase = _tick * 0.18f + i * 0.9f;
+                float yOffset = (float)(Math.Sin(phase) * 3.5);
+                int alpha = (int)(140 + 115 * Math.Sin(phase));
+                alpha = Math.Max(40, Math.Min(255, alpha));
+
+                using var brush = new SolidBrush(Color.FromArgb(alpha, 52, 211, 153));
+                e.Graphics.FillEllipse(brush, 6 + i * 16, 8 + yOffset, 8, 8);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _timer.Stop();
+                _timer.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+
+    #endregion
 
     #region Backward Compatibility Shims
 
