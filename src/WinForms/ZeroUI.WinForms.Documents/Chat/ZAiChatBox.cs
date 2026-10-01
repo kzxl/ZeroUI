@@ -118,7 +118,7 @@ namespace ZeroUI.WinForms.Documents
 
             _botIcon = new Label
             {
-                Text = "🤖",
+                Text = "",
                 Font = new Font("Segoe UI Emoji", 14f, FontStyle.Regular),
                 ForeColor = Color.White,
                 AutoSize = true,
@@ -327,6 +327,8 @@ namespace ZeroUI.WinForms.Documents
             Controls.Add(_inputPanel);
             Controls.Add(_headerPanel);
 
+            ApplyTheme();
+
             ZeroTheme.ThemeChanged += OnThemeChanged;
             Resize += (s, e) =>
             {
@@ -526,7 +528,83 @@ namespace ZeroUI.WinForms.Documents
 
         #region Theme & Cleanup
 
-        private void OnThemeChanged(object? sender, EventArgs e) => Invalidate();
+        public void ApplyTheme()
+        {
+            bool isDark = ZeroTheme.IsDark;
+            var palette = ZeroTheme.Colors;
+
+            // 1. Root & Container
+            BackColor = isDark ? Color.FromArgb(15, 23, 42) : palette.Background;
+            if (_messagesContainer != null)
+                _messagesContainer.BackColor = BackColor;
+
+            // 2. Header Panel
+            if (_headerPanel != null)
+                _headerPanel.BackColor = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(241, 245, 249);
+
+            if (_titleLabel != null)
+                _titleLabel.ForeColor = isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
+
+            if (_statusLabel != null)
+                _statusLabel.ForeColor = isDark ? Color.FromArgb(52, 211, 153) : Color.FromArgb(22, 163, 74);
+
+            if (_clearButton != null)
+            {
+                _clearButton.ForeColor = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139);
+                _clearButton.BackColor = Color.Transparent;
+            }
+
+            // 3. Suggestions Panel
+            if (_suggestionsPanel != null)
+                _suggestionsPanel.BackColor = isDark ? Color.FromArgb(17, 24, 39) : Color.FromArgb(248, 250, 252);
+
+            // 4. Attachment Toolbar
+            if (_attachmentToolbar != null)
+                _attachmentToolbar.BackColor = isDark ? Color.FromArgb(20, 28, 44) : Color.FromArgb(241, 245, 249);
+
+            if (_btnUploadImage != null)
+            {
+                _btnUploadImage.BackColor = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(255, 255, 255);
+                _btnUploadImage.ForeColor = isDark ? Color.FromArgb(147, 197, 253) : Color.FromArgb(37, 99, 235);
+                _btnUploadImage.FlatAppearance.BorderColor = isDark ? Color.FromArgb(59, 130, 246) : Color.FromArgb(191, 219, 254);
+            }
+
+            if (_btnUploadPdf != null)
+            {
+                _btnUploadPdf.BackColor = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(255, 255, 255);
+                _btnUploadPdf.ForeColor = isDark ? Color.FromArgb(248, 113, 113) : Color.FromArgb(220, 38, 38);
+                _btnUploadPdf.FlatAppearance.BorderColor = isDark ? Color.FromArgb(239, 68, 68) : Color.FromArgb(254, 202, 202);
+            }
+
+            // 5. Input Panel
+            if (_inputPanel != null)
+                _inputPanel.BackColor = isDark ? Color.FromArgb(30, 41, 59) : Color.FromArgb(255, 255, 255);
+
+            if (_promptInputBox != null)
+            {
+                _promptInputBox.BackColor = isDark ? Color.FromArgb(15, 23, 42) : Color.FromArgb(248, 250, 252);
+                _promptInputBox.ForeColor = isDark ? Color.FromArgb(248, 250, 252) : Color.FromArgb(15, 23, 42);
+            }
+
+            if (_sendButton != null)
+            {
+                _sendButton.BackColor = isDark ? Color.FromArgb(79, 70, 229) : Color.FromArgb(79, 70, 229);
+                _sendButton.ForeColor = Color.White;
+            }
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => OnThemeChanged(sender, e)));
+                return;
+            }
+            ApplyTheme();
+            RebuildAllMessages();
+            RebuildPromptSuggestions();
+            Invalidate();
+        }
 
         protected override void Dispose(bool disposing)
         {
