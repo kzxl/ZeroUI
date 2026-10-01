@@ -15,8 +15,8 @@ using ZeroUI.WinForms.Theme;
 namespace ZeroUI.WinForms.Documents
 {
     /// <summary>
-    /// Enterprise AI chat box control for WinForms with fluid animations, token streaming,
-    /// markdown formatting, attachment ingestion, and atomic undo actions.
+    /// Enterprise AI chat box control for WinForms with responsive layout, fluid animations,
+    /// token streaming, markdown formatting, attachment ingestion, and atomic undo actions.
     /// </summary>
     [ToolboxItem(true)]
     [Category("ZeroUI")]
@@ -128,9 +128,9 @@ namespace ZeroUI.WinForms.Documents
             _inputPanel = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 72,
+                Height = 68,
                 BackColor = Color.FromArgb(30, 41, 59),
-                Padding = new Padding(12, 8, 12, 8)
+                Padding = new Padding(10, 8, 10, 8)
             };
 
             _promptInputBox = new TextBox
@@ -155,7 +155,7 @@ namespace ZeroUI.WinForms.Documents
             var buttonPanel = new Panel
             {
                 Dock = DockStyle.Right,
-                Width = 92,
+                Width = 88,
                 Padding = new Padding(8, 0, 0, 0)
             };
 
@@ -203,18 +203,18 @@ namespace ZeroUI.WinForms.Documents
                 Dock = DockStyle.Bottom,
                 Height = 36,
                 BackColor = Color.FromArgb(20, 28, 44),
-                Padding = new Padding(12, 4, 12, 4),
+                Padding = new Padding(10, 4, 10, 4),
                 WrapContents = false
             };
 
             _btnUploadImage = new Button
             {
-                Text = "📷 Tải hình ảnh (PO / Báo giá)",
+                Text = "📷 Tải ảnh đơn hàng",
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(147, 197, 253),
                 BackColor = Color.FromArgb(30, 41, 59),
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(190, 28),
+                Size = new Size(150, 28),
                 Margin = new Padding(0, 0, 8, 0),
                 Cursor = Cursors.Hand
             };
@@ -231,7 +231,7 @@ namespace ZeroUI.WinForms.Documents
                 ForeColor = Color.FromArgb(244, 114, 182),
                 BackColor = Color.FromArgb(30, 41, 59),
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(130, 28),
+                Size = new Size(120, 28),
                 Cursor = Cursors.Hand
             };
             _btnUploadPdf.FlatAppearance.BorderColor = Color.FromArgb(236, 72, 153);
@@ -244,23 +244,38 @@ namespace ZeroUI.WinForms.Documents
             _attachmentToolbar.Controls.Add(_btnUploadPdf);
 
             // 3. Suggestions Panel (Dock Bottom above Attachment Toolbar)
+            // Wraps chips cleanly without horizontal scrollbar!
             _suggestionsPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Bottom,
-                Height = 36,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                MaximumSize = new Size(0, 95),
                 BackColor = Color.FromArgb(17, 24, 39),
-                Padding = new Padding(12, 4, 12, 4),
-                WrapContents = false,
-                AutoScroll = true
+                Padding = new Padding(10, 6, 10, 0),
+                WrapContents = true,
+                AutoScroll = false
             };
 
             // 4. Messages Container (Dock Fill)
+            // Strictly vertical scrolling, NO horizontal scrollbar!
             _messagesContainer = new Panel
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
                 BackColor = Color.FromArgb(15, 23, 42),
-                Padding = new Padding(14)
+                Padding = new Padding(12)
+            };
+            _messagesContainer.HorizontalScroll.Maximum = 0;
+            _messagesContainer.HorizontalScroll.Visible = false;
+            _messagesContainer.HorizontalScroll.Enabled = false;
+            _messagesContainer.AutoScrollMinSize = Size.Empty;
+            _messagesContainer.Scroll += (s, e) =>
+            {
+                if (_messagesContainer.HorizontalScroll.Value != 0)
+                {
+                    _messagesContainer.HorizontalScroll.Value = 0;
+                }
             };
 
             // Add in reverse docking order so top/bottom dock stack properly:
@@ -455,7 +470,7 @@ namespace ZeroUI.WinForms.Documents
 
         #endregion
 
-        #region Message Bubbles & Animation
+        #region Message Bubbles & Layout
 
         private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
@@ -480,7 +495,7 @@ namespace ZeroUI.WinForms.Documents
             _messagesContainer.Controls.Clear();
 
             int yOffset = 10;
-            int availableWidth = Math.Max(200, _messagesContainer.ClientSize.Width - 40);
+            int containerW = Math.Max(200, _messagesContainer.ClientSize.Width - 24);
 
             if (_messages.Count == 0)
             {
@@ -490,7 +505,7 @@ namespace ZeroUI.WinForms.Documents
                     Font = new Font("Segoe UI", 9.5f),
                     ForeColor = Color.FromArgb(100, 116, 139),
                     AutoSize = true,
-                    Location = new Point((availableWidth - 360) / 2, 40),
+                    Location = new Point(Math.Max(10, (containerW - 360) / 2), 40),
                     Tag = "emptyState"
                 };
                 _messagesContainer.Controls.Add(emptyLabel);
@@ -500,8 +515,11 @@ namespace ZeroUI.WinForms.Documents
 
             foreach (var msg in _messages)
             {
-                var bubble = CreateBubbleControl(msg, availableWidth, out _, out _);
-                bubble.Location = new Point(msg.Role == ChatRole.User ? availableWidth - bubble.Width + 14 : 14, yOffset);
+                var bubble = CreateBubbleControl(msg, containerW, out _, out _);
+                int targetLeft = msg.Role == ChatRole.User
+                    ? Math.Max(8, _messagesContainer.ClientSize.Width - bubble.Width - 14)
+                    : 10;
+                bubble.Location = new Point(targetLeft, yOffset);
                 _messagesContainer.Controls.Add(bubble);
                 yOffset += bubble.Height + 12;
             }
@@ -513,7 +531,7 @@ namespace ZeroUI.WinForms.Documents
         private void AppendSingleMessageBubble(ChatMessage msg, bool animate = false)
         {
             HideEmptyState();
-            int availableWidth = Math.Max(200, _messagesContainer.ClientSize.Width - 40);
+            int containerW = Math.Max(200, _messagesContainer.ClientSize.Width - 24);
             int yOffset = 10;
 
             foreach (Control c in _messagesContainer.Controls)
@@ -524,12 +542,14 @@ namespace ZeroUI.WinForms.Documents
                 }
             }
 
-            var bubble = CreateBubbleControl(msg, availableWidth, out _, out _);
-            int targetLeft = msg.Role == ChatRole.User ? availableWidth - bubble.Width + 14 : 14;
+            var bubble = CreateBubbleControl(msg, containerW, out _, out _);
+            int targetLeft = msg.Role == ChatRole.User
+                ? Math.Max(8, _messagesContainer.ClientSize.Width - bubble.Width - 14)
+                : 10;
 
             if (animate && msg.Role == ChatRole.User)
             {
-                AddUserBubbleAnimated(bubble, availableWidth, targetLeft, yOffset);
+                AddUserBubbleAnimated(bubble, targetLeft, yOffset);
             }
             else
             {
@@ -539,21 +559,31 @@ namespace ZeroUI.WinForms.Documents
 
             if (_thinkingBubble != null)
             {
-                _thinkingBubble.Location = new Point(14, bubble.Bottom + 12);
+                _thinkingBubble.Location = new Point(10, bubble.Bottom + 12);
                 _thinkingBubble.BringToFront();
             }
 
             ScrollToBottom();
         }
 
-        private void AddUserBubbleAnimated(Control bubble, int availableWidth, int targetLeft, int yOffset)
+        private void AddUserBubbleAnimated(Control bubble, int targetLeft, int yOffset)
         {
-            bubble.Location = new Point(availableWidth + 30, yOffset);
+            // Calculate a safe startX that NEVER exceeds ClientSize.Width
+            int maxSafeRight = _messagesContainer.ClientSize.Width - 12;
+            int startX = Math.Min(maxSafeRight - bubble.Width, targetLeft + 20);
+
+            if (startX <= targetLeft)
+            {
+                bubble.Location = new Point(targetLeft, yOffset);
+                _messagesContainer.Controls.Add(bubble);
+                return;
+            }
+
+            bubble.Location = new Point(startX, yOffset);
             _messagesContainer.Controls.Add(bubble);
 
             var timer = new System.Windows.Forms.Timer { Interval = 16 };
             int step = 0;
-            int startX = availableWidth + 30;
 
             timer.Tick += (s, e) =>
             {
@@ -575,7 +605,10 @@ namespace ZeroUI.WinForms.Documents
         private Control CreateBubbleControl(ChatMessage msg, int containerWidth, out RichTextBox? outRtb, out Panel? outFooterPanel)
         {
             bool isUser = msg.Role == ChatRole.User;
-            int maxBubbleWidth = Math.Min(650, (int)(containerWidth * 0.88));
+
+            // Constrain bubble strictly within container bounds:
+            int maxAllowedWidth = Math.Max(180, containerWidth - 24);
+            int maxBubbleWidth = Math.Min(580, maxAllowedWidth);
 
             var bubble = new Panel
             {
@@ -619,7 +652,7 @@ namespace ZeroUI.WinForms.Documents
             };
             outRtb = rtb;
 
-            int contentWidth = maxBubbleWidth - 28;
+            int contentWidth = Math.Max(120, maxBubbleWidth - 28);
             rtb.Width = contentWidth;
 
             Color textFore = isUser ? Color.FromArgb(241, 245, 249) : Color.FromArgb(226, 232, 240);
@@ -629,12 +662,14 @@ namespace ZeroUI.WinForms.Documents
             int textHeight = CalculateRichTextBoxHeight(rtb, contentWidth);
             rtb.Height = textHeight;
 
-            int totalBubbleWidth = Math.Max(contentWidth + 28, msg.CanUndo ? 280 : 180);
+            int minBubbleWidth = Math.Min(maxBubbleWidth, msg.CanUndo ? 210 : 150);
+            int totalBubbleWidth = Math.Max(minBubbleWidth, Math.Min(maxBubbleWidth, contentWidth + 28));
+
             if (isUser)
             {
                 using var g = CreateGraphics();
                 var measure = g.MeasureString(msg.Content ?? "", rtb.Font, contentWidth);
-                totalBubbleWidth = Math.Max(130, Math.Min(maxBubbleWidth, (int)measure.Width + 32));
+                totalBubbleWidth = Math.Max(120, Math.Min(maxBubbleWidth, (int)measure.Width + 30));
                 rtb.Width = totalBubbleWidth - 24;
                 textHeight = CalculateRichTextBoxHeight(rtb, rtb.Width);
                 rtb.Height = textHeight;
@@ -657,11 +692,11 @@ namespace ZeroUI.WinForms.Documents
                     var undoBtn = new Button
                     {
                         Text = "↺ Hoàn tác",
-                        Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                        Font = new Font("Segoe UI", 8.25f, FontStyle.Bold),
                         ForeColor = Color.FromArgb(251, 191, 36),
                         BackColor = Color.FromArgb(40, 245, 158, 11),
                         FlatStyle = FlatStyle.Flat,
-                        Size = new Size(96, 24),
+                        Size = new Size(90, 24),
                         Location = new Point(12, 3),
                         Cursor = Cursors.Hand
                     };
@@ -680,8 +715,8 @@ namespace ZeroUI.WinForms.Documents
                     ForeColor = Color.FromArgb(148, 163, 184),
                     BackColor = Color.FromArgb(30, 41, 59),
                     FlatStyle = FlatStyle.Flat,
-                    Size = new Size(84, 24),
-                    Location = new Point(totalBubbleWidth - 96, 3),
+                    Size = new Size(80, 24),
+                    Location = new Point(Math.Max(105, totalBubbleWidth - 88), 3),
                     Cursor = Cursors.Hand
                 };
                 copyBtn.FlatAppearance.BorderColor = Color.FromArgb(71, 85, 105);
@@ -743,11 +778,12 @@ namespace ZeroUI.WinForms.Documents
                 if (c.Bottom + 12 > yOffset) yOffset = c.Bottom + 12;
             }
 
+            int safeWidth = Math.Min(320, _messagesContainer.ClientSize.Width - 24);
             var pnl = new Panel
             {
                 BackColor = Color.FromArgb(17, 24, 39),
-                Size = new Size(320, 58),
-                Location = new Point(14, yOffset),
+                Size = new Size(safeWidth, 58),
+                Location = new Point(10, yOffset),
                 Padding = new Padding(10, 6, 10, 6)
             };
 
@@ -820,7 +856,7 @@ namespace ZeroUI.WinForms.Documents
             _messages.Add(msg);
             _suppressRebuild = false;
 
-            int availableWidth = Math.Max(200, _messagesContainer.ClientSize.Width - 40);
+            int containerW = Math.Max(200, _messagesContainer.ClientSize.Width - 24);
             int yOffset = 10;
             foreach (Control c in _messagesContainer.Controls)
             {
@@ -829,8 +865,8 @@ namespace ZeroUI.WinForms.Documents
 
             var tempMsg = ChatMessage.Assistant("", _modelName);
             tempMsg.CanUndo = canUndo;
-            var bubble = CreateBubbleControl(tempMsg, availableWidth, out var rtb, out var footerPanel);
-            bubble.Location = new Point(14, yOffset);
+            var bubble = CreateBubbleControl(tempMsg, containerW, out var rtb, out var footerPanel);
+            bubble.Location = new Point(10, yOffset);
 
             if (footerPanel != null)
             {
@@ -1034,12 +1070,14 @@ namespace ZeroUI.WinForms.Documents
                 var chip = new Button
                 {
                     Text = suggestion,
-                    Font = new Font("Segoe UI", 8.5f),
+                    Font = new Font("Segoe UI", 8.25f),
                     ForeColor = Color.FromArgb(226, 232, 240),
-                    BackColor = Color.FromArgb(30, 41, 59),
+                    BackColor = Color.FromArgb(28, 38, 56),
                     FlatStyle = FlatStyle.Flat,
                     AutoSize = true,
-                    Margin = new Padding(0, 0, 6, 0),
+                    Height = 26,
+                    Padding = new Padding(8, 2, 8, 2),
+                    Margin = new Padding(0, 0, 6, 6),
                     Cursor = Cursors.Hand
                 };
                 chip.FlatAppearance.BorderColor = Color.FromArgb(71, 85, 105);
@@ -1051,7 +1089,7 @@ namespace ZeroUI.WinForms.Documents
                 };
                 chip.MouseLeave += (s, e) =>
                 {
-                    chip.BackColor = Color.FromArgb(30, 41, 59);
+                    chip.BackColor = Color.FromArgb(28, 38, 56);
                     chip.ForeColor = Color.FromArgb(226, 232, 240);
                     chip.FlatAppearance.BorderColor = Color.FromArgb(71, 85, 105);
                 };
@@ -1117,7 +1155,9 @@ namespace ZeroUI.WinForms.Documents
         {
             if (_messagesContainer.Controls.Count > 0)
             {
+                _messagesContainer.HorizontalScroll.Value = 0;
                 _messagesContainer.ScrollControlIntoView(_messagesContainer.Controls[_messagesContainer.Controls.Count - 1]);
+                _messagesContainer.HorizontalScroll.Value = 0;
             }
         }
 
