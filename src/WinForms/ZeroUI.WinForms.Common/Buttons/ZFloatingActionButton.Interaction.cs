@@ -61,6 +61,7 @@ namespace ZeroUI.WinForms.Buttons
             {
                 parent.Controls.Add(this);
             }
+            parent.Controls.SetChildIndex(this, 0);
             this.BringToFront();
 
             parent.Resize += (s, e) =>
@@ -69,8 +70,20 @@ namespace ZeroUI.WinForms.Buttons
                     Math.Max(10, parent.ClientSize.Width - this.Width - rightMargin),
                     Math.Max(10, parent.ClientSize.Height - this.Height - bottomMargin)
                 );
+                parent.Controls.SetChildIndex(this, 0);
                 this.BringToFront();
             };
+        }
+
+        /// <summary>
+        /// Shows this floating action button inside a dedicated top-most owned overlay window.
+        /// Guarantees that the button will NEVER be obscured or covered by any child controls, tabs, or grids.
+        /// </summary>
+        public ZFloatingActionOverlay ShowAsOverlay(Form parentForm, int rightMargin = 28, int bottomMargin = 28)
+        {
+            if (parentForm == null) throw new ArgumentNullException(nameof(parentForm));
+            var overlay = new ZFloatingActionOverlay(parentForm, this, rightMargin, bottomMargin);
+            return overlay;
         }
 
         #endregion

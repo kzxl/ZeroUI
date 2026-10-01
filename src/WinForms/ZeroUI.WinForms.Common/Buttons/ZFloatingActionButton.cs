@@ -208,16 +208,6 @@ namespace ZeroUI.WinForms.Buttons
 
         #region Region & Transparency (Zero Rectangular Artifacts)
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var cp = base.CreateParams;
-                cp.ExStyle |= 0x20; // WS_EX_TRANSPARENT: Guarantees underlying surfaces paint first cleanly
-                return cp;
-            }
-        }
-
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
