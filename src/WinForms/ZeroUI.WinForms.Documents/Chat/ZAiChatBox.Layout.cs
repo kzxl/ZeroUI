@@ -220,6 +220,7 @@ namespace ZeroUI.WinForms.Documents
             var rtb = new RichTextBox
             {
                 Multiline = true,
+                WordWrap = true,
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
                 ScrollBars = RichTextBoxScrollBars.None,
@@ -436,12 +437,17 @@ namespace ZeroUI.WinForms.Documents
 
         private static int CalculateRichTextBoxHeight(RichTextBox rtb, int width)
         {
-            rtb.Width = width;
             if (rtb.TextLength == 0) return 24;
+            rtb.Width = width;
 
-            Point p = rtb.GetPositionFromCharIndex(rtb.TextLength - 1);
-            int lineH = TextRenderer.MeasureText("A", rtb.Font).Height;
-            return Math.Max(26, p.Y + lineH + 12);
+            var pref = rtb.GetPreferredSize(new Size(width, 0));
+            int height = pref.Height + 6;
+
+            var flags = TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl;
+            var textMeasure = TextRenderer.MeasureText(rtb.Text, rtb.Font, new Size(width, int.MaxValue), flags);
+            int safeH = Math.Max(height, textMeasure.Height + 12);
+
+            return Math.Max(26, safeH);
         }
 
         private void HideEmptyState()

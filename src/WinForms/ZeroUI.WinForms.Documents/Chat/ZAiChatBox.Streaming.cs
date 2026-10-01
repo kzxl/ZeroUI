@@ -45,7 +45,8 @@ namespace ZeroUI.WinForms.Documents
                 SendMessage(rtb.Handle, WM_SETREDRAW, false, 0);
                 try
                 {
-                    rtb.AppendText(token);
+                    string safeToken = token.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", Environment.NewLine);
+                    rtb.AppendText(safeToken);
 
                     int newTextHeight = CalculateRichTextBoxHeight(rtb, rtb.Width);
                     if (newTextHeight != rtb.Height)

@@ -180,6 +180,7 @@ namespace ZeroUI.WinForms.Documents
             _promptInputBox = new TextBox
             {
                 Multiline = true,
+                AcceptsReturn = true,
                 ScrollBars = ScrollBars.Vertical,
                 BackColor = Color.FromArgb(15, 23, 42),
                 ForeColor = Color.FromArgb(248, 250, 252),
