@@ -225,11 +225,12 @@ namespace ZeroUI.WinForms.Buttons
         /// </summary>
         public void UpdateRegion()
         {
-            if (Width <= 0 || Height <= 0) return;
+            int d = Math.Min(Width, Height);
+            if (d <= 0) return;
 
             using (var path = new GraphicsPath())
             {
-                path.AddEllipse(0, 0, Width, Height);
+                path.AddEllipse(0, 0, d, d);
                 this.Region = new Region(path);
             }
         }
