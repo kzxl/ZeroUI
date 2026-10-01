@@ -56,61 +56,11 @@ Headless and interactive stress-test verified on `.NET 8.0` (x64, Intel Core i7 
 * **Win32 Memory DC DIBSection Engine**: Offscreen unmanaged double buffering with zero-copy `BitBlt` presentation (100% resilient across RDP and virtual machines).
 * **Enterprise Dual-Runtime Support**: Full native compatibility with **.NET Framework 4.6.2** as well as modern **.NET 8.0 / 9.0**.
 * **Unified Theme Engine**: Instant reactive switching between **Obsidian Dark Mode** (`#12151C`) and **Clean Light Mode** across all controls.
-* **Industrial Security & Identity Management Suite (v1.11.0)**: Decoupled enterprise authentication, role-based authorization (RBAC), multi-modal login (Username/Password, quick PIN, RFID/NFC hardware badge dongle), on-screen touch virtual keyboard (`ZVirtualKeyboard`), idle timeout heartbeat monitor with auto-lock screen overlay (`ZLockScreenOverlay`), user management console (`ZUserManager`), visual permission matrix (`ZRoleMatrix`), declarative RBAC extender (`ZAuthorizeExtender` / `ZAuthorize`), and 21 CFR Part 11 audit log viewer (`ZOperationLogViewer`).
-* **Enterprise Extended Controls Suite (v1.10.1)**: 21 comprehensive production controls covering async autocomplete, command palettes, notification drawers, ISA-18.2 alarm summaries, calendars, cron builders, gauge & bubble charts, signature pads, JSON/code/markdown editors, tree views, and manufacturing timelines.
-* **Interactive Guided Tour & Onboarding Engine (v1.10.0)**: Native spotlight aperture cutout masking (`Region.Exclude` / `CombinedGeometry.Exclude`), semi-transparent glass backdrop dimming, collision-free adaptive popovers, and full keyboard navigation across WinForms and WPF (`ZTour`).
-* **Specialized Creative & Forensic Inspection Media Suite (v1.10.0)**: High-performance vector defect tagging with direct bitmap burning (`ZAnnotationCanvas`), optical precision metrology caliper (`ZMeasurementRuler`), dynamic screen-capture security stamps (`ZWatermarkOverlay`), GPU-accelerated video playback (`ZVideoPlayer`), symmetrical audio waveform scrubbers (`ZAudioWaveform`), and document straightening/binarization (`ZDocumentDeskew`).
-* **Specialized Analytics & Business Charts Suite (v1.9.0)**: Clean Architecture with 100% platform-neutral mathematical engines in `ZeroUI.Core.Analytics` and lightweight hardware rendering layers for WinForms and WPF (`HistogramChart`, `ScatterChart`, `SunburstChart`, `LollipopChart`, `TreemapChart`, `SankeyChart`, `BulletChart`, `ParetoChart`).
-* **Creative & Media Controls Suite (v1.8.0 / v1.9.1)**: Direct-rendered, high-performance visual editors for digital imaging, raw photography, inspection, and video grading cleanly segregated in `ZeroUI.Wpf.Media` and `ZeroUI.WinForms.Media` (`ZImageViewer`, `ZPictureEdit`, `ZCurveEditor`, `ZColorWheel`, `ZCompareViewer`, `ZHistogramScope`, `ZCropBox`, `ZMiniMapNavigator`, `ZMaskGizmoOverlay`, `ZHistoryTimeline`, `ZFilmstripScroller`, `ZDominantPalette`, `ZExifTelemetryCard`, `ZBatchTaskQueue`, `ZThumbnailGrid`, `ZTokenPatternEditor`).
+* **Interactive Guided Tour & Onboarding Engine**: Native spotlight aperture cutout masking (`Region.Exclude` / `CombinedGeometry.Exclude`), semi-transparent glass backdrop dimming, collision-free adaptive popovers, and full keyboard navigation across WinForms and WPF (`ZTour`).
+* **Specialized Creative & Forensic Inspection Media Suite**: High-performance vector defect tagging with direct bitmap burning (`ZAnnotationCanvas`), optical precision metrology caliper (`ZMeasurementRuler`), dynamic screen-capture security stamps (`ZWatermarkOverlay`), GPU-accelerated video playback (`ZVideoPlayer`), symmetrical audio waveform scrubbers (`ZAudioWaveform`), and document straightening/binarization (`ZDocumentDeskew`).
+* **Specialized Analytics & Business Charts Suite**: Clean Architecture with 100% platform-neutral mathematical engines in `ZeroUI.Core.Analytics` and lightweight hardware rendering layers for WinForms and WPF (`HistogramChart`, `ScatterChart`, `SunburstChart`, `LollipopChart`, `TreemapChart`, `SankeyChart`, `BulletChart`, `ParetoChart`).
+* **Creative & Media Controls Suite**: Direct-rendered, high-performance visual editors for digital imaging, raw photography, inspection, and video grading cleanly segregated in `ZeroUI.Wpf.Media` and `ZeroUI.WinForms.Media` (`ZImageViewer`, `ZPictureEdit`, `ZCurveEditor`, `ZColorWheel`, `ZCompareViewer`, `ZHistogramScope`, `ZCropBox`, `ZMiniMapNavigator`, `ZMaskGizmoOverlay`, `ZHistoryTimeline`, `ZFilmstripScroller`, `ZDominantPalette`, `ZExifTelemetryCard`, `ZBatchTaskQueue`, `ZThumbnailGrid`, `ZTokenPatternEditor`).
 * **Centralized 60 FPS Clock (`ZeroAnimationClock`)**: Single global ticker with synchronized ISA-18.2 blinking phases, eliminating timer scatter.
-
----
-
-## 🎛️ Enterprise Extended Controls Suite (v1.10.1)
-
-ZeroUI delivers 21 fully implemented, production-ready enterprise controls across **Windows Forms** and **WPF**, adhering to strict single-HWND architecture, zero-allocation theming, and comprehensive test coverage:
-
-| Category | Control | WinForms | WPF | Core Capabilities |
-| :--- | :--- | :---: | :---: | :--- |
-| **Input & Search** | **`ZAutoComplete`** | ✅ | ✅ | Async debounce filtering, keyboard navigation (Up/Down/Enter/Esc), theme-aware suggestion popup dropdown. |
-| **Overlay & Navigation** | **`ZCommandPalette`** | ✅ | ✅ | Quick-launcher overlay (Ctrl+K), fuzzy search filtering, action execution triggers, and backdrop dimming. |
-| **Feedback & Alerts** | **`ZNotificationCenter`** | ✅ | ✅ | Severity-grouped notification drawer (Info, Success, Warning, Error), unread badge counts, action links, and bell icon (`ZNotificationBell`). |
-| **Industrial & SCADA** | **`ZAlarmSummary`** | ✅ | ✅ | ISA-18.2 compliant alarm management, state badges (Active, Acked, Cleared), acknowledgment actions, and audio snooze toggles. |
-| **Documents & Content** | **`ZRichTextEditor`** | ✅ | ✅ | WYSIWYG formatting toolbar (Bold, Italic, Underline, Bullet lists, Colors, Font size), RTF/HTML round-trip persistence. |
-| **Scheduling** | **`ZScheduler`** | ✅ | ✅ | Multi-view calendar control with Day, Week, Month, and Agenda view modes, event drag creation, and navigation headers. |
-| **Data & Gauges** | **`ZGaugeChart`** | ✅ | ✅ | High-precision radial gauge with customizable threshold zones (Normal, Warning, Danger), animated needle, and live value HUD. |
-| **Statistical Charts** | **`ZBubbleChart`** | ✅ | ✅ | Multi-dimensional bubble dispersion visualization $(X, Y, Size, Color)$, hover hit-testing, and dynamic legends. |
-| **Security & Input** | **`ZPasswordBox`** | ✅ | ✅ | Masked secure input with show/hide eye toggle, real-time password strength meter (entropy bar), and focus indicators. |
-| **Virtualization** | **`ZVirtualGrid`** | ✅ | ✅ | Lightweight, high-throughput virtualization grid designed for high-frequency telemetry feeds and minimal footprint. |
-| **Automation** | **`ZCronEditor`** | ✅ | ✅ | Visual cron builder (Minute, Hour, Day, Month, Weekday), human-readable summary ("At 08:00 every Monday"), and validation. |
-| **Advanced Pickers** | **`ZMultiSelect`** | ✅ | ✅ | Multi-selection tag box with removable chips, inline text search filter, maximum selection limits, and clear-all action. |
-| **Signatures & Ink** | **`ZSignaturePad`** | ✅ | ✅ | Vector handwriting stroke capture, pressure smoothing, custom stroke width/color, clear action, and lossless PNG export. |
-| **Data Transfer** | **`ZTransferList`** | ✅ | ✅ | Dual-list transfer control with directional buttons ($>, >>, <, <<$), search filters on both lists, and count badges. |
-| **Layout & Feedback** | **`ZEmptyState`** | ✅ | ✅ | Polished zero-data illustration/glyph placeholder with title, description, and primary/secondary call-to-action buttons. |
-| **User Identity** | **`ZAvatar`** | ✅ | ✅ | Circular/rounded user avatar with initials fallback, image caching, and presence status dots (Online, Busy, Away, Offline). |
-| **Documentation** | **`ZMarkdownViewer`** | ✅ | ✅ | Vector Markdown document previewer with headings ($H_1-H_6$), code blocks, blockquotes, bullet points, and raw source toggle. |
-| **Code & Scripting** | **`ZCodeEditor`** | ✅ | ✅ | Monospace script and formula editor with gutter line numbers, tab indentation, and theme integration. |
-| **JSON Management** | **`ZJsonEditor`** | ✅ | ✅ | Zero-dependency JSON editor with pretty-formatting, minification, real-time syntax validator, and status indicators. |
-| **Hierarchical Trees** | **`ZTreeView`** | ✅ | ✅ | Vector tree view with chevron expand/collapse, optional node checkboxes, selection highlights, and connector lines. |
-| **Audit Trails** | **`ZTimeline`** | ✅ | ✅ | Vertical manufacturing audit trail and lot tracking journal with status indicator nodes (Completed, InProgress, Error, Pending). |
-
----
-
-## 🛡️ Industrial Security & Identity Management Suite (v1.11.0)
-
-A decoupled, enterprise-grade authentication, role-based authorization (RBAC), touch HMI, and compliance audit suite engineered specifically for 24/7 industrial runtime environments and multi-operator manufacturing stations:
-
-| Category | Control | WinForms | WPF | Core Capabilities |
-| :--- | :--- | :---: | :---: | :--- |
-| **Authentication** | **`ZLoginDialog`** | ✅ | ✅ | Multi-modal login modal supporting Username/Password, quick PIN, and RFID/NFC hardware badge dongle. Close button (✕) with ESC dismiss. WPF auto-shows floating `ZVirtualKeyboard` popup on input focus. WCAG AA contrast validated across all skins. |
-| **Touch HMI** | **`ZVirtualKeyboard`** | ✅ | ✅ | Touch-screen keyboard (QWERTY alphanumeric & 10-key numeric keypad modes) with 48px+ hit targets and auto-popup provider. |
-| **Session Watchdog** | **`ZIdleTimeoutMonitor`** | ✅ | ✅ | Inactivity watchdog with 64-bit monotonic clock, idle countdown, warning, auto-lock overlay, and unlock authentication. |
-| **Operator Status** | **`ZUserStatusBadge`** | ✅ | ✅ | Real-time session status badge showing operator name, role badge, session duration, lockout indicator, and quick logout menu. |
-| **Hardware I/O** | **`ZBadgeReaderListener`** | ✅ | ✅ | Hardware RFID/NFC badge card scanner listener (USB HID keyboard-wedge / Serial) with preamble/postamble and debounce. |
-| **RBAC Matrix** | **`ZRoleMatrix`** | ✅ | ✅ | Visual permission matrix mapping roles against permissions with tri-state checkboxes and asynchronous store sync. |
-| **User Management** | **`ZUserManager`** | ✅ | ✅ | Industrial operator administration console for creating, editing, locking, assigning badges, and managing credentials. |
-| **Declarative Security** | **`ZAuthorizeExtender` / `ZAuthorize`** | ✅ | ✅ | Extender provider (WinForms) & attached property (WPF) dynamically disabling or hiding UI elements based on active role/permission. |
-| **Compliance & Audit** | **`ZOperationLogViewer`** | ✅ | ✅ | 21 CFR Part 11 compliant operator action and electronic signature audit viewer with severity badges, actor filter, and CSV export. |
 
 ---
 
