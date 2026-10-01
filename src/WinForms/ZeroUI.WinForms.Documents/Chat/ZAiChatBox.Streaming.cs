@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZeroUI.Core.AiMl;
+using ZeroUI.WinForms.Theme;
 
 namespace ZeroUI.WinForms.Documents
 {
@@ -107,8 +108,9 @@ namespace ZeroUI.WinForms.Documents
                 {
                     var rtb = holder.RichTextBox;
                     var bubble = holder.BubblePanel;
-                    Color textFore = Color.FromArgb(226, 232, 240);
-                    Color highlight = Color.FromArgb(56, 189, 248);
+                    bool isDark = ZeroTheme.IsDark;
+                    Color textFore = isDark ? Color.FromArgb(226, 232, 240) : Color.FromArgb(15, 23, 42);
+                    Color highlight = isDark ? Color.FromArgb(56, 189, 248) : Color.FromArgb(2, 132, 199);
 
                     SendMessage(rtb.Handle, WM_SETREDRAW, false, 0);
                     try
@@ -184,9 +186,10 @@ namespace ZeroUI.WinForms.Documents
             }
 
             int safeWidth = Math.Min(320, _messagesContainer.ClientSize.Width - 24);
+            bool isDark = ZeroTheme.IsDark;
             var pnl = new Panel
             {
-                BackColor = Color.FromArgb(17, 24, 39),
+                BackColor = isDark ? Color.FromArgb(17, 24, 39) : Color.FromArgb(255, 255, 255),
                 Size = new Size(safeWidth, 58),
                 Location = new Point(10, yOffset),
                 Padding = new Padding(10, 6, 10, 6)
@@ -194,7 +197,8 @@ namespace ZeroUI.WinForms.Documents
 
             pnl.Paint += (s, e) =>
             {
-                using var p = new Pen(Color.FromArgb(51, 65, 85), 1f);
+                var penColor = isDark ? Color.FromArgb(51, 65, 85) : Color.FromArgb(226, 232, 240);
+                using var p = new Pen(penColor, 1f);
                 e.Graphics.DrawRectangle(p, 0, 0, pnl.Width - 1, pnl.Height - 1);
             };
 
@@ -202,7 +206,7 @@ namespace ZeroUI.WinForms.Documents
             {
                 Text = string.IsNullOrWhiteSpace(_modelName) ? _assistantName : _modelName,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(52, 211, 153),
+                ForeColor = isDark ? Color.FromArgb(52, 211, 153) : Color.FromArgb(5, 150, 105),
                 AutoSize = true,
                 Location = new Point(10, 6)
             };
@@ -219,7 +223,7 @@ namespace ZeroUI.WinForms.Documents
             {
                 Text = text,
                 Font = new Font("Segoe UI", 8.5f, FontStyle.Italic),
-                ForeColor = Color.FromArgb(148, 163, 184),
+                ForeColor = isDark ? Color.FromArgb(148, 163, 184) : Color.FromArgb(100, 116, 139),
                 AutoSize = true,
                 Location = new Point(72, 28),
                 Tag = "statusText"
@@ -296,8 +300,9 @@ namespace ZeroUI.WinForms.Documents
             var tokens = Regex.Matches(fullContent, @"(\S+\s*|\s+)").Cast<Match>().Select(m => m.Value).ToList();
             var sb = new System.Text.StringBuilder();
 
-            Color textFore = Color.FromArgb(226, 232, 240);
-            Color highlight = Color.FromArgb(56, 189, 248);
+            bool isDarkToken = ZeroTheme.IsDark;
+            Color textFore = isDarkToken ? Color.FromArgb(226, 232, 240) : Color.FromArgb(15, 23, 42);
+            Color highlight = isDarkToken ? Color.FromArgb(56, 189, 248) : Color.FromArgb(2, 132, 199);
 
             for (int i = 0; i < tokens.Count; i += 2)
             {
