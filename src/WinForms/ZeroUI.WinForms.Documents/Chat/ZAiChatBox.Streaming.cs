@@ -27,6 +27,12 @@ namespace ZeroUI.WinForms.Documents
         /// </summary>
         public void StreamToken(string messageId, string token)
         {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => StreamToken(messageId, token)));
+                return;
+            }
+
             if (string.IsNullOrEmpty(token)) return;
 
             var msg = _messages.FirstOrDefault(m => m.Id == messageId);
@@ -100,6 +106,12 @@ namespace ZeroUI.WinForms.Documents
         /// </summary>
         public void CompleteStreaming(string messageId)
         {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => CompleteStreaming(messageId)));
+                return;
+            }
+
             var msg = _messages.FirstOrDefault(m => m.Id == messageId);
             if (msg != null)
             {
@@ -155,6 +167,11 @@ namespace ZeroUI.WinForms.Documents
                 {
                     RebuildAllMessages();
                 }
+            }
+
+            if (StreamingState == ChatStreamingState.Thinking || StreamingState == ChatStreamingState.Streaming)
+            {
+                StreamingState = ChatStreamingState.Idle;
             }
         }
 
@@ -249,6 +266,11 @@ namespace ZeroUI.WinForms.Documents
                 _messagesContainer.Controls.Remove(_thinkingBubble);
                 _thinkingBubble.Dispose();
                 _thinkingBubble = null;
+            }
+
+            if (StreamingState == ChatStreamingState.Thinking)
+            {
+                StreamingState = ChatStreamingState.Idle;
             }
         }
 

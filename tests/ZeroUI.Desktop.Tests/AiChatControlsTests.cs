@@ -122,6 +122,24 @@ namespace ZeroUI.Desktop.Tests
             chat.CompleteStreaming(msg.Id);
             Assert.False(msg.IsStreaming);
             Assert.Equal("Token 1 Token 2", msg.Content);
+            Assert.Equal(ChatStreamingState.Idle, chat.StreamingState);
+        }
+
+        [Fact]
+        public void WinForms_ZAiChatBox_CompleteStreaming_RendersMarkdownTable()
+        {
+            using var chat = new WinFormsChatBox();
+            var msg = chat.AppendAssistantMessage();
+
+            chat.IsGenerating = true;
+            chat.StreamingState = ChatStreamingState.Streaming;
+
+            string tableMarkdown = "| STT | Mặt hàng | SL |\n|---|---|---|\n| 1 | Mì Hảo Hảo | 5 |";
+            chat.StreamToken(msg.Id, tableMarkdown);
+            chat.CompleteStreaming(msg.Id);
+
+            Assert.False(msg.IsStreaming);
+            Assert.Equal(ChatStreamingState.Idle, chat.StreamingState);
         }
 
         #endregion

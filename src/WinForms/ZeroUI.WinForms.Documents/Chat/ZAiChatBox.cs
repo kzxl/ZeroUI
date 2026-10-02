@@ -442,9 +442,18 @@ namespace ZeroUI.WinForms.Documents
             get => _isGenerating;
             set
             {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(() => IsGenerating = value));
+                    return;
+                }
                 _isGenerating = value;
                 _sendButton.Visible = !_isGenerating;
                 _stopButton.Visible = _isGenerating;
+                if (!_isGenerating && _streamingState == ChatStreamingState.Thinking)
+                {
+                    StreamingState = ChatStreamingState.Idle;
+                }
             }
         }
 
@@ -456,6 +465,11 @@ namespace ZeroUI.WinForms.Documents
             get => _streamingState;
             set
             {
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(() => StreamingState = value));
+                    return;
+                }
                 _streamingState = value;
                 _statusLabel.Text = value switch
                 {

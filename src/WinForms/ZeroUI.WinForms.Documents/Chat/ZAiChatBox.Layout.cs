@@ -348,11 +348,23 @@ namespace ZeroUI.WinForms.Documents
             using var baseFont = new Font("Segoe UI", 9.5f, FontStyle.Regular);
             using var boldFont = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             using var italicFont = new Font("Segoe UI", 9.5f, FontStyle.Italic);
+            using var monoFont = new Font("Consolas", 9f, FontStyle.Regular);
+            using var monoBoldFont = new Font("Consolas", 9f, FontStyle.Bold);
 
             rtb.SuspendLayout();
             int i = 0;
             while (i < normalized.Length)
             {
+                // Check if current position is the start of a Markdown Table block
+                if ((i == 0 || normalized[i - 1] == '\n') && normalized[i] == '|')
+                {
+                    if (TryRenderMarkdownTable(normalized, i, rtb, monoFont, monoBoldFont, defaultColor, highlightColor, out int nextIndex))
+                    {
+                        i = nextIndex;
+                        continue;
+                    }
+                }
+
                 if (normalized[i] == '\n')
                 {
                     rtb.SelectionFont = baseFont;
@@ -433,6 +445,112 @@ namespace ZeroUI.WinForms.Documents
                 }
             }
             rtb.ResumeLayout();
+        }
+
+        private static bool TryRenderMarkdownTable(
+            string text,
+            int startIndex,
+            RichTextBox rtb,
+            Font monoFont,
+            Font monoBoldFont,
+            Color defaultColor,
+            Color highlightColor,
+            out int nextIndex)
+        {
+            nextIndex = startIndex;
+            var lines = new System.Collections.Generic.List<string>();
+            int cursor = startIndex;
+
+            while (cursor < text.Length)
+            {
+                int newline = text.IndexOf('\n', cursor);
+                string line = newline == -1 ? text.Substring(cursor) : text.Substring(cursor, newline - cursor);
+                string trimmed = line.Trim();
+
+                if (trimmed.StartsWith("|") && trimmed.EndsWith("|"))
+                {
+                    lines.Add(line);
+                    cursor = newline == -1 ? text.Length : newline + 1;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (lines.Count < 2) return false;
+
+            // Second line must be table separator e.g. |---|---|
+            string sepTrimmed = lines[1].Trim();
+            if (!sepTrimmed.Contains("-")) return false;
+
+            // Parse cells helper
+            static string[] ParseRowCells(string row)
+            {
+                var raw = row.Split('|');
+                var cells = new System.Collections.Generic.List<string>();
+                for (int i = 1; i < raw.Length - 1; i++)
+                {
+                    cells.Add(raw[i].Trim());
+                }
+                return cells.ToArray();
+            }
+
+            var headerCells = ParseRowCells(lines[0]);
+            if (headerCells.Length == 0) return false;
+
+            var bodyRows = new System.Collections.Generic.List<string[]>();
+            for (int r = 2; r < lines.Count; r++)
+            {
+                bodyRows.Add(ParseRowCells(lines[r]));
+            }
+
+            // Calculate max width for each column
+            int[] colWidths = new int[headerCells.Length];
+            for (int c = 0; c < headerCells.Length; c++)
+            {
+                colWidths[c] = headerCells[c].Length;
+                foreach (var row in bodyRows)
+                {
+                    if (c < row.Length && row[c].Length > colWidths[c])
+                    {
+                        colWidths[c] = row[c].Length;
+                    }
+                }
+                colWidths[c] = Math.Max(colWidths[c], 3);
+            }
+
+            // Render Header
+            rtb.SelectionFont = monoBoldFont;
+            rtb.SelectionColor = highlightColor;
+            for (int c = 0; c < headerCells.Length; c++)
+            {
+                rtb.AppendText(headerCells[c].PadRight(colWidths[c] + 2));
+            }
+            rtb.AppendText(Environment.NewLine);
+
+            // Render Divider line
+            int totalWidth = 0;
+            for (int c = 0; c < colWidths.Length; c++) totalWidth += colWidths[c] + 2;
+            rtb.SelectionFont = monoFont;
+            rtb.SelectionColor = Color.FromArgb(148, 163, 184);
+            rtb.AppendText(new string('─', Math.Min(totalWidth, 80)) + Environment.NewLine);
+
+            // Render Data Rows
+            foreach (var row in bodyRows)
+            {
+                for (int c = 0; c < headerCells.Length; c++)
+                {
+                    string cell = c < row.Length ? row[c] : string.Empty;
+                    rtb.SelectionFont = monoFont;
+                    rtb.SelectionColor = defaultColor;
+                    rtb.AppendText(cell.PadRight(colWidths[c] + 2));
+                }
+                rtb.AppendText(Environment.NewLine);
+            }
+
+            nextIndex = cursor;
+            return true;
         }
 
         private static int CalculateRichTextBoxHeight(RichTextBox rtb, int width)
