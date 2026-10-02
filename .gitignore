@@ -51,3 +51,6 @@ dist/
 artifacts/
 packages/
 *.nupkg
+
+# Agents & Teamwork preview
+.agents/
