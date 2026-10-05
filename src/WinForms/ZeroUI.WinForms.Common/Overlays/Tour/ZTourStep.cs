@@ -20,6 +20,8 @@ namespace ZeroUI.WinForms.Overlays
         public bool Mask { get; set; } = true;
         public string? NextButtonText { get; set; }
         public string? PrevButtonText { get; set; }
+        public int? CardWidth { get; set; }
+        public int? CardHeight { get; set; }
         public Action<ZTourStep>? OnEnter { get; set; }
         public Action<ZTourStep>? OnLeave { get; set; }
 

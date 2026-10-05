@@ -161,8 +161,18 @@ namespace ZeroUI.WinForms.Overlays
 
         private void RecalculateCardLayout(ZTourStep step, int currentIndex, int totalCount)
         {
-            int cardW = 340;
-            int cardH = 150;
+            int cardW = step.CardWidth ?? _tour.CardWidth;
+            if (cardW < 320) cardW = 320;
+            int textAvailableWidth = cardW - 28;
+
+            int measuredDescHeight = 60;
+            using (var font = new Font("Segoe UI", 9.25f))
+            {
+                var size = TextRenderer.MeasureText(step.Description ?? string.Empty, font, new Size(textAvailableWidth, 0), TextFormatFlags.WordBreak);
+                measuredDescHeight = Math.Max(50, size.Height + 8);
+            }
+
+            int cardH = step.CardHeight ?? (44 + measuredDescHeight + 16 + 38);
 
             ZTourPlacement desired = step.Placement;
             if (_targetRect.IsEmpty || desired == ZTourPlacement.Center)
@@ -230,9 +240,9 @@ namespace ZeroUI.WinForms.Overlays
             _btnCloseRect = new Rectangle(_cardRect.Right - 28, _cardRect.Top + 10, 20, 20);
 
             int btnY = _cardRect.Bottom - 38;
-            _btnNextRect = new Rectangle(_cardRect.Right - 90, btnY, 76, 26);
-            _btnPrevRect = new Rectangle(_btnNextRect.Left - 80, btnY, 72, 26);
-            _btnSkipRect = new Rectangle(_btnPrevRect.Left - 70, btnY, 60, 26);
+            _btnNextRect = new Rectangle(_cardRect.Right - 92, btnY, 78, 26);
+            _btnPrevRect = new Rectangle(_btnNextRect.Left - 82, btnY, 74, 26);
+            _btnSkipRect = new Rectangle(_btnPrevRect.Left - 70, btnY, 62, 26);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -314,7 +324,7 @@ namespace ZeroUI.WinForms.Overlays
                 TextRenderer.DrawText(g, badgeText, badgeFont, badgeRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
 
-            var titleRect = new Rectangle(badgeRect.Right + 8, _cardRect.Top + 12, _cardRect.Width - 90, 22);
+            var titleRect = new Rectangle(badgeRect.Right + 8, _cardRect.Top + 12, _cardRect.Width - 75, 24);
             using (var titleFont = new Font("Segoe UI", 10f, FontStyle.Bold))
             {
                 TextRenderer.DrawText(g, currentStep.Title, titleFont, titleRect, Color.FromArgb(248, 250, 252), TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
@@ -327,11 +337,12 @@ namespace ZeroUI.WinForms.Overlays
                 TextRenderer.DrawText(g, "✕", closeFont, _btnCloseRect, closeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
 
-            // 4. Body: Description
-            var descRect = new Rectangle(_cardRect.Left + 14, _cardRect.Top + 42, _cardRect.Width - 28, 60);
-            using (var descFont = new Font("Segoe UI", 9f))
+            // 4. Body: Description (Dynamic height filling the card body)
+            int descAreaHeight = Math.Max(50, _cardRect.Height - 44 - 46);
+            var descRect = new Rectangle(_cardRect.Left + 14, _cardRect.Top + 44, _cardRect.Width - 28, descAreaHeight);
+            using (var descFont = new Font("Segoe UI", 9.25f))
             {
-                TextRenderer.DrawText(g, currentStep.Description, descFont, descRect, Color.FromArgb(148, 163, 184), TextFormatFlags.Left | TextFormatFlags.WordBreak);
+                TextRenderer.DrawText(g, currentStep.Description, descFont, descRect, Color.FromArgb(226, 232, 240), TextFormatFlags.Left | TextFormatFlags.WordBreak);
             }
 
             // 5. Footer: Dot Indicators

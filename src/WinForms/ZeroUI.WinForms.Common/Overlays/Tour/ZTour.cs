@@ -37,6 +37,11 @@ namespace ZeroUI.WinForms.Overlays
 
         public int CurrentIndex { get; private set; } = -1;
 
+        /// <summary>
+        /// Default width in pixels for step popover cards (default: 440px).
+        /// </summary>
+        public int CardWidth { get; set; } = 440;
+
         public ZTourStep? CurrentStep => (CurrentIndex >= 0 && CurrentIndex < Steps.Count) ? Steps[CurrentIndex] : null;
 
         public bool IsActive => _overlayForm != null && _overlayForm.Visible;
