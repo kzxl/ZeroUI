@@ -289,6 +289,8 @@ namespace ZeroUI.WinForms.Media
 
                 g.SmoothingMode = SmoothingMode.HighQuality;
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.CompositingQuality = CompositingQuality.HighQuality;
 
                 var state = g.Save();
 
@@ -305,54 +307,69 @@ namespace ZeroUI.WinForms.Media
 
                 g.DrawImage(_image, imgLeft, imgTop, imgW, imgH);
 
-            // Render OCR Token Overlays
-            if (_result != null && _result.Words.Count > 0)
-            {
-                RenderOcrOverlay(g, imgLeft, imgTop);
-            }
-
-            // Render Selected ROI Box
-            if (_selectedRoi.HasValue && !_selectedRoi.Value.IsEmpty)
-            {
-                var roi = _selectedRoi.Value;
-                var roiRect = new RectangleF(imgLeft + roi.X, imgTop + roi.Y, roi.Width, roi.Height);
-
-                using var roiBrush = new SolidBrush(Color.FromArgb(40, 245, 158, 11));
-                using var roiPen = new Pen(Color.FromArgb(230, 245, 158, 11), 2.0f / (float)_zoom)
+                // Render OCR Token Overlays
+                if (_result != null && _result.Words.Count > 0)
                 {
-                    DashStyle = DashStyle.Dash
-                };
-                g.FillRectangle(roiBrush, roiRect);
-                g.DrawRectangle(roiPen, roiRect.X, roiRect.Y, roiRect.Width, roiRect.Height);
-            }
+                    RenderOcrOverlay(g, imgLeft, imgTop);
+                }
 
-            // Render interactive ROI drag rectangle
-            if (_isDraggingRoi)
-            {
-                float rMinX = Math.Min(_roiStartPoint.X, _roiCurrentPoint.X);
-                float rMinY = Math.Min(_roiStartPoint.Y, _roiCurrentPoint.Y);
-                float rW = Math.Abs(_roiCurrentPoint.X - _roiStartPoint.X);
-                float rH = Math.Abs(_roiCurrentPoint.Y - _roiStartPoint.Y);
-
-                using var dragBrush = new SolidBrush(Color.FromArgb(30, 0, 229, 255));
-                using var dragPen = new Pen(Color.FromArgb(255, 0, 229, 255), 1.5f / (float)_zoom)
+                // Render Selected ROI Box (in image space under zoom/pan transform)
+                if (!_isDraggingRoi && _selectedRoi.HasValue && !_selectedRoi.Value.IsEmpty)
                 {
-                    DashStyle = DashStyle.Dot
-                };
-                g.FillRectangle(dragBrush, rMinX, rMinY, rW, rH);
-                g.DrawRectangle(dragPen, rMinX, rMinY, rW, rH);
+                    var roi = _selectedRoi.Value;
+                    var roiRect = new RectangleF(imgLeft + roi.X, imgTop + roi.Y, roi.Width, roi.Height);
+
+                    using var roiBrush = new SolidBrush(Color.FromArgb(40, 245, 158, 11));
+                    using var roiPen = new Pen(Color.FromArgb(230, 245, 158, 11), 2.0f / (float)_zoom)
+                    {
+                        DashStyle = DashStyle.Dash
+                    };
+                    g.FillRectangle(roiBrush, roiRect);
+                    g.DrawRectangle(roiPen, roiRect.X, roiRect.Y, roiRect.Width, roiRect.Height);
+                }
+
+                g.Restore(state);
+
+                // Render interactive ROI drag rectangle in SCREEN coordinates (1:1 with mouse cursor!)
+                if (_isDraggingRoi)
+                {
+                    float rMinX = Math.Min(_roiStartPoint.X, _roiCurrentPoint.X);
+                    float rMinY = Math.Min(_roiStartPoint.Y, _roiCurrentPoint.Y);
+                    float rW = Math.Abs(_roiCurrentPoint.X - _roiStartPoint.X);
+                    float rH = Math.Abs(_roiCurrentPoint.Y - _roiStartPoint.Y);
+
+                    if (rW > 1 && rH > 1)
+                    {
+                        using var dragBrush = new SolidBrush(Color.FromArgb(35, 0, 229, 255));
+                        using var dragPen = new Pen(Color.FromArgb(255, 0, 229, 255), 1.5f)
+                        {
+                            DashStyle = DashStyle.Dash
+                        };
+                        g.FillRectangle(dragBrush, rMinX, rMinY, rW, rH);
+                        g.DrawRectangle(dragPen, rMinX, rMinY, rW, rH);
+
+                        // Draw real-time size badge near the cursor
+                        string sizeText = $"{(int)rW} × {(int)rH} px";
+                        using var font = new Font("Segoe UI", 8.25f, FontStyle.Bold);
+                        var textSz = g.MeasureString(sizeText, font);
+                        float badgeX = Math.Min(Width - textSz.Width - 10, Math.Max(10, rMinX + rW + 6));
+                        float badgeY = Math.Min(Height - textSz.Height - 10, Math.Max(10, rMinY + rH + 6));
+
+                        using var badgeBg = new SolidBrush(Color.FromArgb(200, 15, 23, 42));
+                        using var textBrush = new SolidBrush(Color.White);
+                        g.FillRectangle(badgeBg, badgeX, badgeY, textSz.Width + 6, textSz.Height + 2);
+                        g.DrawString(sizeText, font, textBrush, badgeX + 3, badgeY + 1);
+                    }
+                }
+
+                // Render HUD badge in screen coordinates
+                RenderHud(g);
             }
-
-            g.Restore(state);
-
-            // Render HUD badge in screen coordinates
-            RenderHud(g);
+            catch (Exception)
+            {
+                // Suppress GDI+ rendering anomalies if image was modified/disposed concurrently
+            }
         }
-        catch (Exception)
-        {
-            // Suppress GDI+ rendering anomalies if image was modified/disposed concurrently
-        }
-    }
 
         private void RenderOcrOverlay(Graphics g, float imgLeft, float imgTop)
         {

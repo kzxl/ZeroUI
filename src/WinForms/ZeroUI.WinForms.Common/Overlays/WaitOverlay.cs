@@ -90,10 +90,11 @@ namespace ZeroUI.WinForms.Overlays
                 }
 
                 _activeWaitForm = new InternalWaitCardForm(ownerForm, caption, description, canCancel, onCancel);
+                _activeWaitForm.TopMost = true;
 
                 if (_activeBackdropForm != null)
                 {
-                    _activeWaitForm.Show(_activeBackdropForm);
+                    _activeWaitForm.Show(ownerForm);
                 }
                 else if (ownerForm != null && ownerForm.Visible && !ownerForm.IsDisposed)
                 {
@@ -103,6 +104,12 @@ namespace ZeroUI.WinForms.Overlays
                 {
                     _activeWaitForm.Show();
                 }
+
+                try
+                {
+                    _activeWaitForm.BringToFront();
+                }
+                catch { }
 
                 return new WaitOverlayHandle(Close);
             }
@@ -163,64 +170,60 @@ namespace ZeroUI.WinForms.Overlays
 
         private static void CloseInternal()
         {
-            if (_activeWaitForm != null && !_activeWaitForm.IsDisposed)
+            var waitFormToClose = _activeWaitForm;
+            _activeWaitForm = null;
+
+            if (waitFormToClose != null && !waitFormToClose.IsDisposed)
             {
                 try
                 {
-                    if (_activeWaitForm.InvokeRequired)
+                    if (waitFormToClose.InvokeRequired)
                     {
-                        _activeWaitForm.BeginInvoke(new Action(() =>
+                        waitFormToClose.BeginInvoke(new Action(() =>
                         {
-                            _activeWaitForm.Close();
-                            _activeWaitForm.Dispose();
-                            _activeWaitForm = null;
+                            try
+                            {
+                                waitFormToClose.Close();
+                                waitFormToClose.Dispose();
+                            }
+                            catch { }
                         }));
                     }
                     else
                     {
-                        _activeWaitForm.Close();
-                        _activeWaitForm.Dispose();
-                        _activeWaitForm = null;
+                        waitFormToClose.Close();
+                        waitFormToClose.Dispose();
                     }
                 }
-                catch
-                {
-                    _activeWaitForm = null;
-                }
-            }
-            else
-            {
-                _activeWaitForm = null;
+                catch { }
             }
 
-            if (_activeBackdropForm != null && !_activeBackdropForm.IsDisposed)
+            var backdropToClose = _activeBackdropForm;
+            _activeBackdropForm = null;
+
+            if (backdropToClose != null && !backdropToClose.IsDisposed)
             {
                 try
                 {
-                    if (_activeBackdropForm.InvokeRequired)
+                    if (backdropToClose.InvokeRequired)
                     {
-                        _activeBackdropForm.BeginInvoke(new Action(() =>
+                        backdropToClose.BeginInvoke(new Action(() =>
                         {
-                            _activeBackdropForm.Close();
-                            _activeBackdropForm.Dispose();
-                            _activeBackdropForm = null;
+                            try
+                            {
+                                backdropToClose.Close();
+                                backdropToClose.Dispose();
+                            }
+                            catch { }
                         }));
                     }
                     else
                     {
-                        _activeBackdropForm.Close();
-                        _activeBackdropForm.Dispose();
-                        _activeBackdropForm = null;
+                        backdropToClose.Close();
+                        backdropToClose.Dispose();
                     }
                 }
-                catch
-                {
-                    _activeBackdropForm = null;
-                }
-            }
-            else
-            {
-                _activeBackdropForm = null;
+                catch { }
             }
         }
 
@@ -256,30 +259,65 @@ namespace ZeroUI.WinForms.Overlays
 
         private static Form CreateBackdropForm(Form ownerForm)
         {
-            var backdrop = new Form
-            {
-                FormBorderStyle = FormBorderStyle.None,
-                StartPosition = FormStartPosition.Manual,
-                ShowInTaskbar = false,
-                BackColor = Color.Black,
-                Opacity = 0.35,
-                Bounds = ownerForm.Bounds,
-                TopMost = ownerForm.TopMost
-            };
+            var backdrop = new InternalBackdropForm(ownerForm);
 
-            ownerForm.LocationChanged += (s, e) =>
+            EventHandler locHandler = (s, e) =>
             {
                 if (!backdrop.IsDisposed && !ownerForm.IsDisposed)
                     backdrop.Bounds = ownerForm.Bounds;
             };
 
-            ownerForm.SizeChanged += (s, e) =>
+            EventHandler sizeHandler = (s, e) =>
             {
                 if (!backdrop.IsDisposed && !ownerForm.IsDisposed)
                     backdrop.Bounds = ownerForm.Bounds;
+            };
+
+            ownerForm.LocationChanged += locHandler;
+            ownerForm.SizeChanged += sizeHandler;
+
+            backdrop.Disposed += (s, e) =>
+            {
+                try
+                {
+                    ownerForm.LocationChanged -= locHandler;
+                    ownerForm.SizeChanged -= sizeHandler;
+                }
+                catch { }
             };
 
             return backdrop;
+        }
+
+        /// <summary>
+        /// Internal dimmed backdrop window covering the owner form with zero-activation overhead.
+        /// </summary>
+        private sealed class InternalBackdropForm : Form
+        {
+            public InternalBackdropForm(Form ownerForm)
+            {
+                FormBorderStyle = FormBorderStyle.None;
+                StartPosition = FormStartPosition.Manual;
+                ShowInTaskbar = false;
+                BackColor = Color.Black;
+                Opacity = 0.35;
+                Bounds = ownerForm.Bounds;
+                TopMost = true;
+            }
+
+            protected override bool ShowWithoutActivation => true;
+
+            protected override CreateParams CreateParams
+            {
+                get
+                {
+                    const int WS_EX_NOACTIVATE = 0x08000000;
+                    const int WS_EX_TOPMOST = 0x00000008;
+                    var cp = base.CreateParams;
+                    cp.ExStyle |= WS_EX_NOACTIVATE | WS_EX_TOPMOST;
+                    return cp;
+                }
+            }
         }
 
         /// <summary>
@@ -315,6 +353,7 @@ namespace ZeroUI.WinForms.Overlays
                 FormBorderStyle = FormBorderStyle.None;
                 ShowInTaskbar = false;
                 DoubleBuffered = true;
+                TopMost = true;
 
                 using (var g = CreateGraphics())
                 {
@@ -353,13 +392,17 @@ namespace ZeroUI.WinForms.Overlays
                 _animTimer.Start();
             }
 
+            protected override bool ShowWithoutActivation => true;
+
             protected override CreateParams CreateParams
             {
                 get
                 {
                     const int CS_DROPSHADOW = 0x20000;
+                    const int WS_EX_TOPMOST = 0x00000008;
                     var cp = base.CreateParams;
                     cp.ClassStyle |= CS_DROPSHADOW;
+                    cp.ExStyle |= WS_EX_TOPMOST;
                     return cp;
                 }
             }
@@ -373,6 +416,7 @@ namespace ZeroUI.WinForms.Overlays
                 }
                 _caption = caption;
                 Invalidate();
+                try { BringToFront(); } catch { }
             }
 
             public void UpdateDescription(string description)
@@ -384,6 +428,7 @@ namespace ZeroUI.WinForms.Overlays
                 }
                 _description = description;
                 Invalidate();
+                try { BringToFront(); } catch { }
             }
 
             public void UpdateProgress(int? percentage)
@@ -395,6 +440,7 @@ namespace ZeroUI.WinForms.Overlays
                 }
                 _progress = percentage.HasValue ? Math.Max(0, Math.Min(100, percentage.Value)) : null;
                 Invalidate();
+                try { BringToFront(); } catch { }
             }
 
             protected override void OnMouseMove(MouseEventArgs e)

@@ -488,17 +488,20 @@ namespace ZeroUI.WinForms.Documents
                     rtb.AppendText("*");
                     i++;
                 }
-                else if (normalized[i] == '*' && normalized.Length - i >= 3)
+                else if (normalized[i] == '*')
                 {
-                    int end = normalized.IndexOf('*', i + 1);
-                    if (end > i + 1 && (end + 1 >= normalized.Length || normalized[end + 1] != '*'))
+                    if (normalized.Length - i >= 3)
                     {
-                        string italicText = normalized.Substring(i + 1, end - (i + 1));
-                        rtb.SelectionFont = italicFont;
-                        rtb.SelectionColor = Color.FromArgb(203, 213, 225);
-                        rtb.AppendText(italicText);
-                        i = end + 1;
-                        continue;
+                        int end = normalized.IndexOf('*', i + 1);
+                        if (end > i + 1 && (end + 1 >= normalized.Length || normalized[end + 1] != '*'))
+                        {
+                            string italicText = normalized.Substring(i + 1, end - (i + 1));
+                            rtb.SelectionFont = italicFont;
+                            rtb.SelectionColor = Color.FromArgb(203, 213, 225);
+                            rtb.AppendText(italicText);
+                            i = end + 1;
+                            continue;
+                        }
                     }
                     rtb.SelectionFont = baseFont;
                     rtb.SelectionColor = defaultColor;
@@ -533,13 +536,20 @@ namespace ZeroUI.WinForms.Documents
                         rtb.AppendText(rest);
                         break;
                     }
-                    else
+                    else if (nextSpecial > i)
                     {
                         string span = normalized.Substring(i, nextSpecial - i);
                         rtb.SelectionFont = baseFont;
                         rtb.SelectionColor = defaultColor;
                         rtb.AppendText(span);
                         i = nextSpecial;
+                    }
+                    else
+                    {
+                        rtb.SelectionFont = baseFont;
+                        rtb.SelectionColor = defaultColor;
+                        rtb.AppendText(normalized[i].ToString());
+                        i++;
                     }
                 }
             }
