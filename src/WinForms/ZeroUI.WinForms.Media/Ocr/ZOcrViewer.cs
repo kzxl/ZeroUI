@@ -649,6 +649,36 @@ namespace ZeroUI.WinForms.Media
         }
 
         /// <summary>
+        /// Crops and returns a new Bitmap from the document image based on the specified Region of Interest (or active SelectedRoi).
+        /// </summary>
+        public Bitmap? GetCroppedBitmap(OcrRect? roi = null)
+        {
+            var target = roi ?? _selectedRoi;
+            if (_image == null || !target.HasValue || target.Value.Width <= 1 || target.Value.Height <= 1)
+            {
+                return null;
+            }
+
+            var r = target.Value;
+            int x = Math.Max(0, (int)Math.Round(r.X));
+            int y = Math.Max(0, (int)Math.Round(r.Y));
+            int w = Math.Min(_image.Width - x, (int)Math.Round(r.Width));
+            int h = Math.Min(_image.Height - y, (int)Math.Round(r.Height));
+
+            if (w <= 0 || h <= 0) return null;
+
+            var cropRect = new Rectangle(x, y, w, h);
+            var cropped = new Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(cropped))
+            {
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawImage(_image, new Rectangle(0, 0, w, h), cropRect, GraphicsUnit.Pixel);
+            }
+            return cropped;
+        }
+
+        /// <summary>
         /// Clears all active token and ROI selections.
         /// </summary>
         public void ClearSelection()

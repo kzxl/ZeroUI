@@ -208,7 +208,7 @@ namespace ZeroUI.WinForms.Documents
             };
             bubble.Controls.Add(timeLabel);
 
-            // 2. Rich Text Content Box
+            // 2. Multi-Block Content (Rich Text + Data Tables)
             Color textFore = isUser
                 ? (isDark ? Color.FromArgb(241, 245, 249) : Color.FromArgb(30, 27, 75))
                 : (isDark ? Color.FromArgb(226, 232, 240) : Color.FromArgb(15, 23, 42));
@@ -217,42 +217,63 @@ namespace ZeroUI.WinForms.Documents
                 ? (isDark ? Color.White : Color.FromArgb(67, 56, 202))
                 : (isDark ? Color.FromArgb(56, 189, 248) : Color.FromArgb(2, 132, 199));
 
-            var rtb = new RichTextBox
-            {
-                Multiline = true,
-                WordWrap = true,
-                ReadOnly = true,
-                BorderStyle = BorderStyle.None,
-                ScrollBars = RichTextBoxScrollBars.None,
-                BackColor = bubble.BackColor,
-                ForeColor = textFore,
-                Font = new Font("Segoe UI", 9.5f),
-                Location = new Point(12, 28),
-                Cursor = Cursors.IBeam
-            };
-            outRtb = rtb;
-
             int contentWidth = Math.Max(120, maxBubbleWidth - 28);
-            rtb.Width = contentWidth;
+            var blocks = ParseMarkdownBlocks(msg.Content ?? "");
 
-            SetMarkdownText(rtb, msg.Content ?? "", textFore, highlight);
+            int currentY = 28;
+            RichTextBox? primaryRtb = null;
 
-            int textHeight = CalculateRichTextBoxHeight(rtb, contentWidth);
-            rtb.Height = textHeight;
+            if (blocks.Count == 0)
+            {
+                var rtb = CreateRichTextBox(contentWidth, bubble.BackColor, textFore);
+                rtb.Location = new Point(12, currentY);
+                int h = CalculateRichTextBoxHeight(rtb, contentWidth);
+                rtb.Height = h;
+                bubble.Controls.Add(rtb);
+                primaryRtb = rtb;
+                currentY += h + 6;
+            }
+            else
+            {
+                foreach (var block in blocks)
+                {
+                    if (block is ChatMarkdownTextBlock tb)
+                    {
+                        var rtb = CreateRichTextBox(contentWidth, bubble.BackColor, textFore);
+                        rtb.Location = new Point(12, currentY);
+                        SetMarkdownText(rtb, tb.Content, textFore, highlight);
+                        int h = CalculateRichTextBoxHeight(rtb, contentWidth);
+                        rtb.Height = h;
+                        bubble.Controls.Add(rtb);
+
+                        if (primaryRtb == null) primaryRtb = rtb;
+                        currentY += h + 6;
+                    }
+                    else if (block is ChatMarkdownTableBlock tableBlock)
+                    {
+                        var tableControl = new ZChatTableControl(tableBlock, contentWidth, isDark);
+                        tableControl.Location = new Point(12, currentY);
+                        bubble.Controls.Add(tableControl);
+                        currentY += tableControl.Height + 8;
+                    }
+                }
+            }
+
+            outRtb = primaryRtb ?? CreateRichTextBox(contentWidth, bubble.BackColor, textFore);
 
             int minBubbleWidth = Math.Min(maxBubbleWidth, msg.CanUndo ? 210 : 150);
             int totalBubbleWidth = Math.Max(minBubbleWidth, Math.Min(maxBubbleWidth, contentWidth + 28));
 
-            if (isUser)
+            if (isUser && primaryRtb != null)
             {
                 using var g = CreateGraphics();
-                var measure = g.MeasureString(msg.Content ?? "", rtb.Font, contentWidth);
+                var measure = g.MeasureString(msg.Content ?? "", primaryRtb.Font, contentWidth);
                 totalBubbleWidth = Math.Max(120, Math.Min(maxBubbleWidth, (int)measure.Width + 30));
-                rtb.Width = totalBubbleWidth - 24;
-                textHeight = CalculateRichTextBoxHeight(rtb, rtb.Width);
-                rtb.Height = textHeight;
+                primaryRtb.Width = totalBubbleWidth - 24;
+                int textHeight = CalculateRichTextBoxHeight(primaryRtb, primaryRtb.Width);
+                primaryRtb.Height = textHeight;
+                currentY = 28 + textHeight;
             }
-            bubble.Controls.Add(rtb);
 
             // 3. Footer Action Bar (Assistant Only)
             Panel? footerPanel = null;
@@ -261,7 +282,7 @@ namespace ZeroUI.WinForms.Documents
                 footerPanel = new Panel
                 {
                     Size = new Size(totalBubbleWidth, 30),
-                    Location = new Point(0, 28 + textHeight + 6),
+                    Location = new Point(0, currentY + 2),
                     BackColor = Color.Transparent
                 };
 
@@ -318,7 +339,7 @@ namespace ZeroUI.WinForms.Documents
             outFooterPanel = footerPanel;
 
             // 4. Overall Bubble Sizing
-            int totalBubbleHeight = isUser ? (28 + textHeight + 10) : (28 + textHeight + 6 + 30 + 8);
+            int totalBubbleHeight = isUser ? (currentY + 10) : (currentY + 2 + 30 + 8);
             bubble.Size = new Size(totalBubbleWidth, totalBubbleHeight);
 
             // 5. Custom Border Paint
@@ -333,6 +354,94 @@ namespace ZeroUI.WinForms.Documents
             };
 
             return bubble;
+        }
+
+        private static RichTextBox CreateRichTextBox(int width, Color backColor, Color foreColor)
+        {
+            return new RichTextBox
+            {
+                Multiline = true,
+                WordWrap = true,
+                ReadOnly = true,
+                BorderStyle = BorderStyle.None,
+                ScrollBars = RichTextBoxScrollBars.None,
+                BackColor = backColor,
+                ForeColor = foreColor,
+                Font = new Font("Segoe UI", 9.5f),
+                Width = width,
+                Height = 26,
+                Cursor = Cursors.IBeam
+            };
+        }
+
+        public void RebuildSingleBubble(string messageId)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => RebuildSingleBubble(messageId)));
+                return;
+            }
+
+            var msg = _messages.FirstOrDefault(m => m.Id == messageId);
+            if (msg == null) return;
+
+            if (!_bubbleCache.TryGetValue(messageId, out var oldHolder) || oldHolder.BubblePanel.IsDisposed)
+            {
+                RebuildAllMessages();
+                return;
+            }
+
+            var oldBubble = oldHolder.BubblePanel;
+            int oldHeight = oldBubble.Height;
+            int oldTop = oldBubble.Top;
+            int containerW = Math.Max(200, _messagesContainer.ClientSize.Width - 24);
+
+            var newBubble = CreateBubbleControl(msg, containerW, out var rtb, out var footer);
+            if (rtb != null)
+            {
+                _bubbleCache[msg.Id] = new BubbleViewHolder
+                {
+                    BubblePanel = newBubble,
+                    RichTextBox = rtb,
+                    FooterPanel = footer,
+                    Message = msg
+                };
+            }
+
+            int targetLeft = msg.Role == ChatRole.User
+                ? Math.Max(8, _messagesContainer.ClientSize.Width - newBubble.Width - 14)
+                : 10;
+            newBubble.Location = new Point(targetLeft, oldTop);
+
+            _messagesContainer.SuspendLayout();
+            _messagesContainer.Controls.Remove(oldBubble);
+            oldBubble.Dispose();
+            _messagesContainer.Controls.Add(newBubble);
+
+            int delta = newBubble.Height - oldHeight;
+            if (delta != 0)
+            {
+                foreach (Control c in _messagesContainer.Controls)
+                {
+                    if (c != newBubble && c != _thinkingBubble && c.Top > oldTop)
+                    {
+                        c.Top += delta;
+                    }
+                }
+            }
+
+            if (_thinkingBubble != null)
+            {
+                int maxY = 10;
+                foreach (Control c in _messagesContainer.Controls)
+                {
+                    if (c != _thinkingBubble && c.Bottom + 12 > maxY) maxY = c.Bottom + 12;
+                }
+                _thinkingBubble.Location = new Point(10, maxY);
+            }
+
+            _messagesContainer.ResumeLayout();
+            ScrollToBottom();
         }
 
         #endregion
@@ -355,16 +464,6 @@ namespace ZeroUI.WinForms.Documents
             int i = 0;
             while (i < normalized.Length)
             {
-                // Check if current position is the start of a Markdown Table block
-                if ((i == 0 || normalized[i - 1] == '\n') && normalized[i] == '|')
-                {
-                    if (TryRenderMarkdownTable(normalized, i, rtb, monoFont, monoBoldFont, defaultColor, highlightColor, out int nextIndex))
-                    {
-                        i = nextIndex;
-                        continue;
-                    }
-                }
-
                 if (normalized[i] == '\n')
                 {
                     rtb.SelectionFont = baseFont;
@@ -445,112 +544,6 @@ namespace ZeroUI.WinForms.Documents
                 }
             }
             rtb.ResumeLayout();
-        }
-
-        private static bool TryRenderMarkdownTable(
-            string text,
-            int startIndex,
-            RichTextBox rtb,
-            Font monoFont,
-            Font monoBoldFont,
-            Color defaultColor,
-            Color highlightColor,
-            out int nextIndex)
-        {
-            nextIndex = startIndex;
-            var lines = new System.Collections.Generic.List<string>();
-            int cursor = startIndex;
-
-            while (cursor < text.Length)
-            {
-                int newline = text.IndexOf('\n', cursor);
-                string line = newline == -1 ? text.Substring(cursor) : text.Substring(cursor, newline - cursor);
-                string trimmed = line.Trim();
-
-                if (trimmed.StartsWith("|") && trimmed.EndsWith("|"))
-                {
-                    lines.Add(line);
-                    cursor = newline == -1 ? text.Length : newline + 1;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if (lines.Count < 2) return false;
-
-            // Second line must be table separator e.g. |---|---|
-            string sepTrimmed = lines[1].Trim();
-            if (!sepTrimmed.Contains("-")) return false;
-
-            // Parse cells helper
-            static string[] ParseRowCells(string row)
-            {
-                var raw = row.Split('|');
-                var cells = new System.Collections.Generic.List<string>();
-                for (int i = 1; i < raw.Length - 1; i++)
-                {
-                    cells.Add(raw[i].Trim());
-                }
-                return cells.ToArray();
-            }
-
-            var headerCells = ParseRowCells(lines[0]);
-            if (headerCells.Length == 0) return false;
-
-            var bodyRows = new System.Collections.Generic.List<string[]>();
-            for (int r = 2; r < lines.Count; r++)
-            {
-                bodyRows.Add(ParseRowCells(lines[r]));
-            }
-
-            // Calculate max width for each column
-            int[] colWidths = new int[headerCells.Length];
-            for (int c = 0; c < headerCells.Length; c++)
-            {
-                colWidths[c] = headerCells[c].Length;
-                foreach (var row in bodyRows)
-                {
-                    if (c < row.Length && row[c].Length > colWidths[c])
-                    {
-                        colWidths[c] = row[c].Length;
-                    }
-                }
-                colWidths[c] = Math.Max(colWidths[c], 3);
-            }
-
-            // Render Header
-            rtb.SelectionFont = monoBoldFont;
-            rtb.SelectionColor = highlightColor;
-            for (int c = 0; c < headerCells.Length; c++)
-            {
-                rtb.AppendText(headerCells[c].PadRight(colWidths[c] + 2));
-            }
-            rtb.AppendText(Environment.NewLine);
-
-            // Render Divider line
-            int totalWidth = 0;
-            for (int c = 0; c < colWidths.Length; c++) totalWidth += colWidths[c] + 2;
-            rtb.SelectionFont = monoFont;
-            rtb.SelectionColor = Color.FromArgb(148, 163, 184);
-            rtb.AppendText(new string('─', Math.Min(totalWidth, 80)) + Environment.NewLine);
-
-            // Render Data Rows
-            foreach (var row in bodyRows)
-            {
-                for (int c = 0; c < headerCells.Length; c++)
-                {
-                    string cell = c < row.Length ? row[c] : string.Empty;
-                    rtb.SelectionFont = monoFont;
-                    rtb.SelectionColor = defaultColor;
-                    rtb.AppendText(cell.PadRight(colWidths[c] + 2));
-                }
-                rtb.AppendText(Environment.NewLine);
-            }
-
-            nextIndex = cursor;
-            return true;
         }
 
         private static int CalculateRichTextBoxHeight(RichTextBox rtb, int width)

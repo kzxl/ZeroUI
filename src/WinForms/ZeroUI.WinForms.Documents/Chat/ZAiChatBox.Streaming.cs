@@ -117,7 +117,12 @@ namespace ZeroUI.WinForms.Documents
             {
                 msg.IsStreaming = false;
 
-                if (_bubbleCache.TryGetValue(messageId, out var holder) && holder.RichTextBox != null && !holder.BubblePanel.IsDisposed)
+                // Rebuild bubble with DataGridView if tables are present in the streamed content
+                if (ContainsMarkdownTable(msg.Content ?? ""))
+                {
+                    RebuildSingleBubble(messageId);
+                }
+                else if (_bubbleCache.TryGetValue(messageId, out var holder) && holder.RichTextBox != null && !holder.BubblePanel.IsDisposed)
                 {
                     var rtb = holder.RichTextBox;
                     var bubble = holder.BubblePanel;
@@ -348,16 +353,23 @@ namespace ZeroUI.WinForms.Documents
                 await Task.Delay(delayMs);
             }
 
-            // Final render pass
-            SetMarkdownText(rtb, fullContent, textFore, highlight);
-            int finalH = CalculateRichTextBoxHeight(rtb, rtb.Width);
-            rtb.Height = finalH;
-            bubble.Height = finalH + (canUndo ? 76 : 64);
-
-            if (footerPanel != null)
+            if (ContainsMarkdownTable(fullContent))
             {
-                footerPanel.Location = new Point(0, 28 + finalH + 6);
-                footerPanel.Visible = true;
+                RebuildSingleBubble(msg.Id);
+            }
+            else
+            {
+                // Final render pass
+                SetMarkdownText(rtb, fullContent, textFore, highlight);
+                int finalH = CalculateRichTextBoxHeight(rtb, rtb.Width);
+                rtb.Height = finalH;
+                bubble.Height = finalH + (canUndo ? 76 : 64);
+
+                if (footerPanel != null)
+                {
+                    footerPanel.Location = new Point(0, 28 + finalH + 6);
+                    footerPanel.Visible = true;
+                }
             }
 
             _isGenerating = false;
