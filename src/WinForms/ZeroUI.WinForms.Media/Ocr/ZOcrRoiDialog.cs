@@ -22,6 +22,7 @@ namespace ZeroUI.WinForms.Media.Ocr
         private readonly int _totalPages;
         private int _currentPage = 1;
         private Bitmap? _currentBitmap;
+        private Bitmap? _resultBitmap;
 
         // Top Toolbar Controls
         private Panel _topBar = null!;
@@ -294,6 +295,17 @@ namespace ZeroUI.WinForms.Media.Ocr
             _btnScanAll.Click += (s, e) =>
             {
                 _ocrViewer.ClearSelection();
+                if (_ocrViewer.Image != null)
+                {
+                    try
+                    {
+                        _resultBitmap = new Bitmap(_ocrViewer.Image);
+                    }
+                    catch
+                    {
+                        _resultBitmap = null;
+                    }
+                }
                 DialogResult = DialogResult.OK;
                 Close();
             };
@@ -310,6 +322,7 @@ namespace ZeroUI.WinForms.Media.Ocr
             {
                 if (HasSelectedRoi)
                 {
+                    _resultBitmap = _ocrViewer.GetCroppedBitmap();
                     DialogResult = DialogResult.OK;
                     Close();
                 }
@@ -396,6 +409,11 @@ namespace ZeroUI.WinForms.Media.Ocr
         /// </summary>
         public Bitmap? GetResultBitmap()
         {
+            if (_resultBitmap != null)
+            {
+                return _resultBitmap;
+            }
+
             if (HasSelectedRoi)
             {
                 return _ocrViewer.GetCroppedBitmap();
@@ -403,8 +421,15 @@ namespace ZeroUI.WinForms.Media.Ocr
 
             if (_ocrViewer.Image != null)
             {
-                // Clone image copy so caller owns lifetime
-                return new Bitmap(_ocrViewer.Image);
+                try
+                {
+                    // Clone image copy so caller owns lifetime
+                    return new Bitmap(_ocrViewer.Image);
+                }
+                catch
+                {
+                    return null;
+                }
             }
 
             return null;
@@ -414,11 +439,14 @@ namespace ZeroUI.WinForms.Media.Ocr
 
         #region Cleanup
 
-        protected override void OnFormClosed(FormClosedEventArgs e)
+        protected override void Dispose(bool disposing)
         {
-            base.OnFormClosed(e);
-            _currentBitmap?.Dispose();
-            _currentBitmap = null;
+            if (disposing)
+            {
+                _currentBitmap?.Dispose();
+                _currentBitmap = null;
+            }
+            base.Dispose(disposing);
         }
 
         #endregion

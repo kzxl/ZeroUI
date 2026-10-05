@@ -282,23 +282,28 @@ namespace ZeroUI.WinForms.Media
                 return;
             }
 
-            g.SmoothingMode = SmoothingMode.HighQuality;
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            try
+            {
+                int imgW = _image.Width;
+                int imgH = _image.Height;
 
-            var state = g.Save();
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            // Center-anchored zoom & pan transform
-            float cx = Width / 2.0f;
-            float cy = Height / 2.0f;
+                var state = g.Save();
 
-            g.TranslateTransform(cx + _panOffset.X, cy + _panOffset.Y);
-            g.ScaleTransform((float)_zoom, (float)_zoom);
-            g.TranslateTransform(-cx, -cy);
+                // Center-anchored zoom & pan transform
+                float cx = Width / 2.0f;
+                float cy = Height / 2.0f;
 
-            float imgLeft = (Width - _image.Width) / 2.0f;
-            float imgTop = (Height - _image.Height) / 2.0f;
+                g.TranslateTransform(cx + _panOffset.X, cy + _panOffset.Y);
+                g.ScaleTransform((float)_zoom, (float)_zoom);
+                g.TranslateTransform(-cx, -cy);
 
-            g.DrawImage(_image, imgLeft, imgTop, _image.Width, _image.Height);
+                float imgLeft = (Width - imgW) / 2.0f;
+                float imgTop = (Height - imgH) / 2.0f;
+
+                g.DrawImage(_image, imgLeft, imgTop, imgW, imgH);
 
             // Render OCR Token Overlays
             if (_result != null && _result.Words.Count > 0)
@@ -343,6 +348,11 @@ namespace ZeroUI.WinForms.Media
             // Render HUD badge in screen coordinates
             RenderHud(g);
         }
+        catch (Exception)
+        {
+            // Suppress GDI+ rendering anomalies if image was modified/disposed concurrently
+        }
+    }
 
         private void RenderOcrOverlay(Graphics g, float imgLeft, float imgTop)
         {
@@ -659,23 +669,34 @@ namespace ZeroUI.WinForms.Media
                 return null;
             }
 
-            var r = target.Value;
-            int x = Math.Max(0, (int)Math.Round(r.X));
-            int y = Math.Max(0, (int)Math.Round(r.Y));
-            int w = Math.Min(_image.Width - x, (int)Math.Round(r.Width));
-            int h = Math.Min(_image.Height - y, (int)Math.Round(r.Height));
-
-            if (w <= 0 || h <= 0) return null;
-
-            var cropRect = new Rectangle(x, y, w, h);
-            var cropped = new Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            using (var g = Graphics.FromImage(cropped))
+            try
             {
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.DrawImage(_image, new Rectangle(0, 0, w, h), cropRect, GraphicsUnit.Pixel);
+                int imgW = _image.Width;
+                int imgH = _image.Height;
+
+                var r = target.Value;
+                int x = Math.Max(0, (int)Math.Round(r.X));
+                int y = Math.Max(0, (int)Math.Round(r.Y));
+                int w = Math.Min(imgW - x, (int)Math.Round(r.Width));
+                int h = Math.Min(imgH - y, (int)Math.Round(r.Height));
+
+                if (w <= 0 || h <= 0) return null;
+
+                var cropRect = new Rectangle(x, y, w, h);
+                var cropped = new Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                using (var g = Graphics.FromImage(cropped))
+                {
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    g.DrawImage(_image, new Rectangle(0, 0, w, h), cropRect, GraphicsUnit.Pixel);
+                }
+                return cropped;
             }
-            return cropped;
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ZOcrViewer] GetCroppedBitmap error: {ex.Message}");
+                return null;
+            }
         }
 
         /// <summary>
