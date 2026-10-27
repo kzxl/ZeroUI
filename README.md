@@ -1,3 +1,13 @@
+> [!IMPORTANT]
+> ### 🏛️ REPOSITORY CONSOLIDATION NOTICE
+> **This repository has been officially consolidated into the unified [ZeroPlatform Sovereign Monorepo](https://github.com/kzxl/ZeroPlatform).**  
+> All active development, issues, pull requests, and new releases take place in the central repository:  
+> 👉 **[kzxl/ZeroPlatform/tree/master/ZeroUI](https://github.com/kzxl/ZeroPlatform/tree/master/ZeroUI)**
+> 
+> *This repository is archived and preserved for historical reference and permanent package links.*
+
+---
+
 # ZeroUI ⚡
 
 > **Ultra-High-Performance, Zero-Allocation Industrial UI & Runtime Ecosystem for .NET (WinForms, WPF, .NET 8/9 & Edge)**
